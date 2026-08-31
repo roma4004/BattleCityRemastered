@@ -143,9 +143,9 @@ std::expected<void, InitError> SDL_Config::InitFonts()
 	return {};
 }
 
-std::shared_ptr<TTF_Font> SDL_Config::OpenFont(const int pointSize) const
+FontHandle SDL_Config::OpenFont(const int pointSize) const
 {
-	return {TTF_OpenFont(fontPath.string().c_str(), static_cast<float>(pointSize)), TTF_CloseFont};
+	return FontHandle{TTF_OpenFont(fontPath.string().c_str(), static_cast<float>(pointSize))};
 }
 
 std::expected<void, InitError> SDL_Config::InitTextures()
@@ -169,7 +169,7 @@ std::expected<void, InitError> SDL_Config::InitAudio()
 	}
 
 	//NOTE: SDL3_mixer traded the one global device for an explicit mixer - a null spec lets it pick
-	if (mixer = {MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, nullptr), MIX_DestroyMixer};
+	if (mixer = MixerHandle{MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, nullptr)};
 		mixer == nullptr)
 	{
 		return std::unexpected(InitError{.stage = "MIX_CreateMixerDevice Error, sound off",
@@ -178,7 +178,7 @@ std::expected<void, InitError> SDL_Config::InitAudio()
 
 	const std::string introMusicPath = projectConfig.ResourcePath("Music.LevelStarted").string();
 	//NOTE: predecoded - one short chunk, and decoding it once keeps the playback path allocation-free
-	if (levelIntroMusic = {MIX_LoadAudio(mixer.get(), introMusicPath.c_str(), true), MIX_DestroyAudio};
+	if (levelIntroMusic = AudioHandle{MIX_LoadAudio(mixer.get(), introMusicPath.c_str(), true)};
 		levelIntroMusic == nullptr)
 	{
 		return std::unexpected(InitError{.stage = "MIX_LoadAudio Error, sound off", .detail = SDL_GetError()});
@@ -200,9 +200,9 @@ std::expected<void, InitError> SDL_Config::InitAudio()
 	return {};
 }
 
-std::expected<std::shared_ptr<SDL_Surface>, InitError> SDL_Config::LoadSurface(const std::filesystem::path& path)
+std::expected<SurfaceHandle, InitError> SDL_Config::LoadSurface(const std::filesystem::path& path)
 {
-	std::shared_ptr<SDL_Surface> surface{IMG_Load(path.string().c_str()), SDL_DestroySurface};
+	SurfaceHandle surface{IMG_Load(path.string().c_str())};
 	if (surface == nullptr)
 	{
 		return std::unexpected(
@@ -212,11 +212,10 @@ std::expected<std::shared_ptr<SDL_Surface>, InitError> SDL_Config::LoadSurface(c
 	return surface;
 }
 
-std::expected<std::shared_ptr<SDL_Texture>, InitError> SDL_Config::CreateTexture(
-		const std::shared_ptr<SDL_Surface>& surface, const std::filesystem::path& path) const
+std::expected<TextureHandle, InitError> SDL_Config::CreateTexture(
+		const SurfaceHandle& surface, const std::filesystem::path& path) const
 {
-	std::shared_ptr<SDL_Texture> texture{SDL_CreateTextureFromSurface(renderer.get(), surface.get()),
-										 SDL_DestroyTexture};
+	TextureHandle texture{SDL_CreateTextureFromSurface(renderer.get(), surface.get())};
 	if (texture == nullptr)
 	{
 		return std::unexpected(
@@ -227,15 +226,15 @@ std::expected<std::shared_ptr<SDL_Texture>, InitError> SDL_Config::CreateTexture
 }
 
 std::expected<void, InitError> SDL_Config::LoadTexturePair(const std::string_view configKey,
-														   std::shared_ptr<SDL_Surface>& outSurface,
-														   std::shared_ptr<SDL_Texture>& outTexture)
+														   SurfaceHandle& outSurface,
+														   TextureHandle& outTexture)
 {
 	const std::filesystem::path path = projectConfig.ResourcePath(std::string{configKey});
 
 	//NOTE: the surface is kept - a device reset rebuilds the texture from it
-	return LoadSurface(path).and_then([&](std::shared_ptr<SDL_Surface> surface)
+	return LoadSurface(path).and_then([&](SurfaceHandle surface)
 	{
-		return CreateTexture(surface, path).transform([&](std::shared_ptr<SDL_Texture> texture)
+		return CreateTexture(surface, path).transform([&](TextureHandle texture)
 		{
 			outSurface = std::move(surface);
 			outTexture = std::move(texture);
@@ -244,16 +243,16 @@ std::expected<void, InitError> SDL_Config::LoadTexturePair(const std::string_vie
 }
 
 std::expected<void, InitError> SDL_Config::LoadPadHints(const std::span<const char* const> configKeys,
-														std::vector<std::shared_ptr<SDL_Surface>>& outSurfaces,
-														std::vector<std::shared_ptr<SDL_Texture>>& outTextures)
+														std::vector<SurfaceHandle>& outSurfaces,
+														std::vector<TextureHandle>& outTextures)
 {
 	outSurfaces.reserve(configKeys.size());
 	outTextures.reserve(configKeys.size());
 
 	for (const char* key: configKeys)
 	{
-		std::shared_ptr<SDL_Surface> surface{nullptr};
-		std::shared_ptr<SDL_Texture> texture{nullptr};
+		SurfaceHandle surface{nullptr};
+		TextureHandle texture{nullptr};
 
 		if (auto loaded = LoadTexturePair(key, surface, texture);
 			!loaded)
@@ -302,8 +301,8 @@ std::expected<void, InitError> SDL_Config::LoadAtlas()
 	return {};
 }
 
-std::expected<void, InitError> SDL_Config::RebuildTexture(const std::shared_ptr<SDL_Surface>& surface,
-														  std::shared_ptr<SDL_Texture>& outTexture,
+std::expected<void, InitError> SDL_Config::RebuildTexture(const SurfaceHandle& surface,
+														  TextureHandle& outTexture,
 														  const std::string_view name) const
 {
 	if (surface == nullptr)
@@ -311,7 +310,7 @@ std::expected<void, InitError> SDL_Config::RebuildTexture(const std::shared_ptr<
 		return {};
 	}
 
-	return CreateTexture(surface, name).transform([&outTexture](std::shared_ptr<SDL_Texture> texture)
+	return CreateTexture(surface, name).transform([&outTexture](TextureHandle texture)
 	{
 		outTexture = std::move(texture);
 	});
@@ -319,8 +318,8 @@ std::expected<void, InitError> SDL_Config::RebuildTexture(const std::shared_ptr<
 
 std::expected<void, InitError> SDL_Config::RecreateTexturesFromSurfaces()
 {
-	const auto rebuildPadHints = [this](const std::vector<std::shared_ptr<SDL_Surface>>& surfaces,
-										std::vector<std::shared_ptr<SDL_Texture>>& outTextures,
+	const auto rebuildPadHints = [this](const std::vector<SurfaceHandle>& surfaces,
+										std::vector<TextureHandle>& outTextures,
 										const std::string_view name) -> std::expected<void, InitError>
 	{
 		outTextures.resize(surfaces.size());
@@ -409,17 +408,15 @@ void SDL_Config::SaveWindowState(ProjectConfig& outProjectConfig) const
 	}
 }
 
-std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> SDL_Config::InitWindow() const
+WindowHandle SDL_Config::InitWindow() const
 {
 	//NOTE: hidden until InitVideo is through - it is resized and moved right after creation
 	constexpr SDL_WindowFlags windowFlags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN;
 
-	std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> window{
-			SDL_CreateWindow(kWindowTitle,
-							 static_cast<int>(windowConfig.size.x),
-							 static_cast<int>(windowConfig.size.y),
-							 windowFlags),
-			SDL_DestroyWindow};
+	WindowHandle window{SDL_CreateWindow(kWindowTitle,
+										static_cast<int>(windowConfig.size.x),
+										static_cast<int>(windowConfig.size.y),
+										windowFlags)};
 
 	if (window == nullptr)
 	{
@@ -446,7 +443,7 @@ std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> SDL_Config::InitWindow
 	return window;
 }
 
-std::shared_ptr<SDL_Renderer> SDL_Config::InitRender() const
+RendererHandle SDL_Config::InitRender() const
 {
 	const int monitorIndex = projectConfig.MonitorNumber() - 1;
 
@@ -514,5 +511,5 @@ std::shared_ptr<SDL_Renderer> SDL_Config::InitRender() const
 	}
 
 	//NOTE: vsync is not a creation flag - InitVideo applies it through SetVSync
-	return {SDL_CreateRenderer(sdlWindowRaw, nullptr), SDL_DestroyRenderer};
+	return RendererHandle{SDL_CreateRenderer(sdlWindowRaw, nullptr)};
 }

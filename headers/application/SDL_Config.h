@@ -1,12 +1,13 @@
 #pragma once
 #include "InitError.h"
-#include <filesystem>
+#include "SdlHandle.h"
 #include <SDL3/SDL_render.h>
-#include <SDL3/SDL_video.h>//NOTE: decltype(&SDL_DestroyWindow) needs the function declared, not just the type
+#include <SDL3/SDL_surface.h>
+#include <SDL3/SDL_video.h>
 #include <SDL3_mixer/SDL_mixer.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <expected>
-#include <memory>
+#include <filesystem>
 #include <span>
 #include <string_view>
 #include <vector>
@@ -15,13 +16,21 @@ class GameConfig;
 class ProjectConfig;
 class WindowConfig;
 
+using WindowHandle = SdlHandle<SDL_Window, SDL_DestroyWindow>;
+using RendererHandle = SdlHandle<SDL_Renderer, SDL_DestroyRenderer>;
+using TextureHandle = SdlHandle<SDL_Texture, SDL_DestroyTexture>;
+using SurfaceHandle = SdlHandle<SDL_Surface, SDL_DestroySurface>;
+using FontHandle = SdlHandle<TTF_Font, TTF_CloseFont>;
+using MixerHandle = SdlHandle<MIX_Mixer, MIX_DestroyMixer>;
+using AudioHandle = SdlHandle<MIX_Audio, MIX_DestroyAudio>;
+
 struct SDL_Config final
 {
 	static constexpr const char* kWindowTitle{"Battle City remastered"};
 	static constexpr int kFontSizePtSmall{14};
 	static constexpr int kFontSizePtMedium{24};
 
-	[[nodiscard]] std::shared_ptr<TTF_Font> OpenFont(int pointSize) const;
+	[[nodiscard]] FontHandle OpenFont(int pointSize) const;
 
 	SDL_Config(const GameConfig& config, const ProjectConfig& projectConfig, const WindowConfig& windowConfig);
 	~SDL_Config();
@@ -40,27 +49,27 @@ struct SDL_Config final
 	const ProjectConfig& projectConfig;
 	const WindowConfig& windowConfig;
 
-	std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> sdlWindow{nullptr, nullptr};
-	std::shared_ptr<SDL_Renderer> renderer{nullptr};
+	WindowHandle sdlWindow{};
+	RendererHandle renderer{};
 	std::filesystem::path fontPath{};
 	//NOTE: opened up front only so a missing font fails Init - drawing goes through the text cache,
 	//which opens every size it needs itself
-	std::shared_ptr<TTF_Font> font{nullptr};
+	FontHandle font{};
 	//NOTE: the mixer owns the audio device - it has to outlive every MIX_Audio loaded through it
-	std::unique_ptr<MIX_Mixer, decltype(&MIX_DestroyMixer)> mixer{nullptr, nullptr};
-	std::unique_ptr<MIX_Audio, decltype(&MIX_DestroyAudio)> levelIntroMusic{nullptr, nullptr};//TODO: soundManager
+	MixerHandle mixer{};
+	AudioHandle levelIntroMusic{};//TODO: soundManager
 
-	std::shared_ptr<SDL_Texture> logoTexture{nullptr};
-	std::shared_ptr<SDL_Texture> atlasTexture{nullptr};
-	std::shared_ptr<SDL_Texture> selectorIconTexture{nullptr};
-	std::vector<std::shared_ptr<SDL_Texture>> ps5Textures;
-	std::vector<std::shared_ptr<SDL_Texture>> xboxTextures;
+	TextureHandle logoTexture{};
+	TextureHandle atlasTexture{};
+	TextureHandle selectorIconTexture{};
+	std::vector<TextureHandle> ps5Textures;
+	std::vector<TextureHandle> xboxTextures;
 
-	std::shared_ptr<SDL_Surface> logoSurface{nullptr};
-	std::shared_ptr<SDL_Surface> atlasSurface{nullptr};
-	std::shared_ptr<SDL_Surface> selectorIconSurface{nullptr};
-	std::vector<std::shared_ptr<SDL_Surface>> surfacePS5;
-	std::vector<std::shared_ptr<SDL_Surface>> surfaceXBox;
+	SurfaceHandle logoSurface{};
+	SurfaceHandle atlasSurface{};
+	SurfaceHandle selectorIconSurface{};
+	std::vector<SurfaceHandle> surfacePS5;
+	std::vector<SurfaceHandle> surfaceXBox;
 
 private:
 	//NOTE: one group per subsystem - each either fills the fields above or names what refused
@@ -70,19 +79,19 @@ private:
 	//NOTE: can fail like the rest; whether that is fatal is decided in Init(), not here
 	[[nodiscard]] std::expected<void, InitError> InitAudio();
 
-	[[nodiscard]] static std::expected<std::shared_ptr<SDL_Surface>, InitError> LoadSurface(
+	[[nodiscard]] static std::expected<SurfaceHandle, InitError> LoadSurface(
 			const std::filesystem::path& path);
-	[[nodiscard]] std::expected<std::shared_ptr<SDL_Texture>, InitError> CreateTexture(
-			const std::shared_ptr<SDL_Surface>& surface, const std::filesystem::path& path) const;
+	[[nodiscard]] std::expected<TextureHandle, InitError> CreateTexture(
+			const SurfaceHandle& surface, const std::filesystem::path& path) const;
 	[[nodiscard]] std::expected<void, InitError> LoadTexturePair(std::string_view configKey,
-																 std::shared_ptr<SDL_Surface>& outSurface,
-																 std::shared_ptr<SDL_Texture>& outTexture);
+																 SurfaceHandle& outSurface,
+																 TextureHandle& outTexture);
 	[[nodiscard]] std::expected<void, InitError> LoadPadHints(std::span<const char* const> configKeys,
-															  std::vector<std::shared_ptr<SDL_Surface>>& outSurfaces,
-															  std::vector<std::shared_ptr<SDL_Texture>>& outTextures);
+															  std::vector<SurfaceHandle>& outSurfaces,
+															  std::vector<TextureHandle>& outTextures);
 	[[nodiscard]] std::expected<void, InitError> LoadAtlas();
-	[[nodiscard]] std::expected<void, InitError> RebuildTexture(const std::shared_ptr<SDL_Surface>& surface,
-																std::shared_ptr<SDL_Texture>& outTexture,
+	[[nodiscard]] std::expected<void, InitError> RebuildTexture(const SurfaceHandle& surface,
+																TextureHandle& outTexture,
 																std::string_view name) const;
 
 	//NOTE: an explicit --window-pos/-size is a one-off, and a host/client window is placed by offset -
@@ -90,6 +99,6 @@ private:
 	[[nodiscard]] bool ShouldPersistWindowPos() const;
 	[[nodiscard]] bool ShouldPersistWindowSize() const;
 
-	[[nodiscard]] std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> InitWindow() const;
-	[[nodiscard]] std::shared_ptr<SDL_Renderer> InitRender() const;
+	[[nodiscard]] WindowHandle InitWindow() const;
+	[[nodiscard]] RendererHandle InitRender() const;
 };
