@@ -2,6 +2,7 @@
 
 #include "geometry/ObjRectangle.h"
 #include "entities/Tags.h"
+#include "enums/Author.h"
 #include "enums/Faction.h"
 #include "interfaces/IObstacle.h"
 #include "utils/Uuid.h"
@@ -22,8 +23,8 @@ protected:
 	Faction _faction{};
 	ObjRectangle _rect{};
 
-	virtual void EmitDamageStatistics(const std::string& author, Faction faction);
-	virtual void EmitDeathStatistics(const std::string& author, Faction faction);
+	virtual void EmitDamageStatistics(Author author);
+	virtual void EmitDeathStatistics(Author author);
 
 	BaseObj(BaseObjProperty baseObjProperty, CollisionTags collision);
 
@@ -67,7 +68,7 @@ public:
 	[[nodiscard]] bool GetIsAlive() const override;
 	void SetIsAlive(bool isAlive) override;
 
-	virtual void TakeDamage(unsigned int damage, const std::string& /*author*/, Faction /*faction*/);
+	virtual void TakeDamage(unsigned int damage, Author author);
 
 	[[nodiscard]] bool GetIsPassable() const override;
 

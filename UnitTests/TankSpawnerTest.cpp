@@ -34,9 +34,7 @@ protected:
 		_instantSpawnAnimationSubs = TestUtils::WireInstantSpawnAnimations(_events);
 	}
 
-	void TearDown() override
-	{
-	}
+	void TearDown() override {}
 };
 
 TEST_F(TankSpawnerTest, DemoPhaseStart)

@@ -17,6 +17,7 @@ Pawn::Pawn(PawnProperty pawnProperty, const GameConfig& gameConfig, const Collis
 	, _events{std::move(pawnProperty.events)}
 	, _dir{pawnProperty.dir}
 	, _gameMode{pawnProperty.gameMode}
+	, _author{pawnProperty.author}
 	, _gameConfig{gameConfig}
 {
 	if (_uuid == UuidUtils::GetNilUuid())
@@ -88,9 +89,11 @@ void Pawn::Unsubscribe()
 	_tickUpdateSub = EventSubscription{};
 }
 
-void Pawn::TakeDamage(const unsigned int damage, const std::string& author, Faction faction)
+Author Pawn::GetAuthor() const { return _author; }
+
+void Pawn::TakeDamage(const unsigned int damage, const Author author)
 {
-	BaseObj::TakeDamage(damage, author, faction);
+	BaseObj::TakeDamage(damage, author);
 
 	if (IsHost(_gameMode))
 	{

@@ -23,7 +23,7 @@ namespace
 //NOTE: what used to be a subclass each - a name and the event a pickup emits. Everything else about a
 //bonus was already the same code. Captureless, so the emitter stays a plain pointer and the whole
 //catalogue can be constexpr
-using PickupEmitter = void (*)(EventSystem& events, const std::string& author, Faction faction);
+using PickupEmitter = void (*)(EventSystem& events, Author author, Faction faction);
 
 struct BonusRecipe
 {
@@ -35,51 +35,51 @@ struct BonusRecipe
 constexpr std::array s_recipes{
 		BonusRecipe{.type = BonusType::Timer,
 					.name = "BonusTimer",
-					.emit = [](EventSystem& events, const std::string&, Faction faction)
+					.emit = [](EventSystem& events, Author, const Faction faction)
 					{
 						//NOTE: a timer freezes the other side, same as a grenade wipes it
 						events.EmitEvent(BonusTimerPickupEvent{.target = EnemiesOf(faction)});
 					}},
 		BonusRecipe{.type = BonusType::Helmet,
 					.name = "BonusHelmet",
-					.emit = [](EventSystem& events, const std::string& author, Faction)
+					.emit = [](EventSystem& events, const Author author, Faction)
 					{
 						events.EmitEvent(BonusHelmetPickupEvent{.author = author});
 					}},
 		BonusRecipe{.type = BonusType::Grenade,
 					.name = "BonusGrenade",
-					.emit = [](EventSystem& events, const std::string&, Faction faction)
+					.emit = [](EventSystem& events, Author, const Faction faction)
 					{
 						//NOTE: the one bonus whose effect lands on the other side
 						events.EmitEvent(Key(EnemiesOf(faction)), BonusGrenadePickupEvent{});
 					}},
 		BonusRecipe{.type = BonusType::Tank,
 					.name = "BonusTank",
-					.emit = [](EventSystem& events, const std::string& author, Faction)
+					.emit = [](EventSystem& events, const Author author, Faction)
 					{
 						events.EmitEvent(BonusTankPickupEvent{.author = author});
 					}},
 		BonusRecipe{.type = BonusType::Star,
 					.name = "BonusStar",
-					.emit = [](EventSystem& events, const std::string& author, Faction)
+					.emit = [](EventSystem& events, const Author author, Faction)
 					{
 						events.EmitEvent(Key(author), BonusStarPickupEvent{});
 					}},
 		BonusRecipe{.type = BonusType::Shovel,
 					.name = "BonusShovel",
-					.emit = [](EventSystem& events, const std::string&, Faction faction)
+					.emit = [](EventSystem& events, Author, const Faction faction)
 					{
 						events.EmitEvent(BonusShovelPickupEvent{.faction = faction});
 					}},
 		BonusRecipe{.type = BonusType::Caliber,
 					.name = "BonusCaliber",
-					.emit = [](EventSystem& events, const std::string& author, Faction)
+					.emit = [](EventSystem& events, const Author author, Faction)
 					{
 						events.EmitEvent(Key(author), BonusCaliberPickupEvent{});
 					}},
 		BonusRecipe{.type = BonusType::Ship,
 					.name = "BonusShip",
-					.emit = [](EventSystem& events, const std::string& author, Faction)
+					.emit = [](EventSystem& events, const Author author, Faction)
 					{
 						events.EmitEvent(Key(author), BonusShipPickupEvent{});
 					}},
@@ -227,14 +227,14 @@ void Bonus::Expire()
 	Despawn(DespawnReason::Expired);
 }
 
-void Bonus::TakeDamage(const unsigned int damage, const std::string& author, Faction faction)
+void Bonus::TakeDamage(const unsigned int damage, const Author author)
 {
 	if (!GetIsAlive())
 	{
 		return;
 	}
 
-	BaseObj::TakeDamage(damage, author, faction);
+	BaseObj::TakeDamage(damage, author);
 
 	if (!GetIsAlive())
 	{
@@ -242,25 +242,25 @@ void Bonus::TakeDamage(const unsigned int damage, const std::string& author, Fac
 	}
 }
 
-void Bonus::EmitDamageStatistics(const std::string& author, Faction faction)
+void Bonus::EmitDamageStatistics(const Author author)
 {
-	_events->EmitEvent(StatisticsBonusDestroyedEvent{.author = author, .faction = faction});
+	_events->EmitEvent(StatisticsBonusDestroyedEvent{.author = author});
 }
 
-void Bonus::PickUpBonus(const std::string& author, Faction faction)
+void Bonus::PickUpBonus(const Author author)
 {
 	if (GetIsAlive())
 	{
-		_events->EmitEvent(StatisticsBonusPickupEvent{.author = author, .faction = faction});
+		_events->EmitEvent(StatisticsBonusPickupEvent{.author = author});
 
 		const PickupEmitter emit = GetRecipe(_bonusType).emit;
-		emit(*_events, author, faction);
+		emit(*_events, author, FactionOf(author));
 
 		if (_isSuper)
 		{
 			//NOTE: a super bonus is simply its own effect twice - timed ones stack their duration,
 			//stepped ones (a tier, a life) advance one more step
-			emit(*_events, author, faction);
+			emit(*_events, author, FactionOf(author));
 		}
 
 		Despawn(DespawnReason::PickedUp);

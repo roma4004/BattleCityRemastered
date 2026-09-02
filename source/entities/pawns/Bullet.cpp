@@ -18,14 +18,11 @@
 #include "interfaces/IMoveBeh.h"
 #include "utils/UuidUtils.h"
 
-Bullet::Bullet(PawnProperty pawnProperty, const GameConfig& gameConfig, const BulletCalibre& calibre,
-			   std::string author)
+Bullet::Bullet(PawnProperty pawnProperty, const GameConfig& gameConfig, const BulletCalibre& calibre)
 	: Pawn{std::move(pawnProperty), gameConfig, kCollision}
-	, _author{std::move(author)}
 	, _calibre{calibre}
 {
-	// NOTE: needed only for tests, TODO in test use tank shoot for bulletPool use instead of creating bullet
-	_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _dir, _uuid, _authorUuid, _gameConfig, _calibre);
+	_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _uuid, _authorUuid, _gameConfig, _calibre);
 
 	_name = "Bullet";
 }
@@ -48,7 +45,7 @@ void Bullet::OnDespawned(const DespawnedEvent& event)
 {
 	Pawn::OnDespawned(event);
 
-	_events->EmitEvent(AnimationCreateBulletExplosionEvent{.rect = _rect, .name = _name});
+	_events->EmitEvent(AnimationCreateBulletExplosionEvent{.rect = _rect});
 }
 
 void Bullet::Draw() const
@@ -66,25 +63,15 @@ const std::string& Bullet::GetUuidStr() const
 	return _uuidStr;
 }
 
-void Bullet::Reset(BulletResetProperty resetProperty)
+void Bullet::Reset(const BulletResetProperty& resetProperty)
 {
 	SetRect(resetProperty.rect);
 	SetHealth(resetProperty.health);
 	SetDirection(resetProperty.dir);
 
-	if (auto* moveBeh = dynamic_cast<MoveLikeBulletBeh*>(_moveBeh.get()))
-	{
-		moveBeh->Reset(resetProperty.calibre);
-	}
-	else
-	{
-		_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _dir, _uuid, _authorUuid, _gameConfig,
-													   resetProperty.calibre);
-	}
-
-	_author = std::move(resetProperty.author);
+	_author = resetProperty.author;
 	_authorUuid = resetProperty.authorUuid;
-	_faction = std::move(resetProperty.faction);
+	_faction = FactionOf(_author);
 	_calibre = resetProperty.calibre;
 
 	_uuidStr = UuidUtils::GetStringUuid(_uuid);
@@ -113,11 +100,9 @@ unsigned int Bullet::GetDamage() const { return _calibre.damage; }
 
 double Bullet::GetDamageRadius() const { return _calibre.damageRadius; }
 
-std::string Bullet::GetAuthor() const { return _author; }
-
-void Bullet::EmitDamageStatistics(const std::string& author, Faction faction)
+void Bullet::EmitDamageStatistics(const Author author)
 {
-	_events->EmitEvent(StatisticsBulletHitEvent{.author = author, .faction = faction});
+	_events->EmitEvent(StatisticsBulletHitEvent{.author = author});
 }
 
 unsigned int Bullet::GetTier() const { return _calibre.tier; }
@@ -142,12 +127,12 @@ void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 
 		if (target->GetIsDestructible() || _calibre.tier > 2u)
 		{
-			target->TakeDamage(_calibre.damage, GetAuthor(), GetFaction());
+			target->TakeDamage(_calibre.damage, _author);
 			if (const auto* otherBullet = dynamic_cast<Bullet*>(baseObj))
 			{
 				isBulletHitBullet = true;
 				//NOTE: in case another bullet hits this bullet, we take damage from another bullet and send statistics
-				TakeDamage(otherBullet->GetDamage(), otherBullet->GetAuthor(), otherBullet->GetFaction());
+				TakeDamage(otherBullet->GetDamage(), otherBullet->GetAuthor());
 			}
 		}
 	}
@@ -155,8 +140,8 @@ void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 	if (isBulletHitBullet == false)
 	{
 		//NOTE: call BaseObj::TakeDamage to skip statistic unnecessary record
-		BaseObj::TakeDamage(_calibre.damage, GetAuthor(), GetFaction());
+		BaseObj::TakeDamage(_calibre.damage, _author);
 	}
 
-	_events->EmitEvent(AnimationCreateBulletExplosionEvent{.rect = _rect, .name = _name});
+	_events->EmitEvent(AnimationCreateBulletExplosionEvent{.rect = _rect});
 }

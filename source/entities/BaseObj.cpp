@@ -72,11 +72,11 @@ void BaseObj::SetIsAlive(const bool isAlive) { _isAlive = isAlive; }
 
 bool BaseObj::GetIsAlive() const { return _isAlive; }
 
-void BaseObj::EmitDamageStatistics(const std::string&, Faction) {}
+void BaseObj::EmitDamageStatistics(Author) {}
 
-void BaseObj::EmitDeathStatistics(const std::string&, Faction) {}
+void BaseObj::EmitDeathStatistics(Author) {}
 
-void BaseObj::TakeDamage(const unsigned int damage, const std::string& author, Faction faction)
+void BaseObj::TakeDamage(const unsigned int damage, const Author author)
 {
 	//NOTE: a corpse lingers in _allObjects until DisposeDeadObject on PostTickUpdate - it is still in
 	//the blast radius of the next shot, and hitting it again would report a second death
@@ -88,11 +88,11 @@ void BaseObj::TakeDamage(const unsigned int damage, const std::string& author, F
 	_health -= static_cast<int>(damage);
 	_isAlive = _health > 0;
 
-	EmitDamageStatistics(author, faction);
+	EmitDamageStatistics(author);
 
 	if (!_isAlive)
 	{
-		EmitDeathStatistics(author, faction);
+		EmitDeathStatistics(author);
 	}
 }
 

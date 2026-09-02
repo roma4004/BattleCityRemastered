@@ -1,8 +1,6 @@
 #pragma once
 
-#include <string>
-
-enum class Faction : char8_t;
+#include "enums/Author.h"
 
 class IPickupableBonus
 {
@@ -10,5 +8,5 @@ protected:
 	virtual ~IPickupableBonus() = default;
 
 public:
-	virtual void PickUpBonus(const std::string& author, Faction faction) = 0;
+	virtual void PickUpBonus(Author author) = 0;
 };

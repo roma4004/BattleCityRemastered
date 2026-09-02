@@ -21,7 +21,7 @@ constexpr unsigned kMaxSendAttempts{3u};
 constexpr std::chrono::milliseconds kSendRetryPause{5};
 }//namespace
 
-Server::Server(boost::asio::io_context& ioContext, std::string host, uint16_t port,
+Server::Server(boost::asio::io_context& ioContext, std::string host, const uint16_t port,
 			   const std::shared_ptr<EventSystem>& events)
 	: _acceptor{tcp::acceptor(ioContext, tcp::endpoint(boost::asio::ip::make_address(host), port))}
 	, _events{events}

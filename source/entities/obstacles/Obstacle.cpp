@@ -86,14 +86,14 @@ void Obstacle::Draw() const
 	_events->EmitEvent(DrawObjEvent{.rect = _rect, .dir = Direction::UP, .texture = TextureOf(_obstacleType)});
 }
 
-void Obstacle::TakeDamage(const unsigned int damage, const std::string& author, Faction faction)
+void Obstacle::TakeDamage(const unsigned int damage, const Author author)
 {
 	if (!GetIsAlive())
 	{
 		return;
 	}
 
-	BaseObj::TakeDamage(damage, author, faction);
+	BaseObj::TakeDamage(damage, author);
 
 	if (!IsHost(_gameMode))
 	{

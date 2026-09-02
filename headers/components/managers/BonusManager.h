@@ -1,5 +1,6 @@
 #pragma once
 #include "components/EventSystem.h"
+#include "enums/Author.h"
 #include "enums/BonusType.h"
 #include "utils/Timer.h"
 #include <chrono>
@@ -30,17 +31,15 @@ class BonusManager
 	//NOTE: the shorter grace a tank gets for free when it respawns
 	static constexpr milliseconds kRespawnHelmetDuration{std::chrono::seconds{5}};
 
-	//NOTE: the field owns the bonus, this only watches the clock on it - a weak handle so a bonus that
-	//was picked up or shot simply drops out
+	//NOTE: the field owns the bonus, this only watches its clock - weak, so a spent one drops out
 	struct SpawnedBonus
 	{
 		std::weak_ptr<Bonus> bonus{};
 		Timer lifeTime{};
 	};
 
-	//NOTE: an effect outlives the bonus that started it, so it is keyed by what it is on - a tank name
-	//for the helmet, a faction for the rest. The BonusType next to it says which of the two this is
-	using EffectTarget = std::variant<std::string, Faction>;
+	//NOTE: an effect outlives its bonus, so it is keyed by what it sits on - a seat or a faction
+	using EffectTarget = std::variant<Author, Faction>;
 
 	struct ActiveEffect
 	{

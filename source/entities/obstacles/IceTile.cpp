@@ -15,4 +15,4 @@ void IceTile::Subscribe()
 
 void IceTile::OnPreDraw(const PreDrawEvent&) const { Draw(); }
 
-void IceTile::EmitDeathStatistics(const std::string&, Faction) {}
+void IceTile::EmitDeathStatistics(Author) {}

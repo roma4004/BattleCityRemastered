@@ -15,7 +15,7 @@ class BushTile final : public Obstacle
 	void OnPostDraw(const PostDrawEvent&) const;
 
 protected:
-	void EmitDeathStatistics(const std::string& author, Faction faction) override;
+	void EmitDeathStatistics(Author author) override;
 
 	static constexpr CollisionTags kCollision{tags::Passable{}, tags::Indestructible{}, tags::Penetrable{}};
 

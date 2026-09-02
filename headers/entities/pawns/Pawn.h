@@ -33,7 +33,8 @@ public:
 	void Deactivate() override;
 
 	//BaseObj overrides
-	void TakeDamage(unsigned int damage, const std::string& author, Faction faction) override;
+	void TakeDamage(unsigned int damage, Author author) override;
+	[[nodiscard]] Author GetAuthor() const;
 
 	void Heal(int amount);
 
@@ -52,6 +53,7 @@ protected:
 	std::unique_ptr<IMoveBeh> _moveBeh{nullptr};
 	Direction _dir{};
 	GameMode _gameMode{};
+	Author _author{};
 	const GameConfig& _gameConfig;
 
 	std::vector<EventSubscription> _subs{};

@@ -4,7 +4,8 @@
 #include "components/EventSystem.h"
 
 #include <memory>
-#include <string>
+#include <span>
+#include <string_view>
 #include <vector>
 
 class GameConfig;
@@ -46,13 +47,8 @@ class ScoreBoard final
 	void OnGameFinished(const GameFinishedEvent&);
 
 	void RenderStatistics() const;
-	void RenderTextWithAlignment(Point pos, unsigned int color, const std::string& text, unsigned short player1,
-								 unsigned short player2, unsigned short enemy) const;
-	void RenderTextWithAlignment(Point pos, unsigned int color, const std::string& text, unsigned short player1,
-								 unsigned short player2) const;
-	void RenderTextWithAlignment(Point pos, unsigned int color, const std::string& text, unsigned short total) const;
-	void RenderTextWithAlignment(Point pos, unsigned int color, const std::string& text, const std::string& text2,
-								 const std::string& text3) const;
+	void RenderRow(Point pos, unsigned int color, std::string_view text,
+				   std::span<const unsigned short> values) const;
 
 	void DisplayScore(bool isDisplayed);
 

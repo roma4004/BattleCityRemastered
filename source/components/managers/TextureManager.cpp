@@ -72,32 +72,34 @@ ObjRectangle TextureManager::GetTextureRect(const TextureType texture)
 	return ObjRectangle{};
 }
 
-ObjRectangle TextureManager::GetTankTextureRect(const std::string& name) const
+ObjRectangle TextureManager::GetTankTextureRect(const Author author)
 {
-	ObjRectangle textureRect{};
-	if (name.starts_with("Enemy"))
+	switch (author)
 	{
-		textureRect = TextureOffset::kEnemy;
-	}
-	else if (name.ends_with("1"))
-	{
-		textureRect = TextureOffset::kPlayerOne;
-	}
-	else if (name.ends_with("2"))
-	{
-		textureRect = TextureOffset::kPlayerTwo;
+		case Author::Enemy1:
+		case Author::Enemy2:
+		case Author::Enemy3:
+		case Author::Enemy4:
+			return TextureOffset::kEnemy;
+		case Author::Player1:
+			return TextureOffset::kPlayer1;
+		case Author::Player2:
+			return TextureOffset::kPlayer2;
+		case Author::None:
+		case Author::lastId:
+			break;
 	}
 
-	return textureRect;
+	return ObjRectangle{};
 }
 
-TextureManager::AtlasFrames TextureManager::GetAnimFrames(const AnimationType type, const std::string& name,
+TextureManager::AtlasFrames TextureManager::GetAnimFrames(const AnimationType type, const Author author,
 														  const ObjRectangle rect, ObjRectangle& destRect) const
 {
 	switch (type)
 	{
 		case AnimationType::Tank_Move:
-			return AtlasFrames{.first = GetTankTextureRect(name)};
+			return AtlasFrames{.first = GetTankTextureRect(author)};
 		case AnimationType::Water_Flow:
 			//NOTE: the water frames sit to the left of the offset, so they are walked backwards
 			return AtlasFrames{.first = TextureOffset::kWater, .step = -1};
@@ -183,9 +185,9 @@ void TextureManager::DrawRim(const ObjRectangle& textureRect, const ObjRectangle
 
 void TextureManager::DrawAnimation(const DrawAnimationEvent& event) const
 {
-	const auto& [rect, dir, frame, scale, type, name] = event;
+	const auto& [rect, dir, frame, scale, type, author] = event;
 	ObjRectangle destRect = rect;
-	auto [textureRect, step] = GetAnimFrames(type, name, rect, destRect);
+	auto [textureRect, step] = GetAnimFrames(type, author, rect, destRect);
 	textureRect.x += static_cast<double>(frame * scale * step);
 	if (constexpr ObjRectangle defaultSdlRect{};
 		ColliderUtils::AreEqualAbsolute(textureRect.x, defaultSdlRect.x)

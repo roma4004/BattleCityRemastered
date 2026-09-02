@@ -34,9 +34,7 @@ protected:
 		_instantSpawnAnimationSubs = TestUtils::WireInstantSpawnAnimations(_events);
 	}
 
-	void TearDown() override
-	{
-	}
+	void TearDown() override {}
 };
 
 TEST_F(RespawnManagerTest, EnemyDiedRespawnCount)
@@ -121,7 +119,7 @@ TEST_F(RespawnManagerTest, EnemyRunOutRespawnPoints)
 	_events->EmitEvent(GameResetEvent{});
 	for (unsigned short i = 0u; i < respawnOriginal; ++i)
 	{
-			_events->EmitEvent(RespawnTanksEvent{});
+		_events->EmitEvent(RespawnTanksEvent{});
 		_events->EmitEvent(TankDiedEvent{.uuid = _allObjects.back()->GetUuid()});
 		_allObjects.pop_back();
 	}
@@ -146,7 +144,7 @@ TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPoints)
 	_events->EmitEvent(GameResetEvent{});
 	for (unsigned short i = 0u; i < respawnOriginal; ++i)
 	{
-			_events->EmitEvent(RespawnTanksEvent{});
+		_events->EmitEvent(RespawnTanksEvent{});
 		_events->EmitEvent(TankDiedEvent{.uuid = _allObjects.back()->GetUuid()});
 		_allObjects.pop_back();
 	}
@@ -171,7 +169,7 @@ TEST_F(RespawnManagerTest, PlayerTwoRunOutRespawnPoints)
 	_events->EmitEvent(GameResetEvent{});
 	for (unsigned short i = 0u; i < respawnOriginal; ++i)
 	{
-			_events->EmitEvent(RespawnTanksEvent{});
+		_events->EmitEvent(RespawnTanksEvent{});
 		_events->EmitEvent(TankDiedEvent{.uuid = _allObjects.back()->GetUuid()});
 		_allObjects.pop_back();
 	}
@@ -196,7 +194,7 @@ TEST_F(RespawnManagerTest, EnemyRunOutRespawnPointsAndTryMore)
 	_events->EmitEvent(GameResetEvent{});
 	for (unsigned short i = 0u; i < respawnOriginal; ++i)
 	{
-			_events->EmitEvent(RespawnTanksEvent{});
+		_events->EmitEvent(RespawnTanksEvent{});
 		if (!_allObjects.empty())
 		{
 			_events->EmitEvent(TankDiedEvent{.uuid = _allObjects.back()->GetUuid()});
@@ -224,7 +222,7 @@ TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPointsAndTryMore)
 	_events->EmitEvent(GameResetEvent{});
 	for (unsigned short i = 0u; i < respawnOriginal; ++i)
 	{
-			_events->EmitEvent(RespawnTanksEvent{});
+		_events->EmitEvent(RespawnTanksEvent{});
 		if (!_allObjects.empty())
 		{
 			_events->EmitEvent(TankDiedEvent{.uuid = _allObjects.back()->GetUuid()});
@@ -252,7 +250,7 @@ TEST_F(RespawnManagerTest, PlayerTwoRunOutRespawnPointsAndTryMore)
 	_events->EmitEvent(GameResetEvent{});
 	for (unsigned short i = 0u; i < respawnOriginal; ++i)
 	{
-			_events->EmitEvent(RespawnTanksEvent{});
+		_events->EmitEvent(RespawnTanksEvent{});
 		if (!_allObjects.empty())
 		{
 			_events->EmitEvent(TankDiedEvent{.uuid = _allObjects.back()->GetUuid()});

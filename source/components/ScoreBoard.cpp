@@ -8,8 +8,76 @@
 #include "components/events/InputEvents.h"
 #include "components/events/RenderUIEvents.h"
 #include "enums/GameState.h"
+#include <algorithm>
+#include <array>
+#include <cstddef>
 #include <iomanip>
+#include <ranges>
+#include <span>
 #include <sstream>
+#include <string_view>
+
+namespace
+{
+using StatField = unsigned short StatisticsData::*;
+
+//NOTE: the scoreboard is a table, so it is written as one - a label and up to three counters,
+//columns in the order P1, P2, the third party. An unset column simply is not printed
+inline constexpr std::size_t kMaxColumns{3};
+
+//NOTE: in characters - the header row lines up with the counters by using the same width
+inline constexpr int kLabelWidth{22};
+inline constexpr int kColumnWidth{4};
+
+struct StatRow final
+{
+	std::string_view label{};
+	std::array<StatField, kMaxColumns> columns{};
+};
+
+constexpr std::array kStatRows{
+		StatRow{.label = "BULLET HIT BY BULLET",
+				.columns = {&StatisticsData::bulletHitByPlayerOne,
+							&StatisticsData::bulletHitByPlayerTwo,
+							&StatisticsData::bulletHitByEnemy}},
+		StatRow{.label = "PLAYER HIT BY ENEMY",
+				.columns = {&StatisticsData::playerOneHitByEnemyTeam,
+							&StatisticsData::playerTwoHitByEnemyTeam}},
+		StatRow{.label = "ENEMY HIT BY",
+				.columns = {&StatisticsData::enemyHitByPlayerOne,
+							&StatisticsData::enemyHitByPlayerTwo,
+							&StatisticsData::enemyHitByFriendlyFire}},
+		StatRow{.label = "TANK KILLS",
+				.columns = {&StatisticsData::enemyDiedByPlayerOne,
+							&StatisticsData::enemyDiedByPlayerTwo,
+							&StatisticsData::playerDiedByEnemyTeam}},
+		StatRow{.label = "FRIENDLY HITS",
+				.columns = {&StatisticsData::playerOneHitFriendlyFire,
+							&StatisticsData::playerTwoHitFriendlyFire,
+							&StatisticsData::enemyHitByFriendlyFire}},
+		StatRow{.label = "FRIENDLY KILLS",
+				.columns = {&StatisticsData::playerOneDiedByFriendlyFire,
+							&StatisticsData::playerTwoDiedByFriendlyFire,
+							&StatisticsData::enemyDiedByFriendlyFire}},
+		StatRow{.label = "BRICK KILLS",
+				.columns = {&StatisticsData::brickWallDiedByPlayerOne,
+							&StatisticsData::brickWallDiedByPlayerTwo,
+							&StatisticsData::brickWallDiedByEnemyTeam}},
+		StatRow{.label = "STEEL KILLS",
+				.columns = {&StatisticsData::steelWallDiedByPlayerOne,
+							&StatisticsData::steelWallDiedByPlayerTwo,
+							&StatisticsData::steelWallDiedByEnemyTeam}},
+		StatRow{.label = "BONUS PICKUPS",
+				.columns = {&StatisticsData::bonusPickupByPlayerOne,
+							&StatisticsData::bonusPickupByPlayerTwo,
+							&StatisticsData::bonusPickupByEnemyTeam}},
+		StatRow{.label = "BONUS DESTROYED",
+				.columns = {&StatisticsData::bonusDestroyedByPlayerOne,
+							&StatisticsData::bonusDestroyedByPlayerTwo,
+							&StatisticsData::bonusDestroyedByEnemyTeam}},
+		StatRow{.label = "BONUS EXPIRED", .columns = {&StatisticsData::bonusExpired}},
+};
+}//namespace
 
 ScoreBoard::ScoreBoard(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig)
 	: _pos{.x = 25, .y = 25}
@@ -87,7 +155,7 @@ void ScoreBoard::Draw() const
 void ScoreBoard::RenderStatistics() const
 {
 	const Point pos{.x = _pos.x + 180, .y = _pos.y + 120};
-	constexpr unsigned int color = {0xff00ffffu};
+	constexpr unsigned int color{0xff00ffffu};
 
 	_events->EmitEvent(
 			RenderTextEvent{.pos = Point{.x = pos.x - 60, .y = pos.y + 80},
@@ -98,114 +166,54 @@ void ScoreBoard::RenderStatistics() const
 							.color = color,
 							.text = "GAME STATISTICS:"});
 
-	RenderTextWithAlignment({.x = pos.x + 180, .y = pos.y + 140}, color, "P1", "P2", "ENEMY");
+	std::ostringstream header;
+	header << std::left;
+	for (const std::string_view column: {"P1", "P2", "ENEMY"})
+	{
+		header << std::setw(kColumnWidth) << column;
+	}
 
-	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 160}, color, "RESPAWN REMAIN", _playerOneRepawnCount,
-							_playerTwoRespawnCount,
-							_enemyRespawnCount);
+	_events->EmitEvent(RenderTextEvent{.pos = {.x = pos.x + 180, .y = pos.y + 140},
+									   .color = color,
+									   .text = header.str()});
 
-	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 160}, color, "RESPAWN REMAIN", _playerOneRepawnCount,
-							_playerTwoRespawnCount,
-							_enemyRespawnCount);
+	constexpr int rowStep{20};
+	int y{pos.y + 160};
 
-	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 180}, color, "BULLET HIT BY BULLET",
-							_statistics->GetBulletHitByPlayerOne(),
-							_statistics->GetBulletHitByPlayerTwo(),
-							_statistics->GetBulletHitByEnemy());
+	//NOTE: the respawn counts are the scoreboard's own, not the statistics block's
+	RenderRow({.x = pos.x - 130, .y = y}, color, "RESPAWN REMAIN",
+			  std::array{_playerOneRepawnCount, _playerTwoRespawnCount, _enemyRespawnCount});
 
-	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 200}, color, "PLAYER HIT BY ENEMY",
-							_statistics->GetPlayerOneHitByEnemyTeam(),
-							_statistics->GetPlayerTwoHitByEnemyTeam());
+	const StatisticsData& data = _statistics->GetData();
+	for (const auto& [label, columns]: kStatRows)
+	{
+		y += rowStep;
 
-	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 220}, color, "ENEMY HIT BY",
-							_statistics->GetEnemyHitByPlayerOne(),
-							_statistics->GetEnemyHitByPlayerTwo(),
-							_statistics->GetEnemyHitByFriendlyFire());
+		//NOTE: a row fills its columns from the left, so the unset ones are the tail
+		const auto filled = static_cast<std::size_t>(std::ranges::count_if(columns, [](const StatField field)
+		{
+			return field != nullptr;
+		}));
 
-	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 240}, color, "TANK KILLS",
-							_statistics->GetEnemyDiedByPlayerOne(),
-							_statistics->GetEnemyDiedByPlayerTwo(),
-							_statistics->GetPlayerDiedByEnemyTeam());
+		std::array<unsigned short, kMaxColumns> values{};
+		std::ranges::transform(columns | std::views::take(filled), values.begin(),
+							   [&data](const StatField field) { return data.*field; });
 
-	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 260}, color, "FRIENDLY HITS",
-							_statistics->GetPlayerOneHitFriendlyFire(),
-							_statistics->GetPlayerTwoHitFriendlyFire(),
-							_statistics->GetEnemyHitByFriendlyFire());
-
-	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 280}, color, "FRIENDLY KILLS",
-							_statistics->GetPlayerOneDiedByFriendlyFire(),
-							_statistics->GetPlayerTwoDiedByFriendlyFire(),
-							_statistics->GetEnemyDiedByFriendlyFire());
-
-	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 300}, color, "BRICK KILLS",
-							_statistics->GetBrickWallDiedByPlayerOne(),
-							_statistics->GetBrickWallDiedByPlayerTwo(),
-							_statistics->GetBrickWallDiedByEnemyTeam());
-
-	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 320}, color, "STEEL KILLS",
-							_statistics->GetSteelWallDiedByPlayerOne(),
-							_statistics->GetSteelWallDiedByPlayerTwo(),
-							_statistics->GetSteelWallDiedByEnemyTeam());
-
-	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 340}, color, "BONUS PICKUPS",
-							_statistics->GetBonusPickupByPlayerOne(),
-							_statistics->GetBonusPickupByPlayerTwo(),
-							_statistics->GetBonusPickupByEnemyTeam());
-
-	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 360}, color, "BONUS DESTROYED",
-							_statistics->GetBonusDestroyedByPlayerOne(),
-							_statistics->GetBonusDestroyedByPlayerTwo(),
-							_statistics->GetBonusDestroyedByEnemyTeam());
-
-	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 380}, color, "BONUS EXPIRED",
-							_statistics->GetBonusExpired());
+		RenderRow({.x = pos.x - 130, .y = y}, color, label, std::span{values}.first(filled));
+	}
 }
 
-void ScoreBoard::RenderTextWithAlignment(const Point pos, const unsigned int color, const std::string& text,
-										 const unsigned short player1, const unsigned short player2,
-										 const unsigned short enemy) const
+void ScoreBoard::RenderRow(const Point pos, const unsigned int color, const std::string_view text,
+						   const std::span<const unsigned short> values) const
 {
 	std::ostringstream textStream;
-	textStream << std::left
-			<< std::setw(22) << text
-			<< std::setw(4) << player1
-			<< std::setw(4) << player2
-			<< std::setw(4) << enemy;
+	textStream << std::left << std::setw(kLabelWidth) << text;
+	for (const unsigned short value: values)
+	{
+		textStream << std::setw(kColumnWidth) << value;
+	}
 
 	_events->EmitEvent(RenderTextEvent{.pos = pos, .color = color, .text = textStream.str()});
-}
-
-void ScoreBoard::RenderTextWithAlignment(const Point pos, const unsigned int color, const std::string& text,
-										 const unsigned short player1, const unsigned short player2) const
-{
-	std::ostringstream textStream;
-	textStream << std::left
-			<< std::setw(22) << text
-			<< std::setw(4) << player1
-			<< std::setw(4) << player2;
-
-	_events->EmitEvent(RenderTextEvent{.pos = pos, .color = color, .text = textStream.str()});
-}
-
-void ScoreBoard::RenderTextWithAlignment(const Point pos, const unsigned int color, const std::string& text,
-										 const unsigned short total) const
-{
-	std::ostringstream textStream;
-	textStream << std::left
-			<< std::setw(22) << text
-			<< std::setw(4) << total;
-
-	_events->EmitEvent(RenderTextEvent{.pos = pos, .color = color, .text = textStream.str()});
-}
-
-void ScoreBoard::RenderTextWithAlignment(const Point pos, const unsigned int color, const std::string& text,
-										 const std::string& text2, const std::string& text3) const
-{
-	std::ostringstream textStream;
-
-	textStream << std::left << std::setw(22) << std::setw(4) << text << std::setw(4) << text2 << std::setw(4) << text3;
-
-	_events->EmitEvent(RenderTextEvent{.pos = Point{.x = pos.x, .y = pos.y}, .color = color, .text = textStream.str()});
 }
 
 void ScoreBoard::DisplayScore(const bool isDisplayed)

@@ -337,14 +337,17 @@ std::expected<void, InitError> SDL_Config::RecreateTexturesFromSurfaces()
 	};
 
 	return RebuildTexture(logoSurface, logoTexture, "Images.Logo")
-		  .and_then([this] { return RebuildTexture(selectorIconSurface, selectorIconTexture, "Images.MenuSelectorP1"); })
+		  .and_then([this]
+		   {
+			   return RebuildTexture(selectorIconSurface, selectorIconTexture, "Images.MenuSelectorP1");
+		   })
 		  .and_then([&rebuildPadHints, this] { return rebuildPadHints(surfacePS5, ps5Textures, "Images.PS5"); })
 		  .and_then([&rebuildPadHints, this] { return rebuildPadHints(surfaceXBox, xboxTextures, "Images.XBox"); })
 		  .and_then([this]
 		   {
 			   //NOTE: the color key rides in the surface, the blend mode does not - set it again
 			   return RebuildTexture(atlasSurface, atlasTexture, "Images.SpriteSheet")
-					   .transform([this] { SDL_SetTextureBlendMode(atlasTexture.get(), SDL_BLENDMODE_BLEND); });
+					  .transform([this] { SDL_SetTextureBlendMode(atlasTexture.get(), SDL_BLENDMODE_BLEND); });
 		   });
 }
 
@@ -414,9 +417,9 @@ WindowHandle SDL_Config::InitWindow() const
 	constexpr SDL_WindowFlags windowFlags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN;
 
 	WindowHandle window{SDL_CreateWindow(kWindowTitle,
-										static_cast<int>(windowConfig.size.x),
-										static_cast<int>(windowConfig.size.y),
-										windowFlags)};
+										 static_cast<int>(windowConfig.size.x),
+										 static_cast<int>(windowConfig.size.y),
+										 windowFlags)};
 
 	if (window == nullptr)
 	{

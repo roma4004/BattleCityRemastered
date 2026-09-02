@@ -1,5 +1,6 @@
 #pragma once
 
+#include "enums/Author.h"
 #include "geometry/Point.h"
 #include "geometry/ObjRectangle.h"
 #include "utils/Uuid.h"
@@ -13,7 +14,6 @@ enum class TextureType : char8_t;
 struct AnimationCreateTankSpawnEvent
 {
 	ObjRectangle rect;
-	std::string name;
 	Uuid uuid;
 };
 
@@ -25,38 +25,31 @@ struct AnimationCreateBonusSpawnEvent
 
 struct AnimationTankUpdateEvent
 {
-	std::string name;
+	Author author;
 	FPoint pos;
 	Direction dir;
-};
-
-struct AnimationCreateExplosionEvent
-{
-	ObjRectangle rect;
-	std::string name;
 };
 
 struct AnimationCreateTankExplosionEvent
 {
 	ObjRectangle rect;
-	std::string name;
+	Author author;
 };
 
 struct AnimationCreateBulletExplosionEvent
 {
 	ObjRectangle rect;
-	std::string name;
 };
 
 struct AnimationCreateTankMoveEvent
 {
 	ObjRectangle rect;
-	std::string name;
+	Author author;
 };
 
 struct AnimationBonusHelmetChangeEvent
 {
-	std::string name;
+	Author author;
 	bool isEnable;
 };
 
@@ -68,7 +61,7 @@ struct DrawAnimationEvent
 	int scale;
 	AnimationType type;
 	//NOTE: only the per-tank animations need it - the rest are told apart by the type alone
-	std::string name;
+	Author author;
 };
 
 struct DrawObjEvent

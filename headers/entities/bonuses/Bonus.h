@@ -36,7 +36,7 @@ private:
 	void OnDespawned(const DespawnedEvent& event);
 	void Despawn(DespawnReason reason);
 
-	void EmitDamageStatistics(const std::string& author, Faction faction) override;
+	void EmitDamageStatistics(Author author) override;
 
 public:
 	Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& events, Uuid uuid, GameMode gameMode,
@@ -52,9 +52,9 @@ public:
 	void Expire();
 
 	//BaseObj overrides
-	void TakeDamage(unsigned int damage, const std::string& author, Faction faction) override;
+	void TakeDamage(unsigned int damage, Author author) override;
 
-	void PickUpBonus(const std::string& author, Faction faction) override;
+	void PickUpBonus(Author author) override;
 
 	[[nodiscard]] bool GetIsSuper() const;
 };

@@ -121,6 +121,7 @@ set(UNIT_TESTS_SOURCES
         UnitTests/CommandLineParserTest.cpp
         UnitTests/CoopBotTest.cpp
         UnitTests/DeadObjectFilterTest.cpp
+        UnitTests/DirectionUtilsTest.cpp
         UnitTests/EnemyBotTest.cpp
         UnitTests/GameStateManagerTest.cpp
         UnitTests/GameStateTest.cpp

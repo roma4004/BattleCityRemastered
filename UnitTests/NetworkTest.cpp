@@ -123,7 +123,7 @@ TEST_F(NetworkTest, PosEventReplication)
 
 	std::optional<PosChangedEvent> received{};
 	auto posSub = _clientEvents->AddListener(Key(_uuid),
-			[&received](const PosChangedEvent& event) { received = event; });
+											 [&received](const PosChangedEvent& event) { received = event; });
 
 	_hostEvents->EmitEvent(
 			PosChangedEvent{.who = "TestTank", .pos = posOrigin, .dir = directionOrigin, .uuid = _uuid});
@@ -144,7 +144,7 @@ TEST_F(NetworkTest, ShotEventReplication)
 
 	std::optional<TankShotEvent> received{};
 	auto shotSub = _clientEvents->AddListener(Key(name),
-			[&received](const TankShotEvent& event) { received = event; });
+											  [&received](const TankShotEvent& event) { received = event; });
 
 	_hostEvents->EmitEvent(TankShotEvent{.who = name, .dir = direction, .bulletUuid = _uuid});
 
@@ -163,7 +163,10 @@ TEST_F(NetworkTest, HealthEventReplication)
 
 	std::optional<int> received{};
 	auto healthSub = _clientEvents->AddListener(Key(_uuid),
-			[&received](const HealthChangedEvent& event) { received = event.health; });
+												[&received](const HealthChangedEvent& event)
+												{
+													received = event.health;
+												});
 
 	_hostEvents->EmitEvent(HealthChangedEvent{.who = "TestTank", .health = healthOrigin, .uuid = _uuid});
 
@@ -180,7 +183,10 @@ TEST_F(NetworkTest, DespawnEventReplication)
 
 	std::vector<DespawnedEvent> received{};
 	auto despawnSub = _clientEvents->AddListener(Key(_uuid),
-			[&received](const DespawnedEvent& event) { received.push_back(event); });
+												 [&received](const DespawnedEvent& event)
+												 {
+													 received.push_back(event);
+												 });
 
 	_hostEvents->EmitEvent(DespawnedEvent{.who = "Bullet", .uuid = _uuid, .reason = DespawnReason::Destroyed});
 	_hostEvents->EmitEvent(
@@ -203,11 +209,10 @@ TEST_F(NetworkTest, StatisticsEventReplication)
 	auto statsSub = _clientEvents->AddListener(
 			[&received](const StatisticsBulletHitEvent& event) { received = event; });
 
-	_hostEvents->EmitEvent(StatisticsBulletHitEvent{.author = "author", .faction = Faction::EnemyTeam});
+	_hostEvents->EmitEvent(StatisticsBulletHitEvent{.author = Author::Enemy1});
 
 	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
-	EXPECT_EQ("author", received->author);
-	EXPECT_EQ(Faction::EnemyTeam, received->faction);
+	EXPECT_EQ(Author::Enemy1, received->author);
 }
 
 TEST_F(NetworkTest, PauseRequestFromClientPausesHost)
@@ -275,7 +280,10 @@ TEST_F(NetworkTest, BonusStatusEventReplication)
 
 	std::optional<bool> received{};
 	auto bonusStatusSub = _clientEvents->AddListener(Key(nameOrigin),
-			[&received](const BonusHelmetAppliedEvent& event) { received = event.isActive; });
+													 [&received](const BonusHelmetAppliedEvent& event)
+													 {
+														 received = event.isActive;
+													 });
 
 	_hostEvents->EmitEvent(BonusHelmetAppliedEvent{.name = nameOrigin, .isActive = isActiveOrigin});
 
@@ -295,7 +303,7 @@ TEST_F(NetworkTest, TierEventReplication)
 
 	std::optional<unsigned short> received{};
 	auto tierSub = _clientEvents->AddListener(Key(_uuid),
-			[&received](const TierChangedEvent& event) { received = event.tier; });
+											  [&received](const TierChangedEvent& event) { received = event.tier; });
 
 	_hostEvents->EmitEvent(TierChangedEvent{.who = "Player1", .tier = tierOrigin, .uuid = _uuid});
 
@@ -314,7 +322,7 @@ TEST_F(NetworkTest, BonusShipStatusEventReplication)
 
 	bool received{false};
 	auto bonusShipSub = _clientEvents->AddListener(Key(nameOrigin),
-			[&received](const BonusShipAppliedEvent&) { received = true; });
+												   [&received](const BonusShipAppliedEvent&) { received = true; });
 
 	_hostEvents->EmitEvent(BonusShipAppliedEvent{.name = nameOrigin});
 
@@ -566,7 +574,9 @@ TEST(CommandDispatcherTest, RegisteredHandlerRunsOnAGoodFrame)
 	std::optional<DisconnectReason> seen{};
 	dispatcher.RegisterAll({{CommandType::DISCONNECT,
 							 [&seen](const network::commands::AnyCommand& command)
-							 { seen = std::get<network::commands::Disconnect>(command).reason; }}});
+							 {
+								 seen = std::get<network::commands::Disconnect>(command).reason;
+							 }}});
 
 	network::commands::CommandBatch batch;
 	batch.commands.emplace_back(network::commands::Disconnect{.reason = DisconnectReason::GameOver});

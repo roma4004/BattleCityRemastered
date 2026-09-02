@@ -56,7 +56,7 @@ TEST_F(BulletPoolTest, SpentBulletsAreHandedOutAgain)
 	std::set<const BaseObj*> firstRound{};
 	for (size_t i = 0u; i < shots; ++i)
 	{
-		inFlight.push_back(_bulletPool->SpawnBullet(std::nullopt));
+		inFlight.push_back(_bulletPool->SpawnBullet({}));
 		firstRound.insert(inFlight.back().get());
 	}
 
@@ -75,7 +75,7 @@ TEST_F(BulletPoolTest, SpentBulletsAreHandedOutAgain)
 	std::set<const BaseObj*> secondRound{};
 	for (size_t i = 0u; i < shots; ++i)
 	{
-		inFlight.push_back(_bulletPool->SpawnBullet(std::nullopt));
+		inFlight.push_back(_bulletPool->SpawnBullet({}));
 		secondRound.insert(inFlight.back().get());
 	}
 
@@ -95,7 +95,7 @@ TEST_F(BulletPoolTest, ReturnedBulletLeavesTheBus)
 	});
 
 	std::shared_ptr<Player> player = TestUtils::CreateTank<Player>(
-			ObjRectangle{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize}, _tankHealth, _uuid, "Player1",
+			ObjRectangle{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize}, _tankHealth, _uuid, Author::Player1,
 			Faction::PlayerTeam, _allObjects, _events, 1u, _tankSpeed, Direction::DOWN, _gameMode, _bulletPool,
 			_gameConfig);
 	_allObjects.emplace_back(player);

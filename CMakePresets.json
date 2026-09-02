@@ -9,7 +9,7 @@
     {
       "name": "Debug-MinGW",
       "displayName": "Debug-MinGW",
-      "description": "Compilers come from the IDE toolchain / PATH - they are machine specific.",
+      "description": "GCC from MSYS2, debug. Compilers come from the IDE toolchain / PATH - they are machine specific.",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/cmake/${presetName}",
       "cacheVariables": {
@@ -19,6 +19,7 @@
     {
       "name": "Release-MinGW",
       "displayName": "Release-MinGW",
+      "description": "GCC from MSYS2, optimized - the build that ships.",
       "inherits": "Debug-MinGW",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
@@ -27,7 +28,7 @@
     {
       "name": "Debug-Clang",
       "displayName": "Debug-Clang",
-      "description": "Clang 19+ required: older Clang cannot see libstdc++'s <expected> - configure fails with an explanation.",
+      "description": "Clang from MSYS2 against the same libstdc++ - a second opinion on warnings. Clang 19+ required: older Clang cannot see libstdc++'s <expected> - configure fails with an explanation.",
       "inherits": "Debug-MinGW",
       "cacheVariables": {
         "CMAKE_C_COMPILER": "clang",
@@ -38,6 +39,7 @@
     {
       "name": "Release-Clang",
       "displayName": "Release-Clang",
+      "description": "Clang from MSYS2, optimized - catches what only shows up with optimizations on.",
       "inherits": "Debug-Clang",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"

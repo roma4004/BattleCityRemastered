@@ -5,47 +5,20 @@
 #include "entities/pawns/Tank.h"
 #include "enums/Direction.h"
 #include "utils/ColliderUtils.h"
+#include "utils/DirectionUtils.h"
 #include "utils/ObjectUtils.h"
 #include <algorithm>
-#include <cmath>
+#include <cstddef>
 #include <memory>
-#include <ranges>
+#include <optional>
 
-MoveLikeTankBeh::MoveLikeTankBeh(ObjRectangle& rect, Direction& dir, double& speed, Uuid& uuid,
-								 BonusEffectProperty& effects, const GameConfig& gameConfig)
+MoveLikeTankBeh::MoveLikeTankBeh(ObjRectangle& rect, double& speed, Uuid& uuid, BonusEffectProperty& effects,
+								 const GameConfig& gameConfig)
 	: _uuid{uuid}
 	, _rect{rect}
-	, _direction{dir}
 	, _speed{speed}
 	, _effects{effects}
 	, _gameConfig{gameConfig} {}
-
-ObjRectangle MoveLikeTankBeh::GetNextPosRect(const double deltaTime, const Direction dir) const
-{
-	const double speed = _speed * deltaTime;
-	const auto [x, y, w, h] = _rect;
-	if (dir == Direction::UP)
-	{
-		return ObjRectangle{.x = x, .y = y - speed, .w = w, .h = h + speed};
-	}
-
-	if (dir == Direction::LEFT)
-	{
-		return ObjRectangle{.x = x - speed, .y = y, .w = w + speed, .h = h};
-	}
-
-	if (dir == Direction::DOWN)
-	{
-		return ObjRectangle{.x = x, .y = y, .w = w, .h = h + speed};
-	}
-
-	if (dir == Direction::RIGHT)
-	{
-		return ObjRectangle{.x = x, .y = y, .w = w + speed, .h = h};
-	}
-
-	return ObjRectangle{};
-}
 
 bool MoveLikeTankBeh::IsBlocking(const std::shared_ptr<BaseObj>& object, const ObjRectangle& nextPosRect) const
 {
@@ -66,7 +39,7 @@ bool MoveLikeTankBeh::IsBlocking(const std::shared_ptr<BaseObj>& object, const O
 bool MoveLikeTankBeh::IsCanMove(const double deltaTime, const Direction dir,
 								const std::vector<std::shared_ptr<BaseObj>>& objects) const
 {
-	const ObjRectangle tankNextPosRect = GetNextPosRect(deltaTime, dir);
+	const ObjRectangle tankNextPosRect = DirectionUtils::Sweep(_rect, _speed * deltaTime, dir);
 
 	auto blocking = [this, &tankNextPosRect](const std::shared_ptr<BaseObj>& object)
 	{
@@ -76,357 +49,100 @@ bool MoveLikeTankBeh::IsCanMove(const double deltaTime, const Direction dir,
 	return std::ranges::none_of(objects, blocking);
 }
 
-std::vector<std::shared_ptr<BaseObj>> MoveLikeTankBeh::GetTouchedObjects(
-		const double deltaTime, const std::vector<std::shared_ptr<BaseObj>>& objects) const
+//NOTE: distance and contacts in one pass - the same list used to be walked three times
+double MoveLikeTankBeh::GetTravelledDistance(const double step, const Direction dir,
+											 const std::vector<std::shared_ptr<BaseObj>>& objects,
+											 std::vector<std::shared_ptr<BaseObj>>& outTouched) const
 {
-	auto blocking = [this, tankNextPosRect = GetNextPosRect(deltaTime, _direction)](const auto& obj)
+	const ObjRectangle sweptRect = DirectionUtils::Sweep(_rect, step, dir);
+
+	//NOTE: park a pixel short - IsCollide reads a flush touch as a collision
+	constexpr double padding = 1.0;
+	double travelled = step;
+	outTouched.clear();
+	for (const std::shared_ptr<BaseObj>& object: objects)
 	{
-		return IsBlocking(obj, tankNextPosRect);
-	};
-
-	return objects
-		   | std::views::filter(blocking)
-		   | std::ranges::to<std::vector>();
-}
-
-// inline float Distance(const FPoint a, const FPoint b)
-// {
-// 	return static_cast<float>(std::sqrt(std::pow(b.x - a.x, 2) + std::pow(b.y - a.y, 2)));
-// }
-
-double MoveLikeTankBeh::FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& objects,
-										const std::function<double(const std::shared_ptr<BaseObj>&)>& sideDiff) const
-{
-	const auto [maxX, maxY] = _gameConfig.battlefieldSize;
-	auto minDist = static_cast<double>(maxX * maxY);
-	// float nearestDist = 0.f;
-	for (const auto& object: objects)
-	{
-		if (object != nullptr)
+		if (!IsBlocking(object, sweptRect))
 		{
-			// auto getSide = [](const std::shared_ptr<BaseObj>& object) -> float { return object->GetX() + object->GetWidth();};
-			const double distance = std::abs(sideDiff(object));
-			// const float distance = abs(this->GetX() - object->GetX() + object->GetWidth());
-			if (distance < minDist)//TODO: need minimal abs distance
-			{
-				minDist = distance;
-			}
+			continue;
+		}
+
+		outTouched.push_back(object);
+		//NOTE: a negative gap is level with or behind the leading edge - touched, but not in the way
+		if (const double gap = DirectionUtils::GapTo(_rect, object->GetRect(), dir); gap >= 0.0)
+		{
+			travelled = std::min(travelled, gap - padding);
 		}
 	}
 
-	return minDist;
-
-	// constexpr auto padding = 1.f;
-	// float distance = this->GetX() - nearestX - padding;
-	// if (distance < padding)
-	// {
-	// 	return 0.f;
-	// }
-	//
-	// return distance;
+	return travelled;
 }
 
 bool MoveLikeTankBeh::Move(const Direction dir, const double deltaTime,
 						   const std::vector<std::shared_ptr<BaseObj>>& objects,
 						   std::vector<std::shared_ptr<BaseObj>>& outCollisions)
 {
-	if (dir == Direction::UP)
+	const double step = _speed * deltaTime;
+	if (!DirectionUtils::FitsBeforeEdge(_rect, _gameConfig.battlefieldSize, step, dir))
 	{
-		return MoveUp(deltaTime, objects, outCollisions);
+		return false;
 	}
 
-	if (dir == Direction::LEFT)
+	const double distance = GetTravelledDistance(step, dir, objects, outCollisions);
+
+	//NOTE: ice turns the step into momentum, but only while the way is clear
+	if (outCollisions.empty() && _effects.isTouchTheIce)
 	{
-		return MoveLeft(deltaTime, objects, outCollisions);
+		if (double& velocity = _velocity[static_cast<size_t>(dir)];
+			velocity < DirectionUtils::SideAlong(_rect, dir) * _driftMultiplicator)// clamp max accumulated velocity
+		{
+			velocity += distance * _driftMultiplicator;
+		}
+
+		return true;
 	}
 
-	if (dir == Direction::DOWN)
+	if (distance <= 0.0)
 	{
-		return MoveDown(deltaTime, objects, outCollisions);
+		return false;
 	}
 
-	if (dir == Direction::RIGHT)
-	{
-		return MoveRight(deltaTime, objects, outCollisions);
-	}
+	_rect = DirectionUtils::Advance(_rect, distance, dir);
 
-	return false;
-}
-
-bool MoveLikeTankBeh::MoveUp(const double deltaTime, const std::vector<std::shared_ptr<BaseObj>>& objects,
-							 std::vector<std::shared_ptr<BaseObj>>& outCollisions)
-{
-	if (double speed = _speed * deltaTime;
-		_rect.y - speed >= 0.0)
-	{
-		constexpr double maxMoveStep = 8.0;
-		speed = std::min(speed, maxMoveStep);
-		if (IsCanMove(deltaTime, _direction, objects))
-		{
-			if (_effects.isTouchTheIce)
-			{
-				if (_upVelocity < _rect.h * _driftMultiplicator)// clamp max accumulated velocity
-				{
-					_upVelocity += speed * _driftMultiplicator;
-				}
-			}
-			else
-			{
-				_rect.y -= speed;
-			}
-
-			return true;
-		}
-
-		// move less than speed to stand next to an object
-		const auto& getSideDiff = [thisTopSide = _rect.y](const std::shared_ptr<BaseObj>& object) -> double
-		{
-			return object->GetBottomSide() - thisTopSide;
-		};
-
-		constexpr double padding = 1.0;
-		outCollisions = GetTouchedObjects(deltaTime, objects);
-		//NOTE: never further than this frame's step - FindMinDistance seeds on the field area, so an
-		//empty list, or a tank already inside an obstacle, would otherwise teleport it across the map
-		if (const double distance = std::min(FindMinDistance(outCollisions, getSideDiff) - padding, speed);
-			distance > 0.0)
-		{
-			_rect.y -= distance;
-
-			return true;
-		}
-	}
-
-	return false;
-}
-
-bool MoveLikeTankBeh::MoveLeft(const double deltaTime, const std::vector<std::shared_ptr<BaseObj>>& objects,
-							   std::vector<std::shared_ptr<BaseObj>>& outCollisions)
-{
-	if (double speed = _speed * deltaTime;
-		_rect.x - speed >= 0.0)
-	{
-		constexpr double maxMoveStep = 8.0;
-		speed = std::min(speed, maxMoveStep);
-		if (IsCanMove(deltaTime, _direction, objects))
-		{
-			if (_effects.isTouchTheIce)
-			{
-				if (_leftVelocity < _rect.w * _driftMultiplicator)// clamp max accumulated velocity
-				{
-					_leftVelocity += speed * _driftMultiplicator;
-				}
-			}
-			else
-			{
-				_rect.x -= speed;
-			}
-
-			return true;
-		}
-
-		// move less than speed to stand next to an object
-		const auto getSideDiff = [thisLeftSide = _rect.x](const std::shared_ptr<BaseObj>& object) -> double
-		{
-			return thisLeftSide - object->GetRightSide();
-		};
-
-		constexpr double padding = 1.0;
-		outCollisions = GetTouchedObjects(deltaTime, objects);
-		//NOTE: never further than this frame's step - FindMinDistance seeds on the field area, so an
-		//empty list, or a tank already inside an obstacle, would otherwise teleport it across the map
-		if (const double distance = std::min(FindMinDistance(outCollisions, getSideDiff) - padding, speed);
-			distance > 0.0)
-		{
-			_rect.x -= distance;
-
-			return true;
-		}
-	}
-
-	return false;
-}
-
-bool MoveLikeTankBeh::MoveDown(const double deltaTime, const std::vector<std::shared_ptr<BaseObj>>& objects,
-							   std::vector<std::shared_ptr<BaseObj>>& outCollisions)
-{
-	if (double speed = _speed * deltaTime;
-		_rect.Bottom() + speed < static_cast<double>(_gameConfig.battlefieldSize.y))
-	{
-		constexpr double maxMoveStep = 8.0;
-		speed = std::min(speed, maxMoveStep);
-		if (IsCanMove(deltaTime, _direction, objects))
-		{
-			if (_effects.isTouchTheIce)
-			{
-				if (_downVelocity < _rect.h * _driftMultiplicator)// clamp max accumulated velocity
-				{
-					_downVelocity += speed * _driftMultiplicator;
-				}
-			}
-			else
-			{
-				_rect.y += speed;
-			}
-
-			return true;
-		}
-
-		// move less than speed to stand next to an object
-		const auto getSideDiff = [thisBottomSide = _rect.Bottom()](const std::shared_ptr<BaseObj>& object) -> double
-		{
-			return object->GetY() - thisBottomSide;
-		};
-
-		constexpr double padding = 1.0;
-		outCollisions = GetTouchedObjects(deltaTime, objects);
-		//NOTE: never further than this frame's step - FindMinDistance seeds on the field area, so an
-		//empty list, or a tank already inside an obstacle, would otherwise teleport it across the map
-		if (const double distance = std::min(FindMinDistance(outCollisions, getSideDiff) - padding, speed);
-			distance > 0.0)
-		{
-			_rect.y += distance;
-
-			return true;
-		}
-	}
-
-	return false;
-}
-
-bool MoveLikeTankBeh::MoveRight(const double deltaTime, const std::vector<std::shared_ptr<BaseObj>>& objects,
-								std::vector<std::shared_ptr<BaseObj>>& outCollisions)
-{
-	const double maxX = static_cast<double>(_gameConfig.battlefieldSize.x);
-	if (double speed = _speed * deltaTime;
-		_rect.Right() + speed < maxX)
-	{
-		constexpr double maxMoveStep = 8.0;
-		speed = std::min(speed, maxMoveStep);
-		if (IsCanMove(deltaTime, _direction, objects))
-		{
-			if (_effects.isTouchTheIce)
-			{
-				if (_rightVelocity < _rect.w * _driftMultiplicator)// clamp max accumulated velocity
-				{
-					_rightVelocity += speed * _driftMultiplicator;
-				}
-			}
-			else
-			{
-				_rect.x += speed;
-			}
-
-			return true;
-		}
-
-		// move less than speed to stand next to an object
-		auto getSideDiff = [thisRightSide = _rect.Right()](const std::shared_ptr<BaseObj>& object) -> double
-		{
-			return object->GetX() - thisRightSide;
-		};
-
-		constexpr double padding = 1.0;
-		outCollisions = GetTouchedObjects(deltaTime, objects);
-		//NOTE: never further than this frame's step - FindMinDistance seeds on the field area, so an
-		//empty list, or a tank already inside an obstacle, would otherwise teleport it across the map
-		if (const double distance = std::min(FindMinDistance(outCollisions, getSideDiff) - padding, speed);
-			distance > 0.0)
-		{
-			_rect.x += distance;
-
-			return true;
-		}
-	}
-
-	return false;
+	return true;
 }
 
 bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime, const std::vector<std::shared_ptr<BaseObj>>& objects)
 {
 	bool isDrift{false};
 	double speed = _speed * deltaTime;
-	if (_upVelocity > speed)
+	for (const Direction dir: {Direction::UP, Direction::LEFT, Direction::DOWN, Direction::RIGHT})
 	{
-		if (_upVelocity > _rect.h / _driftMultiplicator)//enabling drift with delay
+		double& velocity = _velocity[static_cast<size_t>(dir)];
+		if (velocity <= speed)
+		{
+			continue;
+		}
+
+		if (velocity > DirectionUtils::SideAlong(_rect, dir) / _driftMultiplicator)//enabling drift with delay
 		{
 			speed /= _driftMultiplicator;//slow down if push the gas in drift
 		}
 
-		if (IsCanMove(deltaTime, Direction::UP, objects) && _rect.y - speed >= 0.0)
+		if (IsCanMove(deltaTime, dir, objects)
+			&& DirectionUtils::FitsBeforeEdge(_rect, _gameConfig.battlefieldSize, speed, dir))
 		{
-			_rect.y -= speed;
+			_rect = DirectionUtils::Advance(_rect, speed, dir);
 		}
 
-		_upVelocity -= speed;
+		velocity -= speed;
 		isDrift = true;
 	}
 
-	if (_leftVelocity > speed)
-	{
-		if (_leftVelocity > _rect.w / _driftMultiplicator)//enabling drift with delay
-		{
-			speed /= _driftMultiplicator;//slow down if push the gas in drift
-		}
-
-		if (IsCanMove(deltaTime, Direction::LEFT, objects) && _rect.x - speed >= 0.0)
-		{
-			_rect.x -= speed;
-		}
-
-		_leftVelocity -= speed;
-		isDrift = true;
-	}
-
-	if (_downVelocity > speed)
-	{
-		if (_downVelocity > _rect.h / _driftMultiplicator)//enabling drift with delay
-		{
-			speed /= _driftMultiplicator;//slow down if push the gas in drift
-		}
-
-		const double maxY = static_cast<double>(_gameConfig.battlefieldSize.y);
-		if (IsCanMove(deltaTime, Direction::DOWN, objects) && _rect.Bottom() + speed < maxY)
-		{
-			_rect.y += speed;
-		}
-
-		_downVelocity -= speed;
-		isDrift = true;
-	}
-
-	const double maxX = static_cast<double>(_gameConfig.battlefieldSize.x);
-	if (_rightVelocity > speed)
-	{
-		if (_rightVelocity > _rect.w / _driftMultiplicator)//enabling drift with delay
-		{
-			speed /= _driftMultiplicator;//slow down if push the gas in drift
-		}
-
-		if (IsCanMove(deltaTime, Direction::RIGHT, objects) && _rect.Right() + speed < maxX)
-		{
-			_rect.x += speed;
-		}
-
-		_rightVelocity -= speed;
-		isDrift = true;
-	}
-
-	if (isDrift)
-	{
-		return true;
-	}
-
-	return false;
+	return isDrift;
 }
 
-void MoveLikeTankBeh::ResetVelocity()
-{
-	_upVelocity = 0.0;
-	_leftVelocity = 0.0;
-	_downVelocity = 0.0;
-	_rightVelocity = 0.0;
-}
+void MoveLikeTankBeh::ResetVelocity() { _velocity.fill(0.0); }
 
 std::vector<Direction> MoveLikeTankBeh::GetFreePathSides(const double deltaTime,
 														 const std::optional<Direction> excludeDirection,

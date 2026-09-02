@@ -333,7 +333,7 @@ void TankSpawner::DelayedSpawnStart(const ObjRectangle rect, const int health, c
 	_events->EmitEvent(TankSpawnEvent{.uuid = uuid});
 
 	//NOTE: the burst is also the countdown - the tank lands when its last frame is done
-	_events->EmitEvent(AnimationCreateTankSpawnEvent{.rect = rect, .name = name, .uuid = uuid});
+	_events->EmitEvent(AnimationCreateTankSpawnEvent{.rect = rect, .uuid = uuid});
 }
 
 void TankSpawner::OnSpawnDelayFinished(const Uuid uuid)
@@ -362,12 +362,13 @@ void TankSpawner::DelayedSpawnWith(const DelayedTankSpawn& params)
 							  .tier = 1u,
 							  .speed = params.speed,
 							  .dir = Direction::UP,
-							  .gameMode = _gameMode};
+							  .gameMode = _gameMode,
+							  .author = SeatOf(params.type)};
 
 	if (const std::shared_ptr<BaseObj> tank{CreateTank(params.type, std::move(pawnProperty))})
 	{
 		_events->EmitEvent(AddToSpawnQueueEvent{.obj = tank});
-		_events->EmitEvent(AnimationCreateTankMoveEvent{.rect = params.rect, .name = params.name});
+		_events->EmitEvent(AnimationCreateTankMoveEvent{.rect = params.rect, .author = SeatOf(params.type)});
 
 		//NOTE: ahead of the effects - their status travels as its own command, and the client has to
 		//have built the tank before one arrives for it
@@ -376,6 +377,6 @@ void TankSpawner::DelayedSpawnWith(const DelayedTankSpawn& params)
 			_events->EmitEvent(TankSpawnCompletedEvent{.uuid = params.uuid});
 		}
 
-		_events->EmitEvent(BonusReApplyEvent{.uuid = params.uuid, .name = params.name, .faction = params.faction});
+		_events->EmitEvent(BonusReApplyEvent{.uuid = params.uuid, .author = SeatOf(params.type)});
 	}
 }

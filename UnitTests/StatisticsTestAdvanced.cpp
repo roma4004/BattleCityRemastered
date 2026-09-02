@@ -32,16 +32,14 @@ protected:
 		const double gridSize = _gameConfig.gridOffset;
 		_tankSize = gridSize * 3.0;// for better turns
 
-		CreateBullet({.x = 0.0, .y = 5.0}, Direction::DOWN, 1u, "Bullet1", Faction::PlayerTeam, "Player1");
+		CreateBullet({.x = 0.0, .y = 5.0}, Direction::DOWN, 1u, "Bullet1", Faction::PlayerTeam, Author::Player1);
 	}
 
-	void TearDown() override
-	{
-	}
+	void TearDown() override {}
 
 	//TODO: use this style for others bullet creation
 	void CreateBullet(const FPoint pos, const Direction dir, const unsigned short tier, std::string name,
-					  Faction faction, std::string author)
+					  const Faction faction, const Author author)
 	{
 		const BulletCalibre calibre{.speed = 300.0,
 									.damage = 1u,
@@ -53,33 +51,33 @@ protected:
 		std::shared_ptr<Bullet> bullet =
 				TestUtils::CreateBullet(
 						rectBullet, _bulletHealth, _uuid, std::move(name), faction, _allObjects,
-						_events, calibre, dir, _gameMode, _gameConfig, std::move(author));
+						_events, calibre, dir, _gameMode, _gameConfig, author);
 		_allObjects.emplace_back(bullet);
 	}
 };
 
 TEST_F(StatisticsTestAdvanced, BulletHitByEnemyBullet)
 {
-	CreateBullet({.x = 0.0, .y = 5.0 + 1}, Direction::UP, 1u, "Bullet2", Faction::EnemyTeam, "Enemy1");
+	CreateBullet({.x = 0.0, .y = 5.0 + 1}, Direction::UP, 1u, "Bullet2", Faction::EnemyTeam, Author::Enemy1);
 
-	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0u);
-	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0u);
+	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerOne, 0u);
+	EXPECT_EQ(_statistics->GetData().bulletHitByEnemy, 0u);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 1u);
-	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 1u);
+	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerOne, 1u);
+	EXPECT_EQ(_statistics->GetData().bulletHitByEnemy, 1u);
 }
 
 TEST_F(StatisticsTestAdvanced, BulletHitByPlayerOne)
 {
-	CreateBullet({.x = 0.0, .y = 5.0 + 1}, Direction::UP, 1u, "Bullet2", Faction::PlayerTeam, "Player2");
+	CreateBullet({.x = 0.0, .y = 5.0 + 1}, Direction::UP, 1u, "Bullet2", Faction::PlayerTeam, Author::Player2);
 
-	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0u);
-	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 0u);
+	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerOne, 0u);
+	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerTwo, 0u);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 1u);
-	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 1u);
+	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerOne, 1u);
+	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerTwo, 1u);
 }

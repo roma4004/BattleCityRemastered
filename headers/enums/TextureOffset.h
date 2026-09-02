@@ -11,8 +11,8 @@ struct TextureOffset
 
 	// Tanks
 	static constexpr ObjRectangle kEnemy{.x = 129, .y = 1, .w = 13, .h = 13};
-	static constexpr ObjRectangle kPlayerOne{.x = 1, .y = 1, .w = 13, .h = 13};
-	static constexpr ObjRectangle kPlayerTwo{.x = 1, .y = 129, .w = 13, .h = 13};
+	static constexpr ObjRectangle kPlayer1{.x = 1, .y = 1, .w = 13, .h = 13};
+	static constexpr ObjRectangle kPlayer2{.x = 1, .y = 129, .w = 13, .h = 13};
 
 	// Map
 	static constexpr ObjRectangle kBullet{.x = 320, .y = 80, .w = 16, .h = 16};
@@ -49,7 +49,7 @@ struct TextureOffset
 	// SideBar
 	static constexpr ObjRectangle kEnemyIconBackground{.x = 375, .y = 23, .w = 18, .h = 82};
 	static constexpr ObjRectangle kEnemyIcon{.x = 321, .y = 193, .w = 7, .h = 7};
-	static constexpr ObjRectangle kPlayerOneIcon{.x = 375, .y = 135, .w = 19, .h = 18};
-	static constexpr ObjRectangle kPlayerTwoIcon{.x = 375, .y = 159, .w = 19, .h = 18};
+	static constexpr ObjRectangle kPlayer1Icon{.x = 375, .y = 135, .w = 19, .h = 18};
+	static constexpr ObjRectangle kPlayer2Icon{.x = 375, .y = 159, .w = 19, .h = 18};
 	static constexpr ObjRectangle kStageNumberFlag{.x = 375, .y = 182, .w = 18, .h = 28};
 };

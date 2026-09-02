@@ -70,13 +70,13 @@ TEST_F(DeadObjectFilterTest, BonusIsPickedUpOncePerFrame)
 
 	std::shared_ptr<Player> playerAbove = TestUtils::CreateTank<Player>(
 			ObjRectangle{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize}, _gameConfig.tankHealth, _uuid,
-			"Player1", Faction::PlayerTeam, _allObjects, _events, 1u, _tankSpeed, Direction::DOWN, _gameMode,
+			Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u, _tankSpeed, Direction::DOWN, _gameMode,
 			_bulletPool, _gameConfig);
 	_allObjects.emplace_back(playerAbove);
 
 	std::shared_ptr<Player> playerBelow = TestUtils::CreateTank<Player>(
 			ObjRectangle{.x = 0.0, .y = _tankSize * 2.0 + 2.0, .w = _tankSize, .h = _tankSize},
-			_gameConfig.tankHealth, _uuid, "Player2", Faction::PlayerTeam, _allObjects, _events, 1u, _tankSpeed,
+			_gameConfig.tankHealth, _uuid, Author::Player2, Faction::PlayerTeam, _allObjects, _events, 1u, _tankSpeed,
 			Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(playerBelow);
 
@@ -102,14 +102,20 @@ TEST_F(DeadObjectFilterTest, BrickWallHitByTwoBulletsDiesOnce)
 	_allObjects.emplace_back(wall);
 
 	const ObjRectangle fromLeft{.x = 100.0 - _calibre.size.x, .y = 103.0, .w = _calibre.size.x, .h = _calibre.size.y};
-	_allObjects.emplace_back(TestUtils::CreateBullet(fromLeft, 1, _uuid, "Bullet1", Faction::PlayerTeam, _allObjects,
-													 _events, _calibre, Direction::RIGHT, _gameMode, _gameConfig,
-													 "Player1"));
+	auto bullet1{
+			TestUtils::CreateBullet(
+					fromLeft, 1, _uuid, "Bullet1", Faction::PlayerTeam, _allObjects, _events, _calibre,
+					Direction::RIGHT, _gameMode, _gameConfig, Author::Player1)
+	};
+	_allObjects.emplace_back(bullet1);
 
 	const ObjRectangle fromRight{.x = 100.0 + cell, .y = 103.0, .w = _calibre.size.x, .h = _calibre.size.y};
-	_allObjects.emplace_back(TestUtils::CreateBullet(fromRight, 1, _uuid, "Bullet2", Faction::PlayerTeam,
-													 _allObjects, _events, _calibre, Direction::LEFT, _gameMode,
-													 _gameConfig, "Player1"));
+	auto bullet2{
+			TestUtils::CreateBullet(
+					fromRight, 1, _uuid, "Bullet2", Faction::PlayerTeam, _allObjects, _events, _calibre,
+					Direction::LEFT, _gameMode, _gameConfig, Author::Player1)
+	};
+	_allObjects.emplace_back(bullet2);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -125,20 +131,26 @@ TEST_F(DeadObjectFilterTest, TankKilledThisFrameTakesNoSecondHit)
 	const EventSubscription deathSub = _events->AddListener([&deaths](const TankDiedEvent&) { ++deaths; });
 
 	std::shared_ptr<Player> player = TestUtils::CreateTank<Player>(
-			ObjRectangle{.x = 100.0, .y = 100.0, .w = _tankSize, .h = _tankSize}, _tankHealth, _uuid, "Player1",
+			ObjRectangle{.x = 100.0, .y = 100.0, .w = _tankSize, .h = _tankSize}, _tankHealth, _uuid, Author::Player1,
 			Faction::PlayerTeam, _allObjects, _events, 1u, _tankSpeed, Direction::UP, _gameMode, _bulletPool,
 			_gameConfig);
 	_allObjects.emplace_back(player);
 
 	const ObjRectangle fromLeft{.x = 100.0 - _calibre.size.x, .y = 115.0, .w = _calibre.size.x, .h = _calibre.size.y};
-	_allObjects.emplace_back(TestUtils::CreateBullet(fromLeft, 1, _uuid, "Bullet1", Faction::EnemyTeam, _allObjects,
-													 _events, _calibre, Direction::RIGHT, _gameMode, _gameConfig,
-													 "Enemy1"));
+	auto bullet1{
+			TestUtils::CreateBullet(
+					fromLeft, 1, _uuid, "Bullet1", Faction::EnemyTeam, _allObjects, _events, _calibre, Direction::RIGHT,
+					_gameMode, _gameConfig, Author::Enemy1)
+	};
+	_allObjects.emplace_back(bullet1);
 
 	const ObjRectangle fromRight{.x = 100.0 + _tankSize, .y = 115.0, .w = _calibre.size.x, .h = _calibre.size.y};
-	_allObjects.emplace_back(TestUtils::CreateBullet(fromRight, 1, _uuid, "Bullet2", Faction::EnemyTeam, _allObjects,
-													 _events, _calibre, Direction::LEFT, _gameMode, _gameConfig,
-													 "Enemy2"));
+	auto bullet2{
+			TestUtils::CreateBullet(
+					fromRight, 1, _uuid, "Bullet2", Faction::EnemyTeam, _allObjects, _events, _calibre, Direction::LEFT,
+					_gameMode, _gameConfig, Author::Enemy2)
+	};
+	_allObjects.emplace_back(bullet2);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 

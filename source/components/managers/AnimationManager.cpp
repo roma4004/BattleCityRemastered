@@ -6,6 +6,7 @@
 #include "components/events/InputEvents.h"
 #include "components/events/SpawnEvents.h"
 #include "components/events/TimingEvents.h"
+#include "enums/Author.h"
 #include "geometry/ObjRectangle.h"
 #include "enums/AnimationType.h"
 #include "geometry/Point.h"
@@ -13,6 +14,7 @@
 #include <array>
 #include <memory>
 #include <ranges>
+#include <string>
 
 AnimationManager::AnimationManager(const std::shared_ptr<EventSystem>& events)
 	: _events(events)
@@ -82,41 +84,41 @@ void AnimationManager::OnDraw(const DrawEvent&) const
 
 void AnimationManager::OnCreateTankSpawn(const AnimationCreateTankSpawnEvent& event)
 {
-	CreateAnimation(AnimationType::Tank_Spawn, event.rect, event.name, event.uuid);
+	CreateAnimation(AnimationType::Tank_Spawn, event.rect, Author::None, event.uuid);
 }
 
 void AnimationManager::OnCreateBonusSpawn(const AnimationCreateBonusSpawnEvent& event)
 {
-	CreateAnimation(AnimationType::Bonus_Spawn, event.rect, "", event.uuid);
+	CreateAnimation(AnimationType::Bonus_Spawn, event.rect, Author::None, event.uuid);
 }
 
 void AnimationManager::OnCreateTankMove(const AnimationCreateTankMoveEvent& event)
 {
-	CreateAnimation(AnimationType::Tank_Move, event.rect, event.name);
-	OnHelmetEffect(event.name, true);
+	CreateAnimation(AnimationType::Tank_Move, event.rect, event.author);
+	OnHelmetEffect(event.author, true);
 }
 
 void AnimationManager::OnCreateTankExplosion(const AnimationCreateTankExplosionEvent& event)
 {
-	CreateAnimation(AnimationType::Tank_Explosion, event.rect, event.name);
+	CreateAnimation(AnimationType::Tank_Explosion, event.rect, event.author);
 }
 
 void AnimationManager::OnCreateBulletExplosion(const AnimationCreateBulletExplosionEvent& event)
 {
-	CreateAnimation(AnimationType::Bullet_Explosion, event.rect, event.name);
+	CreateAnimation(AnimationType::Bullet_Explosion, event.rect, Author::None);
 }
 
 void AnimationManager::OnCreateWaterFlow(const AnimationCreateWaterEvent& event)
 {
-	CreateAnimation(AnimationType::Water_Flow, event.rect, "Water");
+	CreateAnimation(AnimationType::Water_Flow, event.rect, Author::None);
 }
 
 void AnimationManager::OnUpdateTankMove(const AnimationTankUpdateEvent& event)
 {
-	const auto& name = event.name;
-	const auto it = std::ranges::find_if(_turnBasedTankObjects, [&name](const AnimatedObject& object)
+	const Author author = event.author;
+	const auto it = std::ranges::find_if(_turnBasedTankObjects, [author](const AnimatedObject& object)
 	{
-		return object.name.ends_with(name);
+		return object.author == author;
 	});
 
 	if (it == _turnBasedTankObjects.end())
@@ -130,12 +132,12 @@ void AnimationManager::OnUpdateTankMove(const AnimationTankUpdateEvent& event)
 	it->dir = event.dir;
 
 	UpdateFrame(*it);
-	UpdateHelmetEffect(name, event.pos);
+	UpdateHelmetEffect(author, event.pos);
 }
 
 void AnimationManager::OnHelmetEffect(const AnimationBonusHelmetChangeEvent& event)
 {
-	OnHelmetEffect(event.name, event.isEnable);
+	OnHelmetEffect(event.author, event.isEnable);
 }
 
 void AnimationManager::Reset()
@@ -153,10 +155,10 @@ void AnimationManager::DrawObject(const AnimatedObject& object) const
 							   .frame = object.currentFrameIndex,
 							   .scale = object.scale,
 							   .type = object.type,
-							   .name = object.name});
+							   .author = object.author});
 }
 
-void AnimationManager::Create(const std::string& name, const ObjRectangle rect, const AnimationType type,
+void AnimationManager::Create(const Author author, const ObjRectangle rect, const AnimationType type,
 							  const int size, const int scale, const int speed, const int passes, const Uuid owner)
 {
 	//NOTE: chose animation container for water if not then tanks, if not then other objects
@@ -175,12 +177,12 @@ void AnimationManager::Create(const std::string& name, const ObjRectangle rect, 
 		reusable->ticksSinceLastFrame = 0;
 		reusable->passesDone = 0;
 		reusable->owner = owner;
-		reusable->name = name;
+		reusable->author = author;
 		reusable->markToDispose = false;
 	}
 	else
 	{
-		target.emplace_back(name, rect, type, size, scale, speed, passes, owner);
+		target.emplace_back(author, rect, type, size, scale, speed, passes, owner);
 	}
 }
 
@@ -188,19 +190,19 @@ constexpr AnimationManager::AnimationPreset AnimationManager::GetPreset(const An
 {
 	static constexpr std::array s_presets{
 			KeyValue{.type = AnimationType::Tank_Spawn,
-					 .preset = {.name = "TankSpawn", .size = 3, .scale = 16, .speed = 20}},
+					 .preset = {.size = 3, .scale = 16, .speed = 20}},
 			KeyValue{.type = AnimationType::Tank_Move,
-					 .preset = {.name = "", .size = 2, .scale = 16, .speed = 2, .passes = kEndlessAnimation}},
+					 .preset = {.size = 2, .scale = 16, .speed = 2, .passes = kEndlessAnimation}},
 			KeyValue{.type = AnimationType::Tank_Explosion,
-					 .preset = {.name = "TankExplosion", .size = 2, .scale = 32, .speed = 30}},
+					 .preset = {.size = 2, .scale = 32, .speed = 30}},
 			KeyValue{.type = AnimationType::Bullet_Explosion,
-					 .preset = {.name = "BulletExplosion", .size = 3, .scale = 16, .speed = 20}},
+					 .preset = {.size = 3, .scale = 16, .speed = 20}},
 			KeyValue{.type = AnimationType::Water_Flow,
-					 .preset = {.name = "Water", .size = 16, .scale = 1, .speed = 20, .passes = kEndlessAnimation}},
+					 .preset = {.size = 16, .scale = 1, .speed = 20, .passes = kEndlessAnimation}},
 			KeyValue{.type = AnimationType::Helmet_Effect,
-					 .preset = {.name = "", .size = 2, .scale = 16, .speed = 20, .passes = kEndlessAnimation}},
+					 .preset = {.size = 2, .scale = 16, .speed = 20, .passes = kEndlessAnimation}},
 			KeyValue{.type = AnimationType::Bonus_Spawn,
-					 .preset = {.name = "BonusSpawn", .size = 3, .scale = 16, .speed = 20, .passes = 2}},
+					 .preset = {.size = 3, .scale = 16, .speed = 20, .passes = 2}},
 	};
 
 	static_assert(s_presets.size() == static_cast<std::size_t>(AnimationType::Count),
@@ -215,30 +217,16 @@ constexpr AnimationManager::AnimationPreset AnimationManager::GetPreset(const An
 	return s_presets[static_cast<std::size_t>(type)].preset;
 }
 
-void AnimationManager::CreateAnimation(const AnimationType type, const ObjRectangle rect, const std::string& name,
+void AnimationManager::CreateAnimation(const AnimationType type, const ObjRectangle rect, const Author author,
 									   const Uuid owner)
 {
 	if (type == AnimationType::Tank_Explosion)
 	{
-		DisableTankAnimation(name);//NOTE: for tank we need to disable previous animation
+		DisableTankAnimation(author);//NOTE: for tank we need to disable previous animation
 	}
 
-	const auto& [presetName, size, scale, speed, passes] = GetPreset(type);
-	std::string animName{};
-	if (type == AnimationType::Helmet_Effect)
-	{
-		animName = name + "HelmetEffect";
-	}
-	else if (type == AnimationType::Tank_Move)
-	{
-		animName = name;
-	}
-	else
-	{
-		animName = presetName;
-	}
-
-	Create(animName, rect, type, size, scale, speed, passes, owner);
+	const auto& [size, scale, speed, passes] = GetPreset(type);
+	Create(author, rect, type, size, scale, speed, passes, owner);
 }
 
 bool AnimationManager::UpdateFrame(AnimatedObject& object)
@@ -269,36 +257,37 @@ bool AnimationManager::UpdateFrame(AnimatedObject& object)
 	return false;
 }
 
-void AnimationManager::OnHelmetEffect(const std::string& name, const bool isEnable)
+void AnimationManager::OnHelmetEffect(const Author author, const bool isEnable)
 {
 	if (!isEnable)
 	{
-		DisableHelmetEffect(name);
+		DisableHelmetEffect(author);
 
 		return;
 	}
 
-	const auto tankIt = std::ranges::find_if(_turnBasedTankObjects, [&name](const AnimatedObject& tankObject)
+	const auto tankIt = std::ranges::find_if(_turnBasedTankObjects, [author](const AnimatedObject& tankObject)
 	{
-		return tankObject.type != AnimationType::Tank_Move || tankObject.name == name;
+		return tankObject.author == author;
 	});
 
 	if (tankIt == _turnBasedTankObjects.end())
 	{
-		Log::Error("AnimationManager: no turn-based tank named " + name + " for the helmet effect");
+		Log::Error("AnimationManager: no turn-based tank " + std::string{ToString(author)}
+				   + " for the helmet effect");
 
 		return;
 	}
 
 	//enable and update if exist
-	const auto helmetIt = std::ranges::find_if(_autoAnimatedObjects, [&name](const AnimatedObject& animatedObject)
+	const auto helmetIt = std::ranges::find_if(_autoAnimatedObjects, [author](const AnimatedObject& animatedObject)
 	{
-		return animatedObject.type == AnimationType::Helmet_Effect && animatedObject.name.starts_with(name);
+		return animatedObject.type == AnimationType::Helmet_Effect && animatedObject.author == author;
 	});
 
 	if (helmetIt == _autoAnimatedObjects.end())
 	{
-		CreateAnimation(AnimationType::Helmet_Effect, tankIt->rect, name);
+		CreateAnimation(AnimationType::Helmet_Effect, tankIt->rect, author);
 		return;
 	}
 
@@ -307,13 +296,13 @@ void AnimationManager::OnHelmetEffect(const std::string& name, const bool isEnab
 	helmetIt->rect.y = tankIt->rect.y;
 }
 
-void AnimationManager::UpdateHelmetEffect(const std::string& name, const FPoint& pos)
+void AnimationManager::UpdateHelmetEffect(const Author author, const FPoint& pos)
 {
-	const auto it = std::ranges::find_if(_autoAnimatedObjects, [&name](const AnimatedObject& object)
+	const auto it = std::ranges::find_if(_autoAnimatedObjects, [author](const AnimatedObject& object)
 	{
 		return !object.markToDispose
 			   && object.type == AnimationType::Helmet_Effect
-			   && object.name.starts_with(name);
+			   && object.author == author;
 	});
 
 	if (it != _autoAnimatedObjects.end())
@@ -324,23 +313,23 @@ void AnimationManager::UpdateHelmetEffect(const std::string& name, const FPoint&
 	}
 }
 
-void AnimationManager::DisableTankAnimation(const std::string& name)
+void AnimationManager::DisableTankAnimation(const Author author)
 {
-	auto matching = _turnBasedTankObjects | std::views::filter([&name](const AnimatedObject& object)
+	auto matching = _turnBasedTankObjects | std::views::filter([author](const AnimatedObject& object)
 	{
-		return object.name.ends_with(name);
+		return object.author == author;
 	});
 
 	std::ranges::for_each(matching, [](AnimatedObject& object) { object.markToDispose = true; });
 }
 
-void AnimationManager::DisableHelmetEffect(const std::string& name)
+void AnimationManager::DisableHelmetEffect(const Author author)
 {
-	auto matching = _autoAnimatedObjects | std::views::filter([&name](const AnimatedObject& object)
+	auto matching = _autoAnimatedObjects | std::views::filter([author](const AnimatedObject& object)
 	{
 		return !object.markToDispose
 			   && object.type == AnimationType::Helmet_Effect
-			   && object.name.starts_with(name);
+			   && object.author == author;
 	});
 
 	std::ranges::for_each(matching, [](AnimatedObject& object) { object.markToDispose = true; });

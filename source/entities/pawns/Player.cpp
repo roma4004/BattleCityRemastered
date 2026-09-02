@@ -35,7 +35,7 @@ void Player::Move(const Direction direction, const double deltaTime,
 		isNewDir || isMove)
 	{
 		const FPoint pos = GetPos();
-		_events->EmitEvent(AnimationTankUpdateEvent{.name = GetName(), .pos = pos, .dir = _dir});
+		_events->EmitEvent(AnimationTankUpdateEvent{.author = _author, .pos = pos, .dir = _dir});
 
 		if (IsHost(_gameMode))
 		{
@@ -78,7 +78,7 @@ void Player::TickUpdate(const double deltaTime)
 			moveBeh && moveBeh->ApplyMoveVelocity(deltaTime, _allObjects))
 		{
 			const FPoint pos = GetPos();
-			_events->EmitEvent(AnimationTankUpdateEvent{.name = GetName(), .pos = pos, .dir = _dir});
+			_events->EmitEvent(AnimationTankUpdateEvent{.author = _author, .pos = pos, .dir = _dir});
 
 			if (IsHost(_gameMode))
 			{

@@ -19,7 +19,7 @@ protected:
 	//NOTE: Eagle's death is handled separately via PlayersBaseFinishedEvent (see the destructor),
 	//not the BrickWall/SteelWall-style death-statistics struct - no-op body to satisfy the base's
 	//pure virtual hook.
-	void EmitDeathStatistics(const std::string& author, Faction faction) override;
+	void EmitDeathStatistics(Author author) override;
 	void OnDespawned(const DespawnedEvent& event) override;
 
 	static constexpr CollisionTags kCollision{tags::Impassable{}, tags::Destructible{}, tags::Impenetrable{}};

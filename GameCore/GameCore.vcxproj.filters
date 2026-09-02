@@ -512,6 +512,9 @@
     <ClInclude Include="..\headers\enums\AnimationType.h">
       <Filter>headers\enums</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\enums\Author.h">
+      <Filter>headers\enums</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\enums\BonusType.h">
       <Filter>headers\enums</Filter>
     </ClInclude>
@@ -699,6 +702,9 @@
       <Filter>headers\network</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\utils\ColliderUtils.h">
+      <Filter>headers\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\utils\DirectionUtils.h">
       <Filter>headers\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\utils\Fraction.h">

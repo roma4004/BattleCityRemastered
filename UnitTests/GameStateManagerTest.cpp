@@ -63,9 +63,7 @@ protected:
 		_allObjects.reserve(4u);
 	}
 
-	void TearDown() override
-	{
-	}
+	void TearDown() override {}
 };
 
 // Check that Player's team can win
@@ -152,7 +150,7 @@ TEST_F(GameStateManagerTest, PlayerTeamWon)
 		EXPECT_EQ(_allObjects.size(), 0u);
 
 		EXPECT_EQ(respawnEnemyActual, 20u - i * 4u);
-			_events->EmitEvent(RespawnTanksEvent{});
+		_events->EmitEvent(RespawnTanksEvent{});
 		std::cout << "End of respawn round" << (i + 1u) << '\n';
 	}
 
@@ -256,7 +254,8 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 	const ObjRectangle rectEnemy{.x = _tankSize * 3.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Enemy> enemyBot =
 			TestUtils::CreateTank<Enemy>(
-					rectEnemy, _tankHealth, _uuid, "Enemy1", Faction::EnemyTeam, _allObjects, _events, 1u, _tankSpeed,
+					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
+					_tankSpeed,
 					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(enemyBot);
 
@@ -329,7 +328,9 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBase)
 {
 	bool isGameLose{false};
 	auto gameLoseSub = _events->AddListener([&isGameLose](const GameFinishedEvent& event)
-	{ isGameLose = event.state == GameState::Over; });
+	{
+		isGameLose = event.state == GameState::Over;
+	});
 
 	unsigned short respawnActual{3u};
 	auto respawnCountSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
@@ -377,7 +378,7 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithThreeDeath)
 	EXPECT_EQ(respawnActual, 3u);
 	for (unsigned short i = 0u; i < 3u; ++i)
 	{
-			_events->EmitEvent(RespawnTanksEvent{});
+		_events->EmitEvent(RespawnTanksEvent{});
 		_events->EmitEvent(TankDiedEvent{.uuid = _allObjects.back()->GetUuid()});
 		_allObjects.pop_back();
 	}
@@ -393,7 +394,8 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithExtraLifeDeath)
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Player> player =
 			TestUtils::CreateTank<Player>(
-					rectPlayer, _tankHealth, _uuid, "Player1", Faction::PlayerTeam, _allObjects, _events, 1u, _tankSpeed,
+					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
+					_tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
@@ -447,7 +449,9 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBaseAndExtraLife)
 {
 	bool isGameLose{false};
 	auto gameLoseSub = _events->AddListener([&isGameLose](const GameFinishedEvent& event)
-	{ isGameLose = event.state == GameState::Over; });
+	{
+		isGameLose = event.state == GameState::Over;
+	});
 
 	unsigned short respawnEnemyActual{20u};
 	unsigned short respawnPlayerOneActual{3u};

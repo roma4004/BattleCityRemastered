@@ -10,7 +10,7 @@ namespace network
 CommandDispatcher::CommandDispatcher(std::string ownerName)
 	: _ownerName(std::move(ownerName)) {}
 
-void CommandDispatcher::RegisterAll(std::initializer_list<std::pair<const CommandType, Handler>> handlers)
+void CommandDispatcher::RegisterAll(const std::initializer_list<std::pair<const CommandType, Handler>> handlers)
 {
 	_handlers.insert(handlers);
 }

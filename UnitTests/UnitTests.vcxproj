@@ -53,6 +53,7 @@
     <ClCompile Include="CommandLineParserTest.cpp" />
     <ClCompile Include="CoopBotTest.cpp" />
     <ClCompile Include="DeadObjectFilterTest.cpp" />
+    <ClCompile Include="DirectionUtilsTest.cpp" />
     <ClCompile Include="EnemyBotTest.cpp" />
     <ClCompile Include="GameStateManagerTest.cpp" />
     <ClCompile Include="GameStateTest.cpp" />

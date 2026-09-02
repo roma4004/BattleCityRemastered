@@ -44,6 +44,7 @@ void serialize(Archive& ar, network::commands::BonusStatus& cmd, const unsigned 
 {
 	ar & cmd.type;
 	ar & cmd.name;
+	ar & cmd.author;
 	ar & cmd.bonusType;
 	ar & cmd.isEnable;
 }
@@ -131,7 +132,6 @@ void serialize(Archive& ar, network::commands::StatisticsChange& cmd, const unsi
 	ar & cmd.statisticsType;
 	ar & cmd.who;
 	ar & cmd.author;
-	ar & cmd.faction;
 	ar & cmd.uuid;
 }
 

@@ -11,7 +11,7 @@ class EventSystem;
 class WaterTile final : public Obstacle
 {
 protected:
-	void EmitDeathStatistics(const std::string& author, Faction faction) override;
+	void EmitDeathStatistics(Author author) override;
 
 	static constexpr CollisionTags kCollision{tags::Impassable{}, tags::Indestructible{}, tags::Penetrable{}};
 

@@ -45,7 +45,7 @@ std::shared_ptr<Bullet> BulletPool::CreateNewBullet() const
 	return std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig);
 }
 
-std::shared_ptr<BaseObj> BulletPool::SpawnBullet(const std::optional<Uuid> uuid)
+std::shared_ptr<Bullet> BulletPool::SpawnBullet(const BulletResetProperty& property, const std::optional<Uuid>& uuid)
 {
 	std::scoped_lock lock(_bulletsMutex);
 
@@ -63,6 +63,7 @@ std::shared_ptr<BaseObj> BulletPool::SpawnBullet(const std::optional<Uuid> uuid)
 	//NOTE: the pool names the shot, not the shooter - a reused slot would otherwise fire under the
 	//uuid of the bullet before it. Safe here because a pooled bullet is unsubscribed until Reset
 	bullet->SetId(uuid.value_or(UuidUtils::GetRandomUuid()));
+	bullet->Reset(property);
 
 	_inFlight.push_back(bullet);
 
@@ -85,7 +86,8 @@ void BulletPool::OnPostTickUpdate(const PostTickUpdateEvent&)
 		for (const std::shared_ptr<Bullet>& bullet: returned)
 		{
 			Log::Detail("bullet returned to a pool of " + std::to_string(_free.size()) + ", author "
-						+ bullet->GetAuthor() + " uuid " + UuidUtils::GetStringUuid(bullet->GetUuid()));
+						+ std::string{ToString(bullet->GetAuthor())} + " uuid "
+						+ UuidUtils::GetStringUuid(bullet->GetUuid()));
 
 			//NOTE: the pool guarantees it itself rather than relying on SpawnManager having swept
 			//the bullet earlier in this same PostTickUpdate - a bullet in _free must not listen,
