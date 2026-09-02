@@ -1,37 +1,30 @@
 #pragma once
 
-#include <string>
-
-enum class Faction : char8_t;
+#include "enums/Author.h"
 
 struct BrickWallDiedEvent final
 {
-	std::string author;
-	Faction faction{};
+	Author author{};
 };
 
 struct SteelWallDiedEvent final
 {
-	std::string author;
-	Faction faction{};
+	Author author{};
 };
 
 struct StatisticsBulletHitEvent final
 {
-	std::string author;
-	Faction faction{};
+	Author author{};
 };
 
 struct StatisticsBonusPickupEvent final
 {
-	std::string author;
-	Faction faction{};
+	Author author{};
 };
 
 struct StatisticsBonusDestroyedEvent final
 {
-	std::string author;
-	Faction faction{};
+	Author author{};
 };
 
 //NOTE: bonus just ran out its timeout
@@ -39,7 +32,7 @@ struct StatisticsBonusExpiredEvent final {};
 
 struct StatisticsTankHitEvent final
 {
-	std::string who;
-	std::string author;
-	Faction faction{};
+	//NOTE: the seat that was hit and the seat that hit it
+	Author who{};
+	Author author{};
 };

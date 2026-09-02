@@ -29,7 +29,7 @@ inline FPoint ObjRectangle::Center() const { return FPoint{.x = x + w / 2.0, .y 
 
 inline ObjRectangle ObjRectangle::GetScaledBy(const double scale) const
 {
-	ObjRectangle rectAfterScale = {.x = x, .y = y, .w = w * scale, .h = h * scale};
+	ObjRectangle rectAfterScale{.x = x, .y = y, .w = w * scale, .h = h * scale};
 	rectAfterScale.x -= (rectAfterScale.w - w) / 2;
 	rectAfterScale.y -= (rectAfterScale.h - h) / 2;
 

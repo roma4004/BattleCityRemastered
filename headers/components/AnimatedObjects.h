@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../entities/BaseObj.h"
+#include "enums/Author.h"
 #include "utils/Uuid.h"
-#include <string>
 
 enum class Direction : char8_t;
 enum class AnimationType : char8_t;
@@ -25,8 +25,8 @@ public:
 	AnimationType type{};
 	bool markToDispose{};
 	int scale{};
-	std::string name{};
+	Author author{};
 
-	AnimatedObject(const std::string& objName, ObjRectangle objRect, AnimationType objType, int frameLimit,
+	AnimatedObject(Author objAuthor, ObjRectangle objRect, AnimationType objType, int frameLimit,
 				   int objScale, int animationSpeed, int passCount = 1, Uuid objOwner = {});
 };

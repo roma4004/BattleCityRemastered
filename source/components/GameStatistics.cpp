@@ -2,7 +2,40 @@
 #include "components/EventSystem.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/ObjectLifecycleEvents.h"
-#include "enums/Faction.h"
+#include "enums/Author.h"
+
+namespace
+{
+//NOTE: every counter here splits the same three ways
+struct Buckets final
+{
+	unsigned short& byEnemyTeam;
+	unsigned short& byPlayerOne;
+	unsigned short& byPlayerTwo;
+};
+
+void Credit(const Author author, const Buckets buckets)
+{
+	switch (author)
+	{
+		case Author::Enemy1:
+		case Author::Enemy2:
+		case Author::Enemy3:
+		case Author::Enemy4:
+			++buckets.byEnemyTeam;
+			break;
+		case Author::Player1:
+			++buckets.byPlayerOne;
+			break;
+		case Author::Player2:
+			++buckets.byPlayerTwo;
+			break;
+		case Author::None:
+		case Author::lastId:
+			break;
+	}
+}
+}//namespace
 
 GameStatistics::GameStatistics(const std::shared_ptr<EventSystem>& events)
 	: _events{events}
@@ -31,227 +64,95 @@ void GameStatistics::OnGameReset(const GameResetEvent&) { Reset(); }
 
 void GameStatistics::OnBulletHit(const StatisticsBulletHitEvent& event)
 {
-	if (event.faction == Faction::EnemyTeam)
-	{
-		++_data.bulletHitByEnemy;
-	}
-	else if (event.faction == Faction::PlayerTeam)
-	{
-		if (event.author.ends_with("1"))
-		{
-			++_data.bulletHitByPlayerOne;
-		}
-		else if (event.author.ends_with("2"))
-		{
-			++_data.bulletHitByPlayerTwo;
-		}
-	}
+	Credit(event.author, {.byEnemyTeam = _data.bulletHitByEnemy,
+						  .byPlayerOne = _data.bulletHitByPlayerOne,
+						  .byPlayerTwo = _data.bulletHitByPlayerTwo});
 }
 
-void GameStatistics::OnEnemyHit(const std::string& author, Faction faction)
-{
-	if (faction == Faction::EnemyTeam)
-	{
-		++_data.enemyHitByFriendlyFire;
-	}
-	else if (faction == Faction::PlayerTeam)
-	{
-		if (author.ends_with("1"))
-		{
-			++_data.enemyHitByPlayerOne;
-		}
-		else if (author.ends_with("2"))
-		{
-			++_data.enemyHitByPlayerTwo;
-		}
-	}
-}
-
-void GameStatistics::OnPlayerOneHit(const std::string& author, Faction faction)
-{
-	if (faction == Faction::EnemyTeam)
-	{
-		++_data.playerOneHitByEnemyTeam;
-	}
-	else if (faction == Faction::PlayerTeam)
-	{
-		if (author.ends_with("1") || author.ends_with("2"))
-		{
-			++_data.playerOneHitFriendlyFire;
-		}
-	}
-}
-
-void GameStatistics::OnPlayerTwoHit(const std::string& author, Faction faction)
-{
-	if (faction == Faction::EnemyTeam)
-	{
-		++_data.playerTwoHitByEnemyTeam;
-	}
-	else if (faction == Faction::PlayerTeam)
-	{
-		if (author.ends_with("1") || author.ends_with("2"))
-		{
-			++_data.playerTwoHitFriendlyFire;
-		}
-	}
-}
-
+//NOTE: friendly fire is one bucket, whichever player pulled the trigger - hence the same
+//counter in two positions
 void GameStatistics::OnTankHit(const StatisticsTankHitEvent& event)
 {
-	if (event.who.starts_with("Enemy"))
+	switch (event.who)
 	{
-		OnEnemyHit(event.author, event.faction);
-	}
-	else if (event.who.ends_with("1"))
-	{
-		OnPlayerOneHit(event.author, event.faction);
-	}
-	else if (event.who.ends_with("2"))
-	{
-		OnPlayerTwoHit(event.author, event.faction);
-	}
-}
-
-void GameStatistics::OnEnemyDied(const std::string& author, Faction faction)
-{
-	if (faction == Faction::EnemyTeam)
-	{
-		++_data.enemyDiedByFriendlyFire;
-	}
-	else if (faction == Faction::PlayerTeam)
-	{
-		if (author.ends_with("1"))
-		{
-			++_data.enemyDiedByPlayerOne;
-		}
-		else if (author.ends_with("2"))
-		{
-			++_data.enemyDiedByPlayerTwo;
-		}
-	}
-}
-
-void GameStatistics::OnPlayerOneDied(const std::string& author, Faction faction)
-{
-	if (faction == Faction::EnemyTeam)
-	{
-		++_data.playerDiedByEnemyTeam;
-	}
-	else if (faction == Faction::PlayerTeam)
-	{
-		if (author.ends_with("1") || author.ends_with("2"))
-		{
-			++_data.playerOneDiedByFriendlyFire;
-		}
-	}
-}
-
-void GameStatistics::OnPlayerTwoDied(const std::string& author, Faction faction)
-{
-	if (faction == Faction::EnemyTeam)
-	{
-		++_data.playerDiedByEnemyTeam;
-	}
-	else if (faction == Faction::PlayerTeam)
-	{
-		if (author.ends_with("1") || author.ends_with("2"))
-		{
-			++_data.playerTwoDiedByFriendlyFire;
-		}
+		case Author::Enemy1:
+		case Author::Enemy2:
+		case Author::Enemy3:
+		case Author::Enemy4:
+			Credit(event.author, {.byEnemyTeam = _data.enemyHitByFriendlyFire,
+								  .byPlayerOne = _data.enemyHitByPlayerOne,
+								  .byPlayerTwo = _data.enemyHitByPlayerTwo});
+			break;
+		case Author::Player1:
+			Credit(event.author, {.byEnemyTeam = _data.playerOneHitByEnemyTeam,
+								  .byPlayerOne = _data.playerOneHitFriendlyFire,
+								  .byPlayerTwo = _data.playerOneHitFriendlyFire});
+			break;
+		case Author::Player2:
+			Credit(event.author, {.byEnemyTeam = _data.playerTwoHitByEnemyTeam,
+								  .byPlayerOne = _data.playerTwoHitFriendlyFire,
+								  .byPlayerTwo = _data.playerTwoHitFriendlyFire});
+			break;
+		case Author::None:
+		case Author::lastId:
+			break;
 	}
 }
 
 void GameStatistics::OnTankDied(const TankDiedEvent& event)
 {
-	if (event.who.starts_with("Enemy"))
+	switch (event.who)
 	{
-		OnEnemyDied(event.author, event.faction);
-	}
-	else if (event.who.ends_with("1"))
-	{
-		OnPlayerOneDied(event.author, event.faction);
-	}
-	else if (event.who.ends_with("2"))
-	{
-		OnPlayerTwoDied(event.author, event.faction);
+		case Author::Enemy1:
+		case Author::Enemy2:
+		case Author::Enemy3:
+		case Author::Enemy4:
+			Credit(event.author, {.byEnemyTeam = _data.enemyDiedByFriendlyFire,
+								  .byPlayerOne = _data.enemyDiedByPlayerOne,
+								  .byPlayerTwo = _data.enemyDiedByPlayerTwo});
+			break;
+		case Author::Player1:
+			Credit(event.author, {.byEnemyTeam = _data.playerDiedByEnemyTeam,
+								  .byPlayerOne = _data.playerOneDiedByFriendlyFire,
+								  .byPlayerTwo = _data.playerOneDiedByFriendlyFire});
+			break;
+		case Author::Player2:
+			Credit(event.author, {.byEnemyTeam = _data.playerDiedByEnemyTeam,
+								  .byPlayerOne = _data.playerTwoDiedByFriendlyFire,
+								  .byPlayerTwo = _data.playerTwoDiedByFriendlyFire});
+			break;
+		case Author::None:
+		case Author::lastId:
+			break;
 	}
 }
 
 void GameStatistics::OnBrickWallDied(const BrickWallDiedEvent& event)
 {
-	if (event.faction == Faction::EnemyTeam)
-	{
-		++_data.brickWallDiedByEnemyTeam;
-	}
-	else if (event.faction == Faction::PlayerTeam)
-	{
-		if (event.author.ends_with("1"))
-		{
-			++_data.brickWallDiedByPlayerOne;
-		}
-		else if (event.author.ends_with("2"))
-		{
-			++_data.brickWallDiedByPlayerTwo;
-		}
-	}
+	Credit(event.author, {.byEnemyTeam = _data.brickWallDiedByEnemyTeam,
+						  .byPlayerOne = _data.brickWallDiedByPlayerOne,
+						  .byPlayerTwo = _data.brickWallDiedByPlayerTwo});
 }
 
 void GameStatistics::OnSteelWallDied(const SteelWallDiedEvent& event)
 {
-	if (event.faction == Faction::EnemyTeam)
-	{
-		++_data.steelWallDiedByEnemyTeam;
-	}
-	else if (event.faction == Faction::PlayerTeam)
-	{
-		if (event.author.ends_with("1"))
-		{
-			++_data.steelWallDiedByPlayerOne;
-		}
-		else if (event.author.ends_with("2"))
-		{
-			++_data.steelWallDiedByPlayerTwo;
-		}
-	}
+	Credit(event.author, {.byEnemyTeam = _data.steelWallDiedByEnemyTeam,
+						  .byPlayerOne = _data.steelWallDiedByPlayerOne,
+						  .byPlayerTwo = _data.steelWallDiedByPlayerTwo});
 }
 
 void GameStatistics::OnBonusPickup(const StatisticsBonusPickupEvent& event)
 {
-	if (event.faction == Faction::EnemyTeam)
-	{
-		++_data.bonusPickupByEnemyTeam;
-	}
-	else if (event.faction == Faction::PlayerTeam)
-	{
-		if (event.author.ends_with("1"))
-		{
-			++_data.bonusPickupByPlayerOne;
-		}
-		else if (event.author.ends_with("2"))
-		{
-			++_data.bonusPickupByPlayerTwo;
-		}
-	}
+	Credit(event.author, {.byEnemyTeam = _data.bonusPickupByEnemyTeam,
+						  .byPlayerOne = _data.bonusPickupByPlayerOne,
+						  .byPlayerTwo = _data.bonusPickupByPlayerTwo});
 }
 
 void GameStatistics::OnBonusDestroyed(const StatisticsBonusDestroyedEvent& event)
 {
-	if (event.faction == Faction::EnemyTeam)
-	{
-		++_data.bonusDestroyedByEnemyTeam;
-	}
-	else if (event.faction == Faction::PlayerTeam)
-	{
-		if (event.author.ends_with("1"))
-		{
-			++_data.bonusDestroyedByPlayerOne;
-		}
-		else if (event.author.ends_with("2"))
-		{
-			++_data.bonusDestroyedByPlayerTwo;
-		}
-	}
+	Credit(event.author, {.byEnemyTeam = _data.bonusDestroyedByEnemyTeam,
+						  .byPlayerOne = _data.bonusDestroyedByPlayerOne,
+						  .byPlayerTwo = _data.bonusDestroyedByPlayerTwo});
 }
 
 void GameStatistics::OnBonusExpired(const StatisticsBonusExpiredEvent&)

@@ -64,9 +64,7 @@ protected:
 		_tankSize = _gridSize * 3.0;// for better turns
 	}
 
-	void TearDown() override
-	{
-	}
+	void TearDown() override {}
 };
 
 
@@ -77,7 +75,8 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressBricWallkHide)
 	const ObjRectangle rectEnemy{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Enemy> enemyBot =
 			TestUtils::CreateTank<Enemy>(
-					rectEnemy, _tankHealth, _uuid, "Enemy1", Faction::EnemyTeam, _allObjects, _events, 1u, _tankSpeed,
+					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
+					_tankSpeed,
 					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
 
 	// register a fortress wall
@@ -101,7 +100,8 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressSteelWallHide)
 	const ObjRectangle rectEnemy{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Enemy> enemyBot =
 			TestUtils::CreateTank<Enemy>(
-					rectEnemy, _tankHealth, _uuid, "Enemy1", Faction::EnemyTeam, _allObjects, _events, 1u, _tankSpeed,
+					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
+					_tankSpeed,
 					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
 
 	// spawn Player
@@ -109,7 +109,8 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressSteelWallHide)
 	const ObjRectangle rectPlayer{.x = _tankSize * 2.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Player> player =
 			TestUtils::CreateTank<Player>(
-					rectPlayer, _tankHealth, _uuid, "Player1", Faction::PlayerTeam, _allObjects, _events, 1u, _tankSpeed,
+					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
+					_tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	bool isPressed{true};
@@ -120,13 +121,13 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressSteelWallHide)
 	_events->EmitEvent(SpawnObstacleEvent{.rect = fortressRect, .type = ObstacleType::Fortress});
 
 	// spawn bonuses
-	const ObjRectangle enemyBonusRect = {.x = 0.0, .y = _tankSize + 3.0, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle enemyBonusRect{.x = 0.0, .y = _tankSize + 3.0, .w = _tankSize, .h = _tankSize};
 
 	_bonusSpawner->SpawnBonus(enemyBonusRect, BonusType::Shovel);
-	const ObjRectangle playerBonusRect = {.x = _tankSize * 2.0,
-										  .y = _tankSize * 2.0 + _tankSize + 1.0,
-										  .w = _tankSize,
-										  .h = _tankSize};
+	const ObjRectangle playerBonusRect{.x = _tankSize * 2.0,
+									   .y = _tankSize * 2.0 + _tankSize + 1.0,
+									   .w = _tankSize,
+									   .h = _tankSize};
 	_bonusSpawner->SpawnBonus(playerBonusRect, BonusType::Shovel);
 
 	EXPECT_NE(dynamic_cast<FortressBrickWall*>(_fortressWall.get()), nullptr);

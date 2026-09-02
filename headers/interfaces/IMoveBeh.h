@@ -9,19 +9,6 @@ class BaseObj;
 
 class IMoveBeh
 {
-	[[nodiscard]] virtual bool IsCanMove(double deltaTime, Direction dir,
-										 const std::vector<std::shared_ptr<BaseObj>>& objects) const = 0;
-
-protected:
-	[[nodiscard]] virtual bool MoveUp(double deltaTime, const std::vector<std::shared_ptr<BaseObj>>& objects,
-									  std::vector<std::shared_ptr<BaseObj>>& outCollisions) = 0;
-	[[nodiscard]] virtual bool MoveLeft(double deltaTime, const std::vector<std::shared_ptr<BaseObj>>& objects,
-										std::vector<std::shared_ptr<BaseObj>>& outCollisions) = 0;
-	[[nodiscard]] virtual bool MoveDown(double deltaTime, const std::vector<std::shared_ptr<BaseObj>>& objects,
-										std::vector<std::shared_ptr<BaseObj>>& outCollisions) = 0;
-	[[nodiscard]] virtual bool MoveRight(double deltaTime, const std::vector<std::shared_ptr<BaseObj>>& objects,
-										 std::vector<std::shared_ptr<BaseObj>>& outCollisions) = 0;
-
 public:
 	virtual ~IMoveBeh() = default;
 

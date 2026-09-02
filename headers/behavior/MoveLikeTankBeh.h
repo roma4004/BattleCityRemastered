@@ -3,54 +3,36 @@
 #include "geometry/ObjRectangle.h"
 #include "interfaces/IMoveBeh.h"
 #include "utils/Uuid.h"
-#include <functional>
+#include <array>
 #include <memory>
 #include <optional>
-#include <string>
 #include <vector>
-
-enum class Faction : char8_t;
 
 struct BonusEffectProperty;
 class BaseObj;
-class Tank;
 class GameConfig;
 
 class MoveLikeTankBeh final : public IMoveBeh
 {
 	Uuid& _uuid;
 	ObjRectangle& _rect;
-	Direction& _direction;
 	double& _speed;
 	BonusEffectProperty& _effects;
-	double _upVelocity{};
-	double _leftVelocity{};
-	double _downVelocity{};
-	double _rightVelocity{};
+	//NOTE: indexed by Direction - four named velocities were the same four lines four times
+	std::array<double, 4> _velocity{};
 	double _driftMultiplicator{1.5};
 	const GameConfig& _gameConfig;
 
 	[[nodiscard]] bool IsBlocking(const std::shared_ptr<BaseObj>& object, const ObjRectangle& nextPosRect) const;
 	[[nodiscard]] bool IsCanMove(double deltaTime, Direction dir,
-								 const std::vector<std::shared_ptr<BaseObj>>& objects) const override;
-	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>> GetTouchedObjects(
-			double deltaTime, const std::vector<std::shared_ptr<BaseObj>>& objects) const;
-	[[nodiscard]] ObjRectangle GetNextPosRect(double deltaTime, Direction dir) const;
-	[[nodiscard]] double FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& objects,
-										 const std::function<double(const std::shared_ptr<BaseObj>&)>& sideDiff) const;
-
-protected:
-	[[nodiscard]] bool MoveUp(double deltaTime, const std::vector<std::shared_ptr<BaseObj>>& objects,
-							  std::vector<std::shared_ptr<BaseObj>>& outCollisions) override;
-	[[nodiscard]] bool MoveLeft(double deltaTime, const std::vector<std::shared_ptr<BaseObj>>& objects,
-								std::vector<std::shared_ptr<BaseObj>>& outCollisions) override;
-	[[nodiscard]] bool MoveDown(double deltaTime, const std::vector<std::shared_ptr<BaseObj>>& objects,
-								std::vector<std::shared_ptr<BaseObj>>& outCollisions) override;
-	[[nodiscard]] bool MoveRight(double deltaTime, const std::vector<std::shared_ptr<BaseObj>>& objects,
-								 std::vector<std::shared_ptr<BaseObj>>& outCollisions) override;
+								 const std::vector<std::shared_ptr<BaseObj>>& objects) const;
+	//NOTE: how far the tank actually gets - the frame step is the ceiling, not the answer
+	[[nodiscard]] double GetTravelledDistance(double step, Direction dir,
+											  const std::vector<std::shared_ptr<BaseObj>>& objects,
+											  std::vector<std::shared_ptr<BaseObj>>& outTouched) const;
 
 public:
-	MoveLikeTankBeh(ObjRectangle& rect, Direction& dir, double& speed, Uuid& uuid, BonusEffectProperty& effects,
+	MoveLikeTankBeh(ObjRectangle& rect, double& speed, Uuid& uuid, BonusEffectProperty& effects,
 					const GameConfig& gameConfig);
 
 	~MoveLikeTankBeh() override = default;

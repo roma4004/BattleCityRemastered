@@ -16,7 +16,7 @@ void BrickWall::Subscribe()
 
 void BrickWall::OnDraw(const DrawEvent&) const { Draw(); }
 
-void BrickWall::EmitDeathStatistics(const std::string& author, Faction faction)
+void BrickWall::EmitDeathStatistics(const Author author)
 {
-	_events->EmitEvent(BrickWallDiedEvent{.author = author, .faction = faction});
+	_events->EmitEvent(BrickWallDiedEvent{.author = author});
 }

@@ -1,10 +1,10 @@
 #pragma once
 
+#include "enums/Author.h"
 #include "enums/DespawnReason.h"
 #include "utils/Uuid.h"
 #include <string>
 
-enum class Faction : char8_t;
 
 struct TankSpawnEvent
 {
@@ -13,10 +13,9 @@ struct TankSpawnEvent
 
 struct TankDiedEvent
 {
-	std::string who{};
+	Author who{};
 	Uuid uuid{};
-	std::string author{};
-	Faction faction{};
+	Author author{};
 };
 
 struct DespawnedEvent

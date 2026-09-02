@@ -1,11 +1,10 @@
 #pragma once
 
+#include "enums/Author.h"
 #include "geometry/ObjRectangle.h"
 #include "../BulletCalibre.h"
 #include "utils/Uuid.h"
-#include <string>
 
-enum class Faction : char8_t;
 enum class Direction : char8_t;
 
 struct BulletResetProperty
@@ -13,8 +12,7 @@ struct BulletResetProperty
 	ObjRectangle rect{};
 	Direction dir{};
 	int health{};
-	std::string author{};
-	Faction faction{};
+	Author author{};
 	Uuid authorUuid{};
 	BulletCalibre calibre{};
 };

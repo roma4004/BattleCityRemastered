@@ -13,13 +13,12 @@
 #include "network/commands/CommandBatch.h"
 #include "network/Serializer.h"
 #include "utils/Log.h"
-#include "enums/Faction.h"
 #include <string>
 #include <tuple>
 
 namespace network::commands
 {
-Client::Client(boost::asio::io_context& ioContext, std::string host, uint16_t port,
+Client::Client(boost::asio::io_context& ioContext, std::string host, const uint16_t port,
 			   const std::shared_ptr<EventSystem>& events)
 	: PeerLink(tcp::socket(boost::asio::make_strand(ioContext)), "Client", events)
 	, _reconnectTimer(_channel->Socket().get_executor())
@@ -309,35 +308,31 @@ void Client::OnStatisticsChange(const AnyCommand& command)
 {
 	_commandQueue.Enqueue([this, cmd = std::get<StatisticsChange>(command)]()
 	{
-		//NOTE: the wire carries a raw byte - a string only ever failed to match, an enum has to be
-		//checked before anything switches or compares on it
-		const Faction faction = IsValidFaction(cmd.faction) ? cmd.faction : Faction::Neutral;
+		const Author who = SeatFromWire(cmd.who);
+		const Author author = SeatFromWire(cmd.author);
 
 		switch (cmd.statisticsType)
 		{
 			case StatisticsType::BulletHit:
-				_events->EmitEvent(StatisticsBulletHitEvent{.author = cmd.author, .faction = faction});
+				_events->EmitEvent(StatisticsBulletHitEvent{.author = author});
 				break;
 			case StatisticsType::TankHit:
-				_events->EmitEvent(StatisticsTankHitEvent{.who = cmd.who, .author = cmd.author, .faction = faction});
+				_events->EmitEvent(StatisticsTankHitEvent{.who = who, .author = author});
 				break;
 			case StatisticsType::TankDied:
-				_events->EmitEvent(TankDiedEvent{.who = cmd.who,
-												 .uuid = cmd.uuid,
-												 .author = cmd.author,
-												 .faction = faction});
+				_events->EmitEvent(TankDiedEvent{.who = who, .uuid = cmd.uuid, .author = author});
 				break;
 			case StatisticsType::BrickWallDied:
-				_events->EmitEvent(BrickWallDiedEvent{.author = cmd.author, .faction = faction});
+				_events->EmitEvent(BrickWallDiedEvent{.author = author});
 				break;
 			case StatisticsType::SteelWallDied:
-				_events->EmitEvent(SteelWallDiedEvent{.author = cmd.author, .faction = faction});
+				_events->EmitEvent(SteelWallDiedEvent{.author = author});
 				break;
 			case StatisticsType::BonusPickup:
-				_events->EmitEvent(StatisticsBonusPickupEvent{.author = cmd.author, .faction = faction});
+				_events->EmitEvent(StatisticsBonusPickupEvent{.author = author});
 				break;
 			case StatisticsType::BonusDestroyed:
-				_events->EmitEvent(StatisticsBonusDestroyedEvent{.author = cmd.author, .faction = faction});
+				_events->EmitEvent(StatisticsBonusDestroyedEvent{.author = author});
 				break;
 			case StatisticsType::BonusExpired:
 				_events->EmitEvent(StatisticsBonusExpiredEvent{});
@@ -444,7 +439,7 @@ void Client::OnBonusStatus(const AnyCommand& command)
 				_events->EmitEvent(Key(cmd.name), BonusShipAppliedEvent{.name = cmd.name});
 				return;
 			case BonusType::Tank:
-				_events->EmitEvent(BonusTankAppliedEvent{.name = cmd.name});
+				_events->EmitEvent(BonusTankAppliedEvent{.author = SeatFromWire(cmd.author)});
 				return;
 			case BonusType::Star:
 			case BonusType::Caliber:

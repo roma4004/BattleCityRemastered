@@ -11,12 +11,10 @@
 #include "entities/pawns/BulletResetProperty.h"
 #include "entities/pawns/Tank.h"
 #include "enums/Direction.h"
-#include <functional>
 #include <memory>
 #include <optional>
-// #include <boost/uuid/uuid_io.hpp>
 
-ShootingBeh::ShootingBeh(ObjRectangle& rect, Direction& dir, Uuid& uuid, std::string& name, Faction& faction,
+ShootingBeh::ShootingBeh(ObjRectangle& rect, Direction& dir, Uuid& uuid, const Author author,
 						 const std::shared_ptr<BulletPool>& bulletPool,
 						 BulletCalibre& calibre, const std::shared_ptr<EventSystem>& events,
 						 const GameConfig& gameConfig)
@@ -24,46 +22,12 @@ ShootingBeh::ShootingBeh(ObjRectangle& rect, Direction& dir, Uuid& uuid, std::st
 	, _rect{rect}
 	, _direction{dir}
 	, _gameConfig{gameConfig}
-	, _name{name}
-	, _faction{faction}
+	, _author{author}
 	, _calibre{calibre}
 	, _bulletPool{bulletPool}
 	, _events{events} {}
 
 ShootingBeh::~ShootingBeh() = default;
-
-// inline float Distance(const FPoint a, const FPoint b)
-// {
-// 	return static_cast<float>(std::sqrt(std::pow(b.x - a.x, 2) + std::pow(b.y - a.y, 2)));
-// }
-
-double ShootingBeh::FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& objects,
-									const std::function<double(const std::shared_ptr<BaseObj>&)>& sideDiff) const
-{
-	double minDist = static_cast<double>(_gameConfig.battlefieldSize.x * _gameConfig.battlefieldSize.y);
-	// float nearestDist = 0.f;
-	for (const auto& object: objects)
-	{
-		// auto getSide = [](const std::shared_ptr<BaseObj>& object) -> float { return object->GetX() + object->GetWidth();};
-		const double distance = std::abs(sideDiff(object));
-		// const float distance = abs(this->GetX() - object->GetX() + object->GetWidth());
-		if (distance < minDist)//TODO: need minimal abs distance
-		{
-			minDist = distance;
-		}
-	}
-
-	return minDist;
-
-	// constexpr auto padding = 1.f;
-	// float distance = this->GetX() - nearestX - padding;
-	// if (distance < padding)
-	// {
-	// 	return 0.f;
-	// }
-	//
-	// return distance;
-}
 
 //Note: {-1.f, -1.f} this is try shooting outside screen
 ObjRectangle ShootingBeh::GetBulletStartRect() const
@@ -114,30 +78,20 @@ Uuid ShootingBeh::Shot(const std::optional<Uuid> uuid)
 	}
 
 	//TODO: refactor to network event ShotBullet{rect, bulletResetProperty, uuid}
-	auto bulletAsBase = _bulletPool->SpawnBullet(uuid);
-	if (auto* bullet = dynamic_cast<Bullet*>(bulletAsBase.get()); bullet != nullptr)
-	{
-		BulletResetProperty bulletResetProperty = {
-				.rect = rect,
-				.dir = _direction,
-				.health = 1,
-				.author = _name,
-				.faction = _faction,
-				.authorUuid = _uuid,
-				.calibre = _calibre,
-		};
+	const BulletResetProperty bulletResetProperty{
+			.rect = rect,
+			.dir = _direction,
+			.health = 1,
+			.author = _author,
+			.authorUuid = _uuid,
+			.calibre = _calibre,
+	};
 
-		bullet->Reset(std::move(bulletResetProperty));
+	const std::shared_ptr<Bullet> bullet = _bulletPool->SpawnBullet(bulletResetProperty, uuid);
 
-		Log::Detail("bullet reset " + bullet->GetName() + " uuid " + UuidUtils::GetStringUuid(bullet->GetUuid()));
-	}
+	Log::Detail("bullet spawned " + bullet->GetName() + " uuid " + UuidUtils::GetStringUuid(bullet->GetUuid()));
 
-	if (bulletAsBase != nullptr)
-	{
-		_events->EmitEvent(AddToSpawnQueueEvent{bulletAsBase});
-	}
+	_events->EmitEvent(AddToSpawnQueueEvent{.obj = bullet});
 
-	return bulletAsBase->GetUuid();
+	return bullet->GetUuid();
 }
-
-//TODO: create scheduled spawner manager to postpone or separate spawn to prevent change of subscription in event system

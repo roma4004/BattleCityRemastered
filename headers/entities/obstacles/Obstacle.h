@@ -31,7 +31,7 @@ protected:
 
 	void Draw() const override;
 
-	void EmitDeathStatistics(const std::string& author, Faction faction) override = 0;
+	void EmitDeathStatistics(Author author) override = 0;
 
 	Obstacle(ObjRectangle rect, int health, std::string name, const std::shared_ptr<EventSystem>& events, Uuid uuid,
 			 GameMode gameMode, ObstacleType obstacleType, CollisionTags collision);
@@ -43,5 +43,5 @@ public:
 	void Deactivate() override;
 
 	//BaseObj overrides
-	void TakeDamage(unsigned int damage, const std::string& author, Faction faction) override;
+	void TakeDamage(unsigned int damage, Author author) override;
 };

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../BaseObjProperty.h"
+#include "enums/Author.h"
 #include <memory>
 #include <vector>
 
@@ -18,4 +19,5 @@ struct PawnProperty
 	double speed{};
 	Direction dir{};
 	GameMode gameMode{};
+	Author author{};
 };

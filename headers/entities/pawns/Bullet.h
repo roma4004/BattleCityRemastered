@@ -13,7 +13,6 @@ struct BulletResetProperty;
 struct UPoint;
 class EventSystem;
 class BulletPool;
-class ShootingBeh;
 class GameConfig;
 struct DrawEvent;
 struct DespawnedEvent;
@@ -21,18 +20,16 @@ struct DespawnedEvent;
 class Bullet final : public Pawn, public IDrawable
 {
 	friend BulletPool;
-	friend ShootingBeh;
 
-	std::string _author{};
 	Uuid _authorUuid{};
 	BulletCalibre _calibre{};
 
-	void Reset(BulletResetProperty resetProperty);
+	void Reset(const BulletResetProperty& resetProperty);
 	void OnDraw(const DrawEvent&) const;
 
 protected:
 	void Subscribe() override;
-	void EmitDamageStatistics(const std::string& author, Faction faction) override;
+	void EmitDamageStatistics(Author author) override;
 	void OnDespawned(const DespawnedEvent& event) override;
 	void Draw() const override;
 	void TickUpdate(double deltaTime) override;
@@ -40,16 +37,13 @@ protected:
 public:
 	static constexpr CollisionTags kCollision{tags::Passable{}, tags::Destructible{}, tags::Impenetrable{}};
 
-	Bullet(PawnProperty pawnProperty, const GameConfig& gameConfig, const BulletCalibre& calibre = {},
-		   std::string author = "");
+	Bullet(PawnProperty pawnProperty, const GameConfig& gameConfig, const BulletCalibre& calibre = {});
 
 	~Bullet() override;
 
 	[[nodiscard]] unsigned int GetDamage() const;
 
 	[[nodiscard]] double GetDamageRadius() const;
-
-	[[nodiscard]] std::string GetAuthor() const;
 
 	[[nodiscard]] Uuid GetUuid() const override;
 	[[nodiscard]] const std::string& GetUuidStr() const;

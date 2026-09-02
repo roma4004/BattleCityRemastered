@@ -18,7 +18,7 @@ void EagleTile::Subscribe()
 void EagleTile::OnDraw(const DrawEvent&) const { Draw(); }
 
 //NOTE: the base falls where it is destroyed - a field wiped on reset must not read as a defeat
-void EagleTile::EmitDeathStatistics(const std::string&, Faction)
+void EagleTile::EmitDeathStatistics(Author)
 {
 	_events->EmitEvent(PlayersBaseFinishedEvent{});
 }

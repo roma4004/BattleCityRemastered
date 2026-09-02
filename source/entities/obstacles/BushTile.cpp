@@ -15,4 +15,4 @@ void BushTile::Subscribe()
 
 void BushTile::OnPostDraw(const PostDrawEvent&) const { Draw(); }
 
-void BushTile::EmitDeathStatistics(const std::string&, Faction) {}
+void BushTile::EmitDeathStatistics(Author) {}

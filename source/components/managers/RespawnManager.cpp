@@ -58,7 +58,7 @@ void RespawnManager::OnPlayersBaseFinished(const PlayersBaseFinishedEvent&) { Tr
 
 void RespawnManager::OnRespawnTanks(const RespawnTanksEvent&) { RespawnTanks(); }
 
-void RespawnManager::OnBonusTankApplied(const BonusTankAppliedEvent& event) { OnBonusTank(event.name); }
+void RespawnManager::OnBonusTankApplied(const BonusTankAppliedEvent& event) { OnBonusTank(event.author); }
 
 void RespawnManager::SetEnemyNeedRespawn()
 {
@@ -141,24 +141,30 @@ void RespawnManager::TriggerLastPlayersLife()
 	_events->EmitEvent(RespawnCountChangedToEvent{.objectName = "Player2", .respawnCount = _respawnCount[2]});
 }
 
-void RespawnManager::OnBonusTank(const std::string& author)
+void RespawnManager::OnBonusTank(const Author author)
 {
-	if (author.starts_with("Enemy"))
+	switch (author)
 	{
-		ChangeRespawnCount(1, RespawnGroup::ENEMY_ALL);
-	}
-	else if (author.ends_with("1"))
-	{
-		ChangeRespawnCount(1, RespawnGroup::PLAYER_ONE);
-	}
-	else if (author.ends_with("2"))
-	{
-		ChangeRespawnCount(1, RespawnGroup::PLAYER_TWO);
+		case Author::Enemy1:
+		case Author::Enemy2:
+		case Author::Enemy3:
+		case Author::Enemy4:
+			ChangeRespawnCount(1, RespawnGroup::ENEMY_ALL);
+			break;
+		case Author::Player1:
+			ChangeRespawnCount(1, RespawnGroup::PLAYER_ONE);
+			break;
+		case Author::Player2:
+			ChangeRespawnCount(1, RespawnGroup::PLAYER_TWO);
+			break;
+		case Author::None:
+		case Author::lastId:
+			break;
 	}
 
 	if (IsHost(_gameMode))
 	{
-		_events->EmitEvent(BonusTankAppliedEvent{.name = author});
+		_events->EmitEvent(BonusTankAppliedEvent{.author = author});
 	}
 }
 

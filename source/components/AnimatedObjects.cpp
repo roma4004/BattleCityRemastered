@@ -1,7 +1,7 @@
 #include "components/AnimatedObjects.h"
 #include "enums/AnimationType.h"
 
-AnimatedObject::AnimatedObject(const std::string& objName, const ObjRectangle objRect, const AnimationType objType,
+AnimatedObject::AnimatedObject(const Author objAuthor, const ObjRectangle objRect, const AnimationType objType,
 							   const int frameLimit, const int objScale, const int animationSpeed, const int passCount,
 							   const Uuid objOwner)
 	: rect{objRect}
@@ -11,4 +11,4 @@ AnimatedObject::AnimatedObject(const std::string& objName, const ObjRectangle ob
 	, owner{objOwner}
 	, type(objType)
 	, scale{objScale}
-	, name{objName} {}
+	, author{objAuthor} {}

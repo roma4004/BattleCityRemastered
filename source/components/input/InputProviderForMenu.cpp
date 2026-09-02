@@ -126,7 +126,7 @@ void InputProviderForMenu::TogglePause()
 
 [[nodiscard]] bool InputProviderForMenu::GetPause() const { return _keys.pause; }
 
-void InputProviderForMenu::SetPause(bool value)
+void InputProviderForMenu::SetPause(const bool value)
 {
 	if (_keys.pause == value)
 	{

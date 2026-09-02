@@ -20,7 +20,8 @@
 #include <SDL3_ttf/SDL_ttf.h>
 #include <string>
 
-RenderManager::RenderManager(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig, SDL_Config& sdlConfig)
+RenderManager::RenderManager(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig,
+							 SDL_Config& sdlConfig)
 	: _events{events}
 	, _gameConfig{gameConfig}
 	, _sdlConfig{sdlConfig}
@@ -204,7 +205,10 @@ void RenderManager::DrawEnemyIconBackground(const RenderEnemyIconBackgroundEvent
 {
 	constexpr int backgroundHeight{277};
 	const SDL_Rect dstRect{
-			.x = SideBarColumnX(), .y = kSideBarColumnTop, .w = kSideBarItemWidth, .h = backgroundHeight};
+			.x = SideBarColumnX(),
+			.y = kSideBarColumnTop,
+			.w = kSideBarItemWidth,
+			.h = backgroundHeight};
 	constexpr SDL_Rect srcRect{.x = static_cast<int>(TextureOffset::kEnemyIconBackground.x),
 							   .y = static_cast<int>(TextureOffset::kEnemyIconBackground.y),
 							   .w = static_cast<int>(TextureOffset::kEnemyIconBackground.w),
@@ -234,7 +238,7 @@ void RenderManager::DrawEnemyIcons(const RenderEnemyIconsEvent& event) const
 		const int posX{startPos.x + col * (imageSize.x + padding.x)};
 		const int posY{startPos.y + row * (imageSize.y + padding.y)};
 
-		SDL_Rect destRect = {.x = posX, .y = posY, .w = imageSize.x, .h = imageSize.y};
+		SDL_Rect destRect{.x = posX, .y = posY, .w = imageSize.x, .h = imageSize.y};
 		RenderCopyWithClipping(_sdlConfig.atlasTexture.get(), srcRect, destRect);
 	}
 }
@@ -242,10 +246,10 @@ void RenderManager::DrawEnemyIcons(const RenderEnemyIconsEvent& event) const
 void RenderManager::DrawPlayerOneIcons(const RenderPlayerOneIconEvent& event) const
 {
 	const unsigned short respawnCount = event.respawnCount;
-	constexpr SDL_Rect srcRect{.x = static_cast<int>(TextureOffset::kPlayerOneIcon.x),
-							   .y = static_cast<int>(TextureOffset::kPlayerOneIcon.y),
-							   .w = static_cast<int>(TextureOffset::kPlayerOneIcon.w),
-							   .h = static_cast<int>(TextureOffset::kPlayerOneIcon.h)};
+	constexpr SDL_Rect srcRect{.x = static_cast<int>(TextureOffset::kPlayer1Icon.x),
+							   .y = static_cast<int>(TextureOffset::kPlayer1Icon.y),
+							   .w = static_cast<int>(TextureOffset::kPlayer1Icon.w),
+							   .h = static_cast<int>(TextureOffset::kPlayer1Icon.h)};
 
 	const int posX{SideBarColumnX()};
 	const SDL_Rect rect{.x = posX, .y = 350, .w = kSideBarItemWidth, .h = 70};
@@ -261,10 +265,10 @@ void RenderManager::DrawPlayerOneIcons(const RenderPlayerOneIconEvent& event) co
 void RenderManager::DrawPlayerTwoIcons(const RenderPlayerTwoIconEvent& event) const
 {
 	const unsigned short respawnCount = event.respawnCount;
-	constexpr SDL_Rect srcRect{.x = static_cast<int>(TextureOffset::kPlayerTwoIcon.x),
-							   .y = static_cast<int>(TextureOffset::kPlayerTwoIcon.y),
-							   .w = static_cast<int>(TextureOffset::kPlayerTwoIcon.w),
-							   .h = static_cast<int>(TextureOffset::kPlayerTwoIcon.h)};
+	constexpr SDL_Rect srcRect{.x = static_cast<int>(TextureOffset::kPlayer2Icon.x),
+							   .y = static_cast<int>(TextureOffset::kPlayer2Icon.y),
+							   .w = static_cast<int>(TextureOffset::kPlayer2Icon.w),
+							   .h = static_cast<int>(TextureOffset::kPlayer2Icon.h)};
 
 	const int posX{SideBarColumnX()};
 	const SDL_Rect rect{.x = posX, .y = 420, .w = kSideBarItemWidth, .h = 70};

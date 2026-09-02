@@ -276,6 +276,7 @@
     <ClInclude Include="..\headers\entities\pawns\Tank.h" />
     <ClInclude Include="..\headers\entities\Tags.h" />
     <ClInclude Include="..\headers\enums\AnimationType.h" />
+    <ClInclude Include="..\headers\enums\Author.h" />
     <ClInclude Include="..\headers\enums\BonusType.h" />
     <ClInclude Include="..\headers\enums\CommandType.h" />
     <ClInclude Include="..\headers\enums\ClientSignal.h" />
@@ -337,6 +338,7 @@
     <ClInclude Include="..\headers\network\Serializer.h" />
     <ClInclude Include="..\headers\geometry\Point.h" />
     <ClInclude Include="..\headers\utils\ColliderUtils.h" />
+    <ClInclude Include="..\headers\utils\DirectionUtils.h" />
     <ClInclude Include="..\headers\utils\Log.h" />
     <ClInclude Include="..\headers\utils\ObjectUtils.h" />
     <ClInclude Include="..\headers\utils\PixelUtils.h" />

@@ -100,7 +100,7 @@ bool BonusManager::IsEffectActive(const BonusType type, const EffectTarget& targ
 	});
 }
 
-void BonusManager::StartEffect(const BonusType type, EffectTarget target, const milliseconds duration)
+void BonusManager::StartEffect(const BonusType type, const EffectTarget target, const milliseconds duration)
 {
 	if (const auto it = FindEffect(type, target);
 		it != _activeEffects.end())
@@ -136,7 +136,7 @@ void BonusManager::EmitEffectStatus(const BonusType type, const EffectTarget& ta
 			_events->EmitEvent(Key(std::get<Faction>(target)), BonusTimerStatusChangeEvent{.isActive = isActive});
 			break;
 		case BonusType::Helmet:
-			_events->EmitEvent(Key(std::get<std::string>(target)), BonusHelmetStatusChangeEvent{.isActive = isActive});
+			_events->EmitEvent(Key(std::get<Author>(target)), BonusHelmetStatusChangeEvent{.isActive = isActive});
 			break;
 		case BonusType::Shovel:
 			_events->EmitEvent(
@@ -179,8 +179,8 @@ void BonusManager::ApplyBonusEffectsOnSpawnTo(const BonusReApplyEvent& event)
 		return;
 	}
 
-	const bool isFrozen = IsEffectActive(BonusType::Timer, event.faction);
+	const bool isFrozen = IsEffectActive(BonusType::Timer, FactionOf(event.author));
 	_events->EmitEvent(Key(event.uuid), BonusTimerReApplyOnSpawnEvent{.isEnabled = isFrozen});
 
-	StartEffect(BonusType::Helmet, event.name, kRespawnHelmetDuration);
+	StartEffect(BonusType::Helmet, event.author, kRespawnHelmetDuration);
 }

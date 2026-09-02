@@ -1,5 +1,6 @@
 #pragma once
 
+#include "enums/Author.h"
 #include "enums/BonusType.h"
 #include "enums/CommandType.h"
 #include <string>
@@ -11,6 +12,7 @@ struct BonusStatus final
 {
 	CommandType type{CommandType::BONUS_STATUS};
 	std::string name{};
+	Author author{};
 	BonusType bonusType{};
 	bool isEnable{};
 };

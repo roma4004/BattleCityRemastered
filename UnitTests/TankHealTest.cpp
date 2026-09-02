@@ -46,10 +46,10 @@ TEST_F(TankHealTest, AMaxedTankStillReportsTheHealth)
 {
 	const std::shared_ptr<Enemy> enemy =
 			TestUtils::CreateTank<Enemy>(
-					_tankRect, _tankHealth, UuidUtils::GetRandomUuid(), "EnemyMaxed", Faction::EnemyTeam, _allObjects,
+					_tankRect, _tankHealth, UuidUtils::GetRandomUuid(), Author::Enemy1, Faction::EnemyTeam, _allObjects,
 					_events, 4u, _gameConfig.tankSpeed, Direction::UP, _gameConfig.gameMode, _bulletPool, _gameConfig);
 
-	_events->EmitEvent(Key(std::string{"EnemyMaxed"}), BonusStarPickupEvent{});
+	_events->EmitEvent(Key(Author::Enemy1), BonusStarPickupEvent{});
 
 	EXPECT_EQ(enemy->GetHealth(), _tankHealth + _bonusHeal);
 	ASSERT_EQ(_reportedHealth.size(), 1u);
@@ -61,10 +61,10 @@ TEST_F(TankHealTest, AnUpgradingTankReportsTheHealthToo)
 {
 	const std::shared_ptr<Enemy> enemy =
 			TestUtils::CreateTank<Enemy>(
-					_tankRect, _tankHealth, UuidUtils::GetRandomUuid(), "EnemyFresh", Faction::EnemyTeam, _allObjects,
+					_tankRect, _tankHealth, UuidUtils::GetRandomUuid(), Author::Enemy2, Faction::EnemyTeam, _allObjects,
 					_events, 1u, _gameConfig.tankSpeed, Direction::UP, _gameConfig.gameMode, _bulletPool, _gameConfig);
 
-	_events->EmitEvent(Key(std::string{"EnemyFresh"}), BonusStarPickupEvent{});
+	_events->EmitEvent(Key(Author::Enemy2), BonusStarPickupEvent{});
 
 	EXPECT_EQ(enemy->GetHealth(), _tankHealth + _bonusHeal);
 	ASSERT_EQ(_reportedHealth.size(), 1u);

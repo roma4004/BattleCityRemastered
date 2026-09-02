@@ -1,4 +1,4 @@
-#include "geometry/Point.h"
+﻿#include "geometry/Point.h"
 #include "TestUtils.h"
 #include "application/GameConfig.h"
 #include "application/ProjectConfig.h"
@@ -40,13 +40,11 @@ protected:
 		std::shared_ptr<Bullet> bullet =
 				TestUtils::CreateBullet(
 						rectBullet, _bulletHealth, _uuid, "Bullet1", Faction::PlayerTeam, _allObjects,
-						_events, _calibre, Direction::DOWN, _gameMode, _gameConfig, "Player1");
+						_events, _calibre, Direction::DOWN, _gameMode, _gameConfig, Author::Player1);
 		_allObjects.emplace_back(bullet);
 	}
 
-	void TearDown() override
-	{
-	}
+	void TearDown() override {}
 };
 
 TEST_F(BulletTestAdvanced, BulletTier2CanDestroySteelWall)
@@ -54,7 +52,7 @@ TEST_F(BulletTestAdvanced, BulletTier2CanDestroySteelWall)
 	if (const Bullet* bullet = dynamic_cast<Bullet*>(_allObjects.back().get()))
 	{
 		// spawn BrickWall
-		ObjRectangle wallRect = {.x = 0.0, .y = _calibre.size.y + 1, .w = _gridSize, .h = _gridSize};
+		ObjRectangle wallRect{.x = 0.0, .y = _calibre.size.y + 1, .w = _gridSize, .h = _gridSize};
 		auto steelWall = std::make_shared<SteelWall>(wallRect, _events, _uuid, _gameMode);
 		_allObjects.emplace_back(steelWall);
 

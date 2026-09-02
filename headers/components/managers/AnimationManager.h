@@ -6,8 +6,6 @@
 #include "enums/AnimationType.h"
 #include "utils/Uuid.h"
 #include <memory>
-#include <string>
-#include <string_view>
 #include <vector>
 
 enum class AnimationType : char8_t;
@@ -51,22 +49,21 @@ private:
 	void Reset();
 	void DrawObject(const AnimatedObject& object) const;
 
-	void Create(const std::string& name, ObjRectangle rect, AnimationType type, int size, int scale,
+	void Create(Author author, ObjRectangle rect, AnimationType type, int size, int scale,
 				int speed, int passes, Uuid owner);
-	void CreateAnimation(AnimationType type, ObjRectangle rect, const std::string& name, Uuid owner = {});
+	void CreateAnimation(AnimationType type, ObjRectangle rect, Author author, Uuid owner = {});
 
 	static bool UpdateFrame(AnimatedObject& object);
-	void OnHelmetEffect(const std::string& name, bool isEnable);
-	void UpdateHelmetEffect(const std::string& name, const FPoint& pos);
+	void OnHelmetEffect(Author author, bool isEnable);
+	void UpdateHelmetEffect(Author author, const FPoint& pos);
 
-	void DisableTankAnimation(const std::string& name);
-	void DisableHelmetEffect(const std::string& name);
+	void DisableTankAnimation(Author author);
+	void DisableHelmetEffect(Author author);
 
 	static AnimatedObject* FindReusable(std::vector<AnimatedObject>& container, AnimationType type);
 
 	struct AnimationPreset
 	{
-		std::string_view name{};
 		int size{};
 		int scale{};
 		int speed{};

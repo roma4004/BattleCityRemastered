@@ -21,9 +21,9 @@ class TestUtils
 {
 public:
 	static void ApplyGameMode(const std::shared_ptr<EventSystem>& events,
-							   const std::vector<std::shared_ptr<BaseObj>>& allObjects, GameConfig& gameConfig,
-							   GameMode gameMode, std::shared_ptr<RespawnManager>& respawnManager,
-							   std::shared_ptr<TankSpawner>& tankSpawner);
+							  const std::vector<std::shared_ptr<BaseObj>>& allObjects, GameConfig& gameConfig,
+							  GameMode gameMode, std::shared_ptr<RespawnManager>& respawnManager,
+							  std::shared_ptr<TankSpawner>& tankSpawner);
 
 	[[nodiscard]] static EventSubscription WireSpawnQueue(const std::shared_ptr<EventSystem>& events,
 														  std::vector<std::shared_ptr<BaseObj>>& allObjects)
@@ -38,7 +38,7 @@ public:
 	//NOTE: the other half of what SpawnManager does on PostTickUpdate - a fixture that cares about
 	//an object leaving the world has to sweep it out, otherwise nothing ever calls Deactivate
 	[[nodiscard]] static EventSubscription WireWorldDisposal(const std::shared_ptr<EventSystem>& events,
-															std::vector<std::shared_ptr<BaseObj>>& allObjects)
+															 std::vector<std::shared_ptr<BaseObj>>& allObjects)
 	{
 		return events->AddListener([objects = &allObjects](const PostTickUpdateEvent&)
 		{
@@ -91,16 +91,17 @@ public:
 
 	template<class T>
 	[[nodiscard]] static std::shared_ptr<T> CreateTank(
-			ObjRectangle rect, int health, Uuid uuid, std::string name, Faction faction,
+			ObjRectangle rect, int health, Uuid uuid, Author author, Faction faction,
 			const std::vector<std::shared_ptr<BaseObj>>& allObjects, std::shared_ptr<EventSystem> events,
-			unsigned short tier, double tankSpeed, Direction dir, GameMode gameMode, std::shared_ptr<BulletPool> bulletPool,
+			unsigned short tier, double tankSpeed, Direction dir, GameMode gameMode,
+			std::shared_ptr<BulletPool> bulletPool,
 			const GameConfig& gameConfig);
 
 	[[nodiscard]] static std::shared_ptr<Bullet> CreateBullet(
-			ObjRectangle rect, int health, Uuid uuid, std::string name, Faction faction,
+			ObjRectangle rect, const int health, const Uuid uuid, std::string name, const Faction faction,
 			const std::vector<std::shared_ptr<BaseObj>>& allObjects, std::shared_ptr<EventSystem> events,
-			const BulletCalibre& calibre, Direction dir, GameMode gameMode, const GameConfig& gameConfig,
-			std::string author)
+			const BulletCalibre& calibre, const Direction dir, const GameMode gameMode, const GameConfig& gameConfig,
+			const Author author)
 	{
 		BaseObjProperty baseObjProperty{
 				.rect = rect,
@@ -115,10 +116,10 @@ public:
 				.tier = calibre.tier,
 				.speed = calibre.speed,
 				.dir = dir,
-				.gameMode = gameMode};
+				.gameMode = gameMode,
+				.author = author};
 
-		//NOTE: a fixture that builds one by hand is its own world - nothing enqueues it
-		auto bullet = std::make_shared<Bullet>(std::move(pawnProperty), gameConfig, calibre, std::move(author));
+		auto bullet = std::make_shared<Bullet>(std::move(pawnProperty), gameConfig, calibre);
 		bullet->Activate();
 
 		return bullet;
@@ -126,18 +127,17 @@ public:
 };
 
 template<class T>
-std::shared_ptr<T> TestUtils::CreateTank(ObjRectangle rect, int health, Uuid uuid, std::string name,
-										 Faction faction, const std::vector<std::shared_ptr<BaseObj>>& allObjects,
-										 std::shared_ptr<EventSystem> events,
-										 unsigned short tier, double tankSpeed, Direction dir, GameMode gameMode,
-										 std::shared_ptr<BulletPool> bulletPool,
-										 const GameConfig& gameConfig)
+std::shared_ptr<T> TestUtils::CreateTank(
+		const ObjRectangle rect, const int health, const Uuid uuid, const Author author, const Faction faction,
+		const std::vector<std::shared_ptr<BaseObj>>& allObjects, const std::shared_ptr<EventSystem> events,
+		const unsigned short tier, const double tankSpeed, const Direction dir, const GameMode gameMode,
+		std::shared_ptr<BulletPool> bulletPool, const GameConfig& gameConfig)
 {
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
 			.health = health,
 			.uuid = uuid,
-			.name = name,
+			.name = std::string{ToString(author)},
 			.faction = faction};
 	PawnProperty pawnProperty{
 			.baseObjProperty = std::move(baseObjProperty),
@@ -146,7 +146,8 @@ std::shared_ptr<T> TestUtils::CreateTank(ObjRectangle rect, int health, Uuid uui
 			.tier = tier,
 			.speed = tankSpeed,
 			.dir = dir,
-			.gameMode = gameMode};
+			.gameMode = gameMode,
+			.author = author};
 
 	auto tank = std::make_shared<T>(std::move(pawnProperty), bulletPool, gameConfig);
 	tank->Activate();
@@ -156,7 +157,7 @@ std::shared_ptr<T> TestUtils::CreateTank(ObjRectangle rect, int health, Uuid uui
 
 template<>
 [[nodiscard]] std::shared_ptr<Player> TestUtils::CreateTank<Player>(
-		ObjRectangle rect, int tankHealth, Uuid uuid, std::string name, Faction faction,
+		ObjRectangle rect, int tankHealth, Uuid uuid, Author author, Faction faction,
 		const std::vector<std::shared_ptr<BaseObj>>& allObjects, std::shared_ptr<EventSystem> events,
 		unsigned short tier, double tankSpeed, Direction dir, GameMode gameMode, std::shared_ptr<BulletPool> bulletPool,
 		const GameConfig& gameConfig);

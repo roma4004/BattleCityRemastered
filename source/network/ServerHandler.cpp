@@ -19,7 +19,7 @@ ServerHandler::~ServerHandler()
 {
 	StopIoThread([this](std::function<void()> done)
 	{
-		_server->Shutdown(DisconnectReason::HostShutdown, std::move(done));
+		_server->Shutdown(DisconnectReason::HostShutdown, done);
 	});
 }
 

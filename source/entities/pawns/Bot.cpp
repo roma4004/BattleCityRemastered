@@ -342,7 +342,7 @@ void Bot::TickUpdate(const double deltaTime)
 	if (isMove || oldDir != _dir)
 	{
 		const FPoint pos = GetPos();
-		_events->EmitEvent(AnimationTankUpdateEvent{.name = GetName(), .pos = pos, .dir = _dir});
+		_events->EmitEvent(AnimationTankUpdateEvent{.author = _author, .pos = pos, .dir = _dir});
 
 		if (IsHost(_gameMode))
 		{
@@ -357,7 +357,7 @@ void Bot::TickUpdate(const double deltaTime)
 			moveBeh && moveBeh->ApplyMoveVelocity(deltaTime, _allObjects))
 		{
 			const FPoint pos = GetPos();
-			_events->EmitEvent(AnimationTankUpdateEvent{.name = GetName(), .pos = pos, .dir = _dir});
+			_events->EmitEvent(AnimationTankUpdateEvent{.author = _author, .pos = pos, .dir = _dir});
 
 			if (IsHost(_gameMode))
 			{

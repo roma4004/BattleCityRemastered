@@ -2,9 +2,9 @@
 
 #include "AnimationManager.h"
 #include "components/EventSystem.h"
+#include "enums/Author.h"
 #include <cstdint>
 #include <memory>
-#include <string>
 #include <vector>
 
 enum class AnimationType : char8_t;
@@ -37,10 +37,10 @@ class TextureManager final
 		int step{1};
 	};
 
-	[[nodiscard]] AtlasFrames GetAnimFrames(AnimationType type, const std::string& name, ObjRectangle rect,
+	[[nodiscard]] AtlasFrames GetAnimFrames(AnimationType type, Author author, ObjRectangle rect,
 											ObjRectangle& destRect) const;
 	[[nodiscard]] static ObjRectangle GetTextureRect(TextureType texture);
-	[[nodiscard]] ObjRectangle GetTankTextureRect(const std::string& name) const;
+	[[nodiscard]] static ObjRectangle GetTankTextureRect(Author author);
 
 public:
 	explicit TextureManager(const std::shared_ptr<EventSystem>& events);

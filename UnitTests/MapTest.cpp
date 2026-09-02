@@ -15,10 +15,10 @@ namespace
 {
 //NOTE: three rows of four, one of each interesting kind - enough to tell a parse from a guess
 constexpr auto kTinyMap = "# a comment\n"
-						  "\n"
-						  "0123\n"
-						  "4567\n"
-						  "0000\n";
+		"\n"
+		"0123\n"
+		"4567\n"
+		"0000\n";
 }
 
 TEST(MapLoaderTest, ReadsTheGridAndItsSize)
@@ -165,9 +165,11 @@ TEST(ObstacleSpawnerTest, ClientGivesTheEagleTheSameSpanTheMapDoes)
 	const ObstacleSpawner spawner{events, gameConfig};
 
 	const double cell{gameConfig.gridOffset};
-	events->EmitEvent(ObstacleSpawnedEvent{.pos = {.x = 0.0, .y = 0.0}, .type = ObstacleType::Eagle,
+	events->EmitEvent(ObstacleSpawnedEvent{.pos = {.x = 0.0, .y = 0.0},
+										   .type = ObstacleType::Eagle,
 										   .uuid = UuidUtils::GetRandomUuid()});
-	events->EmitEvent(ObstacleSpawnedEvent{.pos = {.x = 0.0, .y = 0.0}, .type = ObstacleType::Brick,
+	events->EmitEvent(ObstacleSpawnedEvent{.pos = {.x = 0.0, .y = 0.0},
+										   .type = ObstacleType::Brick,
 										   .uuid = UuidUtils::GetRandomUuid()});
 
 	ASSERT_EQ(allObjects.size(), 2u);

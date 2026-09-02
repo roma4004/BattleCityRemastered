@@ -2,6 +2,7 @@
 
 #include "geometry/Point.h"
 #include "geometry/ObjRectangle.h"
+#include "enums/Author.h"
 #include "enums/BonusType.h"
 #include "enums/ObstacleType.h"
 #include "enums/TankType.h"
@@ -10,7 +11,6 @@
 #include <memory>
 #include <string>
 
-enum class Faction : char8_t;
 class BaseObj;
 class Bonus;
 
@@ -72,8 +72,7 @@ struct SpawnObstacleEvent
 struct BonusReApplyEvent
 {
 	Uuid uuid;
-	std::string name;
-	Faction faction{};
+	Author author{};
 };
 
 struct BonusTimerReApplyOnSpawnEvent

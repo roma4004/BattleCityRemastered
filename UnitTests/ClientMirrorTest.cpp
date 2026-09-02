@@ -54,16 +54,16 @@ TEST_F(ClientMirrorTest, AClientTakesHealthOffTheWireInsteadOfHealingItself)
 {
 	const std::shared_ptr<Enemy> enemy =
 			TestUtils::CreateTank<Enemy>(
-					_tankRect, _tankHealth, UuidUtils::GetRandomUuid(), "EnemyMirrored", Faction::EnemyTeam,
+					_tankRect, _tankHealth, UuidUtils::GetRandomUuid(), Author::Enemy1, Faction::EnemyTeam,
 					_allObjects, _events, 1u, _gameConfig.tankSpeed, Direction::UP, _gameConfig.gameMode, _bulletPool,
 					_gameConfig);
 
-	_events->EmitEvent(Key(std::string{"EnemyMirrored"}), BonusStarPickupEvent{});
+	_events->EmitEvent(Key(Author::Enemy1), BonusStarPickupEvent{});
 
 	EXPECT_EQ(enemy->GetHealth(), _tankHealth);
 	EXPECT_TRUE(_reportedHealth.empty());
 
-	_events->EmitEvent(Key(enemy->GetUuid()), HealthChangedEvent{.who = "EnemyMirrored",
+	_events->EmitEvent(Key(enemy->GetUuid()), HealthChangedEvent{.who = "Enemy1",
 																 .health = _tankHealth + _bonusHeal,
 																 .uuid = enemy->GetUuid()});
 

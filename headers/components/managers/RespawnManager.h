@@ -1,6 +1,7 @@
 #pragma once
 
 #include "components/EventSystem.h"
+#include "enums/Author.h"
 #include "enums/RespawnGroup.h"
 #include "utils/Uuid.h"
 #include <chrono>
@@ -42,7 +43,7 @@ class RespawnManager final
 	unsigned short _playersSpawnCount{};
 	unsigned short _playersDeathCount{};
 
-	void OnBonusTank(const std::string& author);
+	void OnBonusTank(Author author);
 	void OnBonusTankApplied(const BonusTankAppliedEvent& event);
 	void OnTankRespawned(const TankRespawnedEvent& event);
 

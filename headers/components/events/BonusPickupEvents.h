@@ -1,5 +1,6 @@
 #pragma once
 
+#include "enums/Author.h"
 #include <string>
 
 enum class Faction : char8_t;
@@ -16,12 +17,12 @@ struct BonusGrenadePickupEvent {};
 
 struct BonusHelmetPickupEvent
 {
-	std::string author;
+	Author author{};
 };
 
 struct BonusTankPickupEvent
 {
-	std::string author;
+	Author author{};
 };
 
 //NOTE: BonusManager owns both teams' effects at once, so the faction is payload here too
@@ -67,5 +68,5 @@ struct BonusShipAppliedEvent
 
 struct BonusTankAppliedEvent
 {
-	std::string name;
+	Author author{};
 };

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "components/EventSystem.h"
+#include "entities/pawns/BulletResetProperty.h"
 #include "utils/Uuid.h"
 #include <chrono>
 #include <memory>
@@ -42,7 +43,9 @@ public:
 
 	void Subscribe();
 
-	[[nodiscard]] std::shared_ptr<BaseObj> SpawnBullet(std::optional<Uuid> uuid);
+	//NOTE: armed here - the pool owns both the free list and Bullet::Reset
+	[[nodiscard]] std::shared_ptr<Bullet> SpawnBullet(const BulletResetProperty& property,
+													 const std::optional<Uuid>& uuid = std::nullopt);
 
 	void Clear();
 };

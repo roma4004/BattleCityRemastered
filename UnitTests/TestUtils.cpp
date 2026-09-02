@@ -7,9 +7,9 @@
 #include "entities/pawns/Player.h"
 
 void TestUtils::ApplyGameMode(const std::shared_ptr<EventSystem>& events,
-							   const std::vector<std::shared_ptr<BaseObj>>& allObjects, GameConfig& gameConfig,
-							   const GameMode gameMode, std::shared_ptr<RespawnManager>& respawnManager,
-							   std::shared_ptr<TankSpawner>& tankSpawner)
+							  const std::vector<std::shared_ptr<BaseObj>>& allObjects, GameConfig& gameConfig,
+							  const GameMode gameMode, std::shared_ptr<RespawnManager>& respawnManager,
+							  std::shared_ptr<TankSpawner>& tankSpawner)
 {
 	gameConfig.gameMode = gameMode;
 	//NOTE: the enemy throttle is wall-clock time, and a test has none to spare
@@ -20,16 +20,16 @@ void TestUtils::ApplyGameMode(const std::shared_ptr<EventSystem>& events,
 
 template<>
 [[nodiscard]] std::shared_ptr<Player> TestUtils::CreateTank<Player>(
-		ObjRectangle rect, int tankHealth, Uuid uuid, std::string name, Faction faction,
+		const ObjRectangle rect, const int tankHealth, const Uuid uuid, const Author author, const Faction faction,
 		const std::vector<std::shared_ptr<BaseObj>>& allObjects, std::shared_ptr<EventSystem> events,
-		unsigned short tier, double tankSpeed, Direction dir, GameMode gameMode, std::shared_ptr<BulletPool> bulletPool,
-		const GameConfig& gameConfig)
+		const unsigned short tier, const double tankSpeed, const Direction dir, const GameMode gameMode,
+		std::shared_ptr<BulletPool> bulletPool, const GameConfig& gameConfig)
 {
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
 			.health = tankHealth,
 			.uuid = uuid,
-			.name = name,
+			.name = std::string{ToString(author)},
 			.faction = faction};
 	PawnProperty pawnProperty{
 			.baseObjProperty = std::move(baseObjProperty),
@@ -38,9 +38,10 @@ template<>
 			.tier = tier,
 			.speed = tankSpeed,
 			.dir = dir,
-			.gameMode = gameMode};
+			.gameMode = gameMode,
+			.author = author};
 
-	const InputChannel channel{name == "Player1" ? InputChannel::LocalP1 : InputChannel::LocalP2};
+	const InputChannel channel{author == Author::Player1 ? InputChannel::LocalP1 : InputChannel::LocalP2};
 	std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayer>(events, channel);
 
 	auto player = std::make_shared<Player>(std::move(pawnProperty), bulletPool, std::move(inputProvider),

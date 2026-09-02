@@ -77,8 +77,8 @@ protected:
 	BulletCalibre _calibre{};
 	Timer _shootTimer{};
 
-	void EmitDamageStatistics(const std::string& author, Faction faction) override;
-	void EmitDeathStatistics(const std::string& author, Faction faction) override;
+	void EmitDamageStatistics(Author author) override;
+	void EmitDeathStatistics(Author author) override;
 	void OnDespawned(const DespawnedEvent& event) override;
 
 	void Subscribe() override;
@@ -102,7 +102,7 @@ public:
 
 
 	//BaseObj overrides
-	void TakeDamage(unsigned int damage, const std::string& author, Faction faction) override;
+	void TakeDamage(unsigned int damage, Author author) override;
 
 	[[nodiscard]] unsigned int GetTier() const;
 
