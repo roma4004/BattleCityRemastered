@@ -27,7 +27,7 @@ namespace DirectionUtils
 }
 
 // the rectangle a step of that length sweeps through, the starting position included
-[[nodiscard]] inline ObjRectangle Sweep(const ObjRectangle& rect, const double distance, const Direction dir)
+[[nodiscard]] inline ObjRectangle Swept(const ObjRectangle& rect, const double distance, const Direction dir)
 {
 	const auto [dx, dy] = Unit(dir);
 
@@ -37,22 +37,22 @@ namespace DirectionUtils
 						.h = rect.h + std::abs(dy) * distance};
 }
 
-[[nodiscard]] inline ObjRectangle Advance(const ObjRectangle& rect, const double distance, const Direction dir)
+[[nodiscard]] inline ObjRectangle Moved(const ObjRectangle& rect, const double distance, const Direction dir)
 {
 	const auto [dx, dy] = Unit(dir);
 
 	return ObjRectangle{.x = rect.x + dx * distance, .y = rect.y + dy * distance, .w = rect.w, .h = rect.h};
 }
 
-[[nodiscard]] inline FPoint Advance(const FPoint point, const double distance, const Direction dir)
+[[nodiscard]] inline FPoint Moved(const FPoint point, const double distance, const Direction dir)
 {
 	const auto [dx, dy] = Unit(dir);
 
 	return FPoint{.x = point.x + dx * distance, .y = point.y + dy * distance};
 }
 
-// the side of the rectangle that lies along the movement axis
-[[nodiscard]] inline double SideAlong(const ObjRectangle& rect, const Direction dir)
+// the length of the rectangle along the movement axis
+[[nodiscard]] inline double SizeAlong(const ObjRectangle& rect, const Direction dir)
 {
 	return Unit(dir).y != 0.0 ? rect.h : rect.w;
 }

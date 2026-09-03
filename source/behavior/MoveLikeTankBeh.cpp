@@ -39,7 +39,7 @@ bool MoveLikeTankBeh::IsBlocking(const std::shared_ptr<BaseObj>& object, const O
 bool MoveLikeTankBeh::IsCanMove(const double deltaTime, const Direction dir,
 								const std::vector<std::shared_ptr<BaseObj>>& objects) const
 {
-	const ObjRectangle tankNextPosRect = DirectionUtils::Sweep(_rect, _speed * deltaTime, dir);
+	const ObjRectangle tankNextPosRect = DirectionUtils::Swept(_rect, _speed * deltaTime, dir);
 
 	auto blocking = [this, &tankNextPosRect](const std::shared_ptr<BaseObj>& object)
 	{
@@ -54,7 +54,7 @@ double MoveLikeTankBeh::GetTravelledDistance(const double step, const Direction 
 											 const std::vector<std::shared_ptr<BaseObj>>& objects,
 											 std::vector<std::shared_ptr<BaseObj>>& outTouched) const
 {
-	const ObjRectangle sweptRect = DirectionUtils::Sweep(_rect, step, dir);
+	const ObjRectangle sweptRect = DirectionUtils::Swept(_rect, step, dir);
 
 	//NOTE: park a pixel short - IsCollide reads a flush touch as a collision
 	constexpr double padding = 1.0;
@@ -94,7 +94,7 @@ bool MoveLikeTankBeh::Move(const Direction dir, const double deltaTime,
 	if (outCollisions.empty() && _effects.isTouchTheIce)
 	{
 		if (double& velocity = _velocity[static_cast<size_t>(dir)];
-			velocity < DirectionUtils::SideAlong(_rect, dir) * _driftMultiplicator)// clamp max accumulated velocity
+			velocity < DirectionUtils::SizeAlong(_rect, dir) * _driftMultiplicator)// clamp max accumulated velocity
 		{
 			velocity += distance * _driftMultiplicator;
 		}
@@ -107,7 +107,7 @@ bool MoveLikeTankBeh::Move(const Direction dir, const double deltaTime,
 		return false;
 	}
 
-	_rect = DirectionUtils::Advance(_rect, distance, dir);
+	_rect = DirectionUtils::Moved(_rect, distance, dir);
 
 	return true;
 }
@@ -124,7 +124,7 @@ bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime, const std::vecto
 			continue;
 		}
 
-		if (velocity > DirectionUtils::SideAlong(_rect, dir) / _driftMultiplicator)//enabling drift with delay
+		if (velocity > DirectionUtils::SizeAlong(_rect, dir) / _driftMultiplicator)//enabling drift with delay
 		{
 			speed /= _driftMultiplicator;//slow down if push the gas in drift
 		}
@@ -132,7 +132,7 @@ bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime, const std::vecto
 		if (IsCanMove(deltaTime, dir, objects)
 			&& DirectionUtils::FitsBeforeEdge(_rect, _gameConfig.battlefieldSize, speed, dir))
 		{
-			_rect = DirectionUtils::Advance(_rect, speed, dir);
+			_rect = DirectionUtils::Moved(_rect, speed, dir);
 		}
 
 		velocity -= speed;

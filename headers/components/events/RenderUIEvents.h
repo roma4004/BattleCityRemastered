@@ -1,5 +1,6 @@
 #pragma once
 
+#include "enums/TextBlockAlign.h"
 #include "geometry/Point.h"
 #include <string>
 #include <vector>
@@ -35,15 +36,19 @@ struct TextBlockLine
 	Point pos{};
 	unsigned int color{};
 	std::string text{};
+
+	[[nodiscard]] bool operator==(const TextBlockLine& rhs) const noexcept = default;
 };
 
 struct RenderMenuTextBlockEvent
 {
 	Point menuPos;
 	int lineHeight;
-	//NOTE: a centred block gets its positions from the panel, so its lines carry none
-	bool isCentered;
+	TextBlockAlign align{};
 	std::vector<TextBlockLine> lines;
+
+	//NOTE: the renderer keeps the last block to see whether it has to fit the font again
+	[[nodiscard]] bool operator==(const RenderMenuTextBlockEvent& rhs) const noexcept = default;
 };
 
 struct RenderMenuLogoEvent

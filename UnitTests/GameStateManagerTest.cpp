@@ -12,8 +12,7 @@
 #include "components/managers/RespawnManager.h"
 #include "components/managers/GameStateManager.h"
 #include "entities/obstacles/EagleTile.h"
-#include "entities/pawns/Bot.h"
-#include "entities/pawns/Player.h"
+#include "entities/pawns/Tank.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
@@ -252,8 +251,8 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 
 	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 3.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Bot> enemyBot =
-			TestUtils::CreateTank<Bot>(
+	std::shared_ptr<Tank> enemyBot =
+			TestUtils::CreateBot(
 					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
@@ -392,8 +391,8 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithThreeDeath)
 TEST_F(GameStateManagerTest, PlayerTeamLoseWithExtraLifeDeath)
 {
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
@@ -488,7 +487,7 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBaseAndExtraLife)
 	EXPECT_EQ(respawnPlayerOneActual, 0u);
 	EXPECT_EQ(respawnPlayerTwoActual, 0u);
 
-	if (const auto player = dynamic_cast<Player*>(_allObjects.back().get()))
+	if (const auto player = dynamic_cast<Tank*>(_allObjects.back().get()))
 	{
 		auto [x, y] = player->GetPos();//to relative spawn above player
 

@@ -35,13 +35,13 @@ class BulletPool final
 
 	[[nodiscard]] std::shared_ptr<Bullet> CreateNewBullet() const;
 
+	void Subscribe();
+
 public:
 	BulletPool(const std::shared_ptr<EventSystem>& events, const std::vector<std::shared_ptr<BaseObj>>& allObjects,
 			   const GameConfig& gameConfig);
 
 	~BulletPool() = default;
-
-	void Subscribe();
 
 	//NOTE: armed here - the pool owns both the free list and Bullet::Reset
 	[[nodiscard]] std::shared_ptr<Bullet> SpawnBullet(const BulletResetProperty& property,

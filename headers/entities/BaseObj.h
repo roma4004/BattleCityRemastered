@@ -6,7 +6,6 @@
 #include "enums/Faction.h"
 #include "interfaces/IObstacle.h"
 #include "utils/Uuid.h"
-#include <string>
 
 struct FPoint;
 struct BaseObjProperty;
@@ -18,8 +17,6 @@ class BaseObj : public IObstacle
 
 protected:
 	Uuid _uuid{};
-	std::string _name{};
-	std::string _nameWithUuid{};
 	Faction _faction{};
 	ObjRectangle _rect{};
 
@@ -76,10 +73,10 @@ public:
 
 	[[nodiscard]] bool GetIsPenetrable() const override;
 
-	[[nodiscard]] virtual ObjRectangle GetRect() const;
+	//NOTE: the member as it is, not a computed value - GetPos below is the counter-example
+	[[nodiscard]] virtual const ObjRectangle& GetRect() const;
 	virtual void SetRect(ObjRectangle rect);
 
-	[[nodiscard]] virtual std::string GetName() const;
 	[[nodiscard]] virtual Uuid GetUuid() const;
 	virtual void SetId(Uuid uuid);
 	[[nodiscard]] Faction GetFaction() const;

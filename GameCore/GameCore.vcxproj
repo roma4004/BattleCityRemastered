@@ -18,6 +18,10 @@
       <Configuration>Release</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug-ASan|x64">
+      <Configuration>Debug-ASan</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -53,6 +57,13 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-ASan|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <EnableASAN>true</EnableASAN>
+  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
@@ -68,6 +79,9 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug-ASan|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
@@ -130,6 +144,20 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug-ASan|x64'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatAngleIncludeAsExternal>true</TreatAngleIncludeAsExternal>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>SER20_THREAD_SAFE=1;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp23</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\source\application\CommandLineParser.cpp" />
     <ClCompile Include="..\source\application\GameConfig.cpp" />
@@ -144,6 +172,7 @@
     <ClCompile Include="..\source\components\EventSystem.cpp" />
     <ClCompile Include="..\source\components\GameStatistics.cpp" />
     <ClCompile Include="..\source\components\input\InputProviderForMenu.cpp" />
+    <ClCompile Include="..\source\components\input\InputProviderForBot.cpp" />
     <ClCompile Include="..\source\components\input\InputProviderForPlayer.cpp" />
     <ClCompile Include="..\source\components\LineOfSight.cpp" />
     <ClCompile Include="..\source\components\managers\AnimationManager.cpp" />
@@ -162,6 +191,7 @@
     <ClCompile Include="..\source\components\RightSideBar.cpp" />
     <ClCompile Include="..\source\components\LobbyScreen.cpp" />
     <ClCompile Include="..\source\components\ScoreBoard.cpp" />
+    <ClCompile Include="..\source\components\TankPool.cpp" />
     <ClCompile Include="..\source\components\TankSpawner.cpp" />
     <ClCompile Include="..\source\entities\BaseObj.cpp" />
     <ClCompile Include="..\source\entities\bonuses\Bonus.cpp" />
@@ -173,10 +203,8 @@
     <ClCompile Include="..\source\entities\obstacles\Obstacle.cpp" />
     <ClCompile Include="..\source\entities\obstacles\SteelWall.cpp" />
     <ClCompile Include="..\source\entities\obstacles\WaterTile.cpp" />
-    <ClCompile Include="..\source\entities\pawns\Bot.cpp" />
     <ClCompile Include="..\source\entities\pawns\Bullet.cpp" />
     <ClCompile Include="..\source\entities\pawns\Pawn.cpp" />
-    <ClCompile Include="..\source\entities\pawns\Player.cpp" />
     <ClCompile Include="..\source\entities\pawns\Tank.cpp" />
     <ClCompile Include="..\source\network\Client.cpp" />
     <ClCompile Include="..\source\network\ClientHandler.cpp" />
@@ -225,6 +253,7 @@
     <ClInclude Include="..\headers\components\EventSystem.h" />
     <ClInclude Include="..\headers\components\GameStatistics.h" />
     <ClInclude Include="..\headers\components\input\InputProviderForMenu.h" />
+    <ClInclude Include="..\headers\components\input\InputProviderForBot.h" />
     <ClInclude Include="..\headers\components\input\InputProviderForPlayer.h" />
     <ClInclude Include="..\headers\components\input\MouseButton.h" />
     <ClInclude Include="..\headers\components\input\PlayerKeys.h" />
@@ -247,6 +276,7 @@
     <ClInclude Include="..\headers\components\LobbyScreen.h" />
     <ClInclude Include="..\headers\components\ScoreBoard.h" />
     <ClInclude Include="..\headers\components\events\SpawnEvents.h" />
+    <ClInclude Include="..\headers\components\TankPool.h" />
     <ClInclude Include="..\headers\components\TankSpawner.h" />
     <ClInclude Include="..\headers\entities\BaseObj.h" />
     <ClInclude Include="..\headers\entities\BaseObjProperty.h" />
@@ -264,12 +294,11 @@
     <ClInclude Include="..\headers\entities\obstacles\Obstacle.h" />
     <ClInclude Include="..\headers\entities\obstacles\SteelWall.h" />
     <ClInclude Include="..\headers\entities\obstacles\WaterTile.h" />
-    <ClInclude Include="..\headers\entities\pawns\Bot.h" />
     <ClInclude Include="..\headers\entities\pawns\Bullet.h" />
     <ClInclude Include="..\headers\entities\pawns\BulletResetProperty.h" />
     <ClInclude Include="..\headers\entities\pawns\Pawn.h" />
     <ClInclude Include="..\headers\entities\pawns\PawnProperty.h" />
-    <ClInclude Include="..\headers\entities\pawns\Player.h" />
+    <ClInclude Include="..\headers\entities\pawns\TankResetProperty.h" />
     <ClInclude Include="..\headers\entities\pawns\Tank.h" />
     <ClInclude Include="..\headers\entities\Tags.h" />
     <ClInclude Include="..\headers\enums\AnimationType.h" />
@@ -290,6 +319,7 @@
     <ClInclude Include="..\headers\enums\RespawnGroup.h" />
     <ClInclude Include="..\headers\enums\StatisticsType.h" />
     <ClInclude Include="..\headers\enums\TankType.h" />
+    <ClInclude Include="..\headers\enums\TextBlockAlign.h" />
     <ClInclude Include="..\headers\enums\TextureOffset.h" />
     <ClInclude Include="..\headers\interfaces\IDrawable.h" />
     <ClInclude Include="..\headers\interfaces\IInputProvider.h" />

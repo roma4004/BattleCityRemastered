@@ -5,7 +5,6 @@
 #include "interfaces/IDrawable.h"
 #include "utils/Uuid.h"
 #include <memory>
-#include <string>
 #include <vector>
 
 enum class Faction : char8_t;
@@ -46,7 +45,6 @@ public:
 	[[nodiscard]] double GetDamageRadius() const;
 
 	[[nodiscard]] Uuid GetUuid() const override;
-	[[nodiscard]] const std::string& GetUuidStr() const;
 
 	[[nodiscard]] unsigned int GetTier() const;
 

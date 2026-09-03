@@ -12,7 +12,7 @@
 #include "entities/BaseObj.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/PawnProperty.h"
-#include "entities/pawns/Player.h"
+#include "entities/pawns/Tank.h"
 
 class RespawnManager;
 class TankSpawner;
@@ -89,8 +89,15 @@ public:
 		});
 	}
 
-	template<class T>
-	[[nodiscard]] static std::shared_ptr<T> CreateTank(
+	//NOTE: one tank either way - the two helpers differ only in who takes the wheel
+	[[nodiscard]] static std::shared_ptr<Tank> CreateBot(
+			ObjRectangle rect, int health, Uuid uuid, Author author, Faction faction,
+			const std::vector<std::shared_ptr<BaseObj>>& allObjects, std::shared_ptr<EventSystem> events,
+			unsigned short tier, double tankSpeed, Direction dir, GameMode gameMode,
+			std::shared_ptr<BulletPool> bulletPool,
+			const GameConfig& gameConfig);
+
+	[[nodiscard]] static std::shared_ptr<Tank> CreatePlayer(
 			ObjRectangle rect, int health, Uuid uuid, Author author, Faction faction,
 			const std::vector<std::shared_ptr<BaseObj>>& allObjects, std::shared_ptr<EventSystem> events,
 			unsigned short tier, double tankSpeed, Direction dir, GameMode gameMode,
@@ -98,7 +105,7 @@ public:
 			const GameConfig& gameConfig);
 
 	[[nodiscard]] static std::shared_ptr<Bullet> CreateBullet(
-			ObjRectangle rect, const int health, const Uuid uuid, std::string name, const Faction faction,
+			ObjRectangle rect, const int health, const Uuid uuid, const Faction faction,
 			const std::vector<std::shared_ptr<BaseObj>>& allObjects, std::shared_ptr<EventSystem> events,
 			const BulletCalibre& calibre, const Direction dir, const GameMode gameMode, const GameConfig& gameConfig,
 			const Author author)
@@ -107,7 +114,6 @@ public:
 				.rect = rect,
 				.health = health,
 				.uuid = uuid,
-				.name = std::move(name),
 				.faction = faction};
 		PawnProperty pawnProperty{
 				.baseObjProperty = std::move(baseObjProperty),
@@ -125,42 +131,6 @@ public:
 		return bullet;
 	}
 };
-
-template<class T>
-std::shared_ptr<T> TestUtils::CreateTank(
-		const ObjRectangle rect, const int health, const Uuid uuid, const Author author, const Faction faction,
-		const std::vector<std::shared_ptr<BaseObj>>& allObjects, const std::shared_ptr<EventSystem> events,
-		const unsigned short tier, const double tankSpeed, const Direction dir, const GameMode gameMode,
-		std::shared_ptr<BulletPool> bulletPool, const GameConfig& gameConfig)
-{
-	BaseObjProperty baseObjProperty{
-			.rect = rect,
-			.health = health,
-			.uuid = uuid,
-			.name = std::string{ToString(author)},
-			.faction = faction};
-	PawnProperty pawnProperty{
-			.baseObjProperty = std::move(baseObjProperty),
-			.allObjects = allObjects,
-			.events = events,
-			.tier = tier,
-			.speed = tankSpeed,
-			.dir = dir,
-			.gameMode = gameMode,
-			.author = author};
-
-	auto tank = std::make_shared<T>(std::move(pawnProperty), bulletPool, gameConfig);
-	tank->Activate();
-
-	return tank;
-}
-
-template<>
-[[nodiscard]] std::shared_ptr<Player> TestUtils::CreateTank<Player>(
-		ObjRectangle rect, int tankHealth, Uuid uuid, Author author, Faction faction,
-		const std::vector<std::shared_ptr<BaseObj>>& allObjects, std::shared_ptr<EventSystem> events,
-		unsigned short tier, double tankSpeed, Direction dir, GameMode gameMode, std::shared_ptr<BulletPool> bulletPool,
-		const GameConfig& gameConfig);
 
 //NOTE: an epsilon comparison is not transitive, so it is no equivalence relation and has no
 //business being spelled == on the type. Production never compares FPoints; the tests do.

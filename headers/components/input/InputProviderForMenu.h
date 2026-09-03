@@ -48,12 +48,12 @@ class InputProviderForMenu final
 	void OnMenuNavEnter(const EnterEvent& event);
 	void OnMenuNavFire(const FireEvent& event);
 
+	void Subscribe();
+
 public:
 	InputProviderForMenu(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig);
 
 	~InputProviderForMenu() = default;
-
-	void Subscribe();
 
 	void EnableMenuInput();
 	void DisableMenuInput();

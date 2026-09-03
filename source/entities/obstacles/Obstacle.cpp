@@ -10,14 +10,10 @@
 #include "enums/Faction.h"
 #include "enums/TextureType.h"
 
-Obstacle::Obstacle(const ObjRectangle rect, const int health, std::string name,
-				   const std::shared_ptr<EventSystem>& events, const Uuid uuid, const GameMode gameMode,
-				   const ObstacleType obstacleType, const CollisionTags collision)
-	: BaseObj{BaseObjProperty{.rect = rect,
-							  .health = health,
-							  .uuid = uuid,
-							  .name = std::move(name),
-							  .faction = Faction::Neutral},
+Obstacle::Obstacle(const ObjRectangle rect, const int health, const std::shared_ptr<EventSystem>& events,
+				   const Uuid uuid, const GameMode gameMode, const ObstacleType obstacleType,
+				   const CollisionTags collision)
+	: BaseObj{BaseObjProperty{.rect = rect, .health = health, .uuid = uuid, .faction = Faction::Neutral},
 			  collision}
 	, _events(events)
 	, _gameMode{gameMode}

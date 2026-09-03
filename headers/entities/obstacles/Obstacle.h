@@ -5,7 +5,6 @@
 #include "components/EventSystem.h"
 #include "interfaces/IDrawable.h"
 #include <memory>
-#include <string>
 #include <vector>
 
 enum class Faction : char8_t;
@@ -33,7 +32,7 @@ protected:
 
 	void EmitDeathStatistics(Author author) override = 0;
 
-	Obstacle(ObjRectangle rect, int health, std::string name, const std::shared_ptr<EventSystem>& events, Uuid uuid,
+	Obstacle(ObjRectangle rect, int health, const std::shared_ptr<EventSystem>& events, Uuid uuid,
 			 GameMode gameMode, ObstacleType obstacleType, CollisionTags collision);
 
 public:

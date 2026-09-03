@@ -126,6 +126,9 @@
     <ClCompile Include="..\source\components\GameStatistics.cpp">
       <Filter>source\components</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\components\input\InputProviderForBot.cpp">
+      <Filter>source\components\input</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\components\input\InputProviderForMenu.cpp">
       <Filter>source\components\input</Filter>
     </ClCompile>
@@ -183,6 +186,9 @@
     <ClCompile Include="..\source\components\ScoreBoard.cpp">
       <Filter>source\components</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\components\TankPool.cpp">
+      <Filter>source\components</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\components\TankSpawner.cpp">
       <Filter>source\components</Filter>
     </ClCompile>
@@ -216,16 +222,10 @@
     <ClCompile Include="..\source\entities\obstacles\WaterTile.cpp">
       <Filter>source\entities\obstacles</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\entities\pawns\Bot.cpp">
-      <Filter>source\entities\pawns</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\entities\pawns\Bullet.cpp">
       <Filter>source\entities\pawns</Filter>
     </ClCompile>
     <ClCompile Include="..\source\entities\pawns\Pawn.cpp">
-      <Filter>source\entities\pawns</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\entities\pawns\Player.cpp">
       <Filter>source\entities\pawns</Filter>
     </ClCompile>
     <ClCompile Include="..\source\entities\pawns\Tank.cpp">
@@ -362,6 +362,9 @@
     <ClInclude Include="..\headers\components\GameStatistics.h">
       <Filter>headers\components</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\components\input\InputProviderForBot.h">
+      <Filter>headers\components\input</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\components\input\InputProviderForMenu.h">
       <Filter>headers\components\input</Filter>
     </ClInclude>
@@ -428,6 +431,9 @@
     <ClInclude Include="..\headers\components\ScoreBoard.h">
       <Filter>headers\components</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\components\TankPool.h">
+      <Filter>headers\components</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\components\TankSpawner.h">
       <Filter>headers\components</Filter>
     </ClInclude>
@@ -476,9 +482,6 @@
     <ClInclude Include="..\headers\entities\obstacles\WaterTile.h">
       <Filter>headers\entities\obstacles</Filter>
     </ClInclude>
-    <ClInclude Include="..\headers\entities\pawns\Bot.h">
-      <Filter>headers\entities\pawns</Filter>
-    </ClInclude>
     <ClInclude Include="..\headers\entities\pawns\Bullet.h">
       <Filter>headers\entities\pawns</Filter>
     </ClInclude>
@@ -491,10 +494,10 @@
     <ClInclude Include="..\headers\entities\pawns\PawnProperty.h">
       <Filter>headers\entities\pawns</Filter>
     </ClInclude>
-    <ClInclude Include="..\headers\entities\pawns\Player.h">
+    <ClInclude Include="..\headers\entities\pawns\Tank.h">
       <Filter>headers\entities\pawns</Filter>
     </ClInclude>
-    <ClInclude Include="..\headers\entities\pawns\Tank.h">
+    <ClInclude Include="..\headers\entities\pawns\TankResetProperty.h">
       <Filter>headers\entities\pawns</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\entities\Tags.h">
@@ -552,6 +555,9 @@
       <Filter>headers\enums</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\enums\TankType.h">
+      <Filter>headers\enums</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\enums\TextBlockAlign.h">
       <Filter>headers\enums</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\enums\TextureOffset.h">

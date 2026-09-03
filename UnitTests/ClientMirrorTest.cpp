@@ -7,7 +7,7 @@
 #include "components/events/ObjectLifecycleEvents.h"
 #include "components/events/ReplicationEvents.h"
 #include "components/events/SpawnEvents.h"
-#include "entities/pawns/Bot.h"
+#include "entities/pawns/Tank.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
 #include "enums/DespawnReason.h"
@@ -52,8 +52,8 @@ protected:
 //NOTE: the host sends health as an absolute value - applying the heal here too would land it twice
 TEST_F(ClientMirrorTest, AClientTakesHealthOffTheWireInsteadOfHealingItself)
 {
-	const std::shared_ptr<Bot> enemy =
-			TestUtils::CreateTank<Bot>(
+	const std::shared_ptr<Tank> enemy =
+			TestUtils::CreateBot(
 					_tankRect, _tankHealth, UuidUtils::GetRandomUuid(), Author::Enemy1, Faction::EnemyTeam,
 					_allObjects, _events, 1u, _gameConfig.tankSpeed, Direction::UP, _gameConfig.gameMode, _bulletPool,
 					_gameConfig);

@@ -14,7 +14,7 @@
 #include <memory>
 #include <optional>
 
-ShootingBeh::ShootingBeh(ObjRectangle& rect, Direction& dir, Uuid& uuid, const Author author,
+ShootingBeh::ShootingBeh(ObjRectangle& rect, Direction& dir, Uuid& uuid, Author& author,
 						 const std::shared_ptr<BulletPool>& bulletPool,
 						 BulletCalibre& calibre, const std::shared_ptr<EventSystem>& events,
 						 const GameConfig& gameConfig)
@@ -89,7 +89,7 @@ Uuid ShootingBeh::Shot(const std::optional<Uuid> uuid)
 
 	const std::shared_ptr<Bullet> bullet = _bulletPool->SpawnBullet(bulletResetProperty, uuid);
 
-	Log::Detail("bullet spawned " + bullet->GetName() + " uuid " + UuidUtils::GetStringUuid(bullet->GetUuid()));
+	Log::Detail("bullet spawned uuid " + UuidUtils::GetStringUuid(bullet->GetUuid()));
 
 	_events->EmitEvent(AddToSpawnQueueEvent{.obj = bullet});
 

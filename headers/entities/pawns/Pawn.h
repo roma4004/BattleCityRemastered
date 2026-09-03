@@ -5,7 +5,6 @@
 #include "components/EventSystem.h"
 #include "interfaces/ITickUpdatable.h"
 #include <memory>
-#include <string>
 #include <vector>
 
 enum class Faction : char8_t;
@@ -46,7 +45,6 @@ public:
 
 protected:
 	double _speed{};
-	std::string _uuidStr{};
 	unsigned short _tier{1u};
 	const std::vector<std::shared_ptr<BaseObj>>& _allObjects;
 	std::shared_ptr<EventSystem> _events{nullptr};

@@ -2,16 +2,17 @@
 #include "application/GameConfig.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
+#include "components/TankPool.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/GameModeEvents.h"
 #include "components/events/ObjectLifecycleEvents.h"
 #include "components/events/ReplicationEvents.h"
+#include "components/input/InputProviderForBot.h"
 #include "components/input/InputProviderForPlayer.h"
 #include "components/events/SpawnEvents.h"
 #include "components/events/AnimationRenderEvents.h"
-#include "entities/pawns/Bot.h"
-#include "entities/pawns/PawnProperty.h"
-#include "entities/pawns/Player.h"
+#include "entities/pawns/Tank.h"
+#include "entities/pawns/TankResetProperty.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
 #include "enums/GameState.h"
@@ -34,6 +35,7 @@ TankSpawner::TankSpawner(const GameConfig& gameConfig, const std::vector<std::sh
 	: _allObjects{allObjects}
 	, _events{events}
 	, _bulletPool{std::make_shared<BulletPool>(events, allObjects, gameConfig)}
+	, _tankPool{std::make_shared<TankPool>(events, allObjects, gameConfig, _bulletPool)}
 	, _gameMode{gameConfig.gameMode}
 	, _gameConfig{gameConfig}
 {
@@ -143,7 +145,7 @@ bool TankSpawner::SpawnEnemy(const ObjRectangle rect, const Uuid uuid, const Tan
 
 	Log::Info("spawn " + name + " (" + std::string{ToString(faction)} + ") uuid " + UuidUtils::GetStringUuid(uuid));
 
-	DelayedSpawnStart(rect, health, name, faction, speed, uuid, type);
+	DelayedSpawnStart(rect, health, speed, uuid, type);
 
 	return true;
 }
@@ -157,7 +159,7 @@ void TankSpawner::SpawnPlayer(const ObjRectangle rect, const double speed, const
 
 	Log::Info("spawn " + name + " (" + std::string{ToString(faction)} + ") uuid " + UuidUtils::GetStringUuid(uuid));
 
-	DelayedSpawnStart(rect, health, name, faction, speed, uuid, type);
+	DelayedSpawnStart(rect, health, speed, uuid, type);
 }
 
 void TankSpawner::SpawnCoopBot(const ObjRectangle rect, const double speed, const int health, const Uuid uuid,
@@ -168,7 +170,7 @@ void TankSpawner::SpawnCoopBot(const ObjRectangle rect, const double speed, cons
 
 	Log::Info("spawn " + name + " (" + std::string{ToString(faction)} + ") uuid " + UuidUtils::GetStringUuid(uuid));
 
-	DelayedSpawnStart(rect, health, name, faction, speed, uuid, type);
+	DelayedSpawnStart(rect, health, speed, uuid, type);
 }
 
 void TankSpawner::RespawnEnemyTanks(const TankType type, const Uuid uuid,
@@ -295,34 +297,26 @@ void TankSpawner::OnClientRespawn(const TankType type, const Uuid uuid, const Ob
 
 //NOTE: on a host the second seat belongs to the peer, so its tank listens to the wire, not to this
 //keyboard - the arrow keys here then reach no listener at all instead of being filtered at the source
-std::unique_ptr<IInputProvider> TankSpawner::GetInputProvider(const TankType type) const
+std::unique_ptr<IInputProvider> TankSpawner::MakeDriver(const TankType type) const
 {
+	if (type != TankType::PLAYER1 && type != TankType::PLAYER2)
+	{
+		return std::make_unique<InputProviderForBot>(_allObjects, _gameConfig);
+	}
+
 	const PlayerSlot slot{type == TankType::PLAYER1 ? PlayerSlot::P1 : PlayerSlot::P2};
 	const bool isPeerSeat{IsHost(_gameMode) && slot == PlayerSlot::P2};
 
 	return std::make_unique<InputProviderForPlayer>(_events, isPeerSeat ? RemoteInput(slot) : LocalInput(slot));
 }
 
-std::shared_ptr<Tank> TankSpawner::CreateTank(const TankType type, PawnProperty pawnProperty)
-{
-	if (type == TankType::PLAYER1 || type == TankType::PLAYER2)
-	{
-		return std::make_shared<Player>(std::move(pawnProperty), _bulletPool, GetInputProvider(type), _gameConfig);
-	}
-
-	//NOTE: an enemy seat and a coop one build the same bot - which team it drives for is already in its faction
-	return std::make_shared<Bot>(std::move(pawnProperty), _bulletPool, _gameConfig);
-}
-
-void TankSpawner::DelayedSpawnStart(const ObjRectangle rect, const int health, const std::string& name,
-									const Faction faction, const double speed, const Uuid uuid, const TankType type)
+void TankSpawner::DelayedSpawnStart(const ObjRectangle rect, const int health, const double speed, const Uuid uuid,
+									const TankType type)
 {
 	_delayedSpawns.push_back(DelayedTankSpawn{.uuid = uuid,
 											  .type = type,
 											  .rect = rect,
 											  .health = health,
-											  .name = name,
-											  .faction = faction,
 											  .speed = speed});
 
 	_events->EmitEvent(TankSpawnEvent{.uuid = uuid});
@@ -345,22 +339,15 @@ void TankSpawner::OnSpawnDelayFinished(const Uuid uuid)
 
 void TankSpawner::DelayedSpawnWith(const DelayedTankSpawn& params)
 {
-	BaseObjProperty baseObjProperty{.rect = params.rect,
-									.health = params.health,
-									.uuid = params.uuid,
-									.name = params.name,
-									.faction = params.faction};
+	const TankResetProperty resetProperty{.uuid = params.uuid,
+										  .rect = params.rect,
+										  .health = params.health,
+										  .speed = params.speed,
+										  .author = SeatOf(params.type),
+										  .dir = Direction::UP};
 
-	PawnProperty pawnProperty{.baseObjProperty = std::move(baseObjProperty),
-							  .allObjects = _allObjects,
-							  .events = _events,
-							  .tier = 1u,
-							  .speed = params.speed,
-							  .dir = Direction::UP,
-							  .gameMode = _gameMode,
-							  .author = SeatOf(params.type)};
-
-	if (const std::shared_ptr<BaseObj> tank{CreateTank(params.type, std::move(pawnProperty))})
+	if (const std::shared_ptr<BaseObj> tank{
+				_tankPool->SpawnTank(resetProperty, MakeDriver(params.type))})
 	{
 		_events->EmitEvent(AddToSpawnQueueEvent{.obj = tank});
 		_events->EmitEvent(AnimationCreateTankMoveEvent{.rect = params.rect, .author = SeatOf(params.type)});

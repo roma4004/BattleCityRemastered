@@ -6,7 +6,6 @@
 #include "interfaces/IDrawable.h"
 #include "interfaces/IPickupableBonus.h"
 #include <memory>
-#include <string>
 #include <vector>
 
 enum class Faction : char8_t;
@@ -34,6 +33,8 @@ private:
 	void Draw() const override;
 	void OnDraw(const DrawEvent&) const;
 	void OnDespawned(const DespawnedEvent& event);
+	void Subscribe();
+	void SubscribeAsClient();
 	void Despawn(DespawnReason reason);
 
 	void EmitDamageStatistics(Author author) override;
@@ -47,8 +48,6 @@ public:
 	void Activate() override;
 	void Deactivate() override;
 
-	void Subscribe();
-	void SubscribeAsClient();
 	void Expire();
 
 	//BaseObj overrides

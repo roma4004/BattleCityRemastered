@@ -15,24 +15,76 @@
 #include "entities/obstacles/BushTile.h"
 #include "entities/obstacles/IceTile.h"
 #include "entities/pawns/PawnProperty.h"
+#include "entities/pawns/TankResetProperty.h"
+#include "geometry/Point.h"
+#include "enums/Direction.h"
 #include "enums/GameMode.h"
+#include "interfaces/IInputProvider.h"
+#include "interfaces/IMoveBeh.h"
 #include "interfaces/IPickupableBonus.h"
 #include "utils/ColliderUtils.h"
 #include "enums/Faction.h"
 #include <ranges>
 
-Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, const GameConfig& gameConfig)
+namespace
+{
+//NOTE: a tank fires at the rate of the seat it drives, and the seat is already in its faction
+constexpr std::chrono::milliseconds kEnemySeatCooldown{1000};
+constexpr std::chrono::milliseconds kPlayerSeatCooldown{500};
+}//namespace
+
+Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool,
+		   std::unique_ptr<IInputProvider> inputProvider, const GameConfig& gameConfig)
 	: Pawn{std::move(pawnProperty), gameConfig, kCollision}
+	, _inputProvider{std::move(inputProvider)}
 {
 	_moveBeh = std::make_unique<MoveLikeTankBeh>(_rect, _speed, _uuid, _effects, gameConfig);
+	ApplyFreshLoadout();
+	_shootingBeh = std::make_shared<ShootingBeh>(_rect, _dir, _uuid, _author, bulletPool, _calibre, _events,
+												 _gameConfig);
+
+	_inputProvider->Enable();
+}
+
+//NOTE: the tier is not touched here - a fresh tank gets it from its property, a reused one from Reset
+void Tank::ApplyFreshLoadout()
+{
 	_calibre = BulletCalibre{.speed = 300.0,
 							 .damage = 15,
 							 .damageRadius = 18.0,
 							 .tier = _tier,
 							 .size{.x = 9.0, .y = 9.0}};
-	_shootingBeh = std::make_shared<ShootingBeh>(_rect, _dir, _uuid, _author, bulletPool, _calibre, _events,
-												 _gameConfig);
+	_effects = BonusEffectProperty{};
+	_shootTimer = Timer{};
+	_shootTimer.cooldown = _faction == Faction::EnemyTeam ? kEnemySeatCooldown : kPlayerSeatCooldown;
+}
 
+//NOTE: the behaviours hold references into the tank, so they survive a reset untouched - only the
+//values they read have to be put back
+void Tank::Reset(const TankResetProperty& resetProperty, std::unique_ptr<IInputProvider> driver)
+{
+	//NOTE: the id first - Enable() below subscribes by it
+	SetId(resetProperty.uuid);
+	SetRect(resetProperty.rect);
+	SetHealth(resetProperty.health);
+	SetDirection(resetProperty.dir);
+	SetSpeed(resetProperty.speed);
+
+	_author = resetProperty.author;
+	_faction = FactionOf(_author);
+	_tier = 1u;
+
+	ApplyFreshLoadout();
+
+	if (auto* moveBeh = dynamic_cast<MoveLikeTankBeh*>(_moveBeh.get()))
+	{
+		moveBeh->ResetVelocity();
+	}
+
+	_inputProvider = std::move(driver);
+	_inputProvider->Enable();
+
+	SetIsAlive(true);
 }
 
 void Tank::OnBonusTimerReApplyOnSpawn(const BonusTimerReApplyOnSpawnEvent& event)
@@ -125,6 +177,91 @@ void Tank::TakeDamage(const unsigned int damage, const Author author)
 }
 
 unsigned int Tank::GetTier() const { return _tier; }
+
+bool Tank::CanShoot() const { return !_shootTimer.isActive; }
+
+std::vector<Direction> Tank::GetFreePathSides(const double deltaTime,
+											  const std::optional<Direction> excludeDirection) const
+{
+	return _moveBeh->GetFreePathSides(deltaTime, excludeDirection, _allObjects);
+}
+
+void Tank::EmitMoved() const
+{
+	const FPoint pos = GetPos();
+	_events->EmitEvent(AnimationTankUpdateEvent{.author = _author, .pos = pos, .dir = _dir});
+
+	if (IsHost(_gameMode))
+	{
+		_events->EmitEvent(PosChangedEvent{.pos = pos, .dir = _dir, .uuid = _uuid});
+	}
+}
+
+//NOTE: one loop for every tank there is - the driver answers where to go and whether to fire, the
+//tank does the rest the same way whoever is at the wheel
+void Tank::TickUpdate(const double deltaTime)
+{
+	if (_shootTimer.isActive && _shootTimer.IsCooldownFinish())
+	{
+		_shootTimer.isActive = false;
+	}
+
+	std::vector<std::shared_ptr<BaseObj>> outCollisions;
+	const Direction oldDir{_dir};
+
+	const std::optional<Direction> chosen = _inputProvider->ChooseDirection(*this, deltaTime);
+	bool isMove{false};
+	if (chosen)
+	{
+		SetDirection(*chosen);
+		isMove = _moveBeh->Move(*chosen, deltaTime, _allObjects, outCollisions);
+	}
+
+	//NOTE: only when a move was actually attempted - a player pressing nothing is not blocked
+	if (chosen && !isMove)
+	{
+		if (const std::optional<Direction> revised = _inputProvider->ReviseWhenMoveBlocked(*this, deltaTime))
+		{
+			SetDirection(*revised);
+		}
+	}
+
+	if (isMove || oldDir != _dir)
+	{
+		EmitMoved();
+	}
+
+	if (_effects.isTouchTheIce)
+	{
+		if (auto* moveBeh = dynamic_cast<MoveLikeTankBeh*>(_moveBeh.get());
+			moveBeh && moveBeh->ApplyMoveVelocity(deltaTime, _allObjects))
+		{
+			EmitMoved();
+		}
+	}
+
+	if (!outCollisions.empty())
+	{
+		HandleBonusPickUp(outCollisions.front());
+		outCollisions.clear();
+	}
+
+	_effects.isTouchTheBushes = IsTouchBush();
+	if (const bool isTouchTheIce = IsTouchIce();
+		_effects.isTouchTheIce != isTouchTheIce)
+	{
+		_effects.isTouchTheIce = isTouchTheIce;
+		if (auto* moveBeh = dynamic_cast<MoveLikeTankBeh*>(_moveBeh.get()))
+		{
+			moveBeh->ResetVelocity();
+		}
+	}
+
+	if (_inputProvider->ShouldShoot(*this) && !_shootTimer.isActive)
+	{
+		Shot();
+	}
+}
 
 void Tank::Shot(const std::optional<Uuid> withUuid)
 {

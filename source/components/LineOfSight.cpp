@@ -174,7 +174,19 @@ void LineOfSight::SortToNearest()
 	});
 }
 
-std::vector<std::shared_ptr<BaseObj>>& LineOfSight::GetUpSideObstacles() { return _upSideObstacles; }
-std::vector<std::shared_ptr<BaseObj>>& LineOfSight::GetLeftSideObstacles() { return _leftSideObstacles; }
-std::vector<std::shared_ptr<BaseObj>>& LineOfSight::GetDownSideObstacles() { return _downSideObstacles; }
-std::vector<std::shared_ptr<BaseObj>>& LineOfSight::GetRightSideObstacles() { return _rightSideObstacles; }
+std::vector<std::shared_ptr<BaseObj>>& LineOfSight::SideObstacles(const Direction dir)
+{
+	switch (dir)
+	{
+		case Direction::UP:
+			return _upSideObstacles;
+		case Direction::LEFT:
+			return _leftSideObstacles;
+		case Direction::DOWN:
+			return _downSideObstacles;
+		case Direction::RIGHT:
+			break;
+	}
+
+	return _rightSideObstacles;
+}

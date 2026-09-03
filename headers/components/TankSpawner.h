@@ -12,21 +12,22 @@
 #include <vector>
 
 enum class Faction : char8_t;
-struct PawnProperty;
 enum class TankType : char8_t;
 enum class GameMode : char8_t;
+struct PawnProperty;
 struct BonusEffectProperty;
-class Tank;
-class BaseObj;
-class BulletPool;
-class EventSystem;
-class IInputProvider;
-class GameConfig;
 struct GameResetEvent;
 struct RespawnTankEvent;
 struct SpawnAnimationFinishedEvent;
 struct TankRespawnedEvent;
 struct TankSpawnCompletedEvent;
+class Tank;
+class BaseObj;
+class BulletPool;
+class TankPool;
+class EventSystem;
+class IInputProvider;
+class GameConfig;
 
 class TankSpawner final
 {
@@ -39,8 +40,6 @@ class TankSpawner final
 		TankType type;
 		ObjRectangle rect;
 		int health;
-		std::string name;
-		Faction faction{};
 		double speed;
 	};
 
@@ -48,6 +47,7 @@ class TankSpawner final
 
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
+	std::shared_ptr<TankPool> _tankPool{nullptr};
 	std::vector<EventSubscription> _subs{};
 	Timer _enemySpawnTimer{};
 	GameMode _gameMode{};
@@ -70,10 +70,8 @@ class TankSpawner final
 	void SpawnPlayer(ObjRectangle rect, double speed, int health, Uuid uuid, TankType type);
 	void SpawnCoopBot(ObjRectangle rect, double speed, int health, Uuid uuid, TankType type);
 
-	void DelayedSpawnStart(ObjRectangle rect, int health, const std::string& name, Faction faction, double speed,
-						   Uuid uuid, TankType type);
-	[[nodiscard]] std::unique_ptr<IInputProvider> GetInputProvider(TankType type) const;
-	[[nodiscard]] std::shared_ptr<Tank> CreateTank(TankType type, PawnProperty pawnProperty);
+	void DelayedSpawnStart(ObjRectangle rect, int health, double speed, Uuid uuid, TankType type);
+	[[nodiscard]] std::unique_ptr<IInputProvider> MakeDriver(TankType type) const;
 
 	void RespawnEnemyTanks(TankType type, Uuid uuid, std::optional<ObjRectangle> rect = std::nullopt);
 	[[nodiscard]] ObjRectangle GetPlayerRandomPosX(bool isFirst) const;

@@ -55,6 +55,6 @@ void LobbyScreen::Draw() const
 
 	_events->EmitEvent(RenderMenuTextBlockEvent{.menuPos = _pos,
 												.lineHeight = lineStep,
-												.isCentered = true,
+												.align = TextBlockAlign::CenteredInPanel,
 												.lines = std::move(lines)});
 }

@@ -13,7 +13,7 @@
 #include "entities/obstacles/SteelWall.h"
 #include "entities/obstacles/WaterTile.h"
 #include "entities/pawns/Bullet.h"
-#include "entities/pawns/Player.h"
+#include "entities/pawns/Tank.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
 #include "enums/InputChannel.h"
@@ -67,8 +67,8 @@ TEST_F(PlayerTest, TankMoveInSideScreenUp)
 {
 	const auto windowHeight = static_cast<double>(_gameConfig.battlefieldSize.y);
 	const ObjRectangle rectPlayer{.x = 0.0, .y = windowHeight - _tankSize, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
@@ -91,8 +91,8 @@ TEST_F(PlayerTest, TankMoveInSideScreenLeft)
 {
 	const auto windowWidth = static_cast<double>(_gameConfig.battlefieldSize.x);
 	const ObjRectangle rectPlayer{.x = windowWidth - _tankSize, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
@@ -114,8 +114,8 @@ TEST_F(PlayerTest, TankMoveInSideScreenLeft)
 TEST_F(PlayerTest, TankMoveInSideScreenDown)
 {
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
@@ -137,8 +137,8 @@ TEST_F(PlayerTest, TankMoveInSideScreenDown)
 TEST_F(PlayerTest, TankMoveInSideScreenRight)
 {
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
@@ -160,8 +160,8 @@ TEST_F(PlayerTest, TankMoveInSideScreenRight)
 TEST_F(PlayerTest, TankMoveOutSideScreenUp)
 {
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
@@ -180,8 +180,8 @@ TEST_F(PlayerTest, TankMoveOutSideScreenUp)
 TEST_F(PlayerTest, TankMoveOutSideScreenLeft)
 {
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
@@ -205,8 +205,8 @@ TEST_F(PlayerTest, TankMoveOutSideScreenDown)
 								  .y = windowHeight - _tankSize,
 								  .w = _tankSize,
 								  .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
@@ -230,8 +230,8 @@ TEST_F(PlayerTest, TankMoveOutSideScreenRight)
 								  .y = windowHeight - _tankSize,
 								  .w = _tankSize,
 								  .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
@@ -250,8 +250,8 @@ TEST_F(PlayerTest, TankMoveOutSideScreenRight)
 TEST_F(PlayerTest, TankSetPos)
 {
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
@@ -268,8 +268,8 @@ TEST_F(PlayerTest, TankSetPos)
 TEST_F(PlayerTest, TankSetDirection)
 {
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::LEFT, _gameMode, _bulletPool, _gameConfig);
@@ -289,8 +289,8 @@ TEST_F(PlayerTest, TankDontMoveWhenShotUp)
 	const auto windowWidth = static_cast<double>(_gameConfig.battlefieldSize.x);
 	const auto windowHeight = static_cast<double>(_gameConfig.battlefieldSize.y);
 	const ObjRectangle rectPlayer{.x = windowWidth / 2.0, .y = windowHeight / 2.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
@@ -311,8 +311,8 @@ TEST_F(PlayerTest, TankDontMoveWhenShotLeft)
 	const auto windowWidth = static_cast<double>(_gameConfig.battlefieldSize.x);
 	const auto windowHeight = static_cast<double>(_gameConfig.battlefieldSize.y);
 	const ObjRectangle rectPlayer{.x = windowWidth / 2.0, .y = windowHeight / 2.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::LEFT, _gameMode, _bulletPool, _gameConfig);
@@ -333,8 +333,8 @@ TEST_F(PlayerTest, TankDontMoveWhenShotDown)
 	const auto windowWidth = static_cast<double>(_gameConfig.battlefieldSize.x);
 	const auto windowHeight = static_cast<double>(_gameConfig.battlefieldSize.y);
 	const ObjRectangle rectPlayer{.x = windowWidth / 2.0, .y = windowHeight / 2.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
@@ -355,8 +355,8 @@ TEST_F(PlayerTest, TankDontMoveWhenShotRight)
 	const auto windowWidth = static_cast<double>(_gameConfig.battlefieldSize.x);
 	const auto windowHeight = static_cast<double>(_gameConfig.battlefieldSize.y);
 	const ObjRectangle rectPlayer{.x = windowWidth / 2.0, .y = windowHeight / 2.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::RIGHT, _gameMode, _bulletPool, _gameConfig);
@@ -375,8 +375,8 @@ TEST_F(PlayerTest, TankDontMoveWhenShotRight)
 TEST_F(PlayerTest, TankShotInSideScreenDown)
 {
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
@@ -396,8 +396,8 @@ TEST_F(PlayerTest, TankShotInSideScreenDown)
 TEST_F(PlayerTest, TankShotInSideScreenRight)
 {
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::RIGHT, _gameMode, _bulletPool, _gameConfig);
@@ -423,8 +423,8 @@ TEST_F(PlayerTest, TankShotInSideScreenUp)
 								  .y = windowHeight - _tankSize,
 								  .w = _tankSize,
 								  .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::RIGHT, _gameMode, _bulletPool, _gameConfig);
@@ -450,8 +450,8 @@ TEST_F(PlayerTest, TankShotInSideScreenLeft)
 								  .y = windowHeight - _tankSize,
 								  .w = _tankSize,
 								  .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::RIGHT, _gameMode, _bulletPool, _gameConfig);
@@ -472,8 +472,8 @@ TEST_F(PlayerTest, TankShotInSideScreenLeft)
 TEST_F(PlayerTest, TankShotOutSideScreen)
 {
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
@@ -529,16 +529,16 @@ TEST_F(PlayerTest, TankShotOutSideScreen)
 TEST_F(PlayerTest, TankCantPassThroughTank)
 {
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
 	const ObjRectangle rectPlayer2{.x = 0, .y = _tankSize + 1, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player2 =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player2 =
+			TestUtils::CreatePlayer(
 					rectPlayer2, _tankHealth, _uuid, Author::Player2, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
@@ -561,8 +561,8 @@ TEST_F(PlayerTest, TankCantPassThroughTank)
 TEST_F(PlayerTest, TankCantPassThroughBrickWall)
 {
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
@@ -587,8 +587,8 @@ TEST_F(PlayerTest, TankCantPassThroughBrickWall)
 TEST_F(PlayerTest, TankCantPassThroughSteelWall)
 {
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
@@ -613,8 +613,8 @@ TEST_F(PlayerTest, TankCantPassThroughSteelWall)
 TEST_F(PlayerTest, TankCantPassThroughWater)
 {
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
@@ -639,8 +639,8 @@ TEST_F(PlayerTest, TankCantPassThroughWater)
 TEST_F(PlayerTest, TankCantPassThroughfortressWall)
 {
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
@@ -666,8 +666,8 @@ TEST_F(PlayerTest, ShotWhileMovingDoesNotBlowUpOnOwnTank)
 	const auto windowWidth = static_cast<double>(_gameConfig.battlefieldSize.x);
 	const auto windowHeight = static_cast<double>(_gameConfig.battlefieldSize.y);
 	const ObjRectangle rectPlayer{.x = windowWidth / 2.0, .y = windowHeight / 2.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::LEFT, _gameMode, _bulletPool, _gameConfig);
@@ -704,8 +704,8 @@ TEST_F(PlayerTest, PointBlankShotDamagesTheShooter)
 	const auto windowWidth = static_cast<double>(_gameConfig.battlefieldSize.x);
 	const auto windowHeight = static_cast<double>(_gameConfig.battlefieldSize.y);
 	const ObjRectangle rectPlayer{.x = windowWidth / 2.0, .y = windowHeight / 2.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::LEFT, _gameMode, _bulletPool, _gameConfig);

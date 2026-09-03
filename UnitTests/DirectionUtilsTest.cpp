@@ -11,48 +11,48 @@ constexpr UPoint kField{.x = 500, .y = 400};
 constexpr double kStep = 5.0;
 }// namespace
 
-TEST(DirectionUtilsTest, SweepCoversTheStartAndTheStep)
+TEST(DirectionUtilsTest, SweptCoversTheStartAndTheStep)
 {
-	const ObjRectangle up = DirectionUtils::Sweep(kRect, kStep, Direction::UP);
+	const ObjRectangle up = DirectionUtils::Swept(kRect, kStep, Direction::UP);
 	EXPECT_DOUBLE_EQ(up.y, 95.0);
 	EXPECT_DOUBLE_EQ(up.Bottom(), kRect.Bottom());
 
-	const ObjRectangle left = DirectionUtils::Sweep(kRect, kStep, Direction::LEFT);
+	const ObjRectangle left = DirectionUtils::Swept(kRect, kStep, Direction::LEFT);
 	EXPECT_DOUBLE_EQ(left.x, 95.0);
 	EXPECT_DOUBLE_EQ(left.Right(), kRect.Right());
 
-	const ObjRectangle down = DirectionUtils::Sweep(kRect, kStep, Direction::DOWN);
+	const ObjRectangle down = DirectionUtils::Swept(kRect, kStep, Direction::DOWN);
 	EXPECT_DOUBLE_EQ(down.y, kRect.y);
 	EXPECT_DOUBLE_EQ(down.Bottom(), 125.0);
 
-	const ObjRectangle right = DirectionUtils::Sweep(kRect, kStep, Direction::RIGHT);
+	const ObjRectangle right = DirectionUtils::Swept(kRect, kStep, Direction::RIGHT);
 	EXPECT_DOUBLE_EQ(right.x, kRect.x);
 	EXPECT_DOUBLE_EQ(right.Right(), 125.0);
 }
 
-TEST(DirectionUtilsTest, AdvanceKeepsTheSize)
+TEST(DirectionUtilsTest, MovedKeepsTheSize)
 {
 	for (const Direction dir: {Direction::UP, Direction::LEFT, Direction::DOWN, Direction::RIGHT})
 	{
-		const ObjRectangle moved = DirectionUtils::Advance(kRect, kStep, dir);
+		const ObjRectangle moved = DirectionUtils::Moved(kRect, kStep, dir);
 		EXPECT_DOUBLE_EQ(moved.w, kRect.w);
 		EXPECT_DOUBLE_EQ(moved.h, kRect.h);
 	}
 
-	EXPECT_DOUBLE_EQ(DirectionUtils::Advance(kRect, kStep, Direction::UP).y, 95.0);
-	EXPECT_DOUBLE_EQ(DirectionUtils::Advance(kRect, kStep, Direction::LEFT).x, 95.0);
-	EXPECT_DOUBLE_EQ(DirectionUtils::Advance(kRect, kStep, Direction::DOWN).y, 105.0);
-	EXPECT_DOUBLE_EQ(DirectionUtils::Advance(kRect, kStep, Direction::RIGHT).x, 105.0);
+	EXPECT_DOUBLE_EQ(DirectionUtils::Moved(kRect, kStep, Direction::UP).y, 95.0);
+	EXPECT_DOUBLE_EQ(DirectionUtils::Moved(kRect, kStep, Direction::LEFT).x, 95.0);
+	EXPECT_DOUBLE_EQ(DirectionUtils::Moved(kRect, kStep, Direction::DOWN).y, 105.0);
+	EXPECT_DOUBLE_EQ(DirectionUtils::Moved(kRect, kStep, Direction::RIGHT).x, 105.0);
 }
 
-TEST(DirectionUtilsTest, AdvancedPointFollowsTheSameTable)
+TEST(DirectionUtilsTest, MovedPointFollowsTheSameTable)
 {
 	constexpr FPoint center{.x = 10.0, .y = 10.0};
 
-	EXPECT_DOUBLE_EQ(DirectionUtils::Advance(center, 3.0, Direction::UP).y, 7.0);
-	EXPECT_DOUBLE_EQ(DirectionUtils::Advance(center, 3.0, Direction::DOWN).y, 13.0);
-	EXPECT_DOUBLE_EQ(DirectionUtils::Advance(center, 3.0, Direction::LEFT).x, 7.0);
-	EXPECT_DOUBLE_EQ(DirectionUtils::Advance(center, 3.0, Direction::RIGHT).x, 13.0);
+	EXPECT_DOUBLE_EQ(DirectionUtils::Moved(center, 3.0, Direction::UP).y, 7.0);
+	EXPECT_DOUBLE_EQ(DirectionUtils::Moved(center, 3.0, Direction::DOWN).y, 13.0);
+	EXPECT_DOUBLE_EQ(DirectionUtils::Moved(center, 3.0, Direction::LEFT).x, 7.0);
+	EXPECT_DOUBLE_EQ(DirectionUtils::Moved(center, 3.0, Direction::RIGHT).x, 13.0);
 }
 
 TEST(DirectionUtilsTest, GapToMeasuresFromTheLeadingEdge)
@@ -100,12 +100,12 @@ TEST(DirectionUtilsTest, FitsBeforeEdgeLetsAStepLandOnTheNearBorderOnly)
 	EXPECT_FALSE(DirectionUtils::FitsBeforeEdge(rect, field, 11.0, Direction::UP));
 }
 
-TEST(DirectionUtilsTest, SideAlongPicksTheAxisOfMovement)
+TEST(DirectionUtilsTest, SizeAlongPicksTheAxisOfMovement)
 {
 	constexpr ObjRectangle wide{.x = 0.0, .y = 0.0, .w = 40.0, .h = 10.0};
 
-	EXPECT_DOUBLE_EQ(DirectionUtils::SideAlong(wide, Direction::UP), 10.0);
-	EXPECT_DOUBLE_EQ(DirectionUtils::SideAlong(wide, Direction::DOWN), 10.0);
-	EXPECT_DOUBLE_EQ(DirectionUtils::SideAlong(wide, Direction::LEFT), 40.0);
-	EXPECT_DOUBLE_EQ(DirectionUtils::SideAlong(wide, Direction::RIGHT), 40.0);
+	EXPECT_DOUBLE_EQ(DirectionUtils::SizeAlong(wide, Direction::UP), 10.0);
+	EXPECT_DOUBLE_EQ(DirectionUtils::SizeAlong(wide, Direction::DOWN), 10.0);
+	EXPECT_DOUBLE_EQ(DirectionUtils::SizeAlong(wide, Direction::LEFT), 40.0);
+	EXPECT_DOUBLE_EQ(DirectionUtils::SizeAlong(wide, Direction::RIGHT), 40.0);
 }

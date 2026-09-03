@@ -20,65 +20,55 @@
 
 namespace
 {
-//NOTE: what used to be a subclass each - a name and the event a pickup emits. Everything else about a
-//bonus was already the same code. Captureless, so the emitter stays a plain pointer and the whole
-//catalogue can be constexpr
+//NOTE: what used to be a subclass each - just the event a pickup emits. Captureless, so the
+//catalogue stays constexpr
 using PickupEmitter = void (*)(EventSystem& events, Author author, Faction faction);
 
 struct BonusRecipe
 {
 	BonusType type{};
-	std::string_view name{};
 	PickupEmitter emit{};
 };
 
 constexpr std::array s_recipes{
 		BonusRecipe{.type = BonusType::Timer,
-					.name = "BonusTimer",
 					.emit = [](EventSystem& events, Author, const Faction faction)
 					{
 						//NOTE: a timer freezes the other side, same as a grenade wipes it
 						events.EmitEvent(BonusTimerPickupEvent{.target = EnemiesOf(faction)});
 					}},
 		BonusRecipe{.type = BonusType::Helmet,
-					.name = "BonusHelmet",
 					.emit = [](EventSystem& events, const Author author, Faction)
 					{
 						events.EmitEvent(BonusHelmetPickupEvent{.author = author});
 					}},
 		BonusRecipe{.type = BonusType::Grenade,
-					.name = "BonusGrenade",
 					.emit = [](EventSystem& events, Author, const Faction faction)
 					{
 						//NOTE: the one bonus whose effect lands on the other side
 						events.EmitEvent(Key(EnemiesOf(faction)), BonusGrenadePickupEvent{});
 					}},
 		BonusRecipe{.type = BonusType::Tank,
-					.name = "BonusTank",
 					.emit = [](EventSystem& events, const Author author, Faction)
 					{
 						events.EmitEvent(BonusTankPickupEvent{.author = author});
 					}},
 		BonusRecipe{.type = BonusType::Star,
-					.name = "BonusStar",
 					.emit = [](EventSystem& events, const Author author, Faction)
 					{
 						events.EmitEvent(Key(author), BonusStarPickupEvent{});
 					}},
 		BonusRecipe{.type = BonusType::Shovel,
-					.name = "BonusShovel",
 					.emit = [](EventSystem& events, Author, const Faction faction)
 					{
 						events.EmitEvent(BonusShovelPickupEvent{.faction = faction});
 					}},
 		BonusRecipe{.type = BonusType::Caliber,
-					.name = "BonusCaliber",
 					.emit = [](EventSystem& events, const Author author, Faction)
 					{
 						events.EmitEvent(Key(author), BonusCaliberPickupEvent{});
 					}},
 		BonusRecipe{.type = BonusType::Ship,
-					.name = "BonusShip",
 					.emit = [](EventSystem& events, const Author author, Faction)
 					{
 						events.EmitEvent(Key(author), BonusShipPickupEvent{});
@@ -129,7 +119,6 @@ Bonus::Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& event
 	: BaseObj{BaseObjProperty{.rect = rect,
 							  .health = 1,
 							  .uuid = uuid,
-							  .name = std::string{GetRecipe(bonusType).name},
 							  .faction = Faction::Neutral},
 			  kCollision}
 	, _gameMode{gameMode}

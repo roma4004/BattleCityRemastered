@@ -8,7 +8,7 @@
 #include "components/events/TimingEvents.h"
 #include "entities/BaseObj.h"
 #include "entities/pawns/Bullet.h"
-#include "entities/pawns/Player.h"
+#include "entities/pawns/Tank.h"
 #include "enums/Direction.h"
 #include "enums/Faction.h"
 #include "enums/GameMode.h"
@@ -94,7 +94,7 @@ TEST_F(BulletPoolTest, ReturnedBulletLeavesTheBus)
 		}
 	});
 
-	std::shared_ptr<Player> player = TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player = TestUtils::CreatePlayer(
 			ObjRectangle{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize}, _tankHealth, _uuid, Author::Player1,
 			Faction::PlayerTeam, _allObjects, _events, 1u, _tankSpeed, Direction::DOWN, _gameMode, _bulletPool,
 			_gameConfig);

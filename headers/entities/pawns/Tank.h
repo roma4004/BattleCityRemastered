@@ -11,11 +11,9 @@
 #include <vector>
 
 enum class Faction : char8_t;
+enum class Direction : char8_t;
 struct UPoint;
-class PlayerTest;
-class IShootable;
-class BulletPool;
-class GameConfig;
+struct TankResetProperty;
 struct PosChangedEvent;
 struct BonusTimerReApplyOnSpawnEvent;
 struct PostDrawEvent;
@@ -29,6 +27,10 @@ struct BonusGrenadePickupEvent;
 struct BonusStarPickupEvent;
 struct BonusCaliberPickupEvent;
 struct BonusShipPickupEvent;
+class IInputProvider;
+class IShootable;
+class BulletPool;
+class GameConfig;
 
 class Tank : public Pawn
 {
@@ -36,6 +38,10 @@ class Tank : public Pawn
 
 	using milliseconds = std::chrono::milliseconds;
 	std::shared_ptr<IShootable> _shootingBeh{nullptr};
+	std::unique_ptr<IInputProvider> _inputProvider{nullptr};
+
+	void EmitMoved() const;
+	void ApplyFreshLoadout();
 
 	void SubscribeAsClient() override;
 	void SubscribeBonus();
@@ -82,6 +88,7 @@ protected:
 	void OnDespawned(const DespawnedEvent& event) override;
 
 	void Subscribe() override;
+	void TickUpdate(double deltaTime) override;
 
 	// bonuses
 	BonusEffectProperty _effects{};
@@ -96,7 +103,8 @@ protected:
 public:
 	static constexpr CollisionTags kCollision{tags::Impassable{}, tags::Destructible{}, tags::Impenetrable{}};
 
-	Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, const GameConfig& gameConfig);
+	Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool,
+		 std::unique_ptr<IInputProvider> inputProvider, const GameConfig& gameConfig);
 
 	~Tank() override;
 
@@ -104,7 +112,15 @@ public:
 	//BaseObj overrides
 	void TakeDamage(unsigned int damage, Author author) override;
 
+	//NOTE: back into service from the pool - everything a previous life could have changed
+	void Reset(const TankResetProperty& resetProperty, std::unique_ptr<IInputProvider> driver);
+
 	[[nodiscard]] unsigned int GetTier() const;
+
+	//NOTE: what the driver needs of the tank it drives
+	[[nodiscard]] bool CanShoot() const;
+	[[nodiscard]] std::vector<Direction> GetFreePathSides(double deltaTime,
+															 std::optional<Direction> excludeDirection) const;
 
 	[[nodiscard]] double GetBulletWidth() const;
 	void SetBulletWidth(double bulletWidth);

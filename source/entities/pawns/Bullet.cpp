@@ -23,13 +23,11 @@ Bullet::Bullet(PawnProperty pawnProperty, const GameConfig& gameConfig, const Bu
 	, _calibre{calibre}
 {
 	_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _uuid, _authorUuid, _gameConfig, _calibre);
-
-	_name = "Bullet";
 }
 
 Bullet::~Bullet()
 {
-	Log::Detail("bullet destroyed " + _nameWithUuid);
+	Log::Detail("bullet destroyed " + UuidUtils::GetStringUuid(_uuid));
 }
 
 void Bullet::Subscribe()
@@ -58,11 +56,6 @@ Uuid Bullet::GetUuid() const
 	return _uuid;
 }
 
-const std::string& Bullet::GetUuidStr() const
-{
-	return _uuidStr;
-}
-
 void Bullet::Reset(const BulletResetProperty& resetProperty)
 {
 	SetRect(resetProperty.rect);
@@ -73,9 +66,6 @@ void Bullet::Reset(const BulletResetProperty& resetProperty)
 	_authorUuid = resetProperty.authorUuid;
 	_faction = FactionOf(_author);
 	_calibre = resetProperty.calibre;
-
-	_uuidStr = UuidUtils::GetStringUuid(_uuid);
-	_nameWithUuid = _name + _uuidStr;
 
 	SetIsAlive(true);
 }

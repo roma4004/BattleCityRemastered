@@ -2,6 +2,7 @@
 
 #include "geometry/Point.h"
 #include "components/EventSystem.h"
+#include "components/events/RenderUIEvents.h"
 #include "components/managers/TextCache.h"
 #include <SDL3/SDL_render.h>
 #include <cstddef>
@@ -21,7 +22,6 @@ struct PreTickUpdateEvent;
 struct PresentFrameEvent;
 struct GameModeChangedToEvent;
 struct RenderTextEvent;
-struct RenderMenuTextBlockEvent;
 struct RenderMenuBackgroundEvent;
 struct RenderMenuLogoEvent;
 struct RenderMenuSelectorIconEvent;
@@ -67,10 +67,11 @@ class RenderManager
 
 	MenuParams _menuParams{};
 
-	//NOTE: kept between frames - only the lines or the scale can change the answer
+	//NOTE: kept between frames - the block itself is the key, so there is nothing to hash and
+	//nothing to collide
 	struct FittedBlock
 	{
-		size_t key{};
+		RenderMenuTextBlockEvent block{};
 		float scale{};
 		int pointSize{};
 	};

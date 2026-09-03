@@ -11,7 +11,7 @@
 #include "entities/bonuses/Bonus.h"
 #include "entities/obstacles/BrickWall.h"
 #include "entities/pawns/Bullet.h"
-#include "entities/pawns/Player.h"
+#include "entities/pawns/Tank.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
 #include "enums/Faction.h"
@@ -68,13 +68,13 @@ TEST_F(DeadObjectFilterTest, BonusIsPickedUpOncePerFrame)
 	auto* bonus = dynamic_cast<Bonus*>(_allObjects.back().get());
 	ASSERT_NE(nullptr, bonus);
 
-	std::shared_ptr<Player> playerAbove = TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> playerAbove = TestUtils::CreatePlayer(
 			ObjRectangle{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize}, _gameConfig.tankHealth, _uuid,
 			Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u, _tankSpeed, Direction::DOWN, _gameMode,
 			_bulletPool, _gameConfig);
 	_allObjects.emplace_back(playerAbove);
 
-	std::shared_ptr<Player> playerBelow = TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> playerBelow = TestUtils::CreatePlayer(
 			ObjRectangle{.x = 0.0, .y = _tankSize * 2.0 + 2.0, .w = _tankSize, .h = _tankSize},
 			_gameConfig.tankHealth, _uuid, Author::Player2, Faction::PlayerTeam, _allObjects, _events, 1u, _tankSpeed,
 			Direction::UP, _gameMode, _bulletPool, _gameConfig);
@@ -104,7 +104,7 @@ TEST_F(DeadObjectFilterTest, BrickWallHitByTwoBulletsDiesOnce)
 	const ObjRectangle fromLeft{.x = 100.0 - _calibre.size.x, .y = 103.0, .w = _calibre.size.x, .h = _calibre.size.y};
 	auto bullet1{
 			TestUtils::CreateBullet(
-					fromLeft, 1, _uuid, "Bullet1", Faction::PlayerTeam, _allObjects, _events, _calibre,
+					fromLeft, 1, _uuid, Faction::PlayerTeam, _allObjects, _events, _calibre,
 					Direction::RIGHT, _gameMode, _gameConfig, Author::Player1)
 	};
 	_allObjects.emplace_back(bullet1);
@@ -112,7 +112,7 @@ TEST_F(DeadObjectFilterTest, BrickWallHitByTwoBulletsDiesOnce)
 	const ObjRectangle fromRight{.x = 100.0 + cell, .y = 103.0, .w = _calibre.size.x, .h = _calibre.size.y};
 	auto bullet2{
 			TestUtils::CreateBullet(
-					fromRight, 1, _uuid, "Bullet2", Faction::PlayerTeam, _allObjects, _events, _calibre,
+					fromRight, 1, _uuid, Faction::PlayerTeam, _allObjects, _events, _calibre,
 					Direction::LEFT, _gameMode, _gameConfig, Author::Player1)
 	};
 	_allObjects.emplace_back(bullet2);
@@ -130,7 +130,7 @@ TEST_F(DeadObjectFilterTest, TankKilledThisFrameTakesNoSecondHit)
 	int deaths{0};
 	const EventSubscription deathSub = _events->AddListener([&deaths](const TankDiedEvent&) { ++deaths; });
 
-	std::shared_ptr<Player> player = TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player = TestUtils::CreatePlayer(
 			ObjRectangle{.x = 100.0, .y = 100.0, .w = _tankSize, .h = _tankSize}, _tankHealth, _uuid, Author::Player1,
 			Faction::PlayerTeam, _allObjects, _events, 1u, _tankSpeed, Direction::UP, _gameMode, _bulletPool,
 			_gameConfig);
@@ -139,7 +139,7 @@ TEST_F(DeadObjectFilterTest, TankKilledThisFrameTakesNoSecondHit)
 	const ObjRectangle fromLeft{.x = 100.0 - _calibre.size.x, .y = 115.0, .w = _calibre.size.x, .h = _calibre.size.y};
 	auto bullet1{
 			TestUtils::CreateBullet(
-					fromLeft, 1, _uuid, "Bullet1", Faction::EnemyTeam, _allObjects, _events, _calibre, Direction::RIGHT,
+					fromLeft, 1, _uuid, Faction::EnemyTeam, _allObjects, _events, _calibre, Direction::RIGHT,
 					_gameMode, _gameConfig, Author::Enemy1)
 	};
 	_allObjects.emplace_back(bullet1);
@@ -147,7 +147,7 @@ TEST_F(DeadObjectFilterTest, TankKilledThisFrameTakesNoSecondHit)
 	const ObjRectangle fromRight{.x = 100.0 + _tankSize, .y = 115.0, .w = _calibre.size.x, .h = _calibre.size.y};
 	auto bullet2{
 			TestUtils::CreateBullet(
-					fromRight, 1, _uuid, "Bullet2", Faction::EnemyTeam, _allObjects, _events, _calibre, Direction::LEFT,
+					fromRight, 1, _uuid, Faction::EnemyTeam, _allObjects, _events, _calibre, Direction::LEFT,
 					_gameMode, _gameConfig, Author::Enemy2)
 	};
 	_allObjects.emplace_back(bullet2);

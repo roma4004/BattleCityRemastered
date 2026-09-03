@@ -23,7 +23,7 @@ double MoveLikeBulletBeh::GetTravelledDistance(const double deltaTime, const Dir
 											   const std::vector<std::shared_ptr<BaseObj>>& objects) const
 {
 	const double step = _calibre.speed * deltaTime;
-	const ObjRectangle nextPosRect = DirectionUtils::Sweep(_rect, step, dir);
+	const ObjRectangle nextPosRect = DirectionUtils::Swept(_rect, step, dir);
 
 	double travelled = std::min(step, DirectionUtils::GapToEdge(_rect, _gameConfig.battlefieldSize, dir));
 
@@ -45,7 +45,7 @@ double MoveLikeBulletBeh::GetTravelledDistance(const double deltaTime, const Dir
 FPoint MoveLikeBulletBeh::GetBlowCenter(const double deltaTime, const Direction dir,
 										const std::vector<std::shared_ptr<BaseObj>>& objects) const
 {
-	return DirectionUtils::Advance(_rect.Center(), GetTravelledDistance(deltaTime, dir, objects), dir);
+	return DirectionUtils::Moved(_rect.Center(), GetTravelledDistance(deltaTime, dir, objects), dir);
 }
 
 bool MoveLikeBulletBeh::IsSelfOrAuthor(const BaseObj& object) const
@@ -58,7 +58,7 @@ bool MoveLikeBulletBeh::IsSelfOrAuthor(const BaseObj& object) const
 bool MoveLikeBulletBeh::IsCanMove(const double deltaTime, const Direction dir,
 								  const std::vector<std::shared_ptr<BaseObj>>& objects) const
 {
-	const ObjRectangle nextPosRect = DirectionUtils::Sweep(_rect, _calibre.speed * deltaTime, dir);
+	const ObjRectangle nextPosRect = DirectionUtils::Swept(_rect, _calibre.speed * deltaTime, dir);
 
 	return std::ranges::none_of(objects, [this, nextPosRect](const std::shared_ptr<BaseObj>& object)
 	{
@@ -77,7 +77,7 @@ bool MoveLikeBulletBeh::Move(const Direction dir, const double deltaTime,
 	if (speed <= DirectionUtils::GapToEdge(_rect, _gameConfig.battlefieldSize, dir)
 		&& IsCanMove(deltaTime, dir, objects))
 	{
-		_rect = DirectionUtils::Advance(_rect, speed, dir);
+		_rect = DirectionUtils::Moved(_rect, speed, dir);
 
 		return true;
 	}

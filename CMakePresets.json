@@ -53,6 +53,24 @@
       "cacheVariables": {
         "ENABLE_COVERAGE": "ON"
       }
+    },
+    {
+      "name": "GlibcxxDebug-MinGW",
+      "displayName": "GlibcxxDebug-MinGW",
+      "description": "Debug + libstdc++ debug containers (_GLIBCXX_DEBUG): checked iterators, bounds and invalidation - the class of defect the plain GCC build never sees. The macro changes container ABI, so it rides on CMAKE_CXX_FLAGS and this tree is built whole, ThirdParty included; its objects must never be mixed with another tree's.",
+      "inherits": "Debug-MinGW",
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": "-D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC"
+      }
+    },
+    {
+      "name": "UbsanTrap-Clang",
+      "displayName": "UbsanTrap-Clang",
+      "description": "Debug-Clang + UBSan that traps instead of reporting: MSYS2 ships no -fsanitize=undefined runtime for the mingw target, so there is no message and no stack - UB compiles to a ud2 and the process dies with an illegal instruction at the spot. Read which test crashed, or run it under a debugger. C++ only, the C in SDL3 stays uninstrumented.",
+      "inherits": "Debug-Clang",
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": "-fsanitize=undefined -fsanitize-trap=undefined"
+      }
     }
   ],
   "buildPresets": [
@@ -75,6 +93,14 @@
     {
       "name": "Coverage-MinGW",
       "configurePreset": "Coverage-MinGW"
+    },
+    {
+      "name": "GlibcxxDebug-MinGW",
+      "configurePreset": "GlibcxxDebug-MinGW"
+    },
+    {
+      "name": "UbsanTrap-Clang",
+      "configurePreset": "UbsanTrap-Clang"
     }
   ],
   "testPresets": [
@@ -95,6 +121,20 @@
     {
       "name": "Coverage-MinGW",
       "configurePreset": "Coverage-MinGW",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "GlibcxxDebug-MinGW",
+      "configurePreset": "GlibcxxDebug-MinGW",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "UbsanTrap-Clang",
+      "configurePreset": "UbsanTrap-Clang",
       "output": {
         "outputOnFailure": true
       }

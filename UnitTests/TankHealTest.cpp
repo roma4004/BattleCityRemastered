@@ -4,7 +4,7 @@
 #include "components/EventSystem.h"
 #include "components/events/BonusPickupEvents.h"
 #include "components/events/ReplicationEvents.h"
-#include "entities/pawns/Bot.h"
+#include "entities/pawns/Tank.h"
 #include "enums/Direction.h"
 #include "enums/Faction.h"
 #include "enums/GameMode.h"
@@ -44,8 +44,8 @@ protected:
 //NOTE: a maxed tank returns early from the star handler, so the heal cannot ride the pickup event
 TEST_F(TankHealTest, AMaxedTankStillReportsTheHealth)
 {
-	const std::shared_ptr<Bot> enemy =
-			TestUtils::CreateTank<Bot>(
+	const std::shared_ptr<Tank> enemy =
+			TestUtils::CreateBot(
 					_tankRect, _tankHealth, UuidUtils::GetRandomUuid(), Author::Enemy1, Faction::EnemyTeam, _allObjects,
 					_events, 4u, _gameConfig.tankSpeed, Direction::UP, _gameConfig.gameMode, _bulletPool, _gameConfig);
 
@@ -59,8 +59,8 @@ TEST_F(TankHealTest, AMaxedTankStillReportsTheHealth)
 
 TEST_F(TankHealTest, AnUpgradingTankReportsTheHealthToo)
 {
-	const std::shared_ptr<Bot> enemy =
-			TestUtils::CreateTank<Bot>(
+	const std::shared_ptr<Tank> enemy =
+			TestUtils::CreateBot(
 					_tankRect, _tankHealth, UuidUtils::GetRandomUuid(), Author::Enemy2, Faction::EnemyTeam, _allObjects,
 					_events, 1u, _gameConfig.tankSpeed, Direction::UP, _gameConfig.gameMode, _bulletPool, _gameConfig);
 

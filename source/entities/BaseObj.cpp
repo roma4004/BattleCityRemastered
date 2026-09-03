@@ -1,28 +1,21 @@
 #include "entities/BaseObj.h"
 #include "geometry/Point.h"
 #include "entities/BaseObjProperty.h"
-#include "utils/UuidUtils.h"
-#include <utility>
 
 BaseObj::BaseObj(BaseObjProperty baseObjProperty, const CollisionTags collision)
 	: _health(baseObjProperty.health)
 	, _collision{collision}
 	, _uuid{baseObjProperty.uuid}
-	, _name{std::move(baseObjProperty.name)}
 	, _faction{baseObjProperty.faction}
 	, _rect{baseObjProperty.rect}
-{
-	_nameWithUuid = _name + UuidUtils::GetStringUuid(_uuid);
-}
+{}
 
 BaseObj::~BaseObj() = default;
 
 
-ObjRectangle BaseObj::GetRect() const { return _rect; }
+const ObjRectangle& BaseObj::GetRect() const { return _rect; }
 
 void BaseObj::SetRect(const ObjRectangle rect) { _rect = rect; }
-
-std::string BaseObj::GetName() const { return _name; }
 
 Uuid BaseObj::GetUuid() const { return _uuid; }
 

@@ -68,9 +68,9 @@ class RespawnManager final
 	void OnTankDied(const TankDiedEvent& event);
 	void RespawnTanks();
 
-public:
 	std::vector<SpawnSlot> _slots{};
 
+public:
 	RespawnManager(const std::shared_ptr<EventSystem>& events, GameMode gameMode);
 
 	~RespawnManager() = default;

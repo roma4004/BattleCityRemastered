@@ -1,10 +1,11 @@
 #include "TestUtils.h"
 #include "components/TankSpawner.h"
 #include "components/managers/RespawnManager.h"
+#include "components/input/InputProviderForBot.h"
 #include "components/input/InputProviderForPlayer.h"
 #include "entities/BaseObj.h"
 #include "entities/pawns/PawnProperty.h"
-#include "entities/pawns/Player.h"
+#include "entities/pawns/Tank.h"
 
 void TestUtils::ApplyGameMode(const std::shared_ptr<EventSystem>& events,
 							  const std::vector<std::shared_ptr<BaseObj>>& allObjects, GameConfig& gameConfig,
@@ -18,20 +19,21 @@ void TestUtils::ApplyGameMode(const std::shared_ptr<EventSystem>& events,
 	tankSpawner = std::make_shared<TankSpawner>(gameConfig, allObjects, events);
 }
 
-template<>
-[[nodiscard]] std::shared_ptr<Player> TestUtils::CreateTank<Player>(
-		const ObjRectangle rect, const int tankHealth, const Uuid uuid, const Author author, const Faction faction,
-		const std::vector<std::shared_ptr<BaseObj>>& allObjects, std::shared_ptr<EventSystem> events,
-		const unsigned short tier, const double tankSpeed, const Direction dir, const GameMode gameMode,
-		std::shared_ptr<BulletPool> bulletPool, const GameConfig& gameConfig)
+namespace
+{
+[[nodiscard]] PawnProperty MakePawnProperty(const ObjRectangle rect, const int health, const Uuid uuid,
+										   const Author author, const Faction faction,
+										   const std::vector<std::shared_ptr<BaseObj>>& allObjects,
+										   const std::shared_ptr<EventSystem>& events, const unsigned short tier,
+										   const double tankSpeed, const Direction dir, const GameMode gameMode)
 {
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
-			.health = tankHealth,
+			.health = health,
 			.uuid = uuid,
-			.name = std::string{ToString(author)},
 			.faction = faction};
-	PawnProperty pawnProperty{
+
+	return PawnProperty{
 			.baseObjProperty = std::move(baseObjProperty),
 			.allObjects = allObjects,
 			.events = events,
@@ -40,13 +42,39 @@ template<>
 			.dir = dir,
 			.gameMode = gameMode,
 			.author = author};
+}
+}//namespace
+
+std::shared_ptr<Tank> TestUtils::CreateBot(
+		const ObjRectangle rect, const int health, const Uuid uuid, const Author author, const Faction faction,
+		const std::vector<std::shared_ptr<BaseObj>>& allObjects, std::shared_ptr<EventSystem> events,
+		const unsigned short tier, const double tankSpeed, const Direction dir, const GameMode gameMode,
+		std::shared_ptr<BulletPool> bulletPool, const GameConfig& gameConfig)
+{
+	PawnProperty pawnProperty{MakePawnProperty(rect, health, uuid, author, faction, allObjects, events, tier,
+											   tankSpeed, dir, gameMode)};
+
+	auto tank = std::make_shared<Tank>(std::move(pawnProperty), bulletPool,
+									   std::make_unique<InputProviderForBot>(allObjects, gameConfig), gameConfig);
+	tank->Activate();
+
+	return tank;
+}
+
+std::shared_ptr<Tank> TestUtils::CreatePlayer(
+		const ObjRectangle rect, const int health, const Uuid uuid, const Author author, const Faction faction,
+		const std::vector<std::shared_ptr<BaseObj>>& allObjects, std::shared_ptr<EventSystem> events,
+		const unsigned short tier, const double tankSpeed, const Direction dir, const GameMode gameMode,
+		std::shared_ptr<BulletPool> bulletPool, const GameConfig& gameConfig)
+{
+	PawnProperty pawnProperty{MakePawnProperty(rect, health, uuid, author, faction, allObjects, events, tier,
+											   tankSpeed, dir, gameMode)};
 
 	const InputChannel channel{author == Author::Player1 ? InputChannel::LocalP1 : InputChannel::LocalP2};
-	std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayer>(events, channel);
 
-	auto player = std::make_shared<Player>(std::move(pawnProperty), bulletPool, std::move(inputProvider),
-										   gameConfig);
-	player->Activate();
+	auto tank = std::make_shared<Tank>(std::move(pawnProperty), bulletPool,
+									   std::make_unique<InputProviderForPlayer>(events, channel), gameConfig);
+	tank->Activate();
 
-	return player;
+	return tank;
 }

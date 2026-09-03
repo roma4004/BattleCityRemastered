@@ -5,6 +5,7 @@
 #include <memory>
 #include <vector>
 
+enum class Direction : char8_t;
 struct UPoint;
 struct FPoint;
 class BaseObj;
@@ -31,8 +32,6 @@ public:
 
 	void SortToNearest();
 
-	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>>& GetUpSideObstacles();
-	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>>& GetLeftSideObstacles();
-	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>>& GetDownSideObstacles();
-	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>>& GetRightSideObstacles();
+	//NOTE: the four lists are one table keyed by direction - callers never need to name a side
+	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>>& SideObstacles(Direction dir);
 };

@@ -46,12 +46,12 @@ class Menu final
 	void DrawControlHints(std::vector<TextBlockLine>& lines) const;
 	void DisplayMenu(bool isDisplayed);
 
+	void Draw();
+
 public:
 	Menu(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig);
 
 	~Menu() = default;
-
-	void Draw();
 
 	[[nodiscard]] MenuKeys GetKeysStats() const { return _input->GetKeysStats(); }
 };

@@ -13,7 +13,7 @@
 #include "entities/obstacles/BrickWall.h"
 #include "entities/obstacles/WaterTile.h"
 #include "entities/pawns/Bullet.h"
-#include "entities/pawns/Player.h"
+#include "entities/pawns/Tank.h"
 #include "enums/Direction.h"
 #include "enums/Faction.h"
 #include "enums/GameMode.h"
@@ -74,7 +74,7 @@ protected:
 TEST_F(AnimationTriggersTest, BulletExplodesWhereItHit)
 {
 	const ObjRectangle bulletRect{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
-	auto bullet = TestUtils::CreateBullet(bulletRect, _health, _uuid, "Bullet1", Faction::PlayerTeam, _allObjects,
+	auto bullet = TestUtils::CreateBullet(bulletRect, _health, _uuid, Faction::PlayerTeam, _allObjects,
 										  _events, _calibre, Direction::DOWN, GameMode::OnePlayer, _gameConfig,
 										  Author::Player1);
 	_allObjects.emplace_back(bullet);
@@ -91,7 +91,7 @@ TEST_F(AnimationTriggersTest, BulletExplodesWhereItHit)
 TEST_F(AnimationTriggersTest, ClientBulletExplodesOnDespawn)
 {
 	const ObjRectangle bulletRect{.x = 20.0, .y = 30.0, .w = _calibre.size.x, .h = _calibre.size.y};
-	auto bullet = TestUtils::CreateBullet(bulletRect, _health, _uuid, "Bullet1", Faction::PlayerTeam, _allObjects,
+	auto bullet = TestUtils::CreateBullet(bulletRect, _health, _uuid, Faction::PlayerTeam, _allObjects,
 										  _events, _calibre, Direction::DOWN, GameMode::PlayAsClient, _gameConfig,
 										  Author::Player1);
 	_allObjects.emplace_back(bullet);
@@ -108,7 +108,7 @@ TEST_F(AnimationTriggersTest, ClientBulletExplodesOnDespawn)
 TEST_F(AnimationTriggersTest, TankExplodesWhereItDied)
 {
 	constexpr ObjRectangle tankRect{.x = 40.0, .y = 50.0, .w = 12.0, .h = 12.0};
-	auto tank = TestUtils::CreateTank<Player>(tankRect, _health, _uuid, Author::Player1, Faction::PlayerTeam,
+	auto tank = TestUtils::CreatePlayer(tankRect, _health, _uuid, Author::Player1, Faction::PlayerTeam,
 											  _allObjects, _events, 1u, 142.0, Direction::UP,
 											  GameMode::OnePlayer, _bulletPool, _gameConfig);
 
@@ -123,7 +123,7 @@ TEST_F(AnimationTriggersTest, TankExplodesWhereItDied)
 TEST_F(AnimationTriggersTest, ALiveTankTakenOffTheFieldExplodesNothing)
 {
 	{
-		auto tank = TestUtils::CreateTank<Player>(ObjRectangle{.x = 0.0, .y = 0.0, .w = 12.0, .h = 12.0}, _health,
+		auto tank = TestUtils::CreatePlayer(ObjRectangle{.x = 0.0, .y = 0.0, .w = 12.0, .h = 12.0}, _health,
 												  _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 												  142.0, Direction::UP, GameMode::OnePlayer, _bulletPool,
 												  _gameConfig);
@@ -156,7 +156,7 @@ TEST_F(AnimationTriggersTest, WaterTileAsksForItsFlowWhenBuilt)
 
 TEST_F(AnimationTriggersTest, HelmetPickupTurnsTheShieldOnAndOff)
 {
-	auto tank = TestUtils::CreateTank<Player>(ObjRectangle{.x = 0.0, .y = 0.0, .w = 12.0, .h = 12.0}, _health, _uuid,
+	auto tank = TestUtils::CreatePlayer(ObjRectangle{.x = 0.0, .y = 0.0, .w = 12.0, .h = 12.0}, _health, _uuid,
 											  Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u, 142.0,
 											  Direction::UP, GameMode::OnePlayer, _bulletPool, _gameConfig);
 

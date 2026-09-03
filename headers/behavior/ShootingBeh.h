@@ -20,7 +20,7 @@ class ShootingBeh final : public IShootable
 	ObjRectangle& _rect;
 	Direction& _direction;
 	const GameConfig& _gameConfig;
-	Author _author{};
+	Author& _author;
 	BulletCalibre& _calibre;
 
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
@@ -29,7 +29,7 @@ class ShootingBeh final : public IShootable
 	[[nodiscard]] ObjRectangle GetBulletStartRect() const;
 
 public:
-	ShootingBeh(ObjRectangle& rect, Direction& dir, Uuid& uuid, Author author,
+	ShootingBeh(ObjRectangle& rect, Direction& dir, Uuid& uuid, Author& author,
 				const std::shared_ptr<BulletPool>& bulletPool, BulletCalibre& calibre,
 				const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig);
 

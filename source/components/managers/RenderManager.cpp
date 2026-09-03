@@ -14,7 +14,6 @@
 #include "utils/Log.h"
 #include <algorithm>
 #include <cmath>
-#include <functional>
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_video.h>
 #include <SDL3_ttf/SDL_ttf.h>
@@ -470,7 +469,9 @@ int RenderManager::FitBlockPointSize(const RenderMenuTextBlockEvent& event, cons
 		const auto fits = [&](const TextBlockLine& line)
 		{
 			const Point size = _textCache.MeasureString(line.text, pointSize, scale);
-			const bool fitsWidth = event.isCentered ? size.x <= panel.w : line.pos.x + size.x <= panel.x + panel.w;
+			const bool fitsWidth = event.align == TextBlockAlign::CenteredInPanel
+										   ? size.x <= panel.w
+										   : line.pos.x + size.x <= panel.x + panel.w;
 
 			return fitsWidth && size.y <= event.lineHeight;
 		};
@@ -492,20 +493,12 @@ void RenderManager::DrawMenuTextBlock(const RenderMenuTextBlockEvent& event) con
 	}
 
 	const float scale = CurrentRenderScale();
-	const size_t key = std::ranges::fold_left(event.lines, std::hash<int>{}(event.lineHeight),
-											  [](const size_t seed, const TextBlockLine& line)
-											  {
-												  return seed ^ (std::hash<std::string>{}(line.text)
-																 + std::hash<int>{}(line.pos.x) + 0x9e3779b9u
-																 + (seed << 6u) + (seed >> 2u));
-											  });
-
-	if (key != _menuBlockFit.key || scale != _menuBlockFit.scale)
+	if (event != _menuBlockFit.block || scale != _menuBlockFit.scale)
 	{
-		_menuBlockFit = {.key = key, .scale = scale, .pointSize = FitBlockPointSize(event, scale)};
+		_menuBlockFit = {.block = event, .scale = scale, .pointSize = FitBlockPointSize(event, scale)};
 	}
 
-	if (event.isCentered)
+	if (event.align == TextBlockAlign::CenteredInPanel)
 	{
 		const SDL_Rect panel = MenuPanelRect(event.menuPos);
 		const int blockHeight = static_cast<int>(event.lines.size()) * event.lineHeight;

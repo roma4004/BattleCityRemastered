@@ -199,9 +199,12 @@ void FrameChannel::TryStartWrite()
 	WriteNextFrame();
 }
 
+//NOTE: pop before the write, not on completion - CloseForReconnect may clear the queue mid-flight
 void FrameChannel::WriteNextFrame()
 {
 	const auto frame = _writeQueue.front();
+	_writeQueue.pop_front();
+
 	auto self(shared_from_this());
 	boost::asio::async_write(_socket, boost::asio::buffer(*frame),
 							 [this, self, frame](const boost::system::error_code& ec, std::size_t)
@@ -222,8 +225,6 @@ void FrameChannel::WriteNextFrame()
 									 ReportError();
 									 return;
 								 }
-
-								 _writeQueue.pop_front();
 
 								 if (_writeQueue.empty())
 								 {

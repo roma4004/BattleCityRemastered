@@ -24,8 +24,6 @@ Pawn::Pawn(PawnProperty pawnProperty, const GameConfig& gameConfig, const Collis
 	{
 		_uuid = UuidUtils::GetRandomUuid();
 	}
-
-	_uuidStr = UuidUtils::GetStringUuid(_uuid);
 }
 
 Pawn::~Pawn() = default;

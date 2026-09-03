@@ -59,8 +59,10 @@ set(GAME_CORE_SOURCES
         source/components/RightSideBar.cpp
         source/components/LobbyScreen.cpp
         source/components/ScoreBoard.cpp
+        source/components/TankPool.cpp
         source/components/TankSpawner.cpp
         source/components/input/InputProviderForMenu.cpp
+        source/components/input/InputProviderForBot.cpp
         source/components/input/InputProviderForPlayer.cpp
         source/components/managers/AnimationManager.cpp
         source/components/managers/BonusManager.cpp
@@ -80,10 +82,8 @@ set(GAME_CORE_SOURCES
         source/entities/obstacles/Obstacle.cpp
         source/entities/obstacles/SteelWall.cpp
         source/entities/obstacles/WaterTile.cpp
-        source/entities/pawns/Bot.cpp
         source/entities/pawns/Bullet.cpp
         source/entities/pawns/Pawn.cpp
-        source/entities/pawns/Player.cpp
         source/entities/pawns/Tank.cpp
         source/network/Client.cpp
         source/network/ClientHandler.cpp
@@ -126,6 +126,7 @@ set(UNIT_TESTS_SOURCES
         UnitTests/GameStateTest.cpp
         UnitTests/ClientMirrorTest.cpp
         UnitTests/TankHealTest.cpp
+        UnitTests/TankTerrainTest.cpp
         UnitTests/MenuInputTest.cpp
         UnitTests/NetworkTest.cpp
         UnitTests/PauseSyncTest.cpp
@@ -152,6 +153,12 @@ target_link_libraries(game_core PUBLIC
         ser20::ser20
         ${PLATFORM_NETWORK_LIBS}
 )
+
+#NOTE: without this, include order picks win_thread or posix_thread per TU, and the timer thread is
+# started as one and joined as the other - SIGSEGV in ~ClientHandler. MSVC has no pthreads at all.
+if (WIN32 AND NOT MSVC)
+    target_compile_definitions(game_core PUBLIC BOOST_ASIO_HAS_PTHREADS=1)
+endif ()
 
 # window/render/audio/input + the game loop; depends on game_core, never the other way round
 add_library(game_platform STATIC ${GAME_PLATFORM_SOURCES})

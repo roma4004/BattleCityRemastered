@@ -15,8 +15,7 @@
 #include "components/managers/FortressManager.h"
 #include "entities/obstacles/FortressWalls.h"
 #include "entities/pawns/Bullet.h"
-#include "entities/pawns/Bot.h"
-#include "entities/pawns/Player.h"
+#include "entities/pawns/Tank.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
@@ -81,8 +80,8 @@ TEST_F(BonusTest, BonusPickUp)
 {
 	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
@@ -112,8 +111,8 @@ TEST_F(BonusTest, BonusNotPickUp)
 {
 	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
@@ -143,8 +142,8 @@ TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 {
 	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
@@ -156,8 +155,8 @@ TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 
 	// spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Bot> enemyBot =
-			TestUtils::CreateTank<Bot>(
+	std::shared_ptr<Tank> enemyBot =
+			TestUtils::CreateBot(
 					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
@@ -177,8 +176,8 @@ TEST_F(BonusTest, TimerNotPickUpEnemyCanMove)
 {
 	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
@@ -190,8 +189,8 @@ TEST_F(BonusTest, TimerNotPickUpEnemyCanMove)
 
 	// spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Bot> enemyBot =
-			TestUtils::CreateTank<Bot>(
+	std::shared_ptr<Tank> enemyBot =
+			TestUtils::CreateBot(
 					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
@@ -209,8 +208,8 @@ TEST_F(BonusTest, HelmetPickUpAndBulletCantDamageTank)
 {
 	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
@@ -227,7 +226,7 @@ TEST_F(BonusTest, HelmetPickUpAndBulletCantDamageTank)
 	const ObjRectangle rectBullet{.x = _tankSize + 1.0, .y = 0.0, .w = 6.0, .h = 5.0};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, "Bullet1", Faction::EnemyTeam, _allObjects,
+					rectBullet, _bulletHealth, _uuid, Faction::EnemyTeam, _allObjects,
 					_events, _calibre, Direction::LEFT, _gameMode, _gameConfig, Author::Enemy1);
 	_allObjects.emplace_back(bullet);
 
@@ -241,8 +240,8 @@ TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 {
 	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
@@ -259,7 +258,7 @@ TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 	const ObjRectangle rectBullet{.x = _tankSize + 1.0, .y = 0.0, .w = 6.0, .h = 5.0};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, "Bullet1", Faction::EnemyTeam, _allObjects,
+					rectBullet, _bulletHealth, _uuid, Faction::EnemyTeam, _allObjects,
 					_events, _calibre, Direction::LEFT, _gameMode, _gameConfig, Author::Enemy1);
 	_allObjects.emplace_back(bullet);
 
@@ -273,8 +272,8 @@ TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 {
 	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
@@ -284,8 +283,8 @@ TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 
 	// spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Bot> enemyBot =
-			TestUtils::CreateTank<Bot>(
+	std::shared_ptr<Tank> enemyBot =
+			TestUtils::CreateBot(
 					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
@@ -305,8 +304,8 @@ TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 {
 	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
@@ -316,8 +315,8 @@ TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 
 	// spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Bot> enemyBot =
-			TestUtils::CreateTank<Bot>(
+	std::shared_ptr<Tank> enemyBot =
+			TestUtils::CreateBot(
 					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
@@ -343,8 +342,8 @@ TEST_F(BonusTest, TankPickUpExtraLife)
 
 	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
@@ -373,8 +372,8 @@ TEST_F(BonusTest, TankNotPickUpTierTheSame)
 
 	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
@@ -397,8 +396,8 @@ TEST_F(BonusTest, StarPickUpTierIncrease)
 {
 	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
@@ -420,8 +419,8 @@ TEST_F(BonusTest, StarNotPickUpTierTheSame)
 {
 	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
@@ -444,8 +443,8 @@ TEST_F(BonusTest, ShovelPickUpByPlayerThenFortressWallTurnIntoSteelWall)
 {
 	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
@@ -471,8 +470,8 @@ TEST_F(BonusTest, ShovelNotPickUpByFortressWallTheSame)
 {
 	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
@@ -497,8 +496,8 @@ TEST_F(BonusTest, WaterBlocksTankWithoutShip)
 {
 	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
@@ -523,8 +522,8 @@ TEST_F(BonusTest, ShipPickUpCanCrossWater)
 {
 	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
@@ -555,8 +554,8 @@ TEST_F(BonusTest, SuperStarPickUpTierIncreaseTwice)
 {
 	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Player> player =
-			TestUtils::CreateTank<Player>(
+	std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);

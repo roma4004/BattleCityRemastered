@@ -52,12 +52,12 @@ class ScoreBoard final
 
 	void DisplayScore(bool isDisplayed);
 
+	void Draw() const;
+
 public:
 	ScoreBoard(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig);
 
 	//NOTE: defaulted out-of-line in the .cpp (not here) - this header only forward-declares
 	//GameStatistics, held below by unique_ptr, so an in-header default would need it complete here.
 	~ScoreBoard();
-
-	void Draw() const;
 };

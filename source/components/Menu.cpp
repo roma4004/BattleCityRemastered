@@ -52,7 +52,7 @@ void Menu::Draw()
 
 	_events->EmitEvent(RenderMenuTextBlockEvent{.menuPos = _pos,
 												.lineHeight = kLineStep,
-												.isCentered = false,
+												.align = TextBlockAlign::LinePositions,
 												.lines = std::move(lines)});
 }
 
