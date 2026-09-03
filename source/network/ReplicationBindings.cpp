@@ -70,11 +70,11 @@ void BindHostBonus(ReplicationPublisher& out)
 	});
 	out.Bind<BonusHelmetAppliedEvent>([](const auto& e)
 	{
-		return BonusStatus{.name = e.name, .bonusType = BonusType::Helmet, .isEnable = e.isActive};
+		return BonusStatus{.author = e.author, .bonusType = BonusType::Helmet, .isEnable = e.isActive};
 	});
 	out.Bind<BonusShipAppliedEvent>([](const auto& e)
 	{
-		return BonusStatus{.name = e.name, .bonusType = BonusType::Ship};
+		return BonusStatus{.author = e.author, .bonusType = BonusType::Ship};
 	});
 	out.Bind<BonusTankAppliedEvent>([](const auto& e)
 	{
@@ -94,16 +94,16 @@ void BindHostReplication(ReplicationPublisher& out)
 
 	out.Bind<PosChangedEvent>([](const auto& e)
 	{
-		return PositionChange{.who = e.who, .pos = e.pos, .dir = e.dir, .uuid = e.uuid};
+		return PositionChange{.pos = e.pos, .dir = e.dir, .uuid = e.uuid};
 	});
 	out.Bind<TankShotEvent>([](const auto& e) { return TankShot{.who = e.who, .dir = e.dir, .uuid = e.bulletUuid}; });
 	out.Bind<HealthChangedEvent>([](const auto& e)
 	{
-		return HealthChange{.who = e.who, .health = e.health, .uuid = e.uuid};
+		return HealthChange{.health = e.health, .uuid = e.uuid};
 	});
 	out.Bind<DespawnedEvent>([](const auto& e)
 	{
-		return Despawn{.who = e.who, .uuid = e.uuid, .reason = e.reason};
+		return Despawn{.uuid = e.uuid, .reason = e.reason};
 	});
 	out.Bind<TankRespawnedEvent>([](const auto& e)
 	{
@@ -117,7 +117,7 @@ void BindHostReplication(ReplicationPublisher& out)
 	out.Bind<BonusSpawnCompletedEvent>([](const auto& e) { return BonusSpawnComplete{.uuid = e.uuid}; });
 	out.Bind<TierChangedEvent>([](const auto& e)
 	{
-		return TierChange{.who = e.who, .tier = e.tier, .uuid = e.uuid};
+		return TierChange{.tier = e.tier, .uuid = e.uuid};
 	});
 
 	BindHostStatistics(out);

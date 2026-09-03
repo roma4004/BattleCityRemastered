@@ -11,7 +11,7 @@
 #include "components/ObstacleSpawner.h"
 #include "components/managers/FortressManager.h"
 #include "entities/obstacles/FortressWalls.h"
-#include "entities/pawns/Enemy.h"
+#include "entities/pawns/Bot.h"
 #include "entities/pawns/Player.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
@@ -73,8 +73,8 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressBricWallkHide)
 {
 	// spawn Enemy
 	const ObjRectangle rectEnemy{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Enemy> enemyBot =
-			TestUtils::CreateTank<Enemy>(
+	std::shared_ptr<Bot> enemyBot =
+			TestUtils::CreateTank<Bot>(
 					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
@@ -98,8 +98,8 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressSteelWallHide)
 {
 	// spawn Enemy
 	const ObjRectangle rectEnemy{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Enemy> enemyBot =
-			TestUtils::CreateTank<Enemy>(
+	std::shared_ptr<Bot> enemyBot =
+			TestUtils::CreateTank<Bot>(
 					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);

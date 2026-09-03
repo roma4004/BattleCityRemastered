@@ -9,8 +9,7 @@
 #include "components/input/InputProviderForPlayer.h"
 #include "components/events/SpawnEvents.h"
 #include "components/events/AnimationRenderEvents.h"
-#include "entities/pawns/CoopBot.h"
-#include "entities/pawns/Enemy.h"
+#include "entities/pawns/Bot.h"
 #include "entities/pawns/PawnProperty.h"
 #include "entities/pawns/Player.h"
 #include "enums/Direction.h"
@@ -306,17 +305,13 @@ std::unique_ptr<IInputProvider> TankSpawner::GetInputProvider(const TankType typ
 
 std::shared_ptr<Tank> TankSpawner::CreateTank(const TankType type, PawnProperty pawnProperty)
 {
-	if (type == TankType::ENEMY1 || type == TankType::ENEMY2 || type == TankType::ENEMY3 || type == TankType::ENEMY4)
+	if (type == TankType::PLAYER1 || type == TankType::PLAYER2)
 	{
-		return std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool, _gameConfig);
+		return std::make_shared<Player>(std::move(pawnProperty), _bulletPool, GetInputProvider(type), _gameConfig);
 	}
 
-	if (type == TankType::COOP1 || type == TankType::COOP2)
-	{
-		return std::make_shared<CoopBot>(std::move(pawnProperty), _bulletPool, _gameConfig);
-	}
-
-	return std::make_shared<Player>(std::move(pawnProperty), _bulletPool, GetInputProvider(type), _gameConfig);
+	//NOTE: an enemy seat and a coop one build the same bot - which team it drives for is already in its faction
+	return std::make_shared<Bot>(std::move(pawnProperty), _bulletPool, _gameConfig);
 }
 
 void TankSpawner::DelayedSpawnStart(const ObjRectangle rect, const int health, const std::string& name,

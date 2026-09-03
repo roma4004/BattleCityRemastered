@@ -39,7 +39,7 @@ void Player::Move(const Direction direction, const double deltaTime,
 
 		if (IsHost(_gameMode))
 		{
-			_events->EmitEvent(PosChangedEvent{.who = _name, .pos = pos, .dir = _dir, .uuid = _uuid});
+			_events->EmitEvent(PosChangedEvent{.pos = pos, .dir = _dir, .uuid = _uuid});
 		}
 	}
 }
@@ -82,7 +82,7 @@ void Player::TickUpdate(const double deltaTime)
 
 			if (IsHost(_gameMode))
 			{
-				_events->EmitEvent(PosChangedEvent{.who = _name, .pos = pos, .dir = _dir, .uuid = _uuid});
+				_events->EmitEvent(PosChangedEvent{.pos = pos, .dir = _dir, .uuid = _uuid});
 			}
 
 		}

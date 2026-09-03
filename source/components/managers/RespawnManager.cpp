@@ -23,8 +23,8 @@ RespawnManager::RespawnManager(const std::shared_ptr<EventSystem>& events, const
 			{.uuid = UuidUtils::GetRandomUuid(), .type = TankType::ENEMY2, .group = RespawnGroup::ENEMY_ALL},
 			{.uuid = UuidUtils::GetRandomUuid(), .type = TankType::ENEMY3, .group = RespawnGroup::ENEMY_ALL},
 			{.uuid = UuidUtils::GetRandomUuid(), .type = TankType::ENEMY4, .group = RespawnGroup::ENEMY_ALL},
-			{.uuid = UuidUtils::GetRandomUuid(), .type = TankType::PLAYER1, .group = RespawnGroup::PLAYER_ONE},
-			{.uuid = UuidUtils::GetRandomUuid(), .type = TankType::PLAYER2, .group = RespawnGroup::PLAYER_TWO},
+			{.uuid = UuidUtils::GetRandomUuid(), .type = TankType::PLAYER1, .group = RespawnGroup::PLAYER1},
+			{.uuid = UuidUtils::GetRandomUuid(), .type = TankType::PLAYER2, .group = RespawnGroup::PLAYER2},
 	};
 
 	Subscribe();
@@ -71,8 +71,8 @@ void RespawnManager::SetEnemyNeedRespawn()
 void RespawnManager::ResetRespawnStat()
 {
 	_respawnCount[static_cast<int>(RespawnGroup::ENEMY_ALL)] = 20u;
-	_respawnCount[static_cast<int>(RespawnGroup::PLAYER_ONE)] = 3u;
-	_respawnCount[static_cast<int>(RespawnGroup::PLAYER_TWO)] = 3u;
+	_respawnCount[static_cast<int>(RespawnGroup::PLAYER1)] = 3u;
+	_respawnCount[static_cast<int>(RespawnGroup::PLAYER2)] = 3u;
 
 	for (auto& [uuid, tankType, respawnGroup, isAvailable]: _slots)
 	{
@@ -106,21 +106,6 @@ void RespawnManager::SetPlayerNeedRespawn()
 	}
 }
 
-std::string RespawnManager::RespawnCountEnumToString(const RespawnGroup type)
-{
-	if (type == RespawnGroup::ENEMY_ALL)
-	{
-		return std::string{"Enemy"};
-	}
-
-	if (type == RespawnGroup::PLAYER_ONE)
-	{
-		return std::string{"Player1"};
-	}
-
-	return std::string{"Player2"};
-}
-
 void RespawnManager::ChangeRespawnCount(const int delta, RespawnGroup type)
 {
 	const auto id = static_cast<size_t>(type);
@@ -129,16 +114,15 @@ void RespawnManager::ChangeRespawnCount(const int delta, RespawnGroup type)
 		_respawnCount[id] = static_cast<unsigned short>(newCount);
 	}
 
-	const std::string who = RespawnCountEnumToString(type);
-	_events->EmitEvent(RespawnCountChangedToEvent{.objectName = who, .respawnCount = _respawnCount[id]});
+	_events->EmitEvent(RespawnCountChangedToEvent{.group = type, .respawnCount = _respawnCount[id]});
 }
 
 void RespawnManager::TriggerLastPlayersLife()
 {
 	_respawnCount[1] = 0u;
-	_events->EmitEvent(RespawnCountChangedToEvent{.objectName = "Player1", .respawnCount = _respawnCount[1]});
+	_events->EmitEvent(RespawnCountChangedToEvent{.group = RespawnGroup::PLAYER1, .respawnCount = _respawnCount[1]});
 	_respawnCount[2] = 0u;
-	_events->EmitEvent(RespawnCountChangedToEvent{.objectName = "Player2", .respawnCount = _respawnCount[2]});
+	_events->EmitEvent(RespawnCountChangedToEvent{.group = RespawnGroup::PLAYER2, .respawnCount = _respawnCount[2]});
 }
 
 void RespawnManager::OnBonusTank(const Author author)
@@ -152,10 +136,10 @@ void RespawnManager::OnBonusTank(const Author author)
 			ChangeRespawnCount(1, RespawnGroup::ENEMY_ALL);
 			break;
 		case Author::Player1:
-			ChangeRespawnCount(1, RespawnGroup::PLAYER_ONE);
+			ChangeRespawnCount(1, RespawnGroup::PLAYER1);
 			break;
 		case Author::Player2:
-			ChangeRespawnCount(1, RespawnGroup::PLAYER_TWO);
+			ChangeRespawnCount(1, RespawnGroup::PLAYER2);
 			break;
 		case Author::None:
 		case Author::lastId:
@@ -182,8 +166,8 @@ void RespawnManager::OnTankRespawned(const TankRespawnedEvent& event)
 		case TankType::PLAYER1:
 		case TankType::PLAYER2:
 			ChangeRespawnCount(-1, type == TankType::PLAYER1
-									   ? RespawnGroup::PLAYER_ONE
-									   : RespawnGroup::PLAYER_TWO);
+									   ? RespawnGroup::PLAYER1
+									   : RespawnGroup::PLAYER2);
 			break;
 		case TankType::COOP1:
 		case TankType::COOP2:

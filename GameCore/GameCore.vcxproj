@@ -175,8 +175,6 @@
     <ClCompile Include="..\source\entities\obstacles\WaterTile.cpp" />
     <ClCompile Include="..\source\entities\pawns\Bot.cpp" />
     <ClCompile Include="..\source\entities\pawns\Bullet.cpp" />
-    <ClCompile Include="..\source\entities\pawns\CoopBot.cpp" />
-    <ClCompile Include="..\source\entities\pawns\Enemy.cpp" />
     <ClCompile Include="..\source\entities\pawns\Pawn.cpp" />
     <ClCompile Include="..\source\entities\pawns\Player.cpp" />
     <ClCompile Include="..\source\entities\pawns\Tank.cpp" />
@@ -269,8 +267,6 @@
     <ClInclude Include="..\headers\entities\pawns\Bot.h" />
     <ClInclude Include="..\headers\entities\pawns\Bullet.h" />
     <ClInclude Include="..\headers\entities\pawns\BulletResetProperty.h" />
-    <ClInclude Include="..\headers\entities\pawns\CoopBot.h" />
-    <ClInclude Include="..\headers\entities\pawns\Enemy.h" />
     <ClInclude Include="..\headers\entities\pawns\Pawn.h" />
     <ClInclude Include="..\headers\entities\pawns\PawnProperty.h" />
     <ClInclude Include="..\headers\entities\pawns\Player.h" />

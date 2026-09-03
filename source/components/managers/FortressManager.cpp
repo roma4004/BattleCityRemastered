@@ -67,10 +67,7 @@ void FortressManager::ClearSpot(const Spot& spot) const
 
 	//NOTE: bypasses TakeDamage to skip statistics record.
 	wall->SetIsAlive(false);
-	_events->EmitEvent(DespawnedEvent{
-			.who = wall->GetName(),
-			.uuid = wall->GetUuid(),
-			.reason = DespawnReason::Destroyed});
+	_events->EmitEvent(DespawnedEvent{.uuid = wall->GetUuid(), .reason = DespawnReason::Destroyed});
 }
 
 void FortressManager::Rebuild(const Spot& spot, const ObstacleType material) const

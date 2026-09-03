@@ -100,10 +100,10 @@ void Obstacle::TakeDamage(const unsigned int damage, const Author author)
 		return;
 	}
 
-	_events->EmitEvent(HealthChangedEvent{.who = _name, .health = GetHealth(), .uuid = _uuid});
+	_events->EmitEvent(HealthChangedEvent{.health = GetHealth(), .uuid = _uuid});
 
 	if (!GetIsAlive())
 	{
-		_events->EmitEvent(DespawnedEvent{.who = _name, .uuid = _uuid, .reason = DespawnReason::Destroyed});
+		_events->EmitEvent(DespawnedEvent{.uuid = _uuid, .reason = DespawnReason::Destroyed});
 	}
 }

@@ -96,7 +96,7 @@ TEST_F(AnimationTriggersTest, ClientBulletExplodesOnDespawn)
 										  Author::Player1);
 	_allObjects.emplace_back(bullet);
 
-	_events->EmitEvent(Key(bullet->GetUuid()), DespawnedEvent{.who = "Bullet1", .uuid = bullet->GetUuid()});
+	_events->EmitEvent(Key(bullet->GetUuid()), DespawnedEvent{.uuid = bullet->GetUuid()});
 
 	ASSERT_TRUE(_bulletExplosion.has_value());
 	EXPECT_EQ(_bulletExplosion->rect.x, bulletRect.x);

@@ -4,6 +4,7 @@
 #include "components/events/SpawnEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/RenderUIEvents.h"
+#include "enums/RespawnGroup.h"
 
 RightSideBar::RightSideBar(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig)
 	: _gameConfig{gameConfig}
@@ -34,17 +35,16 @@ void RightSideBar::Draw() const
 
 void RightSideBar::OnRespawnCountChangedTo(const RespawnCountChangedToEvent& event)
 {
-	const auto& objectName = event.objectName;
-	if (objectName == "Enemy")
+	switch (event.group)
 	{
-		_enemiesRespawnCount = event.respawnCount;
-	}
-	else if (objectName.ends_with("1"))
-	{
-		_playerOneRespawnCount = event.respawnCount;
-	}
-	else if (objectName.ends_with("2"))
-	{
-		_playerTwoRespawnCount = event.respawnCount;
+		case RespawnGroup::ENEMY_ALL:
+			_enemiesRespawnCount = event.respawnCount;
+			return;
+		case RespawnGroup::PLAYER1:
+			_playerOneRespawnCount = event.respawnCount;
+			return;
+		case RespawnGroup::PLAYER2:
+			_playerTwoRespawnCount = event.respawnCount;
+			return;
 	}
 }

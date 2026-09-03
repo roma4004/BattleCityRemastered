@@ -125,7 +125,7 @@ TEST_F(NetworkTest, PosEventReplication)
 											 [&received](const PosChangedEvent& event) { received = event; });
 
 	_hostEvents->EmitEvent(
-			PosChangedEvent{.who = "TestTank", .pos = posOrigin, .dir = directionOrigin, .uuid = _uuid});
+			PosChangedEvent{.pos = posOrigin, .dir = directionOrigin, .uuid = _uuid});
 
 	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
 	const auto& event = received.value();
@@ -140,13 +140,13 @@ TEST_F(NetworkTest, ShotEventReplication)
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
 	constexpr Direction direction{Direction::UP};
-	const auto name{std::string("TestTank")};
+	constexpr auto who{Author::Player1};
 
 	std::optional<TankShotEvent> received{};
-	auto shotSub = _clientEvents->AddListener(Key(name),
+	auto shotSub = _clientEvents->AddListener(Key(who),
 											  [&received](const TankShotEvent& event) { received = event; });
 
-	_hostEvents->EmitEvent(TankShotEvent{.who = name, .dir = direction, .bulletUuid = _uuid});
+	_hostEvents->EmitEvent(TankShotEvent{.who = who, .dir = direction, .bulletUuid = _uuid});
 
 	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
 	const auto& event = received.value();
@@ -169,7 +169,7 @@ TEST_F(NetworkTest, HealthEventReplication)
 													received = event.health;
 												});
 
-	_hostEvents->EmitEvent(HealthChangedEvent{.who = "TestTank", .health = healthOrigin, .uuid = _uuid});
+	_hostEvents->EmitEvent(HealthChangedEvent{.health = healthOrigin, .uuid = _uuid});
 
 	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
 	EXPECT_EQ(healthOrigin, *received);
@@ -189,9 +189,8 @@ TEST_F(NetworkTest, DespawnEventReplication)
 													 received.push_back(event);
 												 });
 
-	_hostEvents->EmitEvent(DespawnedEvent{.who = "Bullet", .uuid = _uuid, .reason = DespawnReason::Destroyed});
-	_hostEvents->EmitEvent(
-			DespawnedEvent{.who = "BonusHelmet", .uuid = _uuid, .reason = DespawnReason::PickedUp});
+	_hostEvents->EmitEvent(DespawnedEvent{.uuid = _uuid, .reason = DespawnReason::Destroyed});
+	_hostEvents->EmitEvent(DespawnedEvent{.uuid = _uuid, .reason = DespawnReason::PickedUp});
 
 	ASSERT_TRUE(PumpUntil([&received] { return received.size() == 2u; }));
 	EXPECT_EQ(_uuid, received[0].uuid);
@@ -277,17 +276,17 @@ TEST_F(NetworkTest, BonusStatusEventReplication)
 	const auto client = MakeClient(server->GetBoundPort());
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
-	const auto nameOrigin{std::string("Player1")};
+	constexpr auto authorOrigin{Author::Player1};
 	constexpr bool isActiveOrigin{true};
 
 	std::optional<bool> received{};
-	auto bonusStatusSub = _clientEvents->AddListener(Key(nameOrigin),
+	auto bonusStatusSub = _clientEvents->AddListener(Key(authorOrigin),
 													 [&received](const BonusHelmetAppliedEvent& event)
 													 {
 														 received = event.isActive;
 													 });
 
-	_hostEvents->EmitEvent(BonusHelmetAppliedEvent{.name = nameOrigin, .isActive = isActiveOrigin});
+	_hostEvents->EmitEvent(BonusHelmetAppliedEvent{.author = authorOrigin, .isActive = isActiveOrigin});
 
 	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
 	EXPECT_EQ(isActiveOrigin, *received);
@@ -307,26 +306,26 @@ TEST_F(NetworkTest, TierEventReplication)
 	auto tierSub = _clientEvents->AddListener(Key(_uuid),
 											  [&received](const TierChangedEvent& event) { received = event.tier; });
 
-	_hostEvents->EmitEvent(TierChangedEvent{.who = "Player1", .tier = tierOrigin, .uuid = _uuid});
+	_hostEvents->EmitEvent(TierChangedEvent{.tier = tierOrigin, .uuid = _uuid});
 
 	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
 	EXPECT_EQ(tierOrigin, *received);
 }
 
-//NOTE: no payload of its own - under test is that its alternative reaches the right name
+//NOTE: no payload of its own - under test is that its alternative reaches the right seat
 TEST_F(NetworkTest, BonusShipStatusEventReplication)
 {
 	const auto server = MakeHost();
 	const auto client = MakeClient(server->GetBoundPort());
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
-	const auto nameOrigin{std::string("Player1")};
+	constexpr auto authorOrigin{Author::Player1};
 
 	bool received{false};
-	auto bonusShipSub = _clientEvents->AddListener(Key(nameOrigin),
+	auto bonusShipSub = _clientEvents->AddListener(Key(authorOrigin),
 												   [&received](const BonusShipAppliedEvent&) { received = true; });
 
-	_hostEvents->EmitEvent(BonusShipAppliedEvent{.name = nameOrigin});
+	_hostEvents->EmitEvent(BonusShipAppliedEvent{.author = authorOrigin});
 
 	EXPECT_TRUE(PumpUntil([&received] { return received; }));
 }

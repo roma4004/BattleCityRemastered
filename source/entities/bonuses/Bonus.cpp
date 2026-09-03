@@ -151,7 +151,7 @@ void Bonus::Despawn(const DespawnReason reason)
 
 	if (IsHost(_gameMode))
 	{
-		_events->EmitEvent(DespawnedEvent{.who = _name, .uuid = _uuid, .reason = reason});
+		_events->EmitEvent(DespawnedEvent{.uuid = _uuid, .reason = reason});
 	}
 }
 

@@ -11,7 +11,7 @@
 #include "entities/obstacles/BrickWall.h"
 #include "entities/obstacles/SteelWall.h"
 #include "entities/pawns/Bullet.h"
-#include "entities/pawns/Enemy.h"
+#include "entities/pawns/Bot.h"
 #include "entities/pawns/Player.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
@@ -287,8 +287,8 @@ TEST_F(StatisticsTest, EnemyHitByFriend)
 {
 	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 2.0 + 2.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Enemy> enemyBot =
-			TestUtils::CreateTank<Enemy>(
+	std::shared_ptr<Bot> enemyBot =
+			TestUtils::CreateTank<Bot>(
 					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
@@ -316,8 +316,8 @@ TEST_F(StatisticsTest, EnemyHitByPlayerOne)
 {
 	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 2.0 + 2.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Enemy> enemyBot =
-			TestUtils::CreateTank<Enemy>(
+	std::shared_ptr<Bot> enemyBot =
+			TestUtils::CreateTank<Bot>(
 					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
@@ -345,8 +345,8 @@ TEST_F(StatisticsTest, EnemyHitByPlayerTwo)
 {
 	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 2.0 + 2.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Enemy> enemyBot =
-			TestUtils::CreateTank<Enemy>(
+	std::shared_ptr<Bot> enemyBot =
+			TestUtils::CreateTank<Bot>(
 					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
@@ -374,8 +374,8 @@ TEST_F(StatisticsTest, EnemyDiedByFriend)
 {
 	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 2.0 + 2.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Enemy> enemyBot =
-			TestUtils::CreateTank<Enemy>(
+	std::shared_ptr<Bot> enemyBot =
+			TestUtils::CreateTank<Bot>(
 					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
@@ -403,8 +403,8 @@ TEST_F(StatisticsTest, EnemyDiedByPlayerOne)
 {
 	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 2.0 + 2.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Enemy> enemyBot =
-			TestUtils::CreateTank<Enemy>(
+	std::shared_ptr<Bot> enemyBot =
+			TestUtils::CreateTank<Bot>(
 					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
@@ -432,8 +432,8 @@ TEST_F(StatisticsTest, EnemyDiedByPlayerTwo)
 {
 	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 2.0 + 2.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Enemy> enemyBot =
-			TestUtils::CreateTank<Enemy>(
+	std::shared_ptr<Bot> enemyBot =
+			TestUtils::CreateTank<Bot>(
 					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
@@ -752,8 +752,8 @@ TEST_F(StatisticsTest, BonusPickUpByEnemyCount)
 {
 	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Enemy> enemyBot =
-			TestUtils::CreateTank<Enemy>(
+	std::shared_ptr<Bot> enemyBot =
+			TestUtils::CreateTank<Bot>(
 					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
@@ -778,8 +778,8 @@ TEST_F(StatisticsTest, BonusNotPickUpByEnemyNotCount)
 {
 	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Enemy> enemyBot =
-			TestUtils::CreateTank<Enemy>(
+	std::shared_ptr<Bot> enemyBot =
+			TestUtils::CreateTank<Bot>(
 					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);

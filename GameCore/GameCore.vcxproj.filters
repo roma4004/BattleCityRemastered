@@ -222,12 +222,6 @@
     <ClCompile Include="..\source\entities\pawns\Bullet.cpp">
       <Filter>source\entities\pawns</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\entities\pawns\CoopBot.cpp">
-      <Filter>source\entities\pawns</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\entities\pawns\Enemy.cpp">
-      <Filter>source\entities\pawns</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\entities\pawns\Pawn.cpp">
       <Filter>source\entities\pawns</Filter>
     </ClCompile>
@@ -489,12 +483,6 @@
       <Filter>headers\entities\pawns</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\entities\pawns\BulletResetProperty.h">
-      <Filter>headers\entities\pawns</Filter>
-    </ClInclude>
-    <ClInclude Include="..\headers\entities\pawns\CoopBot.h">
-      <Filter>headers\entities\pawns</Filter>
-    </ClInclude>
-    <ClInclude Include="..\headers\entities\pawns\Enemy.h">
       <Filter>headers\entities\pawns</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\entities\pawns\Pawn.h">

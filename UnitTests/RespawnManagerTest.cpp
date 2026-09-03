@@ -43,7 +43,7 @@ TEST_F(RespawnManagerTest, EnemyDiedRespawnCount)
 	unsigned short respawnActual{20u};
 	auto respawnSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
 	{
-		if (event.objectName == "Enemy")
+		if (event.group == RespawnGroup::ENEMY_ALL)
 		{
 			respawnActual = event.respawnCount;
 		}
@@ -65,7 +65,7 @@ TEST_F(RespawnManagerTest, PlayerOneDiedRespawnCount)
 	unsigned short respawnActual{3u};
 	auto respawnSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
 	{
-		if (event.objectName == "Player1")
+		if (event.group == RespawnGroup::PLAYER1)
 		{
 			respawnActual = event.respawnCount;
 		}
@@ -87,7 +87,7 @@ TEST_F(RespawnManagerTest, PlayerTwoDiedRespawnCount)
 	unsigned short respawnActual{3u};
 	auto respawnSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
 	{
-		if (event.objectName == "Player2")
+		if (event.group == RespawnGroup::PLAYER2)
 		{
 			respawnActual = event.respawnCount;
 		}
@@ -109,7 +109,7 @@ TEST_F(RespawnManagerTest, EnemyRunOutRespawnPoints)
 	unsigned short respawnActual{20u};
 	auto respawnSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
 	{
-		if (event.objectName == "Enemy")
+		if (event.group == RespawnGroup::ENEMY_ALL)
 		{
 			respawnActual = event.respawnCount;
 		}
@@ -134,7 +134,7 @@ TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPoints)
 	unsigned short respawnActual{3u};
 	auto respawnSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
 	{
-		if (event.objectName == "Player1")
+		if (event.group == RespawnGroup::PLAYER1)
 		{
 			respawnActual = event.respawnCount;
 		}
@@ -159,7 +159,7 @@ TEST_F(RespawnManagerTest, PlayerTwoRunOutRespawnPoints)
 	unsigned short respawnActual{3u};
 	auto respawnSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
 	{
-		if (event.objectName == "Player2")
+		if (event.group == RespawnGroup::PLAYER2)
 		{
 			respawnActual = event.respawnCount;
 		}
@@ -184,7 +184,7 @@ TEST_F(RespawnManagerTest, EnemyRunOutRespawnPointsAndTryMore)
 	unsigned short respawnActual{21u};
 	auto respawnSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
 	{
-		if (event.objectName == "Enemy")
+		if (event.group == RespawnGroup::ENEMY_ALL)
 		{
 			respawnActual = event.respawnCount;
 		}
@@ -212,7 +212,7 @@ TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPointsAndTryMore)
 	unsigned short respawnActual{3u};
 	auto respawnSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
 	{
-		if (event.objectName == "Player1")
+		if (event.group == RespawnGroup::PLAYER1)
 		{
 			respawnActual = event.respawnCount;
 		}
@@ -240,7 +240,7 @@ TEST_F(RespawnManagerTest, PlayerTwoRunOutRespawnPointsAndTryMore)
 	unsigned short respawnActual{3u};
 	auto respawnSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
 	{
-		if (event.objectName == "Player2")
+		if (event.group == RespawnGroup::PLAYER2)
 		{
 			respawnActual = event.respawnCount;
 		}

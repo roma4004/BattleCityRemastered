@@ -4,7 +4,6 @@
 #include <chrono>
 #include <memory>
 #include <random>
-#include <functional>
 #include <vector>
 
 struct BonusEffectProperty;
@@ -22,8 +21,6 @@ class Bot : public Tank
 	double _bulletOffset{};
 
 protected:
-	std::function<bool(const std::shared_ptr<BaseObj>&)> m_shouldShootToObstacleStrategy;
-
 	[[nodiscard]] bool IsOpponent(const std::shared_ptr<BaseObj>& obstacle) const;
 	[[nodiscard]] bool IsAlly(const std::shared_ptr<BaseObj>& obstacle) const;
 	[[nodiscard]] static bool IsBonus(const std::shared_ptr<BaseObj>& obstacle);
@@ -39,6 +36,7 @@ protected:
 
 	void SetRandomDirection(double deltaTime, bool excludeCurrentDirection = false);
 	bool ShouldShootOpponent(const std::shared_ptr<BaseObj>& obj) const;
+	[[nodiscard]] bool ShouldShootObstacle(const std::shared_ptr<BaseObj>& obj) const;
 
 	void TickUpdate(double deltaTime) override;
 

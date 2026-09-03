@@ -6,7 +6,6 @@
 #include "utils/Uuid.h"
 #include <chrono>
 #include <memory>
-#include <string>
 #include <vector>
 
 enum class TankType : char8_t;
@@ -59,7 +58,6 @@ class RespawnManager final
 	void ResetRespawnStat();
 	void ResetSpawn();
 
-	[[nodiscard]] static std::string RespawnCountEnumToString(RespawnGroup type);
 	void ChangeRespawnCount(int delta, RespawnGroup type);
 	void TriggerLastPlayersLife();
 

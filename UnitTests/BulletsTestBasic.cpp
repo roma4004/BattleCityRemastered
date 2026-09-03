@@ -9,7 +9,7 @@
 #include "entities/obstacles/SteelWall.h"
 #include "entities/obstacles/WaterTile.h"
 #include "entities/pawns/Bullet.h"
-#include "entities/pawns/Enemy.h"
+#include "entities/pawns/Bot.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
 #include "gtest/gtest.h"
@@ -338,8 +338,8 @@ TEST_F(BulletTest, BulletDamageTank)
 	constexpr double tankSpeed{142};
 	const auto bulletPool = std::make_shared<BulletPool>(_events, _allObjects, _gameConfig);
 	const ObjRectangle rectEnemy{.x = 0, .y = _calibre.size.y, .w = tankSize, .h = tankSize};
-	std::shared_ptr<Enemy> enemyBot =
-			TestUtils::CreateTank<Enemy>(
+	std::shared_ptr<Bot> enemyBot =
+			TestUtils::CreateTank<Bot>(
 					rectEnemy, tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
 					tankSpeed,
 					Direction::UP, _gameMode, bulletPool, _gameConfig);

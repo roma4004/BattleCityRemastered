@@ -1,13 +1,12 @@
 #pragma once
 
 #include "geometry/Point.h"
+#include "enums/Author.h"
 #include "enums/Direction.h"
 #include "utils/Uuid.h"
-#include <string>
 
 struct PosChangedEvent
 {
-	std::string who;
 	FPoint pos;
 	Direction dir;
 	Uuid uuid;
@@ -15,14 +14,13 @@ struct PosChangedEvent
 
 struct TankShotEvent
 {
-	std::string who;
+	Author who{};
 	Direction dir;
 	Uuid bulletUuid;
 };
 
 struct HealthChangedEvent
 {
-	std::string who;
 	int health;
 	Uuid uuid;
 };
@@ -30,7 +28,6 @@ struct HealthChangedEvent
 //NOTE: the result of an upgrade, not its cause - the client sets it instead of replaying the formula
 struct TierChangedEvent
 {
-	std::string who;
 	unsigned short tier;
 	Uuid uuid;
 };

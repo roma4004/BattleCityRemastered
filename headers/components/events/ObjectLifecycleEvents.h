@@ -3,7 +3,6 @@
 #include "enums/Author.h"
 #include "enums/DespawnReason.h"
 #include "utils/Uuid.h"
-#include <string>
 
 
 struct TankSpawnEvent
@@ -20,7 +19,6 @@ struct TankDiedEvent
 
 struct DespawnedEvent
 {
-	std::string who;
 	Uuid uuid;
 	DespawnReason reason{DespawnReason::None};
 };

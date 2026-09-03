@@ -92,7 +92,7 @@ void Bullet::TickUpdate(const double deltaTime)
 
 	if (isMove && IsHost(_gameMode))
 	{
-		_events->EmitEvent(PosChangedEvent{.who = _name, .pos = GetPos(), .dir = _dir, .uuid = _uuid});
+		_events->EmitEvent(PosChangedEvent{.pos = GetPos(), .dir = _dir, .uuid = _uuid});
 	}
 }
 

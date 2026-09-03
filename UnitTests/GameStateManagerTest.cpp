@@ -12,7 +12,7 @@
 #include "components/managers/RespawnManager.h"
 #include "components/managers/GameStateManager.h"
 #include "entities/obstacles/EagleTile.h"
-#include "entities/pawns/Enemy.h"
+#include "entities/pawns/Bot.h"
 #include "entities/pawns/Player.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
@@ -125,15 +125,15 @@ TEST_F(GameStateManagerTest, PlayerTeamWon)
 			[&respawnEnemyActual, &respawnPlayerOneActual, &respawnPlayerTwoActual](
 			const RespawnCountChangedToEvent& event)
 			{
-				if (event.objectName == "Enemy")
+				if (event.group == RespawnGroup::ENEMY_ALL)
 				{
 					respawnEnemyActual = event.respawnCount;
 				}
-				else if (event.objectName == "Player1")
+				else if (event.group == RespawnGroup::PLAYER1)
 				{
 					respawnPlayerOneActual = event.respawnCount;
 				}
-				else if (event.objectName == "Player2")
+				else if (event.group == RespawnGroup::PLAYER2)
 				{
 					respawnPlayerTwoActual = event.respawnCount;
 				}
@@ -236,15 +236,15 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 			[&respawnEnemyActual, &respawnPlayerOneActual, &respawnPlayerTwoActual](
 			const RespawnCountChangedToEvent& event)
 			{
-				if (event.objectName == "Enemy")
+				if (event.group == RespawnGroup::ENEMY_ALL)
 				{
 					respawnEnemyActual = event.respawnCount;
 				}
-				else if (event.objectName == "Player1")
+				else if (event.group == RespawnGroup::PLAYER1)
 				{
 					respawnPlayerOneActual = event.respawnCount;
 				}
-				else if (event.objectName == "Player2")
+				else if (event.group == RespawnGroup::PLAYER2)
 				{
 					respawnPlayerTwoActual = event.respawnCount;
 				}
@@ -252,8 +252,8 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 
 	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 3.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Enemy> enemyBot =
-			TestUtils::CreateTank<Enemy>(
+	std::shared_ptr<Bot> enemyBot =
+			TestUtils::CreateTank<Bot>(
 					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
@@ -367,7 +367,7 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithThreeDeath)
 	unsigned short respawnActual{3u};
 	auto respawnCountSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
 	{
-		if (event.objectName == "Player1")
+		if (event.group == RespawnGroup::PLAYER1)
 		{
 			respawnActual = event.respawnCount;
 		}
@@ -411,7 +411,7 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithExtraLifeDeath)
 	unsigned short respawnActual{3u};
 	auto respawnCountSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
 	{
-		if (event.objectName == "Player1")
+		if (event.group == RespawnGroup::PLAYER1)
 		{
 			respawnActual = event.respawnCount;
 		}
@@ -460,15 +460,15 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBaseAndExtraLife)
 			[&respawnEnemyActual, &respawnPlayerOneActual, &respawnPlayerTwoActual](
 			const RespawnCountChangedToEvent& event)
 			{
-				if (event.objectName == "Enemy")
+				if (event.group == RespawnGroup::ENEMY_ALL)
 				{
 					respawnEnemyActual = event.respawnCount;
 				}
-				else if (event.objectName == "Player1")
+				else if (event.group == RespawnGroup::PLAYER1)
 				{
 					respawnPlayerOneActual = event.respawnCount;
 				}
-				else if (event.objectName == "Player2")
+				else if (event.group == RespawnGroup::PLAYER2)
 				{
 					respawnPlayerTwoActual = event.respawnCount;
 				}

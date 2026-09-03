@@ -1,7 +1,6 @@
 #pragma once
 
 #include "enums/Author.h"
-#include <string>
 
 enum class Faction : char8_t;
 
@@ -57,13 +56,13 @@ struct BonusShovelStatusChangeEvent
 
 struct BonusHelmetAppliedEvent
 {
-	std::string name;
+	Author author{};
 	bool isActive;
 };
 
 struct BonusShipAppliedEvent
 {
-	std::string name;
+	Author author{};
 };
 
 struct BonusTankAppliedEvent

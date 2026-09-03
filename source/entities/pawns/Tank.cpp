@@ -78,10 +78,10 @@ void Tank::OnPostDraw(const PostDrawEvent&) const
 void Tank::SubscribeAsClient()
 {
 	//TODO: move bot timers to handle outside bot tank
-	_subs.push_back(_events->AddListener(Key(_name), this, &Tank::OnTankShot));
-	_subs.push_back(_events->AddListener(Key(_name), this, &Tank::OnBonusHelmetApplied));
+	_subs.push_back(_events->AddListener(Key(_author), this, &Tank::OnTankShot));
+	_subs.push_back(_events->AddListener(Key(_author), this, &Tank::OnBonusHelmetApplied));
 	_subs.push_back(_events->AddListener(Key(_uuid), this, &Tank::OnTierChanged));
-	_subs.push_back(_events->AddListener(Key(_name), this, &Tank::OnBonusShipApplied));
+	_subs.push_back(_events->AddListener(Key(_author), this, &Tank::OnBonusShipApplied));
 }
 
 void Tank::OnTankShot(const TankShotEvent& event)
@@ -132,7 +132,7 @@ void Tank::Shot(const std::optional<Uuid> withUuid)
 
 	if (IsHost(_gameMode))
 	{
-		_events->EmitEvent(TankShotEvent{.who = _name, .dir = GetDirection(), .bulletUuid = bulletUuid});
+		_events->EmitEvent(TankShotEvent{.who = _author, .dir = GetDirection(), .bulletUuid = bulletUuid});
 	}
 
 	_shootTimer.Reset();
@@ -178,7 +178,7 @@ void Tank::OnBonusHelmet(const bool isActive)
 
 	if (IsHost(_gameMode))
 	{
-		_events->EmitEvent(BonusHelmetAppliedEvent{.name = _name, .isActive = isActive});
+		_events->EmitEvent(BonusHelmetAppliedEvent{.author = _author, .isActive = isActive});
 	}
 }
 
@@ -210,7 +210,7 @@ void Tank::Upgrade(const TierUpgrade& upgrade)
 
 	if (IsHost(_gameMode))
 	{
-		_events->EmitEvent(TierChangedEvent{.who = _name, .tier = _tier, .uuid = _uuid});
+		_events->EmitEvent(TierChangedEvent{.tier = _tier, .uuid = _uuid});
 	}
 }
 
@@ -247,7 +247,7 @@ void Tank::OnBonusShip()
 
 	if (IsHost(_gameMode))
 	{
-		_events->EmitEvent(BonusShipAppliedEvent{.name = _name});
+		_events->EmitEvent(BonusShipAppliedEvent{.author = _author});
 	}
 }
 
@@ -263,7 +263,7 @@ void Tank::EmitDeathStatistics(const Author author)
 
 	if (IsHost(_gameMode))
 	{
-		_events->EmitEvent(DespawnedEvent{.who = _name, .uuid = _uuid, .reason = DespawnReason::Destroyed});
+		_events->EmitEvent(DespawnedEvent{.uuid = _uuid, .reason = DespawnReason::Destroyed});
 	}
 }
 

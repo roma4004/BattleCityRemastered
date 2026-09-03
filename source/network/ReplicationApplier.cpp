@@ -31,34 +31,32 @@ void ReplicationApplier::Apply(const AnyCommand& command)
 
 void ReplicationApplier::Emit(const PositionChange& command) const
 {
-	_events->EmitEvent(Key(command.uuid), PosChangedEvent{.who = command.who,
-														  .pos = command.pos,
-														  .dir = command.dir,
-														  .uuid = command.uuid});
+	_events->EmitEvent(Key(command.uuid),
+					   PosChangedEvent{.pos = command.pos, .dir = command.dir, .uuid = command.uuid});
 }
 
 void ReplicationApplier::Emit(const TankShot& command) const
 {
-	_events->EmitEvent(Key(command.who),
-					   TankShotEvent{.who = command.who, .dir = command.dir, .bulletUuid = command.uuid});
+	const Author who = SeatFromWire(command.who);
+	_events->EmitEvent(Key(who), TankShotEvent{.who = who, .dir = command.dir, .bulletUuid = command.uuid});
 }
 
 void ReplicationApplier::Emit(const HealthChange& command) const
 {
 	_events->EmitEvent(Key(command.uuid),
-					   HealthChangedEvent{.who = command.who, .health = command.health, .uuid = command.uuid});
+					   HealthChangedEvent{.health = command.health, .uuid = command.uuid});
 }
 
 void ReplicationApplier::Emit(const TierChange& command) const
 {
 	_events->EmitEvent(Key(command.uuid),
-					   TierChangedEvent{.who = command.who, .tier = command.tier, .uuid = command.uuid});
+					   TierChangedEvent{.tier = command.tier, .uuid = command.uuid});
 }
 
 void ReplicationApplier::Emit(const Despawn& command) const
 {
 	_events->EmitEvent(Key(command.uuid),
-					   DespawnedEvent{.who = command.who, .uuid = command.uuid, .reason = command.reason});
+					   DespawnedEvent{.uuid = command.uuid, .reason = command.reason});
 }
 
 void ReplicationApplier::Emit(const RespawnTank& command) const
@@ -156,17 +154,17 @@ void ReplicationApplier::Emit(const BonusStatus& command) const
 	//NOTE: only the bonuses whose effect the client cannot see any other way are replicated here -
 	//a star and a caliber land as a TierChange, the rest are applied once on the host and never
 	//reported, so any of them is as wrong here as a byte outside the enum
+	const Author author = SeatFromWire(command.author);
 	switch (command.bonusType)
 	{
 		case BonusType::Helmet:
-			_events->EmitEvent(Key(command.name),
-							   BonusHelmetAppliedEvent{.name = command.name, .isActive = command.isEnable});
+			_events->EmitEvent(Key(author), BonusHelmetAppliedEvent{.author = author, .isActive = command.isEnable});
 			return;
 		case BonusType::Ship:
-			_events->EmitEvent(Key(command.name), BonusShipAppliedEvent{.name = command.name});
+			_events->EmitEvent(Key(author), BonusShipAppliedEvent{.author = author});
 			return;
 		case BonusType::Tank:
-			_events->EmitEvent(BonusTankAppliedEvent{.author = SeatFromWire(command.author)});
+			_events->EmitEvent(BonusTankAppliedEvent{.author = author});
 			return;
 		case BonusType::Star:
 		case BonusType::Caliber:

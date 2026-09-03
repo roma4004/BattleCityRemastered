@@ -82,8 +82,6 @@ set(GAME_CORE_SOURCES
         source/entities/obstacles/WaterTile.cpp
         source/entities/pawns/Bot.cpp
         source/entities/pawns/Bullet.cpp
-        source/entities/pawns/CoopBot.cpp
-        source/entities/pawns/Enemy.cpp
         source/entities/pawns/Pawn.cpp
         source/entities/pawns/Player.cpp
         source/entities/pawns/Tank.cpp

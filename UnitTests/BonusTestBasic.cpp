@@ -15,7 +15,7 @@
 #include "components/managers/FortressManager.h"
 #include "entities/obstacles/FortressWalls.h"
 #include "entities/pawns/Bullet.h"
-#include "entities/pawns/Enemy.h"
+#include "entities/pawns/Bot.h"
 #include "entities/pawns/Player.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
@@ -156,8 +156,8 @@ TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 
 	// spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Enemy> enemyBot =
-			TestUtils::CreateTank<Enemy>(
+	std::shared_ptr<Bot> enemyBot =
+			TestUtils::CreateTank<Bot>(
 					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
@@ -190,8 +190,8 @@ TEST_F(BonusTest, TimerNotPickUpEnemyCanMove)
 
 	// spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Enemy> enemyBot =
-			TestUtils::CreateTank<Enemy>(
+	std::shared_ptr<Bot> enemyBot =
+			TestUtils::CreateTank<Bot>(
 					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
@@ -284,8 +284,8 @@ TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 
 	// spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Enemy> enemyBot =
-			TestUtils::CreateTank<Enemy>(
+	std::shared_ptr<Bot> enemyBot =
+			TestUtils::CreateTank<Bot>(
 					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
@@ -316,8 +316,8 @@ TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 
 	// spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Enemy> enemyBot =
-			TestUtils::CreateTank<Enemy>(
+	std::shared_ptr<Bot> enemyBot =
+			TestUtils::CreateTank<Bot>(
 					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);

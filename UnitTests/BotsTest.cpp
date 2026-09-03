@@ -10,8 +10,7 @@
 #include "entities/obstacles/BushTile.h"
 #include "entities/obstacles/IceTile.h"
 #include "entities/obstacles/WaterTile.h"
-#include "entities/pawns/CoopBot.h"
-#include "entities/pawns/Enemy.h"
+#include "entities/pawns/Bot.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
 #include "gtest/gtest.h"
@@ -63,8 +62,8 @@ TEST_F(BotsTest, BotsChangeDirectionIfOpponentSeen)
 {
 	// Spawn Coop
 	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<CoopBot> coopBot =
-			TestUtils::CreateTank<CoopBot>(
+	std::shared_ptr<Bot> coopBot =
+			TestUtils::CreateTank<Bot>(
 					coopBotRect, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
@@ -72,8 +71,8 @@ TEST_F(BotsTest, BotsChangeDirectionIfOpponentSeen)
 
 	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 3.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Enemy> enemyBot =
-			TestUtils::CreateTank<Enemy>(
+	std::shared_ptr<Bot> enemyBot =
+			TestUtils::CreateTank<Bot>(
 					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
@@ -98,16 +97,16 @@ TEST_F(BotsTest, BotsNoChangeDirectionIfOpponentSeen)
 {
 	// Spawn Coop
 	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<CoopBot> coopBot =
-			TestUtils::CreateTank<CoopBot>(
+	std::shared_ptr<Bot> coopBot =
+			TestUtils::CreateTank<Bot>(
 					coopBotRect, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u, _tankSpeed,
 					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(coopBot);
 
 	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Enemy> enemyBot =
-			TestUtils::CreateTank<Enemy>(
+	std::shared_ptr<Bot> enemyBot =
+			TestUtils::CreateTank<Bot>(
 					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u, _tankSpeed,
 					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(enemyBot);
@@ -131,8 +130,8 @@ TEST_F(BotsTest, BotsChangeDirectionIfBonusSeenAndNoOneShoot)
 {
 	// Spawn Coop
 	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<CoopBot> coopBot =
-			TestUtils::CreateTank<CoopBot>(
+	std::shared_ptr<Bot> coopBot =
+			TestUtils::CreateTank<Bot>(
 					coopBotRect, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
@@ -142,8 +141,8 @@ TEST_F(BotsTest, BotsChangeDirectionIfBonusSeenAndNoOneShoot)
 
 	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 3.0 + 40.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Enemy> enemyBot =
-			TestUtils::CreateTank<Enemy>(
+	std::shared_ptr<Bot> enemyBot =
+			TestUtils::CreateTank<Bot>(
 					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
@@ -170,8 +169,8 @@ TEST_F(BotsTest, BotsCantSeeBonusBehindWater)
 {
 	// Spawn Coop
 	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<CoopBot> coopBot =
-			TestUtils::CreateTank<CoopBot>(
+	std::shared_ptr<Bot> coopBot =
+			TestUtils::CreateTank<Bot>(
 					coopBotRect, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::RIGHT, _gameMode, _bulletPool, _gameConfig);
@@ -198,8 +197,8 @@ TEST_F(BotsTest, BotsCantSeeBonusBehindWater)
 
 	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = 0.0, .y = _tankSize * 5.0 + 40.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Enemy> enemyBot =
-			TestUtils::CreateTank<Enemy>(
+	std::shared_ptr<Bot> enemyBot =
+			TestUtils::CreateTank<Bot>(
 					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::RIGHT, _gameMode, _bulletPool, _gameConfig);
@@ -226,8 +225,8 @@ TEST_F(BotsTest, BotsCantSeeBonusBehindBush)
 {
 	// Spawn Coop
 	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<CoopBot> coopBot =
-			TestUtils::CreateTank<CoopBot>(
+	std::shared_ptr<Bot> coopBot =
+			TestUtils::CreateTank<Bot>(
 					coopBotRect, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::RIGHT, _gameMode, _bulletPool, _gameConfig);
@@ -254,8 +253,8 @@ TEST_F(BotsTest, BotsCantSeeBonusBehindBush)
 
 	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = 0.0, .y = _tankSize * 5.0 + 40.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Enemy> enemyBot =
-			TestUtils::CreateTank<Enemy>(
+	std::shared_ptr<Bot> enemyBot =
+			TestUtils::CreateTank<Bot>(
 					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::RIGHT, _gameMode, _bulletPool, _gameConfig);
@@ -282,8 +281,8 @@ TEST_F(BotsTest, BotsCanSeeBonusBehindIce)
 {
 	// Spawn Coop
 	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<CoopBot> coopBot =
-			TestUtils::CreateTank<CoopBot>(
+	std::shared_ptr<Bot> coopBot =
+			TestUtils::CreateTank<Bot>(
 					coopBotRect, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::RIGHT, _gameMode, _bulletPool, _gameConfig);
@@ -310,8 +309,8 @@ TEST_F(BotsTest, BotsCanSeeBonusBehindIce)
 
 	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = 0.0, .y = _tankSize * 5.0 + 40.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Enemy> enemyBot =
-			TestUtils::CreateTank<Enemy>(
+	std::shared_ptr<Bot> enemyBot =
+			TestUtils::CreateTank<Bot>(
 					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::RIGHT, _gameMode, _bulletPool, _gameConfig);
@@ -338,8 +337,8 @@ TEST_F(BotsTest, BotsCanSeeBonusInTheIce)
 {
 	// Spawn Coop
 	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<CoopBot> coopBot =
-			TestUtils::CreateTank<CoopBot>(
+	std::shared_ptr<Bot> coopBot =
+			TestUtils::CreateTank<Bot>(
 					coopBotRect, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::RIGHT, _gameMode, _bulletPool, _gameConfig);
@@ -374,8 +373,8 @@ TEST_F(BotsTest, BotsCanSeeBonusInTheIce)
 
 	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = 0.0, .y = _tankSize * 5.0 + 40.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Enemy> enemyBot =
-			TestUtils::CreateTank<Enemy>(
+	std::shared_ptr<Bot> enemyBot =
+			TestUtils::CreateTank<Bot>(
 					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
 					_tankSpeed,
 					Direction::RIGHT, _gameMode, _bulletPool, _gameConfig);

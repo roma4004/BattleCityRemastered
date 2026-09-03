@@ -100,9 +100,7 @@ void BulletPool::OnPostTickUpdate(const PostTickUpdateEvent&)
 	//NOTE: announced with the lock released - a listener is free to shoot back
 	for (const std::shared_ptr<Bullet>& bullet: returned)
 	{
-		_events->EmitEvent(DespawnedEvent{.who = bullet->GetName(),
-										  .uuid = bullet->GetUuid(),
-										  .reason = DespawnReason::Destroyed});
+		_events->EmitEvent(DespawnedEvent{.uuid = bullet->GetUuid(), .reason = DespawnReason::Destroyed});
 	}
 }
 

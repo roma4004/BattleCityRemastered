@@ -5,11 +5,11 @@
 #include "enums/Author.h"
 #include "enums/BonusType.h"
 #include "enums/ObstacleType.h"
+#include "enums/RespawnGroup.h"
 #include "enums/TankType.h"
 #include "utils/Uuid.h"
 #include <chrono>
 #include <memory>
-#include <string>
 
 class BaseObj;
 class Bonus;
@@ -32,7 +32,7 @@ struct RespawnTankEvent
 
 struct RespawnCountChangedToEvent
 {
-	std::string objectName;
+	RespawnGroup group{};
 	unsigned short respawnCount;
 };
 

@@ -1,10 +1,11 @@
+#include "entities/pawns/Bot.h"
 #include "application/GameConfig.h"
 #include "behavior/MoveLikeTankBeh.h"
 #include "components/EventSystem.h"
 #include "components/LineOfSight.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "components/events/ReplicationEvents.h"
-#include "entities/pawns/Enemy.h"
+#include "entities/obstacles/IFortress.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
@@ -14,11 +15,20 @@
 #include "utils/RandUtils.h"
 #include <optional>
 
+namespace
+{
+//NOTE: a bot fires at the rate of the seat it drives - an enemy one has its own, a bot standing in
+//for a player keeps the player's
+constexpr std::chrono::milliseconds kEnemySeatCooldown{1000};
+constexpr std::chrono::milliseconds kPlayerSeatCooldown{500};
+}//namespace
+
+//TODO: if enemy see bullets they should try or prioritize move aside
 Bot::Bot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, const GameConfig& gameConfig)
 	: Tank{std::move(pawnProperty), bulletPool, gameConfig}
 	, _distTurnRate(1000 /*ms*/, 5000 /*ms*/)
 {
-	_shootTimer.cooldown = std::chrono::seconds{1};
+	_shootTimer.cooldown = _faction == Faction::EnemyTeam ? kEnemySeatCooldown : kPlayerSeatCooldown;
 	_randomChangeDirTimer.cooldown = std::chrono::seconds{2};
 	_randomChangeDirTimer.Reset();
 }
@@ -291,6 +301,24 @@ void Bot::SetRandomDirection(const double deltaTime, const bool excludeCurrentDi
 	}
 }
 
+//NOTE: the whole of what used to tell an enemy bot from a coop one - a bot on the player team is
+//defending the eagle, so it never fires at the fortress
+bool Bot::ShouldShootObstacle(const std::shared_ptr<BaseObj>& obj) const
+{
+	if (obj == nullptr || IsAlly(obj) || IsBonus(obj))
+	{
+		return false;
+	}
+
+	if ((!obj->GetIsDestructible() && _tier <= 2u) || obj->GetIsPenetrable())// skip water, ice, bush
+	{
+		return false;
+	}
+
+	//NOTE: the eagle and the walls around it
+	return _faction == Faction::EnemyTeam || dynamic_cast<IFortress*>(obj.get()) == nullptr;
+}
+
 bool Bot::ShouldShootOpponent(const std::shared_ptr<BaseObj>& obj) const
 {
 	if (obj == nullptr)
@@ -346,7 +374,7 @@ void Bot::TickUpdate(const double deltaTime)
 
 		if (IsHost(_gameMode))
 		{
-			_events->EmitEvent(PosChangedEvent{.who = _name, .pos = pos, .dir = _dir, .uuid = _uuid});
+			_events->EmitEvent(PosChangedEvent{.pos = pos, .dir = _dir, .uuid = _uuid});
 		}
 	}
 
@@ -361,7 +389,7 @@ void Bot::TickUpdate(const double deltaTime)
 
 			if (IsHost(_gameMode))
 			{
-				_events->EmitEvent(PosChangedEvent{.who = _name, .pos = pos, .dir = _dir, .uuid = _uuid});
+				_events->EmitEvent(PosChangedEvent{.pos = pos, .dir = _dir, .uuid = _uuid});
 			}
 		}
 	}
@@ -386,8 +414,7 @@ void Bot::TickUpdate(const double deltaTime)
 	const std::shared_ptr<BaseObj> nearestSeenObstacle = HandleLineOfSight();
 	if (!_shootTimer.isActive && _obstacleDistance >= _calibre.damageRadius + _bulletOffset)
 	{
-		if (ShouldShootOpponent(nearestSeenObstacle)
-			|| m_shouldShootToObstacleStrategy(nearestSeenObstacle))
+		if (ShouldShootOpponent(nearestSeenObstacle) || ShouldShootObstacle(nearestSeenObstacle))
 		{
 			//TODO: add feature for bots chance to shoot to obstacle
 			//TODO: cover this by test, _shootDistance check

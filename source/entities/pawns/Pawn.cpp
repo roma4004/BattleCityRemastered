@@ -97,7 +97,7 @@ void Pawn::TakeDamage(const unsigned int damage, const Author author)
 
 	if (IsHost(_gameMode))
 	{
-		_events->EmitEvent(HealthChangedEvent{.who = _name, .health = GetHealth(), .uuid = _uuid});
+		_events->EmitEvent(HealthChangedEvent{.health = GetHealth(), .uuid = _uuid});
 	}
 }
 
@@ -112,7 +112,7 @@ void Pawn::Heal(const int amount)
 
 	if (IsHost(_gameMode))
 	{
-		_events->EmitEvent(HealthChangedEvent{.who = _name, .health = GetHealth(), .uuid = _uuid});
+		_events->EmitEvent(HealthChangedEvent{.health = GetHealth(), .uuid = _uuid});
 	}
 }
 

@@ -7,7 +7,7 @@
 #include "components/events/ObjectLifecycleEvents.h"
 #include "components/events/ReplicationEvents.h"
 #include "components/events/SpawnEvents.h"
-#include "entities/pawns/Enemy.h"
+#include "entities/pawns/Bot.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
 #include "enums/DespawnReason.h"
@@ -52,8 +52,8 @@ protected:
 //NOTE: the host sends health as an absolute value - applying the heal here too would land it twice
 TEST_F(ClientMirrorTest, AClientTakesHealthOffTheWireInsteadOfHealingItself)
 {
-	const std::shared_ptr<Enemy> enemy =
-			TestUtils::CreateTank<Enemy>(
+	const std::shared_ptr<Bot> enemy =
+			TestUtils::CreateTank<Bot>(
 					_tankRect, _tankHealth, UuidUtils::GetRandomUuid(), Author::Enemy1, Faction::EnemyTeam,
 					_allObjects, _events, 1u, _gameConfig.tankSpeed, Direction::UP, _gameConfig.gameMode, _bulletPool,
 					_gameConfig);
@@ -63,9 +63,8 @@ TEST_F(ClientMirrorTest, AClientTakesHealthOffTheWireInsteadOfHealingItself)
 	EXPECT_EQ(enemy->GetHealth(), _tankHealth);
 	EXPECT_TRUE(_reportedHealth.empty());
 
-	_events->EmitEvent(Key(enemy->GetUuid()), HealthChangedEvent{.who = "Enemy1",
-																 .health = _tankHealth + _bonusHeal,
-																 .uuid = enemy->GetUuid()});
+	_events->EmitEvent(Key(enemy->GetUuid()),
+					   HealthChangedEvent{.health = _tankHealth + _bonusHeal, .uuid = enemy->GetUuid()});
 
 	EXPECT_EQ(enemy->GetHealth(), _tankHealth + _bonusHeal);
 }
@@ -91,7 +90,7 @@ TEST_F(ClientMirrorTest, ABonusRetiredDuringItsBurstNeverLands)
 	const Uuid uuid = UuidUtils::GetRandomUuid();
 
 	_events->EmitEvent(BonusSpawnedEvent{.pos = _bonusPos, .type = BonusType::Star, .uuid = uuid, .isSuper = false});
-	_events->EmitEvent(Key(uuid), DespawnedEvent{.who = "Bonus", .uuid = uuid, .reason = DespawnReason::PickedUp});
+	_events->EmitEvent(Key(uuid), DespawnedEvent{.uuid = uuid, .reason = DespawnReason::PickedUp});
 	_events->EmitEvent(SpawnAnimationFinishedEvent{.uuid = uuid});
 
 	EXPECT_TRUE(_allObjects.empty());

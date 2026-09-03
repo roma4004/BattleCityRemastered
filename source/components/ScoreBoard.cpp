@@ -8,6 +8,7 @@
 #include "components/events/InputEvents.h"
 #include "components/events/RenderUIEvents.h"
 #include "enums/GameState.h"
+#include "enums/RespawnGroup.h"
 #include <algorithm>
 #include <array>
 #include <cstddef>
@@ -114,18 +115,17 @@ void ScoreBoard::OnGameReset(const GameResetEvent&) { DisplayScore(false); }
 
 void ScoreBoard::OnRespawnCountChangedTo(const RespawnCountChangedToEvent& event)
 {
-	const auto& objectName = event.objectName;
-	if (objectName == "Enemy")
+	switch (event.group)
 	{
-		_enemyRespawnCount = event.respawnCount;
-	}
-	else if (objectName == "Player1")
-	{
-		_playerOneRepawnCount = event.respawnCount;
-	}
-	else if (objectName == "Player2")
-	{
-		_playerTwoRespawnCount = event.respawnCount;
+		case RespawnGroup::ENEMY_ALL:
+			_enemyRespawnCount = event.respawnCount;
+			return;
+		case RespawnGroup::PLAYER1:
+			_playerOneRepawnCount = event.respawnCount;
+			return;
+		case RespawnGroup::PLAYER2:
+			_playerTwoRespawnCount = event.respawnCount;
+			return;
 	}
 }
 

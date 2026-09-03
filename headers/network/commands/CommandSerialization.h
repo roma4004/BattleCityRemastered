@@ -20,7 +20,6 @@
 #include "CommandBatch.h"
 #include "UuidSerialization.h"
 #include <ser20/types/common.hpp>
-#include <ser20/types/string.hpp>
 #include <ser20/types/variant.hpp>
 #include <ser20/types/vector.hpp>
 
@@ -41,7 +40,6 @@ void serialize(Archive& ar, network::commands::BonusSpawn& cmd, const unsigned i
 template<class Archive>
 void serialize(Archive& ar, network::commands::BonusStatus& cmd, const unsigned int /*version*/)
 {
-	ar & cmd.name;
 	ar & cmd.author;
 	ar & cmd.bonusType;
 	ar & cmd.isEnable;
@@ -56,7 +54,6 @@ void serialize(Archive& ar, network::commands::Disconnect& cmd, const unsigned i
 template<class Archive>
 void serialize(Archive& ar, network::commands::Despawn& cmd, const unsigned int /*version*/)
 {
-	ar & cmd.who;
 	ar & cmd.uuid;
 	ar & cmd.reason;
 }
@@ -70,7 +67,6 @@ void serialize(Archive& ar, network::commands::GameStateChange& cmd, const unsig
 template<class Archive>
 void serialize(Archive& ar, network::commands::HealthChange& cmd, const unsigned int /*version*/)
 {
-	ar & cmd.who;
 	ar & cmd.health;
 	ar & cmd.uuid;
 }
@@ -94,7 +90,6 @@ void serialize(Archive& ar, network::commands::ObstacleSpawn& cmd, const unsigne
 template<class Archive>
 void serialize(Archive& ar, network::commands::PositionChange& cmd, const unsigned int /*version*/)
 {
-	ar & cmd.who;
 	ar & cmd.pos;
 	ar & cmd.dir;
 	ar & cmd.uuid;
@@ -146,7 +141,6 @@ void serialize(Archive& ar, network::commands::BonusSpawnComplete& cmd, const un
 template<class Archive>
 void serialize(Archive& ar, network::commands::TierChange& cmd, const unsigned int /*version*/)
 {
-	ar & cmd.who;
 	ar & cmd.tier;
 	ar & cmd.uuid;
 }
