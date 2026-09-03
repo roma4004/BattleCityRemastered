@@ -243,9 +243,6 @@
     <ClCompile Include="..\source\network\ClientHandler.cpp">
       <Filter>source\network</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\network\CommandDispatcher.cpp">
-      <Filter>source\network</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\network\FrameChannel.cpp">
       <Filter>source\network</Filter>
     </ClCompile>
@@ -253,6 +250,12 @@
       <Filter>source\network</Filter>
     </ClCompile>
     <ClCompile Include="..\source\network\PeerLink.cpp">
+      <Filter>source\network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\network\ReplicationApplier.cpp">
+      <Filter>source\network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\network\ReplicationBindings.cpp">
       <Filter>source\network</Filter>
     </ClCompile>
     <ClCompile Include="..\source\network\ReplicationPublisher.cpp">
@@ -521,9 +524,6 @@
     <ClInclude Include="..\headers\enums\ClientSignal.h">
       <Filter>headers\enums</Filter>
     </ClInclude>
-    <ClInclude Include="..\headers\enums\CommandType.h">
-      <Filter>headers\enums</Filter>
-    </ClInclude>
     <ClInclude Include="..\headers\enums\DespawnReason.h">
       <Filter>headers\enums</Filter>
     </ClInclude>
@@ -608,9 +608,6 @@
     <ClInclude Include="..\headers\network\ClientHandler.h">
       <Filter>headers\network</Filter>
     </ClInclude>
-    <ClInclude Include="..\headers\network\CommandDispatcher.h">
-      <Filter>headers\network</Filter>
-    </ClInclude>
     <ClInclude Include="..\headers\network\commands\AnyCommand.h">
       <Filter>headers\network\commands</Filter>
     </ClInclude>
@@ -684,6 +681,12 @@
       <Filter>headers\network</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\PeerLink.h">
+      <Filter>headers\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\ReplicationApplier.h">
+      <Filter>headers\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\ReplicationBindings.h">
       <Filter>headers\network</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\ReplicationPublisher.h">

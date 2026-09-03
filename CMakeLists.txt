@@ -89,10 +89,11 @@ set(GAME_CORE_SOURCES
         source/entities/pawns/Tank.cpp
         source/network/Client.cpp
         source/network/ClientHandler.cpp
-        source/network/CommandDispatcher.cpp
         source/network/FrameChannel.cpp
         source/network/NetworkNodeBase.cpp
         source/network/PeerLink.cpp
+        source/network/ReplicationApplier.cpp
+        source/network/ReplicationBindings.cpp
         source/network/ReplicationPublisher.cpp
         source/network/Server.cpp
         source/network/Session.cpp

@@ -182,10 +182,11 @@
     <ClCompile Include="..\source\entities\pawns\Tank.cpp" />
     <ClCompile Include="..\source\network\Client.cpp" />
     <ClCompile Include="..\source\network\ClientHandler.cpp" />
-    <ClCompile Include="..\source\network\CommandDispatcher.cpp" />
     <ClCompile Include="..\source\network\FrameChannel.cpp" />
     <ClCompile Include="..\source\network\NetworkNodeBase.cpp" />
     <ClCompile Include="..\source\network\PeerLink.cpp" />
+    <ClCompile Include="..\source\network\ReplicationApplier.cpp" />
+    <ClCompile Include="..\source\network\ReplicationBindings.cpp" />
     <ClCompile Include="..\source\network\ReplicationPublisher.cpp" />
     <ClCompile Include="..\source\network\Server.cpp" />
     <ClCompile Include="..\source\network\Session.cpp" />
@@ -278,7 +279,6 @@
     <ClInclude Include="..\headers\enums\AnimationType.h" />
     <ClInclude Include="..\headers\enums\Author.h" />
     <ClInclude Include="..\headers\enums\BonusType.h" />
-    <ClInclude Include="..\headers\enums\CommandType.h" />
     <ClInclude Include="..\headers\enums\ClientSignal.h" />
     <ClInclude Include="..\headers\enums\DespawnReason.h" />
     <ClInclude Include="..\headers\enums\DisconnectReason.h" />
@@ -305,7 +305,6 @@
     <ClInclude Include="..\headers\interfaces\ITickUpdatable.h" />
     <ClInclude Include="..\headers\network\Client.h" />
     <ClInclude Include="..\headers\network\ClientHandler.h" />
-    <ClInclude Include="..\headers\network\CommandDispatcher.h" />
     <ClInclude Include="..\headers\network\FrameChannel.h" />
     <ClInclude Include="..\headers\network\NetworkNodeBase.h" />
     <ClInclude Include="..\headers\network\PeerLink.h" />
@@ -331,6 +330,8 @@
     <ClInclude Include="..\headers\network\commands\PointSerialization.h" />
     <ClInclude Include="..\headers\network\commands\UuidSerialization.h" />
     <ClInclude Include="..\headers\network\MessageFraming.h" />
+    <ClInclude Include="..\headers\network\ReplicationApplier.h" />
+    <ClInclude Include="..\headers\network\ReplicationBindings.h" />
     <ClInclude Include="..\headers\network\ReplicationPublisher.h" />
     <ClInclude Include="..\headers\network\Server.h" />
     <ClInclude Include="..\headers\network\Session.h" />

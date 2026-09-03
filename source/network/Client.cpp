@@ -1,20 +1,13 @@
 #include "network/Client.h"
 #include "components/EventSystem.h"
-#include "components/events/SpawnEvents.h"
-#include "components/events/BonusPickupEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
-#include "components/events/InputEvents.h"
-#include "components/events/ObjectLifecycleEvents.h"
-#include "components/events/ReplicationEvents.h"
-#include "components/events/StatisticsEvents.h"
-#include "enums/CommandType.h"
-#include "enums/InputChannel.h"
-#include "enums/StatisticsType.h"
-#include "network/commands/CommandBatch.h"
-#include "network/Serializer.h"
+#include "enums/ClientSignal.h"
+#include "network/ReplicationBindings.h"
 #include "utils/Log.h"
 #include <string>
 #include <tuple>
+#include <utility>
+#include <variant>
 
 namespace network::commands
 {
@@ -23,32 +16,26 @@ Client::Client(boost::asio::io_context& ioContext, std::string host, const uint1
 	: PeerLink(tcp::socket(boost::asio::make_strand(ioContext)), "Client", events)
 	, _reconnectTimer(_channel->Socket().get_executor())
 	, _endpoint{tcp::endpoint(boost::asio::ip::make_address(host), port)}
+	, _replicationIn{events, _commandQueue}
+	, _replicationOut{events}
 {
+	BindClientReplication(_replicationOut);
 	Subscribe();
-	RegisterCommandHandlers();
 
 	TryConnect();
 }
 
-void Client::RegisterCommandHandlers()
+void Client::OnCommand(const AnyCommand& command)
 {
-	_dispatcher.RegisterAll({
-			{CommandType::POSITION_CHANGE, [this](const AnyCommand& cmd) { OnPositionChange(cmd); }},
-			{CommandType::TANK_SHOT, [this](const AnyCommand& cmd) { OnTankShot(cmd); }},
-			{CommandType::HEALTH_CHANGE, [this](const AnyCommand& cmd) { OnHealthChange(cmd); }},
-			{CommandType::DESPAWN, [this](const AnyCommand& cmd) { OnDespawn(cmd); }},
-			{CommandType::STATISTICS_CHANGE, [this](const AnyCommand& cmd) { OnStatisticsChange(cmd); }},
-			{CommandType::KEY_STATE_CHANGE, [this](const AnyCommand& cmd) { OnKeyStateChange(cmd); }},
-			{CommandType::GAME_STATE_CHANGE, [this](const AnyCommand& cmd) { OnGameStateChange(cmd); }},
-			{CommandType::BONUS_SPAWN, [this](const AnyCommand& cmd) { OnBonusSpawn(cmd); }},
-			{CommandType::RESPAWN_TANK, [this](const AnyCommand& cmd) { OnRespawnTank(cmd); }},
-			{CommandType::OBSTACLE_SPAWN, [this](const AnyCommand& cmd) { OnObstacleSpawn(cmd); }},
-			{CommandType::TANK_SPAWN_COMPLETE, [this](const AnyCommand& cmd) { OnTankSpawnComplete(cmd); }},
-			{CommandType::BONUS_SPAWN_COMPLETE, [this](const AnyCommand& cmd) { OnBonusSpawnComplete(cmd); }},
-			{CommandType::TIER_CHANGE, [this](const AnyCommand& cmd) { OnTierChange(cmd); }},
-			{CommandType::BONUS_STATUS, [this](const AnyCommand& cmd) { OnBonusStatus(cmd); }},
-			{CommandType::DISCONNECT, [this](const AnyCommand& cmd) { OnDisconnect(cmd); }},
-	});
+	//NOTE: the goodbye is peeled off rather than left to the applier - it has to be read on this, the
+	//network thread, while everything else is a game fact and belongs on the game one
+	if (const auto* goodbye = std::get_if<Disconnect>(&command))
+	{
+		OnDisconnect(*goodbye);
+		return;
+	}
+
+	_replicationIn.Apply(command);
 }
 
 void Client::TryConnect()
@@ -67,10 +54,7 @@ void Client::TryConnect()
 			_commandQueue.Enqueue([this] { _events->EmitEvent(ClientConnectedToHostEvent{}); });
 			this->StartReading();
 			_channel->SetWriteEnabled(true);
-			{
-				std::scoped_lock lock(_batchWriteMutex);
-				this->_batch.commands.emplace_back(SignalEvent{.signal = ClientSignal::ReadyToPlay});
-			}
+			_replicationOut.Publish(SignalEvent{.signal = ClientSignal::ReadyToPlay});
 		}
 		else
 		{
@@ -192,53 +176,14 @@ void Client::Shutdown(const DisconnectReason reason, std::function<void()> onClo
 void Client::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &Client::OnNetworkEndFrame));
-
-	//NOTE: a keyboard half belongs to a seat, not to a machine - this process is player two
-	//(SendKeyState tags every press P2), so it takes the arrows like a second player anywhere else.
-	//Tab swaps the halves locally for whoever would rather drive that seat with WASD
-	constexpr InputChannel channel{InputChannel::LocalP2};
-	_subs.push_back(_events->AddListener(Key(channel), this, &Client::OnMoveUp));
-	_subs.push_back(_events->AddListener(Key(channel), this, &Client::OnMoveLeft));
-	_subs.push_back(_events->AddListener(Key(channel), this, &Client::OnMoveDown));
-	_subs.push_back(_events->AddListener(Key(channel), this, &Client::OnMoveRight));
-	_subs.push_back(_events->AddListener(Key(channel), this, &Client::OnFire));
-
-	_subs.push_back(_events->AddListener(this, &Client::OnClientOutReadyToPlay));
-	_subs.push_back(_events->AddListener(this, &Client::OnPauseRequested));
 }
 
 void Client::OnNetworkEndFrame(const NetworkEndFrameEvent&)
 {
-	CommandBatch batch;
+	if (auto frame = _replicationOut.TakeFrame())
 	{
-		std::scoped_lock lock(_batchWriteMutex);
-		std::swap(batch, _batch);
+		_channel->Send(std::move(frame));
 	}
-
-	if (!batch.commands.empty())
-	{
-		SendBatch(batch);
-	}
-}
-
-void Client::OnMoveUp(const MoveUpEvent& event) { SendKeyState(InputSignal::MoveUp, event.isPressed); }
-void Client::OnMoveLeft(const MoveLeftEvent& event) { SendKeyState(InputSignal::MoveLeft, event.isPressed); }
-void Client::OnMoveDown(const MoveDownEvent& event) { SendKeyState(InputSignal::MoveDown, event.isPressed); }
-void Client::OnMoveRight(const MoveRightEvent& event) { SendKeyState(InputSignal::MoveRight, event.isPressed); }
-void Client::OnFire(const FireEvent& event) { SendKeyState(InputSignal::Fire, event.isPressed); }
-
-void Client::OnClientOutReadyToPlay(const ClientOutReadyToPlayEvent&)
-{
-	std::scoped_lock lock(_batchWriteMutex);
-	_batch.commands.emplace_back(SignalEvent{.signal = ClientSignal::ReadyToPlay});
-}
-
-void Client::OnPauseRequested(const PauseRequestedEvent& event)
-{
-	std::scoped_lock lock(_batchWriteMutex);
-	_batch.commands.emplace_back(KeyStateChange{.tag = PlayerTag::None,
-												.action = InputSignal::PauseReleased,
-												.isPressed = event.isPaused});
 }
 
 void Client::StartReading()
@@ -265,200 +210,9 @@ void Client::StartReading()
 	_channel->StartReading();
 }
 
-void Client::SendKeyState(const InputSignal action, const bool state)
+void Client::OnDisconnect(const Disconnect& command)
 {
-	std::scoped_lock lock(_batchWriteMutex);
-	_batch.commands.emplace_back(KeyStateChange{.tag = PlayerTag::P2, .action = action, .isPressed = state});
-}
-
-void Client::OnPositionChange(const AnyCommand& command)
-{
-	_commandQueue.Enqueue([this, cmd = std::get<PositionChange>(command)]()
-	{
-		_events->EmitEvent(Key(cmd.uuid),
-						   PosChangedEvent{.who = cmd.who, .pos = cmd.pos, .dir = cmd.dir, .uuid = cmd.uuid});
-	});
-}
-
-void Client::OnTankShot(const AnyCommand& command)
-{
-	_commandQueue.Enqueue([this, cmd = std::get<TankShot>(command)]()
-	{
-		_events->EmitEvent(Key(cmd.who), TankShotEvent{.who = cmd.who, .dir = cmd.dir, .bulletUuid = cmd.uuid});
-	});
-}
-
-void Client::OnHealthChange(const AnyCommand& command)
-{
-	_commandQueue.Enqueue([this, cmd = std::get<HealthChange>(command)]()
-	{
-		_events->EmitEvent(Key(cmd.uuid), HealthChangedEvent{.who = cmd.who, .health = cmd.health, .uuid = cmd.uuid});
-	});
-}
-
-void Client::OnDespawn(const AnyCommand& command)
-{
-	_commandQueue.Enqueue([this, cmd = std::get<Despawn>(command)]()
-	{
-		_events->EmitEvent(Key(cmd.uuid), DespawnedEvent{.who = cmd.who, .uuid = cmd.uuid, .reason = cmd.reason});
-	});
-}
-
-void Client::OnStatisticsChange(const AnyCommand& command)
-{
-	_commandQueue.Enqueue([this, cmd = std::get<StatisticsChange>(command)]()
-	{
-		const Author who = SeatFromWire(cmd.who);
-		const Author author = SeatFromWire(cmd.author);
-
-		switch (cmd.statisticsType)
-		{
-			case StatisticsType::BulletHit:
-				_events->EmitEvent(StatisticsBulletHitEvent{.author = author});
-				break;
-			case StatisticsType::TankHit:
-				_events->EmitEvent(StatisticsTankHitEvent{.who = who, .author = author});
-				break;
-			case StatisticsType::TankDied:
-				_events->EmitEvent(TankDiedEvent{.who = who, .uuid = cmd.uuid, .author = author});
-				break;
-			case StatisticsType::BrickWallDied:
-				_events->EmitEvent(BrickWallDiedEvent{.author = author});
-				break;
-			case StatisticsType::SteelWallDied:
-				_events->EmitEvent(SteelWallDiedEvent{.author = author});
-				break;
-			case StatisticsType::BonusPickup:
-				_events->EmitEvent(StatisticsBonusPickupEvent{.author = author});
-				break;
-			case StatisticsType::BonusDestroyed:
-				_events->EmitEvent(StatisticsBonusDestroyedEvent{.author = author});
-				break;
-			case StatisticsType::BonusExpired:
-				_events->EmitEvent(StatisticsBonusExpiredEvent{});
-				break;
-		}
-	});
-}
-
-void Client::OnKeyStateChange(const AnyCommand& command)
-{
-	_commandQueue.Enqueue([this, cmd = std::get<KeyStateChange>(command)]()
-	{
-		if (cmd.action == InputSignal::PauseStatus)
-		{
-			_events->EmitEvent(SetPauseEvent{.isPaused = cmd.isPressed});
-			return;
-		}
-
-		Log::Info("Client::OnKeyStateChange: unexpected signal "
-				  + std::to_string(static_cast<int>(cmd.action)));
-	});
-}
-
-void Client::OnGameStateChange(const AnyCommand& command)
-{
-	_commandQueue.Enqueue([this, cmd = std::get<GameStateChange>(command)]()
-	{
-		this->_events->EmitEvent(GameFinishedEvent{.state = cmd.state});
-	});
-}
-
-void Client::OnBonusSpawn(const AnyCommand& command)
-{
-	_commandQueue.Enqueue([this, cmd = std::get<BonusSpawn>(command)]()
-	{
-		//NOTE: the type indexes the bonus catalogue further down, so a wire byte outside the enum
-		//would read past its end - checked here, where the untrusted value enters
-		if (!IsSpawnableBonus(cmd.bonusType))
-		{
-			Log::Error("Client::OnBonusSpawn: bonus type "
-					   + std::to_string(static_cast<int>(cmd.bonusType)) + " is not spawnable");
-
-			return;
-		}
-
-		_events->EmitEvent(
-				BonusSpawnedEvent{.pos = cmd.pos, .type = cmd.bonusType, .uuid = cmd.uuid, .isSuper = cmd.isSuper});
-	});
-}
-
-void Client::OnRespawnTank(const AnyCommand& command)
-{
-	_commandQueue.Enqueue([this, cmd = std::get<RespawnTank>(command)]()
-	{
-		_events->EmitEvent(TankRespawnedEvent{.type = cmd.tankType, .uuid = cmd.uuid, .pos = cmd.pos});
-	});
-}
-
-void Client::OnObstacleSpawn(const AnyCommand& command)
-{
-	_commandQueue.Enqueue([this, cmd = std::get<ObstacleSpawn>(command)]()
-	{
-		_events->EmitEvent(ObstacleSpawnedEvent{.pos = cmd.pos, .type = cmd.obstacleType, .uuid = cmd.uuid});
-	});
-}
-
-void Client::OnTankSpawnComplete(const AnyCommand& command)
-{
-	_commandQueue.Enqueue([this, cmd = std::get<TankSpawnComplete>(command)]()
-	{
-		_events->EmitEvent(TankSpawnCompletedEvent{.uuid = cmd.uuid});
-	});
-}
-
-void Client::OnBonusSpawnComplete(const AnyCommand& command)
-{
-	_commandQueue.Enqueue([this, cmd = std::get<BonusSpawnComplete>(command)]()
-	{
-		_events->EmitEvent(BonusSpawnCompletedEvent{.uuid = cmd.uuid});
-	});
-}
-
-void Client::OnTierChange(const AnyCommand& command)
-{
-	_commandQueue.Enqueue([this, cmd = std::get<TierChange>(command)]()
-	{
-		_events->EmitEvent(Key(cmd.uuid), TierChangedEvent{.who = cmd.who, .tier = cmd.tier, .uuid = cmd.uuid});
-	});
-}
-
-void Client::OnBonusStatus(const AnyCommand& command)
-{
-	_commandQueue.Enqueue([this, cmd = std::get<BonusStatus>(command)]()
-	{
-		//NOTE: only the bonuses whose effect the client cannot see any other way are replicated here -
-		//a star and a caliber land as a TierChange, the rest are applied once on the host and never
-		//reported, so any of them is as wrong here as a byte outside the enum
-		switch (cmd.bonusType)
-		{
-			case BonusType::Helmet:
-				_events->EmitEvent(Key(cmd.name), BonusHelmetAppliedEvent{.name = cmd.name, .isActive = cmd.isEnable});
-				return;
-			case BonusType::Ship:
-				_events->EmitEvent(Key(cmd.name), BonusShipAppliedEvent{.name = cmd.name});
-				return;
-			case BonusType::Tank:
-				_events->EmitEvent(BonusTankAppliedEvent{.author = SeatFromWire(cmd.author)});
-				return;
-			case BonusType::Star:
-			case BonusType::Caliber:
-			case BonusType::None:
-			case BonusType::Timer:
-			case BonusType::Grenade:
-			case BonusType::Shovel:
-			case BonusType::lastId:
-				break;
-		}
-
-		Log::Error("Client::OnBonusStatus: bonus type " + std::to_string(static_cast<int>(cmd.bonusType))
-				   + " is not replicated");
-	});
-}
-
-void Client::OnDisconnect(const AnyCommand& command)
-{
-	const auto reason = std::get<Disconnect>(command).reason;
+	const auto reason = command.reason;
 
 	//NOTE: on the network thread, not in the queued lambda - the EOF arrives well before the game
 	//thread drains the queue, and HandleDisconnect must already know why

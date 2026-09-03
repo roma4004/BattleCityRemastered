@@ -1,7 +1,6 @@
 #pragma once
 
 #include "geometry/Point.h"
-#include "enums/CommandType.h"
 #include "enums/Direction.h"
 #include "utils/Uuid.h"
 #include <string>
@@ -11,7 +10,6 @@ namespace network::commands
 //NOTE: wire DTO - serialization lives in CommandSerialization.h
 struct PositionChange final
 {
-	CommandType type{CommandType::POSITION_CHANGE};
 	std::string who{};
 	FPoint pos{};
 	Direction dir{};

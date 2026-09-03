@@ -1,9 +1,10 @@
 #pragma once
 
 #include "enums/DisconnectReason.h"
-#include "enums/InputSignal.h"
 #include "PeerLink.h"
-#include "commands/CommandBatch.h"
+#include "ReplicationApplier.h"
+#include "ReplicationPublisher.h"
+#include "commands/AnyCommand.h"
 #include "components/EventSystem.h"
 #include <atomic>
 #include <boost/asio/io_context.hpp>
@@ -13,19 +14,11 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <vector>
 
 class EventSystem;
 struct NetworkEndFrameEvent;
-struct MoveUpEvent;
-struct MoveLeftEvent;
-struct MoveDownEvent;
-struct MoveRightEvent;
-struct FireEvent;
-struct ClientOutReadyToPlayEvent;
-struct PauseRequestedEvent;
 
 namespace network::commands
 {
@@ -48,45 +41,25 @@ public:
 
 private:
 	void Subscribe();
-	void RegisterCommandHandlers();
+	void OnCommand(const AnyCommand& command) override;
 
 	void StartReading();
 	void TryConnect();
 
 	void OnNetworkEndFrame(const NetworkEndFrameEvent&);
-	void OnMoveUp(const MoveUpEvent& event);
-	void OnMoveLeft(const MoveLeftEvent& event);
-	void OnMoveDown(const MoveDownEvent& event);
-	void OnMoveRight(const MoveRightEvent& event);
-	void OnFire(const FireEvent& event);
-	void OnClientOutReadyToPlay(const ClientOutReadyToPlayEvent&);
-	void OnPauseRequested(const PauseRequestedEvent& event);
 
-	void SendKeyState(InputSignal action, bool state);
-	void OnPositionChange(const AnyCommand& command);
-	void OnTankShot(const AnyCommand& command);
-	void OnHealthChange(const AnyCommand& command);
-	void OnDespawn(const AnyCommand& command);
-	void OnStatisticsChange(const AnyCommand& command);
-	void OnKeyStateChange(const AnyCommand& command);
-	void OnGameStateChange(const AnyCommand& command);
-	void OnBonusSpawn(const AnyCommand& command);
-	void OnRespawnTank(const AnyCommand& command);
-	void OnObstacleSpawn(const AnyCommand& command);
-	void OnTankSpawnComplete(const AnyCommand& command);
-	void OnBonusSpawnComplete(const AnyCommand& command);
-	void OnTierChange(const AnyCommand& command);
-	void OnBonusStatus(const AnyCommand& command);
-	void OnDisconnect(const AnyCommand& command);
+	//NOTE: the only command Client reads itself - the rest are the applier's, and this one is not a
+	//game fact but transport state, taken on the network thread before the queue
+	void OnDisconnect(const Disconnect& command);
 	void HandleDisconnect();
 	void HandleProtocolError();
 	void ScheduleReconnect();
 
 	boost::asio::steady_timer _reconnectTimer;
 	tcp::endpoint _endpoint;
+	ReplicationApplier _replicationIn;
+	ReplicationPublisher _replicationOut;
 	std::vector<EventSubscription> _subs{};
-	std::mutex _batchWriteMutex;
-	CommandBatch _batch{};
 	std::atomic<bool> _isConnected{};
 	bool _reconnectPending{false};
 	//NOTE: tells our own cancellation apart from a dropped link, so teardown does not reconnect

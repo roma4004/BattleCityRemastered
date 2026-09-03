@@ -16,7 +16,6 @@
 #include "TankShot.h"
 #include "TankSpawnComplete.h"
 #include "TierChange.h"
-#include "enums/CommandType.h"
 #include <variant>
 
 namespace network::commands
@@ -26,10 +25,4 @@ using AnyCommand = std::variant<
 	BonusSpawn, BonusStatus, Despawn, GameStateChange, HealthChange,
 	KeyStateChange, ObstacleSpawn, PositionChange, RespawnTank, SignalEvent, StatisticsChange, TankShot,
 	TankSpawnComplete, Disconnect, BonusSpawnComplete, TierChange>;
-
-inline CommandType GetCommandType(const AnyCommand& command)
-{
-	return std::visit([](const auto& cmd) { return cmd.type; }, command);
-}
-
 }//namespace network::commands

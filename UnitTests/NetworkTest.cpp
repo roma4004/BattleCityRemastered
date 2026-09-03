@@ -15,7 +15,6 @@
 #include "enums/ObstacleType.h"
 #include "enums/TankType.h"
 #include "network/ClientHandler.h"
-#include "network/CommandDispatcher.h"
 #include "network/Serializer.h"
 #include "network/commands/CommandBatch.h"
 #include "network/commands/Disconnect.h"
@@ -129,8 +128,9 @@ TEST_F(NetworkTest, PosEventReplication)
 			PosChangedEvent{.who = "TestTank", .pos = posOrigin, .dir = directionOrigin, .uuid = _uuid});
 
 	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
-	EXPECT_EQ(posOrigin, received->pos);
-	EXPECT_EQ(directionOrigin, received->dir);
+	const auto& event = received.value();
+	EXPECT_EQ(posOrigin, event.pos);
+	EXPECT_EQ(directionOrigin, event.dir);
 }
 
 TEST_F(NetworkTest, ShotEventReplication)
@@ -149,8 +149,9 @@ TEST_F(NetworkTest, ShotEventReplication)
 	_hostEvents->EmitEvent(TankShotEvent{.who = name, .dir = direction, .bulletUuid = _uuid});
 
 	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
-	EXPECT_EQ(direction, received->dir);
-	EXPECT_EQ(_uuid, received->bulletUuid);
+	const auto& event = received.value();
+	EXPECT_EQ(direction, event.dir);
+	EXPECT_EQ(_uuid, event.bulletUuid);
 }
 
 TEST_F(NetworkTest, HealthEventReplication)
@@ -212,7 +213,7 @@ TEST_F(NetworkTest, StatisticsEventReplication)
 	_hostEvents->EmitEvent(StatisticsBulletHitEvent{.author = Author::Enemy1});
 
 	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
-	EXPECT_EQ(Author::Enemy1, received->author);
+	EXPECT_EQ(Author::Enemy1, received.value().author);
 }
 
 TEST_F(NetworkTest, PauseRequestFromClientPausesHost)
@@ -246,10 +247,11 @@ TEST_F(NetworkTest, BonusSpawnEventReplication)
 	_hostEvents->EmitEvent(BonusSpawnedEvent{.pos = pos, .type = type, .uuid = _uuid, .isSuper = true});
 
 	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
-	EXPECT_EQ(pos, received->pos);
-	EXPECT_EQ(type, received->type);
-	EXPECT_EQ(_uuid, received->uuid);
-	EXPECT_TRUE(received->isSuper);
+	const auto& event = received.value();
+	EXPECT_EQ(pos, event.pos);
+	EXPECT_EQ(type, event.type);
+	EXPECT_EQ(_uuid, event.uuid);
+	EXPECT_TRUE(event.isSuper);
 }
 
 //NOTE: what makes the bonus real on the client - its own burst only draws
@@ -345,9 +347,10 @@ TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 	_hostEvents->EmitEvent(ObstacleSpawnedEvent{.pos = posOrigin, .type = obstacleType, .uuid = _uuid});
 
 	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
-	EXPECT_EQ(posOrigin, received->pos);
-	EXPECT_EQ(obstacleType, received->type);
-	EXPECT_EQ(_uuid, received->uuid);
+	const auto& event = received.value();
+	EXPECT_EQ(posOrigin, event.pos);
+	EXPECT_EQ(obstacleType, event.type);
+	EXPECT_EQ(_uuid, event.uuid);
 }
 
 //NOTE: a whole map in one batch - one frame, and every command has to come out of it in order
@@ -555,43 +558,25 @@ TEST_F(NetworkTest, ClientQuitTellsHostWhy)
 //TODO: other bonus effect replication test after write this replication
 // TEST_F(NetworkTest, bonusKind...EventReplication) {
 
-TEST(CommandDispatcherTest, UnreadableFrameIsReportedNotSwallowed)
+TEST(SerializerTest, UnreadableFrameIsReportedNotSwallowed)
 {
-	network::CommandDispatcher dispatcher{"test"};
+	const auto batch = network::Deserialize("not an archive at all");
 
-	const std::string frame{"not an archive at all"};
-	const auto dispatched = dispatcher.Dispatch(frame);
-
-	ASSERT_FALSE(dispatched.has_value());
-	EXPECT_EQ(dispatched.error().frameSize, frame.size());
-	EXPECT_FALSE(dispatched.error().reason.empty());
+	ASSERT_FALSE(batch.has_value());
+	EXPECT_FALSE(batch.error().reason.empty());
 }
 
-TEST(CommandDispatcherTest, RegisteredHandlerRunsOnAGoodFrame)
+TEST(SerializerTest, ABatchSurvivesTheRoundTrip)
 {
-	network::CommandDispatcher dispatcher{"test"};
+	network::commands::CommandBatch sent;
+	sent.commands.emplace_back(network::commands::Disconnect{.reason = DisconnectReason::GameOver});
 
-	std::optional<DisconnectReason> seen{};
-	dispatcher.RegisterAll({{CommandType::DISCONNECT,
-							 [&seen](const network::commands::AnyCommand& command)
-							 {
-								 seen = std::get<network::commands::Disconnect>(command).reason;
-							 }}});
+	const auto received = network::Deserialize(network::Serialize(sent));
 
-	network::commands::CommandBatch batch;
-	batch.commands.emplace_back(network::commands::Disconnect{.reason = DisconnectReason::GameOver});
-
-	EXPECT_TRUE(dispatcher.Dispatch(network::Serialize(batch)).has_value());
-	ASSERT_TRUE(seen.has_value());
-	EXPECT_EQ(*seen, DisconnectReason::GameOver);
-}
-
-TEST(CommandDispatcherTest, CommandWithNoHandlerIsNotAFailure)
-{
-	network::CommandDispatcher dispatcher{"test"};
-
-	network::commands::CommandBatch batch;
-	batch.commands.emplace_back(network::commands::Disconnect{.reason = DisconnectReason::GameOver});
-
-	EXPECT_TRUE(dispatcher.Dispatch(network::Serialize(batch)).has_value());
+	ASSERT_TRUE(received.has_value());
+	const auto& commands = received.value().commands;
+	ASSERT_EQ(commands.size(), 1u);
+	const auto* goodbye = std::get_if<network::commands::Disconnect>(&commands.front());
+	ASSERT_NE(goodbye, nullptr);
+	EXPECT_EQ(goodbye->reason, DisconnectReason::GameOver);
 }

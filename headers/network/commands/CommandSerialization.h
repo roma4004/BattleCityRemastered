@@ -32,7 +32,6 @@ namespace ser20
 template<class Archive>
 void serialize(Archive& ar, network::commands::BonusSpawn& cmd, const unsigned int /*version*/)
 {
-	ar & cmd.type;
 	ar & cmd.pos;
 	ar & cmd.bonusType;
 	ar & cmd.uuid;
@@ -42,7 +41,6 @@ void serialize(Archive& ar, network::commands::BonusSpawn& cmd, const unsigned i
 template<class Archive>
 void serialize(Archive& ar, network::commands::BonusStatus& cmd, const unsigned int /*version*/)
 {
-	ar & cmd.type;
 	ar & cmd.name;
 	ar & cmd.author;
 	ar & cmd.bonusType;
@@ -52,14 +50,12 @@ void serialize(Archive& ar, network::commands::BonusStatus& cmd, const unsigned 
 template<class Archive>
 void serialize(Archive& ar, network::commands::Disconnect& cmd, const unsigned int /*version*/)
 {
-	ar & cmd.type;
 	ar & cmd.reason;
 }
 
 template<class Archive>
 void serialize(Archive& ar, network::commands::Despawn& cmd, const unsigned int /*version*/)
 {
-	ar & cmd.type;
 	ar & cmd.who;
 	ar & cmd.uuid;
 	ar & cmd.reason;
@@ -68,14 +64,12 @@ void serialize(Archive& ar, network::commands::Despawn& cmd, const unsigned int 
 template<class Archive>
 void serialize(Archive& ar, network::commands::GameStateChange& cmd, const unsigned int /*version*/)
 {
-	ar & cmd.type;
 	ar & cmd.state;
 }
 
 template<class Archive>
 void serialize(Archive& ar, network::commands::HealthChange& cmd, const unsigned int /*version*/)
 {
-	ar & cmd.type;
 	ar & cmd.who;
 	ar & cmd.health;
 	ar & cmd.uuid;
@@ -84,7 +78,6 @@ void serialize(Archive& ar, network::commands::HealthChange& cmd, const unsigned
 template<class Archive>
 void serialize(Archive& ar, network::commands::KeyStateChange& cmd, const unsigned int /*version*/)
 {
-	ar & cmd.type;
 	ar & cmd.tag;
 	ar & cmd.action;
 	ar & cmd.isPressed;
@@ -93,7 +86,6 @@ void serialize(Archive& ar, network::commands::KeyStateChange& cmd, const unsign
 template<class Archive>
 void serialize(Archive& ar, network::commands::ObstacleSpawn& cmd, const unsigned int /*version*/)
 {
-	ar & cmd.type;
 	ar & cmd.pos;
 	ar & cmd.obstacleType;
 	ar & cmd.uuid;
@@ -102,7 +94,6 @@ void serialize(Archive& ar, network::commands::ObstacleSpawn& cmd, const unsigne
 template<class Archive>
 void serialize(Archive& ar, network::commands::PositionChange& cmd, const unsigned int /*version*/)
 {
-	ar & cmd.type;
 	ar & cmd.who;
 	ar & cmd.pos;
 	ar & cmd.dir;
@@ -112,7 +103,6 @@ void serialize(Archive& ar, network::commands::PositionChange& cmd, const unsign
 template<class Archive>
 void serialize(Archive& ar, network::commands::RespawnTank& cmd, const unsigned int /*version*/)
 {
-	ar & cmd.type;
 	ar & cmd.tankType;
 	ar & cmd.uuid;
 	ar & cmd.pos;
@@ -121,14 +111,12 @@ void serialize(Archive& ar, network::commands::RespawnTank& cmd, const unsigned 
 template<class Archive>
 void serialize(Archive& ar, network::commands::SignalEvent& cmd, const unsigned int /*version*/)
 {
-	ar & cmd.type;
 	ar & cmd.signal;
 }
 
 template<class Archive>
 void serialize(Archive& ar, network::commands::StatisticsChange& cmd, const unsigned int /*version*/)
 {
-	ar & cmd.type;
 	ar & cmd.statisticsType;
 	ar & cmd.who;
 	ar & cmd.author;
@@ -138,7 +126,6 @@ void serialize(Archive& ar, network::commands::StatisticsChange& cmd, const unsi
 template<class Archive>
 void serialize(Archive& ar, network::commands::TankShot& cmd, const unsigned int /*version*/)
 {
-	ar & cmd.type;
 	ar & cmd.who;
 	ar & cmd.dir;
 	ar & cmd.uuid;
@@ -147,21 +134,18 @@ void serialize(Archive& ar, network::commands::TankShot& cmd, const unsigned int
 template<class Archive>
 void serialize(Archive& ar, network::commands::TankSpawnComplete& cmd, const unsigned int /*version*/)
 {
-	ar & cmd.type;
 	ar & cmd.uuid;
 }
 
 template<class Archive>
 void serialize(Archive& ar, network::commands::BonusSpawnComplete& cmd, const unsigned int /*version*/)
 {
-	ar & cmd.type;
 	ar & cmd.uuid;
 }
 
 template<class Archive>
 void serialize(Archive& ar, network::commands::TierChange& cmd, const unsigned int /*version*/)
 {
-	ar & cmd.type;
 	ar & cmd.who;
 	ar & cmd.tier;
 	ar & cmd.uuid;

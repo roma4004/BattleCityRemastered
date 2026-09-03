@@ -1,119 +1,28 @@
 #include "network/Server.h"
 #include "components/EventSystem.h"
 #include "components/events/CoreLifecycleEvents.h"
-#include "network/commands/CommandBatch.h"
-#include "network/Serializer.h"
+#include "network/ReplicationBindings.h"
 #include "utils/Log.h"
 #include <algorithm>
 #include <boost/asio/strand.hpp>
-#include <chrono>
 #include <mutex>
 #include <string>
-#include <thread>
 
 namespace network::commands
 {
-namespace
-{
-//NOTE: only allocation and serialization reach the catch below - the socket write reports through
-//its own completion handler - so this is a shape kept for UDP, where delivery is not guaranteed
-constexpr unsigned kMaxSendAttempts{3u};
-constexpr std::chrono::milliseconds kSendRetryPause{5};
-}//namespace
-
 Server::Server(boost::asio::io_context& ioContext, std::string host, const uint16_t port,
 			   const std::shared_ptr<EventSystem>& events)
 	: _acceptor{tcp::acceptor(ioContext, tcp::endpoint(boost::asio::ip::make_address(host), port))}
 	, _events{events}
-	, _replication{events}
+	, _replicationOut{events}
 {
+	BindHostReplication(_replicationOut);
 	DoAccept();
-	StartSendThread();
 	_subs.push_back(_events->AddListener(this, &Server::OnNetworkEndFrame));
-}
-
-void Server::StartSendThread()
-{
-	_isRunning.store(true);
-	_sendThread = std::thread([this]()
-	{
-		//NOTE: a frame being sent is held here instead of going back into the queue - re-queuing put it
-		//behind fresher frames and shuffled the order of the state the client sees
-		CommandBatch inFlight;
-		unsigned attempt{0u};
-
-		const auto onSendFailed = [&inFlight, &attempt](const std::string& what)
-		{
-			Log::Error("Server send thread: " + what);
-
-			if (++attempt >= kMaxSendAttempts)
-			{
-				Log::Error("Server send thread: frame dropped after " + std::to_string(attempt) + " attempts");
-				inFlight.commands.clear();
-				attempt = 0u;
-
-				return;
-			}
-
-			//NOTE: without it a permanent failure spins the thread at full speed
-			std::this_thread::sleep_for(kSendRetryPause);
-		};
-
-		while (_isRunning.load())
-		{
-			if (inFlight.commands.empty())
-			{
-				std::unique_lock lock(_sendQueueMutex);
-				_sendCondition.wait(lock, [this] { return !_sendQueue.empty() || !_isRunning.load(); });
-
-				if (!_isRunning.load())
-				{
-					break;
-				}
-
-				//NOTE: an idle frame queues an empty batch - taken off the queue and skipped, not sent
-				inFlight = std::move(_sendQueue.front());
-				_sendQueue.pop();
-
-				continue;
-			}
-
-			try
-			{
-				SendCommand(inFlight);
-				inFlight.commands.clear();
-				attempt = 0u;
-			}
-			catch (const std::exception& e)
-			{
-				onSendFailed(e.what());
-			}
-			catch (...)
-			{
-				onSendFailed("unknown exception");
-			}
-		}
-	});
-}
-
-void Server::StopSendThread()
-{
-	{
-		std::scoped_lock lock(_sendQueueMutex);
-		_isRunning.store(false);
-	}
-
-	_sendCondition.notify_one();
-
-	if (_sendThread.joinable())
-	{
-		_sendThread.join();
-	}
 }
 
 Server::~Server()
 {
-	StopSendThread();
 	Shutdown();
 }
 
@@ -179,11 +88,14 @@ void Server::CloseAcceptor()
 
 void Server::OnNetworkEndFrame(const NetworkEndFrameEvent&)
 {
+	CleanupDeadSessions();
+
+	//NOTE: serialised here, on the game thread, exactly as Client does it - FrameChannel::Send only
+	//posts onto the session's strand, so nothing here waits on the socket
+	if (const auto frame = _replicationOut.TakeFrame())
 	{
-		std::scoped_lock lock(_sendQueueMutex);
-		_sendQueue.push(_replication.TakeBatch());
+		SendToAll(frame);
 	}
-	_sendCondition.notify_one();
 }
 
 void Server::DoAccept()
@@ -246,8 +158,6 @@ void Server::CleanupDeadSessions()
 
 void Server::SendToAll(const std::shared_ptr<const std::string>& message)
 {
-	CleanupDeadSessions();
-
 	for (const auto& session: SnapshotSessions())
 	{
 		if (session && session->IsSocketOpen())
@@ -267,12 +177,5 @@ void Server::ProcessNetworkCommands() const
 			session->ProcessCommandQueue();
 		}
 	}
-}
-
-void Server::SendCommand(const CommandBatch& command)
-{
-
-	const std::string basicString = network::Serialize(command);
-	SendToAll(std::make_shared<const std::string>(network::FrameMessage(basicString)));
 }
 }//namespace network::commands

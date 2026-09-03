@@ -7,22 +7,16 @@
 #include "network/Serializer.h"
 #include "utils/Log.h"
 #include <string>
+#include <variant>
 
 namespace network::commands
 {
 Session::Session(tcp::socket sock, const std::shared_ptr<EventSystem>& events)
-	: PeerLink(std::move(sock), "Session", events)
-{
-	RegisterCommandHandlers();
-}
+	: PeerLink(std::move(sock), "Session", events) {}
 
-void Session::RegisterCommandHandlers()
+void Session::OnCommand(const AnyCommand& command)
 {
-	_dispatcher.RegisterAll({
-			{CommandType::SIGNAL_EVENT, [this](const AnyCommand& cmd) { OnSignalEvent(cmd); }},
-			{CommandType::KEY_STATE_CHANGE, [this](const AnyCommand& cmd) { OnKeyStateChange(cmd); }},
-			{CommandType::DISCONNECT, [this](const AnyCommand& cmd) { OnDisconnect(cmd); }},
-	});
+	std::visit([this](const auto& alternative) { Handle(alternative); }, command);
 }
 
 Session::~Session()
@@ -37,14 +31,14 @@ void Session::Shutdown(const DisconnectReason reason, std::function<void()> onCl
 	CloseWithFarewell(_channel->IsOpen(), reason, std::move(onClosed));
 }
 
-void Session::OnDisconnect(const AnyCommand& command)
+void Session::Handle(const Disconnect& command)
 {
 	_isPeerGone = true;
 
-	_commandQueue.Enqueue([this, cmd = std::get<Disconnect>(command)]()
+	_commandQueue.Enqueue([this, reason = command.reason]()
 	{
 		_channel->Close();
-		_events->EmitEvent(ServerInDisconnectEvent{.reason = cmd.reason});
+		_events->EmitEvent(ServerInDisconnectEvent{.reason = reason});
 	});
 }
 
@@ -84,11 +78,11 @@ void Session::Start()
 	_channel->StartReading();
 }
 
-void Session::OnSignalEvent(const AnyCommand& command)
+void Session::Handle(const SignalEvent& command)
 {
-	_commandQueue.Enqueue([this, cmd = std::get<SignalEvent>(command)]()
+	_commandQueue.Enqueue([this, signal = command.signal]()
 	{
-		switch (cmd.signal)
+		switch (signal)
 		{
 			case ClientSignal::ReadyToPlay:
 				_events->EmitEvent(ServerInClientReadyToStartGameEvent{});
@@ -131,14 +125,14 @@ const std::unordered_map<InputSignal, Session::InputEmitter> Session::kInputEmit
 		 }},
 };
 
-void Session::OnKeyStateChange(const AnyCommand& command)
+void Session::Handle(const KeyStateChange& command)
 {
-	_commandQueue.Enqueue([this, cmd = std::get<KeyStateChange>(command)]()//TODO: validate each command, security risk
+	_commandQueue.Enqueue([this, cmd = command]()
 	{
 		const auto it = kInputEmitters.find(cmd.action);
 		if (it == kInputEmitters.end())
 		{
-			Log::Error("Session::OnKeyStateChange: unhandled input signal "
+			Log::Error("Session: unhandled input signal "
 					   + std::to_string(static_cast<int>(cmd.action)));
 			return;
 		}

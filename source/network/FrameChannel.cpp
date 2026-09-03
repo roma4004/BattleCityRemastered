@@ -7,6 +7,18 @@
 
 namespace network
 {
+namespace
+{
+//NOTE: both are the link ending the way it is meant to - a peer that closed, or our own cancel
+void LogUnexpected(const std::string& ownerName, const boost::system::error_code& ec, const char* operation)
+{
+	if (ec != boost::asio::error::eof && ec != boost::asio::error::operation_aborted)
+	{
+		Log::Error(ownerName + " " + operation + ": " + ec.message());
+	}
+}
+}//namespace
+
 FrameChannel::FrameChannel(tcp::socket socket, std::string ownerName)
 	: _socket(std::move(socket))
 	, _ownerName(std::move(ownerName)) {}
@@ -106,12 +118,7 @@ void FrameChannel::ReadHeader()
 							{
 								if (ec)
 								{
-									if (ec != boost::asio::error::eof
-										&& ec != boost::asio::error::operation_aborted)
-									{
-										Log::Error(_ownerName + " read: " + ec.message());
-									}
-
+									LogUnexpected(_ownerName, ec, "read");
 									ReportError();
 									return;
 								}
@@ -140,12 +147,7 @@ void FrameChannel::ReadPayload(const std::uint32_t payloadLength)
 							{
 								if (ec)
 								{
-									if (ec != boost::asio::error::eof
-										&& ec != boost::asio::error::operation_aborted)
-									{
-										Log::Error(_ownerName + " read: " + ec.message());
-									}
-
+									LogUnexpected(_ownerName, ec, "read");
 									ReportError();
 									return;
 								}
@@ -206,11 +208,7 @@ void FrameChannel::WriteNextFrame()
 							 {
 								 if (ec)
 								 {
-									 if (ec != boost::asio::error::eof
-										 && ec != boost::asio::error::operation_aborted)
-									 {
-										 Log::Error(_ownerName + " write: " + ec.message());
-									 }
+									 LogUnexpected(_ownerName, ec, "write");
 
 									 _writeInProgress = false;
 

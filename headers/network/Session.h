@@ -34,10 +34,30 @@ public:
 private:
 	using InputEmitter = std::function<void(EventSystem&, PlayerSlot, bool)>;
 
-	void RegisterCommandHandlers();
-	void OnSignalEvent(const AnyCommand& command);
-	void OnKeyStateChange(const AnyCommand& command);
-	void OnDisconnect(const AnyCommand& command);
+	//NOTE: visited straight on the network thread, and each Handle queues its own game-thread work -
+	//the goodbye has a half that must run right here, ahead of the queue
+	void OnCommand(const AnyCommand& command) override;
+
+	//NOTE: every alternative of AnyCommand is named on purpose - without a catch-all template, a new
+	//command stops compiling until someone decides whether the host half of the wire cares about it
+	void Handle(const SignalEvent& command);
+	void Handle(const KeyStateChange& command);
+	void Handle(const Disconnect& command);
+
+	//NOTE: the client-bound half - a host writes these, it never reads them
+	void Handle(const PositionChange&) const {}
+	void Handle(const TankShot&) const {}
+	void Handle(const HealthChange&) const {}
+	void Handle(const TierChange&) const {}
+	void Handle(const Despawn&) const {}
+	void Handle(const RespawnTank&) const {}
+	void Handle(const ObstacleSpawn&) const {}
+	void Handle(const TankSpawnComplete&) const {}
+	void Handle(const BonusSpawnComplete&) const {}
+	void Handle(const GameStateChange&) const {}
+	void Handle(const StatisticsChange&) const {}
+	void Handle(const BonusSpawn&) const {}
+	void Handle(const BonusStatus&) const {}
 
 	static const std::unordered_map<InputSignal, InputEmitter> kInputEmitters;
 
