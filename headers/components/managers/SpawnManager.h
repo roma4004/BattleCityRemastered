@@ -10,8 +10,10 @@ struct AddToSpawnQueueEvent;
 struct PostTickUpdateEvent;
 struct GameResetEvent;
 class BaseObj;
+class BulletPool;
 class EventSystem;
 class FortressManager;
+class TankPool;
 class BonusSpawner;
 class ObstacleSpawner;
 class TankSpawner;
@@ -28,6 +30,10 @@ class SpawnManager
 	std::vector<EventSubscription> _subs{};
 
 	std::unique_ptr<FortressManager> _fortressManager{nullptr};
+	//NOTE: above the spawners because they outlive them - a mode change rebuilds every spawner, and
+	//the pools have to keep their objects across it for a tank to be reused rather than rebuilt
+	std::shared_ptr<BulletPool> _bulletPool{nullptr};
+	std::shared_ptr<TankPool> _tankPool{nullptr};
 	std::shared_ptr<BonusSpawner> _bonusSpawner{nullptr};
 	std::shared_ptr<ObstacleSpawner> _obstacleSpawner{nullptr};
 	std::unique_ptr<RespawnManager> _respawnManager{nullptr};

@@ -32,7 +32,13 @@ void BulletPool::Subscribe()
 	_subs.push_back(_events->AddListener(this, &BulletPool::OnPostTickUpdate));
 }
 
-void BulletPool::OnGameReset(const GameResetEvent&) { Clear(); }
+//NOTE: nothing announced for what it takes back - the world is going away with the listeners
+void BulletPool::OnGameReset(const GameResetEvent&)
+{
+	_slots.ReclaimAll();
+
+	Log::Detail("bullet pool shelved for a new match, free " + std::to_string(_slots.FreeCount()));
+}
 
 std::shared_ptr<Bullet> BulletPool::CreateNewBullet() const
 {
@@ -82,11 +88,4 @@ void BulletPool::OnPostTickUpdate(const PostTickUpdateEvent&)
 	{
 		_events->EmitEvent(DespawnedEvent{.uuid = bullet->GetUuid(), .reason = DespawnReason::Destroyed});
 	}
-}
-
-void BulletPool::Clear()
-{
-	Log::Detail("bullet pool cleared, held " + std::to_string(_slots.HeldCount()));
-
-	_slots.Clear();
 }

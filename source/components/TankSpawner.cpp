@@ -1,6 +1,5 @@
 #include "components/TankSpawner.h"
 #include "application/GameConfig.h"
-#include "components/BulletPool.h"
 #include "components/EventSystem.h"
 #include "components/TankPool.h"
 #include "components/events/BonusPickupEvents.h"
@@ -33,12 +32,12 @@
 #include <array>
 #include <memory>
 
+//NOTE: the pools come from outside - this class is rebuilt on every mode change and they are not
 TankSpawner::TankSpawner(const GameConfig& gameConfig, const std::vector<std::shared_ptr<BaseObj>>& allObjects,
-						 const std::shared_ptr<EventSystem>& events)
+						 const std::shared_ptr<EventSystem>& events, const std::shared_ptr<TankPool>& tankPool)
 	: _allObjects{allObjects}
 	, _events{events}
-	, _bulletPool{std::make_shared<BulletPool>(events, allObjects, gameConfig)}
-	, _tankPool{std::make_shared<TankPool>(events, allObjects, gameConfig, _bulletPool)}
+	, _tankPool{tankPool}
 	, _gameMode{gameConfig.gameMode}
 	, _gameConfig{gameConfig}
 {

@@ -8,7 +8,6 @@ cmake_minimum_required(VERSION 3.25) #NOTE: 3.25 for add_subdirectory(<dir> SYST
 include(cmake/SelectCompiler.cmake)
 
 project(BattleCity_remastered)
-#TODO: use std::filesystem for resource loading in code
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) #for Sourcetree
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
@@ -126,6 +125,7 @@ set(UNIT_TESTS_SOURCES
         UnitTests/GameStateTest.cpp
         UnitTests/ClientMirrorTest.cpp
         UnitTests/TankHealTest.cpp
+        UnitTests/TankPoolTest.cpp
         UnitTests/TankTerrainTest.cpp
         UnitTests/MenuInputTest.cpp
         UnitTests/NetworkTest.cpp

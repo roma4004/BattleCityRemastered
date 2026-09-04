@@ -69,6 +69,7 @@
     <ClCompile Include="GameStateTest.cpp" />
     <ClCompile Include="ClientMirrorTest.cpp" />
     <ClCompile Include="TankHealTest.cpp" />
+    <ClCompile Include="TankPoolTest.cpp" />
     <ClCompile Include="TankTerrainTest.cpp" />
     <ClCompile Include="MenuInputTest.cpp" />
     <ClCompile Include="NetworkTest.cpp" />

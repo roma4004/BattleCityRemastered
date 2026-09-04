@@ -8,7 +8,6 @@
 #include "components/events/ObjectLifecycleEvents.h"
 #include "components/events/ReplicationEvents.h"
 #include "components/events/StatisticsEvents.h"
-#include "entities/obstacles/BushTile.h"
 #include "entities/obstacles/IceTile.h"
 #include "entities/obstacles/WaterTile.h"
 #include "entities/pawns/BulletResetProperty.h"
@@ -58,8 +57,10 @@ Uuid Bullet::GetUuid() const
 
 void Bullet::Reset(const BulletResetProperty& resetProperty)
 {
+	_gameMode = _gameConfig.gameMode;
+
 	_rect = resetProperty.rect;
-	SetHealth(resetProperty.health);//NOTE: _health is private in BaseObj, the rest are protected
+	SetHealth(resetProperty.health);
 	_dir = resetProperty.dir;
 
 	_author = resetProperty.author;
@@ -108,8 +109,8 @@ void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 		}
 
 		auto* baseObj = target.get();
+		//NOTE: no tier reaches water or ice; a bush is not here because the tier check below burns it
 		if (dynamic_cast<WaterTile*>(baseObj) != nullptr
-			|| dynamic_cast<BushTile*>(baseObj) != nullptr
 			|| dynamic_cast<IceTile*>(baseObj) != nullptr)
 		{
 			continue;

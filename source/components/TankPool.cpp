@@ -40,7 +40,13 @@ void TankPool::Subscribe()
 	_subs.push_back(_events->AddListener(this, &TankPool::OnPostTickUpdate));
 }
 
-void TankPool::OnGameReset(const GameResetEvent&) { Clear(); }
+//NOTE: shelved, not dropped - a mode switch changes who fills the seats, not what a tank is made of
+void TankPool::OnGameReset(const GameResetEvent&)
+{
+	_slots.ReclaimAll();
+
+	Log::Detail("tank pool shelved for a new match, free " + std::to_string(_slots.FreeCount()));
+}
 
 //NOTE: the driver here is a placeholder - SpawnTank hands the tank its real one before it enters the world
 std::shared_ptr<Tank> TankPool::CreateNewTank() const
@@ -78,11 +84,4 @@ void TankPool::OnPostTickUpdate(const PostTickUpdateEvent&)
 	{
 		Log::Detail("tanks returned to a pool of " + std::to_string(_slots.FreeCount()));
 	}
-}
-
-void TankPool::Clear()
-{
-	Log::Detail("tank pool cleared, held " + std::to_string(_slots.HeldCount()));
-
-	_slots.Clear();
 }

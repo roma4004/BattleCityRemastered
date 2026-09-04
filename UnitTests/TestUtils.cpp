@@ -1,4 +1,6 @@
 #include "TestUtils.h"
+#include "components/BulletPool.h"
+#include "components/TankPool.h"
 #include "components/TankSpawner.h"
 #include "components/managers/RespawnManager.h"
 #include "components/input/InputProviderForBot.h"
@@ -16,7 +18,12 @@ void TestUtils::ApplyGameMode(const std::shared_ptr<EventSystem>& events,
 	//NOTE: the enemy throttle is wall-clock time, and a test has none to spare
 	gameConfig.enemySpawnCooldown = std::chrono::milliseconds{0};
 	respawnManager = std::make_shared<RespawnManager>(events, gameMode);
-	tankSpawner = std::make_shared<TankSpawner>(gameConfig, allObjects, events);
+	//NOTE: production keeps the pools in SpawnManager so they survive a mode change; a fixture has
+	//no such switch, so they live as long as the spawner
+	const auto bulletPool{std::make_shared<BulletPool>(events, allObjects, gameConfig)};
+	tankSpawner = std::make_shared<TankSpawner>(gameConfig, allObjects, events,
+												std::make_shared<TankPool>(events, allObjects, gameConfig,
+																		   bulletPool));
 }
 
 namespace

@@ -23,7 +23,6 @@ struct TankRespawnedEvent;
 struct TankSpawnCompletedEvent;
 class Tank;
 class BaseObj;
-class BulletPool;
 class TankPool;
 class EventSystem;
 class IInputProvider;
@@ -46,7 +45,6 @@ class TankSpawner final
 	const std::vector<std::shared_ptr<BaseObj>>& _allObjects;
 
 	std::shared_ptr<EventSystem> _events{nullptr};
-	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 	std::shared_ptr<TankPool> _tankPool{nullptr};
 	std::vector<EventSubscription> _subs{};
 	Timer _enemySpawnTimer{};
@@ -83,7 +81,7 @@ class TankSpawner final
 
 public:
 	TankSpawner(const GameConfig& gameConfig, const std::vector<std::shared_ptr<BaseObj>>& allObjects,
-				const std::shared_ptr<EventSystem>& events);
+				const std::shared_ptr<EventSystem>& events, const std::shared_ptr<TankPool>& tankPool);
 
 	~TankSpawner() = default;
 };

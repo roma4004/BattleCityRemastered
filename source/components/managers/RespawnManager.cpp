@@ -32,8 +32,6 @@ RespawnManager::RespawnManager(const std::shared_ptr<EventSystem>& events, const
 
 void RespawnManager::Subscribe()
 {
-	//TODO: reuse existing tanks when game mode changed
-	//TODO: need work phase, clearState (all spawns disabled), battleState (spawn as normal)
 	_subs.push_back(_events->AddListener(this, &RespawnManager::OnGameReset));
 	_subs.push_back(_events->AddListener(this, &RespawnManager::OnTankSpawn));
 	_subs.push_back(_events->AddListener(this, &RespawnManager::OnTankDied));

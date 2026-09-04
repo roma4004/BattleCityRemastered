@@ -42,6 +42,4 @@ public:
 	//NOTE: the driver comes in with the seat - taking a tank out of the pool is swapping who steers it
 	[[nodiscard]] std::shared_ptr<Tank> SpawnTank(const TankResetProperty& property,
 												  std::unique_ptr<IInputProvider> driver);
-
-	void Clear();
 };

@@ -59,14 +59,13 @@ void Tank::ApplyFreshLoadout()
 	_shootTimer.cooldown = _faction == Faction::EnemyTeam ? kEnemySeatCooldown : kPlayerSeatCooldown;
 }
 
-//NOTE: the behaviours hold references into the tank, so they survive a reset untouched - only the
-//values they read have to be put back
 void Tank::Reset(const TankResetProperty& resetProperty, std::unique_ptr<IInputProvider> driver)
 {
-	//NOTE: the id first - Enable() below subscribes by it
+	_gameMode = _gameConfig.gameMode;
+
 	_uuid = resetProperty.uuid;
 	_rect = resetProperty.rect;
-	SetHealth(resetProperty.health);//NOTE: _health is private in BaseObj, the rest are protected
+	SetHealth(resetProperty.health);
 	_dir = resetProperty.dir;
 	_speed = resetProperty.speed;
 
@@ -129,7 +128,6 @@ void Tank::OnPostDraw(const PostDrawEvent&) const
 
 void Tank::SubscribeAsClient()
 {
-	//TODO: move bot timers to handle outside bot tank
 	_subs.push_back(_events->AddListener(Key(_author), this, &Tank::OnTankShot));
 	_subs.push_back(_events->AddListener(Key(_author), this, &Tank::OnBonusHelmetApplied));
 	_subs.push_back(_events->AddListener(Key(_uuid), this, &Tank::OnTierChanged));

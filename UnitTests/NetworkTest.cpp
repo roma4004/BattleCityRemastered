@@ -198,7 +198,6 @@ TEST_F(NetworkTest, DespawnEventReplication)
 	EXPECT_EQ(DespawnReason::PickedUp, received[1].reason);
 }
 
-//TODO: cover all statistics items like this
 TEST_F(NetworkTest, StatisticsEventReplication)
 {
 	const auto server = MakeHost();

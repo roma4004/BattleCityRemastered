@@ -5,7 +5,9 @@
 #include "components/events/SpawnEvents.h"
 #include "components/events/TimingEvents.h"
 #include "components/BonusSpawner.h"
+#include "components/BulletPool.h"
 #include "components/EventSystem.h"
+#include "components/TankPool.h"
 #include "components/ObstacleSpawner.h"
 #include "components/TankSpawner.h"
 #include "components/managers/FortressManager.h"
@@ -18,7 +20,12 @@ SpawnManager::SpawnManager(const std::shared_ptr<EventSystem>& events, const Gam
 	, _gameConfig{gameConfig}
 	, _fortressManager{std::make_unique<FortressManager>(events, _allObjects)}
 {
+	//NOTE: before the pools, not in the init list - both listen on PostTickUpdate too, and a slot
+	//reclaimed before DisposeDeadObject has swept it is briefly reachable in the world and the free list
 	Subscribe();
+
+	_bulletPool = std::make_shared<BulletPool>(events, _allObjects, gameConfig);
+	_tankPool = std::make_shared<TankPool>(events, _allObjects, gameConfig, _bulletPool);
 
 	CreateSpawners();
 }
@@ -38,7 +45,7 @@ void SpawnManager::CreateSpawners()
 	_bonusSpawner = std::make_unique<BonusSpawner>(_events, _allObjects, _gameConfig);
 	_obstacleSpawner = std::make_unique<ObstacleSpawner>(_events, _gameConfig);
 	_respawnManager = std::make_unique<RespawnManager>(_events, _gameConfig.gameMode);
-	_tankSpawner = std::make_unique<TankSpawner>(_gameConfig, _allObjects, _events);
+	_tankSpawner = std::make_unique<TankSpawner>(_gameConfig, _allObjects, _events, _tankPool);
 }
 
 void SpawnManager::OnGameModeChangedTo(const GameModeChangedToEvent&) { CreateSpawners(); }

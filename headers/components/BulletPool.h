@@ -43,6 +43,4 @@ public:
 	//NOTE: armed here - the pool owns both the free list and Bullet::Reset
 	[[nodiscard]] std::shared_ptr<Bullet> SpawnBullet(const BulletResetProperty& property,
 													 const std::optional<Uuid>& uuid = std::nullopt);
-
-	void Clear();
 };

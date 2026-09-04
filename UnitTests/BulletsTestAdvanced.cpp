@@ -5,6 +5,7 @@
 #include "components/EventSystem.h"
 #include "components/events/TimingEvents.h"
 #include "entities/obstacles/BrickWall.h"
+#include "entities/obstacles/BushTile.h"
 #include "entities/obstacles/SteelWall.h"
 #include "entities/pawns/Bullet.h"
 #include "enums/Direction.h"
@@ -112,4 +113,67 @@ TEST_F(BulletTestAdvanced, BlastSparesTheWallBehindAtHundredFortyFourFps)
 
 	EXPECT_GT(nearWallHealth, nearWall->GetHealth());
 	EXPECT_EQ(farWallHealth, farWall->GetHealth());
+}
+
+// A bush never stops a bullet, so it can only ever be caught by a blast that went off on something
+// solid - and only from tier three, the same rule that lets a shot through steel
+TEST_F(BulletTestAdvanced, BushBurnsInABlastFromTierThree)
+{
+	auto wall = std::make_shared<BrickWall>(ObjRectangle{.x = 0.0, .y = 20.0, .w = _gridSize, .h = 4.0},
+											_events, _uuid, _gameMode);
+	auto bush = std::make_shared<BushTile>(ObjRectangle{.x = 0.0, .y = 26.0, .w = _gridSize, .h = _gridSize},
+										   _events, _uuid, _gameMode);
+	_allObjects.emplace_back(wall);
+	_allObjects.emplace_back(bush);
+
+	const int wallHealth = wall->GetHealth();
+	for (int frame = 0; frame < 20 && wall->GetHealth() == wallHealth; ++frame)
+	{
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	}
+
+	EXPECT_GT(wallHealth, wall->GetHealth());
+	EXPECT_FALSE(bush->GetIsAlive());
+}
+
+TEST_F(BulletTestAdvanced, BushSurvivesABlastBelowTierThree)
+{
+	_allObjects.clear();
+	_calibre.tier = 2u;
+
+	const ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
+	_allObjects.emplace_back(TestUtils::CreateBullet(rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam,
+													 _allObjects, _events, _calibre, Direction::DOWN, _gameMode,
+													 _gameConfig, Author::Player1));
+
+	auto wall = std::make_shared<BrickWall>(ObjRectangle{.x = 0.0, .y = 20.0, .w = _gridSize, .h = 4.0},
+											_events, _uuid, _gameMode);
+	auto bush = std::make_shared<BushTile>(ObjRectangle{.x = 0.0, .y = 26.0, .w = _gridSize, .h = _gridSize},
+										   _events, _uuid, _gameMode);
+	_allObjects.emplace_back(wall);
+	_allObjects.emplace_back(bush);
+
+	const int wallHealth = wall->GetHealth();
+	for (int frame = 0; frame < 20 && wall->GetHealth() == wallHealth; ++frame)
+	{
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	}
+
+	EXPECT_GT(wallHealth, wall->GetHealth());
+	EXPECT_TRUE(bush->GetIsAlive());
+}
+
+// Nothing solid behind it, so the shot flies on and the bush is never in a blast at all
+TEST_F(BulletTestAdvanced, TierThreeFliesThroughABushWithoutBurningIt)
+{
+	auto bush = std::make_shared<BushTile>(ObjRectangle{.x = 0.0, .y = 20.0, .w = _gridSize, .h = _gridSize},
+										   _events, _uuid, _gameMode);
+	_allObjects.emplace_back(bush);
+
+	for (int frame = 0; frame < 10; ++frame)
+	{
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	}
+
+	EXPECT_TRUE(bush->GetIsAlive());
 }

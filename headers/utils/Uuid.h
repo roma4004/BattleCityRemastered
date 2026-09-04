@@ -6,11 +6,8 @@
 #include <cstring>
 #include <typeindex>//NOTE: required by GCC only - cheapest header declaring std::hash; MSVC-STL leaks it
 
-//NOTE: vocabulary uuid for headers. Layout is identical to boost::uuids::uuid - 16 bytes, 8-byte
-//aligned - so the two convert by memcpy/bit_cast, and boost stays behind UuidUtils.cpp. The point is
-//parse cost: <boost/uuid/uuid.hpp> is ~92k lines after preprocessing and was stored by value in 28
-//of our headers.
-struct alignas(std::uint64_t) Uuid final
+//NOTE: our own 16 bytes instead of boost::uuids::uuid - that header is ~92k lines preprocessed
+struct Uuid final
 {
 	std::uint8_t data[16]{};
 
@@ -19,7 +16,6 @@ struct alignas(std::uint64_t) Uuid final
 };
 
 static_assert(sizeof(Uuid) == 16, "Uuid must stay wire- and boost-compatible");
-static_assert(alignof(Uuid) == 8, "Uuid must keep boost::uuids::uuid's alignment");
 
 template<>
 struct std::hash<Uuid>

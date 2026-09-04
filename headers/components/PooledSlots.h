@@ -14,6 +14,12 @@ class PooledSlots final
 	std::queue<std::shared_ptr<T>> _free{};
 	std::vector<std::shared_ptr<T>> _inPlay{};
 
+	void Shelve(const std::shared_ptr<T>& obj)
+	{
+		obj->Deactivate();
+		_free.push(obj);
+	}
+
 public:
 	//NOTE: nullptr means the free list is empty and the caller builds one - the pool cannot, it does
 	//not know how any particular object is constructed
@@ -51,20 +57,23 @@ public:
 
 		for (const std::shared_ptr<T>& obj: reclaimed)
 		{
-			obj->Deactivate();
-			_free.push(obj);
+			Shelve(obj);
 		}
 
 		return reclaimed;
 	}
 
-	void Clear()
+	//NOTE: a reset ends the match, so the field goes back on the shelf alive or not - what comes off
+	//it next is armed by Reset anyway
+	void ReclaimAll()
 	{
-		_free = {};
+		for (const std::shared_ptr<T>& obj: _inPlay)
+		{
+			Shelve(obj);
+		}
+
 		_inPlay.clear();
 	}
 
 	[[nodiscard]] std::size_t FreeCount() const { return _free.size(); }
-
-	[[nodiscard]] std::size_t HeldCount() const { return _free.size() + _inPlay.size(); }
 };
