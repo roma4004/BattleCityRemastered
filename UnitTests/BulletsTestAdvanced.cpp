@@ -40,8 +40,8 @@ protected:
 		const ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
 		std::shared_ptr<Bullet> bullet =
 				TestUtils::CreateBullet(
-						rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects,
-						_events, _calibre, Direction::DOWN, _gameMode, _gameConfig, Author::Player1);
+						rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects, _events, _calibre,
+						Direction::DOWN, _gameConfig, Author::Player1);
 		_allObjects.emplace_back(bullet);
 	}
 
@@ -142,9 +142,8 @@ TEST_F(BulletTestAdvanced, BushSurvivesABlastBelowTierThree)
 	_calibre.tier = 2u;
 
 	const ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
-	_allObjects.emplace_back(TestUtils::CreateBullet(rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam,
-													 _allObjects, _events, _calibre, Direction::DOWN, _gameMode,
-													 _gameConfig, Author::Player1));
+	_allObjects.emplace_back(TestUtils::CreateBullet(rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects,
+													 _events, _calibre, Direction::DOWN, _gameConfig, Author::Player1));
 
 	auto wall = std::make_shared<BrickWall>(ObjRectangle{.x = 0.0, .y = 20.0, .w = _gridSize, .h = 4.0},
 											_events, _uuid, _gameMode);

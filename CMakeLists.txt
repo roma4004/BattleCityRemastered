@@ -106,8 +106,7 @@ set(GAME_CORE_SOURCES
 )
 
 set(UNIT_TESTS_SOURCES
-        UnitTests/AnimationPauseTest.cpp
-        UnitTests/AnimationTriggersTest.cpp
+        UnitTests/AnimationManagerTest.cpp
         UnitTests/BonusTestBasic.cpp
         UnitTests/BonusTestDestroy.cpp
         UnitTests/BonusTestEnemy.cpp
@@ -175,7 +174,8 @@ target_include_directories(unit_tests PRIVATE headers)
 target_link_libraries(unit_tests PRIVATE project_warnings game_core gtest gtest_main)
 
 include(GoogleTest)
-gtest_discover_tests(unit_tests)
+#NOTE: from the exe folder - the shipped-level test opens Resources/Maps relative to the cwd
+gtest_discover_tests(unit_tests WORKING_DIRECTORY $<TARGET_FILE_DIR:unit_tests>)
 
 #NOTE: SDL3 has no SDL2main equivalent - the entry point hijack is header-only in <SDL3/SDL_main.h>
 target_link_libraries(${PROJECT_NAME} PRIVATE project_warnings game_platform)
@@ -202,12 +202,19 @@ set(GAME_ASSETS
         Resources/Sounds/levelStarted.wav
 )
 
+#NOTE: a target of its own rather than a post-build step on the game - unit_tests lands in the same
+#directory and is regularly built alone, and the test that parses the shipped level needs the map
+#to be there. One copy step, one destination, both exes depending on it.
+add_custom_target(game_assets)
 foreach (asset ${GAME_ASSETS})
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    add_custom_command(TARGET game_assets POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${CMAKE_SOURCE_DIR}/${asset}" #NOTE: absolute - "../" breaks when the build dir moves
             "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${asset}")
 endforeach ()
+
+add_dependencies(${PROJECT_NAME} game_assets)
+add_dependencies(unit_tests game_assets)
 
 # --- Convenience targets: host + client side by side, no IDE-specific run configuration needed ---
 if (WIN32)

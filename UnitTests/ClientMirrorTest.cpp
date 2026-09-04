@@ -54,9 +54,8 @@ TEST_F(ClientMirrorTest, AClientTakesHealthOffTheWireInsteadOfHealingItself)
 {
 	const std::shared_ptr<Tank> enemy =
 			TestUtils::CreateBot(
-					_tankRect, _tankHealth, UuidUtils::GetRandomUuid(), Author::Enemy1, Faction::EnemyTeam,
-					_allObjects, _events, 1u, _gameConfig.tankSpeed, Direction::UP, _gameConfig.gameMode, _bulletPool,
-					_gameConfig);
+					_tankRect, _tankHealth, UuidUtils::GetRandomUuid(), Author::Enemy1, Faction::EnemyTeam, _allObjects,
+					_events, 1u, _gameConfig.tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 
 	_events->EmitEvent(Key(Author::Enemy1), BonusStarPickupEvent{});
 

@@ -144,14 +144,13 @@ bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime, const std::vecto
 
 void MoveLikeTankBeh::ResetVelocity() { _velocity.fill(0.0); }
 
-std::vector<Direction> MoveLikeTankBeh::GetFreePathSides(const double deltaTime,
-														 const std::optional<Direction> excludeDirection,
-														 const std::vector<std::shared_ptr<BaseObj>>& objects) const
+std::vector<Direction> MoveLikeTankBeh::GetFreePathSides(
+		const double deltaTime, const std::optional<Direction> excludeDirection,
+		const std::vector<std::shared_ptr<BaseObj>>& objects) const
 {
+	//NOTE: four sides at most, so one allocation instead of the three a vector takes growing 1-2-4
 	std::vector<Direction> freePath;
-
-	constexpr int defaultCollisionReserve{4};
-	freePath.reserve(defaultCollisionReserve);
+	freePath.reserve(4u);
 
 	for (const Direction dir: {Direction::UP, Direction::LEFT, Direction::DOWN, Direction::RIGHT})
 	{

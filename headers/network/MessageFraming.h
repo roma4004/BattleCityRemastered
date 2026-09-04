@@ -2,7 +2,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <string>
 
 namespace network
 {
@@ -20,21 +19,11 @@ inline std::uint32_t DecodeFrameHeader(const char* data)
 		   | static_cast<std::uint32_t>(static_cast<unsigned char>(data[3]));
 }
 
-inline std::string FrameMessage(const std::string& payload)
+inline void EncodeFrameHeader(char* data, const std::uint32_t length)
 {
-	const auto length = static_cast<std::uint32_t>(payload.size());
-	const char header[kFrameHeaderSize]{
-			static_cast<char>((length >> 24) & 0xFF),
-			static_cast<char>((length >> 16) & 0xFF),
-			static_cast<char>((length >> 8) & 0xFF),
-			static_cast<char>(length & 0xFF),
-	};
-
-	std::string framed;
-	framed.reserve(kFrameHeaderSize + payload.size());
-	framed.append(header, kFrameHeaderSize);
-	framed.append(payload);
-
-	return framed;
+	data[0] = static_cast<char>((length >> 24) & 0xFF);
+	data[1] = static_cast<char>((length >> 16) & 0xFF);
+	data[2] = static_cast<char>((length >> 8) & 0xFF);
+	data[3] = static_cast<char>(length & 0xFF);
 }
 }//namespace network

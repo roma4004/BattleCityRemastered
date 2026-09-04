@@ -47,7 +47,7 @@ TEST_F(TankHealTest, AMaxedTankStillReportsTheHealth)
 	const std::shared_ptr<Tank> enemy =
 			TestUtils::CreateBot(
 					_tankRect, _tankHealth, UuidUtils::GetRandomUuid(), Author::Enemy1, Faction::EnemyTeam, _allObjects,
-					_events, 4u, _gameConfig.tankSpeed, Direction::UP, _gameConfig.gameMode, _bulletPool, _gameConfig);
+					_events, 4u, _gameConfig.tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 
 	_events->EmitEvent(Key(Author::Enemy1), BonusStarPickupEvent{});
 
@@ -62,7 +62,7 @@ TEST_F(TankHealTest, AnUpgradingTankReportsTheHealthToo)
 	const std::shared_ptr<Tank> enemy =
 			TestUtils::CreateBot(
 					_tankRect, _tankHealth, UuidUtils::GetRandomUuid(), Author::Enemy2, Faction::EnemyTeam, _allObjects,
-					_events, 1u, _gameConfig.tankSpeed, Direction::UP, _gameConfig.gameMode, _bulletPool, _gameConfig);
+					_events, 1u, _gameConfig.tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 
 	_events->EmitEvent(Key(Author::Enemy2), BonusStarPickupEvent{});
 

@@ -9,7 +9,6 @@
 
 enum class Faction : char8_t;
 enum class Direction : char8_t;
-enum class GameMode : char8_t;
 struct PawnProperty;
 struct ObjRectangle;
 class IMoveBeh;
@@ -49,7 +48,6 @@ protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::unique_ptr<IMoveBeh> _moveBeh{nullptr};
 	Direction _dir{};
-	GameMode _gameMode{};
 	Author _author{};
 	const GameConfig& _gameConfig;
 

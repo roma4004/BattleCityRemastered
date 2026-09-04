@@ -13,7 +13,7 @@ class GameConfig;
 class LineOfSight;
 class Tank;
 
-//NOTE: the turn timer, the sighting distance and the line-of-sight pass - state of a decision, not of a tank
+//NOTE: the turn timer and the line-of-sight pass - state of a decision, not of a tank
 class InputProviderForBot final : public IInputProvider
 {
 	const std::vector<std::shared_ptr<BaseObj>>& _allObjects;
@@ -21,9 +21,6 @@ class InputProviderForBot final : public IInputProvider
 
 	std::uniform_int_distribution<> _distTurnRate;
 	Timer _randomChangeDirTimer{};
-
-	double _obstacleDistance{};
-	double _bulletOffset{};
 
 	//NOTE: the drivable pass, built at most once per HandleLineOfSight and shared by all four sides
 	std::unique_ptr<LineOfSight> _driveLineOfSight{};
@@ -43,7 +40,8 @@ class InputProviderForBot final : public IInputProvider
 	[[nodiscard]] std::shared_ptr<BaseObj> Lookup(Tank& self, LineOfSight& lineOfSight, Direction& dir,
 												  SightTrigger trigger);
 
-	void UpdateShootDistance(const Tank& self, Direction dir, const std::shared_ptr<BaseObj>& nearestSeenObstacle);
+	//NOTE: a bot must not fire into something closer than its own blast, or the shot takes it too
+	[[nodiscard]] static bool IsClearToFire(const Tank& self, Direction dir, const BaseObj& target);
 
 	[[nodiscard]] std::shared_ptr<BaseObj> HandleLineOfSight(Tank& self);
 

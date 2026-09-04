@@ -58,6 +58,7 @@ void TankSpawner::Subscribe()
 	{
 		_subs.push_back(_events->AddListener(this, &TankSpawner::OnTankRespawned));
 		_subs.push_back(_events->AddListener(this, &TankSpawner::OnTankSpawnCompleted));
+		_subs.push_back(_events->AddListener(this, &TankSpawner::OnTankDied));
 	}
 
 	//NOTE: a tank mid-spawn is not an object yet, so the grenade cannot reach it the way it reaches
@@ -92,6 +93,8 @@ void TankSpawner::OnTankSpawnCompleted(const TankSpawnCompletedEvent& event)
 {
 	OnSpawnDelayFinished(event.uuid);
 }
+
+void TankSpawner::OnTankDied(const TankDiedEvent& event) { DropDelayedSpawn(event.uuid); }
 
 void TankSpawner::Reset(const GameResetEvent&)
 {
@@ -287,7 +290,7 @@ void TankSpawner::RespawnTank(const TankType type, const Uuid uuid, const std::o
 			{
 				RespawnEnemyTanks(type, uuid, rect);
 			}
-			else if (TimeUtils::IsCooldownFinish(_enemySpawnTimer.activateTime, _enemySpawnTimer.cooldown))
+			else if (_enemySpawnTimer.IsCooldownFinish())
 			{
 				_enemySpawnTimer.Reset();
 				RespawnEnemyTanks(type, uuid, rect);
@@ -339,6 +342,19 @@ void TankSpawner::DelayedSpawnStart(const ObjRectangle rect, const int health, c
 	_events->EmitEvent(AnimationCreateTankSpawnEvent{.rect = rect, .uuid = uuid});
 }
 
+//NOTE: a seat keeps its uuid for the match, so an entry left pending would shadow its next spawn
+void TankSpawner::DropDelayedSpawn(const Uuid uuid)
+{
+	const auto it = std::ranges::find(_delayedSpawns, uuid, &DelayedTankSpawn::uuid);
+	if (it == _delayedSpawns.end())
+	{
+		return;
+	}
+
+	_delayedSpawns.erase(it);
+	_events->EmitEvent(AnimationCancelTankSpawnEvent{.uuid = uuid});
+}
+
 void TankSpawner::OnSpawnDelayFinished(const Uuid uuid)
 {
 	const auto it = std::ranges::find(_delayedSpawns, uuid, &DelayedTankSpawn::uuid);
@@ -351,8 +367,6 @@ void TankSpawner::OnSpawnDelayFinished(const Uuid uuid)
 	_delayedSpawns.erase(it);
 }
 
-//NOTE: a cancelled spawn is a death whose body never arrived - same slot handling, no explosion and
-//no statistics, and the respawn point stays spent because it was spent when the burst started
 void TankSpawner::CancelDelayedSpawnsOf(const Faction faction)
 {
 	const auto isTargeted = [faction](const DelayedTankSpawn& spawn)
@@ -366,6 +380,7 @@ void TankSpawner::CancelDelayedSpawnsOf(const Faction faction)
 
 	for (const DelayedTankSpawn& spawn: cancelled)
 	{
+		_events->EmitEvent(AnimationCancelTankSpawnEvent{.uuid = spawn.uuid});
 		_events->EmitEvent(TankDiedEvent{.who = SeatOf(spawn.type), .uuid = spawn.uuid, .author = Author::None});
 	}
 }

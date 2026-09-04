@@ -9,9 +9,13 @@
 #include "components/events/ReplicationEvents.h"
 #include "components/TankSpawner.h"
 #include "components/managers/RespawnManager.h"
+#include "enums/Author.h"
 #include "enums/Faction.h"
 #include "enums/GameMode.h"
+#include "enums/TankType.h"
+#include "utils/UuidUtils.h"
 #include "gtest/gtest.h"
+#include <algorithm>
 #include <memory>
 
 class TankSpawnerTest : public testing::Test
@@ -116,6 +120,11 @@ TEST_F(TankSpawnerTest, GrenadeCancelsEnemiesStillSpawning)
 	const EventSubscription pendingSub = _events->AddListener(
 			[&pending](const AnimationCreateTankSpawnEvent& event) { pending.push_back(event.uuid); });
 
+	//NOTE: the death is all that crosses the wire, so its uuid is the client's only way to match
+	std::vector<Uuid> announcedDead{};
+	const EventSubscription diedSub = _events->AddListener(
+			[&announcedDead](const TankDiedEvent& event) { announcedDead.push_back(event.uuid); });
+
 	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
 	_events->EmitEvent(RespawnTanksEvent{});
@@ -132,4 +141,46 @@ TEST_F(TankSpawnerTest, GrenadeCancelsEnemiesStillSpawning)
 
 	//the player was not the grenade's target and still arrives; the four enemies never do
 	EXPECT_EQ(_allObjects.size(), 1u);
+
+	EXPECT_EQ(announcedDead.size(), 4u);
+	for (const Uuid& dead: announcedDead)
+	{
+		EXPECT_NE(std::ranges::find(pending, dead), pending.end())
+				<< "a cancelled spawn was announced under a uuid no client could match";
+	}
+}
+
+//NOTE: no cancel command exists - a client drops its pending entry on the death itself
+TEST_F(TankSpawnerTest, AClientDropsASpawnTheHostCancelled)
+{
+	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsClient, _respawnManager,
+							 _tankSpawner);
+	_events->EmitEvent(GameResetEvent{});
+
+	const Uuid uuid{UuidUtils::GetRandomUuid()};
+	_events->EmitEvent(TankRespawnedEvent{.type = TankType::ENEMY1, .uuid = uuid, .pos = {.x = 0.0, .y = 0.0}});
+	_events->EmitEvent(TankDiedEvent{.who = Author::Enemy1, .uuid = uuid, .author = Author::None});
+	_events->EmitEvent(TankSpawnCompletedEvent{.uuid = uuid});
+
+	EXPECT_TRUE(_allObjects.empty());
+}
+
+//NOTE: a seat keeps its uuid, so a stale entry would land the tank on the cancelled cycle's rect
+TEST_F(TankSpawnerTest, AClientSpawnsOnTheLatestRectAfterACancel)
+{
+	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsClient, _respawnManager,
+							 _tankSpawner);
+	_events->EmitEvent(GameResetEvent{});
+
+	const Uuid uuid{UuidUtils::GetRandomUuid()};
+	constexpr FPoint cancelledPos{.x = 0.0, .y = 0.0};
+	constexpr FPoint currentPos{.x = 96.0, .y = 0.0};
+
+	_events->EmitEvent(TankRespawnedEvent{.type = TankType::ENEMY1, .uuid = uuid, .pos = cancelledPos});
+	_events->EmitEvent(TankDiedEvent{.who = Author::Enemy1, .uuid = uuid, .author = Author::None});
+	_events->EmitEvent(TankRespawnedEvent{.type = TankType::ENEMY1, .uuid = uuid, .pos = currentPos});
+	_events->EmitEvent(TankSpawnCompletedEvent{.uuid = uuid});
+
+	ASSERT_EQ(_allObjects.size(), 1u);
+	EXPECT_EQ(_allObjects.front()->GetRect().x, currentPos.x);
 }

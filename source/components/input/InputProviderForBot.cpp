@@ -91,8 +91,7 @@ bool InputProviderForBot::ChangeDirIfSeenOpponent(Tank& self, const Direction di
 			return false;
 		}
 
-		UpdateShootDistance(self, dir, nearestSeenObstacle);
-		if (_obstacleDistance >= self.GetBulletDamageRadius() + _bulletOffset)
+		if (IsClearToFire(self, dir, *nearestSeenObstacle))
 		{
 			self.SetDirection(dir);
 
@@ -122,13 +121,12 @@ std::shared_ptr<BaseObj> InputProviderForBot::Lookup(Tank& self, LineOfSight& li
 	return {};
 }
 
-void InputProviderForBot::UpdateShootDistance(const Tank& self, const Direction dir,
-											  const std::shared_ptr<BaseObj>& nearestSeenObstacle)
+bool InputProviderForBot::IsClearToFire(const Tank& self, const Direction dir, const BaseObj& target)
 {
 	const ObjRectangle bullet{.w = self.GetBulletWidth(), .h = self.GetBulletHeight()};
+	const double gap{DirectionUtils::GapTo(self.GetRect(), target.GetRect(), dir)};
 
-	_obstacleDistance = DirectionUtils::GapTo(self.GetRect(), nearestSeenObstacle->GetRect(), dir);
-	_bulletOffset = DirectionUtils::SizeAlong(bullet, dir);
+	return gap >= self.GetBulletDamageRadius() + DirectionUtils::SizeAlong(bullet, dir);
 }
 
 std::shared_ptr<BaseObj> InputProviderForBot::HandleLineOfSight(Tank& self)
@@ -162,7 +160,6 @@ std::shared_ptr<BaseObj> InputProviderForBot::HandleLineOfSight(Tank& self)
 		!sideObstacles.empty())
 	{
 		nearestSeenObstacle = sideObstacles.front();
-		UpdateShootDistance(self, dir, nearestSeenObstacle);
 	}
 
 	return nearestSeenObstacle;
@@ -255,15 +252,18 @@ std::optional<Direction> InputProviderForBot::ReviseWhenMoveBlocked(Tank& self, 
 
 bool InputProviderForBot::ShouldShoot(Tank& self)
 {
-	const std::shared_ptr<BaseObj> nearestSeenObstacle = HandleLineOfSight(self);
-	if (_obstacleDistance < self.GetBulletDamageRadius() + _bulletOffset)
+	const std::shared_ptr<BaseObj> nearestSeenObstacle{HandleLineOfSight(self)};
+	if (nearestSeenObstacle == nullptr)
+	{
+		return false;
+	}
+
+	//NOTE: HandleLineOfSight leaves the tank facing what it found, so its direction is the shot's
+	if (!IsClearToFire(self, self.GetDirection(), *nearestSeenObstacle))
 	{
 		return false;
 	}
 
 	//TODO: add feature for bots chance to shoot to obstacle
-	//TODO: cover this by test, _shootDistance check
-	//TODO: refactor to separated flag isClearToFire mean safe distance
-	//TODO: cover this by test, that we can't shoot if on cooldown
 	return ShouldShootOpponent(self, nearestSeenObstacle) || ShouldShootObstacle(self, nearestSeenObstacle);
 }

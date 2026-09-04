@@ -21,6 +21,7 @@ struct RespawnTankEvent;
 struct SpawnAnimationFinishedEvent;
 struct TankRespawnedEvent;
 struct TankSpawnCompletedEvent;
+struct TankDiedEvent;
 class Tank;
 class BaseObj;
 class TankPool;
@@ -57,12 +58,14 @@ class TankSpawner final
 	void OnSpawnAnimationFinished(const SpawnAnimationFinishedEvent& event);
 	void OnTankRespawned(const TankRespawnedEvent& event);
 	void OnTankSpawnCompleted(const TankSpawnCompletedEvent& event);
+	void OnTankDied(const TankDiedEvent& event);
 
 	void Reset(const GameResetEvent&);
 
 	void OnSpawnDelayFinished(Uuid uuid);
 	void DelayedSpawnWith(const DelayedTankSpawn& params);
 	void CancelDelayedSpawnsOf(Faction faction);
+	void DropDelayedSpawn(Uuid uuid);
 
 	[[nodiscard]] ObjRectangle GetEnemyRandomPosX(TankType type) const;
 	[[nodiscard]] bool SpawnEnemy(ObjRectangle rect, Uuid uuid, TankType type, double speed, int health);

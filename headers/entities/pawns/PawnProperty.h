@@ -6,7 +6,6 @@
 #include <vector>
 
 enum class Direction : char8_t;
-enum class GameMode : char8_t;
 class BaseObj;
 class EventSystem;
 
@@ -18,6 +17,5 @@ struct PawnProperty
 	unsigned short tier{1u};
 	double speed{};
 	Direction dir{};
-	GameMode gameMode{};
 	Author author{};
 };

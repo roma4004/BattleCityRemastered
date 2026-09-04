@@ -5,7 +5,6 @@
 #include "components/GameStatistics.h"
 #include "entities/pawns/Bullet.h"
 #include "enums/Direction.h"
-#include "enums/GameMode.h"
 #include "gtest/gtest.h"
 #include "enums/Faction.h"
 #include <memory>
@@ -21,7 +20,6 @@ protected:
 	Uuid _uuid{};
 	double _tankSize{};
 	unsigned short _bulletHealth{1u};
-	GameMode _gameMode{GameMode::OnePlayer};
 	EventSubscription _spawnQueueSub{};
 
 	void SetUp() override
@@ -50,8 +48,8 @@ protected:
 		const ObjRectangle rectBullet{.x = pos.x, .y = pos.y, .w = calibre.size.x, .h = calibre.size.y};
 		std::shared_ptr<Bullet> bullet =
 				TestUtils::CreateBullet(
-						rectBullet, _bulletHealth, _uuid, faction, _allObjects,
-						_events, calibre, dir, _gameMode, _gameConfig, author);
+						rectBullet, _bulletHealth, _uuid, faction, _allObjects, _events, calibre, dir, _gameConfig,
+						author);
 		_allObjects.emplace_back(bullet);
 	}
 };

@@ -50,7 +50,6 @@ protected:
 	double _deltaTimeOneFrame{1.0 / 60.0};
 	BulletCalibre _calibre{.speed = 300.0, .damage = 1u, .damageRadius = 12.0, .tier = 1u, .size{.x = 6.0, .y = 5.0}};
 	Uuid _uuid{};
-	GameMode _gameMode{GameMode::OnePlayer};
 	EventSubscription _spawnQueueSub{};
 
 	void SetUp() override
@@ -83,8 +82,7 @@ TEST_F(BonusTest, BonusPickUp)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 
 	_allObjects.emplace_back(player);
 	_bonusSpawner->SpawnRandomBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize});
@@ -114,8 +112,7 @@ TEST_F(BonusTest, BonusNotPickUp)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
 	_bonusSpawner->SpawnRandomBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize});
@@ -145,8 +142,7 @@ TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
@@ -158,8 +154,7 @@ TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
 					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(enemyBot);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
@@ -179,8 +174,7 @@ TEST_F(BonusTest, TimerNotPickUpEnemyCanMove)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveUpEvent{.isPressed = isPressed});
@@ -192,8 +186,7 @@ TEST_F(BonusTest, TimerNotPickUpEnemyCanMove)
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
 					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(enemyBot);
 
 	const FPoint enemyPos = enemyBot->GetPos();
@@ -211,8 +204,7 @@ TEST_F(BonusTest, HelmetPickUpAndBulletCantDamageTank)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
@@ -226,8 +218,8 @@ TEST_F(BonusTest, HelmetPickUpAndBulletCantDamageTank)
 	const ObjRectangle rectBullet{.x = _tankSize + 1.0, .y = 0.0, .w = 6.0, .h = 5.0};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, Faction::EnemyTeam, _allObjects,
-					_events, _calibre, Direction::LEFT, _gameMode, _gameConfig, Author::Enemy1);
+					rectBullet, _bulletHealth, _uuid, Faction::EnemyTeam, _allObjects, _events, _calibre,
+					Direction::LEFT, _gameConfig, Author::Enemy1);
 	_allObjects.emplace_back(bullet);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
@@ -243,8 +235,7 @@ TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveUpEvent{.isPressed = isPressed});
@@ -258,8 +249,8 @@ TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 	const ObjRectangle rectBullet{.x = _tankSize + 1.0, .y = 0.0, .w = 6.0, .h = 5.0};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, Faction::EnemyTeam, _allObjects,
-					_events, _calibre, Direction::LEFT, _gameMode, _gameConfig, Author::Enemy1);
+					rectBullet, _bulletHealth, _uuid, Faction::EnemyTeam, _allObjects, _events, _calibre,
+					Direction::LEFT, _gameConfig, Author::Enemy1);
 	_allObjects.emplace_back(bullet);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
@@ -275,8 +266,7 @@ TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
@@ -286,8 +276,7 @@ TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
 					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(enemyBot);
 
 	EXPECT_EQ(enemyBot->GetHealth(), 100);
@@ -307,8 +296,7 @@ TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveUpEvent{.isPressed = isPressed});
@@ -318,8 +306,7 @@ TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
 					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(enemyBot);
 
 	EXPECT_EQ(enemyBot->GetHealth(), 100);
@@ -345,8 +332,7 @@ TEST_F(BonusTest, TankPickUpExtraLife)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
@@ -375,8 +361,7 @@ TEST_F(BonusTest, TankNotPickUpTierTheSame)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveUpEvent{.isPressed = isPressed});
@@ -399,8 +384,7 @@ TEST_F(BonusTest, StarPickUpTierIncrease)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
@@ -422,8 +406,7 @@ TEST_F(BonusTest, StarNotPickUpTierTheSame)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveUpEvent{.isPressed = isPressed});
@@ -446,8 +429,7 @@ TEST_F(BonusTest, ShovelPickUpByPlayerThenFortressWallTurnIntoSteelWall)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
@@ -473,8 +455,7 @@ TEST_F(BonusTest, ShovelNotPickUpByFortressWallTheSame)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveUpEvent{.isPressed = isPressed});
@@ -499,8 +480,7 @@ TEST_F(BonusTest, WaterBlocksTankWithoutShip)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
@@ -525,8 +505,7 @@ TEST_F(BonusTest, ShipPickUpCanCrossWater)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
@@ -557,8 +536,7 @@ TEST_F(BonusTest, SuperStarPickUpTierIncreaseTwice)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});

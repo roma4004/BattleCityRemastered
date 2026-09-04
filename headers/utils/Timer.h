@@ -17,6 +17,9 @@ struct Timer
 
 	[[nodiscard]] bool IsCooldownFinish() const;
 
+	//NOTE: one reading for a whole sweep - asking twice lets a deadline fall between the two answers
+	[[nodiscard]] bool IsCooldownFinish(const TimeUtils::time_point& now) const;
+
 	void Reset();
 	void Reset(milliseconds newCooldown);
 };

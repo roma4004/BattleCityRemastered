@@ -7,9 +7,12 @@
 #include "components/events/TimingEvents.h"
 #include "entities/bonuses/Bonus.h"
 #include "enums/Faction.h"
+#include "utils/TimeUtils.h"
 #include "utils/Uuid.h"
 #include <algorithm>
+#include <ranges>
 #include <variant>
+#include <vector>
 
 BonusManager::BonusManager(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig)
 	: _events{events}
@@ -70,17 +73,21 @@ void BonusManager::ExpireBonuses()
 	});
 }
 
+//NOTE: one reading of the clock for both passes - asking twice let a deadline fall between them,
+//and that effect vanished unannounced, leaving its helmet on
 void BonusManager::ExpireEffects()
 {
-	for (const auto& [type, target, timer]: _activeEffects)
+	const auto isExpired = [now = TimeUtils::Now()](const ActiveEffect& effect)
 	{
-		if (timer.IsCooldownFinish())
-		{
-			EmitEffectStatus(type, target, false);
-		}
+		return effect.timer.IsCooldownFinish(now);
+	};
+
+	for (const auto& [type, target, timer]: _activeEffects | std::views::filter(isExpired))
+	{
+		EmitEffectStatus(type, target, false);
 	}
 
-	std::erase_if(_activeEffects, [](const ActiveEffect& effect) { return effect.timer.IsCooldownFinish(); });
+	std::erase_if(_activeEffects, isExpired);
 }
 
 std::vector<BonusManager::ActiveEffect>::iterator BonusManager::FindEffect(const BonusType type,
@@ -117,12 +124,13 @@ void BonusManager::StartEffect(const BonusType type, const EffectTarget target, 
 
 void BonusManager::FinishEffect(const BonusType type, const EffectTarget& target)
 {
-	if (const auto it = FindEffect(type, target);
-		it != _activeEffects.end())
+	const auto it = FindEffect(type, target);
+	if (it == _activeEffects.end())
 	{
-		_activeEffects.erase(it);
+		return;
 	}
 
+	_activeEffects.erase(it);
 	EmitEffectStatus(type, target, false);
 }
 
@@ -159,15 +167,16 @@ void BonusManager::OnTimerBonus(const BonusTimerPickupEvent& event)
 
 void BonusManager::OnBonusShovelPickup(const BonusShovelPickupEvent& event)
 {
-	Faction faction = event.faction;
-	if (faction == Faction::PlayerTeam)
+	if (event.faction == Faction::PlayerTeam)
 	{
-		StartEffect(BonusType::Shovel, faction, kEffectDuration);
+		StartEffect(BonusType::Shovel, event.faction, kEffectDuration);
+
+		return;
 	}
-	else if (faction == Faction::EnemyTeam)//NOTE: enemy pickup should disable player shovel instantly
-	{
-		FinishEffect(BonusType::Shovel, faction);
-	}
+
+	//NOTE: two things in one pickup - the player's steel walls end early, and the fortress comes down
+	FinishEffect(BonusType::Shovel, Faction::PlayerTeam);
+	_events->EmitEvent(BonusShovelStatusChangeEvent{.faction = Faction::EnemyTeam, .isActive = false});
 }
 
 void BonusManager::ApplyBonusEffectsOnSpawnTo(const BonusReApplyEvent& event)

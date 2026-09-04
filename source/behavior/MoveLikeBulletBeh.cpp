@@ -103,9 +103,3 @@ std::vector<std::shared_ptr<BaseObj>> MoveLikeBulletBeh::GetCircleCollisionObjec
 	return std::vector<std::shared_ptr<BaseObj>>{collisions.begin(), collisions.end()};
 }
 
-std::vector<Direction> MoveLikeBulletBeh::GetFreePathSides(
-		const double /*deltaTime*/, const std::optional<Direction> /*excludeDirection*/,
-		const std::vector<std::shared_ptr<BaseObj>>& /*objects*/) const
-{
-	return {};
-}

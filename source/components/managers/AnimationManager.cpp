@@ -31,11 +31,12 @@ void AnimationManager::Subscribe()
 	_subs.push_back(_events->AddListener(this, &AnimationManager::OnGameReset));
 	_subs.push_back(_events->AddListener(this, &AnimationManager::OnPostTickUpdate));
 	_subs.push_back(_events->AddListener(this, &AnimationManager::OnPauseStatus));
-	//TODO: draw explosion animation after others obstacle and tanks, maybe split explosions and other collections
 	_subs.push_back(_events->AddListener(this, &AnimationManager::OnDraw));
+	_subs.push_back(_events->AddListener(this, &AnimationManager::OnPostDraw));
 
 	_subs.push_back(_events->AddListener(this, &AnimationManager::OnCreateTankSpawn));
 	_subs.push_back(_events->AddListener(this, &AnimationManager::OnCreateBonusSpawn));
+	_subs.push_back(_events->AddListener(this, &AnimationManager::OnCancelTankSpawn));
 	_subs.push_back(_events->AddListener(this, &AnimationManager::OnCreateTankExplosion));
 	_subs.push_back(_events->AddListener(this, &AnimationManager::OnCreateBulletExplosion));
 	_subs.push_back(_events->AddListener(this, &AnimationManager::OnCreateTankMove));
@@ -72,14 +73,25 @@ void AnimationManager::OnPostTickUpdate(const PostTickUpdateEvent&)
 	}
 }
 
+namespace
+{
+constexpr auto IsEnabled = [](const AnimatedObject& object) { return !object.markToDispose; };
+}
+
 void AnimationManager::OnDraw(const DrawEvent&) const
 {
-	constexpr auto isEnabled = [](const AnimatedObject& object) { return !object.markToDispose; };
 	const auto drawObject = [this](const AnimatedObject& object) { DrawObject(object); };
 
-	std::ranges::for_each(_autoAnimatedWaterObjects | std::views::filter(isEnabled), drawObject);
-	std::ranges::for_each(_turnBasedTankObjects | std::views::filter(isEnabled), drawObject);
-	std::ranges::for_each(_autoAnimatedObjects | std::views::filter(isEnabled), drawObject);
+	std::ranges::for_each(_autoAnimatedWaterObjects | std::views::filter(IsEnabled), drawObject);
+	std::ranges::for_each(_turnBasedTankObjects | std::views::filter(IsEnabled), drawObject);
+}
+
+//NOTE: later than the walls, which subscribe after this manager and would paint over every blast;
+//still earlier than the bush, which draws later in this same phase - cover is meant to hide
+void AnimationManager::OnPostDraw(const PostDrawEvent&) const
+{
+	std::ranges::for_each(_autoAnimatedObjects | std::views::filter(IsEnabled),
+						  [this](const AnimatedObject& object) { DrawObject(object); });
 }
 
 void AnimationManager::OnCreateTankSpawn(const AnimationCreateTankSpawnEvent& event)
@@ -90,6 +102,17 @@ void AnimationManager::OnCreateTankSpawn(const AnimationCreateTankSpawnEvent& ev
 void AnimationManager::OnCreateBonusSpawn(const AnimationCreateBonusSpawnEvent& event)
 {
 	CreateAnimation(AnimationType::Bonus_Spawn, event.rect, Author::None, event.uuid);
+}
+
+//NOTE: disposed is enough - UpdateFrame skips it, so it never reaches the frame that reports
+void AnimationManager::OnCancelTankSpawn(const AnimationCancelTankSpawnEvent& event)
+{
+	auto matching = _autoAnimatedObjects | std::views::filter([uuid = event.uuid](const AnimatedObject& object)
+	{
+		return object.owner == uuid;
+	});
+
+	std::ranges::for_each(matching, [](AnimatedObject& object) { object.markToDispose = true; });
 }
 
 void AnimationManager::OnCreateTankMove(const AnimationCreateTankMoveEvent& event)

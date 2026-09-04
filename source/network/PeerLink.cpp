@@ -38,7 +38,7 @@ bool PeerLink::DispatchFrame(const std::string& frame)
 
 void PeerLink::SendBatch(const CommandBatch& batch)
 {
-	_channel->Send(std::make_shared<const std::string>(network::FrameMessage(network::Serialize(batch))));
+	_channel->Send(std::make_shared<const std::string>(network::SerializeFrame(batch)));
 }
 
 void PeerLink::CloseWithFarewell(const bool hasLink, const DisconnectReason reason, std::function<void()> onClosed)

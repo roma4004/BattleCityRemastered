@@ -254,8 +254,7 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
 					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(enemyBot);
 
 	// Spawn bonus extra life
@@ -394,8 +393,7 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithExtraLifeDeath)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
 	bool isGameLose{false};

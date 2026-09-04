@@ -57,8 +57,6 @@ Uuid Bullet::GetUuid() const
 
 void Bullet::Reset(const BulletResetProperty& resetProperty)
 {
-	_gameMode = _gameConfig.gameMode;
-
 	_rect = resetProperty.rect;
 	SetHealth(resetProperty.health);
 	_dir = resetProperty.dir;
@@ -81,7 +79,7 @@ void Bullet::TickUpdate(const double deltaTime)
 		outCollisions.clear();
 	}
 
-	if (isMove && IsHost(_gameMode))
+	if (isMove && _gameConfig.IsHost())
 	{
 		_events->EmitEvent(PosChangedEvent{.pos = GetPos(), .dir = _dir, .uuid = _uuid});
 	}

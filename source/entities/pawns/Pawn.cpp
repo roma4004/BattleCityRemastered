@@ -16,7 +16,6 @@ Pawn::Pawn(PawnProperty pawnProperty, const GameConfig& gameConfig, const Collis
 	, _allObjects{pawnProperty.allObjects}
 	, _events{std::move(pawnProperty.events)}
 	, _dir{pawnProperty.dir}
-	, _gameMode{pawnProperty.gameMode}
 	, _author{pawnProperty.author}
 	, _gameConfig{gameConfig}
 {
@@ -34,7 +33,7 @@ void Pawn::Deactivate() { Unsubscribe(); }
 
 void Pawn::Subscribe()
 {
-	IsAuthority(_gameMode) ? Pawn::SubscribeAsAuthority() : Pawn::SubscribeAsClient();
+	_gameConfig.IsAuthority() ? Pawn::SubscribeAsAuthority() : Pawn::SubscribeAsClient();
 }
 
 void Pawn::SubscribeAsAuthority() { SubscribeTickUpdate(); }
@@ -93,7 +92,7 @@ void Pawn::TakeDamage(const unsigned int damage, const Author author)
 {
 	BaseObj::TakeDamage(damage, author);
 
-	if (IsHost(_gameMode))
+	if (_gameConfig.IsHost())
 	{
 		_events->EmitEvent(HealthChangedEvent{.health = GetHealth(), .uuid = _uuid});
 	}
@@ -101,14 +100,14 @@ void Pawn::TakeDamage(const unsigned int damage, const Author author)
 
 void Pawn::Heal(const int amount)
 {
-	if (!IsAuthority(_gameMode))
+	if (!_gameConfig.IsAuthority())
 	{
 		return;
 	}
 
 	SetHealth(GetHealth() + amount);
 
-	if (IsHost(_gameMode))
+	if (_gameConfig.IsHost())
 	{
 		_events->EmitEvent(HealthChangedEvent{.health = GetHealth(), .uuid = _uuid});
 	}

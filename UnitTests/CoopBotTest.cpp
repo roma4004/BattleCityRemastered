@@ -69,8 +69,7 @@ TEST_F(CoopBotTest, CoopNoChangeDirIfBonusOutsideLineOfSight)
 	std::shared_ptr<Tank> coopBot =
 			TestUtils::CreateBot(
 					coopBotRect, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(coopBot);
 
 	// Spawn a bonus diagonally, out of the bot's direct line of sight
@@ -93,8 +92,7 @@ TEST_F(CoopBotTest, CoopShootToEnemy)
 	std::shared_ptr<Tank> coopBot =
 			TestUtils::CreateBot(
 					coopBotRect, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(coopBot);
 
 	// Spawn Enemy in line of sight
@@ -102,8 +100,7 @@ TEST_F(CoopBotTest, CoopShootToEnemy)
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
 					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(enemyBot);
 
 	const size_t sizeBefore = _allObjects.size();
@@ -124,8 +121,7 @@ TEST_F(CoopBotTest, CoopNoShootToCoop)
 	std::shared_ptr<Tank> coopBot =
 			TestUtils::CreateBot(
 					coopBotRect, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(coopBot);
 
 	// Spawn another coopBot in line of sight first one
@@ -133,8 +129,7 @@ TEST_F(CoopBotTest, CoopNoShootToCoop)
 	std::shared_ptr<Tank> coopBot2 =
 			TestUtils::CreateBot(
 					coopBotRect2, _tankHealth, _uuid, Author::Player2, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(coopBot2);
 
 	const size_t sizeBefore = _allObjects.size();
@@ -152,8 +147,7 @@ TEST_F(CoopBotTest, CoopNoShootToPlayer1)
 	std::shared_ptr<Tank> coopBot =
 			TestUtils::CreateBot(
 					coopBotRect, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(coopBot);
 
 	// Spawn Player in line of sight Coop
@@ -161,8 +155,7 @@ TEST_F(CoopBotTest, CoopNoShootToPlayer1)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
 	const size_t sizeBefore = _allObjects.size();
@@ -180,8 +173,7 @@ TEST_F(CoopBotTest, CoopShootToBrick)
 	std::shared_ptr<Tank> coopBot =
 			TestUtils::CreateBot(
 					coopBotRect, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(coopBot);
 
 	// Spawn BrickWall
@@ -203,8 +195,7 @@ TEST_F(CoopBotTest, CoopTooCloseToShootTheBrick)
 	std::shared_ptr<Tank> coopBot =
 			TestUtils::CreateBot(
 					coopBotRect, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(coopBot);
 
 	// Spawn BrickWall
@@ -226,8 +217,7 @@ TEST_F(CoopBotTest, CoopShootToSteel)
 	std::shared_ptr<Tank> coopBot =
 			TestUtils::CreateBot(
 					coopBotRect, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 3u,
-					_tankSpeed,
-					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(coopBot);
 
 	// Spawn SteelWall
@@ -249,8 +239,7 @@ TEST_F(CoopBotTest, CoopNoShootToSteelIfTierTooLow)
 	std::shared_ptr<Tank> coopBot =
 			TestUtils::CreateBot(
 					coopBotRect, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(coopBot);
 
 	// Spawn SteelWall
@@ -272,8 +261,7 @@ TEST_F(CoopBotTest, CoopNoShootToEagle)
 	std::shared_ptr<Tank> coopBot =
 			TestUtils::CreateBot(
 					coopBotRect, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(coopBot);
 
 	// Spawn Eagle
@@ -295,8 +283,7 @@ TEST_F(CoopBotTest, CoopNoShootToFortress)
 	std::shared_ptr<Tank> coopBot =
 			TestUtils::CreateBot(
 					coopBotRect, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(coopBot);
 
 	// Spawn FortressWall
@@ -318,8 +305,7 @@ TEST_F(CoopBotTest, CoopNoShootToWater)
 	std::shared_ptr<Tank> coopBot =
 			TestUtils::CreateBot(
 					coopBotRect, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(coopBot);
 
 	// Spawn Water
@@ -341,8 +327,7 @@ TEST_F(CoopBotTest, CoopNoShootToBush)
 	std::shared_ptr<Tank> coopBot =
 			TestUtils::CreateBot(
 					coopBotRect, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(coopBot);
 
 	// Spawn Bush
@@ -364,8 +349,7 @@ TEST_F(CoopBotTest, CoopNoShootToIce)
 	std::shared_ptr<Tank> coopBot =
 			TestUtils::CreateBot(
 					coopBotRect, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(coopBot);
 
 	// Spawn Ice

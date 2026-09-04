@@ -44,8 +44,7 @@ std::shared_ptr<Bullet> BulletPool::CreateNewBullet() const
 {
 	PawnProperty pawnProperty{.baseObjProperty = {},
 							  .allObjects = _allObjects,
-							  .events = _events,
-							  .gameMode = _gameConfig.gameMode};
+							  .events = _events};
 
 	return std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig);
 }

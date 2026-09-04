@@ -70,14 +70,14 @@ TEST_F(DeadObjectFilterTest, BonusIsPickedUpOncePerFrame)
 
 	std::shared_ptr<Tank> playerAbove = TestUtils::CreatePlayer(
 			ObjRectangle{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize}, _gameConfig.tankHealth, _uuid,
-			Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u, _tankSpeed, Direction::DOWN, _gameMode,
-			_bulletPool, _gameConfig);
+			Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u, _tankSpeed, Direction::DOWN, _bulletPool,
+			_gameConfig);
 	_allObjects.emplace_back(playerAbove);
 
 	std::shared_ptr<Tank> playerBelow = TestUtils::CreatePlayer(
-			ObjRectangle{.x = 0.0, .y = _tankSize * 2.0 + 2.0, .w = _tankSize, .h = _tankSize},
-			_gameConfig.tankHealth, _uuid, Author::Player2, Faction::PlayerTeam, _allObjects, _events, 1u, _tankSpeed,
-			Direction::UP, _gameMode, _bulletPool, _gameConfig);
+			ObjRectangle{.x = 0.0, .y = _tankSize * 2.0 + 2.0, .w = _tankSize, .h = _tankSize}, _gameConfig.tankHealth,
+			_uuid, Author::Player2, Faction::PlayerTeam, _allObjects, _events, 1u, _tankSpeed, Direction::UP,
+			_bulletPool, _gameConfig);
 	_allObjects.emplace_back(playerBelow);
 
 	constexpr bool isPressed{true};
@@ -104,16 +104,16 @@ TEST_F(DeadObjectFilterTest, BrickWallHitByTwoBulletsDiesOnce)
 	const ObjRectangle fromLeft{.x = 100.0 - _calibre.size.x, .y = 103.0, .w = _calibre.size.x, .h = _calibre.size.y};
 	auto bullet1{
 			TestUtils::CreateBullet(
-					fromLeft, 1, _uuid, Faction::PlayerTeam, _allObjects, _events, _calibre,
-					Direction::RIGHT, _gameMode, _gameConfig, Author::Player1)
+					fromLeft, 1, _uuid, Faction::PlayerTeam, _allObjects, _events, _calibre, Direction::RIGHT,
+					_gameConfig, Author::Player1)
 	};
 	_allObjects.emplace_back(bullet1);
 
 	const ObjRectangle fromRight{.x = 100.0 + cell, .y = 103.0, .w = _calibre.size.x, .h = _calibre.size.y};
 	auto bullet2{
 			TestUtils::CreateBullet(
-					fromRight, 1, _uuid, Faction::PlayerTeam, _allObjects, _events, _calibre,
-					Direction::LEFT, _gameMode, _gameConfig, Author::Player1)
+					fromRight, 1, _uuid, Faction::PlayerTeam, _allObjects, _events, _calibre, Direction::LEFT,
+					_gameConfig, Author::Player1)
 	};
 	_allObjects.emplace_back(bullet2);
 
@@ -132,15 +132,14 @@ TEST_F(DeadObjectFilterTest, TankKilledThisFrameTakesNoSecondHit)
 
 	std::shared_ptr<Tank> player = TestUtils::CreatePlayer(
 			ObjRectangle{.x = 100.0, .y = 100.0, .w = _tankSize, .h = _tankSize}, _tankHealth, _uuid, Author::Player1,
-			Faction::PlayerTeam, _allObjects, _events, 1u, _tankSpeed, Direction::UP, _gameMode, _bulletPool,
-			_gameConfig);
+			Faction::PlayerTeam, _allObjects, _events, 1u, _tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
 	const ObjRectangle fromLeft{.x = 100.0 - _calibre.size.x, .y = 115.0, .w = _calibre.size.x, .h = _calibre.size.y};
 	auto bullet1{
 			TestUtils::CreateBullet(
 					fromLeft, 1, _uuid, Faction::EnemyTeam, _allObjects, _events, _calibre, Direction::RIGHT,
-					_gameMode, _gameConfig, Author::Enemy1)
+					_gameConfig, Author::Enemy1)
 	};
 	_allObjects.emplace_back(bullet1);
 
@@ -148,7 +147,7 @@ TEST_F(DeadObjectFilterTest, TankKilledThisFrameTakesNoSecondHit)
 	auto bullet2{
 			TestUtils::CreateBullet(
 					fromRight, 1, _uuid, Faction::EnemyTeam, _allObjects, _events, _calibre, Direction::LEFT,
-					_gameMode, _gameConfig, Author::Enemy2)
+					_gameConfig, Author::Enemy2)
 	};
 	_allObjects.emplace_back(bullet2);
 

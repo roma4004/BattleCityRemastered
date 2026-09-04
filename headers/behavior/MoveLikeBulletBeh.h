@@ -39,7 +39,4 @@ public:
 	[[nodiscard]]
 	bool Move(Direction dir, double deltaTime, const std::vector<std::shared_ptr<BaseObj>>& objects,
 			  std::vector<std::shared_ptr<BaseObj>>& outCollisions) override;
-	[[nodiscard]] std::vector<Direction> GetFreePathSides(
-			double deltaTime, std::optional<Direction> excludeDirection,
-			const std::vector<std::shared_ptr<BaseObj>>& objects) const override;
 };

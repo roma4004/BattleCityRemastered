@@ -70,8 +70,7 @@ TEST_F(PlayerTest, TankMoveInSideScreenUp)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
 	const FPoint startPos = player->GetPos();
@@ -94,8 +93,7 @@ TEST_F(PlayerTest, TankMoveInSideScreenLeft)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
 	const FPoint startPos = player->GetPos();
@@ -117,8 +115,7 @@ TEST_F(PlayerTest, TankMoveInSideScreenDown)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
 	const FPoint startPos = player->GetPos();
@@ -140,8 +137,7 @@ TEST_F(PlayerTest, TankMoveInSideScreenRight)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
 	const FPoint startPos = player->GetPos();
@@ -163,8 +159,7 @@ TEST_F(PlayerTest, TankMoveOutSideScreenUp)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
 	const FPoint startPos = player->GetPos();
@@ -183,8 +178,7 @@ TEST_F(PlayerTest, TankMoveOutSideScreenLeft)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
 	const FPoint startPos = player->GetPos();
@@ -208,8 +202,7 @@ TEST_F(PlayerTest, TankMoveOutSideScreenDown)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
 	const FPoint startPos = player->GetPos();
@@ -233,8 +226,7 @@ TEST_F(PlayerTest, TankMoveOutSideScreenRight)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
 	const FPoint startPos = player->GetPos();
@@ -253,8 +245,7 @@ TEST_F(PlayerTest, TankSetPos)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
 	const auto windowWidth = static_cast<double>(_gameConfig.battlefieldSize.x);
@@ -271,8 +262,7 @@ TEST_F(PlayerTest, TankSetDirection)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::LEFT, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::LEFT, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
 	const Direction startDirection = player->GetDirection();
@@ -292,8 +282,7 @@ TEST_F(PlayerTest, TankDontMoveWhenShotUp)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
 	const FPoint startPos = player->GetPos();
@@ -314,8 +303,7 @@ TEST_F(PlayerTest, TankDontMoveWhenShotLeft)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::LEFT, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::LEFT, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
 	const FPoint startPos = player->GetPos();
@@ -336,8 +324,7 @@ TEST_F(PlayerTest, TankDontMoveWhenShotDown)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
 	const FPoint startPos = player->GetPos();
@@ -358,8 +345,7 @@ TEST_F(PlayerTest, TankDontMoveWhenShotRight)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::RIGHT, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::RIGHT, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
 	const FPoint startPos = player->GetPos();
@@ -378,8 +364,7 @@ TEST_F(PlayerTest, TankShotInSideScreenDown)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
 	//success shot down test, try to create an inside screen bullet
@@ -399,8 +384,7 @@ TEST_F(PlayerTest, TankShotInSideScreenRight)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::RIGHT, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::RIGHT, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
 	//success shot right test, try to create an inside screen bullet
@@ -426,8 +410,7 @@ TEST_F(PlayerTest, TankShotInSideScreenUp)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::RIGHT, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::RIGHT, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
 	//success shot up test, try to create an inside screen bullet
@@ -453,8 +436,7 @@ TEST_F(PlayerTest, TankShotInSideScreenLeft)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::RIGHT, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::RIGHT, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
 	//success shot left test, try to create an inside screen bullet
@@ -475,8 +457,7 @@ TEST_F(PlayerTest, TankShotOutSideScreen)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
 	constexpr bool isPressed{true};
@@ -532,16 +513,14 @@ TEST_F(PlayerTest, TankCantPassThroughTank)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
 	const ObjRectangle rectPlayer2{.x = 0, .y = _tankSize + 1, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player2 =
 			TestUtils::CreatePlayer(
 					rectPlayer2, _tankHealth, _uuid, Author::Player2, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player2);
 
 	//both players should failure, because they face each other blocking move each other
@@ -564,8 +543,7 @@ TEST_F(PlayerTest, TankCantPassThroughBrickWall)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
 	_allObjects.emplace_back(
@@ -590,8 +568,7 @@ TEST_F(PlayerTest, TankCantPassThroughSteelWall)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
 	_allObjects.emplace_back(
@@ -616,8 +593,7 @@ TEST_F(PlayerTest, TankCantPassThroughWater)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
 	auto waterTile = std::make_shared<WaterTile>(
@@ -642,8 +618,7 @@ TEST_F(PlayerTest, TankCantPassThroughfortressWall)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
 	auto fortressWall = std::make_shared<FortressBrickWall>(
@@ -669,8 +644,7 @@ TEST_F(PlayerTest, ShotWhileMovingDoesNotBlowUpOnOwnTank)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::LEFT, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::LEFT, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
 	const int startHealth = player->GetHealth();
@@ -707,8 +681,7 @@ TEST_F(PlayerTest, PointBlankShotDamagesTheShooter)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::LEFT, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::LEFT, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
 	const ObjRectangle rectWall{.x = rectPlayer.x - _gridSize - 12.0,
@@ -725,4 +698,29 @@ TEST_F(PlayerTest, PointBlankShotDamagesTheShooter)
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_LT(player->GetHealth(), startHealth) << "own blast did not reach the shooter";
+}
+
+// The driver holds its own keyed subscriptions, so it has to go quiet with the tank
+TEST_F(PlayerTest, APlayerTankIgnoresKeysPressedWhileDeactivated)
+{
+	const ObjRectangle rect{.x = _tankSize * 2.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
+	const std::shared_ptr<Tank> player =
+			TestUtils::CreatePlayer(rect, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects,
+									_events, 1u, _tankSpeed, Direction::UP, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player);
+
+	player->Deactivate();
+	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = true});
+	player->Activate();
+
+	const FPoint before = player->GetPos();
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_EQ(player->GetPos(), before);
+
+	//the control: the very same press drives it once the tank is there to hear it
+	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = true});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_NE(player->GetPos(), before);
 }

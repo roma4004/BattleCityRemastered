@@ -1,5 +1,6 @@
 #include "network/FrameChannel.h"
 #include "utils/Log.h"
+#include <boost/asio/dispatch.hpp>
 #include <boost/asio/post.hpp>
 #include <boost/asio/read.hpp>
 #include <boost/asio/write.hpp>
@@ -29,17 +30,22 @@ void FrameChannel::SetHandlers(FrameHandler onFrame, ErrorHandler onError)
 	_onError = std::move(onError);
 }
 
+//NOTE: onto the socket's executor - the game thread closes too, and basic_socket is not thread-safe.
+//dispatch, not post: a handler that found a bad frame must close inline, before its read re-arms
 void FrameChannel::Close()
 {
-	_onFrame = nullptr;
-	_onError = nullptr;
-	CloseSocket();
-	FinishDraining();
+	auto self(shared_from_this());
+	boost::asio::dispatch(_socket.get_executor(), [this, self]
+	{
+		_onFrame = nullptr;
+		_onError = nullptr;
+		CloseSocket();
+		FinishDraining();
+	});
 }
 
 void FrameChannel::CloseForReconnect()
 {
-	++_linkEpoch;
 	_writeInProgress = false;
 	//NOTE: the queue held frames for the link being replaced - stale input would reach the new one
 	_writeQueue.clear();
@@ -80,6 +86,8 @@ void FrameChannel::FinishDraining()
 
 void FrameChannel::CloseSocket()
 {
+	++_linkEpoch;
+
 	if (!_socket.is_open())
 	{
 		return;
@@ -166,6 +174,12 @@ void FrameChannel::ReadPayload(const std::uint32_t payloadLength)
 								if (_onFrame)
 								{
 									_onFrame(std::string(_readPayload.data(), _readPayload.size()));
+								}
+
+								//NOTE: the handler above may have closed us - a bad frame is dealt with here
+								if (epoch != _linkEpoch)
+								{
+									return;
 								}
 
 								ReadHeader();

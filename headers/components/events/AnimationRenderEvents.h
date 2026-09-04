@@ -17,6 +17,12 @@ struct AnimationCreateTankSpawnEvent
 	Uuid uuid;
 };
 
+//NOTE: the burst is the countdown, so a cancelled spawn has to stop it or the tank still lands
+struct AnimationCancelTankSpawnEvent
+{
+	Uuid uuid;
+};
+
 struct AnimationCreateBonusSpawnEvent
 {
 	ObjRectangle rect;

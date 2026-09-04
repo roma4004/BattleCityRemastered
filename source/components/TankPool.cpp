@@ -53,8 +53,7 @@ std::shared_ptr<Tank> TankPool::CreateNewTank() const
 {
 	PawnProperty pawnProperty{.baseObjProperty = {},
 							  .allObjects = _allObjects,
-							  .events = _events,
-							  .gameMode = _gameConfig.gameMode};
+							  .events = _events};
 
 	return std::make_shared<Tank>(std::move(pawnProperty), _bulletPool,
 								  std::make_unique<InputProviderForBot>(_allObjects, _gameConfig), _gameConfig);

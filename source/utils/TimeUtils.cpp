@@ -37,8 +37,3 @@ void TimeUtils::SetPaused(const bool isPaused)
 }
 
 bool TimeUtils::IsPaused() { return gameClock.isPaused; }
-
-bool TimeUtils::IsCooldownFinish(const time_point& activateTime, const milliseconds& cooldown)
-{
-	return Now() - activateTime >= cooldown;
-}

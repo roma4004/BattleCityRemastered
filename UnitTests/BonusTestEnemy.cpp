@@ -3,6 +3,7 @@
 #include "components/BonusSpawner.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
+#include "components/events/BonusPickupEvents.h"
 #include "components/events/InputEvents.h"
 #include "components/events/TimingEvents.h"
 #include "components/TankSpawner.h"
@@ -43,7 +44,6 @@ protected:
 	double _gridSize{};
 	double _tankSpeed{142};
 	unsigned short _tankHealth{100u};
-	GameMode _gameMode{GameMode::OnePlayer};
 	EventSubscription _spawnQueueSub{};
 
 	void SetUp() override
@@ -75,8 +75,7 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressBricWallkHide)
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
 					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 
 	// register a fortress wall
 	const ObjRectangle fortressRect{.x = _tankSize + 1.0, .y = 0, .w = _gridSize, .h = _gridSize};
@@ -100,8 +99,7 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressSteelWallHide)
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
 					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 
 	// spawn Player
 	_allObjects.reserve(4);
@@ -109,8 +107,7 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressSteelWallHide)
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
 					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed,
-					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
@@ -138,4 +135,23 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressSteelWallHide)
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_FALSE(_fortressWall->GetIsAlive());
+}
+
+// NOTE: the enemy shovel ends the player's effect - left running, it swallows the next pickup as an extension
+TEST_F(BonusTestEnemy, PlayerShovelWorksAgainAfterAnEnemyShovel)
+{
+	const ObjRectangle fortressRect{.x = _tankSize * 3.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize};
+	_events->EmitEvent(SpawnObstacleEvent{.rect = fortressRect, .type = ObstacleType::Fortress});
+	ASSERT_NE(dynamic_cast<FortressBrickWall*>(_fortressWall.get()), nullptr);
+
+	_events->EmitEvent(BonusShovelPickupEvent{.faction = Faction::PlayerTeam});
+	ASSERT_NE(dynamic_cast<FortressSteelWall*>(_fortressWall.get()), nullptr);
+
+	_events->EmitEvent(BonusShovelPickupEvent{.faction = Faction::EnemyTeam});
+	ASSERT_FALSE(_fortressWall->GetIsAlive());
+
+	_events->EmitEvent(BonusShovelPickupEvent{.faction = Faction::PlayerTeam});
+
+	EXPECT_NE(dynamic_cast<FortressSteelWall*>(_fortressWall.get()), nullptr);
+	EXPECT_TRUE(_fortressWall->GetIsAlive());
 }

@@ -49,8 +49,8 @@ TEST_F(BulletTest, BulletSetPos)
 	const ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects,
-					_events, _calibre, Direction::DOWN, _gameMode, _gameConfig, Author::Player1);
+					rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects, _events, _calibre,
+					Direction::DOWN, _gameConfig, Author::Player1);
 	_allObjects.emplace_back(bullet);
 
 	const auto windowWidth = static_cast<double>(_gameConfig.battlefieldSize.x);
@@ -67,8 +67,8 @@ TEST_F(BulletTest, BulletSetDirection)
 	const ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects,
-					_events, _calibre, Direction::DOWN, _gameMode, _gameConfig, Author::Player1);
+					rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects, _events, _calibre,
+					Direction::DOWN, _gameConfig, Author::Player1);
 	_allObjects.emplace_back(bullet);
 
 	const Direction startDirection = bullet->GetDirection();
@@ -86,8 +86,8 @@ TEST_F(BulletTest, BulletMoveInsideScreen)
 	const ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects,
-					_events, _calibre, Direction::DOWN, _gameMode, _gameConfig, Author::Player1);
+					rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects, _events, _calibre,
+					Direction::DOWN, _gameConfig, Author::Player1);
 	_allObjects.emplace_back(bullet);
 
 	{
@@ -140,8 +140,8 @@ TEST_F(BulletTest, BulletMoveOutSideScreen)
 	const ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects,
-					_events, _calibre, Direction::DOWN, _gameMode, _gameConfig, Author::Player1);
+					rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects, _events, _calibre,
+					Direction::DOWN, _gameConfig, Author::Player1);
 	_allObjects.emplace_back(bullet);
 
 	const auto windowWidth = static_cast<double>(_gameConfig.battlefieldSize.x);
@@ -187,8 +187,8 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveUp)
 	const ObjRectangle rectBullet{.x = 0.0, .y = 7.0, .w = _calibre.size.x, .h = _calibre.size.y};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects,
-					_events, _calibre, Direction::UP, _gameMode, _gameConfig, Author::Player1);
+					rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects, _events, _calibre,
+					Direction::UP, _gameConfig, Author::Player1);
 	_allObjects.emplace_back(bullet);
 
 	// spawn BrickWall
@@ -210,8 +210,8 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveLeft)
 	const ObjRectangle rectBullet{.x = 7.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects,
-					_events, _calibre, Direction::LEFT, _gameMode, _gameConfig, Author::Player1);
+					rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects, _events, _calibre,
+					Direction::LEFT, _gameConfig, Author::Player1);
 	_allObjects.emplace_back(bullet);
 
 	// spawn BrickWall
@@ -233,8 +233,8 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveDown)
 	const ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects,
-					_events, _calibre, Direction::DOWN, _gameMode, _gameConfig, Author::Player1);
+					rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects, _events, _calibre,
+					Direction::DOWN, _gameConfig, Author::Player1);
 	_allObjects.emplace_back(bullet);
 
 	// spawn BrickWall
@@ -256,8 +256,8 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveRight)
 	const ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects,
-					_events, _calibre, Direction::RIGHT, _gameMode, _gameConfig, Author::Player1);
+					rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects, _events, _calibre,
+					Direction::RIGHT, _gameConfig, Author::Player1);
 	_allObjects.emplace_back(bullet);
 
 	// spawn BrickWall
@@ -297,7 +297,7 @@ TEST_F(BulletTest, BulletBlowRadiusIsDirectionSymmetric)
 		_allObjects.clear();
 		_allObjects.emplace_back(
 				TestUtils::CreateBullet(place(0.0, bulletLength), _bulletHealth, _uuid, Faction::PlayerTeam,
-										_allObjects, _events, _calibre, dir, _gameMode, _gameConfig, Author::Player1));
+										_allObjects, _events, _calibre, dir, _gameConfig, Author::Player1));
 		_allObjects.emplace_back(
 				std::make_shared<BrickWall>(place(bulletLength + 1.0, tileSide), _events, _uuid, _gameMode));
 
@@ -327,8 +327,8 @@ TEST_F(BulletTest, BulletDamageTank)
 	const ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects,
-					_events, _calibre, Direction::DOWN, _gameMode, _gameConfig, Author::Player1);
+					rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects, _events, _calibre,
+					Direction::DOWN, _gameConfig, Author::Player1);
 	_allObjects.emplace_back(bullet);
 
 	// spawn Enemy
@@ -341,8 +341,7 @@ TEST_F(BulletTest, BulletDamageTank)
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
 					rectEnemy, tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
-					tankSpeed,
-					Direction::UP, _gameMode, bulletPool, _gameConfig);
+					tankSpeed, Direction::UP, bulletPool, _gameConfig);
 	_allObjects.emplace_back(enemyBot);
 
 	EXPECT_EQ(enemyBot->GetHealth(), 1);
@@ -359,16 +358,16 @@ TEST_F(BulletTest, BulletToBulletDamageEachOther)
 	const ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects,
-					_events, _calibre, Direction::DOWN, _gameMode, _gameConfig, Author::Player1);
+					rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects, _events, _calibre,
+					Direction::DOWN, _gameConfig, Author::Player1);
 	_allObjects.emplace_back(bullet);
 
 	// spawn Bullet2
 	const ObjRectangle rectBullet2{.x = 0, .y = _calibre.size.y + 1, .w = _calibre.size.x, .h = _calibre.size.y};
 	std::shared_ptr<Bullet> bullet2 =
 			TestUtils::CreateBullet(
-					rectBullet2, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects,
-					_events, _calibre, Direction::UP, _gameMode, _gameConfig, Author::Player2);
+					rectBullet2, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects, _events, _calibre,
+					Direction::UP, _gameConfig, Author::Player2);
 	_allObjects.emplace_back(bullet2);
 
 	const int bulletHealth = bullet->GetHealth();
@@ -387,8 +386,8 @@ TEST_F(BulletTest, BulletCantDamageSteelWall)
 	const ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects,
-					_events, _calibre, Direction::DOWN, _gameMode, _gameConfig, Author::Player1);
+					rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects, _events, _calibre,
+					Direction::DOWN, _gameConfig, Author::Player1);
 	_allObjects.emplace_back(bullet);
 
 	// spawn SteelWall
@@ -412,8 +411,8 @@ TEST_F(BulletTest, BulletCantDamageWater)
 	const ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects,
-					_events, _calibre, Direction::DOWN, _gameMode, _gameConfig, Author::Player1);
+					rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects, _events, _calibre,
+					Direction::DOWN, _gameConfig, Author::Player1);
 	_allObjects.emplace_back(bullet);
 
 	// spawn WaterTile
@@ -437,8 +436,8 @@ TEST_F(BulletTest, BulletDamagefortressWall)
 	const ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects,
-					_events, _calibre, Direction::DOWN, _gameMode, _gameConfig, Author::Player1);
+					rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects, _events, _calibre,
+					Direction::DOWN, _gameConfig, Author::Player1);
 	_allObjects.emplace_back(bullet);
 
 	// spawn FortressWall
@@ -461,8 +460,8 @@ TEST_F(BulletTest, BulletHaveSelfDamageWhenHit)
 	const ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects,
-					_events, _calibre, Direction::DOWN, _gameMode, _gameConfig, Author::Player1);
+					rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects, _events, _calibre,
+					Direction::DOWN, _gameConfig, Author::Player1);
 	_allObjects.emplace_back(bullet);
 
 	// spawn BrickWall

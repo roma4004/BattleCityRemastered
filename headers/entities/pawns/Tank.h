@@ -28,6 +28,7 @@ struct BonusStarPickupEvent;
 struct BonusCaliberPickupEvent;
 struct BonusShipPickupEvent;
 class IInputProvider;
+class MoveLikeTankBeh;
 class IShootable;
 class BulletPool;
 class GameConfig;
@@ -38,6 +39,8 @@ class Tank : public Pawn
 
 	using milliseconds = std::chrono::milliseconds;
 	std::shared_ptr<IShootable> _shootingBeh{nullptr};
+	//NOTE: the object Pawn::_moveBeh owns, typed - set once in the constructor, never replaced
+	MoveLikeTankBeh* _tankMoveBeh{nullptr};
 	std::unique_ptr<IInputProvider> _inputProvider{nullptr};
 
 	void EmitMoved() const;
@@ -108,6 +111,8 @@ public:
 
 	~Tank() override;
 
+	void Activate() override;
+	void Deactivate() override;
 
 	//BaseObj overrides
 	void TakeDamage(unsigned int damage, Author author) override;
@@ -120,7 +125,7 @@ public:
 	//NOTE: what the driver needs of the tank it drives
 	[[nodiscard]] bool CanShoot() const;
 	[[nodiscard]] std::vector<Direction> GetFreePathSides(double deltaTime,
-															 std::optional<Direction> excludeDirection) const;
+												  std::optional<Direction> excludeDirection) const;
 
 	[[nodiscard]] double GetBulletWidth() const;
 	void SetBulletWidth(double bulletWidth);

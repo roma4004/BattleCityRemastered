@@ -35,6 +35,8 @@ public:
 	void CloseAfterFlush(DrainHandler onClosed);
 	void SetWriteEnabled(bool enabled);
 
+	//NOTE: stale across threads, but only as "still open" - a dead session lives one frame longer.
+	//An atomic reaped it before its error handler reported the loss: measured, not guessed
 	[[nodiscard]] bool IsOpen() const { return _socket.is_open(); }
 	[[nodiscard]] tcp::socket& Socket() { return _socket; }
 
@@ -54,7 +56,7 @@ private:
 	std::vector<char> _readPayload{};
 	std::deque<std::shared_ptr<const std::string>> _writeQueue{};
 	bool _writeInProgress{false};
-	//NOTE: the socket outlives a reconnect, so a handler issued for the old link must not touch the new one
+	//NOTE: bumped by every close - a handler issued for a link that is gone still reaches these fields
 	std::uint32_t _linkEpoch{0};
 	bool _writeEnabled{true};
 	FrameHandler _onFrame{};

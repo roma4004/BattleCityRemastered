@@ -1,8 +1,12 @@
 #include "network/Serializer.h"
 #include "network/commands/CommandSerialization.h"
+#include "network/MessageFraming.h"
 #include "utils/Log.h"
 #include <ser20/archives/portable_binary.hpp>
+#include <array>
+#include <cstdint>
 #include <sstream>
+#include <string>
 #include <variant>
 
 namespace network
@@ -47,9 +51,12 @@ std::string Describe(const commands::CommandBatch& batch)
 }
 }// namespace
 
-std::string Serialize(const commands::CommandBatch& batch)
+std::string SerializeFrame(const commands::CommandBatch& batch)
 {
 	std::ostringstream archiveStream;
+	//NOTE: the length goes in last, over these four - so the payload is never copied to gain a prefix
+	static constexpr std::array<char, kFrameHeaderSize> placeholder{};
+	archiveStream.write(placeholder.data(), kFrameHeaderSize);
 	{
 		ser20::PortableBinaryOutputArchive oa(archiveStream);
 		oa(batch);
@@ -61,7 +68,10 @@ std::string Serialize(const commands::CommandBatch& batch)
 		Log::Detail("send: " + Describe(batch));
 	}
 
-	return archiveStream.str();
+	std::string frame{archiveStream.str()};
+	EncodeFrameHeader(frame.data(), static_cast<std::uint32_t>(frame.size() - kFrameHeaderSize));
+
+	return frame;
 }
 
 std::expected<commands::CommandBatch, DeserializeError> Deserialize(const std::string& archiveData)

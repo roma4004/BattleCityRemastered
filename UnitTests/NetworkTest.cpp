@@ -15,6 +15,7 @@
 #include "enums/ObstacleType.h"
 #include "enums/TankType.h"
 #include "network/ClientHandler.h"
+#include "network/MessageFraming.h"
 #include "network/Serializer.h"
 #include "network/commands/CommandBatch.h"
 #include "network/commands/Disconnect.h"
@@ -598,7 +599,12 @@ TEST(SerializerTest, ABatchSurvivesTheRoundTrip)
 	network::commands::CommandBatch sent;
 	sent.commands.emplace_back(network::commands::Disconnect{.reason = DisconnectReason::GameOver});
 
-	const auto received = network::Deserialize(network::Serialize(sent));
+	const std::string frame{network::SerializeFrame(sent)};
+	ASSERT_GT(frame.size(), network::kFrameHeaderSize);
+	//NOTE: FrameChannel trusts the length prefix - one disagreeing with the payload cuts every frame after it short
+	EXPECT_EQ(network::DecodeFrameHeader(frame.data()), frame.size() - network::kFrameHeaderSize);
+
+	const auto received = network::Deserialize(frame.substr(network::kFrameHeaderSize));
 
 	ASSERT_TRUE(received.has_value());
 	const auto& commands = received.value().commands;

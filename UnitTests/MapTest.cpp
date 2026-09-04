@@ -96,13 +96,12 @@ TEST(MapLoaderTest, MissingFileIsAnErrorNotAnEmptyMap)
 	EXPECT_EQ(map.error().path, "Resources/Maps/there-is-no-such-level.map");
 }
 
+//NOTE: the one test that reads a real asset - both build systems copy the map next to the test exe
 TEST(MapLoaderTest, ShippedLevelOneParses)
 {
 	constexpr auto path = "Resources/Maps/level1.map";
-	if (!std::filesystem::exists(path))
-	{
-		GTEST_SKIP() << "assets are copied next to the game exe, not next to the test one";
-	}
+	ASSERT_TRUE(std::filesystem::exists(path))
+			<< "run the test exe from its own directory - the map is copied next to it";
 
 	const auto map = MapLoader::LoadFromFile(path);
 

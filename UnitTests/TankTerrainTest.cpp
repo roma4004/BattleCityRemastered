@@ -47,8 +47,7 @@ protected:
 	{
 		std::shared_ptr<Tank> tank =
 				TestUtils::CreatePlayer(rect, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects,
-										_events, 1u, _tankSpeed, Direction::DOWN, _gameMode, _bulletPool,
-										_gameConfig);
+										_events, 1u, _tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 		_allObjects.emplace_back(tank);
 
 		return tank;

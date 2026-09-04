@@ -38,12 +38,24 @@ Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletP
 	: Pawn{std::move(pawnProperty), gameConfig, kCollision}
 	, _inputProvider{std::move(inputProvider)}
 {
-	_moveBeh = std::make_unique<MoveLikeTankBeh>(_rect, _speed, _uuid, _effects, gameConfig);
+	auto moveBeh{std::make_unique<MoveLikeTankBeh>(_rect, _speed, _uuid, _effects, gameConfig)};
+	_tankMoveBeh = moveBeh.get();
+	_moveBeh = std::move(moveBeh);
 	ApplyFreshLoadout();
 	_shootingBeh = std::make_shared<ShootingBeh>(_rect, _dir, _uuid, _author, bulletPool, _calibre, _events,
 												 _gameConfig);
+}
 
+void Tank::Activate()
+{
+	Pawn::Activate();
 	_inputProvider->Enable();
+}
+
+void Tank::Deactivate()
+{
+	_inputProvider->Disable();
+	Pawn::Deactivate();
 }
 
 //NOTE: the tier is not touched here - a fresh tank gets it from its property, a reused one from Reset
@@ -61,8 +73,6 @@ void Tank::ApplyFreshLoadout()
 
 void Tank::Reset(const TankResetProperty& resetProperty, std::unique_ptr<IInputProvider> driver)
 {
-	_gameMode = _gameConfig.gameMode;
-
 	_uuid = resetProperty.uuid;
 	_rect = resetProperty.rect;
 	SetHealth(resetProperty.health);
@@ -75,13 +85,10 @@ void Tank::Reset(const TankResetProperty& resetProperty, std::unique_ptr<IInputP
 
 	ApplyFreshLoadout();
 
-	if (auto* moveBeh = dynamic_cast<MoveLikeTankBeh*>(_moveBeh.get()))
-	{
-		moveBeh->ResetVelocity();
-	}
+	_tankMoveBeh->ResetVelocity();
 
+	//NOTE: not enabled here - a reset tank is not in the world yet, Activate is what puts it on the bus
 	_inputProvider = std::move(driver);
-	_inputProvider->Enable();
 
 	_isAlive = true;
 }
@@ -106,7 +113,7 @@ void Tank::Subscribe()
 
 	_subs.push_back(_events->AddListener(this, &Tank::OnPostDraw));
 
-	if (IsClient(_gameMode))
+	if (_gameConfig.IsClient())
 	{
 		SubscribeAsClient();
 	}
@@ -179,9 +186,9 @@ unsigned int Tank::GetTier() const { return _tier; }
 bool Tank::CanShoot() const { return !_shootTimer.isActive; }
 
 std::vector<Direction> Tank::GetFreePathSides(const double deltaTime,
-											  const std::optional<Direction> excludeDirection) const
+											 const std::optional<Direction> excludeDirection) const
 {
-	return _moveBeh->GetFreePathSides(deltaTime, excludeDirection, _allObjects);
+	return _tankMoveBeh->GetFreePathSides(deltaTime, excludeDirection, _allObjects);
 }
 
 void Tank::EmitMoved() const
@@ -189,7 +196,7 @@ void Tank::EmitMoved() const
 	const FPoint pos = GetPos();
 	_events->EmitEvent(AnimationTankUpdateEvent{.author = _author, .pos = pos, .dir = _dir});
 
-	if (IsHost(_gameMode))
+	if (_gameConfig.IsHost())
 	{
 		_events->EmitEvent(PosChangedEvent{.pos = pos, .dir = _dir, .uuid = _uuid});
 	}
@@ -231,8 +238,7 @@ void Tank::TickUpdate(const double deltaTime)
 
 	if (_effects.isTouchTheIce)
 	{
-		if (auto* moveBeh = dynamic_cast<MoveLikeTankBeh*>(_moveBeh.get());
-			moveBeh && moveBeh->ApplyMoveVelocity(deltaTime, _allObjects))
+		if (_tankMoveBeh->ApplyMoveVelocity(deltaTime, _allObjects))
 		{
 			EmitMoved();
 		}
@@ -249,10 +255,7 @@ void Tank::TickUpdate(const double deltaTime)
 		_effects.isTouchTheIce != isTouchTheIce)
 	{
 		_effects.isTouchTheIce = isTouchTheIce;
-		if (auto* moveBeh = dynamic_cast<MoveLikeTankBeh*>(_moveBeh.get()))
-		{
-			moveBeh->ResetVelocity();
-		}
+		_tankMoveBeh->ResetVelocity();
 	}
 
 	if (_inputProvider->ShouldShoot(*this) && !_shootTimer.isActive)
@@ -265,7 +268,7 @@ void Tank::Shot(const std::optional<Uuid> withUuid)
 {
 	const Uuid bulletUuid = _shootingBeh->Shot(withUuid);
 
-	if (IsHost(_gameMode))
+	if (_gameConfig.IsHost())
 	{
 		_events->EmitEvent(TankShotEvent{.who = _author, .dir = GetDirection(), .bulletUuid = bulletUuid});
 	}
@@ -311,7 +314,7 @@ void Tank::OnBonusHelmet(const bool isActive)
 
 	_events->EmitEvent(AnimationBonusHelmetChangeEvent{.author = _author, .isEnable = isActive});
 
-	if (IsHost(_gameMode))
+	if (_gameConfig.IsHost())
 	{
 		_events->EmitEvent(BonusHelmetAppliedEvent{.author = _author, .isActive = isActive});
 	}
@@ -343,7 +346,7 @@ void Tank::Upgrade(const TierUpgrade& upgrade)
 	_calibre.tier = _tier;
 	_shootTimer.cooldown -= upgrade.cooldownCut;
 
-	if (IsHost(_gameMode))
+	if (_gameConfig.IsHost())
 	{
 		_events->EmitEvent(TierChangedEvent{.tier = _tier, .uuid = _uuid});
 	}
@@ -380,7 +383,7 @@ void Tank::OnBonusShip()
 
 	_effects.isShipActive = true;
 
-	if (IsHost(_gameMode))
+	if (_gameConfig.IsHost())
 	{
 		_events->EmitEvent(BonusShipAppliedEvent{.author = _author});
 	}
@@ -396,7 +399,7 @@ void Tank::EmitDeathStatistics(const Author author)
 	_events->EmitEvent(TankDiedEvent{.who = _author, .uuid = _uuid, .author = author});
 	_events->EmitEvent(AnimationCreateTankExplosionEvent{.rect = _rect, .author = _author});
 
-	if (IsHost(_gameMode))
+	if (_gameConfig.IsHost())
 	{
 		_events->EmitEvent(DespawnedEvent{.uuid = _uuid, .reason = DespawnReason::Destroyed});
 	}

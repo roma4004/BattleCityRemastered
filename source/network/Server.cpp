@@ -158,9 +158,10 @@ void Server::CleanupDeadSessions()
 
 void Server::SendToAll(const std::shared_ptr<const std::string>& message)
 {
+	//NOTE: no IsSocketOpen check - DoWrite posts onto the session strand, where TryStartWrite rechecks it
 	for (const auto& session: SnapshotSessions())
 	{
-		if (session && session->IsSocketOpen())
+		if (session)
 		{
 			session->DoWrite(message);
 		}

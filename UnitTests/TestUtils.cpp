@@ -32,7 +32,7 @@ namespace
 										   const Author author, const Faction faction,
 										   const std::vector<std::shared_ptr<BaseObj>>& allObjects,
 										   const std::shared_ptr<EventSystem>& events, const unsigned short tier,
-										   const double tankSpeed, const Direction dir, const GameMode gameMode)
+										   const double tankSpeed, const Direction dir)
 {
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
@@ -47,7 +47,6 @@ namespace
 			.tier = tier,
 			.speed = tankSpeed,
 			.dir = dir,
-			.gameMode = gameMode,
 			.author = author};
 }
 }//namespace
@@ -55,11 +54,11 @@ namespace
 std::shared_ptr<Tank> TestUtils::CreateBot(
 		const ObjRectangle rect, const int health, const Uuid uuid, const Author author, const Faction faction,
 		const std::vector<std::shared_ptr<BaseObj>>& allObjects, std::shared_ptr<EventSystem> events,
-		const unsigned short tier, const double tankSpeed, const Direction dir, const GameMode gameMode,
-		std::shared_ptr<BulletPool> bulletPool, const GameConfig& gameConfig)
+		const unsigned short tier, const double tankSpeed, const Direction dir, std::shared_ptr<BulletPool> bulletPool,
+		const GameConfig& gameConfig)
 {
 	PawnProperty pawnProperty{MakePawnProperty(rect, health, uuid, author, faction, allObjects, events, tier,
-											   tankSpeed, dir, gameMode)};
+											   tankSpeed, dir)};
 
 	auto tank = std::make_shared<Tank>(std::move(pawnProperty), bulletPool,
 									   std::make_unique<InputProviderForBot>(allObjects, gameConfig), gameConfig);
@@ -71,11 +70,11 @@ std::shared_ptr<Tank> TestUtils::CreateBot(
 std::shared_ptr<Tank> TestUtils::CreatePlayer(
 		const ObjRectangle rect, const int health, const Uuid uuid, const Author author, const Faction faction,
 		const std::vector<std::shared_ptr<BaseObj>>& allObjects, std::shared_ptr<EventSystem> events,
-		const unsigned short tier, const double tankSpeed, const Direction dir, const GameMode gameMode,
-		std::shared_ptr<BulletPool> bulletPool, const GameConfig& gameConfig)
+		const unsigned short tier, const double tankSpeed, const Direction dir, std::shared_ptr<BulletPool> bulletPool,
+		const GameConfig& gameConfig)
 {
 	PawnProperty pawnProperty{MakePawnProperty(rect, health, uuid, author, faction, allObjects, events, tier,
-											   tankSpeed, dir, gameMode)};
+											   tankSpeed, dir)};
 
 	const InputChannel channel{author == Author::Player1 ? InputChannel::LocalP1 : InputChannel::LocalP2};
 

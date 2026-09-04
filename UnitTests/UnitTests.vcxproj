@@ -50,8 +50,7 @@
   </PropertyGroup>
   <!-- Shared game logic now lives in ..\GameCore.vcxproj (ProjectReference below); only test-only sources remain here. -->
   <ItemGroup>
-    <ClCompile Include="AnimationPauseTest.cpp" />
-    <ClCompile Include="AnimationTriggersTest.cpp" />
+    <ClCompile Include="AnimationManagerTest.cpp" />
     <ClCompile Include="BonusTestBasic.cpp" />
     <ClCompile Include="BonusTestDestroy.cpp" />
     <ClCompile Include="BonusTestEnemy.cpp" />
@@ -95,10 +94,21 @@
       <Project>{6a1f9c3d-2e57-4b8a-9d10-4f7c2a8b5e91}</Project>
     </ProjectReference>
   </ItemGroup>
+  <!-- Debugger cwd = exe folder, same as the game project: the shipped-level test opens
+       Resources/Maps relative to the working directory. -->
+  <PropertyGroup>
+    <LocalDebuggerWorkingDirectory>$(OutDir)</LocalDebuggerWorkingDirectory>
+  </PropertyGroup>
   <ItemDefinitionGroup>
     <PreBuildEvent>
       <Command>powershell -NoProfile -ExecutionPolicy Bypass -File "$(RepoRoot)scripts\fetch-submodules.ps1" -Root "$(RepoRoot)."</Command>
     </PreBuildEvent>
+    <!-- Only the map, unlike the game project: the test that parses the shipped level needs it
+         next to its own exe, and nothing here looks at a texture or a sound. -->
+    <PostBuildEvent>
+      <Command>if not exist "$(OutDir)Resources\Maps" mkdir "$(OutDir)Resources\Maps"
+copy /Y "$(RepoRoot)Resources\Maps\level1.map" "$(OutDir)Resources\Maps\level1.map"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

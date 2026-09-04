@@ -11,7 +11,6 @@
 #include "entities/pawns/Tank.h"
 #include "enums/Direction.h"
 #include "enums/Faction.h"
-#include "enums/GameMode.h"
 #include "enums/InputChannel.h"
 #include "enums/TextureType.h"
 #include "gtest/gtest.h"
@@ -31,7 +30,6 @@ protected:
 	double _tankSpeed{142.0};
 	int _tankHealth{100};
 	Uuid _uuid{};
-	GameMode _gameMode{GameMode::OnePlayer};
 	EventSubscription _spawnQueueSub{};
 	EventSubscription _disposalSub{};
 
@@ -96,8 +94,7 @@ TEST_F(BulletPoolTest, ReturnedBulletLeavesTheBus)
 
 	std::shared_ptr<Tank> player = TestUtils::CreatePlayer(
 			ObjRectangle{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize}, _tankHealth, _uuid, Author::Player1,
-			Faction::PlayerTeam, _allObjects, _events, 1u, _tankSpeed, Direction::DOWN, _gameMode, _bulletPool,
-			_gameConfig);
+			Faction::PlayerTeam, _allObjects, _events, 1u, _tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
 	constexpr bool isPressed{true};

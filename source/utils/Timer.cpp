@@ -6,7 +6,12 @@ Timer::Timer(const milliseconds newCooldown)
 	, activateTime{TimeUtils::Now()}
 	, isActive{true} {}
 
-bool Timer::IsCooldownFinish() const { return TimeUtils::IsCooldownFinish(activateTime, cooldown); }
+bool Timer::IsCooldownFinish() const { return IsCooldownFinish(TimeUtils::Now()); }
+
+bool Timer::IsCooldownFinish(const TimeUtils::time_point& now) const
+{
+	return now - activateTime >= cooldown;
+}
 
 void Timer::Reset()
 {

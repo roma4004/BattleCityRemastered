@@ -30,7 +30,7 @@ std::shared_ptr<const std::string> ReplicationPublisher::TakeFrame()
 		return nullptr;
 	}
 
-	return std::make_shared<const std::string>(network::FrameMessage(network::Serialize(batch)));
+	return std::make_shared<const std::string>(network::SerializeFrame(batch));
 }
 
 }//namespace network::commands
