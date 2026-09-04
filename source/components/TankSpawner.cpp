@@ -28,6 +28,7 @@
 #include "utils/UuidUtils.h"
 #include "utils/WorldQuery.h"
 #include <algorithm>
+#include <array>
 #include <memory>
 
 TankSpawner::TankSpawner(const GameConfig& gameConfig, const std::vector<std::shared_ptr<BaseObj>>& allObjects,
@@ -98,11 +99,10 @@ ObjRectangle TankSpawner::GetEnemyRandomPosX(const TankType type) const
 	const double battleFieldSizeX{static_cast<double>(_gameConfig.battlefieldSize.x) - tankSize};
 
 	const double quartFieldSizeX = battleFieldSizeX / 4.0;
-	const std::vector<std::pair<double, double>> spawnRanges{{0.0, quartFieldSizeX},
-															 {quartFieldSizeX, quartFieldSizeX * 2.0},
-															 {quartFieldSizeX * 2.0, quartFieldSizeX * 3.0},
-															 {quartFieldSizeX * 3.0, battleFieldSizeX}};
-
+	const std::array<std::pair<double, double>, 4> spawnRanges{{{0.0, quartFieldSizeX},
+															   {quartFieldSizeX, quartFieldSizeX * 2.0},
+															   {quartFieldSizeX * 2.0, quartFieldSizeX * 3.0},
+															   {quartFieldSizeX * 3.0, battleFieldSizeX}}};
 
 	const auto randomRange = static_cast<std::size_t>(type);
 	auto [minX, maxX] = spawnRanges[randomRange];

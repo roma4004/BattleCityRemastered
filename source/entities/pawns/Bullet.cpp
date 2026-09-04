@@ -58,16 +58,16 @@ Uuid Bullet::GetUuid() const
 
 void Bullet::Reset(const BulletResetProperty& resetProperty)
 {
-	SetRect(resetProperty.rect);
-	SetHealth(resetProperty.health);
-	SetDirection(resetProperty.dir);
+	_rect = resetProperty.rect;
+	SetHealth(resetProperty.health);//NOTE: _health is private in BaseObj, the rest are protected
+	_dir = resetProperty.dir;
 
 	_author = resetProperty.author;
 	_authorUuid = resetProperty.authorUuid;
 	_faction = FactionOf(_author);
 	_calibre = resetProperty.calibre;
 
-	SetIsAlive(true);
+	_isAlive = true;
 }
 
 void Bullet::TickUpdate(const double deltaTime)

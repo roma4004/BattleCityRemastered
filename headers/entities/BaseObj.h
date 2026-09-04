@@ -75,7 +75,6 @@ public:
 
 	//NOTE: the member as it is, not a computed value - GetPos below is the counter-example
 	[[nodiscard]] virtual const ObjRectangle& GetRect() const;
-	virtual void SetRect(ObjRectangle rect);
 
 	[[nodiscard]] virtual Uuid GetUuid() const;
 	virtual void SetId(Uuid uuid);

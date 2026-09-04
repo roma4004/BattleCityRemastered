@@ -48,27 +48,27 @@ bool InputProviderForBot::IsBonus(const std::shared_ptr<BaseObj>& obstacle)
 bool InputProviderForBot::ChangeDirIfSeenBonus(Tank& self, const Direction dir,
 											   const std::vector<std::shared_ptr<BaseObj>>& sideObstacle)
 {
-	if (sideObstacle.empty())
+	if (sideObstacle.empty() || dir == self.GetDirection())
 	{
 		return false;
 	}
 
 	if (IsBonus(sideObstacle.front()))
 	{
-		LineOfSight bonusLineOfSight(self.GetRect(), _allObjects, _gameConfig, false);
-		const std::vector<std::shared_ptr<BaseObj>>& directionObstacles = bonusLineOfSight.SideObstacles(dir);
+		if (_driveLineOfSight == nullptr)
+		{
+			_driveLineOfSight = std::make_unique<LineOfSight>(self.GetRect(), _allObjects, _gameConfig, false);
+		}
 
 		//Check free path to bonus
-		if (directionObstacles.empty() == false && IsBonus(directionObstacles.front()))
+		if (const std::vector<std::shared_ptr<BaseObj>>& directionObstacles = _driveLineOfSight->SideObstacles(dir);
+			!directionObstacles.empty() && IsBonus(directionObstacles.front()))
 		{
-			if (dir != self.GetDirection())
-			{
-				self.SetDirection(dir);
+			self.SetDirection(dir);
 
-				_randomChangeDirTimer.Reset(std::chrono::milliseconds(RandUtils::GetRandNumber(_distTurnRate)));
+			_randomChangeDirTimer.Reset(std::chrono::milliseconds(RandUtils::GetRandNumber(_distTurnRate)));
 
-				return true;
-			}
+			return true;
 		}
 	}
 
@@ -133,6 +133,8 @@ void InputProviderForBot::UpdateShootDistance(const Tank& self, const Direction 
 
 std::shared_ptr<BaseObj> InputProviderForBot::HandleLineOfSight(Tank& self)
 {
+	_driveLineOfSight.reset();
+
 	const FPoint bulletSize{.x = self.GetBulletWidth(), .y = self.GetBulletHeight()};
 	LineOfSight lineOfSight(self.GetRect(), bulletSize, _allObjects, _gameConfig);
 

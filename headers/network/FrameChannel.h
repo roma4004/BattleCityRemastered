@@ -54,6 +54,8 @@ private:
 	std::vector<char> _readPayload{};
 	std::deque<std::shared_ptr<const std::string>> _writeQueue{};
 	bool _writeInProgress{false};
+	//NOTE: the socket outlives a reconnect, so a handler issued for the old link must not touch the new one
+	std::uint32_t _linkEpoch{0};
 	bool _writeEnabled{true};
 	FrameHandler _onFrame{};
 	ErrorHandler _onError{};

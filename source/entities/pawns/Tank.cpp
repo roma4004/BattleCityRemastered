@@ -64,11 +64,11 @@ void Tank::ApplyFreshLoadout()
 void Tank::Reset(const TankResetProperty& resetProperty, std::unique_ptr<IInputProvider> driver)
 {
 	//NOTE: the id first - Enable() below subscribes by it
-	SetId(resetProperty.uuid);
-	SetRect(resetProperty.rect);
-	SetHealth(resetProperty.health);
-	SetDirection(resetProperty.dir);
-	SetSpeed(resetProperty.speed);
+	_uuid = resetProperty.uuid;
+	_rect = resetProperty.rect;
+	SetHealth(resetProperty.health);//NOTE: _health is private in BaseObj, the rest are protected
+	_dir = resetProperty.dir;
+	_speed = resetProperty.speed;
 
 	_author = resetProperty.author;
 	_faction = FactionOf(_author);
@@ -84,7 +84,7 @@ void Tank::Reset(const TankResetProperty& resetProperty, std::unique_ptr<IInputP
 	_inputProvider = std::move(driver);
 	_inputProvider->Enable();
 
-	SetIsAlive(true);
+	_isAlive = true;
 }
 
 void Tank::OnBonusTimerReApplyOnSpawn(const BonusTimerReApplyOnSpawnEvent& event)

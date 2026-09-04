@@ -41,7 +41,6 @@ public:
 	void SetDirection(Direction dir);
 
 	[[nodiscard]] double GetSpeed() const;
-	void SetSpeed(double speed);
 
 protected:
 	double _speed{};

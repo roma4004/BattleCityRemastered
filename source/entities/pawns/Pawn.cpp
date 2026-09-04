@@ -119,5 +119,3 @@ Direction Pawn::GetDirection() const { return _dir; }
 void Pawn::SetDirection(const Direction dir) { _dir = dir; }
 
 double Pawn::GetSpeed() const { return _speed; }
-
-void Pawn::SetSpeed(const double speed) { _speed = speed; }

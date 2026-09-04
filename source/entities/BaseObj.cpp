@@ -15,8 +15,6 @@ BaseObj::~BaseObj() = default;
 
 const ObjRectangle& BaseObj::GetRect() const { return _rect; }
 
-void BaseObj::SetRect(const ObjRectangle rect) { _rect = rect; }
-
 Uuid BaseObj::GetUuid() const { return _uuid; }
 
 void BaseObj::SetId(const Uuid uuid) { _uuid = uuid; }

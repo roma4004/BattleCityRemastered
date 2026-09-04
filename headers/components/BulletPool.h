@@ -5,7 +5,6 @@
 #include "utils/Uuid.h"
 #include <chrono>
 #include <memory>
-#include <mutex>
 #include <optional>
 #include <queue>
 #include <vector>
@@ -22,7 +21,6 @@ class BulletPool final
 {
 	using milliseconds = std::chrono::milliseconds;
 
-	std::mutex _bulletsMutex{};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
 	const std::vector<std::shared_ptr<BaseObj>>& _allObjects;

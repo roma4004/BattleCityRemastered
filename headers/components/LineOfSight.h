@@ -21,6 +21,7 @@ class LineOfSight final
 	std::vector<std::shared_ptr<BaseObj>> _rightSideObstacles{};
 
 	void CheckLineOfSight(bool isWaterSkip, const std::vector<std::shared_ptr<BaseObj>>& objects);
+	void SortToNearest();
 
 public:
 	LineOfSight(ObjRectangle tankRect, FPoint bulletSize, const std::vector<std::shared_ptr<BaseObj>>& objects,
@@ -29,8 +30,6 @@ public:
 				const GameConfig& gameConfig, bool isWaterSkip = true);
 
 	~LineOfSight();
-
-	void SortToNearest();
 
 	//NOTE: the four lists are one table keyed by direction - callers never need to name a side
 	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>>& SideObstacles(Direction dir);

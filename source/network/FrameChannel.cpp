@@ -39,6 +39,7 @@ void FrameChannel::Close()
 
 void FrameChannel::CloseForReconnect()
 {
+	++_linkEpoch;
 	_writeInProgress = false;
 	//NOTE: the queue held frames for the link being replaced - stale input would reach the new one
 	_writeQueue.clear();
@@ -114,8 +115,13 @@ void FrameChannel::ReadHeader()
 {
 	auto self(shared_from_this());
 	boost::asio::async_read(_socket, boost::asio::buffer(_readHeader),
-							[this, self](const boost::system::error_code& ec, std::size_t)
+							[this, self, epoch = _linkEpoch](const boost::system::error_code& ec, std::size_t)
 							{
+								if (epoch != _linkEpoch)
+								{
+									return;
+								}
+
 								if (ec)
 								{
 									LogUnexpected(_ownerName, ec, "read");
@@ -143,8 +149,13 @@ void FrameChannel::ReadPayload(const std::uint32_t payloadLength)
 
 	auto self(shared_from_this());
 	boost::asio::async_read(_socket, boost::asio::buffer(_readPayload),
-							[this, self](const boost::system::error_code& ec, std::size_t)
+							[this, self, epoch = _linkEpoch](const boost::system::error_code& ec, std::size_t)
 							{
+								if (epoch != _linkEpoch)
+								{
+									return;
+								}
+
 								if (ec)
 								{
 									LogUnexpected(_ownerName, ec, "read");
@@ -207,8 +218,13 @@ void FrameChannel::WriteNextFrame()
 
 	auto self(shared_from_this());
 	boost::asio::async_write(_socket, boost::asio::buffer(*frame),
-							 [this, self, frame](const boost::system::error_code& ec, std::size_t)
+							 [this, self, frame, epoch = _linkEpoch](const boost::system::error_code& ec, std::size_t)
 							 {
+								 if (epoch != _linkEpoch)
+								 {
+									 return;
+								 }
+
 								 if (ec)
 								 {
 									 LogUnexpected(_ownerName, ec, "write");

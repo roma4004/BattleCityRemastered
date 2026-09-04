@@ -25,6 +25,9 @@ class InputProviderForBot final : public IInputProvider
 	double _obstacleDistance{};
 	double _bulletOffset{};
 
+	//NOTE: the drivable pass, built at most once per HandleLineOfSight and shared by all four sides
+	std::unique_ptr<LineOfSight> _driveLineOfSight{};
+
 	[[nodiscard]] static bool IsOpponent(const Tank& self, const std::shared_ptr<BaseObj>& obstacle);
 	[[nodiscard]] static bool IsAlly(const Tank& self, const std::shared_ptr<BaseObj>& obstacle);
 	[[nodiscard]] static bool IsBonus(const std::shared_ptr<BaseObj>& obstacle);

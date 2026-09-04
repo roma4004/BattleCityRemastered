@@ -12,7 +12,8 @@
 #include <iterator>
 #include <optional>
 
-BulletPool::BulletPool(const std::shared_ptr<EventSystem>& events, const std::vector<std::shared_ptr<BaseObj>>& allObjects,
+BulletPool::BulletPool(const std::shared_ptr<EventSystem>& events,
+					   const std::vector<std::shared_ptr<BaseObj>>& allObjects,
 					   const GameConfig& gameConfig)
 	: _events{events}
 	, _allObjects{allObjects}
@@ -47,8 +48,6 @@ std::shared_ptr<Bullet> BulletPool::CreateNewBullet() const
 
 std::shared_ptr<Bullet> BulletPool::SpawnBullet(const BulletResetProperty& property, const std::optional<Uuid>& uuid)
 {
-	std::scoped_lock lock(_bulletsMutex);
-
 	std::shared_ptr<Bullet> bullet;
 	if (_free.empty())
 	{
@@ -78,8 +77,6 @@ void BulletPool::OnPostTickUpdate(const PostTickUpdateEvent&)
 
 	std::vector<std::shared_ptr<Bullet>> returned{};
 	{
-		std::scoped_lock lock(_bulletsMutex);
-
 		std::ranges::copy_if(_inFlight, std::back_inserter(returned), isSpent);
 		std::erase_if(_inFlight, isSpent);
 
@@ -106,8 +103,6 @@ void BulletPool::OnPostTickUpdate(const PostTickUpdateEvent&)
 
 void BulletPool::Clear()
 {
-	std::scoped_lock lock(_bulletsMutex);
-
 	Log::Detail("bullet pool cleared, held " + std::to_string(_free.size() + _inFlight.size()));
 
 	_free = {};
