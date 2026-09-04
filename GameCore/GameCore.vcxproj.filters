@@ -425,6 +425,9 @@
     <ClInclude Include="..\headers\components\ObstacleSpawner.h">
       <Filter>headers\components</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\components\PooledSlots.h">
+      <Filter>headers\components</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\components\RightSideBar.h">
       <Filter>headers\components</Filter>
     </ClInclude>

@@ -2,11 +2,14 @@
 #include "application/GameConfig.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
+#include "components/events/AnimationRenderEvents.h"
+#include "components/events/BonusPickupEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/ObjectLifecycleEvents.h"
 #include "components/events/ReplicationEvents.h"
 #include "components/TankSpawner.h"
 #include "components/managers/RespawnManager.h"
+#include "enums/Faction.h"
 #include "enums/GameMode.h"
 #include "gtest/gtest.h"
 #include <memory>
@@ -101,4 +104,32 @@ TEST_F(TankSpawnerTest, PlayAsClientGameModeStart)
 	}
 
 	EXPECT_EQ(_allObjects.size(), 6u);
+}
+
+//NOTE: the instant-animation wiring is dropped on purpose - the grenade only has something to cancel
+//while the spawns are still pending
+TEST_F(TankSpawnerTest, GrenadeCancelsEnemiesStillSpawning)
+{
+	_instantSpawnAnimationSubs.clear();
+
+	std::vector<Uuid> pending{};
+	const EventSubscription pendingSub = _events->AddListener(
+			[&pending](const AnimationCreateTankSpawnEvent& event) { pending.push_back(event.uuid); });
+
+	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
+	_events->EmitEvent(GameResetEvent{});
+	_events->EmitEvent(RespawnTanksEvent{});
+
+	ASSERT_FALSE(pending.empty());
+	EXPECT_TRUE(_allObjects.empty());
+
+	_events->EmitEvent(Key(Faction::EnemyTeam), BonusGrenadePickupEvent{});
+
+	for (const Uuid& uuid: pending)
+	{
+		_events->EmitEvent(SpawnAnimationFinishedEvent{.uuid = uuid});
+	}
+
+	//the player was not the grenade's target and still arrives; the four enemies never do
+	EXPECT_EQ(_allObjects.size(), 1u);
 }

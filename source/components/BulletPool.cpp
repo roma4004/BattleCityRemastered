@@ -8,8 +8,6 @@
 #include "components/events/TimingEvents.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/PawnProperty.h"
-#include <algorithm>
-#include <iterator>
 #include <optional>
 
 BulletPool::BulletPool(const std::shared_ptr<EventSystem>& events,
@@ -22,7 +20,7 @@ BulletPool::BulletPool(const std::shared_ptr<EventSystem>& events,
 	// Pre-generate 20 default bullets
 	for (size_t i = 0u; i < 20u; ++i)
 	{
-		_free.push(CreateNewBullet());
+		_slots.AddFree(CreateNewBullet());
 	}
 
 	Subscribe();
@@ -48,15 +46,10 @@ std::shared_ptr<Bullet> BulletPool::CreateNewBullet() const
 
 std::shared_ptr<Bullet> BulletPool::SpawnBullet(const BulletResetProperty& property, const std::optional<Uuid>& uuid)
 {
-	std::shared_ptr<Bullet> bullet;
-	if (_free.empty())
+	std::shared_ptr<Bullet> bullet = _slots.TakeFree();
+	if (bullet == nullptr)
 	{
 		bullet = CreateNewBullet();
-	}
-	else
-	{
-		bullet = _free.front();
-		_free.pop();
 	}
 
 	//NOTE: the pool names the shot, not the shooter - a reused slot would otherwise fire under the
@@ -64,7 +57,7 @@ std::shared_ptr<Bullet> BulletPool::SpawnBullet(const BulletResetProperty& prope
 	bullet->SetId(uuid.value_or(UuidUtils::GetRandomUuid()));
 	bullet->Reset(property);
 
-	_inFlight.push_back(bullet);
+	_slots.Track(bullet);
 
 	return bullet;
 }
@@ -73,28 +66,18 @@ std::shared_ptr<Bullet> BulletPool::SpawnBullet(const BulletResetProperty& prope
 //is back on the free list before anything can shoot again
 void BulletPool::OnPostTickUpdate(const PostTickUpdateEvent&)
 {
-	auto isSpent = [](const std::shared_ptr<Bullet>& bullet) { return !bullet->GetIsAlive(); };
+	//NOTE: the pool reclaims itself rather than relying on SpawnManager having swept the bullet
+	//earlier in this same PostTickUpdate
+	const std::vector<std::shared_ptr<Bullet>> returned = _slots.ReclaimDead();
 
-	std::vector<std::shared_ptr<Bullet>> returned{};
+	for (const std::shared_ptr<Bullet>& bullet: returned)
 	{
-		std::ranges::copy_if(_inFlight, std::back_inserter(returned), isSpent);
-		std::erase_if(_inFlight, isSpent);
-
-		for (const std::shared_ptr<Bullet>& bullet: returned)
-		{
-			Log::Detail("bullet returned to a pool of " + std::to_string(_free.size()) + ", author "
-						+ std::string{ToString(bullet->GetAuthor())} + " uuid "
-						+ UuidUtils::GetStringUuid(bullet->GetUuid()));
-
-			//NOTE: the pool guarantees it itself rather than relying on SpawnManager having swept
-			//the bullet earlier in this same PostTickUpdate - a bullet in _free must not listen,
-			//or the next SpawnBullet would rename a subscribed one and subscribe it twice
-			bullet->Deactivate();
-			_free.push(bullet);
-		}
+		Log::Detail("bullet returned to a pool of " + std::to_string(_slots.FreeCount()) + ", author "
+					+ std::string{ToString(bullet->GetAuthor())} + " uuid "
+					+ UuidUtils::GetStringUuid(bullet->GetUuid()));
 	}
 
-	//NOTE: announced with the lock released - a listener is free to shoot back
+	//NOTE: announced only once every slot is back - a listener is free to shoot again
 	for (const std::shared_ptr<Bullet>& bullet: returned)
 	{
 		_events->EmitEvent(DespawnedEvent{.uuid = bullet->GetUuid(), .reason = DespawnReason::Destroyed});
@@ -103,8 +86,7 @@ void BulletPool::OnPostTickUpdate(const PostTickUpdateEvent&)
 
 void BulletPool::Clear()
 {
-	Log::Detail("bullet pool cleared, held " + std::to_string(_free.size() + _inFlight.size()));
+	Log::Detail("bullet pool cleared, held " + std::to_string(_slots.HeldCount()));
 
-	_free = {};
-	_inFlight.clear();
+	_slots.Clear();
 }

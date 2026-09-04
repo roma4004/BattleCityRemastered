@@ -3,6 +3,7 @@
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
 #include "components/TankPool.h"
+#include "components/events/BonusPickupEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/GameModeEvents.h"
 #include "components/events/ObjectLifecycleEvents.h"
@@ -28,6 +29,7 @@
 #include "utils/UuidUtils.h"
 #include "utils/WorldQuery.h"
 #include <algorithm>
+#include <iterator>
 #include <array>
 #include <memory>
 
@@ -57,6 +59,19 @@ void TankSpawner::Subscribe()
 	{
 		_subs.push_back(_events->AddListener(this, &TankSpawner::OnTankRespawned));
 		_subs.push_back(_events->AddListener(this, &TankSpawner::OnTankSpawnCompleted));
+	}
+
+	//NOTE: a tank mid-spawn is not an object yet, so the grenade cannot reach it the way it reaches
+	//the others - the spawner cancels it on their behalf, and only where the world is decided
+	if (IsAuthority(_gameMode))
+	{
+		for (const Faction faction: {Faction::PlayerTeam, Faction::EnemyTeam})
+		{
+			_subs.push_back(_events->AddListener(Key(faction), [this, faction](const BonusGrenadePickupEvent&)
+			{
+				CancelDelayedSpawnsOf(faction);
+			}));
+		}
 	}
 }
 
@@ -335,6 +350,25 @@ void TankSpawner::OnSpawnDelayFinished(const Uuid uuid)
 
 	DelayedSpawnWith(*it);
 	_delayedSpawns.erase(it);
+}
+
+//NOTE: a cancelled spawn is a death whose body never arrived - same slot handling, no explosion and
+//no statistics, and the respawn point stays spent because it was spent when the burst started
+void TankSpawner::CancelDelayedSpawnsOf(const Faction faction)
+{
+	const auto isTargeted = [faction](const DelayedTankSpawn& spawn)
+	{
+		return (spawn.type > TankType::ENEMY4 ? Faction::PlayerTeam : Faction::EnemyTeam) == faction;
+	};
+
+	std::vector<DelayedTankSpawn> cancelled;
+	std::ranges::copy_if(_delayedSpawns, std::back_inserter(cancelled), isTargeted);
+	std::erase_if(_delayedSpawns, isTargeted);
+
+	for (const DelayedTankSpawn& spawn: cancelled)
+	{
+		_events->EmitEvent(TankDiedEvent{.who = SeatOf(spawn.type), .uuid = spawn.uuid, .author = Author::None});
+	}
 }
 
 void TankSpawner::DelayedSpawnWith(const DelayedTankSpawn& params)

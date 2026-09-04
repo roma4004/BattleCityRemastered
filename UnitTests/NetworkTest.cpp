@@ -557,6 +557,35 @@ TEST_F(NetworkTest, ClientQuitTellsHostWhy)
 //TODO: other bonus effect replication test after write this replication
 // TEST_F(NetworkTest, bonusKind...EventReplication) {
 
+// The helmet above is only one of the three effects riding BonusStatus - the other two are told apart
+// by bonusType alone, so a swapped case arrives as the wrong effect on the wrong seat and says nothing.
+// The ship lands keyed on its seat, the tank broadcasts: it is read by the respawn manager, not a tank.
+TEST_F(NetworkTest, ShipAndTankEffectsKeepTheirOwnEventAcrossTheWire)
+{
+	const auto server = MakeHost();
+	const auto client = MakeClient(server->GetBoundPort());
+	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
+
+	constexpr auto shipSeat{Author::Player1};
+	constexpr auto tankSeat{Author::Player2};
+
+	std::optional<Author> ship{};
+	std::optional<Author> tank{};
+
+	std::vector<EventSubscription> subs{};
+	subs.push_back(_clientEvents->AddListener(Key(shipSeat),
+											  [&ship](const BonusShipAppliedEvent& event) { ship = event.author; }));
+	subs.push_back(_clientEvents->AddListener(
+			[&tank](const BonusTankAppliedEvent& event) { tank = event.author; }));
+
+	_hostEvents->EmitEvent(BonusShipAppliedEvent{.author = shipSeat});
+	_hostEvents->EmitEvent(BonusTankAppliedEvent{.author = tankSeat});
+
+	ASSERT_TRUE(PumpUntil([&ship, &tank] { return ship.has_value() && tank.has_value(); }));
+	EXPECT_EQ(shipSeat, *ship);
+	EXPECT_EQ(tankSeat, *tank);
+}
+
 TEST(SerializerTest, UnreadableFrameIsReportedNotSwallowed)
 {
 	const auto batch = network::Deserialize("not an archive at all");
@@ -578,4 +607,57 @@ TEST(SerializerTest, ABatchSurvivesTheRoundTrip)
 	const auto* goodbye = std::get_if<network::commands::Disconnect>(&commands.front());
 	ASSERT_NE(goodbye, nullptr);
 	EXPECT_EQ(goodbye->reason, DisconnectReason::GameOver);
+}
+
+// Eleven local types collapse onto one StatisticsChange command, so the discriminator table is the
+// only thing keeping them apart - a swapped or forgotten binding is silent. Every type here carries a
+// different author on purpose: identical payloads would hide a crossed wire.
+TEST_F(NetworkTest, EveryStatisticsTypeKeepsItsOwnEventAcrossTheWire)
+{
+	const auto server = MakeHost();
+	const auto client = MakeClient(server->GetBoundPort());
+	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
+
+	std::optional<StatisticsTankHitEvent> tankHit{};
+	std::optional<TankDiedEvent> tankDied{};
+	std::optional<BrickWallDiedEvent> brickDied{};
+	std::optional<SteelWallDiedEvent> steelDied{};
+	std::optional<StatisticsBonusPickupEvent> bonusPickup{};
+	std::optional<StatisticsBonusDestroyedEvent> bonusDestroyed{};
+	bool bonusExpired{false};
+
+	std::vector<EventSubscription> subs{};
+	subs.push_back(_clientEvents->AddListener([&tankHit](const StatisticsTankHitEvent& e) { tankHit = e; }));
+	subs.push_back(_clientEvents->AddListener([&tankDied](const TankDiedEvent& e) { tankDied = e; }));
+	subs.push_back(_clientEvents->AddListener([&brickDied](const BrickWallDiedEvent& e) { brickDied = e; }));
+	subs.push_back(_clientEvents->AddListener([&steelDied](const SteelWallDiedEvent& e) { steelDied = e; }));
+	subs.push_back(_clientEvents->AddListener(
+			[&bonusPickup](const StatisticsBonusPickupEvent& e) { bonusPickup = e; }));
+	subs.push_back(_clientEvents->AddListener(
+			[&bonusDestroyed](const StatisticsBonusDestroyedEvent& e) { bonusDestroyed = e; }));
+	subs.push_back(_clientEvents->AddListener(
+			[&bonusExpired](const StatisticsBonusExpiredEvent&) { bonusExpired = true; }));
+
+	_hostEvents->EmitEvent(StatisticsTankHitEvent{.who = Author::Player1, .author = Author::Enemy1});
+	_hostEvents->EmitEvent(TankDiedEvent{.who = Author::Player2, .uuid = _uuid, .author = Author::Enemy2});
+	_hostEvents->EmitEvent(BrickWallDiedEvent{.author = Author::Enemy3});
+	_hostEvents->EmitEvent(SteelWallDiedEvent{.author = Author::Enemy4});
+	_hostEvents->EmitEvent(StatisticsBonusPickupEvent{.author = Author::Player1});
+	_hostEvents->EmitEvent(StatisticsBonusDestroyedEvent{.author = Author::Player2});
+	_hostEvents->EmitEvent(StatisticsBonusExpiredEvent{});
+
+	ASSERT_TRUE(PumpUntil([&]
+	{
+		return tankHit && tankDied && brickDied && steelDied && bonusPickup && bonusDestroyed && bonusExpired;
+	}));
+
+	EXPECT_EQ(Author::Player1, tankHit.value().who);
+	EXPECT_EQ(Author::Enemy1, tankHit.value().author);
+	EXPECT_EQ(Author::Player2, tankDied.value().who);
+	EXPECT_EQ(_uuid, tankDied.value().uuid);
+	EXPECT_EQ(Author::Enemy2, tankDied.value().author);
+	EXPECT_EQ(Author::Enemy3, brickDied.value().author);
+	EXPECT_EQ(Author::Enemy4, steelDied.value().author);
+	EXPECT_EQ(Author::Player1, bonusPickup.value().author);
+	EXPECT_EQ(Author::Player2, bonusDestroyed.value().author);
 }

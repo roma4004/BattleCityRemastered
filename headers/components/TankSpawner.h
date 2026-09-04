@@ -64,6 +64,7 @@ class TankSpawner final
 
 	void OnSpawnDelayFinished(Uuid uuid);
 	void DelayedSpawnWith(const DelayedTankSpawn& params);
+	void CancelDelayedSpawnsOf(Faction faction);
 
 	[[nodiscard]] ObjRectangle GetEnemyRandomPosX(TankType type) const;
 	[[nodiscard]] bool SpawnEnemy(ObjRectangle rect, Uuid uuid, TankType type, double speed, int health);

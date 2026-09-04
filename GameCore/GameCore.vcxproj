@@ -274,6 +274,7 @@
     <ClInclude Include="..\headers\components\ObstacleSpawner.h" />
     <ClInclude Include="..\headers\components\RightSideBar.h" />
     <ClInclude Include="..\headers\components\LobbyScreen.h" />
+    <ClInclude Include="..\headers\components\PooledSlots.h" />
     <ClInclude Include="..\headers\components\ScoreBoard.h" />
     <ClInclude Include="..\headers\components\events\SpawnEvents.h" />
     <ClInclude Include="..\headers\components\TankPool.h" />

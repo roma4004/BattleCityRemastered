@@ -1,12 +1,12 @@
 #pragma once
 
 #include "components/EventSystem.h"
+#include "components/PooledSlots.h"
 #include "entities/pawns/BulletResetProperty.h"
 #include "utils/Uuid.h"
 #include <chrono>
 #include <memory>
 #include <optional>
-#include <queue>
 #include <vector>
 
 enum class GameMode : char8_t;
@@ -24,8 +24,7 @@ class BulletPool final
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
 	const std::vector<std::shared_ptr<BaseObj>>& _allObjects;
-	std::queue<std::shared_ptr<Bullet>> _free{};
-	std::vector<std::shared_ptr<Bullet>> _inFlight{};
+	PooledSlots<Bullet> _slots{};
 	const GameConfig& _gameConfig;
 
 	void OnGameReset(const GameResetEvent&);

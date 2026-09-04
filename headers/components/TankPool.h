@@ -1,8 +1,8 @@
 #pragma once
 
 #include "components/EventSystem.h"
+#include "components/PooledSlots.h"
 #include <memory>
-#include <queue>
 #include <vector>
 
 struct GameResetEvent;
@@ -24,8 +24,7 @@ class TankPool final
 	const std::vector<std::shared_ptr<BaseObj>>& _allObjects;
 	const GameConfig& _gameConfig;
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
-	std::queue<std::shared_ptr<Tank>> _free{};
-	std::vector<std::shared_ptr<Tank>> _inPlay{};
+	PooledSlots<Tank> _slots{};
 
 	void OnGameReset(const GameResetEvent&);
 	void OnPostTickUpdate(const PostTickUpdateEvent&);

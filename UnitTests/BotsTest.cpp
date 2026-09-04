@@ -9,6 +9,7 @@
 #include "components/managers/GameStateManager.h"
 #include "entities/obstacles/BushTile.h"
 #include "entities/obstacles/IceTile.h"
+#include "entities/obstacles/SteelWall.h"
 #include "entities/obstacles/WaterTile.h"
 #include "entities/BulletCalibre.h"
 #include "entities/pawns/Bullet.h"
@@ -506,4 +507,82 @@ TEST_F(BotsTest, BotAimsAtABulletFlyingAwayJustTheSame)
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(coopBot->GetDirection(), Direction::RIGHT);
+}
+
+// The cooldown gate lives in Tank::TickUpdate, not in ShouldShoot - one shot per cooldown, no matter
+// how long the target stays in sight
+TEST_F(BotsTest, BotDoesNotShootTwiceWithinOneCooldown)
+{
+	const ObjRectangle botRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
+	const std::shared_ptr<Tank> bot =
+			TestUtils::CreateBot(botRect, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects,
+								 _events, 1u, _tankSpeed, Direction::RIGHT, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(bot);
+
+	const ObjRectangle enemyRect{.x = _tankSize * 3.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
+	_allObjects.emplace_back(TestUtils::CreateBot(enemyRect, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam,
+												  _allObjects, _events, 1u, _tankSpeed, Direction::LEFT, _gameMode,
+												  _bulletPool, _gameConfig));
+
+	const std::size_t beforeFirstShot = _allObjects.size();
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	const std::size_t afterFirstShot = _allObjects.size();
+	ASSERT_GT(afterFirstShot, beforeFirstShot);
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_EQ(_allObjects.size(), afterFirstShot);
+}
+
+// The cooldown suppresses aiming, not only firing: ChangeDirIfSeenOpponent bails on !CanShoot(), so a
+// reloading bot ignores a target that appears on another side
+TEST_F(BotsTest, ReloadingBotDoesNotTurnToANewOpponent)
+{
+	const ObjRectangle botRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
+	const std::shared_ptr<Tank> bot =
+			TestUtils::CreateBot(botRect, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects,
+								 _events, 1u, _tankSpeed, Direction::RIGHT, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(bot);
+
+	const ObjRectangle rightEnemyRect{.x = _tankSize * 3.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
+	_allObjects.emplace_back(TestUtils::CreateBot(rightEnemyRect, _tankHealth, _uuid, Author::Enemy1,
+												  Faction::EnemyTeam, _allObjects, _events, 1u, _tankSpeed,
+												  Direction::LEFT, _gameMode, _bulletPool, _gameConfig));
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	ASSERT_EQ(bot->GetDirection(), Direction::RIGHT);
+
+	// a second target below, while the first shot is still cooling down
+	const ObjRectangle belowEnemyRect{.x = 0.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize};
+	_allObjects.emplace_back(TestUtils::CreateBot(belowEnemyRect, _tankHealth, _uuid, Author::Enemy2,
+												  Faction::EnemyTeam, _allObjects, _events, 1u, _tankSpeed,
+												  Direction::UP, _gameMode, _bulletPool, _gameConfig));
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_EQ(bot->GetDirection(), Direction::RIGHT);
+}
+
+// Nose to the wall: the move fails, so ReviseWhenMoveBlocked picks among the other three sides. Steel
+// is indestructible, so a tier-1 bot will not shoot it either - the only way out is to turn.
+// The gap is the padding GetTravelledDistance parks on: flush against the wall every side reads as
+// blocked, because IsCollide counts a touch, and that is the state movement never leaves a tank in.
+TEST_F(BotsTest, BotTurnsWhenItRunsIntoAWall)
+{
+	const ObjRectangle botRect{.x = _tankSize * 2.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
+	const std::shared_ptr<Tank> bot =
+			TestUtils::CreateBot(botRect, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects,
+								 _events, 1u, _tankSpeed, Direction::RIGHT, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(bot);
+
+	// flush against the bot's right side, so the very first step is blocked
+	_allObjects.emplace_back(std::make_shared<SteelWall>(
+			ObjRectangle{.x = _tankSize * 3.0 + 1.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize},
+			_events, _uuid, _gameMode));
+
+	ASSERT_EQ(bot->GetDirection(), Direction::RIGHT);
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_NE(bot->GetDirection(), Direction::RIGHT);
 }

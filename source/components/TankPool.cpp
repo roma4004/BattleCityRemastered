@@ -8,8 +8,6 @@
 #include "entities/pawns/Tank.h"
 #include "entities/pawns/TankResetProperty.h"
 #include "utils/Log.h"
-#include <algorithm>
-#include <iterator>
 #include <string>
 
 namespace
@@ -28,7 +26,7 @@ TankPool::TankPool(const std::shared_ptr<EventSystem>& events,
 {
 	for (std::size_t i = 0u; i < kSeatCount; ++i)
 	{
-		_free.push(CreateNewTank());
+		_slots.AddFree(CreateNewTank());
 	}
 
 	Subscribe();
@@ -59,20 +57,15 @@ std::shared_ptr<Tank> TankPool::CreateNewTank() const
 std::shared_ptr<Tank> TankPool::SpawnTank(const TankResetProperty& property,
 										  std::unique_ptr<IInputProvider> driver)
 {
-	std::shared_ptr<Tank> tank;
-	if (_free.empty())
+	std::shared_ptr<Tank> tank = _slots.TakeFree();
+	if (tank == nullptr)
 	{
 		tank = CreateNewTank();
-	}
-	else
-	{
-		tank = _free.front();
-		_free.pop();
 	}
 
 	tank->Reset(property, std::move(driver));
 
-	_inPlay.push_back(tank);
+	_slots.Track(tank);
 
 	return tank;
 }
@@ -80,29 +73,16 @@ std::shared_ptr<Tank> TankPool::SpawnTank(const TankResetProperty& property,
 //NOTE: nothing emitted here - the tank announced its own death already
 void TankPool::OnPostTickUpdate(const PostTickUpdateEvent&)
 {
-	auto isWrecked = [](const std::shared_ptr<Tank>& tank) { return !tank->GetIsAlive(); };
-
-	std::vector<std::shared_ptr<Tank>> returned{};
-	std::ranges::copy_if(_inPlay, std::back_inserter(returned), isWrecked);
-	std::erase_if(_inPlay, isWrecked);
-
-	for (const std::shared_ptr<Tank>& tank: returned)
+	if (const std::vector<std::shared_ptr<Tank>> returned = _slots.ReclaimDead();
+		!returned.empty())
 	{
-		//NOTE: a tank in _free must not listen, or the next SpawnTank subscribes it twice
-		tank->Deactivate();
-		_free.push(tank);
-	}
-
-	if (!returned.empty())
-	{
-		Log::Detail("tanks returned to a pool of " + std::to_string(_free.size()));
+		Log::Detail("tanks returned to a pool of " + std::to_string(_slots.FreeCount()));
 	}
 }
 
 void TankPool::Clear()
 {
-	Log::Detail("tank pool cleared, held " + std::to_string(_free.size() + _inPlay.size()));
+	Log::Detail("tank pool cleared, held " + std::to_string(_slots.HeldCount()));
 
-	_free = {};
-	_inPlay.clear();
+	_slots.Clear();
 }
