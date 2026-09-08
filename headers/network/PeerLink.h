@@ -26,7 +26,6 @@ public:
 
 	void ProcessCommandQueue() { _commandQueue.ProcessAll(); }
 
-	[[nodiscard]] bool IsSocketOpen() const { return _channel->IsOpen(); }
 	[[nodiscard]] bool HasPendingCommands() const { return _commandQueue.Size() > 0u; }
 
 protected:

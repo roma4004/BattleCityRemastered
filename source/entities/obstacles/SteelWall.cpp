@@ -3,10 +3,11 @@
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/StatisticsEvents.h"
 #include "enums/ObstacleType.h"
+#include "application/GameConfig.h"
 
 SteelWall::SteelWall(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const Uuid uuid,
-					 const GameMode gameMode)
-	: Obstacle{rect, 1, events, uuid, gameMode, ObstacleType::Steel, kCollision}
+					 const GameConfig& gameConfig)
+	: Obstacle{rect, 1, events, uuid, gameConfig, ObstacleType::Steel, kCollision}
 {}
 
 void SteelWall::Subscribe()

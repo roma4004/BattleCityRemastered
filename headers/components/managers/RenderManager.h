@@ -6,7 +6,9 @@
 #include "components/managers/TextCache.h"
 #include <SDL3/SDL_render.h>
 #include <cstddef>
+#include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -14,13 +16,13 @@
 
 enum class Direction : char8_t;
 enum class GameMode : char8_t;
+enum class PlayerSlot : std::uint8_t;
 struct ObjRectangle;
 struct SDL_Config;
-class EventSystem;
-class GameConfig;
 struct PreTickUpdateEvent;
 struct PresentFrameEvent;
 struct GameModeChangedToEvent;
+struct PlayerSlotAssignedEvent;
 struct RenderTextEvent;
 struct RenderMenuBackgroundEvent;
 struct RenderMenuLogoEvent;
@@ -43,8 +45,10 @@ struct WorldGeometryChangedEvent;
 struct WindowSizeChangedToEvent;
 struct RenderTargetsResetEvent;
 struct RenderDeviceResetEvent;
+class EventSystem;
+class GameConfig;
 
-class RenderManager
+class RenderManager final
 {
 
 	std::shared_ptr<EventSystem> _events{nullptr};
@@ -90,10 +94,15 @@ class RenderManager
 	static constexpr int kSideBarItemWidth{71};
 	static constexpr int kSideBarColumnTop{60};
 	static constexpr int kSideBarCounterTextPadding{38};
-	//NOTE: opaque on purpose - the old Solid path promoted a transparent alpha, the engine does not
+	//NOTE: opaque on purpose - the engine does not promote a transparent alpha
 	static constexpr SDL_Color kSideBarCounterColor{.r = 0, .g = 0, .b = 2, .a = 255};
 
 	mutable TextCache _textCache;
+
+	//NOTE: both halves of the caption - the mode arrives on entering a match, the seat only once
+	//the server has answered, so the title is rebuilt rather than written in one go
+	GameMode _titleMode{};
+	std::optional<PlayerSlot> _titleSlot{};
 
 	void Subscribe();
 	void OnWorldGeometryChanged(const WorldGeometryChangedEvent&);
@@ -146,8 +155,9 @@ class RenderManager
 
 	void ClearFrame(const PreTickUpdateEvent&) const;
 	void PresentFrame(const PresentFrameEvent&) const;
-	void OnGameModeChangedTo(const GameModeChangedToEvent& event) const;
-	void UpdateWindowTitle(GameMode gameMode) const;
+	void OnGameModeChangedTo(const GameModeChangedToEvent& event);
+	void OnPlayerSlotAssigned(const PlayerSlotAssignedEvent& event);
+	void UpdateWindowTitle() const;
 
 	void CreateColorTexture(unsigned int color);
 	[[nodiscard]] static std::pair<double, SDL_FlipMode> GetRotateAndAngleAndFlip(Direction dir);

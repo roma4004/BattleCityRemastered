@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="host + client" folderName="BattleCity" type="CompoundRunConfigurationType">
+    <toRun name="BattleCityRemastered (client, skipintro)" type="CMakeRunConfiguration" />
+    <toRun name="BattleCityRemastered (host)" type="CMakeRunConfiguration" />
+    <method v="2" />
+  </configuration>
+</component>

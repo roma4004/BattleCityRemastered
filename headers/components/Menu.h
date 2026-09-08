@@ -9,13 +9,13 @@
 #include <vector>
 
 enum class GameMode : char8_t;
+struct DrawUserInterfaceEvent;
+struct SelectedGameModeChangedToEvent;
+struct MenuShowedEvent;
 class GameConfig;
 class EventSystem;
 class GameStatistics;
 class InputProviderForMenu;
-struct DrawUserInterfaceEvent;
-struct SelectedGameModeChangedToEvent;
-struct MenuShowedEvent;
 
 class Menu final
 {
@@ -24,8 +24,7 @@ class Menu final
 
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
-	// Toggled at runtime by DisplayMenu() (also the initial Subscribe() call, if the menu starts
-	// shown), independent of _subs's fixed subscribe-once-at-construction lifetime.
+	// Toggled at runtime by DisplayMenu(), where _subs is filled once at construction and stays
 	EventSubscription _drawSub{};
 	std::unique_ptr<InputProviderForMenu> _input{nullptr};
 
@@ -50,8 +49,6 @@ class Menu final
 
 public:
 	Menu(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig);
-
-	~Menu() = default;
 
 	[[nodiscard]] MenuKeys GetKeysStats() const { return _input->GetKeysStats(); }
 };

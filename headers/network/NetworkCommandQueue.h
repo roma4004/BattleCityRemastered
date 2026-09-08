@@ -15,9 +15,7 @@ class NetworkCommandQueue final
 
 public:
 	NetworkCommandQueue() = default;
-	~NetworkCommandQueue() = default;
 
-	// Non-copyable
 	NetworkCommandQueue(const NetworkCommandQueue&) = delete;
 	NetworkCommandQueue& operator=(const NetworkCommandQueue&) = delete;
 

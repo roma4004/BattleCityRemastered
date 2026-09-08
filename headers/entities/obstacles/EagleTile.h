@@ -7,8 +7,9 @@
 
 enum class Faction : char8_t;
 struct ObjRectangle;
-class EventSystem;
 struct DrawEvent;
+class GameConfig;
+class EventSystem;
 
 class EagleTile final : public Obstacle, public IFortress
 {
@@ -16,16 +17,12 @@ class EagleTile final : public Obstacle, public IFortress
 	void OnDraw(const DrawEvent&) const;
 
 protected:
-	//NOTE: Eagle's death is handled separately via PlayersBaseFinishedEvent (see the destructor),
-	//not the BrickWall/SteelWall-style death-statistics struct - no-op body to satisfy the base's
-	//pure virtual hook.
+	//NOTE: empty - the eagle announces its death as PlayersBaseFinishedEvent from the destructor
 	void EmitDeathStatistics(Author author) override;
 	void OnDespawned(const DespawnedEvent& event) override;
 
 	static constexpr CollisionTags kCollision{tags::Impassable{}, tags::Destructible{}, tags::Impenetrable{}};
 
 public:
-	EagleTile(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, Uuid uuid, GameMode gameMode);
-
-	~EagleTile() override;
+	EagleTile(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, Uuid uuid, const GameConfig& gameConfig);
 };

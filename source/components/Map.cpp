@@ -8,8 +8,6 @@
 Map::Map(const std::shared_ptr<EventSystem>& events)
 	: _events{events} {}
 
-Map::~Map() = default;
-
 std::expected<void, MapError> Map::LoadFromFile(const std::filesystem::path& path)
 {
 	return MapLoader::LoadFromFile(path).transform([this](MapData data) { _data = std::move(data); });

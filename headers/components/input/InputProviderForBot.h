@@ -25,6 +25,9 @@ class InputProviderForBot final : public IInputProvider
 	//NOTE: the drivable pass, built at most once per HandleLineOfSight and shared by all four sides
 	std::unique_ptr<LineOfSight> _driveLineOfSight{};
 
+	//NOTE: started by a refusal to fire at a wall, and the refusal stands while it ticks
+	Timer _obstacleShootCooldown{};
+
 	[[nodiscard]] static bool IsOpponent(const Tank& self, const std::shared_ptr<BaseObj>& obstacle);
 	[[nodiscard]] static bool IsAlly(const Tank& self, const std::shared_ptr<BaseObj>& obstacle);
 	[[nodiscard]] static bool IsBonus(const std::shared_ptr<BaseObj>& obstacle);
@@ -50,6 +53,7 @@ class InputProviderForBot final : public IInputProvider
 
 	[[nodiscard]] static bool ShouldShootOpponent(const Tank& self, const std::shared_ptr<BaseObj>& obj);
 	[[nodiscard]] static bool ShouldShootObstacle(const Tank& self, const std::shared_ptr<BaseObj>& obj);
+	[[nodiscard]] bool RollShootObstacle();
 
 public:
 	InputProviderForBot(const std::vector<std::shared_ptr<BaseObj>>& allObjects, const GameConfig& gameConfig);

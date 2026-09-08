@@ -12,6 +12,7 @@
 #include "PositionChange.h"
 #include "RespawnTank.h"
 #include "SignalEvent.h"
+#include "SlotAssignment.h"
 #include "StatisticsChange.h"
 #include "TankShot.h"
 #include "TankSpawnComplete.h"
@@ -24,5 +25,5 @@ namespace network::commands
 using AnyCommand = std::variant<
 	BonusSpawn, BonusStatus, Despawn, GameStateChange, HealthChange,
 	KeyStateChange, ObstacleSpawn, PositionChange, RespawnTank, SignalEvent, StatisticsChange, TankShot,
-	TankSpawnComplete, Disconnect, BonusSpawnComplete, TierChange>;
+	TankSpawnComplete, Disconnect, BonusSpawnComplete, TierChange, SlotAssignment>;
 }//namespace network::commands

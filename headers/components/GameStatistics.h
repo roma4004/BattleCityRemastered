@@ -5,9 +5,9 @@
 #include <memory>
 #include <vector>
 
-class EventSystem;
 struct GameResetEvent;
 struct TankDiedEvent;
+class EventSystem;
 
 struct StatisticsData final
 {
@@ -74,9 +74,6 @@ class GameStatistics final
 public:
 	explicit GameStatistics(const std::shared_ptr<EventSystem>& events);
 
-	~GameStatistics() = default;
-
-	//NOTE: read-only view of the whole block - thirty one-line getters said nothing the field names
-	//do not, and the scoreboard walks these by pointer-to-member
+	//NOTE: read-only view of the whole block - the scoreboard walks these by pointer-to-member
 	[[nodiscard]] const StatisticsData& GetData() const { return _data; }
 };

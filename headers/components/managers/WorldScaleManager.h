@@ -4,15 +4,13 @@
 #include <memory>
 #include <vector>
 
-class GameConfig;
 struct MapLoadedEvent;
+class GameConfig;
 
 class WorldScaleManager final
 {
 public:
 	WorldScaleManager(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig);
-
-	~WorldScaleManager() = default;
 
 private:
 	void Subscribe();

@@ -18,7 +18,7 @@ struct TTF_TextEngine;
 using FontHandle = SdlHandle<TTF_Font, TTF_CloseFont>;
 
 //NOTE: glyphs are laid out at final pixel size, so a layout is only valid for the scale that made it
-class TextCache
+class TextCache final
 {
 public:
 	struct TextDeleter

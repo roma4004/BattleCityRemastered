@@ -9,7 +9,6 @@
 #include "entities/obstacles/SteelWall.h"
 #include "entities/pawns/Bullet.h"
 #include "enums/Direction.h"
-#include "enums/GameMode.h"
 #include "gtest/gtest.h"
 #include "enums/Faction.h"
 #include <memory>
@@ -26,7 +25,6 @@ protected:
 	Uuid _uuid{};
 	double _gridSize{1};
 	unsigned short _bulletHealth{1};
-	GameMode _gameMode{GameMode::OnePlayer};
 	EventSubscription _spawnQueueSub{};
 
 	void SetUp() override
@@ -52,9 +50,8 @@ TEST_F(BulletTestAdvanced, BulletTier2CanDestroySteelWall)
 {
 	if (const Bullet* bullet = dynamic_cast<Bullet*>(_allObjects.back().get()))
 	{
-		// spawn BrickWall
 		ObjRectangle wallRect{.x = 0.0, .y = _calibre.size.y + 1, .w = _gridSize, .h = _gridSize};
-		auto steelWall = std::make_shared<SteelWall>(wallRect, _events, _uuid, _gameMode);
+		auto steelWall = std::make_shared<SteelWall>(wallRect, _events, _uuid, _gameConfig);
 		_allObjects.emplace_back(steelWall);
 
 		steelWall->SetHealth(1);
@@ -76,9 +73,9 @@ TEST_F(BulletTestAdvanced, BulletTier2CanDestroySteelWall)
 TEST_F(BulletTestAdvanced, BlastSparesTheWallBehindAtThirtyFps)
 {
 	auto nearWall = std::make_shared<BrickWall>(ObjRectangle{.x = 0.0, .y = 20.0, .w = _gridSize, .h = 4.0},
-												_events, _uuid, _gameMode);
+												_events, _uuid, _gameConfig);
 	auto farWall = std::make_shared<BrickWall>(ObjRectangle{.x = 0.0, .y = 34.0, .w = _gridSize, .h = 4.0},
-											   _events, _uuid, _gameMode);
+											   _events, _uuid, _gameConfig);
 	_allObjects.emplace_back(nearWall);
 	_allObjects.emplace_back(farWall);
 
@@ -97,9 +94,9 @@ TEST_F(BulletTestAdvanced, BlastSparesTheWallBehindAtThirtyFps)
 TEST_F(BulletTestAdvanced, BlastSparesTheWallBehindAtHundredFortyFourFps)
 {
 	auto nearWall = std::make_shared<BrickWall>(ObjRectangle{.x = 0.0, .y = 20.0, .w = _gridSize, .h = 4.0},
-												_events, _uuid, _gameMode);
+												_events, _uuid, _gameConfig);
 	auto farWall = std::make_shared<BrickWall>(ObjRectangle{.x = 0.0, .y = 34.0, .w = _gridSize, .h = 4.0},
-											   _events, _uuid, _gameMode);
+											   _events, _uuid, _gameConfig);
 	_allObjects.emplace_back(nearWall);
 	_allObjects.emplace_back(farWall);
 
@@ -120,9 +117,9 @@ TEST_F(BulletTestAdvanced, BlastSparesTheWallBehindAtHundredFortyFourFps)
 TEST_F(BulletTestAdvanced, BushBurnsInABlastFromTierThree)
 {
 	auto wall = std::make_shared<BrickWall>(ObjRectangle{.x = 0.0, .y = 20.0, .w = _gridSize, .h = 4.0},
-											_events, _uuid, _gameMode);
+											_events, _uuid, _gameConfig);
 	auto bush = std::make_shared<BushTile>(ObjRectangle{.x = 0.0, .y = 26.0, .w = _gridSize, .h = _gridSize},
-										   _events, _uuid, _gameMode);
+										   _events, _uuid, _gameConfig);
 	_allObjects.emplace_back(wall);
 	_allObjects.emplace_back(bush);
 
@@ -146,9 +143,9 @@ TEST_F(BulletTestAdvanced, BushSurvivesABlastBelowTierThree)
 													 _events, _calibre, Direction::DOWN, _gameConfig, Author::Player1));
 
 	auto wall = std::make_shared<BrickWall>(ObjRectangle{.x = 0.0, .y = 20.0, .w = _gridSize, .h = 4.0},
-											_events, _uuid, _gameMode);
+											_events, _uuid, _gameConfig);
 	auto bush = std::make_shared<BushTile>(ObjRectangle{.x = 0.0, .y = 26.0, .w = _gridSize, .h = _gridSize},
-										   _events, _uuid, _gameMode);
+										   _events, _uuid, _gameConfig);
 	_allObjects.emplace_back(wall);
 	_allObjects.emplace_back(bush);
 
@@ -166,7 +163,7 @@ TEST_F(BulletTestAdvanced, BushSurvivesABlastBelowTierThree)
 TEST_F(BulletTestAdvanced, TierThreeFliesThroughABushWithoutBurningIt)
 {
 	auto bush = std::make_shared<BushTile>(ObjRectangle{.x = 0.0, .y = 20.0, .w = _gridSize, .h = _gridSize},
-										   _events, _uuid, _gameMode);
+										   _events, _uuid, _gameConfig);
 	_allObjects.emplace_back(bush);
 
 	for (int frame = 0; frame < 10; ++frame)

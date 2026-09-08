@@ -60,11 +60,8 @@ LineOfSight::LineOfSight(const ObjRectangle tankRect, const std::vector<std::sha
 	CheckLineOfSight(isWaterSkip, objects);
 }
 
-LineOfSight::~LineOfSight() = default;
-
 void LineOfSight::CheckLineOfSight(const bool isWaterSkip, const std::vector<std::shared_ptr<BaseObj>>& objects)
 {
-	// parse all seen in Line Of Sight obj
 	for (const std::shared_ptr<BaseObj>& object: objects)
 	{
 		if (!ObjectUtils::IsAlive(object))

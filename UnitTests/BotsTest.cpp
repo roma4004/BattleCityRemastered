@@ -7,6 +7,7 @@
 #include "components/TankSpawner.h"
 #include "components/managers/RespawnManager.h"
 #include "components/managers/GameStateManager.h"
+#include "entities/obstacles/BrickWall.h"
 #include "entities/obstacles/BushTile.h"
 #include "entities/obstacles/IceTile.h"
 #include "entities/obstacles/SteelWall.h"
@@ -15,9 +16,10 @@
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/Tank.h"
 #include "enums/Direction.h"
-#include "enums/GameMode.h"
 #include "gtest/gtest.h"
 #include "enums/Faction.h"
+#include <chrono>
+#include <cstddef>
 #include <memory>
 
 class BotsTest : public testing::Test// NOLINT(clang-diagnostic-padded)
@@ -38,7 +40,6 @@ protected:
 	double _tankSpeed{142};
 	double _gridSize{};
 	unsigned short _tankHealth{100u};
-	GameMode _gameMode{GameMode::OnePlayer};
 	EventSubscription _spawnQueueSub{};
 
 	void SetUp() override
@@ -54,16 +55,17 @@ protected:
 		_gridSize = _gameConfig.gridOffset;
 		_tankSize = _gridSize * 3.0;// for better turns
 
+		//NOTE: the wall roll is pinned open, or every test that expects a shot at an obstacle would flake
+		_gameConfig.botShootObstacleChance = 1.0;
+
 		_allObjects.reserve(4u);
 	}
 
 	void TearDown() override {}
 };
 
-// Check that bots change direction to the opponent
 TEST_F(BotsTest, BotsChangeDirectionIfOpponentSeen)
 {
-	// Spawn Coop
 	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> coopBot =
 			TestUtils::CreateBot(
@@ -71,7 +73,6 @@ TEST_F(BotsTest, BotsChangeDirectionIfOpponentSeen)
 					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(coopBot);
 
-	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 3.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
@@ -97,7 +98,6 @@ TEST_F(BotsTest, BotsChangeDirectionIfOpponentSeen)
 // geometry, only the neighbour is an ally
 TEST_F(BotsTest, BotsNoChangeDirectionIfPlayerAllySeen)
 {
-	// Spawn Coop
 	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> coopBot =
 			TestUtils::CreateBot(
@@ -118,10 +118,8 @@ TEST_F(BotsTest, BotsNoChangeDirectionIfPlayerAllySeen)
 	EXPECT_EQ(coopBot->GetDirection(), Direction::DOWN);
 }
 
-// Check that two bots of the same team ignore each other
 TEST_F(BotsTest, BotsNoChangeDirectionIfBotAllySeen)
 {
-	// Spawn Coop
 	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> coopBot =
 			TestUtils::CreateBot(
@@ -143,10 +141,9 @@ TEST_F(BotsTest, BotsNoChangeDirectionIfBotAllySeen)
 	EXPECT_EQ(secondCoopBot->GetDirection(), Direction::DOWN);
 }
 
-// Check that a bot does not turn to an opponent it cannot shoot without catching its own blast
+// A bot does not turn to an opponent it cannot shoot without catching its own blast
 TEST_F(BotsTest, BotsNoChangeDirectionIfOpponentTooClose)
 {
-	// Spawn Coop
 	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> coopBot =
 			TestUtils::CreateBot(
@@ -168,10 +165,8 @@ TEST_F(BotsTest, BotsNoChangeDirectionIfOpponentTooClose)
 	EXPECT_EQ(enemyBot->GetDirection(), Direction::DOWN);
 }
 
-// Check that bots change their direction to the bonus
 TEST_F(BotsTest, BotsChangeDirectionIfBonusSeenAndNoOneShoot)
 {
-	// Spawn Coop
 	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> coopBot =
 			TestUtils::CreateBot(
@@ -181,7 +176,6 @@ TEST_F(BotsTest, BotsChangeDirectionIfBonusSeenAndNoOneShoot)
 
 	_bonusSpawner->SpawnRandomBonus({.x = _tankSize + 21.0, .y = 0.0, .w = _tankSize, .h = _tankSize});
 
-	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 3.0 + 40.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
@@ -205,10 +199,8 @@ TEST_F(BotsTest, BotsChangeDirectionIfBonusSeenAndNoOneShoot)
 	EXPECT_EQ(endDirEnemy, Direction::LEFT);
 }
 
-// Check that both Bots can't see bonus that behind water
 TEST_F(BotsTest, BotsCantSeeBonusBehindWater)
 {
-	// Spawn Coop
 	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> coopBot =
 			TestUtils::CreateBot(
@@ -216,26 +208,22 @@ TEST_F(BotsTest, BotsCantSeeBonusBehindWater)
 					_tankSpeed, Direction::RIGHT, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(coopBot);
 
-	// Spawn Water
 	_allObjects.emplace_back(
 			std::make_shared<WaterTile>(
 					ObjRectangle{.x = 0.0, .y = _tankSize * 2.0 + 1.0, .w = _tankSize, .h = _tankSize},
 					_events,
 					_uuid,
-					_gameMode));
+					_gameConfig));
 
-	// Spawn Bonus
 	_bonusSpawner->SpawnRandomBonus({.x = 0.0, .y = _tankSize * 3.0 + 2.0, .w = _tankSize, .h = _tankSize});
 
-	// Spawn Water
 	_allObjects.emplace_back(
 			std::make_shared<WaterTile>(
 					ObjRectangle{.x = 0.0, .y = _tankSize * 4.0 + 3.0, .w = _tankSize, .h = _tankSize},
 					_events,
 					_uuid,
-					_gameMode));
+					_gameConfig));
 
-	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = 0.0, .y = _tankSize * 5.0 + 40.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
@@ -259,10 +247,8 @@ TEST_F(BotsTest, BotsCantSeeBonusBehindWater)
 	EXPECT_EQ(endDirEnemy, Direction::RIGHT);
 }
 
-// Check that both Bots can't see bonus that behind Bush
 TEST_F(BotsTest, BotsCantSeeBonusBehindBush)
 {
-	// Spawn Coop
 	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> coopBot =
 			TestUtils::CreateBot(
@@ -270,26 +256,22 @@ TEST_F(BotsTest, BotsCantSeeBonusBehindBush)
 					_tankSpeed, Direction::RIGHT, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(coopBot);
 
-	// Spawn Bush
 	_allObjects.emplace_back(
 			std::make_shared<BushTile>(
 					ObjRectangle{.x = 0.0, .y = _tankSize * 2.0 + 1.0, .w = _tankSize, .h = _tankSize},
 					_events,
 					_uuid,
-					_gameMode));
+					_gameConfig));
 
-	// Spawn Bonus
 	_bonusSpawner->SpawnRandomBonus({.x = 0.0, .y = _tankSize * 3.0 + 2.0, .w = _tankSize, .h = _tankSize});
 
-	// Spawn Bush
 	_allObjects.emplace_back(
 			std::make_shared<BushTile>(
 					ObjRectangle{.x = 0.0, .y = _tankSize * 4.0 + 3.0, .w = _tankSize, .h = _tankSize},
 					_events,
 					_uuid,
-					_gameMode));
+					_gameConfig));
 
-	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = 0.0, .y = _tankSize * 5.0 + 40.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
@@ -313,10 +295,8 @@ TEST_F(BotsTest, BotsCantSeeBonusBehindBush)
 	EXPECT_EQ(endDirEnemy, Direction::RIGHT);
 }
 
-// Check that both Bots can see bonus that behind Ice
 TEST_F(BotsTest, BotsCanSeeBonusBehindIce)
 {
-	// Spawn Coop
 	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> coopBot =
 			TestUtils::CreateBot(
@@ -324,26 +304,22 @@ TEST_F(BotsTest, BotsCanSeeBonusBehindIce)
 					_tankSpeed, Direction::RIGHT, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(coopBot);
 
-	// Spawn Ice
 	_allObjects.emplace_back(
 			std::make_shared<IceTile>(
 					ObjRectangle{.x = 0.0, .y = _tankSize * 2.0 + 1.0, .w = _tankSize, .h = _tankSize},
 					_events,
 					_uuid,
-					_gameMode));
+					_gameConfig));
 
-	// Spawn Bonus
 	_bonusSpawner->SpawnRandomBonus({.x = 0.0, .y = _tankSize * 3.0 + 2.0, .w = _tankSize, .h = _tankSize});
 
-	// Spawn Ice
 	_allObjects.emplace_back(
 			std::make_shared<IceTile>(
 					ObjRectangle{.x = 0.0, .y = _tankSize * 4.0 + 3.0, .w = _tankSize, .h = _tankSize},
 					_events,
 					_uuid,
-					_gameMode));
+					_gameConfig));
 
-	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = 0.0, .y = _tankSize * 5.0 + 40.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
@@ -367,10 +343,8 @@ TEST_F(BotsTest, BotsCanSeeBonusBehindIce)
 	EXPECT_EQ(endDirEnemy, Direction::UP);
 }
 
-// Check that both Bots can see bonus that in the Ice
 TEST_F(BotsTest, BotsCanSeeBonusInTheIce)
 {
-	// Spawn Coop
 	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> coopBot =
 			TestUtils::CreateBot(
@@ -378,34 +352,29 @@ TEST_F(BotsTest, BotsCanSeeBonusInTheIce)
 					_tankSpeed, Direction::RIGHT, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(coopBot);
 
-	// Spawn Ice
 	_allObjects.emplace_back(
 			std::make_shared<IceTile>(
 					ObjRectangle{.x = 0.0, .y = _tankSize * 2.0 + 1.0, .w = _tankSize, .h = _tankSize},
 					_events,
 					_uuid,
-					_gameMode));
+					_gameConfig));
 
-	// Spawn Ice
 	_allObjects.emplace_back(
 			std::make_shared<IceTile>(
 					ObjRectangle{.x = 0.0, .y = _tankSize * 3.0 + 1.0, .w = _tankSize, .h = _tankSize},
 					_events,
 					_uuid,
-					_gameMode));
+					_gameConfig));
 
-	// Spawn Bonus
 	_bonusSpawner->SpawnRandomBonus({.x = 0.0, .y = _tankSize * 3.0 + 2.0, .w = _tankSize, .h = _tankSize});
 
-	// Spawn Ice
 	_allObjects.emplace_back(
 			std::make_shared<IceTile>(
 					ObjRectangle{.x = 0.0, .y = _tankSize * 4.0 + 3.0, .w = _tankSize, .h = _tankSize},
 					_events,
 					_uuid,
-					_gameMode));
+					_gameConfig));
 
-	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = 0.0, .y = _tankSize * 5.0 + 40.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
@@ -545,10 +514,8 @@ TEST_F(BotsTest, ReloadingBotDoesNotTurnToANewOpponent)
 	EXPECT_EQ(bot->GetDirection(), Direction::RIGHT);
 }
 
-// Nose to the wall: the move fails, so ReviseWhenMoveBlocked picks among the other three sides. Steel
-// is indestructible, so a tier-1 bot will not shoot it either - the only way out is to turn.
-// The gap is the padding GetTravelledDistance parks on: flush against the wall every side reads as
-// blocked, because IsCollide counts a touch, and that is the state movement never leaves a tank in.
+// Nose to the wall: the move fails and steel cannot be shot, so the only way out is to turn. The gap
+// is the padding movement parks on - flush against the wall every side reads as blocked
 TEST_F(BotsTest, BotTurnsWhenItRunsIntoAWall)
 {
 	const ObjRectangle botRect{.x = _tankSize * 2.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
@@ -560,7 +527,7 @@ TEST_F(BotsTest, BotTurnsWhenItRunsIntoAWall)
 	// flush against the bot's right side, so the very first step is blocked
 	_allObjects.emplace_back(std::make_shared<SteelWall>(
 			ObjRectangle{.x = _tankSize * 3.0 + 1.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize},
-			_events, _uuid, _gameMode));
+			_events, _uuid, _gameConfig));
 
 	ASSERT_EQ(bot->GetDirection(), Direction::RIGHT);
 
@@ -586,7 +553,7 @@ TEST_F(BotsTest, BotHoldsFireWhenTheBlastWouldReachItself)
 										   ObjRectangle{.x = _tankSize, .y = _tankSize * 2.0,
 														.w = _tankSize, .h = _tankSize}})
 	{
-		_allObjects.emplace_back(std::make_shared<BrickWall>(wallRect, _events, _uuid, _gameMode));
+		_allObjects.emplace_back(std::make_shared<BrickWall>(wallRect, _events, _uuid, _gameConfig));
 	}
 
 	const std::size_t before = _allObjects.size();
@@ -616,4 +583,155 @@ TEST_F(BotsTest, ADeactivatedBotDoesNotDrive)
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(bot->GetPos(), parked);
+}
+
+// The chance gates walls and nothing else - a bot with a target in its sights fires whatever the
+// wall roll would have said
+TEST_F(BotsTest, BotShootsAnOpponentEvenWithTheWallChanceAtZero)
+{
+	_gameConfig.botShootObstacleChance = 0.0;
+
+	const ObjRectangle botRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
+	const std::shared_ptr<Tank> bot =
+			TestUtils::CreateBot(botRect, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects,
+								 _events, 1u, _tankSpeed, Direction::RIGHT, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(bot);
+
+	const ObjRectangle enemyRect{.x = _tankSize * 3.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
+	_allObjects.emplace_back(TestUtils::CreateBot(enemyRect, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam,
+												  _allObjects, _events, 1u, _tankSpeed, Direction::LEFT, _bulletPool,
+												  _gameConfig));
+
+	const std::size_t before = _allObjects.size();
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_GT(_allObjects.size(), before);
+}
+
+// A wall in plain sight and in range, and still no shot - the roll is what decides, and at zero it
+// decides once per sighting, so no number of frames wears it down
+TEST_F(BotsTest, BotHoldsFireAtAWallWhenTheChanceIsZero)
+{
+	_gameConfig.botShootObstacleChance = 0.0;
+
+	const ObjRectangle botRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
+	const std::shared_ptr<Tank> bot =
+			TestUtils::CreateBot(botRect, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events,
+								 1u, _tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(bot);
+
+	_allObjects.emplace_back(std::make_shared<BrickWall>(
+			ObjRectangle{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize}, _events, _uuid, _gameConfig));
+
+	const std::size_t before = _allObjects.size();
+
+	for (int frame{0}; frame < 10; ++frame)
+	{
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	}
+
+	EXPECT_EQ(_allObjects.size(), before);
+	ASSERT_EQ(bot->GetDirection(), Direction::DOWN) << "the control failed - the bot looked away from the wall";
+}
+
+// The other end of the same dial: at one the wall is shot the first frame it is seen
+TEST_F(BotsTest, BotShootsAWallWhenTheChanceIsOne)
+{
+	_gameConfig.botShootObstacleChance = 1.0;
+
+	const ObjRectangle botRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
+	const std::shared_ptr<Tank> bot =
+			TestUtils::CreateBot(botRect, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events,
+								 1u, _tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(bot);
+
+	_allObjects.emplace_back(std::make_shared<BrickWall>(
+			ObjRectangle{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize}, _events, _uuid, _gameConfig));
+
+	const std::size_t before = _allObjects.size();
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_GT(_allObjects.size(), before);
+}
+
+// A bot counts as blocked only flush against the wall, and that close its own blast would reach it -
+// the way out of a dead end is the turn, never the gun.
+TEST_F(BotsTest, ABlockedBotStillTurnsAwayAtZeroChance)
+{
+	_gameConfig.botShootObstacleChance = 0.0;
+
+	const ObjRectangle botRect{.x = _tankSize * 2.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
+	const std::shared_ptr<Tank> bot =
+			TestUtils::CreateBot(botRect, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events,
+								 1u, _tankSpeed, Direction::RIGHT, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(bot);
+
+	// flush against the bot's right side, destructible, and still not worth a shot from this close
+	_allObjects.emplace_back(std::make_shared<BrickWall>(
+			ObjRectangle{.x = _tankSize * 3.0 + 1.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize},
+			_events, _uuid, _gameConfig));
+
+	const std::size_t before = _allObjects.size();
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_NE(bot->GetDirection(), Direction::RIGHT);
+	EXPECT_EQ(_allObjects.size(), before);
+}
+
+// A refusal has to expire, or one unlucky roll decides for as long as that wall is in the sights.
+// Cooldown set to nothing, so the next frame asks again with the chance flipped to the other end.
+TEST_F(BotsTest, ARefusedWallIsReconsideredOnceTheCooldownIsUp)
+{
+	_gameConfig.botShootObstacleChance = 0.0;
+	_gameConfig.botObstacleShootCooldown = std::chrono::milliseconds{0};
+
+	const ObjRectangle botRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
+	const std::shared_ptr<Tank> bot =
+			TestUtils::CreateBot(botRect, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events,
+								 1u, _tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(bot);
+
+	_allObjects.emplace_back(std::make_shared<BrickWall>(
+			ObjRectangle{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize}, _events, _uuid, _gameConfig));
+
+	const std::size_t before = _allObjects.size();
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	ASSERT_EQ(_allObjects.size(), before) << "the control failed - a zero chance fired";
+
+	_gameConfig.botShootObstacleChance = 1.0;
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_GT(_allObjects.size(), before) << "the refusal outlived its cooldown";
+}
+
+// And the other half: until that cooldown is up the answer stands, or the roll is back to per frame
+TEST_F(BotsTest, AWallRefusedStaysRefusedUntilTheCooldownIsUp)
+{
+	_gameConfig.botShootObstacleChance = 0.0;
+	_gameConfig.botObstacleShootCooldown = std::chrono::minutes{1};
+
+	const ObjRectangle botRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
+	const std::shared_ptr<Tank> bot =
+			TestUtils::CreateBot(botRect, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events,
+								 1u, _tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(bot);
+
+	_allObjects.emplace_back(std::make_shared<BrickWall>(
+			ObjRectangle{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize}, _events, _uuid, _gameConfig));
+
+	const std::size_t before = _allObjects.size();
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_gameConfig.botShootObstacleChance = 1.0;
+
+	for (int frame{0}; frame < 10; ++frame)
+	{
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	}
+
+	EXPECT_EQ(_allObjects.size(), before) << "the answer was re-rolled before its cooldown was up";
 }

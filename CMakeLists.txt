@@ -7,7 +7,7 @@ cmake_minimum_required(VERSION 3.25) #NOTE: 3.25 for add_subdirectory(<dir> SYST
 # the file is read before one has been probed.
 include(cmake/SelectCompiler.cmake)
 
-project(BattleCity_remastered)
+project(BattleCityRemastered)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) #for Sourcetree
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
@@ -26,8 +26,9 @@ include(cmake/ConfigureDependencies.cmake)
 # --- Source files ---
 include_directories(headers)
 
-# the SDL-facing files, kept apart so game_core below stays free of SDL
+# the SDL-facing files, kept apart so GameCore below stays free of SDL
 set(GAME_PLATFORM_SOURCES
+        source/application/ServerProcess.cpp
         source/application/Game.cpp
         source/application/SDL_Config.cpp
         source/application/UserInput.cpp
@@ -35,12 +36,13 @@ set(GAME_PLATFORM_SOURCES
         source/components/managers/TextCache.cpp
 )
 
-# game_core sources: every game .cpp except main.cpp (the exe's own entry point) and the platform list above
+# GameCore sources: every game .cpp except main.cpp (the exe's own entry point) and the platform list above
 set(GAME_CORE_SOURCES
         source/application/CommandLineParser.cpp
         source/application/GameConfig.cpp
         source/application/WindowConfig.cpp
         source/application/ProjectConfig.cpp
+        source/application/Simulation.cpp
         source/behavior/MoveLikeBulletBeh.cpp
         source/behavior/MoveLikeTankBeh.cpp
         source/behavior/ShootingBeh.cpp
@@ -85,7 +87,7 @@ set(GAME_CORE_SOURCES
         source/entities/pawns/Pawn.cpp
         source/entities/pawns/Tank.cpp
         source/network/Client.cpp
-        source/network/ClientHandler.cpp
+        source/network/ClientNode.cpp
         source/network/FrameChannel.cpp
         source/network/NetworkNodeBase.cpp
         source/network/PeerLink.cpp
@@ -94,7 +96,7 @@ set(GAME_CORE_SOURCES
         source/network/ReplicationPublisher.cpp
         source/network/Server.cpp
         source/network/Session.cpp
-        source/network/ServerHandler.cpp
+        source/network/ServerNode.cpp
         source/network/Serializer.cpp
         source/utils/ColliderUtils.cpp
         source/utils/Log.cpp
@@ -127,11 +129,13 @@ set(UNIT_TESTS_SOURCES
         UnitTests/TankPoolTest.cpp
         UnitTests/TankTerrainTest.cpp
         UnitTests/MenuInputTest.cpp
+        UnitTests/MenuTextBlockTest.cpp
         UnitTests/NetworkTest.cpp
         UnitTests/PauseSyncTest.cpp
         UnitTests/PlayerTest.cpp
         UnitTests/RespawnManagerTest.cpp
         UnitTests/StatisticsTestAdvanced.cpp
+        UnitTests/SimulationStepTest.cpp
         UnitTests/StatisticsTestBasic.cpp
         UnitTests/TankSpawnerTest.cpp
         UnitTests/TimeUtilsTest.cpp
@@ -144,41 +148,45 @@ if (WIN32)
 endif ()
 
 # game logic, no SDL: a static lib propagates its deps to consumers (PRIVATE ones too, as LINK_ONLY),
-# so anything linked here would reach unit_tests as well
-add_library(game_core STATIC ${GAME_CORE_SOURCES})
-target_link_libraries(game_core PRIVATE project_warnings)
-target_link_libraries(game_core PUBLIC
+# so anything linked here would reach UnitTests as well
+add_library(GameCore STATIC ${GAME_CORE_SOURCES})
+target_link_libraries(GameCore PRIVATE project_warnings)
+target_link_libraries(GameCore PUBLIC
         Boost::uuid Boost::asio_core Boost::property_tree
         ser20::ser20
         ${PLATFORM_NETWORK_LIBS}
 )
 
 #NOTE: without this, include order picks win_thread or posix_thread per TU, and the timer thread is
-# started as one and joined as the other - SIGSEGV in ~ClientHandler. MSVC has no pthreads at all.
+# started as one and joined as the other - SIGSEGV in ~ClientNode. MSVC has no pthreads at all.
 if (WIN32 AND NOT MSVC)
-    target_compile_definitions(game_core PUBLIC BOOST_ASIO_HAS_PTHREADS=1)
+    target_compile_definitions(GameCore PUBLIC BOOST_ASIO_HAS_PTHREADS=1)
 endif ()
 
-# window/render/audio/input + the game loop; depends on game_core, never the other way round
-add_library(game_platform STATIC ${GAME_PLATFORM_SOURCES})
-target_link_libraries(game_platform PRIVATE project_warnings)
-target_link_libraries(game_platform PUBLIC
-        game_core
+# window/render/audio/input + the game loop; depends on GameCore, never the other way round
+add_library(GamePlatform STATIC ${GAME_PLATFORM_SOURCES})
+target_link_libraries(GamePlatform PRIVATE project_warnings)
+target_link_libraries(GamePlatform PUBLIC
+        GameCore
         SDL3::SDL3-static SDL3_ttf::SDL3_ttf SDL3_image::SDL3_image SDL3_mixer::SDL3_mixer
 )
 
 add_executable(${PROJECT_NAME} source/main.cpp)
-add_executable(unit_tests ${UNIT_TESTS_SOURCES})
+#NOTE: GameCore alone, exactly like UnitTests - SDL cannot reach BattleCityServer by
+#construction, and the console is all the output it has
+add_executable(BattleCityServer source/server_main.cpp)
+add_executable(UnitTests ${UNIT_TESTS_SOURCES})
 
-target_include_directories(unit_tests PRIVATE headers)
-target_link_libraries(unit_tests PRIVATE project_warnings game_core gtest gtest_main)
+target_include_directories(UnitTests PRIVATE headers)
+target_link_libraries(UnitTests PRIVATE project_warnings GameCore gtest gtest_main)
 
 include(GoogleTest)
 #NOTE: from the exe folder - the shipped-level test opens Resources/Maps relative to the cwd
-gtest_discover_tests(unit_tests WORKING_DIRECTORY $<TARGET_FILE_DIR:unit_tests>)
+gtest_discover_tests(UnitTests WORKING_DIRECTORY $<TARGET_FILE_DIR:UnitTests>)
 
 #NOTE: SDL3 has no SDL2main equivalent - the entry point hijack is header-only in <SDL3/SDL_main.h>
-target_link_libraries(${PROJECT_NAME} PRIVATE project_warnings game_platform)
+target_link_libraries(${PROJECT_NAME} PRIVATE project_warnings GamePlatform)
+target_link_libraries(BattleCityServer PRIVATE project_warnings GameCore)
 
 # --- Game assets (copied next to the exe post-build) ---
 set(GAME_ASSETS
@@ -202,7 +210,7 @@ set(GAME_ASSETS
         Resources/Sounds/levelStarted.wav
 )
 
-#NOTE: a target of its own rather than a post-build step on the game - unit_tests lands in the same
+#NOTE: a target of its own rather than a post-build step on the game - UnitTests lands in the same
 #directory and is regularly built alone, and the test that parses the shipped level needs the map
 #to be there. One copy step, one destination, both exes depending on it.
 add_custom_target(game_assets)
@@ -214,7 +222,8 @@ foreach (asset ${GAME_ASSETS})
 endforeach ()
 
 add_dependencies(${PROJECT_NAME} game_assets)
-add_dependencies(unit_tests game_assets)
+add_dependencies(UnitTests game_assets)
+add_dependencies(BattleCityServer game_assets)
 
 # --- Convenience targets: host + client side by side, no IDE-specific run configuration needed ---
 if (WIN32)

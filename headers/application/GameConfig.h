@@ -7,15 +7,13 @@
 
 struct LaunchOptions;
 
-//NOTE: the live world - every field here changes while the game runs. Startup input (ini, asset
-//paths) is ProjectConfig's.
-class GameConfig
+//NOTE: the live world - every field here changes while the game runs; startup input is ProjectConfig's
+class GameConfig final
 {
 public:
 	void Apply(const LaunchOptions& launchOptions);
 
-	//NOTE: here so nothing subscribes to GameModeChangedToEvent merely to read it. Game writes it
-	//before the reset event goes out.
+	//NOTE: here so nothing subscribes to GameModeChangedToEvent merely to read it, written before the reset
 	GameMode gameMode{};
 
 	GameState gameState{GameState::Menu};
@@ -35,5 +33,7 @@ public:
 	double tankSize{gridOffset * 3.0};
 	double tankSpeed{142.0};
 	int bonusSize{static_cast<int>(tankSize)};
+	double botShootObstacleChance{0.35};
+	std::chrono::milliseconds botObstacleShootCooldown{1000};
 	bool skipIntroMusic{false};//NOTE: launch flag, not persisted - autoplay only, sound stays on
 };

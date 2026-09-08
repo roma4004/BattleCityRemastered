@@ -8,15 +8,15 @@
 #include <string_view>
 #include <vector>
 
-class GameConfig;
-class EventSystem;
-class GameStatistics;
 struct GameResetEvent;
 struct RespawnCountChangedToEvent;
 struct DrawUserInterfaceEvent;
 struct MenuShowedEvent;
 struct PauseStatusEvent;
 struct GameFinishedEvent;
+class GameConfig;
+class EventSystem;
+class GameStatistics;
 
 class ScoreBoard final
 {
@@ -24,10 +24,9 @@ class ScoreBoard final
 	int _windowHeight{};
 
 	std::shared_ptr<EventSystem> _events{nullptr};
-	std::unique_ptr<GameStatistics> _statistics{nullptr};
+	const GameStatistics& _statistics;
 	std::vector<EventSubscription> _subs{};
-	// Toggled at runtime by DisplayScore() (also the initial Subscribe() call, if the scoreboard
-	// starts shown), independent of _subs's fixed subscribe-once-at-construction lifetime.
+	// Toggled at runtime by DisplayScore(), where _subs is filled once at construction and stays
 	EventSubscription _drawSub{};
 
 	bool _isScoreBoardDisplayed{false};
@@ -55,9 +54,6 @@ class ScoreBoard final
 	void Draw() const;
 
 public:
-	ScoreBoard(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig);
-
-	//NOTE: defaulted out-of-line in the .cpp (not here) - this header only forward-declares
-	//GameStatistics, held below by unique_ptr, so an in-header default would need it complete here.
-	~ScoreBoard();
+	ScoreBoard(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig,
+			   const GameStatistics& statistics);
 };

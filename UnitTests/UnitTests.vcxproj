@@ -71,11 +71,13 @@
     <ClCompile Include="TankPoolTest.cpp" />
     <ClCompile Include="TankTerrainTest.cpp" />
     <ClCompile Include="MenuInputTest.cpp" />
+    <ClCompile Include="MenuTextBlockTest.cpp" />
     <ClCompile Include="NetworkTest.cpp" />
     <ClCompile Include="PauseSyncTest.cpp" />
     <ClCompile Include="PlayerTest.cpp" />
     <ClCompile Include="RespawnManagerTest.cpp" />
     <ClCompile Include="StatisticsTestAdvanced.cpp" />
+    <ClCompile Include="SimulationStepTest.cpp" />
     <ClCompile Include="StatisticsTestBasic.cpp" />
     <ClCompile Include="TankSpawnerTest.cpp" />
     <ClCompile Include="TimeUtilsTest.cpp" />

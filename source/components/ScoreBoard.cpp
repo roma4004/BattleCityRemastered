@@ -80,18 +80,17 @@ constexpr std::array kStatRows{
 };
 }//namespace
 
-ScoreBoard::ScoreBoard(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig)
+ScoreBoard::ScoreBoard(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig,
+					   const GameStatistics& statistics)
 	: _pos{.x = 25, .y = 25}
 	, _events{events}
-	, _statistics{std::make_unique<GameStatistics>(events)}
+	, _statistics{statistics}
 	, _gameConfig{gameConfig}
 {
 	Subscribe();
 
 	_windowHeight = static_cast<int>(gameConfig.LogicalSize().y);
 }
-
-ScoreBoard::~ScoreBoard() = default;
 
 void ScoreBoard::Subscribe()
 {
@@ -184,7 +183,7 @@ void ScoreBoard::RenderStatistics() const
 	RenderRow({.x = pos.x - 130, .y = y}, color, "RESPAWN REMAIN",
 			  std::array{_playerOneRepawnCount, _playerTwoRespawnCount, _enemyRespawnCount});
 
-	const StatisticsData& data = _statistics->GetData();
+	const StatisticsData& data = _statistics.GetData();
 	for (const auto& [label, columns]: kStatRows)
 	{
 		y += rowStep;

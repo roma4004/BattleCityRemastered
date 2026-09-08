@@ -1,32 +1,30 @@
 #include "entities/obstacles/Obstacle.h"
+#include "application/GameConfig.h"
 #include "components/EventSystem.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "components/events/ObjectLifecycleEvents.h"
 #include "components/events/ReplicationEvents.h"
 #include "entities/BaseObjProperty.h"
 #include "enums/Direction.h"
-#include "enums/GameMode.h"
 #include "enums/ObstacleType.h"
 #include "enums/Faction.h"
 #include "enums/TextureType.h"
 
 Obstacle::Obstacle(const ObjRectangle rect, const int health, const std::shared_ptr<EventSystem>& events,
-				   const Uuid uuid, const GameMode gameMode, const ObstacleType obstacleType,
+				   const Uuid uuid, const GameConfig& gameConfig, const ObstacleType obstacleType,
 				   const CollisionTags collision)
 	: BaseObj{BaseObjProperty{.rect = rect, .health = health, .uuid = uuid, .faction = Faction::Neutral},
 			  collision}
 	, _events(events)
-	, _gameMode{gameMode}
+	, _gameConfig{gameConfig}
 	, _obstacleType(obstacleType)
 {}
-
-Obstacle::~Obstacle() = default;
 
 void Obstacle::Activate()
 {
 	Subscribe();
 
-	if (IsClient(_gameMode))
+	if (_gameConfig.IsClient())
 	{
 		SubscribeAsClient();
 	}
@@ -91,7 +89,7 @@ void Obstacle::TakeDamage(const unsigned int damage, const Author author)
 
 	BaseObj::TakeDamage(damage, author);
 
-	if (!IsHost(_gameMode))
+	if (!_gameConfig.IsHost())
 	{
 		return;
 	}

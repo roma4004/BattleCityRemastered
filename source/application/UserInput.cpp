@@ -49,12 +49,20 @@ void UserInput::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &UserInput::OnPauseStatus));
 	_subs.push_back(_events->AddListener(this, &UserInput::SwapControllers));
+	_subs.push_back(_events->AddListener(this, &UserInput::OnPlayerSlotAssigned));
 	_subs.push_back(_events->AddListener(this, &UserInput::OnPreTickUpdate));
 	_subs.push_back(_events->AddListener(this, &UserInput::OnMenuShowed));
 	_subs.push_back(_events->AddListener(this, &UserInput::OnMenuPosChanged));
 }
 
 void UserInput::OnPauseStatus(const PauseStatusEvent& event) { _isPause = event.isPaused; }
+
+//NOTE: the seat comes from the server and the keyboard half does not, so the two are lined up here -
+//WASD and the first gamepad drive our own tank whichever seat we were given
+void UserInput::OnPlayerSlotAssigned(const PlayerSlotAssignedEvent& event)
+{
+	_areControllersSwapped = event.slot == PlayerSlot::P2;
+}
 
 void UserInput::OnPreTickUpdate(const PreTickUpdateEvent&) { Update(); }
 

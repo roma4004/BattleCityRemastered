@@ -10,7 +10,6 @@
 #include "components/events/SpawnEvents.h"
 #include "entities/bonuses/Bonus.h"
 #include "enums/BonusType.h"
-#include "enums/GameMode.h"
 #include "utils/RandUtils.h"
 #include "utils/UuidUtils.h"
 #include "utils/WorldQuery.h"
@@ -33,7 +32,6 @@ BonusSpawner::BonusSpawner(const std::shared_ptr<EventSystem>& events,
 	, _distSuperRoll{1, kSuperBonusOdds}
 	, _gameConfig{gameConfig}
 	, _spawnTimer{std::chrono::seconds{60}}
-	, _gameMode{gameConfig.gameMode}
 {
 	ResetSpawnRanges();
 
@@ -47,7 +45,7 @@ void BonusSpawner::Subscribe()
 
 	//NOTE: the burst is only a picture on the client - what settles is the host's call, so the bonus
 	//waits for BonusSpawnComplete instead of its own clock, and one picked up mid-burst never arrives
-	if (IsAuthority(_gameMode))
+	if (_gameConfig.IsAuthority())
 	{
 		_subs.push_back(_events->AddListener(this, &BonusSpawner::OnSpawnAnimationFinished));
 		_subs.push_back(_events->AddListener(this, &BonusSpawner::Update));
@@ -62,7 +60,7 @@ void BonusSpawner::Subscribe()
 void BonusSpawner::OnSpawnAnimationFinished(const SpawnAnimationFinishedEvent& event)
 {
 	//NOTE: the signal goes out only for a bonus that really settled - one already picked up gets none
-	if (MaterializePending(event.uuid) && IsHost(_gameMode))
+	if (MaterializePending(event.uuid) && _gameConfig.IsHost())
 	{
 		_events->EmitEvent(BonusSpawnCompletedEvent{.uuid = event.uuid});
 	}
@@ -124,7 +122,7 @@ Uuid BonusSpawner::AnnounceSpawn(const ObjRectangle rect, const BonusType type, 
 		uuid = UuidUtils::GetRandomUuid();
 	}
 
-	if (IsHost(_gameMode))
+	if (_gameConfig.IsHost())
 	{
 		_events->EmitEvent(BonusSpawnedEvent{.pos = FPoint{.x = rect.x, .y = rect.y},
 											 .type = type,
@@ -146,7 +144,7 @@ void BonusSpawner::SpawnBonus(const ObjRectangle rect, const BonusType type, Uui
 
 void BonusSpawner::Materialize(const PendingSpawn& pending) const
 {
-	auto bonus = std::make_shared<Bonus>(pending.rect, _events, pending.uuid, _gameMode, pending.type,
+	auto bonus = std::make_shared<Bonus>(pending.rect, _events, pending.uuid, _gameConfig, pending.type,
 										 pending.isSuper);
 	_events->EmitEvent(BonusCreatedEvent{.bonus = bonus});
 	_events->EmitEvent(AddToSpawnQueueEvent{.obj = std::shared_ptr<BaseObj>{std::move(bonus)}});

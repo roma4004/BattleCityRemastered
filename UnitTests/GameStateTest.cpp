@@ -46,11 +46,13 @@ TEST_F(GameStateTest, NetworkGameStartsInTheLobby)
 	EXPECT_EQ(GameState::Lobby, _stateManager->GetState());
 }
 
-TEST_F(GameStateTest, HostLeavesTheLobbyWhenTheClientIsReady)
+TEST_F(GameStateTest, HostLeavesTheLobbyOnceBothSeatsAreReady)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{});
+	EXPECT_EQ(GameState::Lobby, _stateManager->GetState()) << "the first player alone started the match";
 
+	_events->EmitEvent(ServerInClientReadyToStartGameEvent{});
 	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
 }
 
@@ -66,6 +68,7 @@ TEST_F(GameStateTest, EveryKindOfPeerLossGoesBackToTheLobby)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
 
+	_events->EmitEvent(ServerInClientReadyToStartGameEvent{});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{});
 	ASSERT_EQ(GameState::Playing, _stateManager->GetState());
 	_events->EmitEvent(ServerInDisconnectEvent{.reason = DisconnectReason::PlayerQuit});
@@ -152,6 +155,7 @@ TEST_F(GameStateTest, AResetDuringAMatchChangesNothing)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{});
+	_events->EmitEvent(ServerInClientReadyToStartGameEvent{});
 	ASSERT_EQ(GameState::Playing, _stateManager->GetState());
 
 	_announced.clear();
@@ -172,15 +176,16 @@ TEST_F(GameStateTest, RestartingTheSameModeAnnouncesThePhaseAgain)
 	EXPECT_EQ(std::vector{GameState::Playing}, _announced);
 }
 
-TEST_F(GameStateTest, LeavingANetworkGameForgetsThePeer)
+TEST_F(GameStateTest, LeavingANetworkGameForgetsThePeers)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
+	_events->EmitEvent(ServerInClientReadyToStartGameEvent{});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{});
 	ASSERT_EQ(GameState::Playing, _stateManager->GetState());
 
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
 
-	EXPECT_EQ(GameState::Lobby, _stateManager->GetState()) << "a new match kept the peer of the old one";
+	EXPECT_EQ(GameState::Lobby, _stateManager->GetState()) << "a new match kept the peers of the old one";
 }
 
 TEST_F(GameStateTest, ResumingFromAPauseStartsNoMatch)
@@ -206,9 +211,10 @@ TEST_F(GameStateTest, ApplyingALocalModeStartsAMatch)
 	EXPECT_EQ(_matchStarts, 1);
 }
 
-TEST_F(GameStateTest, APeerJoiningStartsTheMatch)
+TEST_F(GameStateTest, TheLastPeerToJoinStartsTheMatch)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
+	_events->EmitEvent(ServerInClientReadyToStartGameEvent{});
 	_announced.clear();
 	_matchStarts = 0;
 
@@ -216,6 +222,33 @@ TEST_F(GameStateTest, APeerJoiningStartsTheMatch)
 
 	ASSERT_EQ(_announced.size(), 1u);
 	EXPECT_EQ(_announced.front(), GameState::Playing);
+	EXPECT_EQ(_matchStarts, 1);
+}
+
+// A count, not a flag: the seat the player who stayed still holds must not be counted twice when
+// the one who left is replaced
+TEST_F(GameStateTest, AHostThatLostOnePlayerRestartsOnOneArrival)
+{
+	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
+	_events->EmitEvent(ServerInClientReadyToStartGameEvent{});
+	_events->EmitEvent(ServerInClientReadyToStartGameEvent{});
+	_events->EmitEvent(ServerClientLostEvent{});
+	ASSERT_EQ(GameState::Lobby, _stateManager->GetState());
+
+	_events->EmitEvent(ServerInClientReadyToStartGameEvent{});
+
+	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
+}
+
+// The other side of the same counter - a client waits for the host, and the host is one peer
+TEST_F(GameStateTest, AClientStartsOnItsOnlyPeer)
+{
+	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsClient});
+	_matchStarts = 0;
+
+	_events->EmitEvent(ClientConnectedToHostEvent{});
+
+	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
 	EXPECT_EQ(_matchStarts, 1);
 }
 

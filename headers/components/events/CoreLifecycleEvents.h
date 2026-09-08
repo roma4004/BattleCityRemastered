@@ -3,6 +3,7 @@
 #include "geometry/Point.h"
 #include "enums/DisconnectReason.h"
 #include "enums/GameState.h"
+#include "enums/PlayerSlot.h"
 #include <cstddef>
 
 struct ServerInClientReadyToStartGameEvent {};
@@ -23,7 +24,13 @@ struct ClientReconnectAbandonedEvent {};
 //NOTE: the host replays the world right behind this, so stale objects have to go
 struct ClientConnectedToHostEvent {};
 
-//NOTE: separate from ServerInDisconnectEvent, which stays what it says it is - an announced leave
+//NOTE: which seat this process drives - the server hands it out on connect
+struct PlayerSlotAssignedEvent
+{
+	PlayerSlot slot;
+};
+
+//NOTE: the link dropped without a goodbye - an announced leave is ServerInDisconnectEvent
 struct ServerClientLostEvent {};
 
 struct GameStateChangedToEvent
@@ -33,11 +40,8 @@ struct GameStateChangedToEvent
 
 struct MatchStartedEvent {};
 
-//NOTE: named GameResetEvent, not ResetEvent - <windows.h> (pulled in transitively via SDL on this
-//MinGW/Windows toolchain) declares a WinAPI function literally named `ResetEvent` (synchapi.h),
-//which collides with a same-named struct in the global namespace (C++ tag names and function names
-//share one namespace, unlike C). Every listener for the former "Reset" string event must use this
-//struct, not a plain `ResetEvent`.
+//NOTE: named GameResetEvent because <windows.h>, pulled in through SDL, declares a function literally
+//called `ResetEvent` - a same-named struct in the global namespace collides with it
 struct GameResetEvent {};
 
 struct LoadMapEvent {};

@@ -1,4 +1,5 @@
 #include "components/managers/FortressManager.h"
+#include "application/GameConfig.h"
 #include "components/EventSystem.h"
 #include "components/events/BonusPickupEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
@@ -22,14 +23,14 @@ namespace
 }// namespace
 
 FortressManager::FortressManager(const std::shared_ptr<EventSystem>& events,
-								 const std::vector<std::shared_ptr<BaseObj>>& allObjects)
+								 const std::vector<std::shared_ptr<BaseObj>>& allObjects,
+								 const GameConfig& gameConfig)
 	: _allObjects{allObjects}
+	, _gameConfig{gameConfig}
 	, _events{events}
 {
 	Subscribe();
 }
-
-FortressManager::~FortressManager() = default;
 
 void FortressManager::Subscribe()
 {
@@ -67,7 +68,12 @@ void FortressManager::ClearSpot(const Spot& spot) const
 
 	//NOTE: bypasses TakeDamage to skip statistics record.
 	wall->SetIsAlive(false);
-	_events->EmitEvent(DespawnedEvent{.uuid = wall->GetUuid(), .reason = DespawnReason::Destroyed});
+
+	//NOTE: the wall is already down - this is the outbound half and nothing else
+	if (_gameConfig.IsHost())
+	{
+		_events->EmitEvent(DespawnedEvent{.uuid = wall->GetUuid(), .reason = DespawnReason::Destroyed});
+	}
 }
 
 void FortressManager::Rebuild(const Spot& spot, const ObstacleType material) const

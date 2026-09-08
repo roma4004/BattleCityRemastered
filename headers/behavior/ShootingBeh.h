@@ -33,7 +33,5 @@ public:
 				const std::shared_ptr<BulletPool>& bulletPool, BulletCalibre& calibre,
 				const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig);
 
-	~ShootingBeh() override;
-
 	[[nodiscard]] Uuid Shot(std::optional<Uuid> uuid) override;
 };

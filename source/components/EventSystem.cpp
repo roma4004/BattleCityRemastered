@@ -38,9 +38,8 @@ void ReportLeftoverListener(const char* const kind, const char* const eventTypeN
 EventSystem::~EventSystem()
 {
 #ifndef NDEBUG
-	// Anything still subscribed here never had its Unsubscribe() run - nothing will ever deliver to
-	// it again. Currently unreachable: EventSubscription holds a shared_ptr to this bus, so no
-	// listener can outlive it. Kept as a guard for any future non-RAII registration path.
+	// Anything still subscribed here never had its Unsubscribe() run. Unreachable while every listener
+	// comes in through an EventSubscription, since that one holds the bus alive
 	bool anyLeftoverListeners = false;
 
 	for (const auto& [eventType, eventInfo]: _events)

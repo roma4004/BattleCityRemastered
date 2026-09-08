@@ -6,7 +6,9 @@
 #include <algorithm>
 #include <boost/asio/strand.hpp>
 #include <mutex>
+#include <optional>
 #include <string>
+#include <vector>
 
 namespace network::commands
 {
@@ -18,6 +20,7 @@ Server::Server(boost::asio::io_context& ioContext, std::string host, const uint1
 {
 	BindHostReplication(_replicationOut);
 	DoAccept();
+
 	_subs.push_back(_events->AddListener(this, &Server::OnNetworkEndFrame));
 }
 
@@ -98,6 +101,40 @@ void Server::OnNetworkEndFrame(const NetworkEndFrameEvent&)
 	}
 }
 
+void Server::Seat(tcp::socket socket)
+{
+	try
+	{
+		std::shared_ptr<Session> session;
+		{
+			std::scoped_lock lock(_sessionsMutex);
+			if (const auto slot = FindFreeSlot())
+			{
+				session = std::make_shared<Session>(std::move(socket), _events, *slot);
+				_sessions.emplace_back(session);
+			}
+		}
+
+		if (session)
+		{
+			session->Start();//NOTE: outside the lock - it posts reads and can reach the event bus
+		}
+		else
+		{
+			//NOTE: no goodbye - there is no session to write one, and the socket dies with this scope
+			Log::Error("Server: both seats are taken, the connection is refused");
+		}
+	}
+	catch (const std::exception& e)
+	{
+		Log::Error(std::string("Server new session start: ") + e.what());
+	}
+	catch (...)
+	{
+		Log::Error("Server new session start: unknown exception");
+	}
+}
+
 void Server::DoAccept()
 {
 	const auto executor = boost::asio::make_strand(_acceptor.get_executor());
@@ -110,28 +147,12 @@ void Server::DoAccept()
 			{
 				Log::Error("Server accept: " + ec.message());
 			}
+
+			return;
 		}
-		else
-		{
-			try
-			{
-				auto session = std::make_shared<Session>(std::move(socket), _events);
-				{
-					std::scoped_lock lock(_sessionsMutex);
-					_sessions.emplace_back(session);
-				}
-				session->Start();//NOTE: outside the lock - it posts reads and can reach the event bus
-			}
-			catch (const std::exception& e)
-			{
-				Log::Error(std::string("Server new session start: ") + e.what());
-			}
-			catch (...)
-			{
-				Log::Error("Server new session start: unknown exception");
-			}
-			DoAccept();
-		}
+
+		Seat(std::move(socket));
+		DoAccept();
 	});
 }
 
@@ -141,24 +162,41 @@ std::vector<std::shared_ptr<Session>> Server::SnapshotSessions() const
 	return _sessions;
 }
 
+std::optional<PlayerSlot> Server::FindFreeSlot() const
+{
+	for (const PlayerSlot slot: {PlayerSlot::P1, PlayerSlot::P2})
+	{
+		const auto holdsSlot = [slot](const std::shared_ptr<Session>& session)
+		{
+			return session && session->GetSlot() == slot;
+		};
+
+		if (!std::ranges::any_of(_sessions, holdsSlot))
+		{
+			return slot;
+		}
+	}
+
+	return std::nullopt;
+}
+
 void Server::CleanupDeadSessions()
 {
-	std::vector<std::shared_ptr<Session>> dead;//NOTE: ~Session closes a socket - not under the lock
+	//NOTE: a finished session with commands still queued is not dead yet - its goodbye is unread
+	const auto isDead = [](const std::shared_ptr<Session>& session)
 	{
-		std::scoped_lock lock(_sessionsMutex);
-		auto removed = std::ranges::remove_if(_sessions, [](const std::shared_ptr<Session>& session)
-		{
-			//NOTE: a closed session with commands still queued is not dead yet - its goodbye is unread
-			return !session || (!session->IsSocketOpen() && !session->HasPendingCommands());
-		});
-		dead.insert(dead.end(), std::make_move_iterator(removed.begin()), std::make_move_iterator(removed.end()));
-		_sessions.erase(removed.begin(), removed.end());
-	}
+		return !session || (session->IsFinished() && !session->HasPendingCommands());
+	};
+
+	//NOTE: ~Session only posts the close onto its strand, so it costs nothing to let it happen here
+	std::scoped_lock lock(_sessionsMutex);
+	std::erase_if(_sessions, isDead);
 }
 
 void Server::SendToAll(const std::shared_ptr<const std::string>& message)
 {
-	//NOTE: no IsSocketOpen check - DoWrite posts onto the session strand, where TryStartWrite rechecks it
+	//NOTE: nothing asks whether the link is up - DoWrite posts onto the session strand, and
+	//TryStartWrite decides there, on the thread that owns the socket
 	for (const auto& session: SnapshotSessions())
 	{
 		if (session)
@@ -172,7 +210,7 @@ void Server::ProcessNetworkCommands() const
 {
 	for (const auto& session: SnapshotSessions())
 	{
-		//NOTE: no IsSocketOpen check - frames already read stay valid, and the last is the goodbye
+		//NOTE: drained even when finished - frames already read stay valid, and the last is the goodbye
 		if (session)
 		{
 			session->ProcessCommandQueue();

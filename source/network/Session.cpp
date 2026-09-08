@@ -1,6 +1,5 @@
 #include "network/Session.h"
 #include "enums/InputChannel.h"
-#include "enums/PlayerTag.h"
 #include "components/EventSystem.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/InputEvents.h"
@@ -11,8 +10,9 @@
 
 namespace network::commands
 {
-Session::Session(tcp::socket sock, const std::shared_ptr<EventSystem>& events)
-	: PeerLink(std::move(sock), "Session", events) {}
+Session::Session(tcp::socket sock, const std::shared_ptr<EventSystem>& events, const PlayerSlot slot)
+	: PeerLink(std::move(sock), "Session", events)
+	, _slot{slot} {}
 
 void Session::OnCommand(const AnyCommand& command)
 {
@@ -40,6 +40,8 @@ void Session::Handle(const Disconnect& command)
 		_channel->Close();
 		_events->EmitEvent(ServerInDisconnectEvent{.reason = reason});
 	});
+
+	MarkFinished();
 }
 
 void Session::Start()
@@ -52,7 +54,8 @@ void Session::Start()
 			{
 				if (const auto self = weakSelf.lock(); self && !self->DispatchFrame(frame))
 				{
-					self->Shutdown(DisconnectReason::ProtocolError, nullptr);
+					//NOTE: finished only once the goodbye is out - CloseAfterFlush still has it to write
+					self->Shutdown(DisconnectReason::ProtocolError, [self] { self->MarkFinished(); });
 				}
 			},
 			[weakSelf]
@@ -73,9 +76,16 @@ void Session::Start()
 						self->_events->EmitEvent(ServerClientLostEvent{});
 					});
 				}
+
+				self->MarkFinished();
 			});
 
 	_channel->StartReading();
+
+	//NOTE: the first thing this client hears - everything it sends afterwards is read as that seat's
+	CommandBatch assignment;
+	assignment.commands.emplace_back(SlotAssignment{.slot = _slot});
+	SendBatch(assignment);
 }
 
 void Session::Handle(const SignalEvent& command)
@@ -91,7 +101,6 @@ void Session::Handle(const SignalEvent& command)
 	});
 }
 
-//NOTE: dispatch table instead of a switch, same shape as the command handlers above
 const std::unordered_map<InputSignal, Session::InputEmitter> Session::kInputEmitters{
 		{InputSignal::MoveUp,
 		 [](EventSystem& events, const PlayerSlot slot, const bool pressed)
@@ -138,8 +147,7 @@ void Session::Handle(const KeyStateChange& command)
 		}
 
 		const auto& emit = it->second;
-		const auto& playerSlot = cmd.tag == PlayerTag::P1 ? PlayerSlot::P1 : PlayerSlot::P2;
-		emit(*_events, playerSlot, cmd.isPressed);
+		emit(*_events, _slot, cmd.isPressed);
 	});
 }
 

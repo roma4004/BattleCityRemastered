@@ -18,7 +18,6 @@
 #include "entities/pawns/Tank.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
-#include "enums/GameMode.h"
 #include "enums/ObstacleType.h"
 #include "enums/InputChannel.h"
 #include "utils/UuidUtils.h"
@@ -62,7 +61,7 @@ protected:
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, _allObjects, _gameConfig);
 		_instantSpawnAnimationSubs = TestUtils::WireInstantSpawnAnimations(_events);
 		_bonusManager = std::make_unique<BonusManager>(_events, _gameConfig);
-		_fortressManager = std::make_unique<FortressManager>(_events, _allObjects);
+		_fortressManager = std::make_unique<FortressManager>(_events, _allObjects, _gameConfig);
 		_obstacleSpawner = std::make_unique<ObstacleSpawner>(_events, _gameConfig);
 		_fortressWallSub = TestUtils::TrackFortressWall(_events, &_fortressWall);
 		_gridSize = _gameConfig.gridOffset;
@@ -74,10 +73,8 @@ protected:
 	void TearDown() override {}
 };
 
-// Check that tank can pick up a random bonus
 TEST_F(BonusTest, BonusPickUp)
 {
-	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
@@ -104,10 +101,8 @@ TEST_F(BonusTest, BonusPickUp)
 	}
 }
 
-// Check that tank can pick up a random bonus
 TEST_F(BonusTest, BonusNotPickUp)
 {
-	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
@@ -134,10 +129,8 @@ TEST_F(BonusTest, BonusNotPickUp)
 	}
 }
 
-// Check that player can pick up Timer bonus and freeze enemy
 TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 {
-	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
@@ -149,7 +142,6 @@ TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 
 	_bonusSpawner->SpawnBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize}, BonusType::Timer);
 
-	// spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
@@ -166,10 +158,8 @@ TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 	EXPECT_EQ(enemyPos, enemyBot->GetPos());
 }
 
-// Check that player not pick up Timer bonus and enemies still move
 TEST_F(BonusTest, TimerNotPickUpEnemyCanMove)
 {
-	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
@@ -181,7 +171,6 @@ TEST_F(BonusTest, TimerNotPickUpEnemyCanMove)
 
 	_bonusSpawner->SpawnBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize}, BonusType::Timer);
 
-	// spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
@@ -196,10 +185,8 @@ TEST_F(BonusTest, TimerNotPickUpEnemyCanMove)
 	EXPECT_NE(enemyPos, enemyBot->GetPos());
 }
 
-//Check that player can pick up Helmet bonus and enemies can't damage player
 TEST_F(BonusTest, HelmetPickUpAndBulletCantDamageTank)
 {
-	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
@@ -214,7 +201,6 @@ TEST_F(BonusTest, HelmetPickUpAndBulletCantDamageTank)
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	// spawn Bullet
 	const ObjRectangle rectBullet{.x = _tankSize + 1.0, .y = 0.0, .w = 6.0, .h = 5.0};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(
@@ -227,10 +213,8 @@ TEST_F(BonusTest, HelmetPickUpAndBulletCantDamageTank)
 	EXPECT_EQ(playerHealth, player->GetHealth());
 }
 
-//Check that player not pick up Helmet bonus and enemies can damage player
 TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 {
-	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
@@ -245,7 +229,6 @@ TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	// spawn Bullet
 	const ObjRectangle rectBullet{.x = _tankSize + 1.0, .y = 0.0, .w = 6.0, .h = 5.0};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(
@@ -258,10 +241,8 @@ TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 	EXPECT_NE(playerHealth, player->GetHealth());
 }
 
-//Check that player pick up Grenade bonus and enemies got zero health
 TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 {
-	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
@@ -271,7 +252,6 @@ TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
 
-	// spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
@@ -288,10 +268,8 @@ TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 	EXPECT_EQ(enemyBot->GetHealth(), 0);
 }
 
-//Check that not player pick up Grenade bonus and enemies remain full health
 TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 {
-	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
@@ -301,7 +279,6 @@ TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveUpEvent{.isPressed = isPressed});
 
-	// spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
@@ -318,7 +295,6 @@ TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 	EXPECT_EQ(enemyBot->GetHealth(), 100);
 }
 
-//Check that player pick up Tank bonus and got his extra life
 TEST_F(BonusTest, TankPickUpExtraLife)
 {
 	unsigned short respawnActual{3u};
@@ -327,7 +303,6 @@ TEST_F(BonusTest, TankPickUpExtraLife)
 		respawnActual = event.respawnCount;
 	});
 
-	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
@@ -347,7 +322,6 @@ TEST_F(BonusTest, TankPickUpExtraLife)
 
 }
 
-//Check that player not pick up Tank bonus and his life count remains the same
 TEST_F(BonusTest, TankNotPickUpTierTheSame)
 {
 	unsigned short respawnActual{3u};
@@ -356,7 +330,6 @@ TEST_F(BonusTest, TankNotPickUpTierTheSame)
 		respawnActual = event.respawnCount;
 	});
 
-	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
@@ -376,10 +349,8 @@ TEST_F(BonusTest, TankNotPickUpTierTheSame)
 
 }
 
-//Check that player pick up Star bonus and his tier increased
 TEST_F(BonusTest, StarPickUpTierIncrease)
 {
-	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
@@ -398,10 +369,8 @@ TEST_F(BonusTest, StarPickUpTierIncrease)
 	EXPECT_EQ(player->GetTier(), 2u);
 }
 
-//Check that player not pick up Star bonus and his tier remains the same
 TEST_F(BonusTest, StarNotPickUpTierTheSame)
 {
-	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
@@ -421,10 +390,8 @@ TEST_F(BonusTest, StarNotPickUpTierTheSame)
 }
 
 // NOTE: when player pick up shovel bonus fortressWalls become steelWalls for a while then return to regular brickWalls
-//Check that player pick up Shovel bonus and Fortress wall turns into Steel wall
 TEST_F(BonusTest, ShovelPickUpByPlayerThenFortressWallTurnIntoSteelWall)
 {
-	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
@@ -447,10 +414,8 @@ TEST_F(BonusTest, ShovelPickUpByPlayerThenFortressWallTurnIntoSteelWall)
 }
 
 //TODO: add new tests, that count bricks and check that player can pickup bonus and rebuild fortress and skip if space spawn not available
-//Check that player not pick up Shovel bonus and his Fortress wall remain the same
 TEST_F(BonusTest, ShovelNotPickUpByFortressWallTheSame)
 {
-	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
@@ -472,10 +437,8 @@ TEST_F(BonusTest, ShovelNotPickUpByFortressWallTheSame)
 	EXPECT_NE(dynamic_cast<FortressBrickWall*>(_fortressWall.get()), nullptr);
 }
 
-//Check that a tank without the Ship bonus is stopped by the water
 TEST_F(BonusTest, WaterBlocksTankWithoutShip)
 {
-	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
@@ -497,10 +460,9 @@ TEST_F(BonusTest, WaterBlocksTankWithoutShip)
 	EXPECT_LE(player->GetBottomSide(), waterRect.y);
 }
 
-//Check that the Ship bonus carries the tank over the water for the rest of its life
+// The Ship bonus carries the tank over the water for the rest of its life
 TEST_F(BonusTest, ShipPickUpCanCrossWater)
 {
-	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
@@ -528,10 +490,9 @@ TEST_F(BonusTest, ShipPickUpCanCrossWater)
 	EXPECT_GT(player->GetY(), waterRect.y + waterRect.h);
 }
 
-//Check that a super bonus applies its effect twice - the star lifts the tier by two
+// A super bonus applies its effect twice - the star lifts the tier by two
 TEST_F(BonusTest, SuperStarPickUpTierIncreaseTwice)
 {
-	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
@@ -552,7 +513,7 @@ TEST_F(BonusTest, SuperStarPickUpTierIncreaseTwice)
 	EXPECT_EQ(player->GetTier(), 3u);
 }
 
-//Check that a delayed spawn plays its animation first and only then puts the bonus on the field
+// A delayed spawn plays its animation first and only then puts the bonus on the field
 TEST_F(BonusTest, DelayedSpawnLandsAfterAnimation)
 {
 	bool animationStarted{false};

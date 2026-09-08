@@ -4,6 +4,7 @@
 #include "enums/DisconnectReason.h"
 #include "enums/InputSignal.h"
 #include "enums/PlayerSlot.h"
+#include <atomic>
 #include <functional>
 #include <memory>
 #include <string>
@@ -19,9 +20,16 @@ using boost::asio::ip::tcp;
 class Session final : public PeerLink, public std::enable_shared_from_this<Session>
 {
 public:
-	Session(tcp::socket sock, const std::shared_ptr<EventSystem>& events);
+	Session(tcp::socket sock, const std::shared_ptr<EventSystem>& events, PlayerSlot slot);
 
 	~Session();
+
+	//NOTE: the seat is the session's, fixed when the server accepted it - a press off the wire names
+	//the key, and the seat says whose it is
+	[[nodiscard]] PlayerSlot GetSlot() const { return _slot; }
+
+	//NOTE: the cue to drop this session, and the only field the game thread reads without a lock
+	[[nodiscard]] bool IsFinished() const { return _isFinished.load(std::memory_order_acquire); }
 
 	void Start();
 	//NOTE: shared, not copied - the same frame goes to every session and stays alive while it is written
@@ -58,9 +66,16 @@ private:
 	void Handle(const StatisticsChange&) const {}
 	void Handle(const BonusSpawn&) const {}
 	void Handle(const BonusStatus&) const {}
+	void Handle(const SlotAssignment&) const {}
+
+	//NOTE: raised on our strand after the last Enqueue, so everything this session read is in the
+	//queue by the time cleanup is free to sweep it
+	void MarkFinished() { _isFinished.store(true, std::memory_order_release); }
 
 	static const std::unordered_map<InputSignal, InputEmitter> kInputEmitters;
 
+	const PlayerSlot _slot;
 	bool _isPeerGone{false};
+	std::atomic_bool _isFinished{false};
 };
 }//namespace network::commands

@@ -8,9 +8,10 @@
 #include <thread>
 
 FramePerSecondManager::FramePerSecondManager(const std::shared_ptr<EventSystem>& events,
-											 const ProjectConfig& projectConfig)
+											 const ProjectConfig& projectConfig, const bool isVsyncAvailable)
 	: _events{events}
 	, _projectConfig{projectConfig}
+	, _isVsyncAvailable{isVsyncAvailable}
 {
 	_targetFrameDuration = std::chrono::duration<double>{1.0 / static_cast<double>(kTargetFps)};
 
@@ -36,7 +37,7 @@ void FramePerSecondManager::OnPostDrawUserInterface(const PostDrawUserInterfaceE
 
 void FramePerSecondManager::CountFpsAndDeltaTime(const CalculateActualFpsEvent&)
 {
-	if (!_projectConfig.IsVsyncOn())
+	if (!_isVsyncAvailable || !_projectConfig.IsVsyncOn())
 	{
 		const auto currentFrameDuration = std::chrono::duration<double>(
 				std::chrono::high_resolution_clock::now() - _startFrameTime);
@@ -58,9 +59,8 @@ void FramePerSecondManager::CountFpsAndDeltaTime(const CalculateActualFpsEvent&)
 	const double measuredFrameTime =
 			std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - _startFrameTime).count();
 
-	//NOTE: this long means the loop stalled - window drag, resize, a breakpoint - not slow hardware.
-	//Movement is speed * deltaTime, so the measured value would teleport everything in one step; give
-	//it one ordinary frame instead. Threshold is tankSize / tankSpeed (36/142) - one tank length.
+	//NOTE: this long means the loop stalled - a window drag, a breakpoint - and speed * deltaTime would
+	//teleport everything in one step. The threshold is tankSize / tankSpeed, one tank length
 	constexpr double kHitchThreshold{0.25};
 	_deltaTime = measuredFrameTime > kHitchThreshold ? _targetFrameDuration.count() : measuredFrameTime;
 	_events->EmitEvent(DeltaTimeEvent{.deltaTime = _deltaTime});

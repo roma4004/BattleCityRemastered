@@ -1,9 +1,9 @@
 #include "components/managers/TextureManager.h"
+#include "enums/AnimationType.h"
 #include "enums/TextureOffset.h"
 #include "enums/TextureType.h"
 #include "components/EventSystem.h"
 #include "components/events/AnimationRenderEvents.h"
-#include "components/managers/AnimationManager.h"
 #include "utils/ColliderUtils.h"
 #include "utils/Log.h"
 
@@ -17,8 +17,7 @@ constexpr double kBonusBoxHeight{14.0};
 }//namespace
 
 TextureManager::TextureManager(const std::shared_ptr<EventSystem>& events)
-	: _animationManager{std::make_unique<AnimationManager>(events)}
-	, _events{events}
+	: _events{events}
 {
 	Subscribe();
 }

@@ -6,11 +6,12 @@
 #include <vector>
 
 enum class ObstacleType : char8_t;
-class BaseObj;
-class EventSystem;
 struct FortressSpotRegisteredEvent;
 struct BonusShovelStatusChangeEvent;
 struct GameResetEvent;
+class BaseObj;
+class EventSystem;
+class GameConfig;
 
 // Keeps the places the eagle's wall stands in, filled once from the map. A spot outlives the wall in
 // it - that is what lets the shovel rebuild one shot out earlier, when no object is left to ask.
@@ -23,6 +24,7 @@ class FortressManager final
 	};
 
 	const std::vector<std::shared_ptr<BaseObj>>& _allObjects;
+	const GameConfig& _gameConfig;
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
 	std::vector<Spot> _spots{};
@@ -36,7 +38,6 @@ class FortressManager final
 	void Rebuild(const Spot& spot, ObstacleType material) const;
 
 public:
-	FortressManager(const std::shared_ptr<EventSystem>& events, const std::vector<std::shared_ptr<BaseObj>>& allObjects);
-
-	~FortressManager();
+	FortressManager(const std::shared_ptr<EventSystem>& events,
+					const std::vector<std::shared_ptr<BaseObj>>& allObjects, const GameConfig& gameConfig);
 };

@@ -33,7 +33,7 @@ class IShootable;
 class BulletPool;
 class GameConfig;
 
-class Tank : public Pawn
+class Tank final : public Pawn
 {
 	friend class TankSpawner;
 
@@ -93,7 +93,6 @@ protected:
 	void Subscribe() override;
 	void TickUpdate(double deltaTime) override;
 
-	// bonuses
 	BonusEffectProperty _effects{};
 
 	void Shot(std::optional<Uuid> withUuid = std::nullopt);

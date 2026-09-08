@@ -25,12 +25,10 @@ struct AnimationCreateWaterEvent;
 struct AnimationTankUpdateEvent;
 struct AnimationBonusHelmetChangeEvent;
 
-class AnimationManager
+class AnimationManager final
 {
 public:
 	explicit AnimationManager(const std::shared_ptr<EventSystem>& events);
-
-	~AnimationManager() = default;
 
 private:
 	void Subscribe();

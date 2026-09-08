@@ -3,10 +3,8 @@
 #include <cstdint>
 #include <string>
 
-//NOTE: the one owner of <iostream> and <fstream> in the project. Everything that used to reach for
-//std::cout/std::cerr on its own goes through here, so the console has a single format and a single
-//on/off switch. Takes a ready string on purpose: <format> costs as much as <iostream> (65k vs 68k
-//preprocessed lines), so the callers concatenate with <string>, which is a third of that.
+//NOTE: the one owner of <iostream> and <fstream>, so the console has one format and one switch. Takes
+//a ready string on purpose - <format> costs as much as <iostream>, and <string> a third of that
 class Log final
 {
 public:

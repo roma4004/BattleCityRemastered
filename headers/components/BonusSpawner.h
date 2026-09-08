@@ -9,18 +9,17 @@
 #include <random>
 #include <vector>
 
-enum class GameMode : char8_t;
 enum class BonusType : char8_t;
 struct UPoint;
-class BaseObj;
-class EventSystem;
-class GameConfig;
 struct GameResetEvent;
 struct WorldGeometryChangedEvent;
 struct SpawnAnimationFinishedEvent;
 struct TickUpdateEvent;
 struct BonusSpawnedEvent;
 struct BonusSpawnCompletedEvent;
+class BaseObj;
+class EventSystem;
+class GameConfig;
 
 class BonusSpawner final
 {
@@ -46,7 +45,6 @@ class BonusSpawner final
 
 	Timer _spawnTimer;
 	std::vector<PendingSpawn> _pendingSpawns{};
-	GameMode _gameMode{};
 
 	std::vector<EventSubscription> _subs{};
 
@@ -74,8 +72,6 @@ class BonusSpawner final
 public:
 	BonusSpawner(const std::shared_ptr<EventSystem>& events, const std::vector<std::shared_ptr<BaseObj>>& allObjects,
 				 const GameConfig& gameConfig);
-
-	~BonusSpawner() = default;
 
 	void SpawnRandomBonus(ObjRectangle rect);
 

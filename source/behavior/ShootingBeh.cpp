@@ -27,9 +27,7 @@ ShootingBeh::ShootingBeh(ObjRectangle& rect, Direction& dir, Uuid& uuid, Author&
 	, _bulletPool{bulletPool}
 	, _events{events} {}
 
-ShootingBeh::~ShootingBeh() = default;
-
-//Note: {-1.f, -1.f} this is try shooting outside screen
+//NOTE: comes back at {-1, -1} when the muzzle would land off the field
 ObjRectangle ShootingBeh::GetBulletStartRect() const
 {
 	const FPoint tankHalf{.x = _rect.w / 2.0, .y = _rect.h / 2.0};
@@ -73,7 +71,7 @@ Uuid ShootingBeh::Shot(const std::optional<Uuid> uuid)
 	const ObjRectangle rect = GetBulletStartRect();
 	if (rect.x < 0.0 || rect.y < 0.0)
 	{
-		//Try shooting outside screen
+		//the muzzle would land off the field
 		return {};
 	}
 

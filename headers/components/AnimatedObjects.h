@@ -10,7 +10,7 @@ enum class AnimationType : char8_t;
 //NOTE: an animation that runs until something disposes of it - tracks, water, the helmet halo
 inline constexpr int kEndlessAnimation{0};
 
-class AnimatedObject
+class AnimatedObject final
 {
 public:
 	ObjRectangle rect{};

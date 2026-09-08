@@ -10,7 +10,6 @@
 #include "entities/obstacles/IceTile.h"
 #include "entities/pawns/Tank.h"
 #include "enums/Direction.h"
-#include "enums/GameMode.h"
 #include "enums/InputChannel.h"
 #include "gtest/gtest.h"
 #include "enums/Faction.h"
@@ -29,7 +28,6 @@ protected:
 	double _tankSize{};
 	double _tankSpeed{142.0};
 	int _tankHealth{100};
-	GameMode _gameMode{GameMode::OnePlayer};
 	EventSubscription _spawnQueueSub{};
 
 	void SetUp() override
@@ -83,7 +81,7 @@ TEST_F(TankTerrainTest, HealthBarIsHiddenWhileTheTankStandsInABush)
 {
 	SpawnPlayerAt({.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize});
 	_allObjects.emplace_back(std::make_shared<BushTile>(
-			ObjRectangle{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize}, _events, _uuid, _gameMode));
+			ObjRectangle{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize}, _events, _uuid, _gameConfig));
 
 	bool isHealthBarDrawn{false};
 	auto healthBarSub = _events->AddListener([&isHealthBarDrawn](const RenderHealthBarEvent&)
@@ -102,7 +100,7 @@ TEST_F(TankTerrainTest, HealthBarComesBackOnceTheBushIsGone)
 {
 	SpawnPlayerAt({.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize});
 	_allObjects.emplace_back(std::make_shared<BushTile>(
-			ObjRectangle{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize}, _events, _uuid, _gameMode));
+			ObjRectangle{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize}, _events, _uuid, _gameConfig));
 
 	bool isHealthBarDrawn{false};
 	auto healthBarSub = _events->AddListener([&isHealthBarDrawn](const RenderHealthBarEvent&)
@@ -145,7 +143,7 @@ TEST_F(TankTerrainTest, TheTankKeepsSlidingAfterTheKeyIsReleasedOnIce)
 {
 	const std::shared_ptr<Tank> tank = SpawnPlayerAt({.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize});
 	_allObjects.emplace_back(std::make_shared<IceTile>(
-			ObjRectangle{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize * 8.0}, _events, _uuid, _gameMode));
+			ObjRectangle{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize * 8.0}, _events, _uuid, _gameConfig));
 
 	constexpr int framesUnderPower{20};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = true});
@@ -164,7 +162,7 @@ TEST_F(TankTerrainTest, TheTankSlidesDiagonallyWhenTurningWhileDrifting)
 {
 	const std::shared_ptr<Tank> tank = SpawnPlayerAt({.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize});
 	_allObjects.emplace_back(std::make_shared<IceTile>(
-			ObjRectangle{.x = 0.0, .y = 0.0, .w = _tankSize * 8.0, .h = _tankSize * 8.0}, _events, _uuid, _gameMode));
+			ObjRectangle{.x = 0.0, .y = 0.0, .w = _tankSize * 8.0, .h = _tankSize * 8.0}, _events, _uuid, _gameConfig));
 
 	constexpr int framesUnderPower{20};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = true});
@@ -188,7 +186,7 @@ TEST_F(TankTerrainTest, TurningAroundDoesNotStopTheDriftOnIce)
 {
 	const std::shared_ptr<Tank> tank = SpawnPlayerAt({.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize});
 	_allObjects.emplace_back(std::make_shared<IceTile>(
-			ObjRectangle{.x = 0.0, .y = 0.0, .w = _tankSize * 8.0, .h = _tankSize * 8.0}, _events, _uuid, _gameMode));
+			ObjRectangle{.x = 0.0, .y = 0.0, .w = _tankSize * 8.0, .h = _tankSize * 8.0}, _events, _uuid, _gameConfig));
 
 	constexpr int framesUnderPower{20};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = true});

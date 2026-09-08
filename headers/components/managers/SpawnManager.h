@@ -20,7 +20,7 @@ class TankSpawner;
 class RespawnManager;
 class GameConfig;
 
-class SpawnManager
+class SpawnManager final
 {
 	std::shared_ptr<EventSystem> _events{nullptr};
 	//NOTE: the world itself - spawners and pawns hold a const& to it, this class is its only writer

@@ -4,8 +4,6 @@
 #include <memory>
 #include <vector>
 
-class GameConfig;
-class EventSystem;
 struct MenuReleasedEvent;
 struct PauseReleasedEvent;
 struct SetPauseEvent;
@@ -17,6 +15,8 @@ struct MoveUpEvent;
 struct MoveDownEvent;
 struct EnterEvent;
 struct FireEvent;
+class GameConfig;
+class EventSystem;
 
 struct MenuKeys final
 {
@@ -31,6 +31,8 @@ class InputProviderForMenu final
 {
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
+	//NOTE: apart from _subs because the menu keys come and go with the menu, and clearing this vector
+	//is how they go - the listeners in _subs stay for the life of the object
 	std::vector<EventSubscription> _menuNavSubs{};
 	const GameConfig& _gameConfig;
 	MenuKeys _keys{};
@@ -52,8 +54,6 @@ class InputProviderForMenu final
 
 public:
 	InputProviderForMenu(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig);
-
-	~InputProviderForMenu() = default;
 
 	void EnableMenuInput();
 	void DisableMenuInput();

@@ -15,7 +15,6 @@
 #include "entities/pawns/Tank.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
-#include "enums/GameMode.h"
 #include "enums/ObstacleType.h"
 #include "enums/InputChannel.h"
 #include "gtest/gtest.h"
@@ -56,7 +55,7 @@ protected:
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, _allObjects, _gameConfig);
 		_instantSpawnAnimationSubs = TestUtils::WireInstantSpawnAnimations(_events);
 		_bonusManager = std::make_unique<BonusManager>(_events, _gameConfig);
-		_fortressManager = std::make_unique<FortressManager>(_events, _allObjects);
+		_fortressManager = std::make_unique<FortressManager>(_events, _allObjects, _gameConfig);
 		_obstacleSpawner = std::make_unique<ObstacleSpawner>(_events, _gameConfig);
 		_fortressWallSub = TestUtils::TrackFortressWall(_events, &_fortressWall);
 		_gridSize = _gameConfig.gridOffset;
@@ -70,7 +69,6 @@ protected:
 // NOTE: when the enemy picks up bonusShovel, then fortressWalls hide (destroy) brick walls around it
 TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressBricWallkHide)
 {
-	// spawn Enemy
 	const ObjRectangle rectEnemy{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
@@ -94,14 +92,12 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressBricWallkHide)
 //       then enemy pickup bonusShovel, then fortressWalls should hide (destroy) steel walls around it
 TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressSteelWallHide)
 {
-	// spawn Enemy
 	const ObjRectangle rectEnemy{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
 					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
 					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 
-	// spawn Player
 	_allObjects.reserve(4);
 	const ObjRectangle rectPlayer{.x = _tankSize * 2.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
@@ -116,7 +112,6 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressSteelWallHide)
 	const ObjRectangle fortressRect{.x = _tankSize * 3.0 + 1.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize};
 	_events->EmitEvent(SpawnObstacleEvent{.rect = fortressRect, .type = ObstacleType::Fortress});
 
-	// spawn bonuses
 	const ObjRectangle enemyBonusRect{.x = 0.0, .y = _tankSize + 3.0, .w = _tankSize, .h = _tankSize};
 
 	_bonusSpawner->SpawnBonus(enemyBonusRect, BonusType::Shovel);

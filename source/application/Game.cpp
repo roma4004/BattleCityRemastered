@@ -1,49 +1,37 @@
 #include "application/Game.h"
 #include "utils/Log.h"
+#include "application/ServerProcess.h"
 #include "application/GameConfig.h"
 #include "application/LaunchOptions.h"
+#include "application/Simulation.h"
 #include "application/UserInput.h"
 #include "application/WindowConfig.h"
 #include "components/EventSystem.h"
+#include "components/LobbyScreen.h"
 #include "components/Menu.h"
 #include "components/RightSideBar.h"
-#include "components/LobbyScreen.h"
 #include "components/ScoreBoard.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/GameModeEvents.h"
-#include "components/events/InputEvents.h"
 #include "components/events/RenderUIEvents.h"
 #include "components/events/TimingEvents.h"
-#include "components/managers/BonusManager.h"
 #include "components/managers/FramePerSecondManager.h"
-#include "components/managers/GameStateManager.h"
 #include "components/managers/RenderManager.h"
-#include "components/managers/SpawnManager.h"
 #include "components/managers/TextureManager.h"
-#include "components/managers/WorldScaleManager.h"
 #include "enums/GameMode.h"
-#include "enums/GameState.h"
-#include "network/ClientHandler.h"
-#include "network/ServerHandler.h"
-#include "utils/TimeUtils.h"
-#include <cmath>
+#include <exception>
 #include <memory>
-//#include <fstream>
 
-// std::ofstream error_log_server("error_log_Server.txt");
 Game::Game(GameConfig& gameConfig, const ProjectConfig& projectConfig, const WindowConfig& windowConfig,
 		   SDL_Config& sdlConfig, const LaunchOptions& launchOptions)
 	: _events{std::make_shared<EventSystem>()}
 	, _menu{std::make_unique<Menu>(_events, gameConfig)}
 	, _textureManager(std::make_unique<TextureManager>(_events))
-	, _stateManager{std::make_unique<GameStateManager>(_events)}
 	, _userInput{std::make_unique<UserInput>(_events, windowConfig, sdlConfig)}
-	, _fpsManager{std::make_unique<FramePerSecondManager>(_events, projectConfig)}
-	, _worldScaleManager{std::make_unique<WorldScaleManager>(_events, gameConfig)}
-	, _spawnManager{std::make_unique<SpawnManager>(_events, gameConfig)}
+	, _fpsManager{std::make_unique<FramePerSecondManager>(_events, projectConfig, true)}
+	, _simulation{std::make_unique<Simulation>(_events, gameConfig)}
 	, _renderManager{std::make_unique<RenderManager>(_events, gameConfig, sdlConfig)}
-	, _bonusManager{std::make_unique<BonusManager>(_events, gameConfig)}
-	, _scoreBoard{std::make_unique<ScoreBoard>(_events, gameConfig)}
+	, _scoreBoard{std::make_unique<ScoreBoard>(_events, gameConfig, _simulation->Statistics())}
 	, _lobbyScreen{std::make_unique<LobbyScreen>(_events, gameConfig)}
 	, _rightSideBar{std::make_unique<RightSideBar>(_events, gameConfig)}
 	, _gameConfig{gameConfig}
@@ -51,7 +39,7 @@ Game::Game(GameConfig& gameConfig, const ProjectConfig& projectConfig, const Win
 {
 	Subscribe();
 
-	ApplyGameMode(launchOptions.gameMode);
+	EnterGameMode(launchOptions.gameMode);
 
 	if (launchOptions.isDemo)
 	{
@@ -67,44 +55,44 @@ void Game::Subscribe()
 	_subs.push_back(_events->AddListener(this, &Game::PrevGameMode));
 	_subs.push_back(_events->AddListener(this, &Game::NextGameMode));
 	_subs.push_back(_events->AddListener(this, &Game::OnApplyGameMode));
-	_subs.push_back(_events->AddListener(this, &Game::OnGameModeChangedTo));
-	_subs.push_back(_events->AddListener(this, &Game::OnPostTickUpdate));
-	_subs.push_back(_events->AddListener(this, &Game::OnDeltaTime));
 	_subs.push_back(_events->AddListener(this, &Game::OnSelectedGameModeChangedTo));
-	_subs.push_back(_events->AddListener(this, &Game::OnGameStateChangedTo));
-	_subs.push_back(_events->AddListener(this, &Game::OnMatchStarted));
 }
 
-void Game::OnApplyGameMode(const ApplyGameModeEvent&) { ApplyGameMode(_selectedGameMode); }
+void Game::OnApplyGameMode(const ApplyGameModeEvent&) { EnterGameMode(_selectedGameMode); }
 
-void Game::OnPostTickUpdate(const PostTickUpdateEvent&)
+//NOTE: PlayAsHost starts BattleCityServer and joins it as an ordinary client - this process runs
+//as a client either way, and takes whichever seat is free
+void Game::EnterGameMode(const GameMode mode)
 {
-	if (_isEnterLobbyPending)
-	{
-		_isEnterLobbyPending = false;
-		EnterLobby();
-	}
-}
+	//NOTE: the link goes before the process it talks to - built any earlier it dials a server
+	//this call is about to kill
+	_simulation->LeaveGameMode();
 
-void Game::OnDeltaTime(const DeltaTimeEvent& event) { _deltaTime = event.deltaTime; }
+	if (mode != GameMode::PlayAsHost)
+	{
+		_serverProcess.reset();
+		_simulation->ApplyGameMode(mode);
+
+		return;
+	}
+
+	if (!_serverProcess)
+	{
+		_serverProcess = std::make_unique<ServerProcess>();
+	}
+
+	if (!_serverProcess->Start())
+	{
+		_serverProcess.reset();
+		_events->EmitEvent(ShowMenuEvent{.show = true});
+
+		return;
+	}
+
+	_simulation->ApplyGameMode(GameMode::PlayAsClient);
+}
 
 void Game::OnSelectedGameModeChangedTo(const SelectedGameModeChangedToEvent& event) { _selectedGameMode = event.mode; }
-
-void Game::ApplyGameMode(const GameMode gameMode)
-{
-	//NOTE: before the reset - listeners of GameResetEvent read the mode off the config, so it has
-	//to be the new one already
-	_gameConfig.gameMode = gameMode;
-
-	_events->EmitEvent(GameResetEvent{});
-
-	SetCurrentGameMode(gameMode);
-
-	if (IsClient(gameMode))
-	{
-		_events->EmitEvent(ClientOutReadyToPlayEvent{});
-	}
-}
 
 void Game::PrevGameMode(const PreviousGameModeEvent&)
 {
@@ -136,48 +124,13 @@ void Game::NextGameMode(const NextGameModeEvent&)
 
 //TODO: recheck rule of 3/5 for all classes
 
-void Game::OnGameStateChangedTo(const GameStateChangedToEvent& event)
-{
-	_gameConfig.gameState = event.state;
-
-	_isEnterLobbyPending = event.state == GameState::Lobby;
-}
-
-void Game::OnMatchStarted(const MatchStartedEvent&)
-{
-	_events->EmitEvent(GameResetEvent{});
-
-	_events->EmitEvent(ShowMenuEvent{.show = false});
-	_events->EmitEvent(SetPauseEvent{.isPaused = false});
-}
-
-//NOTE: the mode is kept - dropping it tears the link down, and nobody could reconnect
-void Game::EnterLobby()
-{
-	_events->EmitEvent(GameResetEvent{});
-	_events->EmitEvent(ShowMenuEvent{.show = false});
-}
-
 void Game::Run()
 {
 	try
 	{
 		while (!_userInput->IsShutdown())
 		{
-			_events->EmitEvent(FrameStartEvent{});
-			_events->EmitEvent(NetCommandUpdateEvent{.deltaTime = _deltaTime});
-			_events->EmitEvent(PreTickUpdateEvent{.deltaTime = _deltaTime});
-			const bool isRunning = !_userInput->IsPause() && _gameConfig.gameState != GameState::Lobby;
-			TimeUtils::SetPaused(!isRunning);
-
-			if (isRunning && IsAuthority(_gameMode))
-			{
-				_events->EmitEvent(RespawnTanksEvent{});
-
-				_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTime});
-			}
-
-			_events->EmitEvent(PostTickUpdateEvent{.deltaTime = _deltaTime});
+			_simulation->Tick();
 
 			_events->EmitEvent(PreDrawEvent{});
 			_events->EmitEvent(DrawEvent{});
@@ -188,10 +141,7 @@ void Game::Run()
 			_events->EmitEvent(DrawUserInterfaceEvent{});
 			_events->EmitEvent(PostDrawUserInterfaceEvent{});
 
-			if (IsNetworkGame(_gameMode))
-			{
-				_events->EmitEvent(NetworkEndFrameEvent{});
-			}
+			_simulation->EndNetworkFrame();
 
 			_events->EmitEvent(PresentFrameEvent{});
 
@@ -209,31 +159,3 @@ void Game::Run()
 }
 
 int Game::Result() const { return 0; }
-
-GameMode Game::GetCurrentGameMode() const { return _gameMode; }
-
-void Game::SetCurrentGameMode(const GameMode selectedGameMode)
-{
-	_gameMode = selectedGameMode;
-
-	_events->EmitEvent(GameModeChangedToEvent{.mode = _gameMode});
-	_events->EmitEvent(GameModeAppliedEvent{.mode = _gameMode});
-}
-
-void Game::OnGameModeChangedTo(const GameModeChangedToEvent& event)
-{
-	_gameMode = event.mode;
-
-	//NOTE: the old node goes first - assigning over it would build the new one (same port, new
-	//connect) while the outgoing one still holds both
-	_networkNode.reset();
-
-	if (IsHost(_gameMode))
-	{
-		_networkNode = std::make_unique<network::commands::ServerHandler>(_events);
-	}
-	else if (IsClient(_gameMode))
-	{
-		_networkNode = std::make_unique<network::commands::ClientHandler>(_events);
-	}
-}

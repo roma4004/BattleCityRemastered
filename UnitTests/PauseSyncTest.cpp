@@ -6,9 +6,8 @@
 #include "gtest/gtest.h"
 #include <memory>
 
-// InputProviderForMenu owns the pause flag; everything else only mirrors PauseStatusEvent. These
-// tests pin that a pause set from outside (battlefield reset, window drag, host echo) reaches the
-// owner, so it can still release it afterwards.
+// InputProviderForMenu owns the pause flag and everything else mirrors PauseStatusEvent, so a pause set
+// from outside - a reset, a window drag, a host echo - has to reach the owner for it to be released
 class PauseSyncTest : public testing::Test
 {
 protected:
@@ -26,7 +25,7 @@ protected:
 	}
 };
 
-// Check that a game reset releases a pause that was set from outside the menu
+// A game reset releases a pause that was set from outside the menu
 TEST_F(PauseSyncTest, GameResetReleasesExternalPause)
 {
 	_events->EmitEvent(SetPauseEvent{.isPaused = true});
@@ -37,7 +36,7 @@ TEST_F(PauseSyncTest, GameResetReleasesExternalPause)
 	EXPECT_FALSE(_isPaused);
 }
 
-// Check that the pause toggle sees an external pause instead of flipping past it
+// The pause toggle sees an external pause instead of flipping past it
 TEST_F(PauseSyncTest, ToggleReleasesExternalPause)
 {
 	_events->EmitEvent(SetPauseEvent{.isPaused = true});
@@ -48,7 +47,7 @@ TEST_F(PauseSyncTest, ToggleReleasesExternalPause)
 	EXPECT_FALSE(_isPaused);
 }
 
-// Check that the same request twice doesn't flip the flag back
+// The same request twice does not flip the flag back
 TEST_F(PauseSyncTest, RepeatedRequestIsIdempotent)
 {
 	_events->EmitEvent(SetPauseEvent{.isPaused = true});

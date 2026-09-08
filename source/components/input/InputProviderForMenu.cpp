@@ -60,9 +60,6 @@ void InputProviderForMenu::OnMenuShowed(const MenuShowedEvent& event)
 	}
 }
 
-// NOTE: registered into _menuNavSubs (not _subs) so DisableMenuInput can drop exactly this
-// toggle-able subset by clearing that vector, without disturbing the always-on listeners
-// Subscribe() registered into _subs for the lifetime of this object.
 void InputProviderForMenu::EnableMenuInput()
 {
 	_menuNavSubs.push_back(_events->AddListener(this, &InputProviderForMenu::OnMenuNavEnter));

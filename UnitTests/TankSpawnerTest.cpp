@@ -5,13 +5,16 @@
 #include "components/events/AnimationRenderEvents.h"
 #include "components/events/BonusPickupEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
+#include "components/events/InputEvents.h"
 #include "components/events/ObjectLifecycleEvents.h"
 #include "components/events/ReplicationEvents.h"
+#include "components/events/SpawnEvents.h"
 #include "components/TankSpawner.h"
 #include "components/managers/RespawnManager.h"
 #include "enums/Author.h"
 #include "enums/Faction.h"
 #include "enums/GameMode.h"
+#include "enums/InputChannel.h"
 #include "enums/TankType.h"
 #include "utils/UuidUtils.h"
 #include "gtest/gtest.h"
@@ -86,7 +89,7 @@ TEST_F(TankSpawnerTest, PlayAsHostGameModeStart)
 	EXPECT_EQ(_allObjects.size(), 6u);// No one set pause, so expected spawn all
 }
 
-//Check that a client puts no tank on the field on its own - it waits for the host to say the spawn is done
+// A client puts no tank on the field on its own - it waits for the host to say the spawn is done
 TEST_F(TankSpawnerTest, PlayAsClientGameModeStart)
 {
 	std::vector<Uuid> spawning{};
@@ -183,4 +186,23 @@ TEST_F(TankSpawnerTest, AClientSpawnsOnTheLatestRectAfterACancel)
 
 	ASSERT_EQ(_allObjects.size(), 1u);
 	EXPECT_EQ(_allObjects.front()->GetRect().x, currentPos.x);
+}
+
+TEST_F(TankSpawnerTest, AHostTakesBothSeatsOffTheWire)
+{
+	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
+	_events->EmitEvent(GameResetEvent{});
+	_events->EmitEvent(RespawnTankEvent{.type = TankType::PLAYER1, .uuid = UuidUtils::GetRandomUuid()});
+
+	ASSERT_EQ(_allObjects.size(), 1u);
+	const auto& playerOne = _allObjects.front();
+	const FPoint startPos{playerOne->GetPos()};
+
+	_events->EmitEvent(Key(InputChannel::LocalP1), MoveUpEvent{.isPressed = true});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = 1.0 / 60.0});
+	EXPECT_EQ(startPos, playerOne->GetPos()) << "the machine running the server drove a seat over its keyboard";
+
+	_events->EmitEvent(Key(InputChannel::RemoteP1), MoveUpEvent{.isPressed = true});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = 1.0 / 60.0});
+	EXPECT_NE(startPos, playerOne->GetPos()) << "the first seat never heard the wire";
 }

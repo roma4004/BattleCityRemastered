@@ -2,13 +2,12 @@
 #include "components/EventSystem.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "enums/ObstacleType.h"
+#include "application/GameConfig.h"
 
 EagleTile::EagleTile(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const Uuid uuid,
-					 const GameMode gameMode)
-	: Obstacle{rect, 1, events, uuid, gameMode, ObstacleType::Eagle, kCollision}
+					 const GameConfig& gameConfig)
+	: Obstacle{rect, 1, events, uuid, gameConfig, ObstacleType::Eagle, kCollision}
 {}
-
-EagleTile::~EagleTile() = default;
 
 void EagleTile::Subscribe()
 {

@@ -17,8 +17,9 @@
 #include <string>
 #include <vector>
 
-class EventSystem;
 struct NetworkEndFrameEvent;
+struct PlayerSlotAssignedEvent;
+class EventSystem;
 
 namespace network::commands
 {
@@ -47,6 +48,7 @@ private:
 	void TryConnect();
 
 	void OnNetworkEndFrame(const NetworkEndFrameEvent&);
+	void OnSlotAssigned(const PlayerSlotAssignedEvent& event);
 
 	//NOTE: the only command Client reads itself - the rest are the applier's, and this one is not a
 	//game fact but transport state, taken on the network thread before the queue
@@ -60,6 +62,7 @@ private:
 	ReplicationApplier _replicationIn;
 	ReplicationPublisher _replicationOut;
 	std::vector<EventSubscription> _subs{};
+	std::vector<EventSubscription> _inputSubs{};
 	std::atomic<bool> _isConnected{};
 	bool _reconnectPending{false};
 	//NOTE: tells our own cancellation apart from a dropped link, so teardown does not reconnect

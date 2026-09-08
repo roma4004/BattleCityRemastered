@@ -15,9 +15,8 @@ namespace
 {
 using namespace network::commands;
 
-//NOTE: the name sits beside the type it names, not in a table parallel to the variant - an
-//alternative added or reordered cannot make the log say the wrong thing, and one added without a
-//name here does not compile, because there is no catch-all overload
+//NOTE: the name sits beside the type it names, so reordering the variant cannot make the log lie -
+//and an alternative added without a name here does not compile, there is no catch-all overload
 constexpr const char* NameOf(const PositionChange&) { return "PositionChange"; }
 constexpr const char* NameOf(const TankShot&) { return "TankShot"; }
 constexpr const char* NameOf(const HealthChange&) { return "HealthChange"; }
@@ -33,6 +32,7 @@ constexpr const char* NameOf(const ObstacleSpawn&) { return "ObstacleSpawn"; }
 constexpr const char* NameOf(const TankSpawnComplete&) { return "TankSpawnComplete"; }
 constexpr const char* NameOf(const BonusSpawnComplete&) { return "BonusSpawnComplete"; }
 constexpr const char* NameOf(const SignalEvent&) { return "SignalEvent"; }
+constexpr const char* NameOf(const SlotAssignment&) { return "SlotAssignment"; }
 constexpr const char* NameOf(const Disconnect&) { return "Disconnect"; }
 
 std::string Describe(const commands::CommandBatch& batch)

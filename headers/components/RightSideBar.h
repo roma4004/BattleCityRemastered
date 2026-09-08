@@ -5,12 +5,12 @@
 #include <vector>
 
 struct ObjRectangle;
-class GameConfig;
-class EventSystem;
 struct DrawUserInterfaceEvent;
 struct RespawnCountChangedToEvent;
+class GameConfig;
+class EventSystem;
 
-class RightSideBar
+class RightSideBar final
 {
 	Point _pos{};
 	unsigned short _enemiesRespawnCount{};
@@ -29,6 +29,4 @@ class RightSideBar
 
 public:
 	RightSideBar(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig);
-
-	~RightSideBar() = default;
 };

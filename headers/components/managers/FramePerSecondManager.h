@@ -5,13 +5,13 @@
 #include <memory>
 #include <vector>
 
-class EventSystem;
-class ProjectConfig;
 struct CalculateActualFpsEvent;
 struct FrameStartEvent;
 struct PostDrawUserInterfaceEvent;
+class EventSystem;
+class ProjectConfig;
 
-class FramePerSecondManager
+class FramePerSecondManager final
 {
 	static constexpr unsigned int kTargetFps{60u};
 
@@ -26,6 +26,9 @@ class FramePerSecondManager
 	unsigned int _frameCounter{};
 	unsigned int _lastDisplayedFps{};
 	const ProjectConfig& _projectConfig;
+	//NOTE: without a presenter nothing else blocks this thread, so the wait below is the only
+	//thing between the loop and a busy spin - the vsync setting says nothing on a console server
+	bool _isVsyncAvailable{true};
 
 	void Subscribe();
 	void OnFrameStart(const FrameStartEvent&);
@@ -34,7 +37,6 @@ class FramePerSecondManager
 	void CountFpsAndDeltaTime(const CalculateActualFpsEvent&);
 
 public:
-	FramePerSecondManager(const std::shared_ptr<EventSystem>& events, const ProjectConfig& projectConfig);
-
-	~FramePerSecondManager() = default;
+	FramePerSecondManager(const std::shared_ptr<EventSystem>& events, const ProjectConfig& projectConfig,
+						  bool isVsyncAvailable);
 };

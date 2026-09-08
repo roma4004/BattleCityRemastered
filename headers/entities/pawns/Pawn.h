@@ -11,13 +11,13 @@ enum class Faction : char8_t;
 enum class Direction : char8_t;
 struct PawnProperty;
 struct ObjRectangle;
-class IMoveBeh;
-class EventSystem;
-class GameConfig;
 struct HealthChangedEvent;
 struct DespawnedEvent;
 struct PosChangedEvent;
 struct TickUpdateEvent;
+class IMoveBeh;
+class EventSystem;
+class GameConfig;
 
 class Pawn : public BaseObj, public ITickUpdatable
 {

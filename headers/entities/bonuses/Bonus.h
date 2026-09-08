@@ -9,13 +9,13 @@
 #include <vector>
 
 enum class Faction : char8_t;
-enum class GameMode : char8_t;
 enum class BonusType : char8_t;
 enum class DespawnReason : char8_t;
 struct BaseObjProperty;
-class EventSystem;
 struct DrawEvent;
 struct DespawnedEvent;
+class EventSystem;
+class GameConfig;
 
 class Bonus final : public BaseObj, public IDrawable, public IPickupableBonus
 {
@@ -23,7 +23,7 @@ public:
 	static constexpr CollisionTags kCollision{tags::Impassable{}, tags::Destructible{}, tags::Impenetrable{}};
 
 private:
-	GameMode _gameMode{};
+	const GameConfig& _gameConfig;
 	BonusType _bonusType{};
 	bool _isSuper{};
 
@@ -40,17 +40,14 @@ private:
 	void EmitDamageStatistics(Author author) override;
 
 public:
-	Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& events, Uuid uuid, GameMode gameMode,
-		  BonusType bonusType, bool isSuper);
-
-	~Bonus() override;
+	Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& events, Uuid uuid,
+		  const GameConfig& gameConfig, BonusType bonusType, bool isSuper);
 
 	void Activate() override;
 	void Deactivate() override;
 
 	void Expire();
 
-	//BaseObj overrides
 	void TakeDamage(unsigned int damage, Author author) override;
 
 	void PickUpBonus(Author author) override;

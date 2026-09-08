@@ -85,6 +85,4 @@ class TankSpawner final
 public:
 	TankSpawner(const GameConfig& gameConfig, const std::vector<std::shared_ptr<BaseObj>>& allObjects,
 				const std::shared_ptr<EventSystem>& events, const std::shared_ptr<TankPool>& tankPool);
-
-	~TankSpawner() = default;
 };

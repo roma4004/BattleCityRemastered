@@ -10,7 +10,6 @@
 
 enum class TankType : char8_t;
 enum class GameMode : char8_t;
-class EventSystem;
 struct GameResetEvent;
 struct TankSpawnEvent;
 struct TankDiedEvent;
@@ -19,6 +18,7 @@ struct PlayersBaseFinishedEvent;
 struct RespawnTanksEvent;
 struct BonusTankAppliedEvent;
 struct TankRespawnedEvent;
+class EventSystem;
 
 class RespawnManager final
 {
@@ -72,6 +72,4 @@ class RespawnManager final
 
 public:
 	RespawnManager(const std::shared_ptr<EventSystem>& events, GameMode gameMode);
-
-	~RespawnManager() = default;
 };

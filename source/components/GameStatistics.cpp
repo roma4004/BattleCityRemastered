@@ -47,9 +47,8 @@ void GameStatistics::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &GameStatistics::OnGameReset));
 
-	//NOTE: one set for both roles, and no role check anywhere below - the host reaches these off
-	//its own game logic, the client off Client.cpp re-emitting the very same events. Replication
-	//is not this class's business: Server subscribes to these same events and lives only on the host.
+	//NOTE: one set for both roles - the host reaches these off its own game logic, the client off the
+	//same events re-emitted from the wire, so nothing below asks which one it is
 	_subs.push_back(_events->AddListener(this, &GameStatistics::OnBulletHit));
 	_subs.push_back(_events->AddListener(this, &GameStatistics::OnTankHit));
 	_subs.push_back(_events->AddListener(this, &GameStatistics::OnTankDied));

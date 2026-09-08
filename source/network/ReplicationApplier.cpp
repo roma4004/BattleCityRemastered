@@ -149,11 +149,15 @@ void ReplicationApplier::Emit(const BonusSpawn& command) const
 										 .isSuper = command.isSuper});
 }
 
+void ReplicationApplier::Emit(const SlotAssignment& command) const
+{
+	_events->EmitEvent(PlayerSlotAssignedEvent{.slot = command.slot});
+}
+
 void ReplicationApplier::Emit(const BonusStatus& command) const
 {
-	//NOTE: only the bonuses whose effect the client cannot see any other way are replicated here -
-	//a star and a caliber land as a TierChange, the rest are applied once on the host and never
-	//reported, so any of them is as wrong here as a byte outside the enum
+	//NOTE: only the bonuses whose effect the client cannot see any other way arrive here - a star and a
+	//caliber land as a TierChange, so either of them is as wrong as a byte outside the enum
 	const Author author = SeatFromWire(command.author);
 	switch (command.bonusType)
 	{

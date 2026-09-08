@@ -65,9 +65,7 @@ std::expected<void, InitError> SDL_Config::Init()
 		  .and_then([this] { return InitTextures(); })
 		  .transform([this]
 		   {
-			   //NOTE: the game runs without sound, so this one failure is reported and dropped. The
-			   //decision to ignore it belongs here, at the call site - not inside InitAudio, which
-			   //has no business deciding how much its own failure matters.
+			   //NOTE: the game runs without sound, so this one failure is reported and dropped
 			   if (const auto audio = InitAudio();
 				   !audio)
 			   {
@@ -426,9 +424,8 @@ WindowHandle SDL_Config::InitWindow() const
 		return window;
 	}
 
-	//NOTE: SDL3 window coordinates are plain pixels - the process is DPI aware and the desktop scale is
-	//not folded in, so the stored size is read as unscaled and multiplied here. SaveWindowState divides
-	//it back out, else the window would grow by the scale every run.
+	//NOTE: SDL3 window coordinates are plain pixels, so the stored size is unscaled and multiplied here.
+	//SaveWindowState divides it back out, else the window grows by the scale every run
 	if (const float scale = SDL_GetWindowDisplayScale(window.get());
 		scale > 0.0f)
 	{

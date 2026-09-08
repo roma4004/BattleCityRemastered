@@ -3,10 +3,8 @@
 #include "enums/PlayerSlot.h"
 #include <cstdint>
 
-// Dispatch key for the input events. The slot half says which player a press belongs to, the origin
-// half says which pipe it arrived on: a host has a keyboard producing presses for both slots, so
-// without the origin its own arrow keys would be indistinguishable from the client's input off the
-// wire. Both players are remote at once once the server becomes a process of its own.
+// Dispatch key for the input events: the slot half says whose press it is, the origin half which pipe
+// it came in on. One machine can hold a keyboard for both slots and take wire input for the same ones
 enum class InputChannel : std::uint8_t
 {
 	LocalP1,

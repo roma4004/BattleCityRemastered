@@ -12,7 +12,6 @@ protected:
 	void TearDown() override { TimeUtils::SetPaused(false); }
 };
 
-// Check that the game clock stands still while paused
 TEST_F(TimeUtilsTest, GameClockFreezesWhilePaused)
 {
 	TimeUtils::SetPaused(true);
@@ -28,7 +27,7 @@ TEST_F(TimeUtilsTest, GameClockFreezesWhilePaused)
 	EXPECT_GE(TimeUtils::Now(), frozen);
 }
 
-// Check that repeated calls with the same state don't stack up extra offset
+// Repeated calls with the same state do not stack up extra offset
 TEST_F(TimeUtilsTest, SetPausedIsIdempotent)
 {
 	TimeUtils::SetPaused(true);
@@ -45,7 +44,7 @@ TEST_F(TimeUtilsTest, SetPausedIsIdempotent)
 	EXPECT_GE(TimeUtils::Now(), resumed);
 }
 
-// Check that a cooldown doesn't burn down during the pause and still finishes afterwards
+// A cooldown does not burn down during the pause and still finishes afterwards
 TEST_F(TimeUtilsTest, CooldownSkipsThePause)
 {
 	Timer timer{100ms};

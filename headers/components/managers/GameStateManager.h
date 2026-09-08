@@ -20,14 +20,14 @@ struct ClientInDisconnectEvent;
 struct ClientReconnectAbandonedEvent;
 class EventSystem;
 
-class GameStateManager
+class GameStateManager final
 {
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
 
 	GameState _state{GameState::Menu};
 	GameMode _gameMode{};
-	bool _hasPeer{false};
+	unsigned short _peerCount{0u};
 	bool _isDemo{false};
 
 	void Subscribe();
@@ -35,6 +35,7 @@ class GameStateManager
 	void AnnouncePhase();
 	void Resume();
 	[[nodiscard]] GameState IdleStateForMode() const;
+	[[nodiscard]] unsigned short PeersToWaitFor() const;
 
 	void OnGameModeApplied(const GameModeAppliedEvent& event);
 	void OnDemoStarted(const DemoStartedEvent&);
@@ -55,8 +56,6 @@ class GameStateManager
 
 public:
 	explicit GameStateManager(const std::shared_ptr<EventSystem>& events);
-
-	~GameStateManager() = default;
 
 	[[nodiscard]] GameState GetState() const { return _state; }
 };

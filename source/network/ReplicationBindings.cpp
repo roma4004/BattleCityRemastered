@@ -2,7 +2,6 @@
 #include "network/ReplicationPublisher.h"
 #include "enums/InputChannel.h"
 #include "enums/InputSignal.h"
-#include "enums/PlayerTag.h"
 #include "components/EventSystem.h"
 #include "components/events/BonusPickupEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
@@ -16,6 +15,8 @@ namespace network::commands
 {
 namespace
 {
+//NOTE: eleven local types collapse onto one command - each line names the StatisticsType that tells
+//them apart and the fields that value carries
 void BindHostStatistics(ReplicationPublisher& out)
 {
 	out.Bind<StatisticsBulletHitEvent>([](const auto& e)
@@ -81,14 +82,22 @@ void BindHostBonus(ReplicationPublisher& out)
 		return BonusStatus{.author = e.author, .bonusType = BonusType::Tank};
 	});
 }
+
+template<class EventT>
+[[nodiscard]] EventSubscription BindKey(ReplicationPublisher& out, EventSystem& events, const InputChannel channel,
+										const InputSignal action)
+{
+	return events.AddListener(Key(channel), [&out, action](const EventT& event)
+	{
+		out.Publish(KeyStateChange{.action = action, .isPressed = event.isPressed});
+	});
+}
 }//namespace
 void BindHostReplication(ReplicationPublisher& out)
 {
 	out.Bind<PauseStatusEvent>([](const auto& e)
 	{
-		return KeyStateChange{.tag = PlayerTag::None,
-							  .action = InputSignal::PauseStatus,
-							  .isPressed = e.isPaused};
+		return KeyStateChange{.action = InputSignal::PauseStatus, .isPressed = e.isPaused};
 	});
 	out.Bind<GameFinishedEvent>([](const auto& e) { return GameStateChange{.state = e.state}; });
 
@@ -124,39 +133,32 @@ void BindHostReplication(ReplicationPublisher& out)
 	BindHostBonus(out);
 }
 
-//NOTE: eleven distinct local types collapse onto one command - StatisticsType is the discriminator,
-//so each line names its enum value and the fields that value actually carries.
-
 void BindClientReplication(ReplicationPublisher& out)
 {
-	//NOTE: a keyboard half belongs to a seat, not to a machine - this process is player two, so it
-	//takes the arrows like a second player anywhere else. Tab swaps the halves locally for whoever
-	//would rather drive that seat with WASD
-	constexpr InputChannel channel{InputChannel::LocalP2};
-
-	const auto keyState = [](const InputSignal action)
-	{
-		return [action](const auto& e)
-		{
-			return KeyStateChange{.tag = PlayerTag::P2, .action = action, .isPressed = e.isPressed};
-		};
-	};
-
-	out.Bind<MoveUpEvent>(Key(channel), keyState(InputSignal::MoveUp));
-	out.Bind<MoveLeftEvent>(Key(channel), keyState(InputSignal::MoveLeft));
-	out.Bind<MoveDownEvent>(Key(channel), keyState(InputSignal::MoveDown));
-	out.Bind<MoveRightEvent>(Key(channel), keyState(InputSignal::MoveRight));
-	out.Bind<FireEvent>(Key(channel), keyState(InputSignal::Fire));
-
 	out.Bind<ClientOutReadyToPlayEvent>([](const auto&)
 	{
 		return SignalEvent{.signal = ClientSignal::ReadyToPlay};
 	});
 	out.Bind<PauseRequestedEvent>([](const auto& e)
 	{
-		return KeyStateChange{.tag = PlayerTag::None,
-							  .action = InputSignal::PauseReleased,
-							  .isPressed = e.isPaused};
+		return KeyStateChange{.action = InputSignal::PauseReleased, .isPressed = e.isPaused};
 	});
+}
+
+//NOTE: forwards the five keys of the half that the server's slot maps to locally. The command names
+//the key, and the server takes the seat from the session it arrived on
+std::vector<EventSubscription> BindClientInput(ReplicationPublisher& out, EventSystem& events, const PlayerSlot slot)
+{
+	const InputChannel channel{LocalInput(slot)};
+
+	std::vector<EventSubscription> subs{};
+	subs.reserve(5u);
+	subs.push_back(BindKey<MoveUpEvent>(out, events, channel, InputSignal::MoveUp));
+	subs.push_back(BindKey<MoveLeftEvent>(out, events, channel, InputSignal::MoveLeft));
+	subs.push_back(BindKey<MoveDownEvent>(out, events, channel, InputSignal::MoveDown));
+	subs.push_back(BindKey<MoveRightEvent>(out, events, channel, InputSignal::MoveRight));
+	subs.push_back(BindKey<FireEvent>(out, events, channel, InputSignal::Fire));
+
+	return subs;
 }
 }//namespace network::commands

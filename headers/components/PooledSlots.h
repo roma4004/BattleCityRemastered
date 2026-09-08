@@ -5,9 +5,8 @@
 #include <queue>
 #include <vector>
 
-//NOTE: the free-list half of a pool, shared by BulletPool and TankPool. Not a base class - each pool
-//keeps its own building, arming and announcing, and only the rule below is written once: an object on
-//the free list must not listen, or the next spawn subscribes it twice.
+//NOTE: the free-list half of a pool, shared by BulletPool and TankPool. The rule it carries: an object
+//on the free list must not listen, or the next spawn subscribes it twice
 template<class T>
 class PooledSlots final
 {

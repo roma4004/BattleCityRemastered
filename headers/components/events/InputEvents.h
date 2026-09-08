@@ -2,9 +2,7 @@
 
 #include "enums/PlayerSlot.h"
 
-// The zero-arg ones need a unique empty tag struct for the same reason as CoreLifecycleEvents.h.
-// The bare-bool ones need a unique single-field struct so two unrelated bool events don't collide
-// under type-based dispatch.
+// Each event needs a type of its own - under type-based dispatch two bare bools would collide
 
 struct MenuReleasedEvent {};
 
@@ -53,8 +51,7 @@ struct FireEvent
 	bool isPressed;
 };
 
-//NOTE: maps to the literal event name "Reset_" (UserInput.cpp:208) - no matching listener found
-//anywhere in the codebase; kept, not deleted, needs author follow-up.
+//TODO: nothing in the codebase listens to this - wire it up or drop it
 struct ResetKeyEvent
 {
 	bool isPressed;

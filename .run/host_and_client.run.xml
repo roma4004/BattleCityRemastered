@@ -1,7 +1,0 @@
-<component name="ProjectRunConfigurationManager">
-  <configuration name="host + client" type="CompoundRunConfigurationType">
-    <toRun name="BattleCityRemastered (client, skipintro)" targetId="CMakeBuildProfile:Debug-MinGW" type="CMakeRunConfiguration" />
-    <toRun name="BattleCityRemastered (host)" targetId="CMakeBuildProfile:Debug-MinGW" type="CMakeRunConfiguration" />
-    <method v="2" />
-  </configuration>
-</component>

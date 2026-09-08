@@ -9,10 +9,10 @@
 
 enum class Faction : char8_t;
 enum class ObstacleType : char8_t;
-enum class GameMode : char8_t;
-class EventSystem;
 struct HealthChangedEvent;
 struct DespawnedEvent;
+class EventSystem;
+class GameConfig;
 
 class Obstacle : public BaseObj, public IDrawable
 {
@@ -25,7 +25,7 @@ protected:
 	virtual void OnDespawned(const DespawnedEvent& event);
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
-	GameMode _gameMode{};
+	const GameConfig& _gameConfig;
 	ObstacleType _obstacleType{};
 
 	void Draw() const override;
@@ -33,14 +33,11 @@ protected:
 	void EmitDeathStatistics(Author author) override = 0;
 
 	Obstacle(ObjRectangle rect, int health, const std::shared_ptr<EventSystem>& events, Uuid uuid,
-			 GameMode gameMode, ObstacleType obstacleType, CollisionTags collision);
+			 const GameConfig& gameConfig, ObstacleType obstacleType, CollisionTags collision);
 
 public:
-	~Obstacle() override;
-
 	void Activate() override;
 	void Deactivate() override;
 
-	//BaseObj overrides
 	void TakeDamage(unsigned int damage, Author author) override;
 };

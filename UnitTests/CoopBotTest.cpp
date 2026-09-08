@@ -16,7 +16,6 @@
 #include "entities/obstacles/WaterTile.h"
 #include "entities/pawns/Tank.h"
 #include "enums/Direction.h"
-#include "enums/GameMode.h"
 #include "gtest/gtest.h"
 #include "enums/Faction.h"
 #include <memory>
@@ -39,7 +38,6 @@ protected:
 	double _tankSpeed{142};
 	double _gridSize{};
 	unsigned short _tankHealth{100u};
-	GameMode _gameMode{GameMode::OnePlayer};
 	EventSubscription _spawnQueueSub{};
 
 	void SetUp() override
@@ -55,16 +53,17 @@ protected:
 		_gridSize = _gameConfig.gridOffset;
 		_tankSize = _gridSize * 3.0;// for better turns
 
+		//NOTE: the wall roll is pinned open, or every test that expects a shot at an obstacle would flake
+		_gameConfig.botShootObstacleChance = 1.0;
+
 		_allObjects.reserve(4u);
 	}
 
 	void TearDown() override {}
 };
 
-// Check that Coop bot does not change direction if it can't see the bonus
 TEST_F(CoopBotTest, CoopNoChangeDirIfBonusOutsideLineOfSight)
 {
-	// Spawn coop
 	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> coopBot =
 			TestUtils::CreateBot(
@@ -84,10 +83,8 @@ TEST_F(CoopBotTest, CoopNoChangeDirIfBonusOutsideLineOfSight)
 	EXPECT_EQ(startDirCoop, endDirCoop);
 }
 
-// Check that coop bot shoots when seeing an enemy
 TEST_F(CoopBotTest, CoopShootToEnemy)
 {
-	// Spawn coop
 	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> coopBot =
 			TestUtils::CreateBot(
@@ -113,10 +110,8 @@ TEST_F(CoopBotTest, CoopShootToEnemy)
 	EXPECT_EQ(sizeAfter, 4u);
 }
 
-// Check that CoopBot does not shoot at PlayerTeam members
 TEST_F(CoopBotTest, CoopNoShootToCoop)
 {
-	// Spawn Coop
 	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> coopBot =
 			TestUtils::CreateBot(
@@ -139,10 +134,8 @@ TEST_F(CoopBotTest, CoopNoShootToCoop)
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
 
-// Check that CoopBot does not shoot at PlayerTeam members
 TEST_F(CoopBotTest, CoopNoShootToPlayer1)
 {
-	// Spawn Coop
 	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> coopBot =
 			TestUtils::CreateBot(
@@ -165,10 +158,8 @@ TEST_F(CoopBotTest, CoopNoShootToPlayer1)
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
 
-// Check that Coop can shoot at Brick wall
 TEST_F(CoopBotTest, CoopShootToBrick)
 {
-	// Spawn Coop
 	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> coopBot =
 			TestUtils::CreateBot(
@@ -176,9 +167,8 @@ TEST_F(CoopBotTest, CoopShootToBrick)
 					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(coopBot);
 
-	// Spawn BrickWall
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
-	_allObjects.emplace_back(std::make_shared<BrickWall>(rect, _events, _uuid, _gameMode));
+	_allObjects.emplace_back(std::make_shared<BrickWall>(rect, _events, _uuid, _gameConfig));
 
 	const size_t sizeBefore = _allObjects.size();
 
@@ -187,10 +177,8 @@ TEST_F(CoopBotTest, CoopShootToBrick)
 	EXPECT_LT(sizeBefore, _allObjects.size());
 }
 
-// Check that Coop not shoots at Brick wall if too close
 TEST_F(CoopBotTest, CoopTooCloseToShootTheBrick)
 {
-	// Spawn Coop
 	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> coopBot =
 			TestUtils::CreateBot(
@@ -198,9 +186,8 @@ TEST_F(CoopBotTest, CoopTooCloseToShootTheBrick)
 					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(coopBot);
 
-	// Spawn BrickWall
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize + 18.0, .w = _tankSize, .h = _tankSize};
-	_allObjects.emplace_back(std::make_shared<BrickWall>(rect, _events, _uuid, _gameMode));
+	_allObjects.emplace_back(std::make_shared<BrickWall>(rect, _events, _uuid, _gameConfig));
 
 	const size_t sizeBefore = _allObjects.size();
 
@@ -209,10 +196,8 @@ TEST_F(CoopBotTest, CoopTooCloseToShootTheBrick)
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
 
-// Check that Coop can shoot at Steel wall if he can destroy it
 TEST_F(CoopBotTest, CoopShootToSteel)
 {
-	// Spawn Coop
 	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> coopBot =
 			TestUtils::CreateBot(
@@ -220,9 +205,8 @@ TEST_F(CoopBotTest, CoopShootToSteel)
 					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(coopBot);
 
-	// Spawn SteelWall
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
-	_allObjects.emplace_back(std::make_shared<SteelWall>(rect, _events, _uuid, _gameMode));
+	_allObjects.emplace_back(std::make_shared<SteelWall>(rect, _events, _uuid, _gameConfig));
 
 	const size_t sizeBefore = _allObjects.size();
 
@@ -231,10 +215,8 @@ TEST_F(CoopBotTest, CoopShootToSteel)
 	EXPECT_LT(sizeBefore, _allObjects.size());
 }
 
-// Check that Coop can shoot at Steel wall if low tier
 TEST_F(CoopBotTest, CoopNoShootToSteelIfTierTooLow)
 {
-	// Spawn Coop
 	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> coopBot =
 			TestUtils::CreateBot(
@@ -242,9 +224,8 @@ TEST_F(CoopBotTest, CoopNoShootToSteelIfTierTooLow)
 					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(coopBot);
 
-	// Spawn SteelWall
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
-	_allObjects.emplace_back(std::make_shared<SteelWall>(rect, _events, _uuid, _gameMode));
+	_allObjects.emplace_back(std::make_shared<SteelWall>(rect, _events, _uuid, _gameConfig));
 
 	const size_t sizeBefore = _allObjects.size();
 
@@ -253,10 +234,8 @@ TEST_F(CoopBotTest, CoopNoShootToSteelIfTierTooLow)
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
 
-// Check that Coop can shoot at Eagle
 TEST_F(CoopBotTest, CoopNoShootToEagle)
 {
-	// Spawn Coop
 	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> coopBot =
 			TestUtils::CreateBot(
@@ -264,9 +243,8 @@ TEST_F(CoopBotTest, CoopNoShootToEagle)
 					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(coopBot);
 
-	// Spawn Eagle
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
-	_allObjects.emplace_back(std::make_shared<EagleTile>(rect, _events, _uuid, _gameMode));
+	_allObjects.emplace_back(std::make_shared<EagleTile>(rect, _events, _uuid, _gameConfig));
 
 	const size_t sizeBefore = _allObjects.size();
 
@@ -275,10 +253,8 @@ TEST_F(CoopBotTest, CoopNoShootToEagle)
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
 
-// Check that Coop can shoot at Fortress wall
 TEST_F(CoopBotTest, CoopNoShootToFortress)
 {
-	// Spawn Coop
 	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> coopBot =
 			TestUtils::CreateBot(
@@ -286,9 +262,8 @@ TEST_F(CoopBotTest, CoopNoShootToFortress)
 					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(coopBot);
 
-	// Spawn FortressWall
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
-	_allObjects.emplace_back(std::make_shared<FortressBrickWall>(rect, _events, _uuid, _gameMode));
+	_allObjects.emplace_back(std::make_shared<FortressBrickWall>(rect, _events, _uuid, _gameConfig));
 
 	const size_t sizeBefore = _allObjects.size();
 
@@ -297,10 +272,8 @@ TEST_F(CoopBotTest, CoopNoShootToFortress)
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
 
-// Check that Coop can shoot at Water
 TEST_F(CoopBotTest, CoopNoShootToWater)
 {
-	// Spawn Coop
 	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> coopBot =
 			TestUtils::CreateBot(
@@ -308,9 +281,8 @@ TEST_F(CoopBotTest, CoopNoShootToWater)
 					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(coopBot);
 
-	// Spawn Water
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
-	_allObjects.emplace_back(std::make_shared<WaterTile>(rect, _events, _uuid, _gameMode));
+	_allObjects.emplace_back(std::make_shared<WaterTile>(rect, _events, _uuid, _gameConfig));
 
 	const size_t sizeBefore = _allObjects.size();
 
@@ -319,10 +291,8 @@ TEST_F(CoopBotTest, CoopNoShootToWater)
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
 
-// Check that Coop can shoot at Bush
 TEST_F(CoopBotTest, CoopNoShootToBush)
 {
-	// Spawn Coop
 	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> coopBot =
 			TestUtils::CreateBot(
@@ -330,9 +300,8 @@ TEST_F(CoopBotTest, CoopNoShootToBush)
 					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(coopBot);
 
-	// Spawn Bush
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
-	_allObjects.emplace_back(std::make_shared<BushTile>(rect, _events, _uuid, _gameMode));
+	_allObjects.emplace_back(std::make_shared<BushTile>(rect, _events, _uuid, _gameConfig));
 
 	const size_t sizeBefore = _allObjects.size();
 
@@ -341,10 +310,8 @@ TEST_F(CoopBotTest, CoopNoShootToBush)
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
 
-// Check that Coop can shoot at Ice
 TEST_F(CoopBotTest, CoopNoShootToIce)
 {
-	// Spawn Coop
 	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> coopBot =
 			TestUtils::CreateBot(
@@ -352,9 +319,8 @@ TEST_F(CoopBotTest, CoopNoShootToIce)
 					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(coopBot);
 
-	// Spawn Ice
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
-	_allObjects.emplace_back(std::make_shared<IceTile>(rect, _events, _uuid, _gameMode));
+	_allObjects.emplace_back(std::make_shared<IceTile>(rect, _events, _uuid, _gameConfig));
 
 	const size_t sizeBefore = _allObjects.size();
 

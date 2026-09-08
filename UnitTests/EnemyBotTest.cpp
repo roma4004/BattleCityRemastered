@@ -16,7 +16,6 @@
 #include "entities/obstacles/WaterTile.h"
 #include "entities/pawns/Tank.h"
 #include "enums/Direction.h"
-#include "enums/GameMode.h"
 #include "gtest/gtest.h"
 #include "enums/Faction.h"
 #include <memory>
@@ -40,7 +39,6 @@ protected:
 	double _tankSpeed{142};
 	double _gridSize{};
 	unsigned short _tankHealth{100u};
-	GameMode _gameMode{GameMode::OnePlayer};
 
 	void SetUp() override
 	{
@@ -55,16 +53,17 @@ protected:
 		_gridSize = _gameConfig.gridOffset;
 		_tankSize = _gridSize * 3.0;// for better turns
 
+		//NOTE: the wall roll is pinned open, or every test that expects a shot at an obstacle would flake
+		_gameConfig.botShootObstacleChance = 1.0;
+
 		_allObjects.reserve(4u);
 	}
 
 	void TearDown() override {}
 };
 
-// Check that bot shoots when seeing an opponent
 TEST_F(EnemyBotTest, EnemyShootToCoop)
 {
-	// Spawn Coop
 	const ObjRectangle coopBotRect{.x = 0.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> coopBot =
 			TestUtils::CreateBot(
@@ -90,10 +89,8 @@ TEST_F(EnemyBotTest, EnemyShootToCoop)
 	EXPECT_EQ(sizeAfter, 4u);
 }
 
-// Check that bot shoots when seeing a Player1
 TEST_F(EnemyBotTest, EnemyShootToPlayer1)
 {
-	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
@@ -120,10 +117,8 @@ TEST_F(EnemyBotTest, EnemyShootToPlayer1)
 	EXPECT_EQ(sizeAfter, 3u);
 }
 
-// Check that bot shoots when seeing a Player2
 TEST_F(EnemyBotTest, EnemyShootToPlayer2)
 {
-	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
@@ -149,10 +144,8 @@ TEST_F(EnemyBotTest, EnemyShootToPlayer2)
 	EXPECT_EQ(sizeAfter, 3u);
 }
 
-// Check that bot shoots when seeing a Player1
 TEST_F(EnemyBotTest, EnemyNoShootToPlayer1IfTooClose)
 {
-	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
@@ -178,10 +171,8 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayer1IfTooClose)
 	EXPECT_EQ(sizeAfter, 3u);
 }
 
-// Check that bot shoots when seeing a Player2
 TEST_F(EnemyBotTest, EnemyNoShootToPlayer2IfTooClose)
 {
-	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
@@ -261,10 +252,8 @@ TEST_F(EnemyBotTest, EnemyNoShootToAlliedIfTooClose)
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
 
-// Check that Enemy can shoot at Brick wall
 TEST_F(EnemyBotTest, EnemyShootToBrick)
 {
-	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
@@ -273,7 +262,7 @@ TEST_F(EnemyBotTest, EnemyShootToBrick)
 	_allObjects.emplace_back(enemyBot);
 
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
-	_allObjects.emplace_back(std::make_shared<BrickWall>(rect, _events, _uuid, _gameMode));
+	_allObjects.emplace_back(std::make_shared<BrickWall>(rect, _events, _uuid, _gameConfig));
 
 	const size_t sizeBefore = _allObjects.size();
 
@@ -282,10 +271,8 @@ TEST_F(EnemyBotTest, EnemyShootToBrick)
 	EXPECT_LT(sizeBefore, _allObjects.size());
 }
 
-// Check that Enemy not shoots at Brick wall if too close
 TEST_F(EnemyBotTest, EnemyTooCloseToShootTheBrick)
 {
-	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
@@ -294,7 +281,7 @@ TEST_F(EnemyBotTest, EnemyTooCloseToShootTheBrick)
 	_allObjects.emplace_back(enemyBot);
 
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize + 3.0, .w = _tankSize, .h = _tankSize};
-	_allObjects.emplace_back(std::make_shared<BrickWall>(rect, _events, _uuid, _gameMode));
+	_allObjects.emplace_back(std::make_shared<BrickWall>(rect, _events, _uuid, _gameConfig));
 
 	const size_t sizeBefore = _allObjects.size();
 
@@ -303,10 +290,8 @@ TEST_F(EnemyBotTest, EnemyTooCloseToShootTheBrick)
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
 
-// Check that enemy can shoot at Steel wall if he can destroy it
 TEST_F(EnemyBotTest, EnemyShootToSteel)
 {
-	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
@@ -314,9 +299,8 @@ TEST_F(EnemyBotTest, EnemyShootToSteel)
 					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(enemyBot);
 
-	// Spawn SteelWall
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
-	_allObjects.emplace_back(std::make_shared<SteelWall>(rect, _events, _uuid, _gameMode));
+	_allObjects.emplace_back(std::make_shared<SteelWall>(rect, _events, _uuid, _gameConfig));
 
 	const size_t sizeBefore = _allObjects.size();
 
@@ -325,10 +309,8 @@ TEST_F(EnemyBotTest, EnemyShootToSteel)
 	EXPECT_LT(sizeBefore, _allObjects.size());
 }
 
-// Check that Enemy can shoot at Steel wall if low tier
 TEST_F(EnemyBotTest, EnemyNoShootToSteelIfTierTooLow)
 {
-	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
@@ -336,9 +318,8 @@ TEST_F(EnemyBotTest, EnemyNoShootToSteelIfTierTooLow)
 					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(enemyBot);
 
-	// Spawn SteelWall
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
-	_allObjects.emplace_back(std::make_shared<SteelWall>(rect, _events, _uuid, _gameMode));
+	_allObjects.emplace_back(std::make_shared<SteelWall>(rect, _events, _uuid, _gameConfig));
 
 	const size_t sizeBefore = _allObjects.size();
 
@@ -347,10 +328,8 @@ TEST_F(EnemyBotTest, EnemyNoShootToSteelIfTierTooLow)
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
 
-// Check that Enemy can shoot at Eagle
 TEST_F(EnemyBotTest, EnemyShootToEagle)
 {
-	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
@@ -358,9 +337,8 @@ TEST_F(EnemyBotTest, EnemyShootToEagle)
 					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(enemyBot);
 
-	// Spawn Eagle
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
-	_allObjects.emplace_back(std::make_shared<EagleTile>(rect, _events, _uuid, _gameMode));
+	_allObjects.emplace_back(std::make_shared<EagleTile>(rect, _events, _uuid, _gameConfig));
 
 	const size_t sizeBefore = _allObjects.size();
 
@@ -369,10 +347,8 @@ TEST_F(EnemyBotTest, EnemyShootToEagle)
 	EXPECT_LT(sizeBefore, _allObjects.size());
 }
 
-// Check that Enemy can shoot at Fortress wall
 TEST_F(EnemyBotTest, EnemyShootToFortress)
 {
-	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
@@ -380,9 +356,8 @@ TEST_F(EnemyBotTest, EnemyShootToFortress)
 					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(enemyBot);
 
-	// Spawn FortressWall
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
-	_allObjects.emplace_back(std::make_shared<FortressBrickWall>(rect, _events, _uuid, _gameMode));
+	_allObjects.emplace_back(std::make_shared<FortressBrickWall>(rect, _events, _uuid, _gameConfig));
 
 	const size_t sizeBefore = _allObjects.size();
 
@@ -391,10 +366,8 @@ TEST_F(EnemyBotTest, EnemyShootToFortress)
 	EXPECT_LT(sizeBefore, _allObjects.size());
 }
 
-// Check that Enemy can shoot at Water
 TEST_F(EnemyBotTest, EnemyShootToWater)
 {
-	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
@@ -402,9 +375,8 @@ TEST_F(EnemyBotTest, EnemyShootToWater)
 					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(enemyBot);
 
-	// Spawn Water
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
-	_allObjects.emplace_back(std::make_shared<WaterTile>(rect, _events, _uuid, _gameMode));
+	_allObjects.emplace_back(std::make_shared<WaterTile>(rect, _events, _uuid, _gameConfig));
 
 	const size_t sizeBefore = _allObjects.size();
 
@@ -413,10 +385,8 @@ TEST_F(EnemyBotTest, EnemyShootToWater)
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
 
-// Check that Enemy can shoot at Bush
 TEST_F(EnemyBotTest, EnemyShootToBush)
 {
-	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
@@ -424,9 +394,8 @@ TEST_F(EnemyBotTest, EnemyShootToBush)
 					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(enemyBot);
 
-	// Spawn Bush
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
-	_allObjects.emplace_back(std::make_shared<BushTile>(rect, _events, _uuid, _gameMode));
+	_allObjects.emplace_back(std::make_shared<BushTile>(rect, _events, _uuid, _gameConfig));
 
 	const size_t sizeBefore = _allObjects.size();
 
@@ -435,10 +404,8 @@ TEST_F(EnemyBotTest, EnemyShootToBush)
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
 
-// Check that Enemy can shoot at Ice
 TEST_F(EnemyBotTest, EnemyShootToIce)
 {
-	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
@@ -446,9 +413,8 @@ TEST_F(EnemyBotTest, EnemyShootToIce)
 					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(enemyBot);
 
-	// Spawn Ice
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
-	_allObjects.emplace_back(std::make_shared<IceTile>(rect, _events, _uuid, _gameMode));
+	_allObjects.emplace_back(std::make_shared<IceTile>(rect, _events, _uuid, _gameConfig));
 
 	const size_t sizeBefore = _allObjects.size();
 
@@ -457,10 +423,8 @@ TEST_F(EnemyBotTest, EnemyShootToIce)
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
 
-// Check that Enemy can shoot at Player that been behind water
 TEST_F(EnemyBotTest, EnemyShootToPlayerBehindWater)
 {
-	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
@@ -468,9 +432,8 @@ TEST_F(EnemyBotTest, EnemyShootToPlayerBehindWater)
 					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(enemyBot);
 
-	// Spawn Water
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0 + 1.0, .w = _tankSize, .h = _tankSize};
-	_allObjects.emplace_back(std::make_shared<WaterTile>(rect, _events, _uuid, _gameMode));
+	_allObjects.emplace_back(std::make_shared<WaterTile>(rect, _events, _uuid, _gameConfig));
 
 	// Spawn player aligned enemy in line of sight
 	const ObjRectangle rectPlayer{.x = 0.0, .y = _tankSize * 3.0 + 2.0, .w = _tankSize, .h = _tankSize};
@@ -490,10 +453,9 @@ TEST_F(EnemyBotTest, EnemyShootToPlayerBehindWater)
 	EXPECT_EQ(sizeAfter, 4u);
 }
 
-// Check that Enemy can shoot at Player that been in the water (in case of BonusShip was pickup)
+// A player standing in the water, which takes a Ship bonus, is still a target
 TEST_F(EnemyBotTest, EnemyShootToPlayerInTheWater)
 {
-	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
@@ -501,9 +463,8 @@ TEST_F(EnemyBotTest, EnemyShootToPlayerInTheWater)
 					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(enemyBot);
 
-	// Spawn Water
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0 + 1.0, .w = _tankSize, .h = _tankSize};
-	_allObjects.emplace_back(std::make_shared<WaterTile>(rect, _events, _uuid, _gameMode));
+	_allObjects.emplace_back(std::make_shared<WaterTile>(rect, _events, _uuid, _gameConfig));
 
 	// Spawn player aligned enemy in line of sight
 	const ObjRectangle rectPlayer{.x = 0.0, .y = _tankSize * 2.0 + 1.0, .w = _tankSize, .h = _tankSize};
@@ -523,10 +484,8 @@ TEST_F(EnemyBotTest, EnemyShootToPlayerInTheWater)
 	EXPECT_EQ(sizeAfter, 4u);
 }
 
-// Check that Enemy can shoot at Player that been behind Ice
 TEST_F(EnemyBotTest, EnemyShootToPlayerBehindIce)
 {
-	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
@@ -534,9 +493,8 @@ TEST_F(EnemyBotTest, EnemyShootToPlayerBehindIce)
 					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(enemyBot);
 
-	// Spawn Ice
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0 + 1.0, .w = _tankSize, .h = _tankSize};
-	_allObjects.emplace_back(std::make_shared<IceTile>(rect, _events, _uuid, _gameMode));
+	_allObjects.emplace_back(std::make_shared<IceTile>(rect, _events, _uuid, _gameConfig));
 
 	// Spawn player aligned enemy in line of sight
 	const ObjRectangle rectPlayer{.x = 0.0, .y = _tankSize * 3.0 + 2.0, .w = _tankSize, .h = _tankSize};
@@ -556,10 +514,8 @@ TEST_F(EnemyBotTest, EnemyShootToPlayerBehindIce)
 	EXPECT_EQ(sizeAfter, 4u);
 }
 
-// Check that Enemy can shoot at Player that been in the Ice
 TEST_F(EnemyBotTest, EnemyShootToPlayerInTheIce)
 {
-	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
@@ -567,9 +523,8 @@ TEST_F(EnemyBotTest, EnemyShootToPlayerInTheIce)
 					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(enemyBot);
 
-	// Spawn Ice
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0 + 1.0, .w = _tankSize, .h = _tankSize};
-	_allObjects.emplace_back(std::make_shared<IceTile>(rect, _events, _uuid, _gameMode));
+	_allObjects.emplace_back(std::make_shared<IceTile>(rect, _events, _uuid, _gameConfig));
 
 	// Spawn player aligned enemy in line of sight
 	const ObjRectangle rectPlayer{.x = 0.0, .y = _tankSize * 2.0 + 1.0, .w = _tankSize, .h = _tankSize};
@@ -589,10 +544,8 @@ TEST_F(EnemyBotTest, EnemyShootToPlayerInTheIce)
 	EXPECT_EQ(sizeAfter, 4u);
 }
 
-// Check that Enemy can shoot at Player that been behind BrickWall
 TEST_F(EnemyBotTest, EnemyNoShootToPlayerBehindBrickWall)
 {
-	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
@@ -600,9 +553,8 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayerBehindBrickWall)
 					_tankSpeed, Direction::RIGHT, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(enemyBot);
 
-	// Spawn BrickWall
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0 + 1.0, .w = _tankSize, .h = _tankSize};
-	_allObjects.emplace_back(std::make_shared<BrickWall>(rect, _events, _uuid, _gameMode));
+	_allObjects.emplace_back(std::make_shared<BrickWall>(rect, _events, _uuid, _gameConfig));
 
 	// Spawn player aligned enemy in line of sight
 	const ObjRectangle rectPlayer{.x = 0.0, .y = _tankSize * 3.0 + 2.0, .w = _tankSize, .h = _tankSize};
@@ -622,10 +574,8 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayerBehindBrickWall)
 	EXPECT_EQ(sizeAfter, 3u);
 }
 
-// Check that Enemy can shoot at Player that been behind SteelWall
 TEST_F(EnemyBotTest, EnemyNoShootToPlayerBehindSteelWall)
 {
-	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
@@ -633,9 +583,8 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayerBehindSteelWall)
 					_tankSpeed, Direction::RIGHT, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(enemyBot);
 
-	// Spawn SteelWall
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0 + 1.0, .w = _tankSize, .h = _tankSize};
-	_allObjects.emplace_back(std::make_shared<SteelWall>(rect, _events, _uuid, _gameMode));
+	_allObjects.emplace_back(std::make_shared<SteelWall>(rect, _events, _uuid, _gameConfig));
 
 	// Spawn player aligned enemy in line of sight
 	const ObjRectangle rectPlayer{.x = 0.0, .y = _tankSize * 3.0 + 2.0, .w = _tankSize, .h = _tankSize};
@@ -655,10 +604,8 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayerBehindSteelWall)
 	EXPECT_EQ(sizeAfter, 3u);
 }
 
-// Check that Enemy can shoot at Player that been behind FortressWall
 TEST_F(EnemyBotTest, EnemyNoShootToPlayerBehindFortressWall)
 {
-	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
@@ -666,9 +613,8 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayerBehindFortressWall)
 					_tankSpeed, Direction::RIGHT, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(enemyBot);
 
-	// Spawn FortressWall
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0 + 1.0, .w = _tankSize, .h = _tankSize};
-	_allObjects.emplace_back(std::make_shared<FortressBrickWall>(rect, _events, _uuid, _gameMode));
+	_allObjects.emplace_back(std::make_shared<FortressBrickWall>(rect, _events, _uuid, _gameConfig));
 
 	// Spawn player aligned enemy in line of sight
 	const ObjRectangle rectPlayer{.x = 0.0, .y = _tankSize * 3.0 + 2.0, .w = _tankSize, .h = _tankSize};
@@ -688,10 +634,8 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayerBehindFortressWall)
 	EXPECT_EQ(sizeAfter, 3u);
 }
 
-// Check that Enemy can shoot at Player that been behind Bush
 TEST_F(EnemyBotTest, EnemyNoShootToPlayerBehindBush)
 {
-	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
@@ -699,9 +643,8 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayerBehindBush)
 					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(enemyBot);
 
-	// Spawn Bush
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0 + 1.0, .w = _tankSize, .h = _tankSize};
-	_allObjects.emplace_back(std::make_shared<BushTile>(rect, _events, _uuid, _gameMode));
+	_allObjects.emplace_back(std::make_shared<BushTile>(rect, _events, _uuid, _gameConfig));
 
 	// Spawn player aligned enemy in line of sight
 	const ObjRectangle rectPlayer{.x = 0.0, .y = _tankSize * 3.0 + 2.0, .w = _tankSize, .h = _tankSize};
@@ -721,10 +664,8 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayerBehindBush)
 	EXPECT_EQ(sizeAfter, 3u);
 }
 
-// Check that Enemy can shoot at Player that been in the Bush
 TEST_F(EnemyBotTest, EnemyNoShootToPlayerInTheBush)
 {
-	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
@@ -732,9 +673,8 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayerInTheBush)
 					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(enemyBot);
 
-	// Spawn Bush
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0 + 1.0, .w = _tankSize, .h = _tankSize};
-	_allObjects.emplace_back(std::make_shared<BushTile>(rect, _events, _uuid, _gameMode));
+	_allObjects.emplace_back(std::make_shared<BushTile>(rect, _events, _uuid, _gameConfig));
 
 	// Spawn player aligned enemy in line of sight
 	const ObjRectangle rectPlayer{.x = 0.0, .y = _tankSize * 2.0 + 1.0, .w = _tankSize, .h = _tankSize};

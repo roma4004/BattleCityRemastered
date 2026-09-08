@@ -17,7 +17,6 @@
 #include "entities/pawns/Tank.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
-#include "enums/GameMode.h"
 #include "enums/ObstacleType.h"
 #include "gtest/gtest.h"
 #include "enums/Faction.h"
@@ -59,7 +58,7 @@ protected:
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, _allObjects, _gameConfig);
 		_instantSpawnAnimationSubs = TestUtils::WireInstantSpawnAnimations(_events);
 		_bonusManager = std::make_unique<BonusManager>(_events, _gameConfig);
-		_fortressManager = std::make_unique<FortressManager>(_events, _allObjects);
+		_fortressManager = std::make_unique<FortressManager>(_events, _allObjects, _gameConfig);
 		_obstacleSpawner = std::make_unique<ObstacleSpawner>(_events, _gameConfig);
 		_fortressWallSub = TestUtils::TrackFortressWall(_events, &_fortressWall);
 		_gridSize = _gameConfig.gridOffset;
@@ -71,10 +70,8 @@ protected:
 	void TearDown() override {}
 };
 
-// Check that bullet can destroy a random bonus
 TEST_F(BonusTestDestroy, BonusDestroy)
 {
-	// spawn Bullet
 	constexpr ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = 6.0, .h = 5.0};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(
@@ -98,10 +95,8 @@ TEST_F(BonusTestDestroy, BonusDestroy)
 	EXPECT_TRUE(false);
 }
 
-// Check that bullet not destroy a random bonus
 TEST_F(BonusTestDestroy, BonusNotDestroy)
 {
-	// spawn Bullet
 	constexpr ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = 6.0, .h = 5.0};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(
@@ -125,10 +120,8 @@ TEST_F(BonusTestDestroy, BonusNotDestroy)
 	EXPECT_TRUE(false);
 }
 
-//Check that player can destroy timer bonus and enemies still move
 TEST_F(BonusTestDestroy, TimerDestroyByPlayerAndEnemyStillMove)
 {
-	// spawn Bullet
 	constexpr ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = 6.0, .h = 5.0};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(
@@ -140,7 +133,6 @@ TEST_F(BonusTestDestroy, TimerDestroyByPlayerAndEnemyStillMove)
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	// spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
@@ -155,10 +147,8 @@ TEST_F(BonusTestDestroy, TimerDestroyByPlayerAndEnemyStillMove)
 	EXPECT_NE(enemyPos, enemyBot->GetPos());
 }
 
-//Check that player can destroy helmet bonus and enemies still can damage player
 TEST_F(BonusTestDestroy, HelmetDestroyAndBulletStillCanDamageTank)
 {
-	// spawn Player
 	const ObjRectangle rectPlayer{.x = _tankSize + 1.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
@@ -166,7 +156,6 @@ TEST_F(BonusTestDestroy, HelmetDestroyAndBulletStillCanDamageTank)
 					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
-	// spawn Bullet
 	constexpr ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = 6.0, .h = 5.0};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(
@@ -178,7 +167,6 @@ TEST_F(BonusTestDestroy, HelmetDestroyAndBulletStillCanDamageTank)
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	// spawn Bullet2
 	const ObjRectangle rectBullet2{.x = _tankSize * 2 + 1.0, .y = 7.0, .w = 6.0, .h = 5.0};
 	std::shared_ptr<Bullet> bullet2 =
 			TestUtils::CreateBullet(
@@ -194,10 +182,8 @@ TEST_F(BonusTestDestroy, HelmetDestroyAndBulletStillCanDamageTank)
 }
 
 
-//Check that player can destroy Grenade bonus and enemies still full health
 TEST_F(BonusTestDestroy, GrenadeDestroyEnemyHealthFull)
 {
-	// spawn Bullet
 	constexpr ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = 6.0, .h = 5.0};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(
@@ -207,7 +193,6 @@ TEST_F(BonusTestDestroy, GrenadeDestroyEnemyHealthFull)
 
 	_bonusSpawner->SpawnBonus({.x = 0.0, .y = 7.0, .w = _tankSize, .h = _tankSize}, BonusType::Grenade);
 
-	// spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
@@ -222,7 +207,6 @@ TEST_F(BonusTestDestroy, GrenadeDestroyEnemyHealthFull)
 	EXPECT_EQ(enemyBot->GetHealth(), 100);
 }
 
-//Check that player destroys Tank bonus and his life counts remain the same
 TEST_F(BonusTestDestroy, TankDestroyNoExtraLife)
 {
 	unsigned short respawnActual{3u};
@@ -231,7 +215,6 @@ TEST_F(BonusTestDestroy, TankDestroyNoExtraLife)
 		respawnActual = event.respawnCount;
 	});
 
-	// spawn Bullet
 	constexpr ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = 6.0, .h = 5.0};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(
@@ -249,10 +232,8 @@ TEST_F(BonusTestDestroy, TankDestroyNoExtraLife)
 
 }
 
-//Check that player destroys Star bonus and his tier counts remain the same
 TEST_F(BonusTestDestroy, StarDestroyTierRemainTheSame)
 {
-	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
@@ -260,7 +241,6 @@ TEST_F(BonusTestDestroy, StarDestroyTierRemainTheSame)
 					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
-	// spawn Bullet
 	constexpr ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = 6.0, .h = 5.0};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(
@@ -277,10 +257,8 @@ TEST_F(BonusTestDestroy, StarDestroyTierRemainTheSame)
 	EXPECT_EQ(player->GetTier(), 1u);
 }
 
-//Check that player destroys Shovel bonus and fortress brick remain the same
 TEST_F(BonusTestDestroy, ShovelNotPickUpByPlayerThenfortressWallRemainTheSame)
 {
-	// spawn Bullet
 	constexpr ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = 6.0, .h = 5.0};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(

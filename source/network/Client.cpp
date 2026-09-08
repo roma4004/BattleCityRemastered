@@ -87,8 +87,8 @@ void Client::ScheduleReconnect()
 
 	_reconnectPending = true;
 
-	//NOTE: weak for the same reason as in StartReading - the timer is our own member, so a shared
-	//capture would keep this Client alive through its own pending handler
+	//NOTE: weak - the timer is our own member, so a shared capture would keep this Client alive
+	//through its own pending handler
 	const std::weak_ptr<Client> weakSelf = weak_from_this();
 	_reconnectTimer.expires_after(std::chrono::milliseconds(kReconnectDelayMs));
 	_reconnectTimer.async_wait([weakSelf](const boost::system::error_code& timerEc)
@@ -130,9 +130,8 @@ void Client::HandleDisconnect()
 	ScheduleReconnect();
 }
 
-//NOTE: TCP hands bytes over intact or not at all, so an unreadable frame is a protocol
-//disagreement, not line noise - the next one fails the same way and a reconnect reaches the
-//same host. Hence: end the link, and tell the game side why.
+//NOTE: TCP hands bytes over intact or not at all, so an unreadable frame is a protocol disagreement
+//and the next one fails the same way - the link ends here instead of retrying
 void Client::HandleProtocolError()
 {
 	if (_isShuttingDown)
@@ -176,6 +175,12 @@ void Client::Shutdown(const DisconnectReason reason, std::function<void()> onClo
 void Client::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &Client::OnNetworkEndFrame));
+	_subs.push_back(_events->AddListener(this, &Client::OnSlotAssigned));
+}
+
+void Client::OnSlotAssigned(const PlayerSlotAssignedEvent& event)
+{
+	_inputSubs = BindClientInput(_replicationOut, *_events, event.slot);
 }
 
 void Client::OnNetworkEndFrame(const NetworkEndFrameEvent&)

@@ -29,8 +29,6 @@ public:
 	LineOfSight(ObjRectangle tankRect, const std::vector<std::shared_ptr<BaseObj>>& objects,
 				const GameConfig& gameConfig, bool isWaterSkip = true);
 
-	~LineOfSight();
-
 	//NOTE: the four lists are one table keyed by direction - callers never need to name a side
 	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>>& SideObstacles(Direction dir);
 };

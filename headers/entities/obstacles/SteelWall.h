@@ -6,6 +6,7 @@
 
 enum class Faction : char8_t;
 struct DrawEvent;
+class GameConfig;
 
 class SteelWall : public Obstacle
 {
@@ -18,7 +19,7 @@ protected:
 	static constexpr CollisionTags kCollision{tags::Impassable{}, tags::Indestructible{}, tags::Impenetrable{}};
 
 public:
-	SteelWall(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, Uuid uuid, GameMode gameMode);
+	SteelWall(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, Uuid uuid, const GameConfig& gameConfig);
 
 	~SteelWall() override = default;
 };

@@ -10,11 +10,11 @@
 enum class Faction : char8_t;
 struct BulletResetProperty;
 struct UPoint;
+struct DrawEvent;
+struct DespawnedEvent;
 class EventSystem;
 class BulletPool;
 class GameConfig;
-struct DrawEvent;
-struct DespawnedEvent;
 
 class Bullet final : public Pawn, public IDrawable
 {

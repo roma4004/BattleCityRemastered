@@ -9,13 +9,13 @@ namespace network::commands
 {
 class Server;
 
-class ServerHandler final : public NetworkNodeBase
+class ServerNode final : public NetworkNodeBase
 {
 public:
-	explicit ServerHandler(const std::shared_ptr<EventSystem>& events);
-	ServerHandler(std::string host, uint16_t port, const std::shared_ptr<EventSystem>& events);
+	explicit ServerNode(const std::shared_ptr<EventSystem>& events);
+	ServerNode(std::string host, uint16_t port, const std::shared_ptr<EventSystem>& events);
 
-	~ServerHandler() override;
+	~ServerNode() override;
 
 	void ProcessNetworkCommands() override;
 

@@ -62,13 +62,17 @@ GameState GameStateManager::IdleStateForMode() const
 		return GameState::Demo;
 	}
 
-	return IsNetworkGame(_gameMode) && !_hasPeer ? GameState::Lobby : GameState::Playing;
+	return IsNetworkGame(_gameMode) && _peerCount < PeersToWaitFor() ? GameState::Lobby : GameState::Playing;
 }
+
+//NOTE: PlayAsHost is reached only inside BattleCityServer, which fills no seat itself, so it
+//waits for both players. A client waits for one peer, and that peer is the server, not player two.
+unsigned short GameStateManager::PeersToWaitFor() const { return IsHost(_gameMode) ? 2u : 1u; }
 
 void GameStateManager::OnGameModeApplied(const GameModeAppliedEvent& event)
 {
 	_gameMode = event.mode;
-	_hasPeer = false;
+	_peerCount = 0u;
 	_isDemo = false;
 
 	//NOTE: announced even when the phase keeps its name - spawners act on entering one, not on a diff
@@ -98,9 +102,9 @@ void GameStateManager::OnGameFinished(const GameFinishedEvent& event) { SetState
 
 void GameStateManager::PeerArrived()
 {
-	_hasPeer = true;
+	++_peerCount;
 
-	if (_state == GameState::Lobby)
+	if (_state == GameState::Lobby && _peerCount >= PeersToWaitFor())
 	{
 		SetState(GameState::Playing);
 	}
@@ -108,7 +112,10 @@ void GameStateManager::PeerArrived()
 
 void GameStateManager::PeerGone()
 {
-	_hasPeer = false;
+	if (_peerCount > 0u)
+	{
+		--_peerCount;
+	}
 
 	if (IsNetworkGame(_gameMode))
 	{

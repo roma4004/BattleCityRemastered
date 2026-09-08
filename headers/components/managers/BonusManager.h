@@ -10,10 +10,6 @@
 #include <vector>
 
 enum class Faction : char8_t;
-
-class Bonus;
-class EventSystem;
-class GameConfig;
 struct BonusCreatedEvent;
 struct GameResetEvent;
 struct TickUpdateEvent;
@@ -21,8 +17,11 @@ struct BonusTimerPickupEvent;
 struct BonusHelmetPickupEvent;
 struct BonusShovelPickupEvent;
 struct BonusReApplyEvent;
+class Bonus;
+class EventSystem;
+class GameConfig;
 
-class BonusManager
+class BonusManager final
 {
 	using milliseconds = std::chrono::milliseconds;
 
@@ -76,6 +75,4 @@ class BonusManager
 
 public:
 	BonusManager(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig);
-
-	~BonusManager() = default;
 };

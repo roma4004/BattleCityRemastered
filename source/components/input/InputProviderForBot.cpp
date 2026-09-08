@@ -1,4 +1,5 @@
 #include "components/input/InputProviderForBot.h"
+#include "application/GameConfig.h"
 #include "components/LineOfSight.h"
 #include "entities/BaseObj.h"
 #include "entities/obstacles/IFortress.h"
@@ -11,6 +12,7 @@
 #include "utils/DirectionUtils.h"
 #include "utils/RandUtils.h"
 #include <chrono>
+#include <random>
 
 //TODO: if enemy see bullets they should try or prioritize move aside
 InputProviderForBot::InputProviderForBot(const std::vector<std::shared_ptr<BaseObj>>& allObjects,
@@ -102,8 +104,7 @@ bool InputProviderForBot::ChangeDirIfSeenOpponent(Tank& self, const Direction di
 	return false;
 }
 
-//NOTE: the sides are tried in this order, and the first one that triggers wins - same as when the
-//two lookups were spelled out four blocks each
+//NOTE: the sides are tried in this order, and the first one that triggers wins
 std::shared_ptr<BaseObj> InputProviderForBot::Lookup(Tank& self, LineOfSight& lineOfSight, Direction& dir,
 													  const SightTrigger trigger)
 {
@@ -205,8 +206,7 @@ bool InputProviderForBot::ShouldShootOpponent(const Tank& self, const std::share
 	return false;
 }
 
-//NOTE: the whole of what used to tell an enemy bot from a coop one - a bot on the player team is
-//defending the eagle, so it never fires at the fortress
+//NOTE: a bot in the player team is defending the eagle, so it never fires at the fortress
 bool InputProviderForBot::ShouldShootObstacle(const Tank& self, const std::shared_ptr<BaseObj>& obj)
 {
 	if (obj == nullptr || IsAlly(self, obj) || IsBonus(obj))
@@ -221,6 +221,25 @@ bool InputProviderForBot::ShouldShootObstacle(const Tank& self, const std::share
 
 	//NOTE: the eagle and the walls around it
 	return self.GetFaction() == Faction::EnemyTeam || dynamic_cast<IFortress*>(obj.get()) == nullptr;
+}
+
+//NOTE: asked every frame, so without a cooldown on a refusal any chance fires within a few
+//frames. A successful roll needs none - the reload already paces the next shot
+bool InputProviderForBot::RollShootObstacle()
+{
+	if (!_obstacleShootCooldown.IsCooldownFinish())
+	{
+		return false;
+	}
+
+	if (RandUtils::GetRandNumber(std::uniform_real_distribution{0.0, 1.0}) < _gameConfig.botShootObstacleChance)
+	{
+		return true;
+	}
+
+	_obstacleShootCooldown.Reset(_gameConfig.botObstacleShootCooldown);
+
+	return false;
 }
 
 std::optional<Direction> InputProviderForBot::ChooseDirection(Tank& self, const double deltaTime)
@@ -264,6 +283,11 @@ bool InputProviderForBot::ShouldShoot(Tank& self)
 		return false;
 	}
 
-	//TODO: add feature for bots chance to shoot to obstacle
-	return ShouldShootOpponent(self, nearestSeenObstacle) || ShouldShootObstacle(self, nearestSeenObstacle);
+	if (ShouldShootOpponent(self, nearestSeenObstacle))
+	{
+		return true;
+	}
+
+	//NOTE: a refusal keeps the loaded shot for an opponent, so it is asked only with the gun loaded
+	return self.CanShoot() && ShouldShootObstacle(self, nearestSeenObstacle) && RollShootObstacle();
 }

@@ -15,7 +15,6 @@
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
 #include "enums/Faction.h"
-#include "enums/GameMode.h"
 #include "enums/InputChannel.h"
 #include "gtest/gtest.h"
 #include <memory>
@@ -38,7 +37,6 @@ protected:
 	double _tankSpeed{142.0};
 	double _deltaTimeOneFrame{1.0 / 60.0};
 	int _tankHealth{1};
-	GameMode _gameMode{GameMode::OnePlayer};
 	EventSubscription _spawnQueueSub{};
 
 	void SetUp() override
@@ -98,7 +96,7 @@ TEST_F(DeadObjectFilterTest, BrickWallHitByTwoBulletsDiesOnce)
 
 	const double cell = _gameConfig.gridOffset;
 	auto wall = std::make_shared<BrickWall>(ObjRectangle{.x = 100.0, .y = 100.0, .w = cell, .h = cell}, _events,
-											_uuid, _gameMode);
+											_uuid, _gameConfig);
 	_allObjects.emplace_back(wall);
 
 	const ObjRectangle fromLeft{.x = 100.0 - _calibre.size.x, .y = 103.0, .w = _calibre.size.x, .h = _calibre.size.y};

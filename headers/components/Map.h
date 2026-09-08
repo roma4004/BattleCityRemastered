@@ -9,7 +9,7 @@
 class EventSystem;
 
 //NOTE: the grid lives in Resources/Maps/*.map, with its legend in the file's own header comment.
-//The map decides its size; the window never does - see WorldGeometry for how the two are reconciled.
+//The map decides how big the world is, the window never does
 class Map final
 {
 	std::shared_ptr<EventSystem> _events{nullptr};
@@ -17,8 +17,6 @@ class Map final
 
 public:
 	explicit Map(const std::shared_ptr<EventSystem>& events);
-
-	~Map();
 
 	[[nodiscard]] std::expected<void, MapError> LoadFromFile(const std::filesystem::path& path);
 

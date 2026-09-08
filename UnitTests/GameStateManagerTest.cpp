@@ -65,7 +65,6 @@ protected:
 	void TearDown() override {}
 };
 
-// Check that Player's team can win
 TEST_F(GameStateManagerTest, PlayerTeamWon)
 {
 	bool isGameWon{false};
@@ -176,7 +175,6 @@ TEST_F(GameStateManagerTest, PlayerTeamWon)
 
 }
 
-// Check that Player's team can win with enemy extra life
 TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 {
 	bool isGameWon{false};
@@ -249,7 +247,6 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 				}
 			});
 
-	// Spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 3.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
@@ -338,7 +335,7 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBase)
 
 	EXPECT_EQ(respawnActual, 3u);
 	_events->EmitEvent(RespawnTanksEvent{});
-	_allObjects.emplace_back(std::make_shared<EagleTile>(ObjRectangle{}, _events, _uuid, GameMode::OnePlayer));
+	_allObjects.emplace_back(std::make_shared<EagleTile>(ObjRectangle{}, _events, _uuid, _gameConfig));
 	EXPECT_EQ(respawnActual, 2u);
 
 	EXPECT_FALSE(isGameLose);
@@ -479,7 +476,7 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBaseAndExtraLife)
 	EXPECT_EQ(respawnPlayerOneActual, 2u);
 	EXPECT_EQ(respawnPlayerTwoActual, 3u);//game mode one player so second should not respawn
 
-	_allObjects.emplace_back(std::make_shared<EagleTile>(ObjRectangle{}, _events, _uuid, GameMode::OnePlayer));
+	_allObjects.emplace_back(std::make_shared<EagleTile>(ObjRectangle{}, _events, _uuid, _gameConfig));
 	_events->EmitEvent(PlayersBaseFinishedEvent{});
 	_allObjects.pop_back();// the base fell
 	EXPECT_EQ(respawnPlayerOneActual, 0u);

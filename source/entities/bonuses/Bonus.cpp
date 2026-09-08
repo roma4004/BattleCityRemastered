@@ -1,4 +1,5 @@
 #include "entities/bonuses/Bonus.h"
+#include "application/GameConfig.h"
 #include "components/EventSystem.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
@@ -8,7 +9,6 @@
 #include "entities/BaseObjProperty.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
-#include "enums/GameMode.h"
 #include "enums/Faction.h"
 #include "enums/TextureType.h"
 #include "utils/TimeUtils.h"
@@ -20,8 +20,7 @@
 
 namespace
 {
-//NOTE: what used to be a subclass each - just the event a pickup emits. Captureless, so the
-//catalogue stays constexpr
+//NOTE: just the event a pickup emits. Captureless, so the catalogue stays constexpr
 using PickupEmitter = void (*)(EventSystem& events, Author author, Faction faction);
 
 struct BonusRecipe
@@ -115,19 +114,17 @@ static_assert(
 }//namespace
 
 Bonus::Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& events, const Uuid uuid,
-			 const GameMode gameMode, const BonusType bonusType, const bool isSuper)
+			 const GameConfig& gameConfig, const BonusType bonusType, const bool isSuper)
 	: BaseObj{BaseObjProperty{.rect = rect,
 							  .health = 1,
 							  .uuid = uuid,
 							  .faction = Faction::Neutral},
 			  kCollision}
-	, _gameMode{gameMode}
+	, _gameConfig{gameConfig}
 	, _bonusType{bonusType}
 	, _isSuper{isSuper}
 	, _events{events}
 {}
-
-Bonus::~Bonus() = default;
 
 void Bonus::Activate() { Subscribe(); }
 
@@ -138,7 +135,7 @@ void Bonus::Despawn(const DespawnReason reason)
 {
 	SetIsAlive(false);
 
-	if (IsHost(_gameMode))
+	if (_gameConfig.IsHost())
 	{
 		_events->EmitEvent(DespawnedEvent{.uuid = _uuid, .reason = reason});
 	}
@@ -148,7 +145,7 @@ void Bonus::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &Bonus::OnDraw));
 
-	if (!IsAuthority(_gameMode))
+	if (!_gameConfig.IsAuthority())
 	{
 		SubscribeAsClient();
 	}

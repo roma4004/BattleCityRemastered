@@ -5,9 +5,8 @@
 //NOTE: static - one copy of the atlas layout, no instance to hold
 struct TextureOffset
 {
-	// NOTE: Battle City SpriteSheet.png Grid size 16x16
-	// tanks are 13x13px, so we need to make 1px offset,
-	// cuz they're not aligned properly and start flickering while we rotate them
+	// NOTE: the sheet is a 16x16 grid holding 13x13 tanks, off-centre by a pixel - without the offset
+	// they flicker when rotated
 
 	// Tanks
 	static constexpr ObjRectangle kEnemy{.x = 129, .y = 1, .w = 13, .h = 13};
@@ -21,8 +20,7 @@ struct TextureOffset
 	static constexpr ObjRectangle kSteel{.x = 256, .y = 16, .w = 8, .h = 8};
 	static constexpr ObjRectangle kBush{.x = 272, .y = 32, .w = 8, .h = 8};
 	static constexpr ObjRectangle kIce{.x = 288, .y = 32, .w = 8, .h = 8};
-	// waterflow left -> right; played back-to-front frame
-	static constexpr ObjRectangle kWater{.x = 272, .y = 80, .w = 8, .h = 8};
+	static constexpr ObjRectangle kWater{.x = 272, .y = 80, .w = 8, .h = 8};//left -> right; played back-to-front frame
 
 	// Effects
 	static constexpr ObjRectangle kTankSpawn{.x = 256, .y = 96, .w = 16, .h = 16};// 4 frames, animation 16x16

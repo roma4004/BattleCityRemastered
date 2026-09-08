@@ -1,5 +1,6 @@
 #include "components/MapLoader.h"
 #include <fstream>
+#include <map>
 #include <sstream>
 
 namespace
@@ -31,6 +32,13 @@ constexpr char kFirstSymbol{'0'};
 
 std::expected<MapData, MapError> MapLoader::LoadFromFile(const std::filesystem::path& path)
 {
+	//NOTE: a map file never changes while the game runs, so every load after the first skips the disk
+	static std::map<std::filesystem::path, MapData> parsed;
+	if (const auto cached = parsed.find(path); cached != parsed.end())
+	{
+		return cached->second;
+	}
+
 	std::ifstream file{path};
 	if (!file)
 	{
@@ -40,7 +48,14 @@ std::expected<MapData, MapError> MapLoader::LoadFromFile(const std::filesystem::
 	std::ostringstream contents;
 	contents << file.rdbuf();
 
-	return Parse(contents.str(), path);
+	//NOTE: only a good parse is remembered - a broken path goes back to the disk and complains again
+	auto loaded = Parse(contents.str(), path);
+	if (!loaded)
+	{
+		return std::unexpected(std::move(loaded).error());
+	}
+
+	return parsed.emplace(path, std::move(*loaded)).first->second;
 }
 
 std::expected<MapData, MapError> MapLoader::Parse(const std::string_view text, std::filesystem::path path)

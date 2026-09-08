@@ -33,6 +33,9 @@
     <ClCompile Include="..\source\application\SDL_Config.cpp">
       <Filter>source\application</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\application\ServerProcess.cpp">
+      <Filter>source\application</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\application\UserInput.cpp">
       <Filter>source\application</Filter>
     </ClCompile>
@@ -51,6 +54,9 @@
       <Filter>headers\application</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\application\SDL_Config.h">
+      <Filter>headers\application</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\application\ServerProcess.h">
       <Filter>headers\application</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\application\UserInput.h">

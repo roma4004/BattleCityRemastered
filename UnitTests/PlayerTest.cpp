@@ -12,14 +12,11 @@
 #include "entities/obstacles/FortressWalls.h"
 #include "entities/obstacles/SteelWall.h"
 #include "entities/obstacles/WaterTile.h"
-#include "entities/pawns/Bullet.h"
 #include "entities/pawns/Tank.h"
 #include "enums/Direction.h"
-#include "enums/GameMode.h"
 #include "enums/InputChannel.h"
 #include "gtest/gtest.h"
 #include "enums/Faction.h"
-#include <algorithm>
 #include <memory>
 
 class PlayerTest : public testing::Test// NOLINT(clang-diagnostic-padded)
@@ -40,7 +37,6 @@ protected:
 	double _tankSpeed{142};
 	double _gridSize{};
 	unsigned short _tankHealth{100u};
-	GameMode _gameMode{GameMode::OnePlayer};
 	EventSubscription _spawnQueueSub{};
 
 	void SetUp() override
@@ -62,7 +58,6 @@ protected:
 	void TearDown() override {}
 };
 
-// Check that tank can move inside the screen
 TEST_F(PlayerTest, TankMoveInSideScreenUp)
 {
 	const auto windowHeight = static_cast<double>(_gameConfig.battlefieldSize.y);
@@ -85,7 +80,6 @@ TEST_F(PlayerTest, TankMoveInSideScreenUp)
 	EXPECT_GT(startPos.y, endPos.y);
 }
 
-// Check that tank can move inside the screen
 TEST_F(PlayerTest, TankMoveInSideScreenLeft)
 {
 	const auto windowWidth = static_cast<double>(_gameConfig.battlefieldSize.x);
@@ -108,7 +102,6 @@ TEST_F(PlayerTest, TankMoveInSideScreenLeft)
 	EXPECT_GT(startPos.x, endPos.x);
 }
 
-// Check that tank can move inside the screen
 TEST_F(PlayerTest, TankMoveInSideScreenDown)
 {
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
@@ -130,7 +123,6 @@ TEST_F(PlayerTest, TankMoveInSideScreenDown)
 	EXPECT_LT(startPos.y, endPos.y);
 }
 
-// Check that tank can move inside the screen
 TEST_F(PlayerTest, TankMoveInSideScreenRight)
 {
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
@@ -152,7 +144,6 @@ TEST_F(PlayerTest, TankMoveInSideScreenRight)
 	EXPECT_LT(startPos.x, endPos.x);
 }
 
-// Check that tank cannot move out of screen
 TEST_F(PlayerTest, TankMoveOutSideScreenUp)
 {
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
@@ -171,7 +162,6 @@ TEST_F(PlayerTest, TankMoveOutSideScreenUp)
 	EXPECT_EQ(startPos, player->GetPos());
 }
 
-// Check that tank cannot move out of screen
 TEST_F(PlayerTest, TankMoveOutSideScreenLeft)
 {
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
@@ -190,7 +180,6 @@ TEST_F(PlayerTest, TankMoveOutSideScreenLeft)
 	EXPECT_EQ(startPos, player->GetPos());
 }
 
-// Check that tank cannot move out of screen
 TEST_F(PlayerTest, TankMoveOutSideScreenDown)
 {
 	const auto windowWidth = static_cast<double>(_gameConfig.battlefieldSize.x);
@@ -214,7 +203,6 @@ TEST_F(PlayerTest, TankMoveOutSideScreenDown)
 	EXPECT_EQ(startPos, player->GetPos());
 }
 
-// Check that tank cannot move out of screen
 TEST_F(PlayerTest, TankMoveOutSideScreenRight)
 {
 	const auto windowWidth = static_cast<double>(_gameConfig.battlefieldSize.x);
@@ -238,7 +226,6 @@ TEST_F(PlayerTest, TankMoveOutSideScreenRight)
 	EXPECT_EQ(startPos, player->GetPos());
 }
 
-// Check that tank set their position correctly
 TEST_F(PlayerTest, TankSetPos)
 {
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
@@ -255,7 +242,6 @@ TEST_F(PlayerTest, TankSetPos)
 	EXPECT_EQ(player->GetPos(), (FPoint{.x = windowWidth, .y = windowHeight}));
 }
 
-// Check that tank set their direction correctly
 TEST_F(PlayerTest, TankSetDirection)
 {
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
@@ -273,7 +259,6 @@ TEST_F(PlayerTest, TankSetDirection)
 	EXPECT_EQ(Direction::RIGHT, player->GetDirection());
 }
 
-// Check that tank don't move when shooting
 TEST_F(PlayerTest, TankDontMoveWhenShotUp)
 {
 	const auto windowWidth = static_cast<double>(_gameConfig.battlefieldSize.x);
@@ -294,7 +279,6 @@ TEST_F(PlayerTest, TankDontMoveWhenShotUp)
 	EXPECT_EQ(startPos, player->GetPos());
 }
 
-// Check that tank don't move when shooting
 TEST_F(PlayerTest, TankDontMoveWhenShotLeft)
 {
 	const auto windowWidth = static_cast<double>(_gameConfig.battlefieldSize.x);
@@ -315,7 +299,6 @@ TEST_F(PlayerTest, TankDontMoveWhenShotLeft)
 	EXPECT_EQ(startPos, player->GetPos());
 }
 
-// Check that tank don't move when shooting
 TEST_F(PlayerTest, TankDontMoveWhenShotDown)
 {
 	const auto windowWidth = static_cast<double>(_gameConfig.battlefieldSize.x);
@@ -336,7 +319,6 @@ TEST_F(PlayerTest, TankDontMoveWhenShotDown)
 	EXPECT_EQ(startPos, player->GetPos());
 }
 
-// Check that tank doesn't move when shooting
 TEST_F(PlayerTest, TankDontMoveWhenShotRight)
 {
 	const auto windowWidth = static_cast<double>(_gameConfig.battlefieldSize.x);
@@ -357,7 +339,6 @@ TEST_F(PlayerTest, TankDontMoveWhenShotRight)
 	EXPECT_EQ(startPos, player->GetPos());
 }
 
-// Check that tank can shoot inside the screen
 TEST_F(PlayerTest, TankShotInSideScreenDown)
 {
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
@@ -377,7 +358,6 @@ TEST_F(PlayerTest, TankShotInSideScreenDown)
 	EXPECT_LT(size, _allObjects.size());
 }
 
-// Check that tank can shoot inside the screen
 TEST_F(PlayerTest, TankShotInSideScreenRight)
 {
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
@@ -398,7 +378,6 @@ TEST_F(PlayerTest, TankShotInSideScreenRight)
 	EXPECT_LT(size, _allObjects.size());
 }
 
-// Check that tank can shoot inside the screen
 TEST_F(PlayerTest, TankShotInSideScreenUp)
 {
 	const auto windowWidth = static_cast<double>(_gameConfig.battlefieldSize.x);
@@ -424,7 +403,6 @@ TEST_F(PlayerTest, TankShotInSideScreenUp)
 	EXPECT_LT(size, _allObjects.size());
 }
 
-// Check that tank can shoot inside the screen
 TEST_F(PlayerTest, TankShotInSideScreenLeft)
 {
 	const auto windowWidth = static_cast<double>(_gameConfig.battlefieldSize.x);
@@ -450,7 +428,6 @@ TEST_F(PlayerTest, TankShotInSideScreenLeft)
 	EXPECT_LT(size, _allObjects.size());
 }
 
-// Check that tank can't shoot outside the screen
 TEST_F(PlayerTest, TankShotOutSideScreen)
 {
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
@@ -506,7 +483,6 @@ TEST_F(PlayerTest, TankShotOutSideScreen)
 	}
 }
 
-// Check that tank can't move through tank
 TEST_F(PlayerTest, TankCantPassThroughTank)
 {
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
@@ -536,7 +512,6 @@ TEST_F(PlayerTest, TankCantPassThroughTank)
 	EXPECT_EQ(player2StartPos, player2->GetPos());
 }
 
-// Check that tank can't move through brickWall
 TEST_F(PlayerTest, TankCantPassThroughBrickWall)
 {
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
@@ -549,7 +524,7 @@ TEST_F(PlayerTest, TankCantPassThroughBrickWall)
 	_allObjects.emplace_back(
 			std::make_shared<BrickWall>(
 					ObjRectangle{.x = 0.0, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _events, _uuid,
-					_gameMode));
+					_gameConfig));
 
 	//moveDown player should failure, because below we have a brickWall obstacle
 	const FPoint startPos = player->GetPos();
@@ -561,7 +536,6 @@ TEST_F(PlayerTest, TankCantPassThroughBrickWall)
 	EXPECT_EQ(startPos, player->GetPos());
 }
 
-// Check that tank cant move through steelWall
 TEST_F(PlayerTest, TankCantPassThroughSteelWall)
 {
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
@@ -574,7 +548,7 @@ TEST_F(PlayerTest, TankCantPassThroughSteelWall)
 	_allObjects.emplace_back(
 			std::make_shared<SteelWall>(
 					ObjRectangle{.x = 0.0, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _events, _uuid,
-					_gameMode));
+					_gameConfig));
 
 	//moveDown player should failure, because below we have a steelWall obstacle
 	const FPoint startPos = player->GetPos();
@@ -586,7 +560,6 @@ TEST_F(PlayerTest, TankCantPassThroughSteelWall)
 	EXPECT_EQ(startPos, player->GetPos());
 }
 
-// Check that tank cant move through water
 TEST_F(PlayerTest, TankCantPassThroughWater)
 {
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
@@ -598,7 +571,7 @@ TEST_F(PlayerTest, TankCantPassThroughWater)
 
 	auto waterTile = std::make_shared<WaterTile>(
 			ObjRectangle{.x = 0.0, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize},
-			_events, _uuid, _gameMode);
+			_events, _uuid, _gameConfig);
 	_allObjects.emplace_back(waterTile);
 
 	//moveDown player should failure, because below we have a water obstacle
@@ -611,7 +584,6 @@ TEST_F(PlayerTest, TankCantPassThroughWater)
 	EXPECT_EQ(startPos, player->GetPos());
 }
 
-// Check that tank can't move through fortressWall
 TEST_F(PlayerTest, TankCantPassThroughfortressWall)
 {
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
@@ -622,7 +594,7 @@ TEST_F(PlayerTest, TankCantPassThroughfortressWall)
 	_allObjects.emplace_back(player);
 
 	auto fortressWall = std::make_shared<FortressBrickWall>(
-			ObjRectangle{.x = 0.0, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _events, _uuid, _gameMode);
+			ObjRectangle{.x = 0.0, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _events, _uuid, _gameConfig);
 	_allObjects.emplace_back(fortressWall);
 
 	//moveDown player should failure, because below we have a fortressWall obstacle
@@ -635,7 +607,6 @@ TEST_F(PlayerTest, TankCantPassThroughfortressWall)
 	EXPECT_EQ(startPos, player->GetPos());
 }
 
-// Check that a bullet fired in the direction of travel is not blown up by its own tank
 TEST_F(PlayerTest, ShotWhileMovingDoesNotBlowUpOnOwnTank)
 {
 	const auto windowWidth = static_cast<double>(_gameConfig.battlefieldSize.x);
@@ -648,31 +619,26 @@ TEST_F(PlayerTest, ShotWhileMovingDoesNotBlowUpOnOwnTank)
 	_allObjects.emplace_back(player);
 
 	const int startHealth = player->GetHealth();
-	const auto aliveBullets = [this]
-	{
-		return std::ranges::count_if(_allObjects, [](const std::shared_ptr<BaseObj>& obj)
-		{
-			return dynamic_cast<Bullet*>(obj.get()) != nullptr && obj->GetIsAlive();
-		});
-	};
 
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveLeftEvent{.isPressed = isPressed});
 	_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = isPressed});
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	ASSERT_EQ(aliveBullets(), 1) << "no bullet was spawned";
+	ASSERT_EQ(_allObjects.size(), 2u) << "no bullet was spawned";
+	const std::shared_ptr<BaseObj> bullet = _allObjects.back();
 
 	for (int frame = 0; frame < 5; ++frame)
 	{
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 	}
 
-	EXPECT_EQ(aliveBullets(), 1) << "bullet died on its own tank";
+	EXPECT_EQ(_allObjects.size(), 2u) << "the tank fired a second time mid-flight";
+	EXPECT_TRUE(bullet->GetIsAlive()) << "bullet died on its own tank";
 	EXPECT_EQ(player->GetHealth(), startHealth) << "tank damaged by its own bullet";
 }
 
-// Check that the blast of your own bullet still reaches you when firing point-blank at a wall
+// The blast of your own bullet still reaches you when firing point-blank at a wall
 TEST_F(PlayerTest, PointBlankShotDamagesTheShooter)
 {
 	const auto windowWidth = static_cast<double>(_gameConfig.battlefieldSize.x);
@@ -688,7 +654,7 @@ TEST_F(PlayerTest, PointBlankShotDamagesTheShooter)
 								.y = rectPlayer.y,
 								.w = _gridSize,
 								.h = _tankSize};
-	_allObjects.emplace_back(std::make_shared<SteelWall>(rectWall, _events, _uuid, _gameMode));
+	_allObjects.emplace_back(std::make_shared<SteelWall>(rectWall, _events, _uuid, _gameConfig));
 
 	const int startHealth = player->GetHealth();
 

@@ -12,6 +12,7 @@
 #include "PositionChange.h"
 #include "RespawnTank.h"
 #include "SignalEvent.h"
+#include "SlotAssignment.h"
 #include "StatisticsChange.h"
 #include "TankShot.h"
 #include "TankSpawnComplete.h"
@@ -74,7 +75,6 @@ void serialize(Archive& ar, network::commands::HealthChange& cmd, const unsigned
 template<class Archive>
 void serialize(Archive& ar, network::commands::KeyStateChange& cmd, const unsigned int /*version*/)
 {
-	ar & cmd.tag;
 	ar & cmd.action;
 	ar & cmd.isPressed;
 }
@@ -107,6 +107,12 @@ template<class Archive>
 void serialize(Archive& ar, network::commands::SignalEvent& cmd, const unsigned int /*version*/)
 {
 	ar & cmd.signal;
+}
+
+template<class Archive>
+void serialize(Archive& ar, network::commands::SlotAssignment& cmd, const unsigned int /*version*/)
+{
+	ar & cmd.slot;
 }
 
 template<class Archive>

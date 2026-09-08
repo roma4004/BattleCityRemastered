@@ -12,14 +12,16 @@
 #include "enums/Direction.h"
 #include "enums/DespawnReason.h"
 #include "enums/DisconnectReason.h"
+#include "enums/InputChannel.h"
 #include "enums/ObstacleType.h"
+#include "enums/PlayerSlot.h"
 #include "enums/TankType.h"
-#include "network/ClientHandler.h"
+#include "network/ClientNode.h"
 #include "network/MessageFraming.h"
 #include "network/Serializer.h"
 #include "network/commands/CommandBatch.h"
 #include "network/commands/Disconnect.h"
-#include "network/ServerHandler.h"
+#include "network/ServerNode.h"
 #include "gtest/gtest.h"
 #include "utils/Uuid.h"
 #include <array>
@@ -44,6 +46,8 @@ protected:
 	//crosses the wire, and the test passes with no networking at all
 	std::shared_ptr<EventSystem> _hostEvents{std::make_shared<EventSystem>()};
 	std::shared_ptr<EventSystem> _clientEvents{std::make_shared<EventSystem>()};
+	//NOTE: a seat is handed out per connection, so telling the two apart takes a second game process
+	std::shared_ptr<EventSystem> _secondClientEvents{std::make_shared<EventSystem>()};
 	double _deltaTimeOneFrame{1.0 / 60.0};
 
 	//NOTE: stands in for MainLoop, in its order - nothing is received or sent without it
@@ -51,10 +55,13 @@ protected:
 	{
 		_hostEvents->EmitEvent(NetCommandUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 		_clientEvents->EmitEvent(NetCommandUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		_secondClientEvents->EmitEvent(NetCommandUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 		_hostEvents->EmitEvent(PreTickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 		_clientEvents->EmitEvent(PreTickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		_secondClientEvents->EmitEvent(PreTickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 		_hostEvents->EmitEvent(NetworkEndFrameEvent{});
 		_clientEvents->EmitEvent(NetworkEndFrameEvent{});
+		_secondClientEvents->EmitEvent(NetworkEndFrameEvent{});
 	}
 
 	//NOTE: listeners fire from the drain Pump does, so on this thread - a captured variable is enough
@@ -72,18 +79,18 @@ protected:
 	}
 
 	//NOTE: port 0 - the OS picks a free one, so a leftover socket cannot collide
-	[[nodiscard]] std::unique_ptr<network::commands::ServerHandler> MakeHost() const
+	[[nodiscard]] std::unique_ptr<network::commands::ServerNode> MakeHost() const
 	{
-		return std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, _hostEvents);
+		return std::make_unique<network::commands::ServerNode>("127.0.0.1", 0, _hostEvents);
 	}
 
-	[[nodiscard]] std::unique_ptr<network::commands::ClientHandler> MakeClient(const uint16_t port) const
+	[[nodiscard]] std::unique_ptr<network::commands::ClientNode> MakeClient(const uint16_t port) const
 	{
-		return std::make_unique<network::commands::ClientHandler>("127.0.0.1", port, _clientEvents);
+		return std::make_unique<network::commands::ClientNode>("127.0.0.1", port, _clientEvents);
 	}
 
 	//NOTE: keeps pumping while it waits - the client's own retries need it
-	[[nodiscard]] bool ReboundHost(std::unique_ptr<network::commands::ServerHandler>& server,
+	[[nodiscard]] bool ReboundHost(std::unique_ptr<network::commands::ServerNode>& server,
 								   const uint16_t port) const
 	{
 		return PumpUntil([this, &server, port]
@@ -95,7 +102,7 @@ protected:
 
 			try
 			{
-				server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", port, _hostEvents);
+				server = std::make_unique<network::commands::ServerNode>("127.0.0.1", port, _hostEvents);
 			}
 			catch (const std::exception&)
 			{
@@ -557,9 +564,8 @@ TEST_F(NetworkTest, ClientQuitTellsHostWhy)
 //TODO: other bonus effect replication test after write this replication
 // TEST_F(NetworkTest, bonusKind...EventReplication) {
 
-// The helmet above is only one of the three effects riding BonusStatus - the other two are told apart
-// by bonusType alone, so a swapped case arrives as the wrong effect on the wrong seat and says nothing.
-// The ship lands keyed on its seat, the tank broadcasts: it is read by the respawn manager, not a tank.
+// Three effects ride BonusStatus and bonusType is all that tells them apart, so a swapped case arrives
+// as the wrong effect on the wrong seat in silence. The ship lands keyed on its seat, the tank broadcasts
 TEST_F(NetworkTest, ShipAndTankEffectsKeepTheirOwnEventAcrossTheWire)
 {
 	const auto server = MakeHost();
@@ -584,6 +590,100 @@ TEST_F(NetworkTest, ShipAndTankEffectsKeepTheirOwnEventAcrossTheWire)
 	ASSERT_TRUE(PumpUntil([&ship, &tank] { return ship.has_value() && tank.has_value(); }));
 	EXPECT_EQ(shipSeat, *ship);
 	EXPECT_EQ(tankSeat, *tank);
+}
+
+// The seat handed out on connect is the only thing tying a key to a tank: the server reads whose
+// press it is off the session it arrived on.
+TEST_F(NetworkTest, TheServerHandsOutTheSeatsInOrder)
+{
+	std::optional<PlayerSlot> first{};
+	std::optional<PlayerSlot> second{};
+	std::vector<EventSubscription> subs{};
+	subs.push_back(_clientEvents->AddListener([&first](const PlayerSlotAssignedEvent& e) { first = e.slot; }));
+	subs.push_back(_secondClientEvents->AddListener([&second](const PlayerSlotAssignedEvent& e) { second = e.slot; }));
+
+	const auto server = MakeHost();
+	const auto client = MakeClient(server->GetBoundPort());
+	ASSERT_TRUE(PumpUntil([&first] { return first.has_value(); })) << "the first client was told no seat";
+	//NOTE: dialled only once the first seat is out, so the accept order is the test's, not the OS's
+	const auto secondClient = std::make_unique<network::commands::ClientNode>("127.0.0.1",
+																				 server->GetBoundPort(),
+																				 _secondClientEvents);
+	ASSERT_TRUE(PumpUntil([&second] { return second.has_value(); })) << "the second client was told no seat";
+
+	EXPECT_EQ(PlayerSlot::P1, *first);
+	EXPECT_EQ(PlayerSlot::P2, *second);
+}
+
+// A seat is held by its session and comes back only once that session is swept - and a session
+// that said goodbye is swept on its own IsFinished verdict.
+TEST_F(NetworkTest, ASeatComesBackWhenItsClientSaysGoodbye)
+{
+	std::optional<PlayerSlot> first{};
+	std::optional<PlayerSlot> second{};
+	std::vector<EventSubscription> subs{};
+	subs.push_back(_clientEvents->AddListener([&first](const PlayerSlotAssignedEvent& e) { first = e.slot; }));
+	subs.push_back(_secondClientEvents->AddListener([&second](const PlayerSlotAssignedEvent& e) { second = e.slot; }));
+
+	const auto server = MakeHost();
+	auto client = MakeClient(server->GetBoundPort());
+	ASSERT_TRUE(PumpUntil([&first] { return first.has_value(); })) << "the first client was told no seat";
+	ASSERT_EQ(PlayerSlot::P1, *first);
+
+	bool goodbye{false};
+	subs.push_back(_hostEvents->AddListener([&goodbye](const ServerInDisconnectEvent&) { goodbye = true; }));
+
+	client.reset();
+	ASSERT_TRUE(PumpUntil([&goodbye] { return goodbye; })) << "host never got the client's goodbye";
+
+	const auto next = std::make_unique<network::commands::ClientNode>("127.0.0.1", server->GetBoundPort(),
+																				_secondClientEvents);
+	ASSERT_TRUE(PumpUntil([&second] { return second.has_value(); })) << "the freed seat was never handed out";
+	EXPECT_EQ(PlayerSlot::P1, *second) << "the seat of a client that quit is still held by its session";
+}
+
+// A client drives the keyboard half of the seat it was given, and only that one
+TEST_F(NetworkTest, EachClientPutsOnlyItsOwnSeatOnTheWire)
+{
+	std::optional<PlayerSlot> firstSeat{};
+	std::optional<PlayerSlot> secondSeat{};
+	std::vector<EventSubscription> subs{};
+	subs.push_back(_clientEvents->AddListener([&firstSeat](const PlayerSlotAssignedEvent& e) { firstSeat = e.slot; }));
+	subs.push_back(_secondClientEvents->AddListener(
+			[&secondSeat](const PlayerSlotAssignedEvent& e) { secondSeat = e.slot; }));
+
+	const auto server = MakeHost();
+	const auto client = MakeClient(server->GetBoundPort());
+	ASSERT_TRUE(PumpUntil([&firstSeat] { return firstSeat.has_value(); }));
+	const auto secondClient = std::make_unique<network::commands::ClientNode>("127.0.0.1",
+																				 server->GetBoundPort(),
+																				 _secondClientEvents);
+	ASSERT_TRUE(PumpUntil([&secondSeat] { return secondSeat.has_value(); }));
+
+	bool firstSeatMoved{false};
+	bool secondSeatMoved{false};
+	bool strayArrived{false};
+	subs.push_back(_hostEvents->AddListener(Key(InputChannel::RemoteP1),
+											[&firstSeatMoved](const MoveUpEvent& e)
+											{
+												firstSeatMoved = e.isPressed;
+											}));
+	subs.push_back(_hostEvents->AddListener(Key(InputChannel::RemoteP2),
+											[&secondSeatMoved](const MoveUpEvent& e)
+											{
+												secondSeatMoved = e.isPressed;
+											}));
+	subs.push_back(_hostEvents->AddListener(Key(InputChannel::RemoteP1),
+											[&strayArrived](const MoveDownEvent&) { strayArrived = true; }));
+
+	//NOTE: the stray goes first - the wire keeps its order, so once the press behind it has landed,
+	//a press that never left is told apart from one still in flight
+	_clientEvents->EmitEvent(Key(InputChannel::LocalP2), MoveDownEvent{.isPressed = true});
+	_clientEvents->EmitEvent(Key(InputChannel::LocalP1), MoveUpEvent{.isPressed = true});
+	_secondClientEvents->EmitEvent(Key(InputChannel::LocalP2), MoveUpEvent{.isPressed = true});
+
+	ASSERT_TRUE(PumpUntil([&firstSeatMoved, &secondSeatMoved] { return firstSeatMoved && secondSeatMoved; }));
+	EXPECT_FALSE(strayArrived) << "a client sent the keyboard half of a seat it was never given";
 }
 
 TEST(SerializerTest, UnreadableFrameIsReportedNotSwallowed)
@@ -614,9 +714,8 @@ TEST(SerializerTest, ABatchSurvivesTheRoundTrip)
 	EXPECT_EQ(goodbye->reason, DisconnectReason::GameOver);
 }
 
-// Eleven local types collapse onto one StatisticsChange command, so the discriminator table is the
-// only thing keeping them apart - a swapped or forgotten binding is silent. Every type here carries a
-// different author on purpose: identical payloads would hide a crossed wire.
+// Eleven local types collapse onto one StatisticsChange, so the discriminator table is all that keeps
+// them apart. Every type here carries a different author - identical payloads would hide a crossed wire
 TEST_F(NetworkTest, EveryStatisticsTypeKeepsItsOwnEventAcrossTheWire)
 {
 	const auto server = MakeHost();

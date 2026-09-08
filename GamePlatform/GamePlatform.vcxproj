@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<!-- The SDL-facing edge of the game: window/render/audio/input plus the game loop that drives them. Everything else lives in GameCore\GameCore.vcxproj, which this project references - the dependency goes GamePlatform -> GameCore and never back. Split out so UnitTests, which references GameCore only, no longer builds SDL3/freetype at all. Mirrors CMake's game_platform STATIC library. -->
+<!-- The SDL-facing edge of the game: window/render/audio/input plus the game loop that drives them. Everything else lives in GameCore\GameCore.vcxproj, which this project references - the dependency goes GamePlatform -> GameCore and never back. Split out so UnitTests, which references GameCore only, no longer builds SDL3/freetype at all. Mirrors CMake's GamePlatform STATIC library. -->
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -159,6 +159,7 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\source\application\ServerProcess.cpp" />
     <ClCompile Include="..\source\application\Game.cpp" />
     <ClCompile Include="..\source\application\SDL_Config.cpp" />
     <ClCompile Include="..\source\application\UserInput.cpp" />
@@ -167,6 +168,7 @@
   </ItemGroup>
   <!-- Headers matching the .cpp files above; header+impl live in the same project. -->
   <ItemGroup>
+    <ClInclude Include="..\headers\application\ServerProcess.h" />
     <ClInclude Include="..\headers\application\Game.h" />
     <ClInclude Include="..\headers\application\InitError.h" />
     <ClInclude Include="..\headers\application\SDL_Config.h" />

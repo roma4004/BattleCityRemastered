@@ -10,6 +10,7 @@
 #include "components/events/TimingEvents.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
+#include "enums/PlayerSlot.h"
 #include "enums/TextureOffset.h"
 #include "utils/Log.h"
 #include <algorithm>
@@ -38,6 +39,7 @@ void RenderManager::Subscribe()
 	_subs.push_back(_events->AddListener(this, &RenderManager::ClearFrame));
 	_subs.push_back(_events->AddListener(this, &RenderManager::PresentFrame));
 	_subs.push_back(_events->AddListener(this, &RenderManager::OnGameModeChangedTo));
+	_subs.push_back(_events->AddListener(this, &RenderManager::OnPlayerSlotAssigned));
 	_subs.push_back(_events->AddListener(this, &RenderManager::OnRenderText));
 	_subs.push_back(_events->AddListener(this, &RenderManager::DrawMenuTextBlock));
 
@@ -319,7 +321,6 @@ unsigned int RenderManager::ComponentsToColor(const Uint8 r, const Uint8 g, cons
 	return (Uint32{a} << 24u) | (Uint32{r} << 16u) | (Uint32{g} << 8u) | Uint32{b};
 }
 
-// blend menu panel and menu texture background
 void RenderManager::DrawMenuBackground(const RenderMenuBackgroundEvent& event) const
 {
 	const Point pos = event.pos;
@@ -398,8 +399,8 @@ int RenderManager::BasePointSize(const bool isMediumFontSize)
 
 float RenderManager::CurrentRenderScale() const
 {
-	//NOTE: SDL3 keeps the logical presentation apart from the render scale, so SDL_GetRenderScale no
-	//longer reports it - the letterbox rect is what maps a logical pixel onto the window
+	//NOTE: the logical presentation is kept apart from the render scale, so SDL_GetRenderScale does not
+	//report it - the letterbox rect is what maps a logical pixel onto the window
 	int logicalWidth{};
 	int logicalHeight{};
 	SDL_RendererLogicalPresentation mode{SDL_LOGICAL_PRESENTATION_DISABLED};
@@ -514,6 +515,8 @@ void RenderManager::DrawMenuTextBlock(const RenderMenuTextBlockEvent& event) con
 		return;
 	}
 
+	//NOTE: clipped here and not in the block - a line missing from the event would change what
+	//FitBlockPointSize measures, and while the menu slides in that is every line there is
 	const int logicalHeight = static_cast<int>(_gameConfig.LogicalSize().y);
 	for (const TextBlockLine& line: event.lines)
 	{
@@ -605,19 +608,36 @@ void RenderManager::PresentFrame(const PresentFrameEvent&) const
 	SDL_RenderPresent(_sdlConfig.renderer.get());
 }
 
-void RenderManager::OnGameModeChangedTo(const GameModeChangedToEvent& event) const { UpdateWindowTitle(event.mode); }
+void RenderManager::OnGameModeChangedTo(const GameModeChangedToEvent& event)
+{
+	_titleMode = event.mode;
+	//NOTE: a new match hands out seats again, and the old one would name the wrong window
+	_titleSlot.reset();
 
-void RenderManager::UpdateWindowTitle(const GameMode gameMode) const
+	UpdateWindowTitle();
+}
+
+void RenderManager::OnPlayerSlotAssigned(const PlayerSlotAssignedEvent& event)
+{
+	_titleSlot = event.slot;
+
+	UpdateWindowTitle();
+}
+
+//NOTE: two clients look alike on screen, so the caption carries the seat the server gave this
+//one - which is also the keyboard half that drives it
+void RenderManager::UpdateWindowTitle() const
 {
 	std::string title{SDL_Config::kWindowTitle};
 
-	if (IsHost(gameMode))
+	if (IsHost(_titleMode))
 	{
 		title += " - host";
 	}
-	else if (IsClient(gameMode))
+	else if (IsClient(_titleMode))
 	{
-		title += " - client";
+		title += _titleSlot ? (*_titleSlot == PlayerSlot::P1 ? " - client P1" : " - client P2")
+							: " - client, waiting for a seat";
 	}
 
 	SDL_SetWindowTitle(_sdlConfig.sdlWindow.get(), title.c_str());
@@ -652,7 +672,6 @@ void RenderManager::DrawColorTexture(const RenderColorTextureEvent& event)
 
 void RenderManager::DrawTexture(const RenderTextureEvent& event) const
 {
-	//local angle and flip for texture
 	auto [angle, flip] = GetRotateAndAngleAndFlip(event.dir);
 	const SDL_FRect src = ToFRect(RectToSdlRect(event.textureRect));
 	const SDL_FRect dst = ToFRect(RectToSdlRect(event.destRect));

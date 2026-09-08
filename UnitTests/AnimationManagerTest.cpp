@@ -121,7 +121,7 @@ TEST_F(AnimationManagerTest, BulletExplodesWhereItHit)
 										  _calibre, Direction::DOWN, _gameConfig, Author::Player1);
 	_allObjects.emplace_back(bullet);
 	_allObjects.emplace_back(std::make_shared<BrickWall>(ObjRectangle{.x = 0.0, .y = 8.0, .w = 12.0, .h = 12.0},
-														 _events, _uuid, GameMode::OnePlayer));
+														 _events, _uuid, _gameConfig));
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = 1.0 / 60.0});
 
@@ -186,7 +186,7 @@ TEST_F(AnimationManagerTest, SpawnedTankAsksForItsSpawnBurst)
 TEST_F(AnimationManagerTest, WaterTileAsksForItsFlowWhenBuilt)
 {
 	constexpr ObjRectangle waterRect{.x = 24.0, .y = 36.0, .w = 12.0, .h = 12.0};
-	const WaterTile water{waterRect, _events, _uuid, GameMode::OnePlayer};
+	const WaterTile water{waterRect, _events, _uuid, _gameConfig};
 
 	ASSERT_TRUE(_water.has_value());
 	EXPECT_EQ(_water->rect.x, waterRect.x);

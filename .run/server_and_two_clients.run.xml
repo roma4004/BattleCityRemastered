@@ -1,0 +1,8 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="server + 2 clients" folderName="BattleCity" type="CompoundRunConfigurationType">
+    <toRun name="BattleCityServer" targetId="CMakeBuildProfile:Debug-MinGW" type="CMakeRunConfiguration" />
+    <toRun name="BattleCityRemastered (client 1)" targetId="CMakeBuildProfile:Debug-MinGW" type="CMakeRunConfiguration" />
+    <toRun name="BattleCityRemastered (client 2)" targetId="CMakeBuildProfile:Debug-MinGW" type="CMakeRunConfiguration" />
+    <method v="2" />
+  </configuration>
+</component>

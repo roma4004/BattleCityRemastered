@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<!-- Game logic, no SDL: every game source except main.cpp (the exe's own entry point in BattleCityRemastered.vcxproj) and the SDL-facing files in GamePlatform\GamePlatform.vcxproj. Compiled once, consumed by GamePlatform and UnitTests\UnitTests.vcxproj via ProjectReference. Keeping SDL out of here is what stops UnitTests from building SDL3/freetype at all - the SDL3 include paths and ProjectReferences deliberately live in GamePlatform only, so an SDL include added here simply fails to resolve. Mirrors CMake's game_core STATIC library. -->
+<!-- Game logic, no SDL: every game source except main.cpp (the exe's own entry point in BattleCityRemastered.vcxproj) and the SDL-facing files in GamePlatform\GamePlatform.vcxproj. Compiled once, consumed by GamePlatform and UnitTests\UnitTests.vcxproj via ProjectReference. Keeping SDL out of here is what stops UnitTests from building SDL3/freetype at all - the SDL3 include paths and ProjectReferences deliberately live in GamePlatform only, so an SDL include added here simply fails to resolve. Mirrors CMake's GameCore STATIC library. -->
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -163,6 +163,7 @@
     <ClCompile Include="..\source\application\GameConfig.cpp" />
     <ClCompile Include="..\source\application\WindowConfig.cpp" />
     <ClCompile Include="..\source\application\ProjectConfig.cpp" />
+    <ClCompile Include="..\source\application\Simulation.cpp" />
     <ClCompile Include="..\source\behavior\MoveLikeBulletBeh.cpp" />
     <ClCompile Include="..\source\behavior\MoveLikeTankBeh.cpp" />
     <ClCompile Include="..\source\behavior\ShootingBeh.cpp" />
@@ -207,7 +208,7 @@
     <ClCompile Include="..\source\entities\pawns\Pawn.cpp" />
     <ClCompile Include="..\source\entities\pawns\Tank.cpp" />
     <ClCompile Include="..\source\network\Client.cpp" />
-    <ClCompile Include="..\source\network\ClientHandler.cpp" />
+    <ClCompile Include="..\source\network\ClientNode.cpp" />
     <ClCompile Include="..\source\network\FrameChannel.cpp" />
     <ClCompile Include="..\source\network\NetworkNodeBase.cpp" />
     <ClCompile Include="..\source\network\PeerLink.cpp" />
@@ -216,7 +217,7 @@
     <ClCompile Include="..\source\network\ReplicationPublisher.cpp" />
     <ClCompile Include="..\source\network\Server.cpp" />
     <ClCompile Include="..\source\network\Session.cpp" />
-    <ClCompile Include="..\source\network\ServerHandler.cpp" />
+    <ClCompile Include="..\source\network\ServerNode.cpp" />
     <ClCompile Include="..\source\network\Serializer.cpp" />
     <ClCompile Include="..\source\utils\ColliderUtils.cpp" />
     <ClCompile Include="..\source\utils\Log.cpp" />
@@ -233,6 +234,7 @@
     <ClInclude Include="..\headers\application\WindowConfig.h" />
     <ClInclude Include="..\headers\application\ProjectConfig.h" />
     <ClInclude Include="..\headers\application\LaunchOptions.h" />
+    <ClInclude Include="..\headers\application\Simulation.h" />
     <ClInclude Include="..\headers\behavior\MoveLikeBulletBeh.h" />
     <ClInclude Include="..\headers\behavior\MoveLikeTankBeh.h" />
     <ClInclude Include="..\headers\behavior\ShootingBeh.h" />
@@ -311,7 +313,6 @@
     <ClInclude Include="..\headers\enums\InputSignal.h" />
     <ClInclude Include="..\headers\enums\InputChannel.h" />
     <ClInclude Include="..\headers\enums\PlayerSlot.h" />
-    <ClInclude Include="..\headers\enums\PlayerTag.h" />
     <ClInclude Include="..\headers\enums\Direction.h" />
     <ClInclude Include="..\headers\enums\Faction.h" />
     <ClInclude Include="..\headers\enums\GameMode.h" />
@@ -331,7 +332,8 @@
     <ClInclude Include="..\headers\interfaces\IShootable.h" />
     <ClInclude Include="..\headers\interfaces\ITickUpdatable.h" />
     <ClInclude Include="..\headers\network\Client.h" />
-    <ClInclude Include="..\headers\network\ClientHandler.h" />
+    <ClInclude Include="..\headers\network\ClientNode.h" />
+    <ClInclude Include="..\headers\network\Endpoints.h" />
     <ClInclude Include="..\headers\network\FrameChannel.h" />
     <ClInclude Include="..\headers\network\NetworkNodeBase.h" />
     <ClInclude Include="..\headers\network\PeerLink.h" />
@@ -350,6 +352,7 @@
     <ClInclude Include="..\headers\network\commands\PositionChange.h" />
     <ClInclude Include="..\headers\network\commands\RespawnTank.h" />
     <ClInclude Include="..\headers\network\commands\SignalEvent.h" />
+    <ClInclude Include="..\headers\network\commands\SlotAssignment.h" />
     <ClInclude Include="..\headers\network\commands\StatisticsChange.h" />
     <ClInclude Include="..\headers\network\commands\TankShot.h" />
     <ClInclude Include="..\headers\network\commands\TankSpawnComplete.h" />
@@ -362,7 +365,7 @@
     <ClInclude Include="..\headers\network\ReplicationPublisher.h" />
     <ClInclude Include="..\headers\network\Server.h" />
     <ClInclude Include="..\headers\network\Session.h" />
-    <ClInclude Include="..\headers\network\ServerHandler.h" />
+    <ClInclude Include="..\headers\network\ServerNode.h" />
     <ClInclude Include="..\headers\network\Serializer.h" />
     <ClInclude Include="..\headers\geometry\Point.h" />
     <ClInclude Include="..\headers\utils\ColliderUtils.h" />

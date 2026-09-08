@@ -18,7 +18,7 @@
 SpawnManager::SpawnManager(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig)
 	: _events{events}
 	, _gameConfig{gameConfig}
-	, _fortressManager{std::make_unique<FortressManager>(events, _allObjects)}
+	, _fortressManager{std::make_unique<FortressManager>(events, _allObjects, gameConfig)}
 {
 	//NOTE: before the pools, not in the init list - both listen on PostTickUpdate too, and a slot
 	//reclaimed before DisposeDeadObject has swept it is briefly reachable in the world and the free list

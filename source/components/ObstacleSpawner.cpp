@@ -13,7 +13,6 @@
 #include "entities/obstacles/IceTile.h"
 #include "entities/obstacles/SteelWall.h"
 #include "entities/obstacles/WaterTile.h"
-#include "enums/GameMode.h"
 #include "enums/ObstacleType.h"
 #include "utils/UuidUtils.h"
 #include <memory>
@@ -23,7 +22,6 @@ class BaseObj;
 ObstacleSpawner::ObstacleSpawner(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig)
 	: _events{events}
 	, _gameConfig{gameConfig}
-	, _gameMode{gameConfig.gameMode}
 {
 	Subscribe();
 }
@@ -35,7 +33,7 @@ void ObstacleSpawner::Subscribe()
 	_subs.push_back(_events->AddListener(this, &ObstacleSpawner::OnSpawnObstacle));
 	_subs.push_back(_events->AddListener(this, &ObstacleSpawner::OnSpawnFortressWall));
 
-	if (IsClient(_gameMode))
+	if (_gameConfig.IsClient())
 	{
 		_subs.push_back(_events->AddListener(this, &ObstacleSpawner::OnObstacleSpawned));
 	}
@@ -43,7 +41,7 @@ void ObstacleSpawner::Subscribe()
 
 void ObstacleSpawner::OnMatchStarted(const MatchStartedEvent&) const
 {
-	if (!IsClient(_gameMode))
+	if (!_gameConfig.IsClient())
 	{
 		LoadMap();
 	}
@@ -76,25 +74,25 @@ void ObstacleSpawner::SpawnObstacle(const ObjRectangle rect, const ObstacleType 
 	switch (type)
 	{
 		case ObstacleType::Brick:
-			obstacle = std::make_shared<BrickWall>(rect, _events, uuid, _gameMode);
+			obstacle = std::make_shared<BrickWall>(rect, _events, uuid, _gameConfig);
 			break;
 		case ObstacleType::Steel:
-			obstacle = std::make_shared<SteelWall>(rect, _events, uuid, _gameMode);
+			obstacle = std::make_shared<SteelWall>(rect, _events, uuid, _gameConfig);
 			break;
 		case ObstacleType::Water:
-			obstacle = std::make_shared<WaterTile>(rect, _events, uuid, _gameMode);
+			obstacle = std::make_shared<WaterTile>(rect, _events, uuid, _gameConfig);
 			break;
 		case ObstacleType::Fortress:
 			SpawnFortressWall(rect, ObstacleType::Brick);
 			return;
 		case ObstacleType::Eagle:
-			obstacle = std::make_shared<EagleTile>(rect, _events, uuid, _gameMode);
+			obstacle = std::make_shared<EagleTile>(rect, _events, uuid, _gameConfig);
 			break;
 		case ObstacleType::Bush:
-			obstacle = std::make_shared<BushTile>(rect, _events, uuid, _gameMode);
+			obstacle = std::make_shared<BushTile>(rect, _events, uuid, _gameConfig);
 			break;
 		case ObstacleType::Ice:
-			obstacle = std::make_shared<IceTile>(rect, _events, uuid, _gameMode);
+			obstacle = std::make_shared<IceTile>(rect, _events, uuid, _gameConfig);
 			break;
 		default:
 			break;
@@ -105,7 +103,7 @@ void ObstacleSpawner::SpawnObstacle(const ObjRectangle rect, const ObstacleType 
 		_events->EmitEvent(AddToSpawnQueueEvent{.obj = obstacle});
 	}
 
-	if (IsHost(_gameMode))
+	if (_gameConfig.IsHost())
 	{
 		_events->EmitEvent(ObstacleSpawnedEvent{.pos = FPoint{.x = rect.x, .y = rect.y}, .type = type, .uuid = uuid});
 	}
@@ -118,11 +116,11 @@ void ObstacleSpawner::SpawnFortressWall(const ObjRectangle rect, const ObstacleT
 	std::shared_ptr<BaseObj> wall{nullptr};
 	if (material == ObstacleType::Steel)
 	{
-		wall = std::make_shared<FortressSteelWall>(rect, _events, uuid, _gameMode);
+		wall = std::make_shared<FortressSteelWall>(rect, _events, uuid, _gameConfig);
 	}
 	else
 	{
-		wall = std::make_shared<FortressBrickWall>(rect, _events, uuid, _gameMode);
+		wall = std::make_shared<FortressBrickWall>(rect, _events, uuid, _gameConfig);
 	}
 
 	//NOTE: reported from here, not from the map branch - a wall no one told FortressManager about would
@@ -131,7 +129,7 @@ void ObstacleSpawner::SpawnFortressWall(const ObjRectangle rect, const ObstacleT
 
 	_events->EmitEvent(AddToSpawnQueueEvent{.obj = std::move(wall)});
 
-	if (IsHost(_gameMode))
+	if (_gameConfig.IsHost())
 	{
 		_events->EmitEvent(ObstacleSpawnedEvent{
 				.pos = FPoint{.x = rect.x, .y = rect.y},

@@ -10,12 +10,12 @@
 #include <vector>
 
 enum class GameMode : char8_t;
+struct GameResetEvent;
+struct PostTickUpdateEvent;
 class Bullet;
 class BaseObj;
 class EventSystem;
 class GameConfig;
-struct GameResetEvent;
-struct PostTickUpdateEvent;
 
 class BulletPool final
 {
@@ -37,8 +37,6 @@ class BulletPool final
 public:
 	BulletPool(const std::shared_ptr<EventSystem>& events, const std::vector<std::shared_ptr<BaseObj>>& allObjects,
 			   const GameConfig& gameConfig);
-
-	~BulletPool() = default;
 
 	//NOTE: armed here - the pool owns both the free list and Bullet::Reset
 	[[nodiscard]] std::shared_ptr<Bullet> SpawnBullet(const BulletResetProperty& property,

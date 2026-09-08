@@ -9,6 +9,8 @@
 #include "components/WorldGeometry.h"
 #include <gtest/gtest.h>
 #include <filesystem>
+#include <fstream>
+#include <string>
 #include "TestUtils.h"//NOTE: PrintTo for the Point types
 
 namespace
@@ -108,6 +110,27 @@ TEST(MapLoaderTest, ShippedLevelOneParses)
 	ASSERT_TRUE(map.has_value()) << map.error().reason;
 	EXPECT_EQ(map->cols, 52u);
 	EXPECT_EQ(map->rows, 50u);
+}
+
+//NOTE: nothing in the result says whether the disk was touched, so the file is swapped between the two
+//loads - the first map coming back the second time is the cache answering
+TEST(MapLoaderTest, TheSameFileIsReadFromDiskOnlyOnce)
+{
+	const std::string name{"battlecity_cache_" + UuidUtils::GetStringUuid(UuidUtils::GetRandomUuid()) + ".map"};
+	const std::filesystem::path path{std::filesystem::temp_directory_path() / name};
+
+	std::ofstream{path} << "0123\n4567\n";
+	const auto first = MapLoader::LoadFromFile(path);
+
+	std::ofstream{path} << "000\n000\n000\n";
+	const auto second = MapLoader::LoadFromFile(path);
+
+	std::filesystem::remove(path);//NOTE: before the assertions - a failed one would return past it
+
+	ASSERT_TRUE(first.has_value()) << first.error().reason;
+	ASSERT_TRUE(second.has_value()) << second.error().reason;
+	EXPECT_EQ(second->cols, 4u);
+	EXPECT_EQ(second->rows, 2u);
 }
 
 TEST(WorldGeometryTest, ClassicMapKeepsTheClassicField)

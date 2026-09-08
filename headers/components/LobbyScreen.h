@@ -5,11 +5,11 @@
 #include <memory>
 #include <vector>
 
-class GameConfig;
-class EventSystem;
 struct DrawUserInterfaceEvent;
 struct GameStateChangedToEvent;
 struct MenuShowedEvent;
+class GameConfig;
+class EventSystem;
 
 //NOTE: a sibling of Menu and ScoreBoard - waiting for a peer is its own phase, not a menu mode
 class LobbyScreen final
@@ -35,6 +35,4 @@ class LobbyScreen final
 
 public:
 	LobbyScreen(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig);
-
-	~LobbyScreen() = default;
 };

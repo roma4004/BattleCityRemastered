@@ -3,8 +3,8 @@
 #include <memory>
 #include <vector>
 
-class BaseObj;
 struct ObjRectangle;
+class BaseObj;
 
 class WorldQuery final
 {

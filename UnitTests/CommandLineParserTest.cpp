@@ -15,7 +15,7 @@ namespace
 //NOTE: argv[0] is the exe name, the parser starts at [1]
 std::expected<LaunchOptions, ArgError> ParseRaw(const std::initializer_list<const char*> args)
 {
-	std::vector<const char*> argv{"BattleCity_remastered.exe"};
+	std::vector<const char*> argv{"BattleCityRemastered.exe"};
 	argv.insert(argv.end(), args);
 
 	return CommandLineParser::Parse(static_cast<int>(argv.size()), argv.data());

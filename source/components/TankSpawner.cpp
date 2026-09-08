@@ -117,9 +117,9 @@ ObjRectangle TankSpawner::GetEnemyRandomPosX(const TankType type) const
 
 	const double quartFieldSizeX = battleFieldSizeX / 4.0;
 	const std::array<std::pair<double, double>, 4> spawnRanges{{{0.0, quartFieldSizeX},
-															   {quartFieldSizeX, quartFieldSizeX * 2.0},
-															   {quartFieldSizeX * 2.0, quartFieldSizeX * 3.0},
-															   {quartFieldSizeX * 3.0, battleFieldSizeX}}};
+																{quartFieldSizeX, quartFieldSizeX * 2.0},
+																{quartFieldSizeX * 2.0, quartFieldSizeX * 3.0},
+																{quartFieldSizeX * 3.0, battleFieldSizeX}}};
 
 	const auto randomRange = static_cast<std::size_t>(type);
 	auto [minX, maxX] = spawnRanges[randomRange];
@@ -208,7 +208,6 @@ ObjRectangle TankSpawner::GetPlayerRandomPosX(const bool isFirst) const
 {
 	const double battleFieldSizeX{static_cast<double>(_gameConfig.battlefieldSize.x)};
 	const double battleFieldSizeY{static_cast<double>(_gameConfig.battlefieldSize.y)};
-	// const float gridOffset{_gameConfig.gridOffset};
 	const double tankSize{_gameConfig.tankSize};
 
 	const std::pair spawnRangePlayer1{0.0, battleFieldSizeX / 2.0 - tankSize * 3.25};
@@ -312,8 +311,6 @@ void TankSpawner::OnClientRespawn(const TankType type, const Uuid uuid, const Ob
 	RespawnTank(type, uuid, rect);
 }
 
-//NOTE: on a host the second seat belongs to the peer, so its tank listens to the wire, not to this
-//keyboard - the arrow keys here then reach no listener at all instead of being filtered at the source
 std::unique_ptr<IInputProvider> TankSpawner::MakeDriver(const TankType type) const
 {
 	if (type != TankType::PLAYER1 && type != TankType::PLAYER2)
@@ -322,9 +319,8 @@ std::unique_ptr<IInputProvider> TankSpawner::MakeDriver(const TankType type) con
 	}
 
 	const PlayerSlot slot{type == TankType::PLAYER1 ? PlayerSlot::P1 : PlayerSlot::P2};
-	const bool isPeerSeat{IsHost(_gameMode) && slot == PlayerSlot::P2};
 
-	return std::make_unique<InputProviderForPlayer>(_events, isPeerSeat ? RemoteInput(slot) : LocalInput(slot));
+	return std::make_unique<InputProviderForPlayer>(_events, IsHost(_gameMode) ? RemoteInput(slot) : LocalInput(slot));
 }
 
 void TankSpawner::DelayedSpawnStart(const ObjRectangle rect, const int health, const double speed, const Uuid uuid,
@@ -395,7 +391,7 @@ void TankSpawner::DelayedSpawnWith(const DelayedTankSpawn& params)
 										  .dir = Direction::UP};
 
 	if (const std::shared_ptr<BaseObj> tank{
-				_tankPool->SpawnTank(resetProperty, MakeDriver(params.type))})
+			_tankPool->SpawnTank(resetProperty, MakeDriver(params.type))})
 	{
 		_events->EmitEvent(AddToSpawnQueueEvent{.obj = tank});
 		_events->EmitEvent(AnimationCreateTankMoveEvent{.rect = params.rect, .author = SeatOf(params.type)});
