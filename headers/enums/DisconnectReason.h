@@ -10,4 +10,5 @@ enum class DisconnectReason : std::uint8_t
 	GameOver,
 
 	ProtocolError,
+	ServerFull,
 };

@@ -41,7 +41,6 @@ protected:
 	double _deltaTimeOneFrame{1.0 / 60.0};
 	double _tankSize{};
 	double _gridSize{};
-	double _tankSpeed{142};
 	unsigned short _tankHealth{100u};
 	EventSubscription _spawnQueueSub{};
 
@@ -72,8 +71,7 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressBricWallkHide)
 	const ObjRectangle rectEnemy{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
-					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
-					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
+					rectEnemy, _tankHealth, _uuid, Author::Enemy1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
 
 	// register a fortress wall
 	const ObjRectangle fortressRect{.x = _tankSize + 1.0, .y = 0, .w = _gridSize, .h = _gridSize};
@@ -95,15 +93,13 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressSteelWallHide)
 	const ObjRectangle rectEnemy{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
-					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
-					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
+					rectEnemy, _tankHealth, _uuid, Author::Enemy1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
 
 	_allObjects.reserve(4);
 	const ObjRectangle rectPlayer{.x = _tankSize * 2.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
+					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});

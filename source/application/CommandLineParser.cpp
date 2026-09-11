@@ -1,5 +1,7 @@
 #include "application/CommandLineParser.h"
+#include "enums/WindowSide.h"
 #include <charconv>
+#include <optional>
 #include <string_view>
 
 namespace
@@ -29,6 +31,21 @@ std::optional<UPoint> ParsePoint(const std::string_view value)
 	}
 
 	return point;
+}
+
+std::optional<WindowSide> ParseSide(const std::string_view value)
+{
+	if (value == "left")
+	{
+		return WindowSide::Left;
+	}
+
+	if (value == "right")
+	{
+		return WindowSide::Right;
+	}
+
+	return std::nullopt;
 }
 }//namespace
 
@@ -79,6 +96,14 @@ std::expected<LaunchOptions, ArgError> CommandLineParser::Parse(const int argc, 
 				{
 					return std::unexpected(ArgError{.arg = std::string{arg},
 													.reason = "expected size=WIDTH,HEIGHT with both above zero"});
+				}
+			}
+			else if (key.ends_with("side"))
+			{
+				launchOptions.windowSide = ParseSide(value);
+				if (!launchOptions.windowSide)
+				{
+					return std::unexpected(ArgError{.arg = std::string{arg}, .reason = "expected side=left or side=right"});
 				}
 			}
 		}

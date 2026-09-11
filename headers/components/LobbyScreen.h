@@ -7,6 +7,8 @@
 
 struct DrawUserInterfaceEvent;
 struct GameStateChangedToEvent;
+struct ClientInDisconnectEvent;
+struct ClientConnectedToHostEvent;
 struct MenuShowedEvent;
 class GameConfig;
 class EventSystem;
@@ -24,10 +26,13 @@ class LobbyScreen final
 
 	bool _isLobby{false};
 	bool _isMenuShown{false};
+	bool _isServerFull{false};
 
 	void Subscribe();
 	void OnGameStateChangedTo(const GameStateChangedToEvent& event);
 	void OnMenuShowed(const MenuShowedEvent& event);
+	void OnRefusedOrLost(const ClientInDisconnectEvent& event);
+	void OnConnectedToHost(const ClientConnectedToHostEvent&);
 	void OnDrawUserInterface(const DrawUserInterfaceEvent&);
 
 	void Display(bool isDisplayed);

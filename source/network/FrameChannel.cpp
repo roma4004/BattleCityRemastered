@@ -49,6 +49,8 @@ void FrameChannel::CloseForReconnect()
 	_writeInProgress = false;
 	//NOTE: the queue held frames for the link being replaced - stale input would reach the new one
 	_writeQueue.clear();
+	//NOTE: nothing new is taken until a link is up - keys banked while reconnecting arrive as a burst
+	_writeEnabled = false;
 	CloseSocket();
 }
 
@@ -200,6 +202,11 @@ void FrameChannel::Send(std::shared_ptr<const std::string> frame)
 	auto self(shared_from_this());
 	boost::asio::post(_socket.get_executor(), [this, self, payload = std::move(frame)]() mutable
 	{
+		if (!_writeEnabled)
+		{
+			return;
+		}
+
 		if (_writeQueue.size() >= kMaxPendingFrames)
 		{
 			_writeQueue.pop_front();

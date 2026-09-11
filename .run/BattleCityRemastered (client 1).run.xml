@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="BattleCityRemastered (client 1)" folderName="BattleCity" type="CMakeRunConfiguration" factoryName="Application" singleton="false" PROGRAM_PARAMS="client skipintro side=left" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="BattleCityRemastered" TARGET_NAME="BattleCityRemastered" CONFIG_NAME="Debug-MinGW" RUN_TARGET_PROJECT_NAME="BattleCityRemastered" RUN_TARGET_NAME="BattleCityRemastered">
+    <method v="2">
+      <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+    </method>
+  </configuration>
+</component>

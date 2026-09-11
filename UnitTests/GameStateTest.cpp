@@ -17,6 +17,7 @@ protected:
 	std::unique_ptr<GameStateManager> _stateManager{nullptr};
 	std::vector<GameState> _announced{};
 	int _matchStarts{};
+	size_t _phasesBeforeMatchStart{};
 	EventSubscription _stateSub{};
 	EventSubscription _matchStartSub{};
 
@@ -27,7 +28,11 @@ protected:
 		{
 			_announced.push_back(event.state);
 		});
-		_matchStartSub = _events->AddListener([this](const MatchStartedEvent&) { ++_matchStarts; });
+		_matchStartSub = _events->AddListener([this](const MatchStartedEvent&)
+		{
+			++_matchStarts;
+			_phasesBeforeMatchStart = _announced.size();
+		});
 	}
 };
 
@@ -56,12 +61,24 @@ TEST_F(GameStateTest, HostLeavesTheLobbyOnceBothSeatsAreReady)
 	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
 }
 
-TEST_F(GameStateTest, ClientLeavesTheLobbyOnceTheLinkIsUp)
+//NOTE: the link says nothing about the other seat - starting on it played alone on an empty field
+TEST_F(GameStateTest, AClientStaysInTheLobbyUntilTheHostSaysOtherwise)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsClient});
 	_events->EmitEvent(ClientConnectedToHostEvent{});
+	EXPECT_EQ(GameState::Lobby, _stateManager->GetState());
 
+	_events->EmitEvent(HostPhaseAnnouncedEvent{.phase = GameState::Playing});
 	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
+}
+
+//NOTE: entering Playing wipes the world on a client, so a spawn burst ahead of it is erased there
+TEST_F(GameStateTest, ThePhaseIsAnnouncedBeforeTheMatchStarts)
+{
+	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::OnePlayer});
+
+	ASSERT_EQ(_matchStarts, 1);
+	EXPECT_EQ(_phasesBeforeMatchStart, 1u) << "the match started before its phase was announced";
 }
 
 TEST_F(GameStateTest, EveryKindOfPeerLossGoesBackToTheLobby)
@@ -81,12 +98,12 @@ TEST_F(GameStateTest, EveryKindOfPeerLossGoesBackToTheLobby)
 
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsClient});
 
-	_events->EmitEvent(ClientConnectedToHostEvent{});
+	_events->EmitEvent(HostPhaseAnnouncedEvent{.phase = GameState::Playing});
 	ASSERT_EQ(GameState::Playing, _stateManager->GetState());
 	_events->EmitEvent(ClientInDisconnectEvent{.reason = DisconnectReason::HostShutdown});
 	EXPECT_EQ(GameState::Lobby, _stateManager->GetState());
 
-	_events->EmitEvent(ClientConnectedToHostEvent{});
+	_events->EmitEvent(HostPhaseAnnouncedEvent{.phase = GameState::Playing});
 	ASSERT_EQ(GameState::Playing, _stateManager->GetState());
 	_events->EmitEvent(ClientReconnectAbandonedEvent{});
 	EXPECT_EQ(GameState::Lobby, _stateManager->GetState());
@@ -95,13 +112,15 @@ TEST_F(GameStateTest, EveryKindOfPeerLossGoesBackToTheLobby)
 TEST_F(GameStateTest, ReconnectingAfterALossStartsTheMatchAgain)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsClient});
-	_events->EmitEvent(ClientConnectedToHostEvent{});
+	_events->EmitEvent(HostPhaseAnnouncedEvent{.phase = GameState::Playing});
 	_events->EmitEvent(ClientReconnectAbandonedEvent{});
 	ASSERT_EQ(GameState::Lobby, _stateManager->GetState());
 
 	_announced.clear();
 	_events->EmitEvent(ClientConnectedToHostEvent{});
+	EXPECT_EQ(GameState::Lobby, _stateManager->GetState()) << "the link alone started a match";
 
+	_events->EmitEvent(HostPhaseAnnouncedEvent{.phase = GameState::Playing});
 	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
 	EXPECT_EQ(std::vector{GameState::Playing}, _announced);
 }
@@ -241,15 +260,46 @@ TEST_F(GameStateTest, AHostThatLostOnePlayerRestartsOnOneArrival)
 }
 
 // The other side of the same counter - a client waits for the host, and the host is one peer
-TEST_F(GameStateTest, AClientStartsOnItsOnlyPeer)
+TEST_F(GameStateTest, AClientStartsTheMatchOnlyWhenTheHostAnnouncesIt)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsClient});
 	_matchStarts = 0;
 
 	_events->EmitEvent(ClientConnectedToHostEvent{});
+	EXPECT_EQ(_matchStarts, 0) << "the link alone started the match";
 
+	_events->EmitEvent(HostPhaseAnnouncedEvent{.phase = GameState::Playing});
 	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
 	EXPECT_EQ(_matchStarts, 1);
+}
+
+TEST_F(GameStateTest, ARestartPutsTheHostBackToWaitingForBothSeats)
+{
+	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
+	_events->EmitEvent(ServerInClientReadyToStartGameEvent{});
+	_events->EmitEvent(ServerInClientReadyToStartGameEvent{});
+	ASSERT_EQ(GameState::Playing, _stateManager->GetState());
+
+	_events->EmitEvent(ServerInRestartRequestedEvent{});
+	EXPECT_EQ(GameState::Lobby, _stateManager->GetState());
+
+	_events->EmitEvent(ServerInClientReadyToStartGameEvent{});
+	EXPECT_EQ(GameState::Lobby, _stateManager->GetState()) << "one player restarted the match alone";
+
+	_events->EmitEvent(ServerInClientReadyToStartGameEvent{});
+	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
+}
+
+//NOTE: hearing the lobby is what makes a client drop its world, so a repeat still has to go out
+TEST_F(GameStateTest, ARestartAnnouncesTheLobbyItIsAlreadyIn)
+{
+	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
+	ASSERT_EQ(GameState::Lobby, _stateManager->GetState());
+
+	_announced.clear();
+	_events->EmitEvent(ServerInRestartRequestedEvent{});
+
+	EXPECT_EQ(std::vector{GameState::Lobby}, _announced);
 }
 
 TEST_F(GameStateTest, WaitingInTheLobbyStartsNoMatch)

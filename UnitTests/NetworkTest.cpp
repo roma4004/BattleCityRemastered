@@ -48,6 +48,8 @@ protected:
 	std::shared_ptr<EventSystem> _clientEvents{std::make_shared<EventSystem>()};
 	//NOTE: a seat is handed out per connection, so telling the two apart takes a second game process
 	std::shared_ptr<EventSystem> _secondClientEvents{std::make_shared<EventSystem>()};
+	//NOTE: the one that finds both seats taken
+	std::shared_ptr<EventSystem> _thirdClientEvents{std::make_shared<EventSystem>()};
 	double _deltaTimeOneFrame{1.0 / 60.0};
 
 	//NOTE: stands in for MainLoop, in its order - nothing is received or sent without it
@@ -56,12 +58,15 @@ protected:
 		_hostEvents->EmitEvent(NetCommandUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 		_clientEvents->EmitEvent(NetCommandUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 		_secondClientEvents->EmitEvent(NetCommandUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		_thirdClientEvents->EmitEvent(NetCommandUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 		_hostEvents->EmitEvent(PreTickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 		_clientEvents->EmitEvent(PreTickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 		_secondClientEvents->EmitEvent(PreTickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		_thirdClientEvents->EmitEvent(PreTickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 		_hostEvents->EmitEvent(NetworkEndFrameEvent{});
 		_clientEvents->EmitEvent(NetworkEndFrameEvent{});
 		_secondClientEvents->EmitEvent(NetworkEndFrameEvent{});
+		_thirdClientEvents->EmitEvent(NetworkEndFrameEvent{});
 	}
 
 	//NOTE: listeners fire from the drain Pump does, so on this thread - a captured variable is enough
@@ -87,6 +92,14 @@ protected:
 	[[nodiscard]] std::unique_ptr<network::commands::ClientNode> MakeClient(const uint16_t port) const
 	{
 		return std::make_unique<network::commands::ClientNode>("127.0.0.1", port, _clientEvents);
+	}
+
+	[[nodiscard]] EventSubscription AnnounceReadyOnConnect() const
+	{
+		return _clientEvents->AddListener([this](const ClientConnectedToHostEvent&)
+		{
+			_clientEvents->EmitEvent(ClientOutReadyToPlayEvent{});
+		});
 	}
 
 	//NOTE: keeps pumping while it waits - the client's own retries need it
@@ -447,6 +460,7 @@ TEST_F(NetworkTest, ClientReconnectsAfterEstablishedLinkDrops)
 	subs.push_back(_hostEvents->AddListener(
 			[&readySignals](const ServerInClientReadyToStartGameEvent&) { ++readySignals; }));
 	subs.push_back(_clientEvents->AddListener([&linksUp](const ClientConnectedToHostEvent&) { ++linksUp; }));
+	subs.push_back(AnnounceReadyOnConnect());
 
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 	ASSERT_TRUE(PumpUntil([&readySignals] { return readySignals == 1; })) << "host never got the first ready";
@@ -491,6 +505,7 @@ TEST_F(NetworkTest, HostLearnsTheClientDroppedWithoutSayingGoodbye)
 			[&readySignals](const ServerInClientReadyToStartGameEvent&) { ++readySignals; }));
 	subs.push_back(_hostEvents->AddListener(
 			[&announced](const ServerInDisconnectEvent& event) { announced = event.reason; }));
+	subs.push_back(AnnounceReadyOnConnect());
 
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 	ASSERT_TRUE(PumpUntil([&readySignals] { return readySignals == 1; }));
@@ -684,6 +699,34 @@ TEST_F(NetworkTest, EachClientPutsOnlyItsOwnSeatOnTheWire)
 
 	ASSERT_TRUE(PumpUntil([&firstSeatMoved, &secondSeatMoved] { return firstSeatMoved && secondSeatMoved; }));
 	EXPECT_FALSE(strayArrived) << "a client sent the keyboard half of a seat it was never given";
+}
+
+//NOTE: a bare EOF reads as a dropped link, so an untold third player spends ten quick retries and
+// gives up on a host that is up and simply busy
+TEST_F(NetworkTest, AThirdClientIsToldTheSeatsAreTaken)
+{
+	std::optional<PlayerSlot> firstSeat{};
+	std::optional<PlayerSlot> secondSeat{};
+	std::optional<DisconnectReason> refusal{};
+	std::vector<EventSubscription> subs{};
+	subs.push_back(_clientEvents->AddListener([&firstSeat](const PlayerSlotAssignedEvent& e) { firstSeat = e.slot; }));
+	subs.push_back(_secondClientEvents->AddListener(
+			[&secondSeat](const PlayerSlotAssignedEvent& e) { secondSeat = e.slot; }));
+	subs.push_back(_thirdClientEvents->AddListener(
+			[&refusal](const ClientInDisconnectEvent& e) { refusal = e.reason; }));
+
+	const auto server = MakeHost();
+	const uint16_t port = server->GetBoundPort();
+	const auto client = MakeClient(port);
+	const auto secondClient = std::make_unique<network::commands::ClientNode>("127.0.0.1", port,
+																					  _secondClientEvents);
+	ASSERT_TRUE(PumpUntil([&firstSeat, &secondSeat] { return firstSeat && secondSeat; }));
+
+	const auto thirdClient = std::make_unique<network::commands::ClientNode>("127.0.0.1", port,
+																					 _thirdClientEvents);
+
+	ASSERT_TRUE(PumpUntil([&refusal] { return refusal.has_value(); })) << "the third client heard nothing";
+	EXPECT_EQ(*refusal, DisconnectReason::ServerFull);
 }
 
 TEST(SerializerTest, UnreadableFrameIsReportedNotSwallowed)

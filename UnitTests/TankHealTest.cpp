@@ -6,7 +6,6 @@
 #include "components/events/ReplicationEvents.h"
 #include "entities/pawns/Tank.h"
 #include "enums/Direction.h"
-#include "enums/Faction.h"
 #include "enums/GameMode.h"
 #include "geometry/ObjRectangle.h"
 #include "utils/UuidUtils.h"
@@ -46,8 +45,8 @@ TEST_F(TankHealTest, AMaxedTankStillReportsTheHealth)
 {
 	const std::shared_ptr<Tank> enemy =
 			TestUtils::CreateBot(
-					_tankRect, _tankHealth, UuidUtils::GetRandomUuid(), Author::Enemy1, Faction::EnemyTeam, _allObjects,
-					_events, 4u, _gameConfig.tankSpeed, Direction::UP, _bulletPool, _gameConfig);
+					_tankRect, _tankHealth, UuidUtils::GetRandomUuid(), Author::Enemy1, _allObjects,
+					_events, 4u, Direction::UP, _bulletPool, _gameConfig);
 
 	_events->EmitEvent(Key(Author::Enemy1), BonusStarPickupEvent{});
 
@@ -61,8 +60,8 @@ TEST_F(TankHealTest, AnUpgradingTankReportsTheHealthToo)
 {
 	const std::shared_ptr<Tank> enemy =
 			TestUtils::CreateBot(
-					_tankRect, _tankHealth, UuidUtils::GetRandomUuid(), Author::Enemy2, Faction::EnemyTeam, _allObjects,
-					_events, 1u, _gameConfig.tankSpeed, Direction::UP, _bulletPool, _gameConfig);
+					_tankRect, _tankHealth, UuidUtils::GetRandomUuid(), Author::Enemy2, _allObjects,
+					_events, 1u, Direction::UP, _bulletPool, _gameConfig);
 
 	_events->EmitEvent(Key(Author::Enemy2), BonusStarPickupEvent{});
 

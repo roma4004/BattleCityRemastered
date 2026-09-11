@@ -42,6 +42,15 @@
     <ClCompile Include="BulletsTestBasic.cpp">
       <Filter></Filter>
     </ClCompile>
+    <ClCompile Include="ClientHandshakeTest.cpp">
+      <Filter></Filter>
+    </ClCompile>
+    <ClCompile Include="ProjectConfigTest.cpp">
+      <Filter></Filter>
+    </ClCompile>
+    <ClCompile Include="SeatAssignmentTest.cpp">
+      <Filter></Filter>
+    </ClCompile>
     <ClCompile Include="CommandLineParserTest.cpp">
       <Filter></Filter>
     </ClCompile>

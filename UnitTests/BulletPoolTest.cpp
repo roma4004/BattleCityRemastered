@@ -10,7 +10,6 @@
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/Tank.h"
 #include "enums/Direction.h"
-#include "enums/Faction.h"
 #include "enums/InputChannel.h"
 #include "enums/TextureType.h"
 #include "gtest/gtest.h"
@@ -27,7 +26,6 @@ protected:
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	double _deltaTimeOneFrame{1.0 / 60.0};
 	double _tankSize{};
-	double _tankSpeed{142.0};
 	int _tankHealth{100};
 	Uuid _uuid{};
 	EventSubscription _spawnQueueSub{};
@@ -93,8 +91,7 @@ TEST_F(BulletPoolTest, ReturnedBulletLeavesTheBus)
 	});
 
 	std::shared_ptr<Tank> player = TestUtils::CreatePlayer(
-			ObjRectangle{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize}, _tankHealth, _uuid, Author::Player1,
-			Faction::PlayerTeam, _allObjects, _events, 1u, _tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
+			ObjRectangle{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize}, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
 	constexpr bool isPressed{true};

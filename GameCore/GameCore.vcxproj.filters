@@ -569,6 +569,9 @@
     <ClInclude Include="..\headers\enums\TextureOffset.h">
       <Filter>headers\enums</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\enums\WindowSide.h">
+      <Filter>headers\enums</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\geometry\Circle.h">
       <Filter>headers\geometry</Filter>
     </ClInclude>

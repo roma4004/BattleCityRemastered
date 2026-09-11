@@ -12,7 +12,6 @@
 #include "enums/Direction.h"
 #include "enums/InputChannel.h"
 #include "gtest/gtest.h"
-#include "enums/Faction.h"
 #include <memory>
 
 //NOTE: bush and ice are read back every frame, not set once at spawn
@@ -26,7 +25,6 @@ protected:
 	double _deltaTimeOneFrame{1.0 / 60.0};
 	Uuid _uuid{};
 	double _tankSize{};
-	double _tankSpeed{142.0};
 	int _tankHealth{100};
 	EventSubscription _spawnQueueSub{};
 
@@ -44,8 +42,8 @@ protected:
 	std::shared_ptr<Tank> SpawnPlayerAt(const ObjRectangle rect)
 	{
 		std::shared_ptr<Tank> tank =
-				TestUtils::CreatePlayer(rect, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects,
-										_events, 1u, _tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
+				TestUtils::CreatePlayer(rect, _tankHealth, _uuid, Author::Player1, _allObjects,
+										_events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
 		_allObjects.emplace_back(tank);
 
 		return tank;

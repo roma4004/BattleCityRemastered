@@ -5,6 +5,12 @@
 #include "components/events/InputEvents.h"
 #include "components/events/RenderUIEvents.h"
 
+namespace
+{
+//NOTE: BattleCityServer fills no seat itself, so both of them arrive over the wire
+constexpr unsigned short kPeersToWaitFor{2u};
+}//namespace
+
 GameStateManager::GameStateManager(const std::shared_ptr<EventSystem>& events)
 	: _events{events}
 {
@@ -21,7 +27,8 @@ void GameStateManager::Subscribe()
 	_subs.push_back(_events->AddListener(this, &GameStateManager::OnGameFinished));
 
 	_subs.push_back(_events->AddListener(this, &GameStateManager::OnClientReady));
-	_subs.push_back(_events->AddListener(this, &GameStateManager::OnConnectedToHost));
+	_subs.push_back(_events->AddListener(this, &GameStateManager::OnRestartRequested));
+	_subs.push_back(_events->AddListener(this, &GameStateManager::OnHostPhase));
 	_subs.push_back(_events->AddListener(this, &GameStateManager::OnClientLeft));
 	_subs.push_back(_events->AddListener(this, &GameStateManager::OnClientLost));
 	_subs.push_back(_events->AddListener(this, &GameStateManager::OnHostLeft));
@@ -41,12 +48,12 @@ void GameStateManager::SetState(const GameState state)
 
 void GameStateManager::AnnouncePhase()
 {
+	_events->EmitEvent(GameStateChangedToEvent{.state = _state});
+
 	if (_state == GameState::Playing)
 	{
 		_events->EmitEvent(MatchStartedEvent{});
 	}
-
-	_events->EmitEvent(GameStateChangedToEvent{.state = _state});
 }
 
 void GameStateManager::Resume()
@@ -62,12 +69,14 @@ GameState GameStateManager::IdleStateForMode() const
 		return GameState::Demo;
 	}
 
-	return IsNetworkGame(_gameMode) && _peerCount < PeersToWaitFor() ? GameState::Lobby : GameState::Playing;
-}
+	if (!IsNetworkGame(_gameMode))
+	{
+		return GameState::Playing;
+	}
 
-//NOTE: PlayAsHost is reached only inside BattleCityServer, which fills no seat itself, so it
-//waits for both players. A client waits for one peer, and that peer is the server, not player two.
-unsigned short GameStateManager::PeersToWaitFor() const { return IsHost(_gameMode) ? 2u : 1u; }
+	//NOTE: only the host counts seats. A client waits to be told, so its own idle phase is the lobby
+	return IsHost(_gameMode) && _peerCount >= kPeersToWaitFor ? GameState::Playing : GameState::Lobby;
+}
 
 void GameStateManager::OnGameModeApplied(const GameModeAppliedEvent& event)
 {
@@ -104,7 +113,7 @@ void GameStateManager::PeerArrived()
 {
 	++_peerCount;
 
-	if (_state == GameState::Lobby && _peerCount >= PeersToWaitFor())
+	if (_state == GameState::Lobby && _peerCount >= kPeersToWaitFor)
 	{
 		SetState(GameState::Playing);
 	}
@@ -124,7 +133,21 @@ void GameStateManager::PeerGone()
 }
 
 void GameStateManager::OnClientReady(const ServerInClientReadyToStartGameEvent&) { PeerArrived(); }
-void GameStateManager::OnConnectedToHost(const ClientConnectedToHostEvent&) { PeerArrived(); }
+
+void GameStateManager::OnRestartRequested(const ServerInRestartRequestedEvent&)
+{
+	_peerCount = 0u;
+	_state = GameState::Lobby;
+	AnnouncePhase();
+}
+
+//NOTE: announced even when the phase keeps its name - SetState would swallow the repeat
+void GameStateManager::OnHostPhase(const HostPhaseAnnouncedEvent& event)
+{
+	_state = event.phase;
+	AnnouncePhase();
+}
+
 void GameStateManager::OnClientLeft(const ServerInDisconnectEvent&) { PeerGone(); }
 void GameStateManager::OnClientLost(const ServerClientLostEvent&) { PeerGone(); }
 void GameStateManager::OnHostLeft(const ClientInDisconnectEvent&) { PeerGone(); }

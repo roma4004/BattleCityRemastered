@@ -2,6 +2,7 @@
 
 #include "geometry/Point.h"
 #include "enums/GameMode.h"
+#include "enums/WindowSide.h"
 #include <optional>
 
 //NOTE: empty optional means "not passed" - the ini value stays
@@ -14,4 +15,5 @@ struct LaunchOptions final
 	bool skipIntroMusic{false};
 	std::optional<UPoint> windowPos{};
 	std::optional<UPoint> windowSize{};
+	std::optional<WindowSide> windowSide{};
 };

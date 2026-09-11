@@ -4,6 +4,7 @@
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/RenderUIEvents.h"
 #include "enums/GameMode.h"
+#include "enums/DisconnectReason.h"
 #include "enums/GameState.h"
 #include <string>
 #include <vector>
@@ -19,6 +20,8 @@ void LobbyScreen::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &LobbyScreen::OnGameStateChangedTo));
 	_subs.push_back(_events->AddListener(this, &LobbyScreen::OnMenuShowed));
+	_subs.push_back(_events->AddListener(this, &LobbyScreen::OnRefusedOrLost));
+	_subs.push_back(_events->AddListener(this, &LobbyScreen::OnConnectedToHost));
 }
 
 void LobbyScreen::OnGameStateChangedTo(const GameStateChangedToEvent& event)
@@ -34,6 +37,13 @@ void LobbyScreen::OnMenuShowed(const MenuShowedEvent& event)
 	Display(_isLobby && !_isMenuShown);
 }
 
+void LobbyScreen::OnRefusedOrLost(const ClientInDisconnectEvent& event)
+{
+	_isServerFull = event.reason == DisconnectReason::ServerFull;
+}
+
+void LobbyScreen::OnConnectedToHost(const ClientConnectedToHostEvent&) { _isServerFull = false; }
+
 void LobbyScreen::OnDrawUserInterface(const DrawUserInterfaceEvent&) { Draw(); }
 
 void LobbyScreen::Display(const bool isDisplayed)
@@ -47,10 +57,19 @@ void LobbyScreen::Draw() const
 
 	constexpr unsigned int color{0xffffffffu};
 	constexpr int lineStep{30};
-	const std::string waitingFor = IsHost(_gameConfig.gameMode) ? "WAITING FOR PLAYER" : "CONNECTING TO HOST";
-
 	std::vector<TextBlockLine> lines;
-	lines.push_back(TextBlockLine{.color = color, .text = waitingFor});
+	if (_isServerFull)
+	{
+		lines.push_back(TextBlockLine{.color = color, .text = "MATCH IN PROGRESS"});
+		lines.push_back(TextBlockLine{.color = color, .text = "WAITING FOR A FREE SEAT"});
+	}
+	else
+	{
+		const std::string waitingFor =
+				IsHost(_gameConfig.gameMode) ? "WAITING FOR PLAYER" : "CONNECTING TO HOST";
+		lines.push_back(TextBlockLine{.color = color, .text = waitingFor});
+	}
+
 	lines.push_back(TextBlockLine{.color = color, .text = "PRESS M FOR MENU"});
 
 	_events->EmitEvent(RenderMenuTextBlockEvent{.menuPos = _pos,

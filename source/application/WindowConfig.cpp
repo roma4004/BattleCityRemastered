@@ -2,6 +2,7 @@
 #include "application/LaunchOptions.h"
 #include "application/ProjectConfig.h"
 #include "enums/GameMode.h"
+#include "enums/WindowSide.h"
 
 WindowConfig::WindowConfig(const ProjectConfig& projectConfig)
 {
@@ -14,7 +15,6 @@ WindowConfig::WindowConfig(const ProjectConfig& projectConfig)
 
 void WindowConfig::Apply(const LaunchOptions& launchOptions)
 {
-	//NOTE: size first - the host/client offset below is half a window wide
 	if (launchOptions.windowSize)
 	{
 		size = *launchOptions.windowSize;
@@ -27,13 +27,17 @@ void WindowConfig::Apply(const LaunchOptions& launchOptions)
 		hasExplicitPos = true;
 	}
 
-	//NOTE: two windows on one screen - the pair is pushed apart instead of landing on top of each other
-	if (IsHost(launchOptions.gameMode))
+	//NOTE: with a dedicated server both processes are clients, so the mode alone puts them on one half
+	if (launchOptions.windowSide)
 	{
-		posOffset.x -= size.x / 2;
+		side = *launchOptions.windowSide;
+	}
+	else if (IsHost(launchOptions.gameMode))
+	{
+		side = WindowSide::Left;
 	}
 	else if (IsClient(launchOptions.gameMode))
 	{
-		posOffset.x += size.x / 2;
+		side = WindowSide::Right;
 	}
 }

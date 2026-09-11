@@ -323,6 +323,7 @@
     <ClInclude Include="..\headers\enums\TankType.h" />
     <ClInclude Include="..\headers\enums\TextBlockAlign.h" />
     <ClInclude Include="..\headers\enums\TextureOffset.h" />
+    <ClInclude Include="..\headers\enums\WindowSide.h" />
     <ClInclude Include="..\headers\interfaces\IDrawable.h" />
     <ClInclude Include="..\headers\interfaces\IInputProvider.h" />
     <ClInclude Include="..\headers\interfaces\IMoveBeh.h" />

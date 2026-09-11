@@ -81,7 +81,7 @@ void ReplicationApplier::Emit(const BonusSpawnComplete& command) const
 
 void ReplicationApplier::Emit(const GameStateChange& command) const
 {
-	_events->EmitEvent(GameFinishedEvent{.state = command.state});
+	_events->EmitEvent(HostPhaseAnnouncedEvent{.phase = command.state});
 }
 
 void ReplicationApplier::Emit(const KeyStateChange& command) const

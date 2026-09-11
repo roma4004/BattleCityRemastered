@@ -49,20 +49,12 @@ void UserInput::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &UserInput::OnPauseStatus));
 	_subs.push_back(_events->AddListener(this, &UserInput::SwapControllers));
-	_subs.push_back(_events->AddListener(this, &UserInput::OnPlayerSlotAssigned));
 	_subs.push_back(_events->AddListener(this, &UserInput::OnPreTickUpdate));
 	_subs.push_back(_events->AddListener(this, &UserInput::OnMenuShowed));
 	_subs.push_back(_events->AddListener(this, &UserInput::OnMenuPosChanged));
 }
 
 void UserInput::OnPauseStatus(const PauseStatusEvent& event) { _isPause = event.isPaused; }
-
-//NOTE: the seat comes from the server and the keyboard half does not, so the two are lined up here -
-//WASD and the first gamepad drive our own tank whichever seat we were given
-void UserInput::OnPlayerSlotAssigned(const PlayerSlotAssignedEvent& event)
-{
-	_areControllersSwapped = event.slot == PlayerSlot::P2;
-}
 
 void UserInput::OnPreTickUpdate(const PreTickUpdateEvent&) { Update(); }
 
@@ -110,27 +102,18 @@ void UserInput::SwapControllers(const TabReleasedEvent&)
 
 PlayerSlot UserInput::ControllerSlotDefiner(const SDL_JoystickID instanceId) const
 {
-	bool isFirst{true};
-	if (ConnectedJoystickCount() > 1)
+	const auto isSameId = [instanceId](const std::shared_ptr<SDL_Gamepad>& controller)
 	{
-		const auto isSameId = [instanceId](const std::shared_ptr<SDL_Gamepad>& controller)
-		{
-			return IsSameController(controller, instanceId);
-		};
+		return IsSameController(controller, instanceId);
+	};
 
-		if (const auto it = std::ranges::find_if(_slotsForController, isSameId);
-			it != _slotsForController.end())
-		{
-			isFirst = 1 == std::distance(_slotsForController.begin(), it);
-		}
-	}
+	//NOTE: an unknown pad falls in with the first - a seat beats none
+	const auto it = std::ranges::find_if(_slotsForController, isSameId);
+	const std::size_t index{it == _slotsForController.end()
+							? 0u
+							: static_cast<std::size_t>(std::distance(_slotsForController.begin(), it))};
 
-	if (isFirst)
-	{
-		return _areControllersSwapped ? PlayerSlot::P2 : PlayerSlot::P1;
-	}
-
-	return _areControllersSwapped ? PlayerSlot::P1 : PlayerSlot::P2;
+	return SlotForDevice(index, _areControllersSwapped);
 }
 
 void UserInput::OnWindowDragStop()
@@ -209,8 +192,8 @@ void UserInput::MouseEvents(const SDL_Event& event)
 
 void UserInput::KeyboardKeyPressRelease(const SDL_Event& event, const bool& isPressed) const
 {
-	const PlayerSlot keyboardLeftSideSlot{_areControllersSwapped ? PlayerSlot::P2 : PlayerSlot::P1};
-	const PlayerSlot keyboardRightSideSlot{_areControllersSwapped ? PlayerSlot::P1 : PlayerSlot::P2};
+	const PlayerSlot keyboardLeftSideSlot{SlotForDevice(0u, _areControllersSwapped)};
+	const PlayerSlot keyboardRightSideSlot{SlotForDevice(1u, _areControllersSwapped)};
 
 	switch (event.key.key)
 	{

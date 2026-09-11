@@ -44,6 +44,8 @@ private:
 	//NOTE: the seat is whatever FindFreeSlot has left - the order clients arrive in is the order they sit
 	void Seat(tcp::socket socket);
 
+	void RefuseSeat(tcp::socket socket) const;
+
 	[[nodiscard]] std::vector<std::shared_ptr<Session>> SnapshotSessions() const;
 
 	//NOTE: called with _sessionsMutex held - the search and the session that takes the seat have to

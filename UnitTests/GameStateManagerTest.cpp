@@ -19,7 +19,6 @@
 #include "enums/InputChannel.h"
 #include "utils/UuidUtils.h"
 #include "gtest/gtest.h"
-#include "enums/Faction.h"
 #include <iostream>
 #include <memory>
 
@@ -38,7 +37,6 @@ protected:
 	double _deltaTimeOneFrame{1.0 / 60.0};
 	Uuid _uuid{};
 	double _tankSize{};
-	double _tankSpeed{142};
 	double _gridSize{};
 	unsigned short _tankHealth{100u};
 	GameMode _gameMode{GameMode::OnePlayer};
@@ -250,8 +248,7 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 	const ObjRectangle rectEnemy{.x = _tankSize * 3.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
-					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
-					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
+					rectEnemy, _tankHealth, _uuid, Author::Enemy1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(enemyBot);
 
 	// Spawn bonus extra life
@@ -389,8 +386,7 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithExtraLifeDeath)
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
+					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
 	bool isGameLose{false};

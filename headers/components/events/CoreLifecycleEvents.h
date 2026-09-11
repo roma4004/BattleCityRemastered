@@ -8,6 +8,8 @@
 
 struct ServerInClientReadyToStartGameEvent {};
 
+struct ServerInRestartRequestedEvent {};
+
 //NOTE: only a deliberate leave produces these - a dropped link never does
 struct ServerInDisconnectEvent
 {
@@ -21,8 +23,12 @@ struct ClientInDisconnectEvent
 
 struct ClientReconnectAbandonedEvent {};
 
-//NOTE: the host replays the world right behind this, so stale objects have to go
 struct ClientConnectedToHostEvent {};
+
+struct HostPhaseAnnouncedEvent
+{
+	GameState phase;
+};
 
 //NOTE: which seat this process drives - the server hands it out on connect
 struct PlayerSlotAssignedEvent
@@ -47,6 +53,8 @@ struct GameResetEvent {};
 struct LoadMapEvent {};
 
 struct ClientOutReadyToPlayEvent {};
+
+struct ClientOutRestartMatchEvent {};
 
 struct FrameStartEvent {};
 

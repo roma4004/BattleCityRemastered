@@ -13,7 +13,8 @@ struct GameModeAppliedEvent;
 struct DemoStartedEvent;
 struct GameFinishedEvent;
 struct ServerInClientReadyToStartGameEvent;
-struct ClientConnectedToHostEvent;
+struct ServerInRestartRequestedEvent;
+struct HostPhaseAnnouncedEvent;
 struct ServerInDisconnectEvent;
 struct ServerClientLostEvent;
 struct ClientInDisconnectEvent;
@@ -35,14 +36,14 @@ class GameStateManager final
 	void AnnouncePhase();
 	void Resume();
 	[[nodiscard]] GameState IdleStateForMode() const;
-	[[nodiscard]] unsigned short PeersToWaitFor() const;
 
 	void OnGameModeApplied(const GameModeAppliedEvent& event);
 	void OnDemoStarted(const DemoStartedEvent&);
 	void OnPauseStatus(const PauseStatusEvent& event);
 	void OnGameFinished(const GameFinishedEvent& event);
 	void OnClientReady(const ServerInClientReadyToStartGameEvent&);
-	void OnConnectedToHost(const ClientConnectedToHostEvent&);
+	void OnRestartRequested(const ServerInRestartRequestedEvent&);
+	void OnHostPhase(const HostPhaseAnnouncedEvent& event);
 	void OnClientLeft(const ServerInDisconnectEvent&);
 	void OnClientLost(const ServerClientLostEvent&);
 	void OnHostLeft(const ClientInDisconnectEvent&);

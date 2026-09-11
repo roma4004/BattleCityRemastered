@@ -4,6 +4,7 @@
 #include "application/GameConfig.h"
 #include "application/WindowConfig.h"
 #include "application/UserInput.h"
+#include "enums/WindowSide.h"
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
 #include <SDL3_mixer/SDL_mixer.h>
@@ -38,12 +39,12 @@ SDL_Config::SDL_Config(const GameConfig& config, const ProjectConfig& project, c
 
 bool SDL_Config::ShouldPersistWindowPos() const
 {
-	return !windowConfig.hasExplicitPos && !gameConfig.IsHost() && !gameConfig.IsClient();
+	return !windowConfig.hasExplicitPos && windowConfig.side == WindowSide::Center;
 }
 
 bool SDL_Config::ShouldPersistWindowSize() const
 {
-	return !windowConfig.hasExplicitSize && !gameConfig.IsHost() && !gameConfig.IsClient();
+	return !windowConfig.hasExplicitSize && windowConfig.side == WindowSide::Center;
 }
 
 SDL_Config::~SDL_Config()
@@ -473,8 +474,7 @@ RendererHandle SDL_Config::InitRender() const
 			!windowConfig.hasExplicitPos
 			&& (projectConfig.IsFreshIni()
 				|| projectConfig.IsCenterOnStart()
-				|| gameConfig.IsHost()
-				|| gameConfig.IsClient());
+				|| windowConfig.side != WindowSide::Center);
 	if (hasMonitor && centerOnMonitor)
 	{
 		//NOTE: the real window, not the ini one - InitWindow already scaled it
@@ -482,23 +482,12 @@ RendererHandle SDL_Config::InitRender() const
 		int windowHeight{};
 		SDL_GetWindowSize(sdlWindowRaw, &windowWidth, &windowHeight);
 
-		//NOTE: WindowConfig gives the direction, the distance comes off the real window - already
-		//scaled. The cast to int unwraps the host's negative offset, made by an unsigned subtraction.
-		const auto halfWindowApart = [](const std::size_t offset, const int windowSide)
-		{
-			const int direction = static_cast<int>(0 < static_cast<int>(offset))
-								  - static_cast<int>(static_cast<int>(offset) < 0);
-
-			return direction * (windowSide / 2);
-		};
+		const int halfWindowApart = static_cast<int>(windowConfig.side) * (windowWidth / 2);
 
 		const Point screenCenter{.x = bounds.x + bounds.w / 2,
 								 .y = bounds.y + bounds.h / 2};
-		const Point centred{.x = screenCenter.x - windowWidth / 2
-								 + halfWindowApart(windowConfig.posOffset.x, windowWidth),
-							.y = screenCenter.y - windowHeight / 2
-								 + halfWindowApart(windowConfig.posOffset.y, windowHeight)
-								 - bordersSize.y};
+		const Point centred{.x = screenCenter.x - windowWidth / 2 + halfWindowApart,
+							.y = screenCenter.y - windowHeight / 2 - bordersSize.y};
 
 		//NOTE: the pair spans two windows and must stay on this display. Clamped, not shrunk - they
 		//overlap in the middle instead of leaving the screen; the top margin keeps the title bar

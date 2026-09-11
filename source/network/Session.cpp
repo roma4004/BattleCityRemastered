@@ -97,6 +97,9 @@ void Session::Handle(const SignalEvent& command)
 			case ClientSignal::ReadyToPlay:
 				_events->EmitEvent(ServerInClientReadyToStartGameEvent{});
 				break;
+			case ClientSignal::RestartMatch:
+				_events->EmitEvent(ServerInRestartRequestedEvent{});
+				break;
 		}
 	});
 }

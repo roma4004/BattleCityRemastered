@@ -24,11 +24,9 @@
 namespace
 {
 //NOTE: movement is speed * deltaTime, so a step that follows the frame makes the same input land
-//differently on every machine - that is what a fixed step buys, not smoothness
+//differently on every machine
 constexpr double kFixedStep{1.0 / 60.0};
 
-//NOTE: a frame this close counts as exactly one step. Vsync jitter would else alternate zero and
-//two, and with no render interpolation yet that reads as a stutter
 constexpr double kStepSnapTolerance{kFixedStep / 20.0};
 
 //NOTE: every step is a full frame of movement and shooting - a slow stretch must not come back
@@ -61,6 +59,10 @@ void Simulation::Subscribe()
 	_subs.push_back(_events->AddListener(this, &Simulation::OnGameStateChangedTo));
 	_subs.push_back(_events->AddListener(this, &Simulation::OnGameModeChangedTo));
 	_subs.push_back(_events->AddListener(this, &Simulation::OnMatchStarted));
+	_subs.push_back(_events->AddListener(this, &Simulation::OnConnectedToHost));
+	_subs.push_back(_events->AddListener(this, &Simulation::OnPlayerSlotAssigned));
+	_subs.push_back(_events->AddListener(this, &Simulation::OnHostLeft));
+	_subs.push_back(_events->AddListener(this, &Simulation::OnHostUnreachable));
 }
 
 const GameStatistics& Simulation::Statistics() const { return *_statistics; }
@@ -109,12 +111,34 @@ void Simulation::OnMatchStarted(const MatchStartedEvent&)
 	_events->EmitEvent(SetPauseEvent{.isPaused = false});
 }
 
+void Simulation::OnConnectedToHost(const ClientConnectedToHostEvent&)
+{
+	_isLinkUp = true;
+
+	//NOTE: not announced here - the ready follows the reset, and EnterLobby is the one place doing both
+	_isEnterLobbyPending = _gameConfig.gameState == GameState::Lobby;
+}
+
+void Simulation::OnPlayerSlotAssigned(const PlayerSlotAssignedEvent& event) { _gameConfig.ownSlot = event.slot; }
+
+void Simulation::OnHostLeft(const ClientInDisconnectEvent&) { _isLinkUp = false; }
+
+void Simulation::OnHostUnreachable(const ClientReconnectAbandonedEvent&) { _isLinkUp = false; }
+
 //NOTE: the mode is kept - dropping it tears the link down, and nobody could reconnect
 void Simulation::EnterLobby()
 {
 	_events->EmitEvent(GameResetEvent{});
 	_events->EmitEvent(ShowMenuEvent{.show = false});
+
+	if (_isLinkUp)
+	{
+		AnnounceReady();
+	}
 }
+
+//NOTE: after the reset, never before - the host answers with the world, and the reset would erase it
+void Simulation::AnnounceReady() const { _events->EmitEvent(ClientOutReadyToPlayEvent{}); }
 
 void Simulation::LeaveGameMode() { _networkNode.reset(); }
 
@@ -126,13 +150,23 @@ void Simulation::ApplyGameMode(const GameMode gameMode)
 
 	_events->EmitEvent(GameResetEvent{});
 
+	_isLinkUp = false;
+	_gameConfig.ownSlot.reset();//NOTE: a new link is a new seat, and it may not be the old one
 	_events->EmitEvent(GameModeChangedToEvent{.mode = gameMode});
 	_events->EmitEvent(GameModeAppliedEvent{.mode = gameMode});
+}
 
-	if (IsClient(gameMode))
+//NOTE: a restart is a wire command, not a re-entry - rebuilding the mode would drop a working link
+bool Simulation::TryRestartMatch() const
+{
+	if (!_isLinkUp)
 	{
-		_events->EmitEvent(ClientOutReadyToPlayEvent{});
+		return false;
 	}
+
+	_events->EmitEvent(ClientOutRestartMatchEvent{});
+
+	return true;
 }
 
 void Simulation::Tick()

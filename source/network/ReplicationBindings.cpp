@@ -99,7 +99,7 @@ void BindHostReplication(ReplicationPublisher& out)
 	{
 		return KeyStateChange{.action = InputSignal::PauseStatus, .isPressed = e.isPaused};
 	});
-	out.Bind<GameFinishedEvent>([](const auto& e) { return GameStateChange{.state = e.state}; });
+	out.Bind<GameStateChangedToEvent>([](const auto& e) { return GameStateChange{.state = e.state}; });
 
 	out.Bind<PosChangedEvent>([](const auto& e)
 	{
@@ -138,6 +138,10 @@ void BindClientReplication(ReplicationPublisher& out)
 	out.Bind<ClientOutReadyToPlayEvent>([](const auto&)
 	{
 		return SignalEvent{.signal = ClientSignal::ReadyToPlay};
+	});
+	out.Bind<ClientOutRestartMatchEvent>([](const auto&)
+	{
+		return SignalEvent{.signal = ClientSignal::RestartMatch};
 	});
 	out.Bind<PauseRequestedEvent>([](const auto& e)
 	{

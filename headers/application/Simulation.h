@@ -5,11 +5,15 @@
 #include <vector>
 
 enum class GameMode : char8_t;
+struct ClientConnectedToHostEvent;
+struct ClientInDisconnectEvent;
+struct ClientReconnectAbandonedEvent;
 struct DeltaTimeEvent;
 struct GameModeChangedToEvent;
 struct GameStateChangedToEvent;
 struct MatchStartedEvent;
 struct PauseStatusEvent;
+struct PlayerSlotAssignedEvent;
 struct PostTickUpdateEvent;
 class AnimationManager;
 class BonusManager;
@@ -40,9 +44,10 @@ class Simulation final
 	GameConfig& _gameConfig;
 
 	double _deltaTime{};
-	//NOTE: real time measured but not yet spent on a whole step, carried into the next frame
 	double _stepAccumulator{0.0};
 	bool _isPaused{false};
+	//NOTE: the link and the lobby arrive in either order, so the ready waits for both
+	bool _isLinkUp{false};
 	//NOTE: derived from the phase, not latched, so a match starting later in the same frame clears a
 	//lobby entry that no longer applies. Acted on at PostTickUpdate
 	bool _isEnterLobbyPending{false};
@@ -55,8 +60,13 @@ class Simulation final
 	void OnGameStateChangedTo(const GameStateChangedToEvent& event);
 	void OnGameModeChangedTo(const GameModeChangedToEvent& event);
 	void OnMatchStarted(const MatchStartedEvent&);
+	void OnConnectedToHost(const ClientConnectedToHostEvent&);
+	void OnPlayerSlotAssigned(const PlayerSlotAssignedEvent& event);
+	void OnHostLeft(const ClientInDisconnectEvent&);
+	void OnHostUnreachable(const ClientReconnectAbandonedEvent&);
 
 	void EnterLobby();
+	void AnnounceReady() const;
 
 public:
 	Simulation(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig);
@@ -74,6 +84,8 @@ public:
 	void LeaveGameMode();
 
 	void ApplyGameMode(GameMode gameMode);
+
+	[[nodiscard]] bool TryRestartMatch() const;
 
 	//NOTE: separate from EndNetworkFrame because drawing goes between them
 	void Tick();

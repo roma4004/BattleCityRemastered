@@ -59,6 +59,7 @@
     <ClCompile Include="MapTest.cpp" />
     <ClCompile Include="BulletsTestAdvanced.cpp" />
     <ClCompile Include="BulletsTestBasic.cpp" />
+    <ClCompile Include="ClientHandshakeTest.cpp" />
     <ClCompile Include="CommandLineParserTest.cpp" />
     <ClCompile Include="CoopBotTest.cpp" />
     <ClCompile Include="DeadObjectFilterTest.cpp" />
@@ -75,8 +76,10 @@
     <ClCompile Include="NetworkTest.cpp" />
     <ClCompile Include="PauseSyncTest.cpp" />
     <ClCompile Include="PlayerTest.cpp" />
+    <ClCompile Include="ProjectConfigTest.cpp" />
     <ClCompile Include="RespawnManagerTest.cpp" />
     <ClCompile Include="StatisticsTestAdvanced.cpp" />
+    <ClCompile Include="SeatAssignmentTest.cpp" />
     <ClCompile Include="SimulationStepTest.cpp" />
     <ClCompile Include="StatisticsTestBasic.cpp" />
     <ClCompile Include="TankSpawnerTest.cpp" />

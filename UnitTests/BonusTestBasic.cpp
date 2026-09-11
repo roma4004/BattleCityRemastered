@@ -22,7 +22,6 @@
 #include "enums/InputChannel.h"
 #include "utils/UuidUtils.h"
 #include "gtest/gtest.h"
-#include "enums/Faction.h"
 #include <memory>
 
 class BonusTest : public testing::Test// NOLINT(clang-diagnostic-padded)
@@ -45,7 +44,6 @@ protected:
 	unsigned short _bulletHealth{1u};
 	double _tankSize{};
 	double _gridSize{};
-	double _tankSpeed{142};
 	double _deltaTimeOneFrame{1.0 / 60.0};
 	BulletCalibre _calibre{.speed = 300.0, .damage = 1u, .damageRadius = 12.0, .tier = 1u, .size{.x = 6.0, .y = 5.0}};
 	Uuid _uuid{};
@@ -78,8 +76,7 @@ TEST_F(BonusTest, BonusPickUp)
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
+					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
 
 	_allObjects.emplace_back(player);
 	_bonusSpawner->SpawnRandomBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize});
@@ -106,8 +103,7 @@ TEST_F(BonusTest, BonusNotPickUp)
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
+					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
 	_bonusSpawner->SpawnRandomBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize});
@@ -134,8 +130,7 @@ TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
+					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
@@ -145,8 +140,7 @@ TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 	const ObjRectangle rectEnemy{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
-					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
-					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
+					rectEnemy, _tankHealth, _uuid, Author::Enemy1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(enemyBot);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
@@ -163,8 +157,7 @@ TEST_F(BonusTest, TimerNotPickUpEnemyCanMove)
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
+					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveUpEvent{.isPressed = isPressed});
@@ -174,8 +167,7 @@ TEST_F(BonusTest, TimerNotPickUpEnemyCanMove)
 	const ObjRectangle rectEnemy{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
-					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
-					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
+					rectEnemy, _tankHealth, _uuid, Author::Enemy1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(enemyBot);
 
 	const FPoint enemyPos = enemyBot->GetPos();
@@ -190,8 +182,7 @@ TEST_F(BonusTest, HelmetPickUpAndBulletCantDamageTank)
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
+					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
@@ -204,7 +195,7 @@ TEST_F(BonusTest, HelmetPickUpAndBulletCantDamageTank)
 	const ObjRectangle rectBullet{.x = _tankSize + 1.0, .y = 0.0, .w = 6.0, .h = 5.0};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, Faction::EnemyTeam, _allObjects, _events, _calibre,
+					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
 					Direction::LEFT, _gameConfig, Author::Enemy1);
 	_allObjects.emplace_back(bullet);
 
@@ -218,8 +209,7 @@ TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
+					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveUpEvent{.isPressed = isPressed});
@@ -232,7 +222,7 @@ TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 	const ObjRectangle rectBullet{.x = _tankSize + 1.0, .y = 0.0, .w = 6.0, .h = 5.0};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, Faction::EnemyTeam, _allObjects, _events, _calibre,
+					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
 					Direction::LEFT, _gameConfig, Author::Enemy1);
 	_allObjects.emplace_back(bullet);
 
@@ -246,8 +236,7 @@ TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
+					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
@@ -255,8 +244,7 @@ TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 	const ObjRectangle rectEnemy{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
-					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
-					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
+					rectEnemy, _tankHealth, _uuid, Author::Enemy1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(enemyBot);
 
 	EXPECT_EQ(enemyBot->GetHealth(), 100);
@@ -273,8 +261,7 @@ TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
+					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveUpEvent{.isPressed = isPressed});
@@ -282,8 +269,7 @@ TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 	const ObjRectangle rectEnemy{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
-					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
-					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
+					rectEnemy, _tankHealth, _uuid, Author::Enemy1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(enemyBot);
 
 	EXPECT_EQ(enemyBot->GetHealth(), 100);
@@ -306,8 +292,7 @@ TEST_F(BonusTest, TankPickUpExtraLife)
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
+					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
@@ -333,8 +318,7 @@ TEST_F(BonusTest, TankNotPickUpTierTheSame)
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
+					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveUpEvent{.isPressed = isPressed});
@@ -354,8 +338,7 @@ TEST_F(BonusTest, StarPickUpTierIncrease)
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
+					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
@@ -374,8 +357,7 @@ TEST_F(BonusTest, StarNotPickUpTierTheSame)
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
+					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveUpEvent{.isPressed = isPressed});
@@ -395,8 +377,7 @@ TEST_F(BonusTest, ShovelPickUpByPlayerThenFortressWallTurnIntoSteelWall)
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
+					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
@@ -419,8 +400,7 @@ TEST_F(BonusTest, ShovelNotPickUpByFortressWallTheSame)
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
+					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveUpEvent{.isPressed = isPressed});
@@ -442,8 +422,7 @@ TEST_F(BonusTest, WaterBlocksTankWithoutShip)
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
+					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
@@ -466,8 +445,7 @@ TEST_F(BonusTest, ShipPickUpCanCrossWater)
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
+					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
@@ -496,8 +474,7 @@ TEST_F(BonusTest, SuperStarPickUpTierIncreaseTwice)
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
+					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});

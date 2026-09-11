@@ -1,7 +1,13 @@
 #include "network/Server.h"
 #include "components/EventSystem.h"
 #include "components/events/CoreLifecycleEvents.h"
+#include "network/FrameChannel.h"
 #include "network/ReplicationBindings.h"
+#include "network/Serializer.h"
+#include "network/commands/CommandBatch.h"
+#include "network/commands/Disconnect.h"
+#include "enums/DisconnectReason.h"
+#include <memory>
 #include "utils/Log.h"
 #include <algorithm>
 #include <boost/asio/strand.hpp>
@@ -101,6 +107,20 @@ void Server::OnNetworkEndFrame(const NetworkEndFrameEvent&)
 	}
 }
 
+//NOTE: a bare EOF reads as a dropped link - told why, the client waits instead of burning its retries
+void Server::RefuseSeat(tcp::socket socket) const
+{
+	Log::Info("Server: both seats are taken, the client is told to wait for a free match");
+
+	CommandBatch farewell;
+	farewell.commands.emplace_back(Disconnect{.reason = DisconnectReason::ServerFull});
+
+	//NOTE: the channel keeps itself alive through the write it posted, so this handle may go
+	const auto channel = std::make_shared<network::FrameChannel>(std::move(socket), "Server");
+	channel->Send(std::make_shared<const std::string>(network::SerializeFrame(farewell)));
+	channel->CloseAfterFlush({});
+}
+
 void Server::Seat(tcp::socket socket)
 {
 	try
@@ -121,8 +141,7 @@ void Server::Seat(tcp::socket socket)
 		}
 		else
 		{
-			//NOTE: no goodbye - there is no session to write one, and the socket dies with this scope
-			Log::Error("Server: both seats are taken, the connection is refused");
+			RefuseSeat(std::move(socket));
 		}
 	}
 	catch (const std::exception& e)

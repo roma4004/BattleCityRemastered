@@ -1,4 +1,5 @@
 #pragma once
+#include "enums/WindowSide.h"
 #include "geometry/Point.h"
 
 struct LaunchOptions;
@@ -15,7 +16,7 @@ public:
 
 	UPoint size{};
 	UPoint pos{};
-	UPoint posOffset{};
+	WindowSide side{WindowSide::Center};
 	bool hasExplicitPos{false};//NOTE: explicit pos wins over monitor centering
 	bool hasExplicitSize{false};
 };

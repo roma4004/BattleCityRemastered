@@ -20,7 +20,6 @@ struct TabReleasedEvent;
 struct PreTickUpdateEvent;
 struct MenuShowedEvent;
 struct MenuPosChangedEvent;
-struct PlayerSlotAssignedEvent;
 class EventSystem;
 class WindowConfig;
 
@@ -41,10 +40,7 @@ class UserInput final
 	bool _isWindowDragging{false};
 	bool _isMenuDisplayed{false};
 	GameMode _selectedGameMode{};
-	//NOTE: which seat the default devices drive - WASD and the first gamepad take P1 while it is
-	//false. Tab flips it, and joining a match sets it to the seat the server gave this client
 	bool _areControllersSwapped{false};
-	//NOTE: the last size we announced, so a repeat is dropped without asking who heard the previous one
 	UPoint _windowSize{};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
@@ -70,7 +66,6 @@ class UserInput final
 
 	void Subscribe();
 	void OnPauseStatus(const PauseStatusEvent& event);
-	void OnPlayerSlotAssigned(const PlayerSlotAssignedEvent& event);
 	void SwapControllers(const TabReleasedEvent&);
 	void OnPreTickUpdate(const PreTickUpdateEvent&);
 	void OnMenuShowed(const MenuShowedEvent& event);

@@ -64,6 +64,14 @@ void Game::OnApplyGameMode(const ApplyGameModeEvent&) { EnterGameMode(_selectedG
 //as a client either way, and takes whichever seat is free
 void Game::EnterGameMode(const GameMode mode)
 {
+	//NOTE: the applied mode says PlayAsClient for both network entries, and the server process is
+	//what tells them apart
+	const GameMode entered = _serverProcess ? GameMode::PlayAsHost : _gameConfig.gameMode;
+	if (mode == entered && _simulation->TryRestartMatch())
+	{
+		return;
+	}
+
 	//NOTE: the link goes before the process it talks to - built any earlier it dials a server
 	//this call is about to kill
 	_simulation->LeaveGameMode();

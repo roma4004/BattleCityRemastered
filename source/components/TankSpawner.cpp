@@ -320,7 +320,10 @@ std::unique_ptr<IInputProvider> TankSpawner::MakeDriver(const TankType type) con
 
 	const PlayerSlot slot{type == TankType::PLAYER1 ? PlayerSlot::P1 : PlayerSlot::P2};
 
-	return std::make_unique<InputProviderForPlayer>(_events, IsHost(_gameMode) ? RemoteInput(slot) : LocalInput(slot));
+	//NOTE: whose seat it is, not which mode - a client must not wire the mirrored tank to its keyboard
+	const InputChannel channel{_gameConfig.IsOwnSlot(slot) ? LocalInput(slot) : RemoteInput(slot)};
+
+	return std::make_unique<InputProviderForPlayer>(_events, channel);
 }
 
 void TankSpawner::DelayedSpawnStart(const ObjRectangle rect, const int health, const double speed, const Uuid uuid,

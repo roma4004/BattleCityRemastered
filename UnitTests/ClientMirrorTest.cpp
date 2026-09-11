@@ -11,7 +11,6 @@
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
 #include "enums/DespawnReason.h"
-#include "enums/Faction.h"
 #include "enums/GameMode.h"
 #include "geometry/ObjRectangle.h"
 #include "utils/UuidUtils.h"
@@ -54,8 +53,8 @@ TEST_F(ClientMirrorTest, AClientTakesHealthOffTheWireInsteadOfHealingItself)
 {
 	const std::shared_ptr<Tank> enemy =
 			TestUtils::CreateBot(
-					_tankRect, _tankHealth, UuidUtils::GetRandomUuid(), Author::Enemy1, Faction::EnemyTeam, _allObjects,
-					_events, 1u, _gameConfig.tankSpeed, Direction::UP, _bulletPool, _gameConfig);
+					_tankRect, _tankHealth, UuidUtils::GetRandomUuid(), Author::Enemy1, _allObjects,
+					_events, 1u, Direction::UP, _bulletPool, _gameConfig);
 
 	_events->EmitEvent(Key(Author::Enemy1), BonusStarPickupEvent{});
 

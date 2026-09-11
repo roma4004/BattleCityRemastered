@@ -70,10 +70,12 @@ private:
 	//NOTE: a goodbye is not one of these - the host sends it while restarting the same mode, and
 	//the client is the only side that can dial back
 	std::atomic<bool> _isLinkUnrecoverable{false};
+	std::atomic<bool> _isWaitingForSeat{false};
 	unsigned char _reconnectAttempts{0u};
 	//NOTE: one drop can be reported twice, by the read and by the write - give up once
 	bool _reconnectAbandoned{false};
 	static constexpr unsigned char kMaxReconnectAttempts{10u};
 	static constexpr unsigned short kReconnectDelayMs{500u};
+	static constexpr unsigned short kFullServerRetryMs{3000u};
 };
 }//namespace network::commands

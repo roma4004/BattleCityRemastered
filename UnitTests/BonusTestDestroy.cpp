@@ -19,7 +19,6 @@
 #include "enums/Direction.h"
 #include "enums/ObstacleType.h"
 #include "gtest/gtest.h"
-#include "enums/Faction.h"
 #include <memory>
 
 class BonusTestDestroy : public testing::Test// NOLINT(clang-diagnostic-padded)
@@ -42,7 +41,6 @@ protected:
 	BulletCalibre _calibre{.speed = 300.0, .damage = 1u, .damageRadius = 12.0, .tier = 1u, .size{.x = 6.0, .y = 5.0}};
 	double _tankSize{};
 	double _gridSize{};
-	double _tankSpeed{142};
 	unsigned short _tankHealth{100u};
 	unsigned short _bulletHealth{1u};
 	Uuid _uuid{};
@@ -75,7 +73,7 @@ TEST_F(BonusTestDestroy, BonusDestroy)
 	constexpr ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = 6.0, .h = 5.0};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, Faction::EnemyTeam, _allObjects, _events, _calibre,
+					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
 					Direction::DOWN, _gameConfig, Author::Enemy1);
 	_allObjects.emplace_back(bullet);
 
@@ -100,7 +98,7 @@ TEST_F(BonusTestDestroy, BonusNotDestroy)
 	constexpr ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = 6.0, .h = 5.0};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, Faction::EnemyTeam, _allObjects, _events, _calibre,
+					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
 					Direction::RIGHT, _gameConfig, Author::Enemy1);
 	_allObjects.emplace_back(bullet);
 
@@ -125,7 +123,7 @@ TEST_F(BonusTestDestroy, TimerDestroyByPlayerAndEnemyStillMove)
 	constexpr ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = 6.0, .h = 5.0};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects, _events, _calibre,
+					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
 					Direction::DOWN, _gameConfig, Author::Player1);
 	_allObjects.emplace_back(bullet);
 
@@ -136,8 +134,7 @@ TEST_F(BonusTestDestroy, TimerDestroyByPlayerAndEnemyStillMove)
 	const ObjRectangle rectEnemy{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
-					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
-					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
+					rectEnemy, _tankHealth, _uuid, Author::Enemy1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(enemyBot);
 
 	const FPoint enemyPos = enemyBot->GetPos();
@@ -152,14 +149,13 @@ TEST_F(BonusTestDestroy, HelmetDestroyAndBulletStillCanDamageTank)
 	const ObjRectangle rectPlayer{.x = _tankSize + 1.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player2, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
+					rectPlayer, _tankHealth, _uuid, Author::Player2, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
 	constexpr ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = 6.0, .h = 5.0};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects, _events, _calibre,
+					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
 					Direction::DOWN, _gameConfig, Author::Player1);
 	_allObjects.emplace_back(bullet);
 
@@ -170,7 +166,7 @@ TEST_F(BonusTestDestroy, HelmetDestroyAndBulletStillCanDamageTank)
 	const ObjRectangle rectBullet2{.x = _tankSize * 2 + 1.0, .y = 7.0, .w = 6.0, .h = 5.0};
 	std::shared_ptr<Bullet> bullet2 =
 			TestUtils::CreateBullet(
-					rectBullet2, _bulletHealth, _uuid, Faction::EnemyTeam, _allObjects, _events, _calibre,
+					rectBullet2, _bulletHealth, _uuid, _allObjects, _events, _calibre,
 					Direction::LEFT, _gameConfig, Author::Enemy1);
 	_allObjects.emplace_back(bullet2);
 
@@ -187,7 +183,7 @@ TEST_F(BonusTestDestroy, GrenadeDestroyEnemyHealthFull)
 	constexpr ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = 6.0, .h = 5.0};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects, _events, _calibre,
+					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
 					Direction::DOWN, _gameConfig, Author::Player1);
 	_allObjects.emplace_back(bullet);
 
@@ -196,8 +192,7 @@ TEST_F(BonusTestDestroy, GrenadeDestroyEnemyHealthFull)
 	const ObjRectangle rectEnemy{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> enemyBot =
 			TestUtils::CreateBot(
-					rectEnemy, _tankHealth, _uuid, Author::Enemy1, Faction::EnemyTeam, _allObjects, _events, 1u,
-					_tankSpeed, Direction::DOWN, _bulletPool, _gameConfig);
+					rectEnemy, _tankHealth, _uuid, Author::Enemy1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(enemyBot);
 
 	EXPECT_EQ(enemyBot->GetHealth(), 100);
@@ -218,7 +213,7 @@ TEST_F(BonusTestDestroy, TankDestroyNoExtraLife)
 	constexpr ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = 6.0, .h = 5.0};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects, _events, _calibre,
+					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
 					Direction::DOWN, _gameConfig, Author::Player1);
 	_allObjects.emplace_back(bullet);
 
@@ -237,14 +232,13 @@ TEST_F(BonusTestDestroy, StarDestroyTierRemainTheSame)
 	const ObjRectangle rectPlayer{.x = 0.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Tank> player =
 			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player2, Faction::PlayerTeam, _allObjects, _events, 1u,
-					_tankSpeed, Direction::UP, _bulletPool, _gameConfig);
+					rectPlayer, _tankHealth, _uuid, Author::Player2, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
 	constexpr ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = 6.0, .h = 5.0};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects, _events, _calibre,
+					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
 					Direction::DOWN, _gameConfig, Author::Player1);
 	_allObjects.emplace_back(bullet);
 
@@ -262,7 +256,7 @@ TEST_F(BonusTestDestroy, ShovelNotPickUpByPlayerThenfortressWallRemainTheSame)
 	constexpr ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = 6.0, .h = 5.0};
 	std::shared_ptr<Bullet> bullet =
 			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, Faction::PlayerTeam, _allObjects, _events, _calibre,
+					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
 					Direction::DOWN, _gameConfig, Author::Player1);
 	_allObjects.emplace_back(bullet);
 

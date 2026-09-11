@@ -91,19 +91,19 @@ public:
 
 	//NOTE: one tank either way - the two helpers differ only in who takes the wheel
 	[[nodiscard]] static std::shared_ptr<Tank> CreateBot(
-			ObjRectangle rect, int health, Uuid uuid, Author author, Faction faction,
+			ObjRectangle rect, int health, Uuid uuid, Author author,
 			const std::vector<std::shared_ptr<BaseObj>>& allObjects, std::shared_ptr<EventSystem> events,
-			unsigned short tier, double tankSpeed, Direction dir, std::shared_ptr<BulletPool> bulletPool,
+			unsigned short tier, Direction dir, std::shared_ptr<BulletPool> bulletPool,
 			const GameConfig& gameConfig);
 
 	[[nodiscard]] static std::shared_ptr<Tank> CreatePlayer(
-			ObjRectangle rect, int health, Uuid uuid, Author author, Faction faction,
+			ObjRectangle rect, int health, Uuid uuid, Author author,
 			const std::vector<std::shared_ptr<BaseObj>>& allObjects, std::shared_ptr<EventSystem> events,
-			unsigned short tier, double tankSpeed, Direction dir, std::shared_ptr<BulletPool> bulletPool,
+			unsigned short tier, Direction dir, std::shared_ptr<BulletPool> bulletPool,
 			const GameConfig& gameConfig);
 
 	[[nodiscard]] static std::shared_ptr<Bullet> CreateBullet(
-			ObjRectangle rect, const int health, const Uuid uuid, const Faction faction,
+			ObjRectangle rect, const int health, const Uuid uuid,
 			const std::vector<std::shared_ptr<BaseObj>>& allObjects, std::shared_ptr<EventSystem> events,
 			const BulletCalibre& calibre, const Direction dir, const GameConfig& gameConfig,
 			const Author author)
@@ -112,7 +112,7 @@ public:
 				.rect = rect,
 				.health = health,
 				.uuid = uuid,
-				.faction = faction};
+				.faction = FactionOf(author)};
 		PawnProperty pawnProperty{
 				.baseObjProperty = std::move(baseObjProperty),
 				.allObjects = allObjects,

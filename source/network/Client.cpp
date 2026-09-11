@@ -54,7 +54,6 @@ void Client::TryConnect()
 			_commandQueue.Enqueue([this] { _events->EmitEvent(ClientConnectedToHostEvent{}); });
 			this->StartReading();
 			_channel->SetWriteEnabled(true);
-			_replicationOut.Publish(SignalEvent{.signal = ClientSignal::ReadyToPlay});
 		}
 		else
 		{
@@ -74,7 +73,7 @@ void Client::ScheduleReconnect()
 		return;
 	}
 
-	if (_isLinkUnrecoverable || _reconnectAttempts >= kMaxReconnectAttempts)
+	if (_isLinkUnrecoverable || (!_isWaitingForSeat && _reconnectAttempts >= kMaxReconnectAttempts))
 	{
 		if (!_reconnectAbandoned)
 		{
@@ -90,7 +89,8 @@ void Client::ScheduleReconnect()
 	//NOTE: weak - the timer is our own member, so a shared capture would keep this Client alive
 	//through its own pending handler
 	const std::weak_ptr<Client> weakSelf = weak_from_this();
-	_reconnectTimer.expires_after(std::chrono::milliseconds(kReconnectDelayMs));
+	_reconnectTimer.expires_after(
+			std::chrono::milliseconds(_isWaitingForSeat ? kFullServerRetryMs : kReconnectDelayMs));
 	_reconnectTimer.async_wait([weakSelf](const boost::system::error_code& timerEc)
 	{
 		const auto self = weakSelf.lock();
@@ -222,6 +222,7 @@ void Client::OnDisconnect(const Disconnect& command)
 	//NOTE: on the network thread, not in the queued lambda - the EOF arrives well before the game
 	//thread drains the queue, and HandleDisconnect must already know why
 	_isLinkUnrecoverable = reason == DisconnectReason::ProtocolError;
+	_isWaitingForSeat = reason == DisconnectReason::ServerFull;
 
 	_commandQueue.Enqueue([this, reason]()
 	{

@@ -117,7 +117,9 @@ set(UNIT_TESTS_SOURCES
         UnitTests/MapTest.cpp
         UnitTests/BulletsTestAdvanced.cpp
         UnitTests/BulletsTestBasic.cpp
+        UnitTests/ClientHandshakeTest.cpp
         UnitTests/CommandLineParserTest.cpp
+        UnitTests/ProjectConfigTest.cpp
         UnitTests/CoopBotTest.cpp
         UnitTests/DeadObjectFilterTest.cpp
         UnitTests/DirectionUtilsTest.cpp
@@ -135,6 +137,7 @@ set(UNIT_TESTS_SOURCES
         UnitTests/PlayerTest.cpp
         UnitTests/RespawnManagerTest.cpp
         UnitTests/StatisticsTestAdvanced.cpp
+        UnitTests/SeatAssignmentTest.cpp
         UnitTests/SimulationStepTest.cpp
         UnitTests/StatisticsTestBasic.cpp
         UnitTests/TankSpawnerTest.cpp

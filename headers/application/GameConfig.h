@@ -2,8 +2,10 @@
 #include "components/WorldGeometry.h"
 #include "enums/GameMode.h"
 #include "enums/GameState.h"
+#include "enums/PlayerSlot.h"
 #include <chrono>
 #include <cstddef>
+#include <optional>
 
 struct LaunchOptions;
 
@@ -18,9 +20,22 @@ public:
 
 	GameState gameState{GameState::Menu};
 
+	std::optional<PlayerSlot> ownSlot{};
+
 	[[nodiscard]] bool IsAuthority() const { return ::IsAuthority(gameMode); }
 	[[nodiscard]] bool IsClient() const { return ::IsClient(gameMode); }
 	[[nodiscard]] bool IsHost() const { return ::IsHost(gameMode); }
+
+	//NOTE: false for both seats on the dedicated server - it drives no tank of its own
+	[[nodiscard]] bool IsOwnSlot(const PlayerSlot slot) const
+	{
+		if (IsHost())
+		{
+			return false;
+		}
+
+		return !IsClient() || ownSlot == slot;
+	}
 	[[nodiscard]] bool HasSecondPlayer() const { return ::HasSecondPlayer(gameMode); }
 	[[nodiscard]] UPoint LogicalSize() const;
 

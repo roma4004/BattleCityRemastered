@@ -19,7 +19,6 @@
 #include "entities/pawns/Tank.h"
 #include "enums/AnimationType.h"
 #include "enums/Direction.h"
-#include "enums/Faction.h"
 #include "enums/GameMode.h"
 #include "utils/Uuid.h"
 #include "utils/UuidUtils.h"
@@ -117,7 +116,7 @@ protected:
 TEST_F(AnimationManagerTest, BulletExplodesWhereItHit)
 {
 	const ObjRectangle bulletRect{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
-	auto bullet = TestUtils::CreateBullet(bulletRect, _health, _uuid, Faction::PlayerTeam, _allObjects, _events,
+	auto bullet = TestUtils::CreateBullet(bulletRect, _health, _uuid, _allObjects, _events,
 										  _calibre, Direction::DOWN, _gameConfig, Author::Player1);
 	_allObjects.emplace_back(bullet);
 	_allObjects.emplace_back(std::make_shared<BrickWall>(ObjRectangle{.x = 0.0, .y = 8.0, .w = 12.0, .h = 12.0},
@@ -135,7 +134,7 @@ TEST_F(AnimationManagerTest, ClientBulletExplodesOnDespawn)
 	_gameConfig.gameMode = GameMode::PlayAsClient;
 
 	const ObjRectangle bulletRect{.x = 20.0, .y = 30.0, .w = _calibre.size.x, .h = _calibre.size.y};
-	auto bullet = TestUtils::CreateBullet(bulletRect, _health, _uuid, Faction::PlayerTeam, _allObjects, _events,
+	auto bullet = TestUtils::CreateBullet(bulletRect, _health, _uuid, _allObjects, _events,
 										  _calibre, Direction::DOWN, _gameConfig, Author::Player1);
 	_allObjects.emplace_back(bullet);
 
@@ -149,8 +148,8 @@ TEST_F(AnimationManagerTest, ClientBulletExplodesOnDespawn)
 TEST_F(AnimationManagerTest, TankExplodesWhereItDied)
 {
 	constexpr ObjRectangle tankRect{.x = 40.0, .y = 50.0, .w = 12.0, .h = 12.0};
-	auto tank = TestUtils::CreatePlayer(tankRect, _health, _uuid, Author::Player1, Faction::PlayerTeam, _allObjects,
-										_events, 1u, 142.0, Direction::UP, _bulletPool, _gameConfig);
+	auto tank = TestUtils::CreatePlayer(tankRect, _health, _uuid, Author::Player1, _allObjects,
+										_events, 1u, Direction::UP, _bulletPool, _gameConfig);
 
 	tank->TakeDamage(static_cast<unsigned int>(tank->GetHealth()), Author::Enemy1);
 
@@ -164,7 +163,7 @@ TEST_F(AnimationManagerTest, ALiveTankTakenOffTheFieldExplodesNothing)
 {
 	{
 		auto tank = TestUtils::CreatePlayer(ObjRectangle{.x = 0.0, .y = 0.0, .w = 12.0, .h = 12.0}, _health, _uuid,
-											Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u, 142.0,
+											Author::Player1, _allObjects, _events, 1u,
 											Direction::UP, _bulletPool, _gameConfig);
 	}
 
@@ -196,7 +195,7 @@ TEST_F(AnimationManagerTest, WaterTileAsksForItsFlowWhenBuilt)
 TEST_F(AnimationManagerTest, HelmetPickupTurnsTheShieldOnAndOff)
 {
 	auto tank = TestUtils::CreatePlayer(ObjRectangle{.x = 0.0, .y = 0.0, .w = 12.0, .h = 12.0}, _health, _uuid,
-										Author::Player1, Faction::PlayerTeam, _allObjects, _events, 1u, 142.0,
+										Author::Player1, _allObjects, _events, 1u,
 										Direction::UP, _bulletPool, _gameConfig);
 
 	_events->EmitEvent(Key(Author::Player1), BonusHelmetStatusChangeEvent{.isActive = true});
