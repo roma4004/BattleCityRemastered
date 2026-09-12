@@ -115,6 +115,7 @@ set(UNIT_TESTS_SOURCES
         UnitTests/BotsTest.cpp
         UnitTests/BulletPoolTest.cpp
         UnitTests/MapTest.cpp
+        UnitTests/MatchStartTest.cpp
         UnitTests/BulletsTestAdvanced.cpp
         UnitTests/BulletsTestBasic.cpp
         UnitTests/ClientHandshakeTest.cpp

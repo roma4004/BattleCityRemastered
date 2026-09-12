@@ -6,7 +6,7 @@
 #include <vector>
 
 struct GameResetEvent;
-struct PostTickUpdateEvent;
+struct DeadObjectsSweptEvent;
 struct TankResetProperty;
 class BaseObj;
 class BulletPool;
@@ -27,7 +27,7 @@ class TankPool final
 	PooledSlots<Tank> _slots{};
 
 	void OnGameReset(const GameResetEvent&);
-	void OnPostTickUpdate(const PostTickUpdateEvent&);
+	void OnDeadObjectsSwept(const DeadObjectsSweptEvent&);
 
 	[[nodiscard]] std::shared_ptr<Tank> CreateNewTank() const;
 

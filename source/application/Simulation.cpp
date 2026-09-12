@@ -49,8 +49,6 @@ Simulation::Simulation(const std::shared_ptr<EventSystem>& events, GameConfig& g
 
 Simulation::~Simulation() = default;
 
-//NOTE: after every subsystem above and before the spawners, which are built on the first mode change -
-//so a reset announced here still reaches a spawner that does not exist yet
 void Simulation::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &Simulation::OnDeltaTime));
@@ -103,9 +101,12 @@ void Simulation::OnGameModeChangedTo(const GameModeChangedToEvent& event)
 	}
 }
 
+//NOTE: the reset empties the field and the map fills it - stated in order here, rather than left to
+//two listeners of MatchStartedEvent and whichever subscribed first
 void Simulation::OnMatchStarted(const MatchStartedEvent&)
 {
 	_events->EmitEvent(GameResetEvent{});
+	_events->EmitEvent(LoadMapEvent{});
 
 	_events->EmitEvent(ShowMenuEvent{.show = false});
 	_events->EmitEvent(SetPauseEvent{.isPaused = false});

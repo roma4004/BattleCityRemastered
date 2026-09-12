@@ -17,6 +17,9 @@ struct TankDiedEvent
 	Author author{};
 };
 
+//NOTE: the world has just been swept - what a pool reclaims is unreachable by the time it hears this
+struct DeadObjectsSweptEvent {};
+
 struct DespawnedEvent
 {
 	Uuid uuid;

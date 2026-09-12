@@ -2,7 +2,7 @@
 #include "application/GameConfig.h"
 #include "components/EventSystem.h"
 #include "components/events/CoreLifecycleEvents.h"
-#include "components/events/TimingEvents.h"
+#include "components/events/ObjectLifecycleEvents.h"
 #include "components/input/InputProviderForBot.h"
 #include "entities/pawns/PawnProperty.h"
 #include "entities/pawns/Tank.h"
@@ -37,7 +37,7 @@ TankPool::~TankPool() = default;
 void TankPool::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &TankPool::OnGameReset));
-	_subs.push_back(_events->AddListener(this, &TankPool::OnPostTickUpdate));
+	_subs.push_back(_events->AddListener(this, &TankPool::OnDeadObjectsSwept));
 }
 
 //NOTE: shelved, not dropped - a mode switch changes who fills the seats, not what a tank is made of
@@ -76,7 +76,7 @@ std::shared_ptr<Tank> TankPool::SpawnTank(const TankResetProperty& property,
 }
 
 //NOTE: nothing emitted here - the tank announced its own death already
-void TankPool::OnPostTickUpdate(const PostTickUpdateEvent&)
+void TankPool::OnDeadObjectsSwept(const DeadObjectsSweptEvent&)
 {
 	if (const std::vector<std::shared_ptr<Tank>> returned = _slots.ReclaimDead();
 		!returned.empty())

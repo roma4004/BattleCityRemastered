@@ -7,6 +7,7 @@
 #include "components/EventSystem.h"
 #include "entities/obstacles/FortressWalls.h"
 #include "components/events/AnimationRenderEvents.h"
+#include "components/events/ObjectLifecycleEvents.h"
 #include "components/events/SpawnEvents.h"
 #include "components/events/TimingEvents.h"
 #include "entities/BaseObj.h"
@@ -40,7 +41,7 @@ public:
 	[[nodiscard]] static EventSubscription WireWorldDisposal(const std::shared_ptr<EventSystem>& events,
 															 std::vector<std::shared_ptr<BaseObj>>& allObjects)
 	{
-		return events->AddListener([objects = &allObjects](const PostTickUpdateEvent&)
+		return events->AddListener([objects = &allObjects, events](const PostTickUpdateEvent&)
 		{
 			const auto isDead = [](const std::shared_ptr<BaseObj>& obj)
 			{
@@ -56,6 +57,8 @@ public:
 			}
 
 			std::erase_if(*objects, isDead);
+
+			events->EmitEvent(DeadObjectsSweptEvent{});
 		});
 	}
 

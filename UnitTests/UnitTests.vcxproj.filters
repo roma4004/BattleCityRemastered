@@ -54,6 +54,9 @@
     <ClCompile Include="ScoreBoardTest.cpp">
       <Filter></Filter>
     </ClCompile>
+    <ClCompile Include="MatchStartTest.cpp">
+      <Filter></Filter>
+    </ClCompile>
     <ClCompile Include="CommandLineParserTest.cpp">
       <Filter></Filter>
     </ClCompile>

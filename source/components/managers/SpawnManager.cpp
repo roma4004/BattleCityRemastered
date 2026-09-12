@@ -2,6 +2,7 @@
 #include "application/GameConfig.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/GameModeEvents.h"
+#include "components/events/ObjectLifecycleEvents.h"
 #include "components/events/SpawnEvents.h"
 #include "components/events/TimingEvents.h"
 #include "components/BonusSpawner.h"
@@ -20,8 +21,6 @@ SpawnManager::SpawnManager(const std::shared_ptr<EventSystem>& events, const Gam
 	, _gameConfig{gameConfig}
 	, _fortressManager{std::make_unique<FortressManager>(events, _allObjects, gameConfig)}
 {
-	//NOTE: before the pools, not in the init list - both listen on PostTickUpdate too, and a slot
-	//reclaimed before DisposeDeadObject has swept it is briefly reachable in the world and the free list
 	Subscribe();
 
 	_bulletPool = std::make_shared<BulletPool>(events, _allObjects, gameConfig);
@@ -58,11 +57,14 @@ void SpawnManager::OnAddToSpawnQueue(const AddToSpawnQueueEvent& event)
 	_pendingSpawns.push_back(event.obj);
 }
 
-//NOTE: pour in, then sweep out - the two run back to back so nothing iterates the world in between
+//NOTE: pour in, then sweep out - the two run back to back so nothing iterates the world in between.
+//The pools reclaim on the announcement that follows, so a free slot is never also still in the world
 void SpawnManager::OnPostTickUpdate(const PostTickUpdateEvent&)
 {
 	FlushSpawnQueue();
 	DisposeDeadObject();
+
+	_events->EmitEvent(DeadObjectsSweptEvent{});
 }
 
 void SpawnManager::OnGameReset(const GameResetEvent&)

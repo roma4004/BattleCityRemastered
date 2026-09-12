@@ -4,6 +4,7 @@
 #include "components/EventSystem.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
+#include "components/events/ObjectLifecycleEvents.h"
 #include "components/events/InputEvents.h"
 #include "components/events/TimingEvents.h"
 #include "entities/BaseObj.h"
@@ -13,6 +14,7 @@
 #include "enums/InputChannel.h"
 #include "enums/TextureType.h"
 #include "gtest/gtest.h"
+#include <algorithm>
 #include <memory>
 #include <set>
 #include <vector>
@@ -35,8 +37,10 @@ protected:
 	{
 		_events = std::make_shared<EventSystem>();
 		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, _allObjects);
-		_disposalSub = TestUtils::WireWorldDisposal(_events, _allObjects);
+		//NOTE: the pool goes first on purpose - it used to listen on PostTickUpdate alongside the
+		//sweep, and then this order alone decided whether a free slot was still in the world
 		_bulletPool = std::make_shared<BulletPool>(_events, _allObjects, _gameConfig);
+		_disposalSub = TestUtils::WireWorldDisposal(_events, _allObjects);
 		_tankSize = _gameConfig.tankSize;
 
 		_allObjects.reserve(64u);
@@ -109,4 +113,27 @@ TEST_F(BulletPoolTest, ReturnedBulletLeavesTheBus)
 
 	_events->EmitEvent(DrawEvent{});
 	EXPECT_EQ(1, bulletDraws);
+}
+
+// A slot is free only once the world has let go of the bullet: handed back any earlier, it sits in
+// the free list and in _allObjects at the same time, and the next shot reuses an object still there
+TEST_F(BulletPoolTest, ASlotComesBackOnlyAfterTheWorldLetGo)
+{
+	const std::shared_ptr<Bullet> bullet = _bulletPool->SpawnBullet({});
+	_allObjects.emplace_back(bullet);
+
+	bool wasStillInTheWorld{true};
+	const EventSubscription despawnSub = _events->AddListener(
+			[this, &wasStillInTheWorld, raw = bullet.get()](const DespawnedEvent&)
+	{
+		wasStillInTheWorld = std::ranges::any_of(_allObjects, [raw](const std::shared_ptr<BaseObj>& obj)
+		{
+			return obj.get() == raw;
+		});
+	});
+
+	bullet->SetIsAlive(false);
+	_events->EmitEvent(PostTickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_FALSE(wasStillInTheWorld);
 }

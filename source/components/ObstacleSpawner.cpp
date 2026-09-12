@@ -28,7 +28,6 @@ ObstacleSpawner::ObstacleSpawner(const std::shared_ptr<EventSystem>& events, con
 
 void ObstacleSpawner::Subscribe()
 {
-	_subs.push_back(_events->AddListener(this, &ObstacleSpawner::OnMatchStarted));
 	_subs.push_back(_events->AddListener(this, &ObstacleSpawner::OnLoadMap));
 	_subs.push_back(_events->AddListener(this, &ObstacleSpawner::OnSpawnObstacle));
 	_subs.push_back(_events->AddListener(this, &ObstacleSpawner::OnSpawnFortressWall));
@@ -39,15 +38,14 @@ void ObstacleSpawner::Subscribe()
 	}
 }
 
-void ObstacleSpawner::OnMatchStarted(const MatchStartedEvent&) const
+//NOTE: a client mirrors the obstacles the host spawns, it never reads the map itself
+void ObstacleSpawner::OnLoadMap(const LoadMapEvent&) const
 {
 	if (!_gameConfig.IsClient())
 	{
 		LoadMap();
 	}
 }
-
-void ObstacleSpawner::OnLoadMap(const LoadMapEvent&) const { LoadMap(); }
 
 void ObstacleSpawner::OnSpawnObstacle(const SpawnObstacleEvent& event) { SpawnObstacle(event.rect, event.type); }
 

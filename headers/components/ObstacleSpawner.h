@@ -8,7 +8,6 @@
 enum class ObstacleType : char8_t;
 enum class BonusType : char8_t;
 struct ObjRectangle;
-struct MatchStartedEvent;
 struct LoadMapEvent;
 struct SpawnObstacleEvent;
 struct SpawnFortressWallEvent;
@@ -27,7 +26,6 @@ class ObstacleSpawner final
 	std::vector<EventSubscription> _subs{};
 
 	void Subscribe();
-	void OnMatchStarted(const MatchStartedEvent&) const;
 	void OnLoadMap(const LoadMapEvent&) const;
 	void OnSpawnObstacle(const SpawnObstacleEvent& event);
 	void OnSpawnFortressWall(const SpawnFortressWallEvent& event);

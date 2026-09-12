@@ -26,6 +26,7 @@
 #include <algorithm>
 #include <memory>
 #include <optional>
+#include <string_view>
 #include <vector>
 
 class AnimationManagerTest : public testing::Test
@@ -303,4 +304,26 @@ TEST_F(AnimationManagerTest, WaterStaysInTheMainDrawPhase)
 	_events->EmitEvent(DrawEvent{});
 
 	EXPECT_TRUE(WasDrawn(AnimationType::Water_Flow));
+}
+
+// The manager is there before the match and a wall only from the moment it spawns, so inside the
+// shared phase the terrain is always painted first - no field order decides this
+TEST_F(AnimationManagerTest, WaterIsPaintedBeforeAWallOfTheSamePhase)
+{
+	std::vector<std::string_view> painted{};
+	const EventSubscription animationSub = _events->AddListener([&painted](const DrawAnimationEvent&)
+	{
+		painted.emplace_back("water");
+	});
+	const EventSubscription objectSub = _events->AddListener([&painted](const DrawObjEvent&)
+	{
+		painted.emplace_back("wall");
+	});
+
+	_events->EmitEvent(AnimationCreateWaterEvent{.rect = _rect});
+	_events->EmitEvent(AddToSpawnQueueEvent{.obj = std::make_shared<BrickWall>(_rect, _events, _uuid, _gameConfig)});
+
+	_events->EmitEvent(DrawEvent{});
+
+	EXPECT_EQ(painted, (std::vector<std::string_view>{"water", "wall"}));
 }

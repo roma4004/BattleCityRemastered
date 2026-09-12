@@ -11,7 +11,7 @@
 
 enum class GameMode : char8_t;
 struct GameResetEvent;
-struct PostTickUpdateEvent;
+struct DeadObjectsSweptEvent;
 class Bullet;
 class BaseObj;
 class EventSystem;
@@ -28,7 +28,7 @@ class BulletPool final
 	const GameConfig& _gameConfig;
 
 	void OnGameReset(const GameResetEvent&);
-	void OnPostTickUpdate(const PostTickUpdateEvent&);
+	void OnDeadObjectsSwept(const DeadObjectsSweptEvent&);
 
 	[[nodiscard]] std::shared_ptr<Bullet> CreateNewBullet() const;
 

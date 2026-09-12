@@ -5,7 +5,6 @@
 #include "components/EventSystem.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/ObjectLifecycleEvents.h"
-#include "components/events/TimingEvents.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/PawnProperty.h"
 #include <optional>
@@ -29,7 +28,7 @@ BulletPool::BulletPool(const std::shared_ptr<EventSystem>& events,
 void BulletPool::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &BulletPool::OnGameReset));
-	_subs.push_back(_events->AddListener(this, &BulletPool::OnPostTickUpdate));
+	_subs.push_back(_events->AddListener(this, &BulletPool::OnDeadObjectsSwept));
 }
 
 //NOTE: nothing announced for what it takes back - the world is going away with the listeners
@@ -69,10 +68,8 @@ std::shared_ptr<Bullet> BulletPool::SpawnBullet(const BulletResetProperty& prope
 
 //NOTE: the same frame step that takes a dead object out of _allObjects - a bullet spent this frame
 //is back on the free list before anything can shoot again
-void BulletPool::OnPostTickUpdate(const PostTickUpdateEvent&)
+void BulletPool::OnDeadObjectsSwept(const DeadObjectsSweptEvent&)
 {
-	//NOTE: the pool reclaims itself rather than relying on SpawnManager having swept the bullet
-	//earlier in this same PostTickUpdate
 	const std::vector<std::shared_ptr<Bullet>> returned = _slots.ReclaimDead();
 
 	for (const std::shared_ptr<Bullet>& bullet: returned)

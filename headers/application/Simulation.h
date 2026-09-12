@@ -32,7 +32,8 @@ class Simulation final
 
 	std::unique_ptr<INetworkNode> _networkNode{nullptr};
 	std::unique_ptr<GameStateManager> _stateManager{nullptr};
-	//NOTE: before the spawner, so the burst paints under the walls - within one event order is subscription order
+	//NOTE: a wall enters the bus when it spawns, later than every manager here, so it paints over
+	//the burst whatever the order of these fields
 	std::unique_ptr<AnimationManager> _animationManager{nullptr};
 	std::unique_ptr<GameStatistics> _statistics{nullptr};
 	std::unique_ptr<WorldScaleManager> _worldScaleManager{nullptr};
