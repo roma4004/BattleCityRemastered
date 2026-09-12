@@ -8,12 +8,11 @@
 #include <string_view>
 #include <vector>
 
-struct GameResetEvent;
 struct RespawnCountChangedToEvent;
 struct DrawUserInterfaceEvent;
 struct MenuShowedEvent;
 struct PauseStatusEvent;
-struct GameFinishedEvent;
+struct GameStateChangedToEvent;
 class GameConfig;
 class EventSystem;
 class GameStatistics;
@@ -30,20 +29,19 @@ class ScoreBoard final
 	EventSubscription _drawSub{};
 
 	bool _isScoreBoardDisplayed{false};
+	bool _isDemo{false};
 
 	unsigned short _enemyRespawnCount{20u};
 	unsigned short _playerOneRepawnCount{3u};
 	unsigned short _playerTwoRespawnCount{3u};
-	const GameConfig& _gameConfig;
 
 	void Subscribe();
 
-	void OnGameReset(const GameResetEvent&);
 	void OnRespawnCountChangedTo(const RespawnCountChangedToEvent& event);
 	void OnDrawUserInterface(const DrawUserInterfaceEvent&);
 	void OnMenuShowed(const MenuShowedEvent& event);
 	void OnPauseStatus(const PauseStatusEvent&);
-	void OnGameFinished(const GameFinishedEvent&);
+	void OnGameStateChangedTo(const GameStateChangedToEvent& event);
 
 	void RenderStatistics() const;
 	void RenderRow(Point pos, unsigned int color, std::string_view text,

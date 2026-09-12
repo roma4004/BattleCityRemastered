@@ -136,6 +136,7 @@ set(UNIT_TESTS_SOURCES
         UnitTests/PauseSyncTest.cpp
         UnitTests/PlayerTest.cpp
         UnitTests/RespawnManagerTest.cpp
+        UnitTests/ScoreBoardTest.cpp
         UnitTests/StatisticsTestAdvanced.cpp
         UnitTests/SeatAssignmentTest.cpp
         UnitTests/SimulationStepTest.cpp

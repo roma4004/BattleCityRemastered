@@ -78,6 +78,7 @@
     <ClCompile Include="PlayerTest.cpp" />
     <ClCompile Include="ProjectConfigTest.cpp" />
     <ClCompile Include="RespawnManagerTest.cpp" />
+    <ClCompile Include="ScoreBoardTest.cpp" />
     <ClCompile Include="StatisticsTestAdvanced.cpp" />
     <ClCompile Include="SeatAssignmentTest.cpp" />
     <ClCompile Include="SimulationStepTest.cpp" />

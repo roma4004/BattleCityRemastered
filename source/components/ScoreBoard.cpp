@@ -85,7 +85,6 @@ ScoreBoard::ScoreBoard(const std::shared_ptr<EventSystem>& events, const GameCon
 	: _pos{.x = 25, .y = 25}
 	, _events{events}
 	, _statistics{statistics}
-	, _gameConfig{gameConfig}
 {
 	Subscribe();
 
@@ -94,9 +93,6 @@ ScoreBoard::ScoreBoard(const std::shared_ptr<EventSystem>& events, const GameCon
 
 void ScoreBoard::Subscribe()
 {
-	//NOTE: avoid showing score on game start
-	_subs.push_back(_events->AddListener(this, &ScoreBoard::OnGameReset));
-
 	_subs.push_back(_events->AddListener(this, &ScoreBoard::OnRespawnCountChangedTo));
 
 	if (_isScoreBoardDisplayed)
@@ -107,10 +103,8 @@ void ScoreBoard::Subscribe()
 	//NOTE: avoid showing score and menu at the same time
 	_subs.push_back(_events->AddListener(this, &ScoreBoard::OnMenuShowed));
 	_subs.push_back(_events->AddListener(this, &ScoreBoard::OnPauseStatus));
-	_subs.push_back(_events->AddListener(this, &ScoreBoard::OnGameFinished));
+	_subs.push_back(_events->AddListener(this, &ScoreBoard::OnGameStateChangedTo));
 }
-
-void ScoreBoard::OnGameReset(const GameResetEvent&) { DisplayScore(false); }
 
 void ScoreBoard::OnRespawnCountChangedTo(const RespawnCountChangedToEvent& event)
 {
@@ -143,7 +137,21 @@ void ScoreBoard::OnPauseStatus(const PauseStatusEvent& /*event*/)
 	/*DisplayScore(isPause);*/
 }
 
-void ScoreBoard::OnGameFinished(const GameFinishedEvent&) { DisplayScore(true); }
+//NOTE: the scoreboard is a view of Won/Over, and the phase is the one thing every mode agrees on -
+//a client never runs the win check itself, it is told the phase over the wire
+void ScoreBoard::OnGameStateChangedTo(const GameStateChangedToEvent& event)
+{
+	if (event.state == GameState::Won || event.state == GameState::Over)
+	{
+		DisplayScore(!_isDemo);
+
+		return;
+	}
+
+	_isDemo = event.state == GameState::Demo;
+
+	DisplayScore(false);
+}
 
 void ScoreBoard::Draw() const
 {
@@ -217,11 +225,6 @@ void ScoreBoard::RenderRow(const Point pos, const unsigned int color, const std:
 
 void ScoreBoard::DisplayScore(const bool isDisplayed)
 {
-	if (isDisplayed && _gameConfig.gameState == GameState::Demo)
-	{
-		return;
-	}
-
 	if (isDisplayed)
 	{
 		_events->EmitEvent(ShowMenuEvent{.show = false});

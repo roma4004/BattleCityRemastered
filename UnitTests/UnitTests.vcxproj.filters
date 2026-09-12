@@ -51,6 +51,9 @@
     <ClCompile Include="SeatAssignmentTest.cpp">
       <Filter></Filter>
     </ClCompile>
+    <ClCompile Include="ScoreBoardTest.cpp">
+      <Filter></Filter>
+    </ClCompile>
     <ClCompile Include="CommandLineParserTest.cpp">
       <Filter></Filter>
     </ClCompile>
