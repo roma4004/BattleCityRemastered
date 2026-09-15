@@ -42,7 +42,7 @@ TEST_F(MenuTextBlockTest, AllLinesFitOnTheClassicScreenOnceSettled)
 		_events->EmitEvent(DrawUserInterfaceEvent{});
 	}
 
-	const int logicalHeight = static_cast<int>(_gameConfig.LogicalSize().y);
+	const auto logicalHeight{static_cast<int>(_gameConfig.LogicalSize().y)};
 	for (const TextBlockLine& line: _blocks.back().lines)
 	{
 		EXPECT_LT(line.pos.y, logicalHeight);
@@ -54,7 +54,7 @@ TEST_F(MenuTextBlockTest, AllLinesFitOnTheClassicScreenOnceSettled)
 TEST_F(MenuTextBlockTest, TheBlockIsWholeWhileTheMenuIsStillSlidingIn)
 {
 	_events->EmitEvent(DrawUserInterfaceEvent{});
-	const std::size_t whileSliding = _blocks.back().lines.size();
+	const std::size_t whileSliding{_blocks.back().lines.size()};
 
 	for (int frame{0}; frame < kFramesToSettleSlideIn; ++frame)
 	{

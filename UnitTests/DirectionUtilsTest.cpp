@@ -8,24 +8,24 @@ namespace
 {
 constexpr ObjRectangle kRect{.x = 100.0, .y = 100.0, .w = 20.0, .h = 20.0};
 constexpr UPoint kField{.x = 500, .y = 400};
-constexpr double kStep = 5.0;
+constexpr double kStep{5.0};
 }// namespace
 
 TEST(DirectionUtilsTest, SweptCoversTheStartAndTheStep)
 {
-	const ObjRectangle up = DirectionUtils::Swept(kRect, kStep, Direction::UP);
+	const ObjRectangle up{DirectionUtils::Swept(kRect, kStep, Direction::UP)};
 	EXPECT_DOUBLE_EQ(up.y, 95.0);
 	EXPECT_DOUBLE_EQ(up.Bottom(), kRect.Bottom());
 
-	const ObjRectangle left = DirectionUtils::Swept(kRect, kStep, Direction::LEFT);
+	const ObjRectangle left{DirectionUtils::Swept(kRect, kStep, Direction::LEFT)};
 	EXPECT_DOUBLE_EQ(left.x, 95.0);
 	EXPECT_DOUBLE_EQ(left.Right(), kRect.Right());
 
-	const ObjRectangle down = DirectionUtils::Swept(kRect, kStep, Direction::DOWN);
+	const ObjRectangle down{DirectionUtils::Swept(kRect, kStep, Direction::DOWN)};
 	EXPECT_DOUBLE_EQ(down.y, kRect.y);
 	EXPECT_DOUBLE_EQ(down.Bottom(), 125.0);
 
-	const ObjRectangle right = DirectionUtils::Swept(kRect, kStep, Direction::RIGHT);
+	const ObjRectangle right{DirectionUtils::Swept(kRect, kStep, Direction::RIGHT)};
 	EXPECT_DOUBLE_EQ(right.x, kRect.x);
 	EXPECT_DOUBLE_EQ(right.Right(), 125.0);
 }
@@ -34,7 +34,7 @@ TEST(DirectionUtilsTest, MovedKeepsTheSize)
 {
 	for (const Direction dir: {Direction::UP, Direction::LEFT, Direction::DOWN, Direction::RIGHT})
 	{
-		const ObjRectangle moved = DirectionUtils::Moved(kRect, kStep, dir);
+		const ObjRectangle moved{DirectionUtils::Moved(kRect, kStep, dir)};
 		EXPECT_DOUBLE_EQ(moved.w, kRect.w);
 		EXPECT_DOUBLE_EQ(moved.h, kRect.h);
 	}

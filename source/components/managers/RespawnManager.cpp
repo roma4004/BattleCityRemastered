@@ -94,20 +94,20 @@ void RespawnManager::ResetSpawn()
 
 void RespawnManager::SetPlayerNeedRespawn()
 {
-	constexpr auto player1Id = static_cast<size_t>(TankType::PLAYER1);
+	constexpr auto player1Id{static_cast<size_t>(TankType::PLAYER1)};
 	_slots[player1Id].isAvailable = true;
 
 	if (HasSecondPlayer(_gameMode))
 	{
-		constexpr auto player2Id = static_cast<size_t>(TankType::PLAYER2);
+		constexpr auto player2Id{static_cast<size_t>(TankType::PLAYER2)};
 		_slots[player2Id].isAvailable = true;
 	}
 }
 
 void RespawnManager::ChangeRespawnCount(const int delta, RespawnGroup type)
 {
-	const auto id = static_cast<size_t>(type);
-	if (const int newCount = _respawnCount[id] + delta; newCount >= 0)
+	const auto id{static_cast<size_t>(type)};
+	if (const int newCount{_respawnCount[id] + delta}; newCount >= 0)
 	{
 		_respawnCount[id] = static_cast<unsigned short>(newCount);
 	}
@@ -152,7 +152,7 @@ void RespawnManager::OnBonusTank(const Author author)
 
 void RespawnManager::OnTankRespawned(const TankRespawnedEvent& event)
 {
-	const TankType type = event.type;
+	const TankType type{event.type};
 	switch (type)
 	{
 		case TankType::ENEMY1:
@@ -175,8 +175,8 @@ void RespawnManager::OnTankRespawned(const TankRespawnedEvent& event)
 
 void RespawnManager::OnTankSpawn(const TankSpawnEvent& event)
 {
-	const Uuid& uuid = event.uuid;
-	if (const auto it = std::ranges::find(_slots, uuid, &SpawnSlot::uuid);
+	const Uuid& uuid{event.uuid};
+	if (const auto it{std::ranges::find(_slots, uuid, &SpawnSlot::uuid)};
 		it != _slots.end())
 	{
 		it->isAvailable = false;
@@ -217,8 +217,8 @@ void RespawnManager::OnPlayerDied(const bool isAvailable)
 
 void RespawnManager::OnTankDied(const TankDiedEvent& event)
 {
-	const Uuid& uuid = event.uuid;
-	if (const auto it = std::ranges::find(_slots, uuid, &SpawnSlot::uuid);
+	const Uuid& uuid{event.uuid};
+	if (const auto it{std::ranges::find(_slots, uuid, &SpawnSlot::uuid)};
 		it != _slots.end())
 	{
 		it->isAvailable = _respawnCount[static_cast<size_t>(it->group)] > 0u;

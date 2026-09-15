@@ -119,7 +119,7 @@ void EmitToList(const char* const context, ListenerListT& listeners, const CallA
 {
 	for (auto it = listeners.begin(); it != listeners.end();)
 	{
-		const auto next = std::next(it);
+		const auto next{std::next(it)};
 
 		if (it->alive)
 		{
@@ -349,7 +349,7 @@ public:
 
 	ListenerHandle AddListener(const KeyT& key, callbackType callback, const std::source_location& origin)
 	{
-		auto& listeners = _listeners[key];
+		auto& listeners{_listeners[key]};
 		listeners.emplace_back(std::move(callback), origin);
 		return std::prev(listeners.end());
 	}
@@ -358,11 +358,11 @@ public:
 	template<typename... FwdArgs>
 	void Emit(const KeyT& key, FwdArgs&&... args)
 	{
-		if (const auto it = _listeners.find(key); it != _listeners.end())
+		if (const auto it{_listeners.find(key)}; it != _listeners.end())
 		{
 			//NOTE: the list is bound by reference before the walk - a listener added under a new key
 			//mid-dispatch can rehash the map, which invalidates its iterators but not its elements
-			ListenerList& listeners = it->second;
+			ListenerList& listeners{it->second};
 
 			++_emitDepth;
 			detail::EmitToList("keyed event callback", listeners, args...);
@@ -375,7 +375,7 @@ public:
 	// Marked rather than erased, because a dispatch may be walking this list
 	void RemoveListener(const KeyT& key, ListenerHandle handle)
 	{
-		if (const auto it = _listeners.find(key); it != _listeners.end())
+		if (const auto it{_listeners.find(key)}; it != _listeners.end())
 		{
 			if (_emitDepth > 0)
 			{
@@ -450,7 +450,7 @@ class EventSystem final : public std::enable_shared_from_this<EventSystem>
 	template<typename EventType>
 	Event<EventType>* GetTypedEvent()
 	{
-		if (const auto it = _events.find(std::type_index(typeid(EventType))); it != _events.end())
+		if (const auto it{_events.find(std::type_index(typeid(EventType)))}; it != _events.end())
 		{
 			return static_cast<Event<EventType>*>(it->second.event.get());
 		}
@@ -468,7 +468,7 @@ class EventSystem final : public std::enable_shared_from_this<EventSystem>
 	template<typename KeyT, typename EventType>
 	KeyedEvent<KeyT, EventType>* GetTypedKeyedEvent()
 	{
-		if (const auto it = _keyedEvents.find(std::type_index(typeid(EventType))); it != _keyedEvents.end())
+		if (const auto it{_keyedEvents.find(std::type_index(typeid(EventType)))}; it != _keyedEvents.end())
 		{
 			return static_cast<KeyedEvent<KeyT, EventType>*>(it->second.event.get());
 		}
@@ -511,13 +511,13 @@ public:
 	{
 		const std::type_index key(typeid(EventType));
 
-		if (const auto it = _events.find(key); it == _events.end())
+		if (const auto it{_events.find(key)}; it == _events.end())
 		{
 			_events.emplace(key, EventInfo{std::make_unique<Event<EventType>>()});
 		}
 
-		auto* event = GetTypedEvent<EventType>();
-		const auto handle = event->AddListener(std::forward<CallableT>(callback), origin);
+		auto* event{GetTypedEvent<EventType>()};
+		const auto handle{event->AddListener(std::forward<CallableT>(callback), origin)};
 
 		return EventSubscription(shared_from_this(), [event, handle]()
 		{
@@ -555,13 +555,13 @@ public:
 	{
 		const std::type_index typeKey(typeid(EventType));
 
-		if (const auto it = _keyedEvents.find(typeKey); it == _keyedEvents.end())
+		if (const auto it{_keyedEvents.find(typeKey)}; it == _keyedEvents.end())
 		{
 			_keyedEvents.emplace(typeKey, KeyedEventInfo{std::make_unique<KeyedEvent<KeyT, EventType>>()});
 		}
 
 		auto* event = GetTypedKeyedEvent<KeyT, EventType>();
-		const auto handle = event->AddListener(key, std::forward<CallableT>(callback), origin);
+		const auto handle{event->AddListener(key, std::forward<CallableT>(callback), origin)};
 
 		return EventSubscription(shared_from_this(), [event, key, handle]()
 		{
@@ -573,7 +573,7 @@ public:
 	template<typename EventType>
 	void EmitEvent(const EventType& eventInstance)
 	{
-		if (auto* typedEvent = GetTypedEvent<EventType>())
+		if (auto* typedEvent{GetTypedEvent<EventType>()})
 		{
 			typedEvent->Emit(eventInstance);
 		}

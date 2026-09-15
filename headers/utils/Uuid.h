@@ -28,7 +28,7 @@ struct std::hash<Uuid>
 		std::memcpy(&low, uuid.data, sizeof(low));
 		std::memcpy(&high, uuid.data + sizeof(low), sizeof(high));
 
-		std::uint64_t mixed = low ^ (high + 0x9e3779b97f4a7c15ULL + (low << 6u) + (low >> 2u));
+		std::uint64_t mixed{low ^ (high + 0x9e3779b97f4a7c15ULL + (low << 6u) + (low >> 2u))};
 		mixed ^= mixed >> 33u;
 		mixed *= 0xff51afd7ed558ccdULL;
 		mixed ^= mixed >> 33u;

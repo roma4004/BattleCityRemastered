@@ -41,9 +41,8 @@ protected:
 	//NOTE: puts the tank into the world too, so the result is a convenience, not the point
 	std::shared_ptr<Tank> SpawnPlayerAt(const ObjRectangle rect)
 	{
-		std::shared_ptr<Tank> tank =
-				TestUtils::CreatePlayer(rect, _tankHealth, _uuid, Author::Player1, _allObjects,
-										_events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
+		std::shared_ptr<Tank> tank{TestUtils::CreatePlayer(rect, _tankHealth, Author::Player1, _allObjects, _events,
+														   Direction::DOWN, _bulletPool, _gameConfig)};
 		_allObjects.emplace_back(tank);
 
 		return tank;
@@ -60,13 +59,13 @@ protected:
 
 TEST_F(TankTerrainTest, HealthBarIsDrawnOnPlainGround)
 {
-	const std::shared_ptr<Tank> tank = SpawnPlayerAt({.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize});
+	const std::shared_ptr<Tank> tank{SpawnPlayerAt({.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize})};
 
 	bool isHealthBarDrawn{false};
-	auto healthBarSub = _events->AddListener([&isHealthBarDrawn](const RenderHealthBarEvent&)
+	auto healthBarSub{_events->AddListener([&isHealthBarDrawn](const RenderHealthBarEvent&)
 	{
 		isHealthBarDrawn = true;
-	});
+	})};
 
 	Tick();
 	_events->EmitEvent(PostDrawEvent{});
@@ -82,10 +81,10 @@ TEST_F(TankTerrainTest, HealthBarIsHiddenWhileTheTankStandsInABush)
 			ObjRectangle{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize}, _events, _uuid, _gameConfig));
 
 	bool isHealthBarDrawn{false};
-	auto healthBarSub = _events->AddListener([&isHealthBarDrawn](const RenderHealthBarEvent&)
+	auto healthBarSub{_events->AddListener([&isHealthBarDrawn](const RenderHealthBarEvent&)
 	{
 		isHealthBarDrawn = true;
-	});
+	})};
 
 	Tick();
 	_events->EmitEvent(PostDrawEvent{});
@@ -101,10 +100,10 @@ TEST_F(TankTerrainTest, HealthBarComesBackOnceTheBushIsGone)
 			ObjRectangle{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize}, _events, _uuid, _gameConfig));
 
 	bool isHealthBarDrawn{false};
-	auto healthBarSub = _events->AddListener([&isHealthBarDrawn](const RenderHealthBarEvent&)
+	auto healthBarSub{_events->AddListener([&isHealthBarDrawn](const RenderHealthBarEvent&)
 	{
 		isHealthBarDrawn = true;
-	});
+	})};
 
 	Tick();
 	_events->EmitEvent(PostDrawEvent{});
@@ -121,14 +120,14 @@ TEST_F(TankTerrainTest, HealthBarComesBackOnceTheBushIsGone)
 //NOTE: on plain ground the tank is where the key left it - this is the control for the ice test below
 TEST_F(TankTerrainTest, TheTankStopsAtOnceOnPlainGround)
 {
-	const std::shared_ptr<Tank> tank = SpawnPlayerAt({.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize});
+	const std::shared_ptr<Tank> tank{SpawnPlayerAt({.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize})};
 
 	constexpr int framesUnderPower{20};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = true});
 	Tick(framesUnderPower);
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = false});
 
-	const double yOnRelease = tank->GetPos().y;
+	const double yOnRelease{tank->GetPos().y};
 	EXPECT_GT(yOnRelease, 0.0);
 
 	Tick(framesUnderPower);
@@ -139,7 +138,7 @@ TEST_F(TankTerrainTest, TheTankStopsAtOnceOnPlainGround)
 //NOTE: on ice Move feeds velocity instead of moving - ApplyMoveVelocity spends it later
 TEST_F(TankTerrainTest, TheTankKeepsSlidingAfterTheKeyIsReleasedOnIce)
 {
-	const std::shared_ptr<Tank> tank = SpawnPlayerAt({.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize});
+	const std::shared_ptr<Tank> tank{SpawnPlayerAt({.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize})};
 	_allObjects.emplace_back(std::make_shared<IceTile>(
 			ObjRectangle{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize * 8.0}, _events, _uuid, _gameConfig));
 
@@ -148,7 +147,7 @@ TEST_F(TankTerrainTest, TheTankKeepsSlidingAfterTheKeyIsReleasedOnIce)
 	Tick(framesUnderPower);
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = false});
 
-	const double yOnRelease = tank->GetPos().y;
+	const double yOnRelease{tank->GetPos().y};
 
 	Tick();
 
@@ -158,7 +157,7 @@ TEST_F(TankTerrainTest, TheTankKeepsSlidingAfterTheKeyIsReleasedOnIce)
 //NOTE: momentum is per direction, so a turn mid-drift spends both at once
 TEST_F(TankTerrainTest, TheTankSlidesDiagonallyWhenTurningWhileDrifting)
 {
-	const std::shared_ptr<Tank> tank = SpawnPlayerAt({.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize});
+	const std::shared_ptr<Tank> tank{SpawnPlayerAt({.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize})};
 	_allObjects.emplace_back(std::make_shared<IceTile>(
 			ObjRectangle{.x = 0.0, .y = 0.0, .w = _tankSize * 8.0, .h = _tankSize * 8.0}, _events, _uuid, _gameConfig));
 
@@ -167,8 +166,8 @@ TEST_F(TankTerrainTest, TheTankSlidesDiagonallyWhenTurningWhileDrifting)
 	Tick(framesUnderPower);
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = false});
 
-	const double xBeforeTurn = tank->GetPos().x;
-	const double yBeforeTurn = tank->GetPos().y;
+	const double xBeforeTurn{tank->GetPos().x};
+	const double yBeforeTurn{tank->GetPos().y};
 	ASSERT_DOUBLE_EQ(xBeforeTurn, 0.0);
 
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveRightEvent{.isPressed = true});
@@ -182,7 +181,7 @@ TEST_F(TankTerrainTest, TheTankSlidesDiagonallyWhenTurningWhileDrifting)
 //NOTE: a tap only turns the sprite - one frame of reverse momentum is spent at once
 TEST_F(TankTerrainTest, TurningAroundDoesNotStopTheDriftOnIce)
 {
-	const std::shared_ptr<Tank> tank = SpawnPlayerAt({.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize});
+	const std::shared_ptr<Tank> tank{SpawnPlayerAt({.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize})};
 	_allObjects.emplace_back(std::make_shared<IceTile>(
 			ObjRectangle{.x = 0.0, .y = 0.0, .w = _tankSize * 8.0, .h = _tankSize * 8.0}, _events, _uuid, _gameConfig));
 
@@ -191,7 +190,7 @@ TEST_F(TankTerrainTest, TurningAroundDoesNotStopTheDriftOnIce)
 	Tick(framesUnderPower);
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = false});
 
-	const double yBeforeTap = tank->GetPos().y;
+	const double yBeforeTap{tank->GetPos().y};
 	ASSERT_EQ(tank->GetDirection(), Direction::DOWN);
 
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveUpEvent{.isPressed = true});

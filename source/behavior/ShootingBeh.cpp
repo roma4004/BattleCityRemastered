@@ -41,7 +41,7 @@ ObjRectangle ShootingBeh::GetBulletStartRect() const
 	const FPoint bulletHalf{.x = bulletWidth / 2.0, .y = bulletHeight / 2.0};
 	ObjRectangle bulletRect{.x = -1, .y = -1, .w = bulletWidth, .h = bulletHeight};
 
-	if (const Direction dir = _direction;
+	if (const Direction dir{_direction};
 		dir == Direction::UP && tankPos.y - bulletHeight >= 0.0)
 	{
 		bulletRect.x = tankCenter.x - bulletHalf.x;
@@ -68,7 +68,7 @@ ObjRectangle ShootingBeh::GetBulletStartRect() const
 
 Uuid ShootingBeh::Shot(const std::optional<Uuid> uuid)
 {
-	const ObjRectangle rect = GetBulletStartRect();
+	const ObjRectangle rect{GetBulletStartRect()};
 	if (rect.x < 0.0 || rect.y < 0.0)
 	{
 		//the muzzle would land off the field
@@ -85,7 +85,7 @@ Uuid ShootingBeh::Shot(const std::optional<Uuid> uuid)
 			.calibre = _calibre,
 	};
 
-	const std::shared_ptr<Bullet> bullet = _bulletPool->SpawnBullet(bulletResetProperty, uuid);
+	const std::shared_ptr<Bullet> bullet{_bulletPool->SpawnBullet(bulletResetProperty, uuid)};
 
 	Log::Detail("bullet spawned uuid " + UuidUtils::GetStringUuid(bullet->GetUuid()));
 

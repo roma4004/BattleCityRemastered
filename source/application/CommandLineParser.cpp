@@ -9,7 +9,7 @@ namespace
 //NOTE: "800,600", fully consumed - "800x600"/"800,60a" rejected
 std::optional<UPoint> ParsePoint(const std::string_view value)
 {
-	const auto separator = value.find(',');
+	const auto separator{value.find(',')};
 	if (separator == std::string_view::npos)
 	{
 		return std::nullopt;
@@ -18,8 +18,8 @@ std::optional<UPoint> ParsePoint(const std::string_view value)
 	const auto parseField = [](const std::string_view field, size_t& out)
 	{
 		//NOTE: 'last' bounds from_chars, no terminator needed
-		const auto* const first = field.data();
-		const auto* const last = first + field.size();
+		const auto* const first{field.data()};
+		const auto* const last{first + field.size()};
 		const auto [ptr, ec] = std::from_chars(first, last, out);
 		return ec == std::errc{} && ptr == last;
 	};
@@ -71,10 +71,10 @@ std::expected<LaunchOptions, ArgError> CommandLineParser::Parse(const int argc, 
 		{
 			launchOptions.skipIntroMusic = true;
 		}
-		else if (const auto separator = arg.find('='); separator != std::string_view::npos)
+		else if (const auto separator{arg.find('=')}; separator != std::string_view::npos)
 		{
-			const std::string_view key = arg.substr(0, separator);
-			const std::string_view value = arg.substr(separator + 1);
+			const std::string_view key{arg.substr(0, separator)};
+			const std::string_view value{arg.substr(separator + 1)};
 
 			if (key.ends_with("pos"))
 			{

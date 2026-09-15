@@ -36,7 +36,7 @@ void InputProviderForMenu::OnPreTickUpdate(const PreTickUpdateEvent&) { MenuUpda
 
 void InputProviderForMenu::OnShowMenu(const ShowMenuEvent& event)
 {
-	const bool isDisplayed = event.show;
+	const bool isDisplayed{event.show};
 	if ((isDisplayed && !_keys.menuShow)
 		|| (!isDisplayed && _keys.menuShow))
 	{
@@ -53,7 +53,7 @@ void InputProviderForMenu::OnMenuShowed(const MenuShowedEvent& event)
 		return;
 	}
 
-	const bool isDisplayed = event.isShown;
+	const bool isDisplayed{event.isShown};
 	if (isDisplayed != _keys.pause)//NOTE: menu visibility and the pause flag drifted apart
 	{
 		TogglePause();
@@ -138,7 +138,7 @@ void InputProviderForMenu::Reset() { SetPause(false); }
 
 void InputProviderForMenu::MenuUpdate()
 {
-	const auto menuKeysStats = GetKeysStats();
+	const auto menuKeysStats{GetKeysStats()};
 
 	if (menuKeysStats.up)
 	{

@@ -37,7 +37,7 @@ protected:
 		_events = std::make_shared<EventSystem>();
 		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, _allObjects);
 		_allObjects.reserve(6u);
-		const auto bulletPool = std::make_shared<BulletPool>(_events, _allObjects, _gameConfig);
+		const auto bulletPool{std::make_shared<BulletPool>(_events, _allObjects, _gameConfig)};
 		TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, _gameConfig.gameMode, _respawnManager,
 								 _tankSpawner);
 		_events->EmitEvent(GameResetEvent{});
@@ -93,10 +93,10 @@ TEST_F(TankSpawnerTest, PlayAsHostGameModeStart)
 TEST_F(TankSpawnerTest, PlayAsClientGameModeStart)
 {
 	std::vector<Uuid> spawning{};
-	auto spawnSub = _events->AddListener([&spawning](const TankSpawnEvent& event)
+	auto spawnSub{_events->AddListener([&spawning](const TankSpawnEvent& event)
 	{
 		spawning.emplace_back(event.uuid);
-	});
+	})};
 
 	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsClient, _respawnManager, _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
@@ -120,13 +120,13 @@ TEST_F(TankSpawnerTest, GrenadeCancelsEnemiesStillSpawning)
 	_instantSpawnAnimationSubs.clear();
 
 	std::vector<Uuid> pending{};
-	const EventSubscription pendingSub = _events->AddListener(
-			[&pending](const AnimationCreateTankSpawnEvent& event) { pending.push_back(event.uuid); });
+	const EventSubscription pendingSub{_events->AddListener(
+			[&pending](const AnimationCreateTankSpawnEvent& event) { pending.push_back(event.uuid); })};
 
 	//NOTE: the death is all that crosses the wire, so its uuid is the client's only way to match
 	std::vector<Uuid> announcedDead{};
-	const EventSubscription diedSub = _events->AddListener(
-			[&announcedDead](const TankDiedEvent& event) { announcedDead.push_back(event.uuid); });
+	const EventSubscription diedSub{_events->AddListener(
+			[&announcedDead](const TankDiedEvent& event) { announcedDead.push_back(event.uuid); })};
 
 	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
@@ -195,7 +195,7 @@ TEST_F(TankSpawnerTest, AHostTakesBothSeatsOffTheWire)
 	_events->EmitEvent(RespawnTankEvent{.type = TankType::PLAYER1, .uuid = UuidUtils::GetRandomUuid()});
 
 	ASSERT_EQ(_allObjects.size(), 1u);
-	const auto& playerOne = _allObjects.front();
+	const auto& playerOne{_allObjects.front()};
 	const FPoint startPos{playerOne->GetPos()};
 
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveUpEvent{.isPressed = true});

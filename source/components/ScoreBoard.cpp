@@ -122,7 +122,7 @@ void ScoreBoard::OnRespawnCountChangedTo(const RespawnCountChangedToEvent& event
 	}
 }
 
-void ScoreBoard::OnDrawUserInterface(const DrawUserInterfaceEvent&) { Draw(); }
+void ScoreBoard::OnDrawUserInterface(const DrawUserInterfaceEvent&) const { Draw(); }
 
 void ScoreBoard::OnMenuShowed(const MenuShowedEvent& event)
 {
@@ -191,16 +191,16 @@ void ScoreBoard::RenderStatistics() const
 	RenderRow({.x = pos.x - 130, .y = y}, color, "RESPAWN REMAIN",
 			  std::array{_playerOneRepawnCount, _playerTwoRespawnCount, _enemyRespawnCount});
 
-	const StatisticsData& data = _statistics.GetData();
+	const StatisticsData& data{_statistics.GetData()};
 	for (const auto& [label, columns]: kStatRows)
 	{
 		y += rowStep;
 
 		//NOTE: a row fills its columns from the left, so the unset ones are the tail
-		const auto filled = static_cast<std::size_t>(std::ranges::count_if(columns, [](const StatField field)
+		const auto filled{static_cast<std::size_t>(std::ranges::count_if(columns, [](const StatField field)
 		{
 			return field != nullptr;
-		}));
+		}))};
 
 		std::array<unsigned short, kMaxColumns> values{};
 		std::ranges::transform(columns | std::views::take(filled), values.begin(),

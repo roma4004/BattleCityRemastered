@@ -14,9 +14,13 @@
 #include "entities/pawns/Tank.h"
 #include "enums/Direction.h"
 #include "enums/InputChannel.h"
+#include "geometry/Point.h"
 #include "gtest/gtest.h"
+#include <chrono>
 #include <memory>
 #include <thread>
+
+using namespace std::chrono_literals;
 
 class StatisticsTest : public testing::Test// NOLINT(clang-diagnostic-padded)
 {
@@ -46,30 +50,51 @@ protected:
 		_bonusManager = std::make_shared<BonusManager>(_events, _gameConfig);
 		_instantSpawnAnimationSubs = TestUtils::WireInstantSpawnAnimations(_events);
 		_statistics = std::make_shared<GameStatistics>(_events);
-		const double gridSize = _gameConfig.gridOffset;
+		const double gridSize{_gameConfig.gridOffset};
 		_tankSize = gridSize * 3.0;// for better turns
 
 		_allObjects.reserve(5);
 	}
 
 	void TearDown() override {}
+
+	std::shared_ptr<Tank> CreatePlayer(const FPoint pos, const Author author = Author::Player1,
+									   const Direction dir = Direction::UP)
+	{
+		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _tankSize, .h = _tankSize};
+		auto player{TestUtils::CreatePlayer(rect, _tankHealth, author, _allObjects, _events, dir, _bulletPool,
+											_gameConfig)};
+		_allObjects.emplace_back(player);
+
+		return player;
+	}
+
+	std::shared_ptr<Tank> CreateBot(const FPoint pos, const Author author, const Direction dir,
+									const unsigned short tier = 1u)
+	{
+		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _tankSize, .h = _tankSize};
+		auto bot{TestUtils::CreateBot(rect, _tankHealth, author, _allObjects, _events, dir, _bulletPool, _gameConfig,
+									  tier)};
+		_allObjects.emplace_back(bot);
+
+		return bot;
+	}
+
+	std::shared_ptr<Bullet> CreateBullet(const FPoint pos, const Direction dir, const Author author)
+	{
+		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _calibre.size.x, .h = _calibre.size.y};
+		auto bullet{TestUtils::CreateBullet(rect, _bulletHealth, _allObjects, _events, _calibre, dir, _gameConfig,
+											author)};
+		_allObjects.emplace_back(bullet);
+
+		return bullet;
+	}
 };
 
 TEST_F(StatisticsTest, PlayerOneHitByEnemy)
 {
-	// Spawn Player1
-	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player);
-
-	const ObjRectangle rectBullet{.x = _tankSize / 2.0, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre, Direction::UP,
-					_gameConfig, Author::Enemy1);
-	_allObjects.emplace_back(bullet);
+	CreatePlayer({.x = 0.0, .y = 0.0});
+	CreateBullet({.x = _tankSize / 2.0, .y = _tankSize}, Direction::UP, Author::Enemy1);
 
 	EXPECT_EQ(_statistics->GetData().playerOneHitByEnemyTeam, 0u);
 
@@ -80,22 +105,8 @@ TEST_F(StatisticsTest, PlayerOneHitByEnemy)
 
 TEST_F(StatisticsTest, PlayerOneHitByFriend)
 {
-	// Spawn Player1
-	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player);
-
-	const ObjRectangle rectBullet{.x = _tankSize / 2.0,
-								  .y = _tankSize + 1.0,
-								  .w = _calibre.size.x,
-								  .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::UP, _gameConfig, Author::Player2);
-	_allObjects.emplace_back(bullet);
+	CreatePlayer({.x = 0.0, .y = 0.0});
+	CreateBullet({.x = _tankSize / 2.0, .y = _tankSize + 1.0}, Direction::UP, Author::Player2);
 
 	EXPECT_EQ(_statistics->GetData().playerOneHitFriendlyFire, 0u);
 
@@ -106,22 +117,8 @@ TEST_F(StatisticsTest, PlayerOneHitByFriend)
 
 TEST_F(StatisticsTest, PlayerTwoHitByEnemy)
 {
-	// Spawn Player2
-	const ObjRectangle rectPlayer2{.x = _tankSize + 1.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player2 =
-			TestUtils::CreatePlayer(
-					rectPlayer2, _tankHealth, _uuid, Author::Player2, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player2);
-
-	const ObjRectangle rectBullet{.x = _tankSize + _tankSize / 2.0,
-								  .y = _tankSize,
-								  .w = _calibre.size.x,
-								  .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre, Direction::UP,
-					_gameConfig, Author::Enemy1);
-	_allObjects.emplace_back(bullet);
+	CreatePlayer({.x = _tankSize + 1.0, .y = 0.0}, Author::Player2);
+	CreateBullet({.x = _tankSize + _tankSize / 2.0, .y = _tankSize}, Direction::UP, Author::Enemy1);
 
 	EXPECT_EQ(_statistics->GetData().playerTwoHitByEnemyTeam, 0u);
 
@@ -132,22 +129,8 @@ TEST_F(StatisticsTest, PlayerTwoHitByEnemy)
 
 TEST_F(StatisticsTest, PlayerTwoHitByFriend)
 {
-	// Spawn Player2
-	const ObjRectangle rectPlayer2{.x = _tankSize + 1.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player2 =
-			TestUtils::CreatePlayer(
-					rectPlayer2, _tankHealth, _uuid, Author::Player2, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player2);
-
-	const ObjRectangle rectBullet{.x = _tankSize + _tankSize / 2.0,
-								  .y = _tankSize,
-								  .w = _calibre.size.x,
-								  .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::UP, _gameConfig, Author::Player1);
-	_allObjects.emplace_back(bullet);
+	CreatePlayer({.x = _tankSize + 1.0, .y = 0.0}, Author::Player2);
+	CreateBullet({.x = _tankSize + _tankSize / 2.0, .y = _tankSize}, Direction::UP, Author::Player1);
 
 	EXPECT_EQ(_statistics->GetData().playerTwoHitFriendlyFire, 0u);
 
@@ -158,19 +141,8 @@ TEST_F(StatisticsTest, PlayerTwoHitByFriend)
 
 TEST_F(StatisticsTest, PlayerOneDiedByFriend)
 {
-	// Spawn Player1
-	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player);
-
-	const ObjRectangle rectBullet{.x = 0.0, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::UP, _gameConfig, Author::Player2);
-	_allObjects.emplace_back(bullet);
+	CreatePlayer({.x = 0.0, .y = 0.0});
+	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::UP, Author::Player2);
 
 	EXPECT_EQ(_statistics->GetData().playerOneDiedByFriendlyFire, 0u);
 
@@ -181,22 +153,8 @@ TEST_F(StatisticsTest, PlayerOneDiedByFriend)
 
 TEST_F(StatisticsTest, PlayerTwoDiedByEnemy)
 {
-	// Spawn Player2
-	const ObjRectangle rectPlayer2{.x = _tankSize + 1.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player2 =
-			TestUtils::CreatePlayer(
-					rectPlayer2, _tankHealth, _uuid, Author::Player2, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player2);
-
-	const ObjRectangle rectBullet{.x = _tankSize + _tankSize / 2.0,
-								  .y = _tankSize,
-								  .w = _calibre.size.x,
-								  .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre, Direction::UP,
-					_gameConfig, Author::Enemy1);
-	_allObjects.emplace_back(bullet);
+	CreatePlayer({.x = _tankSize + 1.0, .y = 0.0}, Author::Player2);
+	CreateBullet({.x = _tankSize + _tankSize / 2.0, .y = _tankSize}, Direction::UP, Author::Enemy1);
 
 	EXPECT_EQ(_statistics->GetData().playerDiedByEnemyTeam, 0u);
 
@@ -207,19 +165,8 @@ TEST_F(StatisticsTest, PlayerTwoDiedByEnemy)
 
 TEST_F(StatisticsTest, PlayerOneDiedByEnemy)
 {
-	// Spawn Player1
-	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player);
-
-	const ObjRectangle rectBullet{.x = _calibre.size.x, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre, Direction::UP,
-					_gameConfig, Author::Enemy1);
-	_allObjects.emplace_back(bullet);
+	CreatePlayer({.x = 0.0, .y = 0.0});
+	CreateBullet({.x = _calibre.size.x, .y = _tankSize}, Direction::UP, Author::Enemy1);
 
 	EXPECT_EQ(_statistics->GetData().playerDiedByEnemyTeam, 0u);
 
@@ -230,22 +177,8 @@ TEST_F(StatisticsTest, PlayerOneDiedByEnemy)
 
 TEST_F(StatisticsTest, PlayerTwoDiedByFriend)
 {
-	// Spawn Player2
-	const ObjRectangle rectPlayer2{.x = _tankSize + 1.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player2 =
-			TestUtils::CreatePlayer(
-					rectPlayer2, _tankHealth, _uuid, Author::Player2, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player2);
-
-	const ObjRectangle rectBullet{.x = _tankSize + _tankSize / 2.0,
-								  .y = _tankSize,
-								  .w = _calibre.size.x,
-								  .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::UP, _gameConfig, Author::Player1);
-	_allObjects.emplace_back(bullet);
+	CreatePlayer({.x = _tankSize + 1.0, .y = 0.0}, Author::Player2);
+	CreateBullet({.x = _tankSize + _tankSize / 2.0, .y = _tankSize}, Direction::UP, Author::Player1);
 
 	EXPECT_EQ(_statistics->GetData().playerTwoDiedByFriendlyFire, 0u);
 
@@ -256,21 +189,8 @@ TEST_F(StatisticsTest, PlayerTwoDiedByFriend)
 
 TEST_F(StatisticsTest, EnemyHitByFriend)
 {
-	const ObjRectangle rectEnemy{.x = _tankSize * 2.0 + 2.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> enemyBot =
-			TestUtils::CreateBot(
-					rectEnemy, _tankHealth, _uuid, Author::Enemy1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(enemyBot);
-
-	const ObjRectangle rectBullet{.x = _tankSize * 2.0 + 2.0 + _tankSize / 2.0,
-								  .y = _tankSize,
-								  .w = _calibre.size.x,
-								  .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre, Direction::UP,
-					_gameConfig, Author::Enemy2);
-	_allObjects.emplace_back(bullet);
+	CreateBot({.x = _tankSize * 2.0 + 2.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
+	CreateBullet({.x = _tankSize * 2.0 + 2.0 + _tankSize / 2.0, .y = _tankSize}, Direction::UP, Author::Enemy2);
 
 	EXPECT_EQ(_statistics->GetData().enemyHitByFriendlyFire, 0u);
 
@@ -281,21 +201,8 @@ TEST_F(StatisticsTest, EnemyHitByFriend)
 
 TEST_F(StatisticsTest, EnemyHitByPlayerOne)
 {
-	const ObjRectangle rectEnemy{.x = _tankSize * 2.0 + 2.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> enemyBot =
-			TestUtils::CreateBot(
-					rectEnemy, _tankHealth, _uuid, Author::Enemy1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(enemyBot);
-
-	const ObjRectangle rectBullet{.x = _tankSize * 2.0 + 2.0 + _tankSize / 2.0,
-								  .y = _tankSize,
-								  .w = _calibre.size.x,
-								  .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::UP, _gameConfig, Author::Player1);
-	_allObjects.emplace_back(bullet);
+	CreateBot({.x = _tankSize * 2.0 + 2.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
+	CreateBullet({.x = _tankSize * 2.0 + 2.0 + _tankSize / 2.0, .y = _tankSize}, Direction::UP, Author::Player1);
 
 	EXPECT_EQ(_statistics->GetData().enemyHitByPlayerOne, 0u);
 
@@ -306,21 +213,8 @@ TEST_F(StatisticsTest, EnemyHitByPlayerOne)
 
 TEST_F(StatisticsTest, EnemyHitByPlayerTwo)
 {
-	const ObjRectangle rectEnemy{.x = _tankSize * 2.0 + 2.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> enemyBot =
-			TestUtils::CreateBot(
-					rectEnemy, _tankHealth, _uuid, Author::Enemy1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(enemyBot);
-
-	const ObjRectangle rectBullet{.x = _tankSize * 2.0 + 2.0 + _tankSize / 2.0,
-								  .y = _tankSize + 1,
-								  .w = _calibre.size.x,
-								  .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::UP, _gameConfig, Author::Player2);
-	_allObjects.emplace_back(bullet);
+	CreateBot({.x = _tankSize * 2.0 + 2.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
+	CreateBullet({.x = _tankSize * 2.0 + 2.0 + _tankSize / 2.0, .y = _tankSize + 1}, Direction::UP, Author::Player2);
 
 	EXPECT_EQ(_statistics->GetData().enemyHitByPlayerTwo, 0u);
 
@@ -331,21 +225,8 @@ TEST_F(StatisticsTest, EnemyHitByPlayerTwo)
 
 TEST_F(StatisticsTest, EnemyDiedByFriend)
 {
-	const ObjRectangle rectEnemy{.x = _tankSize * 2.0 + 2.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> enemyBot =
-			TestUtils::CreateBot(
-					rectEnemy, _tankHealth, _uuid, Author::Enemy1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(enemyBot);
-
-	const ObjRectangle rectBullet{.x = _tankSize * 2.0 + 2.0 + _tankSize / 2.0,
-								  .y = _tankSize,
-								  .w = _calibre.size.x,
-								  .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre, Direction::UP,
-					_gameConfig, Author::Enemy2);
-	_allObjects.emplace_back(bullet);
+	CreateBot({.x = _tankSize * 2.0 + 2.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
+	CreateBullet({.x = _tankSize * 2.0 + 2.0 + _tankSize / 2.0, .y = _tankSize}, Direction::UP, Author::Enemy2);
 
 	EXPECT_EQ(_statistics->GetData().enemyDiedByFriendlyFire, 0u);
 
@@ -356,21 +237,8 @@ TEST_F(StatisticsTest, EnemyDiedByFriend)
 
 TEST_F(StatisticsTest, EnemyDiedByPlayerOne)
 {
-	const ObjRectangle rectEnemy{.x = _tankSize * 2.0 + 2.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> enemyBot =
-			TestUtils::CreateBot(
-					rectEnemy, _tankHealth, _uuid, Author::Enemy1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(enemyBot);
-
-	const ObjRectangle rectBullet{.x = _tankSize * 2.0 + 2.0 + _tankSize / 2.0,
-								  .y = _tankSize + 1,
-								  .w = _calibre.size.x,
-								  .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::UP, _gameConfig, Author::Player1);
-	_allObjects.emplace_back(bullet);
+	CreateBot({.x = _tankSize * 2.0 + 2.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
+	CreateBullet({.x = _tankSize * 2.0 + 2.0 + _tankSize / 2.0, .y = _tankSize + 1}, Direction::UP, Author::Player1);
 
 	EXPECT_EQ(_statistics->GetData().enemyDiedByPlayerOne, 0u);
 
@@ -381,21 +249,8 @@ TEST_F(StatisticsTest, EnemyDiedByPlayerOne)
 
 TEST_F(StatisticsTest, EnemyDiedByPlayerTwo)
 {
-	const ObjRectangle rectEnemy{.x = _tankSize * 2.0 + 2.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> enemyBot =
-			TestUtils::CreateBot(
-					rectEnemy, _tankHealth, _uuid, Author::Enemy1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(enemyBot);
-
-	const ObjRectangle rectBullet{.x = _tankSize * 2.0 + 2.0 + _tankSize / 2.0,
-								  .y = _tankSize,
-								  .w = _calibre.size.x,
-								  .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::UP, _gameConfig, Author::Player2);
-	_allObjects.emplace_back(bullet);
+	CreateBot({.x = _tankSize * 2.0 + 2.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
+	CreateBullet({.x = _tankSize * 2.0 + 2.0 + _tankSize / 2.0, .y = _tankSize}, Direction::UP, Author::Player2);
 
 	EXPECT_EQ(_statistics->GetData().enemyDiedByPlayerTwo, 0u);
 
@@ -406,22 +261,8 @@ TEST_F(StatisticsTest, EnemyDiedByPlayerTwo)
 
 TEST_F(StatisticsTest, BulletHitByPlayerTwo)
 {
-	const ObjRectangle rectBullet{.x = 0.0, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::DOWN, _gameConfig, Author::Player1);
-	_allObjects.emplace_back(bullet);
-
-	const ObjRectangle rectBullet2{.x = 0.0,
-								   .y = _tankSize + _calibre.size.y + 1.0,
-								   .w = _calibre.size.x,
-								   .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet2 =
-			TestUtils::CreateBullet(
-					rectBullet2, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::UP, _gameConfig, Author::Player2);
-	_allObjects.emplace_back(bullet2);
+	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player1);
+	CreateBullet({.x = 0.0, .y = _tankSize + _calibre.size.y + 1.0}, Direction::UP, Author::Player2);
 
 	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerOne, 0u);
 	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerTwo, 0u);
@@ -434,19 +275,14 @@ TEST_F(StatisticsTest, BulletHitByPlayerTwo)
 
 TEST_F(StatisticsTest, BrickWallDiedByEnemy)
 {
-	ObjRectangle brickWallRect{.x = 0.0,
-							   .y = _tankSize + _calibre.size.y + 1,
-							   .w = _calibre.size.x,
-							   .h = _calibre.size.y};
+	const ObjRectangle brickWallRect{.x = 0.0,
+									 .y = _tankSize + _calibre.size.y + 1,
+									 .w = _calibre.size.x,
+									 .h = _calibre.size.y};
 
 	_allObjects.emplace_back(std::make_shared<BrickWall>(brickWallRect, _events, _uuid, _gameConfig));
 
-	const ObjRectangle rectBullet{.x = 0.0, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::DOWN, _gameConfig, Author::Enemy1);
-	_allObjects.emplace_back(bullet);
+	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Enemy1);
 
 	EXPECT_EQ(_statistics->GetData().brickWallDiedByEnemyTeam, 0u);
 
@@ -457,18 +293,13 @@ TEST_F(StatisticsTest, BrickWallDiedByEnemy)
 
 TEST_F(StatisticsTest, BrickWallDiedByPlayerOne)
 {
-	ObjRectangle brickWallRect{.x = 0.0,
-							   .y = _tankSize + _calibre.size.y + 1,
-							   .w = _calibre.size.x,
-							   .h = _calibre.size.y};
+	const ObjRectangle brickWallRect{.x = 0.0,
+									 .y = _tankSize + _calibre.size.y + 1,
+									 .w = _calibre.size.x,
+									 .h = _calibre.size.y};
 	_allObjects.emplace_back(std::make_shared<BrickWall>(brickWallRect, _events, _uuid, _gameConfig));
 
-	const ObjRectangle rectBullet{.x = 0.0, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::DOWN, _gameConfig, Author::Player1);
-	_allObjects.emplace_back(bullet);
+	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player1);
 
 	EXPECT_EQ(_statistics->GetData().brickWallDiedByPlayerOne, 0u);
 
@@ -479,15 +310,13 @@ TEST_F(StatisticsTest, BrickWallDiedByPlayerOne)
 
 TEST_F(StatisticsTest, BrickDiedByPlayerTwo)
 {
-	ObjRectangle brickRect{.x = 0.0, .y = _tankSize + _calibre.size.y + 1, .w = _calibre.size.x, .h = _calibre.size.y};
+	const ObjRectangle brickRect{.x = 0.0,
+								 .y = _tankSize + _calibre.size.y + 1,
+								 .w = _calibre.size.x,
+								 .h = _calibre.size.y};
 	_allObjects.emplace_back(std::make_shared<BrickWall>(brickRect, _events, _uuid, _gameConfig));
 
-	const ObjRectangle rectBullet{.x = 0.0, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::DOWN, _gameConfig, Author::Player2);
-	_allObjects.emplace_back(bullet);
+	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player2);
 
 	EXPECT_EQ(_statistics->GetData().brickWallDiedByPlayerTwo, 0u);
 
@@ -498,19 +327,14 @@ TEST_F(StatisticsTest, BrickDiedByPlayerTwo)
 
 TEST_F(StatisticsTest, SteelWallDiedByEnemy)
 {
-	ObjRectangle brickWallRect{.x = 0.0,
-							   .y = _tankSize + _calibre.size.y + 1,
-							   .w = _calibre.size.x,
-							   .h = _calibre.size.y};
+	const ObjRectangle brickWallRect{.x = 0.0,
+									 .y = _tankSize + _calibre.size.y + 1,
+									 .w = _calibre.size.x,
+									 .h = _calibre.size.y};
 	_allObjects.emplace_back(std::make_shared<SteelWall>(brickWallRect, _events, _uuid, _gameConfig));
 
-	const ObjRectangle rectBullet{.x = 0.0, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
 	_calibre.tier = 3u;
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::DOWN, _gameConfig, Author::Enemy1);
-	_allObjects.emplace_back(bullet);
+	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Enemy1);
 
 	EXPECT_EQ(_statistics->GetData().steelWallDiedByEnemyTeam, 0u);
 
@@ -521,19 +345,14 @@ TEST_F(StatisticsTest, SteelWallDiedByEnemy)
 
 TEST_F(StatisticsTest, SteelWallDiedByPlayerOne)
 {
-	ObjRectangle brickWallRect{.x = 0.0,
-							   .y = _tankSize + _calibre.size.y + 1,
-							   .w = _calibre.size.x,
-							   .h = _calibre.size.y};
+	const ObjRectangle brickWallRect{.x = 0.0,
+									 .y = _tankSize + _calibre.size.y + 1,
+									 .w = _calibre.size.x,
+									 .h = _calibre.size.y};
 	_allObjects.emplace_back(std::make_shared<SteelWall>(brickWallRect, _events, _uuid, _gameConfig));
 
-	const ObjRectangle rectBullet{.x = 0.0, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
 	_calibre.tier = 3u;
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::DOWN, _gameConfig, Author::Player1);
-	_allObjects.emplace_back(bullet);
+	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player1);
 
 	EXPECT_EQ(_statistics->GetData().steelWallDiedByPlayerOne, 0u);
 
@@ -544,16 +363,14 @@ TEST_F(StatisticsTest, SteelWallDiedByPlayerOne)
 
 TEST_F(StatisticsTest, SteelDiedByPlayerTwo)
 {
-	ObjRectangle brickRect{.x = 0.0, .y = _tankSize + _calibre.size.y + 1, .w = _calibre.size.x, .h = _calibre.size.y};
+	const ObjRectangle brickRect{.x = 0.0,
+								 .y = _tankSize + _calibre.size.y + 1,
+								 .w = _calibre.size.x,
+								 .h = _calibre.size.y};
 	_allObjects.emplace_back(std::make_shared<SteelWall>(brickRect, _events, _uuid, _gameConfig));
 
-	const ObjRectangle rectBullet{.x = 0.0, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
 	_calibre.tier = 3u;
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::DOWN, _gameConfig, Author::Player2);
-	_allObjects.emplace_back(bullet);
+	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player2);
 
 	EXPECT_EQ(_statistics->GetData().steelWallDiedByPlayerTwo, 0u);
 
@@ -564,22 +381,8 @@ TEST_F(StatisticsTest, SteelDiedByPlayerTwo)
 
 TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByEnemy)
 {
-	const ObjRectangle rectBullet{.x = 0.0, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::DOWN, _gameConfig, Author::Enemy1);
-	_allObjects.emplace_back(bullet);
-
-	const ObjRectangle rectBullet2{.x = 0.0,
-								   .y = _tankSize + _calibre.size.y + 1.0,
-								   .w = _calibre.size.x,
-								   .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet2 =
-			TestUtils::CreateBullet(
-					rectBullet2, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::UP, _gameConfig, Author::Enemy2);
-	_allObjects.emplace_back(bullet2);
+	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Enemy1);
+	CreateBullet({.x = 0.0, .y = _tankSize + _calibre.size.y + 1.0}, Direction::UP, Author::Enemy2);
 
 	EXPECT_EQ(_statistics->GetData().bulletHitByEnemy, 0u);
 
@@ -590,22 +393,8 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByEnemy)
 
 TEST_F(StatisticsTest, BulletHitBulletPlayerOneAndByPlayerTwo)
 {
-	const ObjRectangle rectBullet{.x = 0.0, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::DOWN, _gameConfig, Author::Player1);
-	_allObjects.emplace_back(bullet);
-
-	const ObjRectangle rectBullet2{.x = 0.0,
-								   .y = _tankSize + _calibre.size.y + 1.0,
-								   .w = _calibre.size.x,
-								   .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet2 =
-			TestUtils::CreateBullet(
-					rectBullet2, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::UP, _gameConfig, Author::Player2);
-	_allObjects.emplace_back(bullet2);
+	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player1);
+	CreateBullet({.x = 0.0, .y = _tankSize + _calibre.size.y + 1.0}, Direction::UP, Author::Player2);
 
 	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerOne, 0u);
 	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerTwo, 0u);
@@ -618,22 +407,8 @@ TEST_F(StatisticsTest, BulletHitBulletPlayerOneAndByPlayerTwo)
 
 TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerOne)
 {
-	const ObjRectangle rectBullet{.x = 0.0, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::DOWN, _gameConfig, Author::Player1);
-	_allObjects.emplace_back(bullet);
-
-	const ObjRectangle rectBullet2{.x = 0.0,
-								   .y = _tankSize + _calibre.size.y + 1.0,
-								   .w = _calibre.size.x,
-								   .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet2 =
-			TestUtils::CreateBullet(
-					rectBullet2, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::UP, _gameConfig, Author::Enemy1);
-	_allObjects.emplace_back(bullet2);
+	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player1);
+	CreateBullet({.x = 0.0, .y = _tankSize + _calibre.size.y + 1.0}, Direction::UP, Author::Enemy1);
 
 	EXPECT_EQ(_statistics->GetData().bulletHitByEnemy, 0u);
 	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerOne, 0u);
@@ -646,22 +421,8 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerOne)
 
 TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerTwo)
 {
-	const ObjRectangle rectBullet{.x = 0.0, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::DOWN, _gameConfig, Author::Player2);
-	_allObjects.emplace_back(bullet);
-
-	const ObjRectangle rectBullet2{.x = 0.0,
-								   .y = _tankSize + _calibre.size.y + 1.0,
-								   .w = _calibre.size.x,
-								   .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet2 =
-			TestUtils::CreateBullet(
-					rectBullet2, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::UP, _gameConfig, Author::Enemy1);
-	_allObjects.emplace_back(bullet2);
+	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player2);
+	CreateBullet({.x = 0.0, .y = _tankSize + _calibre.size.y + 1.0}, Direction::UP, Author::Enemy1);
 
 	EXPECT_EQ(_statistics->GetData().bulletHitByEnemy, 0u);
 	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerTwo, 0u);
@@ -674,11 +435,7 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerTwo)
 
 TEST_F(StatisticsTest, BonusPickUpByEnemyCount)
 {
-	const ObjRectangle rectEnemy{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> enemyBot =
-			TestUtils::CreateBot(
-					rectEnemy, _tankHealth, _uuid, Author::Enemy1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(enemyBot);
+	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
 
 	_bonusSpawner->SpawnRandomBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize});
 	_bonusSpawner->SpawnRandomBonus({.x = _tankSize + 1.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize});
@@ -696,11 +453,7 @@ TEST_F(StatisticsTest, BonusPickUpByEnemyCount)
 
 TEST_F(StatisticsTest, BonusNotPickUpByEnemyNotCount)
 {
-	const ObjRectangle rectEnemy{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> enemyBot =
-			TestUtils::CreateBot(
-					rectEnemy, _tankHealth, _uuid, Author::Enemy1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(enemyBot);
+	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
 
 	_bonusSpawner->SpawnRandomBonus({.x = 0.0, .y = _tankSize * 2 + 1.0, .w = _tankSize, .h = _tankSize});
 	_bonusSpawner->SpawnRandomBonus({.x = _tankSize * 2 + 1.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize});
@@ -718,12 +471,7 @@ TEST_F(StatisticsTest, BonusNotPickUpByEnemyNotCount)
 
 TEST_F(StatisticsTest, BonusPickUpByPlayerOneCount)
 {
-	// Spawn Player1
-	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player);
+	CreatePlayer({.x = 0.0, .y = 0.0});
 
 	_bonusSpawner->SpawnRandomBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize});
 	constexpr bool isPressed{true};
@@ -742,12 +490,7 @@ TEST_F(StatisticsTest, BonusPickUpByPlayerOneCount)
 
 TEST_F(StatisticsTest, BonusNotPickUpByPlayerOneNotCount)
 {
-	// Spawn Player1
-	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player);
+	CreatePlayer({.x = 0.0, .y = 0.0});
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveUpEvent{.isPressed = isPressed});
 
@@ -766,12 +509,7 @@ TEST_F(StatisticsTest, BonusNotPickUpByPlayerOneNotCount)
 
 TEST_F(StatisticsTest, BonusPickUpByPlayerTwoCount)
 {
-	// Spawn Player2
-	const ObjRectangle rectPlayer2{.x = _tankSize + 1.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player2 =
-			TestUtils::CreatePlayer(
-					rectPlayer2, _tankHealth, _uuid, Author::Player2, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player2);
+	CreatePlayer({.x = _tankSize + 1.0, .y = 0.0}, Author::Player2);
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP2), MoveDownEvent{.isPressed = isPressed});
 
@@ -790,12 +528,7 @@ TEST_F(StatisticsTest, BonusPickUpByPlayerTwoCount)
 
 TEST_F(StatisticsTest, BonusNotPickUpByPlayerTwoNotCount)
 {
-	// Spawn Player2
-	const ObjRectangle rectPlayer2{.x = _tankSize + 1.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player2 =
-			TestUtils::CreatePlayer(
-					rectPlayer2, _tankHealth, _uuid, Author::Player2, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player2);
+	CreatePlayer({.x = _tankSize + 1.0, .y = 0.0}, Author::Player2);
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP2), MoveUpEvent{.isPressed = isPressed});
 
@@ -814,8 +547,6 @@ TEST_F(StatisticsTest, BonusNotPickUpByPlayerTwoNotCount)
 
 TEST_F(StatisticsTest, BonusExpiredCountedWithNoAuthor)
 {
-	using namespace std::chrono_literals;
-
 	//NOTE: how long a bonus lives is the spawner's, so the test shortens it instead of building one by hand
 	_gameConfig.bonusLifeTimeCooldown = 1ms;
 	_bonusSpawner->SpawnBonus({.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize}, BonusType::Helmet);
@@ -837,10 +568,8 @@ TEST_F(StatisticsTest, BonusExpiredCountedWithNoAuthor)
 
 TEST_F(StatisticsTest, BonusShotIsCountedAndPickupIsNot)
 {
-	using namespace std::chrono_literals;
-
 	const ObjRectangle rectBonus{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	auto shot = std::make_shared<Bonus>(rectBonus, _events, _uuid, _gameConfig, BonusType::Helmet, false);
+	auto shot{std::make_shared<Bonus>(rectBonus, _events, _uuid, _gameConfig, BonusType::Helmet, false)};
 	_allObjects.emplace_back(shot);
 
 	shot->TakeDamage(1u, Author::Player1);
@@ -849,7 +578,7 @@ TEST_F(StatisticsTest, BonusShotIsCountedAndPickupIsNot)
 	EXPECT_EQ(_statistics->GetData().bonusDestroyedByPlayerOne, 1u);
 	EXPECT_EQ(_statistics->GetData().bonusPickupByPlayerOne, 0u);
 
-	auto taken = std::make_shared<Bonus>(rectBonus, _events, _uuid, _gameConfig, BonusType::Helmet, false);
+	auto taken{std::make_shared<Bonus>(rectBonus, _events, _uuid, _gameConfig, BonusType::Helmet, false)};
 	_allObjects.emplace_back(taken);
 
 	taken->PickUpBonus(Author::Player1);

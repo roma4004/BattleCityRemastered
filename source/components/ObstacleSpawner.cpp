@@ -109,7 +109,7 @@ void ObstacleSpawner::SpawnObstacle(const ObjRectangle rect, const ObstacleType 
 
 void ObstacleSpawner::SpawnFortressWall(const ObjRectangle rect, const ObstacleType material)
 {
-	const Uuid uuid = UuidUtils::GetRandomUuid();
+	const Uuid uuid{UuidUtils::GetRandomUuid()};
 
 	std::shared_ptr<BaseObj> wall{nullptr};
 	if (material == ObstacleType::Steel)
@@ -145,11 +145,11 @@ void ObstacleSpawner::SpawnFortressWall(const ObjRectangle rect, const ObstacleT
 void ObstacleSpawner::LoadMap() const
 {
 	Map map{_events};
-	if (const auto loaded = map.LoadFromFile(kMapPath);
+	if (const auto loaded{map.LoadFromFile(kMapPath)};
 		!loaded)
 	{
-		const MapError& error = loaded.error();
-		const std::string where = error.line != 0u ? " (line " + std::to_string(error.line) + ')' : std::string{};
+		const MapError& error{loaded.error()};
+		const std::string where{error.line != 0u ? " (line " + std::to_string(error.line) + ')' : std::string{}};
 		Log::Error("cannot load map " + error.path.string() + where + ": " + error.reason);
 
 		return;

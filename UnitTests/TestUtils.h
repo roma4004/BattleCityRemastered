@@ -14,6 +14,7 @@
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/PawnProperty.h"
 #include "entities/pawns/Tank.h"
+#include "utils/UuidUtils.h"
 
 class RespawnManager;
 class TankSpawner;
@@ -94,30 +95,30 @@ public:
 
 	//NOTE: one tank either way - the two helpers differ only in who takes the wheel
 	[[nodiscard]] static std::shared_ptr<Tank> CreateBot(
-			ObjRectangle rect, int health, Uuid uuid, Author author,
-			const std::vector<std::shared_ptr<BaseObj>>& allObjects, std::shared_ptr<EventSystem> events,
-			unsigned short tier, Direction dir, std::shared_ptr<BulletPool> bulletPool,
-			const GameConfig& gameConfig);
+			ObjRectangle rect, int health, Author author,
+			const std::vector<std::shared_ptr<BaseObj>>& allObjects, const std::shared_ptr<EventSystem>& events,
+			Direction dir, const std::shared_ptr<BulletPool>& bulletPool, const GameConfig& gameConfig,
+			unsigned short tier = 1u);
 
 	[[nodiscard]] static std::shared_ptr<Tank> CreatePlayer(
-			ObjRectangle rect, int health, Uuid uuid, Author author,
-			const std::vector<std::shared_ptr<BaseObj>>& allObjects, std::shared_ptr<EventSystem> events,
-			unsigned short tier, Direction dir, std::shared_ptr<BulletPool> bulletPool,
-			const GameConfig& gameConfig);
+			ObjRectangle rect, int health, Author author,
+			const std::vector<std::shared_ptr<BaseObj>>& allObjects, const std::shared_ptr<EventSystem>& events,
+			Direction dir, const std::shared_ptr<BulletPool>& bulletPool, const GameConfig& gameConfig,
+			unsigned short tier = 1u);
 
 	[[nodiscard]] static std::shared_ptr<Bullet> CreateBullet(
-			ObjRectangle rect, const int health, const Uuid uuid,
-			const std::vector<std::shared_ptr<BaseObj>>& allObjects, std::shared_ptr<EventSystem> events,
+			const ObjRectangle rect, const int health,
+			const std::vector<std::shared_ptr<BaseObj>>& allObjects, const std::shared_ptr<EventSystem>& events,
 			const BulletCalibre& calibre, const Direction dir, const GameConfig& gameConfig,
 			const Author author)
 	{
-		BaseObjProperty baseObjProperty{
+		const BaseObjProperty baseObjProperty{
 				.rect = rect,
 				.health = health,
-				.uuid = uuid,
+				.uuid = UuidUtils::GetRandomUuid(),
 				.faction = FactionOf(author)};
 		PawnProperty pawnProperty{
-				.baseObjProperty = std::move(baseObjProperty),
+				.baseObjProperty = baseObjProperty,
 				.allObjects = allObjects,
 				.events = events,
 				.tier = calibre.tier,
@@ -125,7 +126,7 @@ public:
 				.dir = dir,
 				.author = author};
 
-		auto bullet = std::make_shared<Bullet>(std::move(pawnProperty), gameConfig, calibre);
+		auto bullet{std::make_shared<Bullet>(std::move(pawnProperty), gameConfig, calibre)};
 		bullet->Activate();
 
 		return bullet;
@@ -136,7 +137,7 @@ public:
 //business being spelled == on the type. Production never compares FPoints; the tests do.
 [[nodiscard]] inline bool operator==(const FPoint& lhs, const FPoint& rhs) noexcept
 {
-	static constexpr double epsilon = 1e-4;
+	static constexpr double epsilon{1e-4};
 	return std::abs(lhs.x - rhs.x) < epsilon && std::abs(lhs.y - rhs.y) < epsilon;
 }
 

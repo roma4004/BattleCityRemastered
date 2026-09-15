@@ -33,6 +33,8 @@
 #include "utils/UuidUtils.h"
 #include "TestUtils.h"//NOTE: PrintTo for the Point types
 
+using namespace std::chrono_literals;
+
 class NetworkTest : public testing::Test
 {
 protected:
@@ -73,11 +75,11 @@ protected:
 	template<typename Predicate>
 	[[nodiscard]] bool PumpUntil(Predicate predicate, const std::chrono::milliseconds timeout = kWaitTimeout) const
 	{
-		const auto deadline = std::chrono::steady_clock::now() + timeout;
+		const auto deadline{std::chrono::steady_clock::now() + timeout};
 		while (!predicate() && std::chrono::steady_clock::now() < deadline)
 		{
 			Pump();
-			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			std::this_thread::sleep_for(1ms);
 		}
 
 		return predicate();
@@ -126,69 +128,69 @@ protected:
 		}, kRebindTimeout);
 	}
 
-	static constexpr std::chrono::milliseconds kWaitTimeout{5000};
+	static constexpr auto kWaitTimeout{5s};
 	//NOTE: short on purpose - the client gives up after ~5s, and a slow re-bind eats that window
-	static constexpr std::chrono::milliseconds kRebindTimeout{1500};
+	static constexpr auto kRebindTimeout{1500ms};
 };
 
 
 TEST_F(NetworkTest, PosEventReplication)
 {
-	const auto server = MakeHost();
-	const auto client = MakeClient(server->GetBoundPort());
+	const auto server{MakeHost()};
+	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
 	constexpr FPoint posOrigin{.x = 42.0, .y = 42.0};
 	constexpr auto directionOrigin{Direction::UP};
 
 	std::optional<PosChangedEvent> received{};
-	auto posSub = _clientEvents->AddListener(Key(_uuid),
-											 [&received](const PosChangedEvent& event) { received = event; });
+	auto posSub{_clientEvents->AddListener(Key(_uuid),
+										   [&received](const PosChangedEvent& event) { received = event; })};
 
 	_hostEvents->EmitEvent(
 			PosChangedEvent{.pos = posOrigin, .dir = directionOrigin, .uuid = _uuid});
 
 	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
-	const auto& event = received.value();
+	const auto& event{received.value()};
 	EXPECT_EQ(posOrigin, event.pos);
 	EXPECT_EQ(directionOrigin, event.dir);
 }
 
 TEST_F(NetworkTest, ShotEventReplication)
 {
-	const auto server = MakeHost();
-	const auto client = MakeClient(server->GetBoundPort());
+	const auto server{MakeHost()};
+	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
-	constexpr Direction direction{Direction::UP};
+	constexpr auto direction{Direction::UP};
 	constexpr auto who{Author::Player1};
 
 	std::optional<TankShotEvent> received{};
-	auto shotSub = _clientEvents->AddListener(Key(who),
-											  [&received](const TankShotEvent& event) { received = event; });
+	auto shotSub{_clientEvents->AddListener(Key(who),
+											[&received](const TankShotEvent& event) { received = event; })};
 
 	_hostEvents->EmitEvent(TankShotEvent{.who = who, .dir = direction, .bulletUuid = _uuid});
 
 	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
-	const auto& event = received.value();
+	const auto& event{received.value()};
 	EXPECT_EQ(direction, event.dir);
 	EXPECT_EQ(_uuid, event.bulletUuid);
 }
 
 TEST_F(NetworkTest, HealthEventReplication)
 {
-	const auto server = MakeHost();
-	const auto client = MakeClient(server->GetBoundPort());
+	const auto server{MakeHost()};
+	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
 	constexpr int healthOrigin{42};
 
 	std::optional<int> received{};
-	auto healthSub = _clientEvents->AddListener(Key(_uuid),
-												[&received](const HealthChangedEvent& event)
-												{
-													received = event.health;
-												});
+	auto healthSub{_clientEvents->AddListener(Key(_uuid),
+											  [&received](const HealthChangedEvent& event)
+											  {
+												  received = event.health;
+											  })};
 
 	_hostEvents->EmitEvent(HealthChangedEvent{.health = healthOrigin, .uuid = _uuid});
 
@@ -199,16 +201,16 @@ TEST_F(NetworkTest, HealthEventReplication)
 //NOTE: two despawns - a destroyed bullet and a picked-up bonus travel the same command
 TEST_F(NetworkTest, DespawnEventReplication)
 {
-	const auto server = MakeHost();
-	const auto client = MakeClient(server->GetBoundPort());
+	const auto server{MakeHost()};
+	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
 	std::vector<DespawnedEvent> received{};
-	auto despawnSub = _clientEvents->AddListener(Key(_uuid),
-												 [&received](const DespawnedEvent& event)
-												 {
-													 received.push_back(event);
-												 });
+	auto despawnSub{_clientEvents->AddListener(Key(_uuid),
+											   [&received](const DespawnedEvent& event)
+											   {
+												   received.push_back(event);
+											   })};
 
 	_hostEvents->EmitEvent(DespawnedEvent{.uuid = _uuid, .reason = DespawnReason::Destroyed});
 	_hostEvents->EmitEvent(DespawnedEvent{.uuid = _uuid, .reason = DespawnReason::PickedUp});
@@ -221,13 +223,13 @@ TEST_F(NetworkTest, DespawnEventReplication)
 
 TEST_F(NetworkTest, StatisticsEventReplication)
 {
-	const auto server = MakeHost();
-	const auto client = MakeClient(server->GetBoundPort());
+	const auto server{MakeHost()};
+	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
 	std::optional<StatisticsBulletHitEvent> received{};
-	auto statsSub = _clientEvents->AddListener(
-			[&received](const StatisticsBulletHitEvent& event) { received = event; });
+	auto statsSub{_clientEvents->AddListener(
+			[&received](const StatisticsBulletHitEvent& event) { received = event; })};
 
 	_hostEvents->EmitEvent(StatisticsBulletHitEvent{.author = Author::Enemy1});
 
@@ -237,13 +239,13 @@ TEST_F(NetworkTest, StatisticsEventReplication)
 
 TEST_F(NetworkTest, PauseRequestFromClientPausesHost)
 {
-	const auto server = MakeHost();
-	const auto client = MakeClient(server->GetBoundPort());
+	const auto server{MakeHost()};
+	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
 	bool hostPauseToggled{false};
-	auto pauseSub = _hostEvents->AddListener(
-			[&hostPauseToggled](const PauseReleasedEvent&) { hostPauseToggled = true; });
+	auto pauseSub{_hostEvents->AddListener(
+			[&hostPauseToggled](const PauseReleasedEvent&) { hostPauseToggled = true; })};
 
 	_clientEvents->EmitEvent(PauseRequestedEvent{.isPaused = true});
 
@@ -252,21 +254,21 @@ TEST_F(NetworkTest, PauseRequestFromClientPausesHost)
 
 TEST_F(NetworkTest, BonusSpawnEventReplication)
 {
-	const auto server = MakeHost();
-	const auto client = MakeClient(server->GetBoundPort());
+	const auto server{MakeHost()};
+	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
 	constexpr FPoint pos{.x = 42.0, .y = 42.0};
 	constexpr auto type{BonusType::Timer};
 
 	std::optional<BonusSpawnedEvent> received{};
-	auto bonusSpawnSub = _clientEvents->AddListener(
-			[&received](const BonusSpawnedEvent& event) { received = event; });
+	auto bonusSpawnSub{_clientEvents->AddListener(
+			[&received](const BonusSpawnedEvent& event) { received = event; })};
 
 	_hostEvents->EmitEvent(BonusSpawnedEvent{.pos = pos, .type = type, .uuid = _uuid, .isSuper = true});
 
 	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
-	const auto& event = received.value();
+	const auto& event{received.value()};
 	EXPECT_EQ(pos, event.pos);
 	EXPECT_EQ(type, event.type);
 	EXPECT_EQ(_uuid, event.uuid);
@@ -276,13 +278,13 @@ TEST_F(NetworkTest, BonusSpawnEventReplication)
 //NOTE: what makes the bonus real on the client - its own burst only draws
 TEST_F(NetworkTest, BonusSpawnCompleteEventReplication)
 {
-	const auto server = MakeHost();
-	const auto client = MakeClient(server->GetBoundPort());
+	const auto server{MakeHost()};
+	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
 	std::optional<Uuid> received{};
-	auto bonusSpawnCompleteSub = _clientEvents->AddListener(
-			[&received](const BonusSpawnCompletedEvent& event) { received = event.uuid; });
+	auto bonusSpawnCompleteSub{_clientEvents->AddListener(
+			[&received](const BonusSpawnCompletedEvent& event) { received = event.uuid; })};
 
 	_hostEvents->EmitEvent(BonusSpawnCompletedEvent{.uuid = _uuid});
 
@@ -292,19 +294,19 @@ TEST_F(NetworkTest, BonusSpawnCompleteEventReplication)
 
 TEST_F(NetworkTest, BonusStatusEventReplication)
 {
-	const auto server = MakeHost();
-	const auto client = MakeClient(server->GetBoundPort());
+	const auto server{MakeHost()};
+	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
 	constexpr auto authorOrigin{Author::Player1};
 	constexpr bool isActiveOrigin{true};
 
 	std::optional<bool> received{};
-	auto bonusStatusSub = _clientEvents->AddListener(Key(authorOrigin),
-													 [&received](const BonusHelmetAppliedEvent& event)
-													 {
-														 received = event.isActive;
-													 });
+	auto bonusStatusSub{_clientEvents->AddListener(Key(authorOrigin),
+												   [&received](const BonusHelmetAppliedEvent& event)
+												   {
+													   received = event.isActive;
+												   })};
 
 	_hostEvents->EmitEvent(BonusHelmetAppliedEvent{.author = authorOrigin, .isActive = isActiveOrigin});
 
@@ -316,15 +318,15 @@ TEST_F(NetworkTest, BonusStatusEventReplication)
 //the upgrade formula, exactly as it does with health
 TEST_F(NetworkTest, TierEventReplication)
 {
-	const auto server = MakeHost();
-	const auto client = MakeClient(server->GetBoundPort());
+	const auto server{MakeHost()};
+	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
 	constexpr unsigned short tierOrigin{4u};
 
 	std::optional<unsigned short> received{};
-	auto tierSub = _clientEvents->AddListener(Key(_uuid),
-											  [&received](const TierChangedEvent& event) { received = event.tier; });
+	auto tierSub{_clientEvents->AddListener(Key(_uuid),
+											[&received](const TierChangedEvent& event) { received = event.tier; })};
 
 	_hostEvents->EmitEvent(TierChangedEvent{.tier = tierOrigin, .uuid = _uuid});
 
@@ -335,15 +337,15 @@ TEST_F(NetworkTest, TierEventReplication)
 //NOTE: no payload of its own - under test is that its alternative reaches the right seat
 TEST_F(NetworkTest, BonusShipStatusEventReplication)
 {
-	const auto server = MakeHost();
-	const auto client = MakeClient(server->GetBoundPort());
+	const auto server{MakeHost()};
+	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
 	constexpr auto authorOrigin{Author::Player1};
 
 	bool received{false};
-	auto bonusShipSub = _clientEvents->AddListener(Key(authorOrigin),
-												   [&received](const BonusShipAppliedEvent&) { received = true; });
+	auto bonusShipSub{_clientEvents->AddListener(Key(authorOrigin),
+												 [&received](const BonusShipAppliedEvent&) { received = true; })};
 
 	_hostEvents->EmitEvent(BonusShipAppliedEvent{.author = authorOrigin});
 
@@ -352,21 +354,21 @@ TEST_F(NetworkTest, BonusShipStatusEventReplication)
 
 TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 {
-	const auto server = MakeHost();
-	const auto client = MakeClient(server->GetBoundPort());
+	const auto server{MakeHost()};
+	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
-	constexpr auto obstacleType = ObstacleType::Brick;
+	constexpr auto obstacleType{ObstacleType::Brick};
 	constexpr FPoint posOrigin{.x = 42.0, .y = 43.0};
 
 	std::optional<ObstacleSpawnedEvent> received{};
-	auto obstacleSpawnSub = _clientEvents->AddListener(
-			[&received](const ObstacleSpawnedEvent& event) { received = event; });
+	auto obstacleSpawnSub{_clientEvents->AddListener(
+			[&received](const ObstacleSpawnedEvent& event) { received = event; })};
 
 	_hostEvents->EmitEvent(ObstacleSpawnedEvent{.pos = posOrigin, .type = obstacleType, .uuid = _uuid});
 
 	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
-	const auto& event = received.value();
+	const auto& event{received.value()};
 	EXPECT_EQ(posOrigin, event.pos);
 	EXPECT_EQ(obstacleType, event.type);
 	EXPECT_EQ(_uuid, event.uuid);
@@ -375,25 +377,25 @@ TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 //NOTE: a whole map in one batch - one frame, and every command has to come out of it in order
 TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 {
-	const auto server = MakeHost();
-	const auto client = MakeClient(server->GetBoundPort());
+	const auto server{MakeHost()};
+	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
-	constexpr auto obstacleType = ObstacleType::Brick;
-	constexpr unsigned short itemsInMassiveTest = 10000u;
+	constexpr auto obstacleType{ObstacleType::Brick};
+	constexpr unsigned short itemsInMassiveTest{10000u};
 
 	std::vector<FPoint> sent{};
 	sent.reserve(itemsInMassiveTest);
 	for (size_t i = 0u; i < itemsInMassiveTest; ++i)
 	{
-		const auto value = static_cast<double>(i);
+		const auto value{static_cast<double>(i)};
 		sent.emplace_back(FPoint{.x = value, .y = value + 1.0});
 	}
 
 	std::vector<ObstacleSpawnedEvent> received{};
 	received.reserve(itemsInMassiveTest);
-	auto massiveObstacleSub = _clientEvents->AddListener(
-			[&received](const ObstacleSpawnedEvent& event) { received.push_back(event); });
+	auto massiveObstacleSub{_clientEvents->AddListener(
+			[&received](const ObstacleSpawnedEvent& event) { received.push_back(event); })};
 
 	for (const auto& pos: sent)
 	{
@@ -413,8 +415,8 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 
 TEST_F(NetworkTest, RespawnTankEventReplication)
 {
-	const auto server = MakeHost();
-	const auto client = MakeClient(server->GetBoundPort());
+	const auto server{MakeHost()};
+	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
 	constexpr std::array tankTypes{
@@ -430,8 +432,8 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 	constexpr size_t expectedCount{tankTypes.size()};
 
 	std::vector<TankRespawnedEvent> received{};
-	auto respawnTankSub = _clientEvents->AddListener(
-			[&received](const TankRespawnedEvent& event) { received.push_back(event); });
+	auto respawnTankSub{_clientEvents->AddListener(
+			[&received](const TankRespawnedEvent& event) { received.push_back(event); })};
 
 	for (const auto tankType: tankTypes)
 	{
@@ -450,9 +452,9 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 //NOTE: the link and what rides it - a host still thinking the old client plays reconnects nothing
 TEST_F(NetworkTest, ClientReconnectsAfterEstablishedLinkDrops)
 {
-	auto server = MakeHost();
-	const uint16_t port = server->GetBoundPort();
-	const auto client = MakeClient(port);
+	auto server{MakeHost()};
+	const uint16_t port{server->GetBoundPort()};
+	const auto client{MakeClient(port)};
 
 	int readySignals{0};
 	int linksUp{0};
@@ -477,7 +479,7 @@ TEST_F(NetworkTest, ClientReconnectsAfterEstablishedLinkDrops)
 		GTEST_SKIP() << "port " << port << " still held by the OS - nothing to test against";
 	}
 
-	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }, std::chrono::milliseconds{10000}))
+	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }, 10s))
 			<< "client did not reconnect after the host came back";
 
 	//NOTE: pumped, not read straight off - IsConnected flips before the event behind it is drained
@@ -492,9 +494,9 @@ TEST_F(NetworkTest, ClientReconnectsAfterEstablishedLinkDrops)
 //here the host outlives the loss and has to take the next client on the same acceptor
 TEST_F(NetworkTest, HostLearnsTheClientDroppedWithoutSayingGoodbye)
 {
-	const auto server = MakeHost();
-	const uint16_t port = server->GetBoundPort();
-	auto client = MakeClient(port);
+	const auto server{MakeHost()};
+	const uint16_t port{server->GetBoundPort()};
+	auto client{MakeClient(port)};
 
 	bool clientLost{false};
 	int readySignals{0};
@@ -517,7 +519,7 @@ TEST_F(NetworkTest, HostLearnsTheClientDroppedWithoutSayingGoodbye)
 			<< "host never noticed the client stopped answering";
 	EXPECT_FALSE(announced.has_value()) << "a dropped link reported itself as an announced leave";
 
-	const auto secondClient = MakeClient(port);
+	const auto secondClient{MakeClient(port)};
 	ASSERT_TRUE(PumpUntil([&secondClient] { return secondClient->IsConnected(); }))
 			<< "host stopped accepting after losing the first client";
 	EXPECT_TRUE(PumpUntil([&readySignals] { return readySignals == 2; }))
@@ -527,9 +529,9 @@ TEST_F(NetworkTest, HostLearnsTheClientDroppedWithoutSayingGoodbye)
 //NOTE: like the reconnection test above - about the link, not about a command riding it
 TEST_F(NetworkTest, HostShutdownTellsClientWhyAndKeepsTheReconnect)
 {
-	auto server = MakeHost();
-	const uint16_t port = server->GetBoundPort();
-	const auto client = MakeClient(port);
+	auto server{MakeHost()};
+	const uint16_t port{server->GetBoundPort()};
+	const auto client{MakeClient(port)};
 
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
@@ -550,15 +552,15 @@ TEST_F(NetworkTest, HostShutdownTellsClientWhyAndKeepsTheReconnect)
 		GTEST_SKIP() << "port " << port << " still held by the OS - nothing to test against";
 	}
 
-	EXPECT_TRUE(PumpUntil([&client] { return client->IsConnected(); }, std::chrono::milliseconds{10000}))
+	EXPECT_TRUE(PumpUntil([&client] { return client->IsConnected(); }, 10s))
 			<< "client did not dial back the host that only announced a restart";
 	EXPECT_FALSE(gaveUp) << "client gave up on a host that was restarting the same mode";
 }
 
 TEST_F(NetworkTest, ClientQuitTellsHostWhy)
 {
-	const auto server = MakeHost();
-	auto client = MakeClient(server->GetBoundPort());
+	const auto server{MakeHost()};
+	auto client{MakeClient(server->GetBoundPort())};
 
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
@@ -583,8 +585,8 @@ TEST_F(NetworkTest, ClientQuitTellsHostWhy)
 // as the wrong effect on the wrong seat in silence. The ship lands keyed on its seat, the tank broadcasts
 TEST_F(NetworkTest, ShipAndTankEffectsKeepTheirOwnEventAcrossTheWire)
 {
-	const auto server = MakeHost();
-	const auto client = MakeClient(server->GetBoundPort());
+	const auto server{MakeHost()};
+	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
 	constexpr auto shipSeat{Author::Player1};
@@ -617,13 +619,13 @@ TEST_F(NetworkTest, TheServerHandsOutTheSeatsInOrder)
 	subs.push_back(_clientEvents->AddListener([&first](const PlayerSlotAssignedEvent& e) { first = e.slot; }));
 	subs.push_back(_secondClientEvents->AddListener([&second](const PlayerSlotAssignedEvent& e) { second = e.slot; }));
 
-	const auto server = MakeHost();
-	const auto client = MakeClient(server->GetBoundPort());
+	const auto server{MakeHost()};
+	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&first] { return first.has_value(); })) << "the first client was told no seat";
 	//NOTE: dialled only once the first seat is out, so the accept order is the test's, not the OS's
-	const auto secondClient = std::make_unique<network::commands::ClientNode>("127.0.0.1",
-																				 server->GetBoundPort(),
-																				 _secondClientEvents);
+	const auto secondClient{std::make_unique<network::commands::ClientNode>("127.0.0.1",
+																			   server->GetBoundPort(),
+																			   _secondClientEvents)};
 	ASSERT_TRUE(PumpUntil([&second] { return second.has_value(); })) << "the second client was told no seat";
 
 	EXPECT_EQ(PlayerSlot::P1, *first);
@@ -640,8 +642,8 @@ TEST_F(NetworkTest, ASeatComesBackWhenItsClientSaysGoodbye)
 	subs.push_back(_clientEvents->AddListener([&first](const PlayerSlotAssignedEvent& e) { first = e.slot; }));
 	subs.push_back(_secondClientEvents->AddListener([&second](const PlayerSlotAssignedEvent& e) { second = e.slot; }));
 
-	const auto server = MakeHost();
-	auto client = MakeClient(server->GetBoundPort());
+	const auto server{MakeHost()};
+	auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&first] { return first.has_value(); })) << "the first client was told no seat";
 	ASSERT_EQ(PlayerSlot::P1, *first);
 
@@ -651,8 +653,8 @@ TEST_F(NetworkTest, ASeatComesBackWhenItsClientSaysGoodbye)
 	client.reset();
 	ASSERT_TRUE(PumpUntil([&goodbye] { return goodbye; })) << "host never got the client's goodbye";
 
-	const auto next = std::make_unique<network::commands::ClientNode>("127.0.0.1", server->GetBoundPort(),
-																				_secondClientEvents);
+	const auto next{std::make_unique<network::commands::ClientNode>("127.0.0.1", server->GetBoundPort(),
+																			  _secondClientEvents)};
 	ASSERT_TRUE(PumpUntil([&second] { return second.has_value(); })) << "the freed seat was never handed out";
 	EXPECT_EQ(PlayerSlot::P1, *second) << "the seat of a client that quit is still held by its session";
 }
@@ -667,12 +669,12 @@ TEST_F(NetworkTest, EachClientPutsOnlyItsOwnSeatOnTheWire)
 	subs.push_back(_secondClientEvents->AddListener(
 			[&secondSeat](const PlayerSlotAssignedEvent& e) { secondSeat = e.slot; }));
 
-	const auto server = MakeHost();
-	const auto client = MakeClient(server->GetBoundPort());
+	const auto server{MakeHost()};
+	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&firstSeat] { return firstSeat.has_value(); }));
-	const auto secondClient = std::make_unique<network::commands::ClientNode>("127.0.0.1",
-																				 server->GetBoundPort(),
-																				 _secondClientEvents);
+	const auto secondClient{std::make_unique<network::commands::ClientNode>("127.0.0.1",
+																			   server->GetBoundPort(),
+																			   _secondClientEvents)};
 	ASSERT_TRUE(PumpUntil([&secondSeat] { return secondSeat.has_value(); }));
 
 	bool firstSeatMoved{false};
@@ -715,15 +717,15 @@ TEST_F(NetworkTest, AThirdClientIsToldTheSeatsAreTaken)
 	subs.push_back(_thirdClientEvents->AddListener(
 			[&refusal](const ClientInDisconnectEvent& e) { refusal = e.reason; }));
 
-	const auto server = MakeHost();
-	const uint16_t port = server->GetBoundPort();
-	const auto client = MakeClient(port);
-	const auto secondClient = std::make_unique<network::commands::ClientNode>("127.0.0.1", port,
-																					  _secondClientEvents);
+	const auto server{MakeHost()};
+	const uint16_t port{server->GetBoundPort()};
+	const auto client{MakeClient(port)};
+	const auto secondClient{std::make_unique<network::commands::ClientNode>("127.0.0.1", port,
+																					_secondClientEvents)};
 	ASSERT_TRUE(PumpUntil([&firstSeat, &secondSeat] { return firstSeat && secondSeat; }));
 
-	const auto thirdClient = std::make_unique<network::commands::ClientNode>("127.0.0.1", port,
-																					 _thirdClientEvents);
+	const auto thirdClient{std::make_unique<network::commands::ClientNode>("127.0.0.1", port,
+																				   _thirdClientEvents)};
 
 	ASSERT_TRUE(PumpUntil([&refusal] { return refusal.has_value(); })) << "the third client heard nothing";
 	EXPECT_EQ(*refusal, DisconnectReason::ServerFull);
@@ -731,7 +733,7 @@ TEST_F(NetworkTest, AThirdClientIsToldTheSeatsAreTaken)
 
 TEST(SerializerTest, UnreadableFrameIsReportedNotSwallowed)
 {
-	const auto batch = network::Deserialize("not an archive at all");
+	const auto batch{network::Deserialize("not an archive at all")};
 
 	ASSERT_FALSE(batch.has_value());
 	EXPECT_FALSE(batch.error().reason.empty());
@@ -747,12 +749,12 @@ TEST(SerializerTest, ABatchSurvivesTheRoundTrip)
 	//NOTE: FrameChannel trusts the length prefix - one disagreeing with the payload cuts every frame after it short
 	EXPECT_EQ(network::DecodeFrameHeader(frame.data()), frame.size() - network::kFrameHeaderSize);
 
-	const auto received = network::Deserialize(frame.substr(network::kFrameHeaderSize));
+	const auto received{network::Deserialize(frame.substr(network::kFrameHeaderSize))};
 
 	ASSERT_TRUE(received.has_value());
-	const auto& commands = received.value().commands;
+	const auto& commands{received.value().commands};
 	ASSERT_EQ(commands.size(), 1u);
-	const auto* goodbye = std::get_if<network::commands::Disconnect>(&commands.front());
+	const auto* goodbye{std::get_if<network::commands::Disconnect>(&commands.front())};
 	ASSERT_NE(goodbye, nullptr);
 	EXPECT_EQ(goodbye->reason, DisconnectReason::GameOver);
 }
@@ -761,8 +763,8 @@ TEST(SerializerTest, ABatchSurvivesTheRoundTrip)
 // them apart. Every type here carries a different author - identical payloads would hide a crossed wire
 TEST_F(NetworkTest, EveryStatisticsTypeKeepsItsOwnEventAcrossTheWire)
 {
-	const auto server = MakeHost();
-	const auto client = MakeClient(server->GetBoundPort());
+	const auto server{MakeHost()};
+	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
 	std::optional<StatisticsTankHitEvent> tankHit{};

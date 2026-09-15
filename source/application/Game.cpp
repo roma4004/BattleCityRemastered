@@ -66,7 +66,7 @@ void Game::EnterGameMode(const GameMode mode)
 {
 	//NOTE: the applied mode says PlayAsClient for both network entries, and the server process is
 	//what tells them apart
-	const GameMode entered = _serverProcess ? GameMode::PlayAsHost : _gameConfig.gameMode;
+	const GameMode entered{_serverProcess ? GameMode::PlayAsHost : _gameConfig.gameMode};
 	if (mode == entered && _simulation->TryRestartMatch())
 	{
 		return;
@@ -104,12 +104,12 @@ void Game::OnSelectedGameModeChangedTo(const SelectedGameModeChangedToEvent& eve
 
 void Game::PrevGameMode(const PreviousGameModeEvent&)
 {
-	int mode = static_cast<int>(_selectedGameMode);
+	auto mode{static_cast<int>(_selectedGameMode)};
 	--mode;
 
-	constexpr int maxMode = static_cast<int>(GameMode::EndIterator) - 1;
+	constexpr int maxMode{static_cast<int>(GameMode::EndIterator) - 1};
 	constexpr int minMode = 0;
-	const int newMode = mode < minMode ? maxMode : mode;
+	const int newMode{mode < minMode ? maxMode : mode};
 	_selectedGameMode = static_cast<GameMode>(newMode);
 
 	_events->EmitEvent(SelectedGameModeChangedToEvent{.mode = _selectedGameMode});
@@ -117,12 +117,12 @@ void Game::PrevGameMode(const PreviousGameModeEvent&)
 
 void Game::NextGameMode(const NextGameModeEvent&)
 {
-	int mode = static_cast<int>(_selectedGameMode);
+	auto mode{static_cast<int>(_selectedGameMode)};
 	++mode;
 
-	constexpr int maxMode = static_cast<int>(GameMode::EndIterator) - 1;
+	constexpr int maxMode{static_cast<int>(GameMode::EndIterator) - 1};
 	constexpr int minMode = 0;
-	const int newMode = mode > maxMode ? minMode : mode;
+	const int newMode{mode > maxMode ? minMode : mode};
 	_selectedGameMode = static_cast<GameMode>(newMode);
 
 	_events->EmitEvent(SelectedGameModeChangedToEvent{.mode = _selectedGameMode});

@@ -8,9 +8,9 @@ namespace network::commands
 ClientNode::ClientNode(const std::shared_ptr<EventSystem>& events)
 	: ClientNode(std::string(kDefaultHost), kDefaultPort, events) {}
 
-ClientNode::ClientNode(std::string host, uint16_t port, const std::shared_ptr<EventSystem>& events)
+ClientNode::ClientNode(const std::string& host, uint16_t port, const std::shared_ptr<EventSystem>& events)
 	: NetworkNodeBase(events, "ClientNode")
-	, _client{std::make_shared<Client>(IoContext(), std::move(host), port, events)}
+	, _client{std::make_shared<Client>(IoContext(), host, port, events)}
 {
 	StartIoThread();
 	SubscribeToNetCommandUpdate();

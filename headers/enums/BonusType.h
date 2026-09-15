@@ -24,7 +24,7 @@ inline constexpr int kLastSpawnableBonusId{static_cast<int>(BonusType::lastId) -
 //NOTE: the one gate for values that arrive from outside the code - the wire
 [[nodiscard]] constexpr bool IsSpawnableBonus(const BonusType type)
 {
-	const auto id = static_cast<int>(type);
+	const auto id{static_cast<int>(type)};
 
 	return id >= kFirstSpawnableBonusId && id <= kLastSpawnableBonusId;
 }

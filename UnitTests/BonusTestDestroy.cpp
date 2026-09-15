@@ -18,6 +18,7 @@
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
 #include "enums/ObstacleType.h"
+#include "geometry/Point.h"
 #include "gtest/gtest.h"
 #include <memory>
 
@@ -43,7 +44,6 @@ protected:
 	double _gridSize{};
 	unsigned short _tankHealth{100u};
 	unsigned short _bulletHealth{1u};
-	Uuid _uuid{};
 	EventSubscription _spawnQueueSub{};
 
 	void SetUp() override
@@ -66,20 +66,47 @@ protected:
 	}
 
 	void TearDown() override {}
+
+	std::shared_ptr<Tank> CreatePlayer(const FPoint pos, const Author author = Author::Player1,
+									   const Direction dir = Direction::UP)
+	{
+		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _tankSize, .h = _tankSize};
+		auto player{TestUtils::CreatePlayer(rect, _tankHealth, author, _allObjects, _events, dir, _bulletPool,
+											_gameConfig)};
+		_allObjects.emplace_back(player);
+
+		return player;
+	}
+
+	std::shared_ptr<Tank> CreateBot(const FPoint pos, const Author author, const Direction dir,
+									const unsigned short tier = 1u)
+	{
+		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _tankSize, .h = _tankSize};
+		auto bot{TestUtils::CreateBot(rect, _tankHealth, author, _allObjects, _events, dir, _bulletPool, _gameConfig,
+									  tier)};
+		_allObjects.emplace_back(bot);
+
+		return bot;
+	}
+
+	std::shared_ptr<Bullet> CreateBullet(const FPoint pos, const Direction dir, const Author author)
+	{
+		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _calibre.size.x, .h = _calibre.size.y};
+		auto bullet{TestUtils::CreateBullet(rect, _bulletHealth, _allObjects, _events, _calibre, dir, _gameConfig,
+											author)};
+		_allObjects.emplace_back(bullet);
+
+		return bullet;
+	}
 };
 
 TEST_F(BonusTestDestroy, BonusDestroy)
 {
-	constexpr ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = 6.0, .h = 5.0};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::DOWN, _gameConfig, Author::Enemy1);
-	_allObjects.emplace_back(bullet);
+	CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Enemy1);
 
 	_bonusSpawner->SpawnRandomBonus({.x = 0.0, .y = 7.0, .w = _tankSize, .h = _tankSize});
 
-	if (const auto bonus = dynamic_cast<Bonus*>(_allObjects.back().get()))
+	if (const auto bonus{dynamic_cast<Bonus*>(_allObjects.back().get())})
 	{
 		EXPECT_TRUE(bonus->GetIsAlive());
 
@@ -95,16 +122,11 @@ TEST_F(BonusTestDestroy, BonusDestroy)
 
 TEST_F(BonusTestDestroy, BonusNotDestroy)
 {
-	constexpr ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = 6.0, .h = 5.0};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::RIGHT, _gameConfig, Author::Enemy1);
-	_allObjects.emplace_back(bullet);
+	CreateBullet({.x = 0.0, .y = 0.0}, Direction::RIGHT, Author::Enemy1);
 
 	_bonusSpawner->SpawnRandomBonus({.x = 0.0, .y = 7.0, .w = _tankSize, .h = _tankSize});
 
-	if (const auto bonus = dynamic_cast<Bonus*>(_allObjects.back().get()))
+	if (const auto bonus{dynamic_cast<Bonus*>(_allObjects.back().get())})
 	{
 		EXPECT_TRUE(bonus->GetIsAlive());
 
@@ -120,24 +142,15 @@ TEST_F(BonusTestDestroy, BonusNotDestroy)
 
 TEST_F(BonusTestDestroy, TimerDestroyByPlayerAndEnemyStillMove)
 {
-	constexpr ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = 6.0, .h = 5.0};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::DOWN, _gameConfig, Author::Player1);
-	_allObjects.emplace_back(bullet);
+	CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
 
 	_bonusSpawner->SpawnBonus({.x = 0.0, .y = 7.0, .w = _tankSize, .h = _tankSize}, BonusType::Timer);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	const ObjRectangle rectEnemy{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> enemyBot =
-			TestUtils::CreateBot(
-					rectEnemy, _tankHealth, _uuid, Author::Enemy1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(enemyBot);
+	const auto enemyBot{CreateBot({.x = _tankSize * 2, .y = _tankSize * 2}, Author::Enemy1, Direction::DOWN)};
 
-	const FPoint enemyPos = enemyBot->GetPos();
+	const FPoint enemyPos{enemyBot->GetPos()};
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -146,31 +159,16 @@ TEST_F(BonusTestDestroy, TimerDestroyByPlayerAndEnemyStillMove)
 
 TEST_F(BonusTestDestroy, HelmetDestroyAndBulletStillCanDamageTank)
 {
-	const ObjRectangle rectPlayer{.x = _tankSize + 1.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player2, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player);
-
-	constexpr ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = 6.0, .h = 5.0};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::DOWN, _gameConfig, Author::Player1);
-	_allObjects.emplace_back(bullet);
+	const auto player{CreatePlayer({.x = _tankSize + 1.0, .y = 0.0}, Author::Player2)};
+	CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
 
 	_bonusSpawner->SpawnBonus({.x = 0.0, .y = 7.0, .w = _tankSize, .h = _tankSize}, BonusType::Helmet);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	const ObjRectangle rectBullet2{.x = _tankSize * 2 + 1.0, .y = 7.0, .w = 6.0, .h = 5.0};
-	std::shared_ptr<Bullet> bullet2 =
-			TestUtils::CreateBullet(
-					rectBullet2, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::LEFT, _gameConfig, Author::Enemy1);
-	_allObjects.emplace_back(bullet2);
+	CreateBullet({.x = _tankSize * 2 + 1.0, .y = 7.0}, Direction::LEFT, Author::Enemy1);
 
-	const int playerHealth = player->GetHealth();
+	const int playerHealth{player->GetHealth()};
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -180,20 +178,11 @@ TEST_F(BonusTestDestroy, HelmetDestroyAndBulletStillCanDamageTank)
 
 TEST_F(BonusTestDestroy, GrenadeDestroyEnemyHealthFull)
 {
-	constexpr ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = 6.0, .h = 5.0};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::DOWN, _gameConfig, Author::Player1);
-	_allObjects.emplace_back(bullet);
+	CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
 
 	_bonusSpawner->SpawnBonus({.x = 0.0, .y = 7.0, .w = _tankSize, .h = _tankSize}, BonusType::Grenade);
 
-	const ObjRectangle rectEnemy{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> enemyBot =
-			TestUtils::CreateBot(
-					rectEnemy, _tankHealth, _uuid, Author::Enemy1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(enemyBot);
+	const auto enemyBot{CreateBot({.x = _tankSize * 2, .y = _tankSize * 2}, Author::Enemy1, Direction::DOWN)};
 
 	EXPECT_EQ(enemyBot->GetHealth(), 100);
 
@@ -205,21 +194,16 @@ TEST_F(BonusTestDestroy, GrenadeDestroyEnemyHealthFull)
 TEST_F(BonusTestDestroy, TankDestroyNoExtraLife)
 {
 	unsigned short respawnActual{3u};
-	auto respawnSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
+	auto respawnSub{_events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
 	{
 		respawnActual = event.respawnCount;
-	});
+	})};
 
-	constexpr ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = 6.0, .h = 5.0};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::DOWN, _gameConfig, Author::Player1);
-	_allObjects.emplace_back(bullet);
+	CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
 
 	_bonusSpawner->SpawnBonus({.x = 0.0, .y = 7.0, .w = _tankSize, .h = _tankSize}, BonusType::Tank);
 
-	const unsigned short playerSpawnCount = respawnActual;
+	const unsigned short playerSpawnCount{respawnActual};
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -229,18 +213,8 @@ TEST_F(BonusTestDestroy, TankDestroyNoExtraLife)
 
 TEST_F(BonusTestDestroy, StarDestroyTierRemainTheSame)
 {
-	const ObjRectangle rectPlayer{.x = 0.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player2, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player);
-
-	constexpr ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = 6.0, .h = 5.0};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::DOWN, _gameConfig, Author::Player1);
-	_allObjects.emplace_back(bullet);
+	const auto player{CreatePlayer({.x = 0.0, .y = _tankSize * 3.0}, Author::Player2)};
+	CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
 
 	_bonusSpawner->SpawnBonus({.x = 0.0, .y = 7.0, .w = _tankSize, .h = _tankSize}, BonusType::Star);
 
@@ -253,12 +227,7 @@ TEST_F(BonusTestDestroy, StarDestroyTierRemainTheSame)
 
 TEST_F(BonusTestDestroy, ShovelNotPickUpByPlayerThenfortressWallRemainTheSame)
 {
-	constexpr ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = 6.0, .h = 5.0};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::DOWN, _gameConfig, Author::Player1);
-	_allObjects.emplace_back(bullet);
+	CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
 
 	_bonusSpawner->SpawnBonus({.x = 0.0, .y = 7.0, .w = _tankSize, .h = _tankSize}, BonusType::Shovel);
 	const ObjRectangle fortressRect{.x = _tankSize + 1.0, .y = 0, .w = _gridSize, .h = _gridSize};

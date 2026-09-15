@@ -29,7 +29,6 @@ protected:
 	double _deltaTimeOneFrame{1.0 / 60.0};
 	double _tankSize{};
 	int _tankHealth{100};
-	Uuid _uuid{};
 	EventSubscription _spawnQueueSub{};
 	EventSubscription _disposalSub{};
 
@@ -86,23 +85,24 @@ TEST_F(BulletPoolTest, SpentBulletsAreHandedOutAgain)
 TEST_F(BulletPoolTest, ReturnedBulletLeavesTheBus)
 {
 	int bulletDraws{0};
-	const EventSubscription drawSub = _events->AddListener([&bulletDraws](const DrawObjEvent& event)
+	const EventSubscription drawSub{_events->AddListener([&bulletDraws](const DrawObjEvent& event)
 	{
 		if (event.texture == TextureType::Bullet)
 		{
 			++bulletDraws;
 		}
-	});
+	})};
 
-	std::shared_ptr<Tank> player = TestUtils::CreatePlayer(
-			ObjRectangle{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize}, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
+	const std::shared_ptr<Tank> player{TestUtils::CreatePlayer(
+			ObjRectangle{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize}, _tankHealth, Author::Player1, _allObjects,
+			_events, Direction::DOWN, _bulletPool, _gameConfig)};
 	_allObjects.emplace_back(player);
 
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = isPressed});
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	const std::shared_ptr<BaseObj> bullet = _allObjects.back();
+	const std::shared_ptr<BaseObj> bullet{_allObjects.back()};
 	ASSERT_NE(nullptr, dynamic_cast<Bullet*>(bullet.get()));
 
 	_events->EmitEvent(DrawEvent{});
@@ -119,18 +119,18 @@ TEST_F(BulletPoolTest, ReturnedBulletLeavesTheBus)
 // the free list and in _allObjects at the same time, and the next shot reuses an object still there
 TEST_F(BulletPoolTest, ASlotComesBackOnlyAfterTheWorldLetGo)
 {
-	const std::shared_ptr<Bullet> bullet = _bulletPool->SpawnBullet({});
+	const std::shared_ptr<Bullet> bullet{_bulletPool->SpawnBullet({})};
 	_allObjects.emplace_back(bullet);
 
 	bool wasStillInTheWorld{true};
-	const EventSubscription despawnSub = _events->AddListener(
+	const EventSubscription despawnSub{_events->AddListener(
 			[this, &wasStillInTheWorld, raw = bullet.get()](const DespawnedEvent&)
 	{
 		wasStillInTheWorld = std::ranges::any_of(_allObjects, [raw](const std::shared_ptr<BaseObj>& obj)
 		{
 			return obj.get() == raw;
 		});
-	});
+	})};
 
 	bullet->SetIsAlive(false);
 	_events->EmitEvent(PostTickUpdateEvent{.deltaTime = _deltaTimeOneFrame});

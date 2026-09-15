@@ -15,4 +15,13 @@ public:
 
 		return distribution(gen);
 	}
+
+	template<typename Rep, typename Period>
+	[[nodiscard]] static auto GetRandDuration(const std::chrono::duration<Rep, Period> from,
+											  const std::chrono::duration<Rep, Period> to)
+	{
+		const auto count{GetRandNumber(std::uniform_int_distribution<Rep>{from.count(), to.count()})};
+
+		return std::chrono::duration<Rep, Period>{count};
+	}
 };

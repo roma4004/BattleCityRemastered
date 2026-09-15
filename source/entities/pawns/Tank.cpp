@@ -24,13 +24,16 @@
 #include "interfaces/IPickupableBonus.h"
 #include "utils/ColliderUtils.h"
 #include "enums/Faction.h"
+#include <chrono>
 #include <ranges>
+
+using namespace std::chrono_literals;
 
 namespace
 {
 //NOTE: a tank fires at the rate of the seat it drives, and the seat is already in its faction
-constexpr std::chrono::milliseconds kEnemySeatCooldown{1000};
-constexpr std::chrono::milliseconds kPlayerSeatCooldown{500};
+constexpr auto kEnemySeatCooldown{1000ms};
+constexpr auto kPlayerSeatCooldown{500ms};
 }//namespace
 
 Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool,
@@ -193,7 +196,7 @@ std::vector<Direction> Tank::GetFreePathSides(const double deltaTime,
 
 void Tank::EmitMoved() const
 {
-	const FPoint pos = GetPos();
+	const FPoint pos{GetPos()};
 	_events->EmitEvent(AnimationTankUpdateEvent{.author = _author, .pos = pos, .dir = _dir});
 
 	if (_gameConfig.IsHost())
@@ -214,7 +217,7 @@ void Tank::TickUpdate(const double deltaTime)
 	std::vector<std::shared_ptr<BaseObj>> outCollisions;
 	const Direction oldDir{_dir};
 
-	const std::optional<Direction> chosen = _inputProvider->ChooseDirection(*this, deltaTime);
+	const std::optional<Direction> chosen{_inputProvider->ChooseDirection(*this, deltaTime)};
 	bool isMove{false};
 	if (chosen)
 	{
@@ -225,7 +228,7 @@ void Tank::TickUpdate(const double deltaTime)
 	//NOTE: only when a move was actually attempted - a player pressing nothing is not blocked
 	if (chosen && !isMove)
 	{
-		if (const std::optional<Direction> revised = _inputProvider->ReviseWhenMoveBlocked(*this, deltaTime))
+		if (const std::optional<Direction> revised{_inputProvider->ReviseWhenMoveBlocked(*this, deltaTime)})
 		{
 			SetDirection(*revised);
 		}
@@ -251,7 +254,7 @@ void Tank::TickUpdate(const double deltaTime)
 	}
 
 	_effects.isTouchTheBushes = IsTouchBush();
-	if (const bool isTouchTheIce = IsTouchIce();
+	if (const bool isTouchTheIce{IsTouchIce()};
 		_effects.isTouchTheIce != isTouchTheIce)
 	{
 		_effects.isTouchTheIce = isTouchTheIce;
@@ -266,7 +269,7 @@ void Tank::TickUpdate(const double deltaTime)
 
 void Tank::Shot(const std::optional<Uuid> withUuid)
 {
-	const Uuid bulletUuid = _shootingBeh->Shot(withUuid);
+	const Uuid bulletUuid{_shootingBeh->Shot(withUuid)};
 
 	if (_gameConfig.IsHost())
 	{
@@ -322,7 +325,7 @@ void Tank::OnBonusHelmet(const bool isActive)
 
 void Tank::OnBonusGrenade(const BonusGrenadePickupEvent&)
 {
-	if (const int health = GetHealth(); health > 0)
+	if (const int health{GetHealth()}; health > 0)
 	{
 		TakeDamage(static_cast<unsigned int>(health), Author::None);
 	}
@@ -358,7 +361,7 @@ void Tank::OnBonusStar()
 							   .speedFactor = 1.10,
 							   .damage = 15,
 							   .radiusFactor = 1.25,
-							   .cooldownCut = milliseconds{150}};
+							   .cooldownCut = 150ms};
 
 	Upgrade(star);
 }
@@ -369,7 +372,7 @@ void Tank::OnBonusCaliber()
 								  .speedFactor = 1.30,
 								  .damage = 45,
 								  .radiusFactor = 1.75,
-								  .cooldownCut = milliseconds{450}};
+								  .cooldownCut = 450ms};
 
 	Upgrade(caliber);
 }
@@ -414,7 +417,7 @@ void Tank::OnDespawned(const DespawnedEvent& event)
 
 void Tank::HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const
 {
-	if (auto* bonus = dynamic_cast<IPickupableBonus*>(object.get()))
+	if (auto* bonus{dynamic_cast<IPickupableBonus*>(object.get())})
 	{
 		bonus->PickUpBonus(_author);
 	}
@@ -432,24 +435,24 @@ void Tank::OnPosChanged(const PosChangedEvent& event)
 
 bool Tank::IsTouchBush() const
 {
-	auto bushCollisionsFilter = _allObjects | std::views::filter([this](const std::shared_ptr<BaseObj>& object)
+	auto bushCollisionsFilter{_allObjects | std::views::filter([this](const std::shared_ptr<BaseObj>& object)
 	{
 		return _uuid != object->GetUuid()
 			   && ColliderUtils::IsCollide(_rect, object->GetRect())
 			   && dynamic_cast<BushTile*>(object.get()) != nullptr;
-	});
+	})};
 
 	return !bushCollisionsFilter.empty();
 }
 
 bool Tank::IsTouchIce() const
 {
-	auto bushCollisionsFilter = _allObjects | std::views::filter([this](const std::shared_ptr<BaseObj>& object)
+	auto bushCollisionsFilter{_allObjects | std::views::filter([this](const std::shared_ptr<BaseObj>& object)
 	{
 		return _uuid != object->GetUuid()
 			   && ColliderUtils::IsCollide(_rect, object->GetRect())
 			   && dynamic_cast<IceTile*>(object.get()) != nullptr;
-	});
+	})};
 
 	return !bushCollisionsFilter.empty();
 }

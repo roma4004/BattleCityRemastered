@@ -62,9 +62,9 @@ void NetworkNodeBase::StopIoThread(const std::function<void(std::function<void()
 
 		//NOTE: a timeout is not fatal - stop() below tears the context down anyway - but silence here
 		//would hide a goodbye that never made it onto the wire
-		if (shutdownFuture.wait_for(std::chrono::milliseconds(kShutdownTimeoutMs)) == std::future_status::timeout)
+		if (shutdownFuture.wait_for(kShutdownTimeout) == std::future_status::timeout)
 		{
-			Log::Error(_name + " shutdown timed out after " + std::to_string(kShutdownTimeoutMs) + " ms");
+			Log::Error(_name + " shutdown timed out after " + std::to_string(kShutdownTimeout.count()) + " ms");
 		}
 	}
 

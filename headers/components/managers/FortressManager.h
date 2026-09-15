@@ -31,7 +31,7 @@ class FortressManager final
 
 	void Subscribe();
 	void OnSpotRegistered(const FortressSpotRegisteredEvent& event);
-	void OnBonusShovel(const BonusShovelStatusChangeEvent& event);
+	void OnBonusShovel(const BonusShovelStatusChangeEvent& event) const;
 	void OnGameReset(const GameResetEvent&);
 
 	void ClearSpot(const Spot& spot) const;

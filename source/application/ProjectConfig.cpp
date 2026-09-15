@@ -1,5 +1,6 @@
 #include "application/ProjectConfig.h"
 #include "utils/Log.h"
+#include <exception>
 #include <filesystem>
 #include <system_error>
 #include <utility>
@@ -16,7 +17,7 @@ ProjectConfig::ProjectConfig(std::filesystem::path filePath, const bool skipIni)
 		return;
 	}
 
-	if (const auto loaded = LoadIni(_filePath); !loaded)
+	if (const auto loaded{LoadIni(_filePath)}; !loaded)
 	{
 		DefaultInitIni();
 
@@ -133,5 +134,10 @@ void ProjectConfig::SaveIni(const std::filesystem::path& filePath) const
 	catch (const boost::property_tree::ini_parser_error& err)
 	{
 		Log::Error(std::string{err.what()} + ", cannot save the config - check write permissions and free space");
+	}
+	//NOTE: the destructor saves too, and anything escaping it is std::terminate
+	catch (const std::exception& err)
+	{
+		Log::Error(std::string{"cannot save the config: "} + err.what());
 	}
 }

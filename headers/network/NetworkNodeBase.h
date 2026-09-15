@@ -2,6 +2,7 @@
 
 #include "components/EventSystem.h"
 #include "interfaces/INetworkNode.h"
+#include <chrono>
 #include <functional>
 #include <memory>
 #include <string>
@@ -51,6 +52,6 @@ private:
 	std::thread _thread{};
 	std::vector<EventSubscription> _subs{};
 
-	static constexpr int kShutdownTimeoutMs{500};
+	static constexpr std::chrono::milliseconds kShutdownTimeout{500};
 };
 }//namespace network::commands

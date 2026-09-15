@@ -11,17 +11,17 @@ namespace network::commands
 ReplicationPublisher::ReplicationPublisher(const std::shared_ptr<EventSystem>& events)
 	: _events{events} {}
 
-void ReplicationPublisher::Publish(AnyCommand command)
+void ReplicationPublisher::Publish(const AnyCommand command)
 {
-	std::scoped_lock lock(_batchWriteMutex);
-	_batch.commands.emplace_back(std::move(command));
+	const std::scoped_lock lock{_batchWriteMutex};
+	_batch.commands.emplace_back(command);
 }
 
 std::shared_ptr<const std::string> ReplicationPublisher::TakeFrame()
 {
 	CommandBatch batch;
 	{
-		std::scoped_lock lock(_batchWriteMutex);
+		const std::scoped_lock lock{_batchWriteMutex};
 		std::swap(batch, _batch);
 	}
 

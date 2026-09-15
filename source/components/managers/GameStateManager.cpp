@@ -46,7 +46,7 @@ void GameStateManager::SetState(const GameState state)
 	AnnouncePhase();
 }
 
-void GameStateManager::AnnouncePhase()
+void GameStateManager::AnnouncePhase() const
 {
 	_events->EmitEvent(GameStateChangedToEvent{.state = _state});
 

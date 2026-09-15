@@ -14,9 +14,12 @@
 #include "utils/UuidUtils.h"
 #include "utils/WorldQuery.h"
 #include <algorithm>
+#include <chrono>
 
 class BaseObj;
 class EventSystem;
+
+using namespace std::chrono_literals;
 
 namespace
 {
@@ -31,7 +34,7 @@ BonusSpawner::BonusSpawner(const std::shared_ptr<EventSystem>& events,
 	, _distSpawnType{kFirstSpawnableBonusId, kLastSpawnableBonusId}
 	, _distSuperRoll{1, kSuperBonusOdds}
 	, _gameConfig{gameConfig}
-	, _spawnTimer{std::chrono::seconds{60}}
+	, _spawnTimer{60s}
 {
 	ResetSpawnRanges();
 
@@ -70,7 +73,7 @@ void BonusSpawner::OnBonusSpawnCompleted(const BonusSpawnCompletedEvent& event) 
 
 bool BonusSpawner::MaterializePending(const Uuid uuid)
 {
-	const auto it = std::ranges::find(_pendingSpawns, uuid, &PendingSpawn::uuid);
+	const auto it{std::ranges::find(_pendingSpawns, uuid, &PendingSpawn::uuid)};
 	if (it == _pendingSpawns.end())
 	{
 		return false;
@@ -86,7 +89,7 @@ void BonusSpawner::OnWorldGeometryChanged(const WorldGeometryChangedEvent&) { Re
 
 void BonusSpawner::ResetSpawnRanges()
 {
-	const UPoint& battlefieldSize = _gameConfig.battlefieldSize;
+	const UPoint& battlefieldSize{_gameConfig.battlefieldSize};
 
 	_distSpawnPosX = std::uniform_int_distribution<>{0, static_cast<int>(battlefieldSize.x) - _gameConfig.bonusSize};
 	_distSpawnPosY = std::uniform_int_distribution<>{0, static_cast<int>(battlefieldSize.y) - _gameConfig.bonusSize};
@@ -94,7 +97,7 @@ void BonusSpawner::ResetSpawnRanges()
 
 void BonusSpawner::OnBonusSpawned(const BonusSpawnedEvent& event)
 {
-	const auto size = static_cast<double>(_gameConfig.bonusSize);
+	const auto size{static_cast<double>(_gameConfig.bonusSize)};
 	const ObjRectangle rect{.x = event.pos.x, .y = event.pos.y, .w = size, .h = size};
 	SpawnBonus(rect, event.type, event.uuid, event.isSuper);
 }
@@ -103,9 +106,9 @@ void BonusSpawner::Update(const TickUpdateEvent&)
 {
 	if (_spawnTimer.IsCooldownFinish())
 	{
-		const auto size = static_cast<double>(_gameConfig.bonusSize);
-		const auto x = static_cast<double>(RandUtils::GetRandNumber(_distSpawnPosX));
-		const auto y = static_cast<double>(RandUtils::GetRandNumber(_distSpawnPosY));
+		const auto size{static_cast<double>(_gameConfig.bonusSize)};
+		const auto x{static_cast<double>(RandUtils::GetRandNumber(_distSpawnPosX))};
+		const auto y{static_cast<double>(RandUtils::GetRandNumber(_distSpawnPosY))};
 		const ObjRectangle rect{.x = x, .y = y, .w = size, .h = size};
 		if (WorldQuery::IsSpotFree(_allObjects, rect))
 		{
@@ -144,13 +147,13 @@ void BonusSpawner::SpawnBonus(const ObjRectangle rect, const BonusType type, Uui
 
 void BonusSpawner::Materialize(const PendingSpawn& pending) const
 {
-	auto bonus = std::make_shared<Bonus>(pending.rect, _events, pending.uuid, _gameConfig, pending.type,
-										 pending.isSuper);
+	auto bonus{std::make_shared<Bonus>(pending.rect, _events, pending.uuid, _gameConfig, pending.type,
+									   pending.isSuper)};
 	_events->EmitEvent(BonusCreatedEvent{.bonus = bonus});
-	_events->EmitEvent(AddToSpawnQueueEvent{.obj = std::shared_ptr<BaseObj>{std::move(bonus)}});
+	_events->EmitEvent(AddToSpawnQueueEvent{.obj = std::move(bonus)});
 }
 
-BonusSpawner::RolledBonus BonusSpawner::RollBonus()
+BonusSpawner::RolledBonus BonusSpawner::RollBonus() const
 {
 	return RolledBonus{.type = static_cast<BonusType>(RandUtils::GetRandNumber(_distSpawnType)),
 					   .isSuper = RandUtils::GetRandNumber(_distSuperRoll) == 1};

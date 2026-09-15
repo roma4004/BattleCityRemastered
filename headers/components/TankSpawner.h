@@ -63,7 +63,7 @@ class TankSpawner final
 	void Reset(const GameResetEvent&);
 
 	void OnSpawnDelayFinished(Uuid uuid);
-	void DelayedSpawnWith(const DelayedTankSpawn& params);
+	void DelayedSpawnWith(const DelayedTankSpawn& params) const;
 	void CancelDelayedSpawnsOf(Faction faction);
 	void DropDelayedSpawn(Uuid uuid);
 

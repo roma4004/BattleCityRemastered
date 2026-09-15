@@ -18,7 +18,7 @@
 
 namespace network::commands
 {
-Server::Server(boost::asio::io_context& ioContext, std::string host, const uint16_t port,
+Server::Server(boost::asio::io_context& ioContext, const std::string& host, const uint16_t port,
 			   const std::shared_ptr<EventSystem>& events)
 	: _acceptor{tcp::acceptor(ioContext, tcp::endpoint(boost::asio::ip::make_address(host), port))}
 	, _events{events}
@@ -52,9 +52,9 @@ void Server::Shutdown(const DisconnectReason reason, const std::function<void()>
 {
 	CloseAcceptor();
 
-	const auto sessions = SnapshotSessions();
+	const auto sessions{SnapshotSessions()};
 	//NOTE: counted, not per-session - the caller is told once, after the last goodbye is out
-	const auto pending = std::make_shared<std::size_t>(sessions.size());
+	const auto pending{std::make_shared<std::size_t>(sessions.size())};
 
 	if (sessions.empty())
 	{
@@ -101,7 +101,7 @@ void Server::OnNetworkEndFrame(const NetworkEndFrameEvent&)
 
 	//NOTE: serialised here, on the game thread, exactly as Client does it - FrameChannel::Send only
 	//posts onto the session's strand, so nothing here waits on the socket
-	if (const auto frame = _replicationOut.TakeFrame())
+	if (const auto frame{_replicationOut.TakeFrame()})
 	{
 		SendToAll(frame);
 	}
@@ -116,7 +116,7 @@ void Server::RefuseSeat(tcp::socket socket) const
 	farewell.commands.emplace_back(Disconnect{.reason = DisconnectReason::ServerFull});
 
 	//NOTE: the channel keeps itself alive through the write it posted, so this handle may go
-	const auto channel = std::make_shared<network::FrameChannel>(std::move(socket), "Server");
+	const auto channel{std::make_shared<network::FrameChannel>(std::move(socket), "Server")};
 	channel->Send(std::make_shared<const std::string>(network::SerializeFrame(farewell)));
 	channel->CloseAfterFlush({});
 }
@@ -125,24 +125,20 @@ void Server::Seat(tcp::socket socket)
 {
 	try
 	{
-		std::shared_ptr<Session> session;
+		std::unique_lock lock(_sessionsMutex);
+		const auto slot{FindFreeSlot()};
+		if (!slot)
 		{
-			std::scoped_lock lock(_sessionsMutex);
-			if (const auto slot = FindFreeSlot())
-			{
-				session = std::make_shared<Session>(std::move(socket), _events, *slot);
-				_sessions.emplace_back(session);
-			}
+			lock.unlock();
+			RefuseSeat(std::move(socket));
+			return;
 		}
 
-		if (session)
-		{
-			session->Start();//NOTE: outside the lock - it posts reads and can reach the event bus
-		}
-		else
-		{
-			RefuseSeat(std::move(socket));
-		}
+		const auto session{std::make_shared<Session>(std::move(socket), _events, *slot)};
+		_sessions.emplace_back(session);
+		lock.unlock();
+
+		session->Start();//NOTE: outside the lock - it posts reads and can reach the event bus
 	}
 	catch (const std::exception& e)
 	{
@@ -156,7 +152,7 @@ void Server::Seat(tcp::socket socket)
 
 void Server::DoAccept()
 {
-	const auto executor = boost::asio::make_strand(_acceptor.get_executor());
+	const auto executor{boost::asio::make_strand(_acceptor.get_executor())};
 	//NOTE: own strand per socket - serializes that session's handlers against each other
 	_acceptor.async_accept(executor, [this](const boost::system::error_code& ec, tcp::socket socket)
 	{
@@ -177,7 +173,7 @@ void Server::DoAccept()
 
 std::vector<std::shared_ptr<Session>> Server::SnapshotSessions() const
 {
-	std::scoped_lock lock(_sessionsMutex);
+	const std::scoped_lock lock{_sessionsMutex};
 	return _sessions;
 }
 
@@ -208,7 +204,7 @@ void Server::CleanupDeadSessions()
 	};
 
 	//NOTE: ~Session only posts the close onto its strand, so it costs nothing to let it happen here
-	std::scoped_lock lock(_sessionsMutex);
+	const std::scoped_lock lock{_sessionsMutex};
 	std::erase_if(_sessions, isDead);
 }
 

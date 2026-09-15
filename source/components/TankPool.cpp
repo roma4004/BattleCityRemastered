@@ -51,18 +51,15 @@ void TankPool::OnGameReset(const GameResetEvent&)
 //NOTE: the driver here is a placeholder - SpawnTank hands the tank its real one before it enters the world
 std::shared_ptr<Tank> TankPool::CreateNewTank() const
 {
-	PawnProperty pawnProperty{.baseObjProperty = {},
-							  .allObjects = _allObjects,
-							  .events = _events};
-
-	return std::make_shared<Tank>(std::move(pawnProperty), _bulletPool,
-								  std::make_unique<InputProviderForBot>(_allObjects, _gameConfig), _gameConfig);
+	return std::make_shared<Tank>(PawnProperty{.baseObjProperty = {}, .allObjects = _allObjects, .events = _events},
+								  _bulletPool, std::make_unique<InputProviderForBot>(_allObjects, _gameConfig),
+								  _gameConfig);
 }
 
 std::shared_ptr<Tank> TankPool::SpawnTank(const TankResetProperty& property,
 										  std::unique_ptr<IInputProvider> driver)
 {
-	std::shared_ptr<Tank> tank = _slots.TakeFree();
+	std::shared_ptr<Tank> tank{_slots.TakeFree()};
 	if (tank == nullptr)
 	{
 		tank = CreateNewTank();
@@ -78,7 +75,7 @@ std::shared_ptr<Tank> TankPool::SpawnTank(const TankResetProperty& property,
 //NOTE: nothing emitted here - the tank announced its own death already
 void TankPool::OnDeadObjectsSwept(const DeadObjectsSweptEvent&)
 {
-	if (const std::vector<std::shared_ptr<Tank>> returned = _slots.ReclaimDead();
+	if (const std::vector<std::shared_ptr<Tank>> returned{_slots.ReclaimDead()};
 		!returned.empty())
 	{
 		Log::Detail("tanks returned to a pool of " + std::to_string(_slots.FreeCount()));

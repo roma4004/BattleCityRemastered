@@ -43,10 +43,10 @@ void FortressManager::OnGameReset(const GameResetEvent&) { _spots.clear(); }
 
 void FortressManager::OnSpotRegistered(const FortressSpotRegisteredEvent& event)
 {
-	const auto it = std::ranges::find_if(_spots, [&event](const Spot& spot)
+	const auto it{std::ranges::find_if(_spots, [&event](const Spot& spot)
 	{
 		return IsSameSpot(spot.rect, event.rect);
-	});
+	})};
 
 	if (it != _spots.end())
 	{
@@ -60,7 +60,7 @@ void FortressManager::OnSpotRegistered(const FortressSpotRegisteredEvent& event)
 
 void FortressManager::ClearSpot(const Spot& spot) const
 {
-	const std::shared_ptr<BaseObj> wall = spot.wall.lock();
+	const std::shared_ptr<BaseObj> wall{spot.wall.lock()};
 	if (wall == nullptr || !wall->GetIsAlive())
 	{
 		return;
@@ -81,7 +81,7 @@ void FortressManager::Rebuild(const Spot& spot, const ObstacleType material) con
 	_events->EmitEvent(SpawnFortressWallEvent{.rect = spot.rect, .material = material});
 }
 
-void FortressManager::OnBonusShovel(const BonusShovelStatusChangeEvent& event)
+void FortressManager::OnBonusShovel(const BonusShovelStatusChangeEvent& event) const
 {
 	for (const Spot& spot: _spots)
 	{

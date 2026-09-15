@@ -37,19 +37,24 @@ protected:
 	}
 
 	void TearDown() override {}
+
+	std::shared_ptr<Bullet> CreateBullet(const FPoint pos, const Direction dir, const Author author)
+	{
+		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _calibre.size.x, .h = _calibre.size.y};
+		auto bullet{TestUtils::CreateBullet(rect, _bulletHealth, _allObjects, _events, _calibre, dir, _gameConfig,
+											author)};
+		_allObjects.emplace_back(bullet);
+
+		return bullet;
+	}
 };
 
 TEST_F(BulletTest, BulletSetPos)
 {
-	const ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::DOWN, _gameConfig, Author::Player1);
-	_allObjects.emplace_back(bullet);
+	const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};
 
-	const auto windowWidth = static_cast<double>(_gameConfig.battlefieldSize.x);
-	const auto windowHeight = static_cast<double>(_gameConfig.battlefieldSize.y);
+	const auto windowWidth{static_cast<double>(_gameConfig.battlefieldSize.x)};
+	const auto windowHeight{static_cast<double>(_gameConfig.battlefieldSize.y)};
 	bullet->SetPos({.x = windowWidth, .y = windowHeight});
 
 	EXPECT_EQ(bullet->GetPos(), (FPoint{.x = windowWidth, .y = windowHeight}));
@@ -57,14 +62,9 @@ TEST_F(BulletTest, BulletSetPos)
 
 TEST_F(BulletTest, BulletSetDirection)
 {
-	const ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::DOWN, _gameConfig, Author::Player1);
-	_allObjects.emplace_back(bullet);
+	const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};
 
-	const Direction startDirection = bullet->GetDirection();
+	const Direction startDirection{bullet->GetDirection()};
 
 	bullet->SetDirection(Direction::UP);
 
@@ -74,51 +74,46 @@ TEST_F(BulletTest, BulletSetDirection)
 
 TEST_F(BulletTest, BulletMoveInsideScreen)
 {
-	const ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::DOWN, _gameConfig, Author::Player1);
-	_allObjects.emplace_back(bullet);
+	const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};
 
 	{
 		//success bullet moves down test, try to move inside a screen bullet
 		bullet->SetDirection(Direction::DOWN);
-		const FPoint bulletStartPos = bullet->GetPos();
+		const FPoint bulletStartPos{bullet->GetPos()};
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-		const FPoint bulletEndPos = bullet->GetPos();
+		const FPoint bulletEndPos{bullet->GetPos()};
 		EXPECT_LT(bulletStartPos.y, bulletEndPos.y);
 		EXPECT_EQ(bulletStartPos.x, bulletEndPos.x);
 	}
 	{
 		//success bullet right test, try to move inside a screen bullet
 		bullet->SetDirection(Direction::RIGHT);
-		const FPoint bulletStartPos = bullet->GetPos();
+		const FPoint bulletStartPos{bullet->GetPos()};
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-		const FPoint bulletEndPos = bullet->GetPos();
+		const FPoint bulletEndPos{bullet->GetPos()};
 		EXPECT_LT(bulletStartPos.x, bulletEndPos.x);
 		EXPECT_EQ(bulletStartPos.y, bulletEndPos.y);
 	}
 
-	const auto windowWidth = static_cast<double>(_gameConfig.battlefieldSize.x);
-	const auto windowHeight = static_cast<double>(_gameConfig.battlefieldSize.y);
+	const auto windowWidth{static_cast<double>(_gameConfig.battlefieldSize.x)};
+	const auto windowHeight{static_cast<double>(_gameConfig.battlefieldSize.y)};
 
 	bullet->SetPos({.x = windowWidth - _calibre.size.x, .y = windowHeight - _calibre.size.y});
 	{
 		//success shot up test, try to create an inside screen bullet
 		bullet->SetDirection(Direction::UP);
-		const FPoint bulletStartPos = bullet->GetPos();
+		const FPoint bulletStartPos{bullet->GetPos()};
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-		const FPoint bulletEndPos = bullet->GetPos();
+		const FPoint bulletEndPos{bullet->GetPos()};
 		EXPECT_GT(bulletStartPos.y, bulletEndPos.y);
 		EXPECT_EQ(bulletStartPos.x, bulletEndPos.x);
 	}
 	{
 		//success move left test, try to move inside a screen bullet
 		bullet->SetDirection(Direction::LEFT);
-		const FPoint bulletStartPos = bullet->GetPos();
+		const FPoint bulletStartPos{bullet->GetPos()};
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-		const FPoint bulletEndPos = bullet->GetPos();
+		const FPoint bulletEndPos{bullet->GetPos()};
 		EXPECT_GT(bulletStartPos.x, bulletEndPos.x);
 		EXPECT_EQ(bulletStartPos.y, bulletEndPos.y);
 	}
@@ -126,28 +121,23 @@ TEST_F(BulletTest, BulletMoveInsideScreen)
 
 TEST_F(BulletTest, BulletMoveOutSideScreen)
 {
-	const ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::DOWN, _gameConfig, Author::Player1);
-	_allObjects.emplace_back(bullet);
+	const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};
 
-	const auto windowWidth = static_cast<double>(_gameConfig.battlefieldSize.x);
-	const auto windowHeight = static_cast<double>(_gameConfig.battlefieldSize.y);
+	const auto windowWidth{static_cast<double>(_gameConfig.battlefieldSize.x)};
+	const auto windowHeight{static_cast<double>(_gameConfig.battlefieldSize.y)};
 
 	bullet->SetPos({.x = windowWidth - _calibre.size.x, .y = windowHeight - _calibre.size.y});
 	{
 		//fail bullet move down test, try to move an outside screen bullet
 		bullet->SetDirection(Direction::DOWN);
-		const FPoint bulletStartPos = bullet->GetPos();
+		const FPoint bulletStartPos{bullet->GetPos()};
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 		EXPECT_EQ(bulletStartPos, bullet->GetPos());
 	}
 	{
 		//fail the bullet move right test, try to move an outside screen bullet
 		bullet->SetDirection(Direction::RIGHT);
-		const FPoint bulletStartPos = bullet->GetPos();
+		const FPoint bulletStartPos{bullet->GetPos()};
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 		EXPECT_EQ(bulletStartPos, bullet->GetPos());
 	}
@@ -156,14 +146,14 @@ TEST_F(BulletTest, BulletMoveOutSideScreen)
 	{
 		//fail bullet move up test, try to move an outside screen bullet
 		bullet->SetDirection(Direction::UP);
-		const FPoint bulletStartPos = bullet->GetPos();
+		const FPoint bulletStartPos{bullet->GetPos()};
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 		EXPECT_EQ(bulletStartPos, bullet->GetPos());
 	}
 	{
 		//fail the bullet move left test, try to move an outside screen bullet
 		bullet->SetDirection(Direction::LEFT);
-		const FPoint bulletStartPos = bullet->GetPos();
+		const FPoint bulletStartPos{bullet->GetPos()};
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 		EXPECT_EQ(bulletStartPos, bullet->GetPos());
 	}
@@ -171,18 +161,13 @@ TEST_F(BulletTest, BulletMoveOutSideScreen)
 
 TEST_F(BulletTest, BulletDamageBrickWhenMoveUp)
 {
-	const ObjRectangle rectBullet{.x = 0.0, .y = 7.0, .w = _calibre.size.x, .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::UP, _gameConfig, Author::Player1);
-	_allObjects.emplace_back(bullet);
+	CreateBullet({.x = 0.0, .y = 7.0}, Direction::UP, Author::Player1);
 
 	const ObjRectangle rect{.x = 0, .y = 0, .w = _gridSize, .h = _gridSize};
-	auto brickWall = std::make_shared<BrickWall>(rect, _events, _uuid, _gameConfig);
+	auto brickWall{std::make_shared<BrickWall>(rect, _events, _uuid, _gameConfig)};
 	_allObjects.emplace_back(brickWall);
 
-	const int brickWallHealth = brickWall->GetHealth();
+	const int brickWallHealth{brickWall->GetHealth()};
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -191,18 +176,13 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveUp)
 
 TEST_F(BulletTest, BulletDamageBrickWhenMoveLeft)
 {
-	const ObjRectangle rectBullet{.x = 7.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::LEFT, _gameConfig, Author::Player1);
-	_allObjects.emplace_back(bullet);
+	CreateBullet({.x = 7.0, .y = 0.0}, Direction::LEFT, Author::Player1);
 
 	const ObjRectangle rect{.x = 0, .y = 0, .w = _gridSize, .h = _gridSize};
-	auto brickWall = std::make_shared<BrickWall>(rect, _events, _uuid, _gameConfig);
+	auto brickWall{std::make_shared<BrickWall>(rect, _events, _uuid, _gameConfig)};
 	_allObjects.emplace_back(brickWall);
 
-	const int brickWallHealth = brickWall->GetHealth();
+	const int brickWallHealth{brickWall->GetHealth()};
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -211,18 +191,13 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveLeft)
 
 TEST_F(BulletTest, BulletDamageBrickWhenMoveDown)
 {
-	const ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::DOWN, _gameConfig, Author::Player1);
-	_allObjects.emplace_back(bullet);
+	CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
 
 	const ObjRectangle rect{.x = 0.0, .y = 6.0, .w = _gridSize, .h = _gridSize};
-	auto brickWall = std::make_shared<BrickWall>(rect, _events, _uuid, _gameConfig);
+	auto brickWall{std::make_shared<BrickWall>(rect, _events, _uuid, _gameConfig)};
 	_allObjects.emplace_back(brickWall);
 
-	const int brickWallHealth = brickWall->GetHealth();
+	const int brickWallHealth{brickWall->GetHealth()};
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -231,18 +206,13 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveDown)
 
 TEST_F(BulletTest, BulletDamageBrickWhenMoveRight)
 {
-	const ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::RIGHT, _gameConfig, Author::Player1);
-	_allObjects.emplace_back(bullet);
+	CreateBullet({.x = 0.0, .y = 0.0}, Direction::RIGHT, Author::Player1);
 
 	const ObjRectangle rect{.x = 7.0, .y = 0.0, .w = _gridSize, .h = _gridSize};
-	auto brickWall = std::make_shared<BrickWall>(rect, _events, _uuid, _gameConfig);
+	auto brickWall{std::make_shared<BrickWall>(rect, _events, _uuid, _gameConfig)};
 	_allObjects.emplace_back(brickWall);
 
-	const int brickWallHealth = brickWall->GetHealth();
+	const int brickWallHealth{brickWall->GetHealth()};
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -256,14 +226,14 @@ TEST_F(BulletTest, BulletBlowRadiusIsDirectionSymmetric)
 
 	auto farTileDamage = [this](const Direction dir)
 	{
-		const bool isHorizontal = dir == Direction::LEFT || dir == Direction::RIGHT;
-		const bool isMirrored = dir == Direction::LEFT || dir == Direction::UP;
-		const double bulletLength = isHorizontal ? _calibre.size.x : _calibre.size.y;
+		const bool isHorizontal{dir == Direction::LEFT || dir == Direction::RIGHT};
+		const bool isMirrored{dir == Direction::LEFT || dir == Direction::UP};
+		const double bulletLength{isHorizontal ? _calibre.size.x : _calibre.size.y};
 
 		// offset and length are measured along the shot axis, starting at the bullet's back edge
 		auto place = [&](const double offset, const double length)
 		{
-			const double along = isMirrored ? mirrorAxis - offset - length : offset;
+			const double along{isMirrored ? mirrorAxis - offset - length : offset};
 
 			return isHorizontal
 					   ? ObjRectangle{.x = along, .y = 0.0, .w = length, .h = tileSide}
@@ -271,25 +241,24 @@ TEST_F(BulletTest, BulletBlowRadiusIsDirectionSymmetric)
 		};
 
 		_allObjects.clear();
-		_allObjects.emplace_back(
-				TestUtils::CreateBullet(place(0.0, bulletLength), _bulletHealth, _uuid,
-										_allObjects, _events, _calibre, dir, _gameConfig, Author::Player1));
+		_allObjects.emplace_back(TestUtils::CreateBullet(place(0.0, bulletLength), _bulletHealth, _allObjects, _events,
+														 _calibre, dir, _gameConfig, Author::Player1));
 		_allObjects.emplace_back(
 				std::make_shared<BrickWall>(place(bulletLength + 1.0, tileSide), _events, _uuid, _gameConfig));
 
 		// just outside the radius measured from the bullet's leading edge, just inside it from the bullet's centre
-		auto farTile = std::make_shared<BrickWall>(
-				place(bulletLength + 1.0 + _calibre.damageRadius, tileSide), _events, _uuid, _gameConfig);
+		auto farTile{std::make_shared<BrickWall>(
+				place(bulletLength + 1.0 + _calibre.damageRadius, tileSide), _events, _uuid, _gameConfig)};
 		_allObjects.emplace_back(farTile);
 
-		const int healthBefore = farTile->GetHealth();
+		const int healthBefore{farTile->GetHealth()};
 
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 		return healthBefore - farTile->GetHealth();
 	};
 
-	const int damageShotRight = farTileDamage(Direction::RIGHT);
+	const int damageShotRight{farTileDamage(Direction::RIGHT)};
 
 	EXPECT_EQ(damageShotRight, farTileDamage(Direction::LEFT));
 	EXPECT_EQ(damageShotRight, farTileDamage(Direction::DOWN));
@@ -298,21 +267,15 @@ TEST_F(BulletTest, BulletBlowRadiusIsDirectionSymmetric)
 
 TEST_F(BulletTest, BulletDamageTank)
 {
-	const ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::DOWN, _gameConfig, Author::Player1);
-	_allObjects.emplace_back(bullet);
+	CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
 
-	const double gridSize = _gameConfig.gridOffset;
-	const double tankSize = gridSize * 3;// for better turns
-	constexpr unsigned short tankHealth = 1u;
-	const auto bulletPool = std::make_shared<BulletPool>(_events, _allObjects, _gameConfig);
+	const double gridSize{_gameConfig.gridOffset};
+	const double tankSize{gridSize * 3};// for better turns
+	constexpr unsigned short tankHealth{1u};
+	const auto bulletPool{std::make_shared<BulletPool>(_events, _allObjects, _gameConfig)};
 	const ObjRectangle rectEnemy{.x = 0, .y = _calibre.size.y, .w = tankSize, .h = tankSize};
-	std::shared_ptr<Tank> enemyBot =
-			TestUtils::CreateBot(
-					rectEnemy, tankHealth, _uuid, Author::Enemy1, _allObjects, _events, 1u, Direction::UP, bulletPool, _gameConfig);
+	const std::shared_ptr<Tank> enemyBot{TestUtils::CreateBot(rectEnemy, tankHealth, Author::Enemy1, _allObjects,
+															  _events, Direction::UP, bulletPool, _gameConfig)};
 	_allObjects.emplace_back(enemyBot);
 
 	EXPECT_EQ(enemyBot->GetHealth(), 1);
@@ -324,22 +287,11 @@ TEST_F(BulletTest, BulletDamageTank)
 
 TEST_F(BulletTest, BulletToBulletDamageEachOther)
 {
-	const ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::DOWN, _gameConfig, Author::Player1);
-	_allObjects.emplace_back(bullet);
+	const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};
+	const auto bullet2{CreateBullet({.x = 0, .y = _calibre.size.y + 1}, Direction::UP, Author::Player2)};
 
-	const ObjRectangle rectBullet2{.x = 0, .y = _calibre.size.y + 1, .w = _calibre.size.x, .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet2 =
-			TestUtils::CreateBullet(
-					rectBullet2, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::UP, _gameConfig, Author::Player2);
-	_allObjects.emplace_back(bullet2);
-
-	const int bulletHealth = bullet->GetHealth();
-	const int bullet2Health = bullet2->GetHealth();
+	const int bulletHealth{bullet->GetHealth()};
+	const int bullet2Health{bullet2->GetHealth()};
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -349,19 +301,14 @@ TEST_F(BulletTest, BulletToBulletDamageEachOther)
 
 TEST_F(BulletTest, BulletCantDamageSteelWall)
 {
-	const ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::DOWN, _gameConfig, Author::Player1);
-	_allObjects.emplace_back(bullet);
+	const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};
 
 	const ObjRectangle rect{.x = 0.0, .y = 6.0, .w = _gridSize, .h = _gridSize};
-	auto steelWall = std::make_shared<SteelWall>(rect, _events, _uuid, _gameConfig);
+	auto steelWall{std::make_shared<SteelWall>(rect, _events, _uuid, _gameConfig)};
 	_allObjects.emplace_back(steelWall);
 
-	const int bulletHealth = bullet->GetHealth();
-	const int steelWallHealth = steelWall->GetHealth();
+	const int bulletHealth{bullet->GetHealth()};
+	const int steelWallHealth{steelWall->GetHealth()};
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -371,19 +318,14 @@ TEST_F(BulletTest, BulletCantDamageSteelWall)
 
 TEST_F(BulletTest, BulletCantDamageWater)
 {
-	const ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::DOWN, _gameConfig, Author::Player1);
-	_allObjects.emplace_back(bullet);
+	const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};
 
 	const ObjRectangle rect{.x = 0.0, .y = 6.0, .w = _gridSize, .h = _gridSize};
-	auto waterTile = std::make_shared<WaterTile>(rect, _events, _uuid, _gameConfig);
+	auto waterTile{std::make_shared<WaterTile>(rect, _events, _uuid, _gameConfig)};
 	_allObjects.emplace_back(waterTile);
 
-	const int bulletHealth = bullet->GetHealth();
-	const int waterTileHealth = waterTile->GetHealth();
+	const int bulletHealth{bullet->GetHealth()};
+	const int waterTileHealth{waterTile->GetHealth()};
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -393,15 +335,10 @@ TEST_F(BulletTest, BulletCantDamageWater)
 
 TEST_F(BulletTest, BulletDamagefortressWall)
 {
-	const ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::DOWN, _gameConfig, Author::Player1);
-	_allObjects.emplace_back(bullet);
+	CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
 
 	constexpr ObjRectangle rect{.x = 0.0, .y = 6.0, .w = 36, .h = 36};
-	auto fortressWall = std::make_shared<FortressBrickWall>(rect, _events, _uuid, _gameConfig);
+	auto fortressWall{std::make_shared<FortressBrickWall>(rect, _events, _uuid, _gameConfig)};
 	_allObjects.emplace_back(fortressWall);
 
 	fortressWall->SetHealth(1);
@@ -414,15 +351,10 @@ TEST_F(BulletTest, BulletDamagefortressWall)
 
 TEST_F(BulletTest, BulletHaveSelfDamageWhenHit)
 {
-	const ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
-	std::shared_ptr<Bullet> bullet =
-			TestUtils::CreateBullet(
-					rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-					Direction::DOWN, _gameConfig, Author::Player1);
-	_allObjects.emplace_back(bullet);
+	const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};
 
 	constexpr ObjRectangle rect{.x = 0.0, .y = 6.0, .w = 36, .h = 36};
-	auto brickWall = std::make_shared<BrickWall>(rect, _events, _uuid, _gameConfig);
+	auto brickWall{std::make_shared<BrickWall>(rect, _events, _uuid, _gameConfig)};
 	_allObjects.emplace_back(brickWall);
 
 	bullet->SetHealth(1);

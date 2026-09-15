@@ -81,7 +81,7 @@ void FrameChannel::FinishDraining()
 		return;
 	}
 
-	const DrainHandler onDrained = std::move(_onDrained);
+	const DrainHandler onDrained{std::move(_onDrained)};
 	_onDrained = nullptr;
 	onDrained();
 }
@@ -111,7 +111,7 @@ void FrameChannel::CloseSocket()
 	}
 }
 
-void FrameChannel::ReportError()
+void FrameChannel::ReportError() const
 {
 	if (_onError)
 	{
@@ -139,7 +139,7 @@ void FrameChannel::ReadHeader()
 									return;
 								}
 
-								const std::uint32_t payloadLength = DecodeFrameHeader(_readHeader.data());
+								const std::uint32_t payloadLength{DecodeFrameHeader(_readHeader.data())};
 								if (payloadLength == 0u || payloadLength > kMaxFramePayloadSize)
 								{
 									Log::Info(_ownerName + ": bogus frame length "
@@ -234,7 +234,7 @@ void FrameChannel::TryStartWrite()
 //NOTE: pop before the write, not on completion - CloseForReconnect may clear the queue mid-flight
 void FrameChannel::WriteNextFrame()
 {
-	const auto frame = _writeQueue.front();
+	const auto frame{_writeQueue.front()};
 	_writeQueue.pop_front();
 
 	auto self(shared_from_this());

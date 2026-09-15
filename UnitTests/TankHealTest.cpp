@@ -8,7 +8,6 @@
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
 #include "geometry/ObjRectangle.h"
-#include "utils/UuidUtils.h"
 #include "gtest/gtest.h"
 #include <memory>
 #include <vector>
@@ -43,10 +42,8 @@ protected:
 //NOTE: a maxed tank returns early from the star handler, so the heal cannot ride the pickup event
 TEST_F(TankHealTest, AMaxedTankStillReportsTheHealth)
 {
-	const std::shared_ptr<Tank> enemy =
-			TestUtils::CreateBot(
-					_tankRect, _tankHealth, UuidUtils::GetRandomUuid(), Author::Enemy1, _allObjects,
-					_events, 4u, Direction::UP, _bulletPool, _gameConfig);
+	const std::shared_ptr<Tank> enemy{TestUtils::CreateBot(_tankRect, _tankHealth, Author::Enemy1, _allObjects, _events,
+														   Direction::UP, _bulletPool, _gameConfig, 4u)};
 
 	_events->EmitEvent(Key(Author::Enemy1), BonusStarPickupEvent{});
 
@@ -58,10 +55,8 @@ TEST_F(TankHealTest, AMaxedTankStillReportsTheHealth)
 
 TEST_F(TankHealTest, AnUpgradingTankReportsTheHealthToo)
 {
-	const std::shared_ptr<Tank> enemy =
-			TestUtils::CreateBot(
-					_tankRect, _tankHealth, UuidUtils::GetRandomUuid(), Author::Enemy2, _allObjects,
-					_events, 1u, Direction::UP, _bulletPool, _gameConfig);
+	const std::shared_ptr<Tank> enemy{TestUtils::CreateBot(_tankRect, _tankHealth, Author::Enemy2, _allObjects, _events,
+														   Direction::UP, _bulletPool, _gameConfig)};
 
 	_events->EmitEvent(Key(Author::Enemy2), BonusStarPickupEvent{});
 

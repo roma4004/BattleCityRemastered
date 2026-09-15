@@ -2,9 +2,9 @@
 
 #include "interfaces/IInputProvider.h"
 #include "utils/Timer.h"
+#include <chrono>
 #include <memory>
 #include <optional>
-#include <random>
 #include <vector>
 
 enum class Direction : char8_t;
@@ -19,7 +19,9 @@ class InputProviderForBot final : public IInputProvider
 	const std::vector<std::shared_ptr<BaseObj>>& _allObjects;
 	const GameConfig& _gameConfig;
 
-	std::uniform_int_distribution<> _distTurnRate;
+	//NOTE: milliseconds, not seconds - the roll lands in the unit of its bounds
+	static constexpr std::chrono::milliseconds kMinTurnDelay{std::chrono::seconds{1}};
+	static constexpr std::chrono::milliseconds kMaxTurnDelay{std::chrono::seconds{5}};
 	Timer _randomChangeDirTimer{};
 
 	//NOTE: the drivable pass, built at most once per HandleLineOfSight and shared by all four sides

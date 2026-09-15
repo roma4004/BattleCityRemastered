@@ -78,7 +78,7 @@ TEST_F(SimulationStepTest, JitterAroundTheStepStaysOneStepPerFrame)
 	//it just pays it in an empty frame and a double one
 	for (int frame{0}; frame < 60; ++frame)
 	{
-		const std::size_t before = _steps.size();
+		const std::size_t before{_steps.size()};
 		Frame(frame % 2 == 0 ? kStep - kJitter : kStep + kJitter);
 
 		EXPECT_EQ(1u, _steps.size() - before) << "frame " << frame << " did not advance exactly once";

@@ -35,10 +35,9 @@ protected:
 		_allObjects.reserve(4);
 
 		const ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
-		std::shared_ptr<Bullet> bullet =
-				TestUtils::CreateBullet(
-						rectBullet, _bulletHealth, _uuid, _allObjects, _events, _calibre,
-						Direction::DOWN, _gameConfig, Author::Player1);
+		const std::shared_ptr<Bullet> bullet{TestUtils::CreateBullet(rectBullet, _bulletHealth, _allObjects, _events,
+																	 _calibre, Direction::DOWN, _gameConfig,
+																	 Author::Player1)};
 		_allObjects.emplace_back(bullet);
 	}
 
@@ -47,10 +46,10 @@ protected:
 
 TEST_F(BulletTestAdvanced, BulletTier2CanDestroySteelWall)
 {
-	if (const Bullet* bullet = dynamic_cast<Bullet*>(_allObjects.back().get()))
+	if (const Bullet* bullet{dynamic_cast<Bullet*>(_allObjects.back().get())})
 	{
-		ObjRectangle wallRect{.x = 0.0, .y = _calibre.size.y + 1, .w = _gridSize, .h = _gridSize};
-		auto steelWall = std::make_shared<SteelWall>(wallRect, _events, _uuid, _gameConfig);
+		const ObjRectangle wallRect{.x = 0.0, .y = _calibre.size.y + 1, .w = _gridSize, .h = _gridSize};
+		auto steelWall{std::make_shared<SteelWall>(wallRect, _events, _uuid, _gameConfig)};
 		_allObjects.emplace_back(steelWall);
 
 		steelWall->SetHealth(1);
@@ -71,15 +70,15 @@ TEST_F(BulletTestAdvanced, BulletTier2CanDestroySteelWall)
 // the wall behind the one that was hit stays out of reach at 30 and at 144 frames per second alike
 TEST_F(BulletTestAdvanced, BlastSparesTheWallBehindAtThirtyFps)
 {
-	auto nearWall = std::make_shared<BrickWall>(ObjRectangle{.x = 0.0, .y = 20.0, .w = _gridSize, .h = 4.0},
-												_events, _uuid, _gameConfig);
-	auto farWall = std::make_shared<BrickWall>(ObjRectangle{.x = 0.0, .y = 34.0, .w = _gridSize, .h = 4.0},
-											   _events, _uuid, _gameConfig);
+	auto nearWall{std::make_shared<BrickWall>(ObjRectangle{.x = 0.0, .y = 20.0, .w = _gridSize, .h = 4.0},
+											  _events, _uuid, _gameConfig)};
+	auto farWall{std::make_shared<BrickWall>(ObjRectangle{.x = 0.0, .y = 34.0, .w = _gridSize, .h = 4.0},
+											 _events, _uuid, _gameConfig)};
 	_allObjects.emplace_back(nearWall);
 	_allObjects.emplace_back(farWall);
 
-	const int nearWallHealth = nearWall->GetHealth();
-	const int farWallHealth = farWall->GetHealth();
+	const int nearWallHealth{nearWall->GetHealth()};
+	const int farWallHealth{farWall->GetHealth()};
 
 	for (int frame = 0; frame < 20 && nearWall->GetHealth() == nearWallHealth; ++frame)
 	{
@@ -92,15 +91,15 @@ TEST_F(BulletTestAdvanced, BlastSparesTheWallBehindAtThirtyFps)
 
 TEST_F(BulletTestAdvanced, BlastSparesTheWallBehindAtHundredFortyFourFps)
 {
-	auto nearWall = std::make_shared<BrickWall>(ObjRectangle{.x = 0.0, .y = 20.0, .w = _gridSize, .h = 4.0},
-												_events, _uuid, _gameConfig);
-	auto farWall = std::make_shared<BrickWall>(ObjRectangle{.x = 0.0, .y = 34.0, .w = _gridSize, .h = 4.0},
-											   _events, _uuid, _gameConfig);
+	auto nearWall{std::make_shared<BrickWall>(ObjRectangle{.x = 0.0, .y = 20.0, .w = _gridSize, .h = 4.0},
+											  _events, _uuid, _gameConfig)};
+	auto farWall{std::make_shared<BrickWall>(ObjRectangle{.x = 0.0, .y = 34.0, .w = _gridSize, .h = 4.0},
+											 _events, _uuid, _gameConfig)};
 	_allObjects.emplace_back(nearWall);
 	_allObjects.emplace_back(farWall);
 
-	const int nearWallHealth = nearWall->GetHealth();
-	const int farWallHealth = farWall->GetHealth();
+	const int nearWallHealth{nearWall->GetHealth()};
+	const int farWallHealth{farWall->GetHealth()};
 
 	for (int frame = 0; frame < 40 && nearWall->GetHealth() == nearWallHealth; ++frame)
 	{
@@ -115,14 +114,14 @@ TEST_F(BulletTestAdvanced, BlastSparesTheWallBehindAtHundredFortyFourFps)
 // solid - and only from tier three, the same rule that lets a shot through steel
 TEST_F(BulletTestAdvanced, BushBurnsInABlastFromTierThree)
 {
-	auto wall = std::make_shared<BrickWall>(ObjRectangle{.x = 0.0, .y = 20.0, .w = _gridSize, .h = 4.0},
-											_events, _uuid, _gameConfig);
-	auto bush = std::make_shared<BushTile>(ObjRectangle{.x = 0.0, .y = 26.0, .w = _gridSize, .h = _gridSize},
-										   _events, _uuid, _gameConfig);
+	auto wall{std::make_shared<BrickWall>(ObjRectangle{.x = 0.0, .y = 20.0, .w = _gridSize, .h = 4.0},
+										  _events, _uuid, _gameConfig)};
+	auto bush{std::make_shared<BushTile>(ObjRectangle{.x = 0.0, .y = 26.0, .w = _gridSize, .h = _gridSize},
+										 _events, _uuid, _gameConfig)};
 	_allObjects.emplace_back(wall);
 	_allObjects.emplace_back(bush);
 
-	const int wallHealth = wall->GetHealth();
+	const int wallHealth{wall->GetHealth()};
 	for (int frame = 0; frame < 20 && wall->GetHealth() == wallHealth; ++frame)
 	{
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
@@ -138,17 +137,17 @@ TEST_F(BulletTestAdvanced, BushSurvivesABlastBelowTierThree)
 	_calibre.tier = 2u;
 
 	const ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
-	_allObjects.emplace_back(TestUtils::CreateBullet(rectBullet, _bulletHealth, _uuid, _allObjects,
-													 _events, _calibre, Direction::DOWN, _gameConfig, Author::Player1));
+	_allObjects.emplace_back(TestUtils::CreateBullet(rectBullet, _bulletHealth, _allObjects, _events, _calibre,
+													 Direction::DOWN, _gameConfig, Author::Player1));
 
-	auto wall = std::make_shared<BrickWall>(ObjRectangle{.x = 0.0, .y = 20.0, .w = _gridSize, .h = 4.0},
-											_events, _uuid, _gameConfig);
-	auto bush = std::make_shared<BushTile>(ObjRectangle{.x = 0.0, .y = 26.0, .w = _gridSize, .h = _gridSize},
-										   _events, _uuid, _gameConfig);
+	auto wall{std::make_shared<BrickWall>(ObjRectangle{.x = 0.0, .y = 20.0, .w = _gridSize, .h = 4.0},
+										  _events, _uuid, _gameConfig)};
+	auto bush{std::make_shared<BushTile>(ObjRectangle{.x = 0.0, .y = 26.0, .w = _gridSize, .h = _gridSize},
+										 _events, _uuid, _gameConfig)};
 	_allObjects.emplace_back(wall);
 	_allObjects.emplace_back(bush);
 
-	const int wallHealth = wall->GetHealth();
+	const int wallHealth{wall->GetHealth()};
 	for (int frame = 0; frame < 20 && wall->GetHealth() == wallHealth; ++frame)
 	{
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
@@ -161,8 +160,8 @@ TEST_F(BulletTestAdvanced, BushSurvivesABlastBelowTierThree)
 // Nothing solid behind it, so the shot flies on and the bush is never in a blast at all
 TEST_F(BulletTestAdvanced, TierThreeFliesThroughABushWithoutBurningIt)
 {
-	auto bush = std::make_shared<BushTile>(ObjRectangle{.x = 0.0, .y = 20.0, .w = _gridSize, .h = _gridSize},
-										   _events, _uuid, _gameConfig);
+	auto bush{std::make_shared<BushTile>(ObjRectangle{.x = 0.0, .y = 20.0, .w = _gridSize, .h = _gridSize},
+										 _events, _uuid, _gameConfig)};
 	_allObjects.emplace_back(bush);
 
 	for (int frame = 0; frame < 10; ++frame)

@@ -10,7 +10,7 @@
 #include "utils/UuidUtils.h"
 
 Pawn::Pawn(PawnProperty pawnProperty, const GameConfig& gameConfig, const CollisionTags collision)
-	: BaseObj{std::move(pawnProperty.baseObjProperty), collision}
+	: BaseObj{pawnProperty.baseObjProperty, collision}
 	, _speed{pawnProperty.speed}
 	, _tier{pawnProperty.tier}
 	, _allObjects{pawnProperty.allObjects}

@@ -27,7 +27,7 @@ void TextCache::Clear()
 
 size_t TextCache::KeyHash::operator()(const Key& key) const noexcept
 {
-	size_t hash = std::hash<std::string>{}(key.text);
+	size_t hash{std::hash<std::string>{}(key.text)};
 	hash ^= static_cast<size_t>(key.basePointSize) + 0x9e3779b9u + (hash << 6u) + (hash >> 2u);
 
 	return hash;
@@ -45,9 +45,9 @@ TTF_TextEngine* TextCache::Engine()
 
 TTF_Font* TextCache::FontForScale(const int basePointSize, const float scale)
 {
-	const int pixelSize = static_cast<int>(std::lround(static_cast<float>(basePointSize) * scale));
+	const auto pixelSize{static_cast<int>(std::lround(static_cast<float>(basePointSize) * scale))};
 
-	auto& scaledFont = _fonts[pixelSize];
+	auto& scaledFont{_fonts[pixelSize]};
 	if (!scaledFont)
 	{
 		scaledFont = _sdlConfig.OpenFont(pixelSize);
@@ -91,7 +91,7 @@ const TextCache::CachedText* TextCache::Acquire(const std::string& text, const S
 	}
 
 	const Key key{.text = text, .basePointSize = basePointSize};
-	if (const auto it = _entries.find(key); it != _entries.end())
+	if (const auto it{_entries.find(key)}; it != _entries.end())
 	{
 		TTF_SetTextColor(it->second.text.get(), color.r, color.g, color.b, color.a);
 
@@ -105,7 +105,7 @@ const TextCache::CachedText* TextCache::Acquire(const std::string& text, const S
 		_scale = scale;
 	}
 
-	TTF_TextEngine* const engine = Engine();
+	TTF_TextEngine* const engine{Engine()};
 	if (engine == nullptr)
 	{
 		return nullptr;

@@ -58,7 +58,7 @@ void BonusManager::ExpireBonuses()
 {
 	for (const auto& [bonus, lifeTime]: _spawnedBonuses)
 	{
-		if (const std::shared_ptr<Bonus> alive = bonus.lock();
+		if (const std::shared_ptr<Bonus> alive{bonus.lock()};
 			alive && lifeTime.IsCooldownFinish())
 		{
 			alive->Expire();
@@ -67,7 +67,7 @@ void BonusManager::ExpireBonuses()
 
 	std::erase_if(_spawnedBonuses, [](const SpawnedBonus& spawned)
 	{
-		const std::shared_ptr<Bonus> bonus = spawned.bonus.lock();
+		const std::shared_ptr<Bonus> bonus{spawned.bonus.lock()};
 
 		return bonus == nullptr || !bonus->GetIsAlive();
 	});
@@ -109,7 +109,7 @@ bool BonusManager::IsEffectActive(const BonusType type, const EffectTarget& targ
 
 void BonusManager::StartEffect(const BonusType type, const EffectTarget target, const milliseconds duration)
 {
-	if (const auto it = FindEffect(type, target);
+	if (const auto it{FindEffect(type, target)};
 		it != _activeEffects.end())
 	{
 		//NOTE: picking the same bonus up again buys more of the same effect, it does not restart it
@@ -124,7 +124,7 @@ void BonusManager::StartEffect(const BonusType type, const EffectTarget target, 
 
 void BonusManager::FinishEffect(const BonusType type, const EffectTarget& target)
 {
-	const auto it = FindEffect(type, target);
+	const auto it{FindEffect(type, target)};
 	if (it == _activeEffects.end())
 	{
 		return;
@@ -188,7 +188,7 @@ void BonusManager::ApplyBonusEffectsOnSpawnTo(const BonusReApplyEvent& event)
 		return;
 	}
 
-	const bool isFrozen = IsEffectActive(BonusType::Timer, FactionOf(event.author));
+	const bool isFrozen{IsEffectActive(BonusType::Timer, FactionOf(event.author))};
 	_events->EmitEvent(Key(event.uuid), BonusTimerReApplyOnSpawnEvent{.isEnabled = isFrozen});
 
 	StartEffect(BonusType::Helmet, event.author, kRespawnHelmetDuration);

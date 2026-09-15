@@ -16,6 +16,7 @@
 #include "entities/obstacles/WaterTile.h"
 #include "entities/pawns/Tank.h"
 #include "enums/Direction.h"
+#include "geometry/Point.h"
 #include "gtest/gtest.h"
 #include <memory>
 
@@ -58,69 +59,60 @@ protected:
 	}
 
 	void TearDown() override {}
+
+	std::shared_ptr<Tank> CreateBot(const FPoint pos, const Author author, const Direction dir,
+									const unsigned short tier = 1u)
+	{
+		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _tankSize, .h = _tankSize};
+		auto bot{TestUtils::CreateBot(rect, _tankHealth, author, _allObjects, _events, dir, _bulletPool, _gameConfig,
+									  tier)};
+		_allObjects.emplace_back(bot);
+
+		return bot;
+	}
 };
 
 TEST_F(CoopBotTest, CoopNoChangeDirIfBonusOutsideLineOfSight)
 {
-	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> coopBot =
-			TestUtils::CreateBot(
-					coopBotRect, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(coopBot);
+	const auto coopBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN)};
 
 	// Spawn a bonus diagonally, out of the bot's direct line of sight
 	_bonusSpawner->SpawnRandomBonus({.x = _tankSize * 2.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize});
 
-	const Direction startDirCoop = coopBot->GetDirection();
+	const Direction startDirCoop{coopBot->GetDirection()};
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	const Direction endDirCoop = coopBot->GetDirection();
+	const Direction endDirCoop{coopBot->GetDirection()};
 
 	EXPECT_EQ(startDirCoop, endDirCoop);
 }
 
 TEST_F(CoopBotTest, CoopShootToEnemy)
 {
-	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> coopBot =
-			TestUtils::CreateBot(
-					coopBotRect, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(coopBot);
+	CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
 
 	// Spawn Enemy in line of sight
-	const ObjRectangle rectEnemy{.x = 0.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> enemyBot =
-			TestUtils::CreateBot(
-					rectEnemy, _tankHealth, _uuid, Author::Enemy1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(enemyBot);
+	CreateBot({.x = 0.0, .y = _tankSize * 3.0}, Author::Enemy1, Direction::UP);
 
-	const size_t sizeBefore = _allObjects.size();
+	const size_t sizeBefore{_allObjects.size()};
 	EXPECT_EQ(sizeBefore, 2u);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	const size_t sizeAfter = _allObjects.size();
+	const size_t sizeAfter{_allObjects.size()};
 	EXPECT_LT(sizeBefore, sizeAfter);// Bullet should be spawned
 	EXPECT_EQ(sizeAfter, 4u);
 }
 
 TEST_F(CoopBotTest, CoopNoShootToCoop)
 {
-	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> coopBot =
-			TestUtils::CreateBot(
-					coopBotRect, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(coopBot);
+	const auto coopBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN)};
 
 	// Spawn another coopBot in line of sight first one
-	const ObjRectangle coopBotRect2{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> coopBot2 =
-			TestUtils::CreateBot(
-					coopBotRect2, _tankHealth, _uuid, Author::Player2, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(coopBot2);
+	CreateBot({.x = 0.0, .y = _tankSize * 2.0}, Author::Player2, Direction::UP);
 
-	const size_t sizeBefore = _allObjects.size();
+	const size_t sizeBefore{_allObjects.size()};
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -129,20 +121,14 @@ TEST_F(CoopBotTest, CoopNoShootToCoop)
 
 TEST_F(CoopBotTest, CoopNoShootToPlayer1)
 {
-	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> coopBot =
-			TestUtils::CreateBot(
-					coopBotRect, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(coopBot);
+	CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
 
 	// Spawn Player in line of sight Coop
 	const ObjRectangle rectPlayer{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player);
+	_allObjects.emplace_back(TestUtils::CreatePlayer(rectPlayer, _tankHealth, Author::Player1, _allObjects, _events,
+													 Direction::UP, _bulletPool, _gameConfig));
 
-	const size_t sizeBefore = _allObjects.size();
+	const size_t sizeBefore{_allObjects.size()};
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -151,16 +137,12 @@ TEST_F(CoopBotTest, CoopNoShootToPlayer1)
 
 TEST_F(CoopBotTest, CoopShootToBrick)
 {
-	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> coopBot =
-			TestUtils::CreateBot(
-					coopBotRect, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(coopBot);
+	CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
 
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
 	_allObjects.emplace_back(std::make_shared<BrickWall>(rect, _events, _uuid, _gameConfig));
 
-	const size_t sizeBefore = _allObjects.size();
+	const size_t sizeBefore{_allObjects.size()};
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -169,16 +151,12 @@ TEST_F(CoopBotTest, CoopShootToBrick)
 
 TEST_F(CoopBotTest, CoopTooCloseToShootTheBrick)
 {
-	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> coopBot =
-			TestUtils::CreateBot(
-					coopBotRect, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(coopBot);
+	CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
 
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize + 18.0, .w = _tankSize, .h = _tankSize};
 	_allObjects.emplace_back(std::make_shared<BrickWall>(rect, _events, _uuid, _gameConfig));
 
-	const size_t sizeBefore = _allObjects.size();
+	const size_t sizeBefore{_allObjects.size()};
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -187,16 +165,12 @@ TEST_F(CoopBotTest, CoopTooCloseToShootTheBrick)
 
 TEST_F(CoopBotTest, CoopShootToSteel)
 {
-	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> coopBot =
-			TestUtils::CreateBot(
-					coopBotRect, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 3u, Direction::DOWN, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(coopBot);
+	CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN, 3u);
 
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
 	_allObjects.emplace_back(std::make_shared<SteelWall>(rect, _events, _uuid, _gameConfig));
 
-	const size_t sizeBefore = _allObjects.size();
+	const size_t sizeBefore{_allObjects.size()};
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -205,16 +179,12 @@ TEST_F(CoopBotTest, CoopShootToSteel)
 
 TEST_F(CoopBotTest, CoopNoShootToSteelIfTierTooLow)
 {
-	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> coopBot =
-			TestUtils::CreateBot(
-					coopBotRect, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(coopBot);
+	CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
 
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
 	_allObjects.emplace_back(std::make_shared<SteelWall>(rect, _events, _uuid, _gameConfig));
 
-	const size_t sizeBefore = _allObjects.size();
+	const size_t sizeBefore{_allObjects.size()};
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -223,16 +193,12 @@ TEST_F(CoopBotTest, CoopNoShootToSteelIfTierTooLow)
 
 TEST_F(CoopBotTest, CoopNoShootToEagle)
 {
-	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> coopBot =
-			TestUtils::CreateBot(
-					coopBotRect, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(coopBot);
+	CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
 
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
 	_allObjects.emplace_back(std::make_shared<EagleTile>(rect, _events, _uuid, _gameConfig));
 
-	const size_t sizeBefore = _allObjects.size();
+	const size_t sizeBefore{_allObjects.size()};
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -241,16 +207,12 @@ TEST_F(CoopBotTest, CoopNoShootToEagle)
 
 TEST_F(CoopBotTest, CoopNoShootToFortress)
 {
-	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> coopBot =
-			TestUtils::CreateBot(
-					coopBotRect, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(coopBot);
+	CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
 
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
 	_allObjects.emplace_back(std::make_shared<FortressBrickWall>(rect, _events, _uuid, _gameConfig));
 
-	const size_t sizeBefore = _allObjects.size();
+	const size_t sizeBefore{_allObjects.size()};
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -259,16 +221,12 @@ TEST_F(CoopBotTest, CoopNoShootToFortress)
 
 TEST_F(CoopBotTest, CoopNoShootToWater)
 {
-	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> coopBot =
-			TestUtils::CreateBot(
-					coopBotRect, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(coopBot);
+	CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
 
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
 	_allObjects.emplace_back(std::make_shared<WaterTile>(rect, _events, _uuid, _gameConfig));
 
-	const size_t sizeBefore = _allObjects.size();
+	const size_t sizeBefore{_allObjects.size()};
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -277,16 +235,12 @@ TEST_F(CoopBotTest, CoopNoShootToWater)
 
 TEST_F(CoopBotTest, CoopNoShootToBush)
 {
-	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> coopBot =
-			TestUtils::CreateBot(
-					coopBotRect, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(coopBot);
+	CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
 
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
 	_allObjects.emplace_back(std::make_shared<BushTile>(rect, _events, _uuid, _gameConfig));
 
-	const size_t sizeBefore = _allObjects.size();
+	const size_t sizeBefore{_allObjects.size()};
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -295,16 +249,12 @@ TEST_F(CoopBotTest, CoopNoShootToBush)
 
 TEST_F(CoopBotTest, CoopNoShootToIce)
 {
-	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> coopBot =
-			TestUtils::CreateBot(
-					coopBotRect, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(coopBot);
+	CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
 
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
 	_allObjects.emplace_back(std::make_shared<IceTile>(rect, _events, _uuid, _gameConfig));
 
-	const size_t sizeBefore = _allObjects.size();
+	const size_t sizeBefore{_allObjects.size()};
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 

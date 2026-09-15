@@ -25,7 +25,7 @@ std::expected<LaunchOptions, ArgError> ParseRaw(const std::initializer_list<cons
 //NOTE: a rejection here is a bug in the test's own arguments, not a case under test
 LaunchOptions Parse(const std::initializer_list<const char*> args)
 {
-	const auto options = ParseRaw(args);
+	const auto options{ParseRaw(args)};
 	EXPECT_TRUE(options.has_value()) << (options ? "" : options.error().reason);
 
 	return options.value_or(LaunchOptions{});
@@ -33,7 +33,7 @@ LaunchOptions Parse(const std::initializer_list<const char*> args)
 
 std::optional<ArgError> ParseError(const std::initializer_list<const char*> args)
 {
-	const auto options = ParseRaw(args);
+	const auto options{ParseRaw(args)};
 	if (options)
 	{
 		return std::nullopt;
@@ -62,7 +62,7 @@ protected:
 //NOTE: plain launch must stay untouched - every option here is a deliberate override, not a default
 TEST_F(CommandLineParserTest, NoArgumentsGivesDemoPhase)
 {
-	const auto options = Parse({});
+	const auto options{Parse({})};
 
 	EXPECT_TRUE(options.isDemo);
 	EXPECT_EQ(options.gameMode, GameMode::CoopWithBot);
@@ -84,7 +84,7 @@ TEST_F(CommandLineParserTest, GameModeAcceptsBareAndDashedForms)
 //NOTE: guards the loop over argv - an earlier parser looked at argv[1] only and would drop the second flag
 TEST_F(CommandLineParserTest, SkipIntroCombinesWithGameMode)
 {
-	const auto options = Parse({"client", "skipintro"});
+	const auto options{Parse({"client", "skipintro"})};
 
 	EXPECT_EQ(options.gameMode, GameMode::PlayAsClient);
 	EXPECT_TRUE(options.skipIntroMusic);
@@ -93,7 +93,7 @@ TEST_F(CommandLineParserTest, SkipIntroCombinesWithGameMode)
 //NOTE: the happy path for key=value, both keys at once
 TEST_F(CommandLineParserTest, WindowPosAndSizeAreParsed)
 {
-	const auto options = Parse({"pos=10,20", "size=1024,768"});
+	const auto options{Parse({"pos=10,20", "size=1024,768"})};
 
 	ASSERT_TRUE(options.windowPos.has_value());
 	ASSERT_TRUE(options.windowSize.has_value());
@@ -105,15 +105,15 @@ TEST_F(CommandLineParserTest, WindowPosAndSizeAreParsed)
 //and the one left out keeps its ini value
 TEST_F(CommandLineParserTest, EachWindowOptionIsIndependent)
 {
-	const auto sizeOnly = Parse({"size=1024,768"});
+	const auto sizeOnly{Parse({"size=1024,768"})};
 	EXPECT_TRUE(sizeOnly.windowSize.has_value());
 	EXPECT_FALSE(sizeOnly.windowPos.has_value());
 
-	const auto posOnly = Parse({"pos=10,20"});
+	const auto posOnly{Parse({"pos=10,20"})};
 	EXPECT_TRUE(posOnly.windowPos.has_value());
 	EXPECT_FALSE(posOnly.windowSize.has_value());
 
-	const UPoint iniSize = _windowConfig.size;
+	const UPoint iniSize{_windowConfig.size};
 	_windowConfig.Apply(posOnly);
 
 	EXPECT_EQ(_windowConfig.pos, (UPoint{.x = 10u, .y = 20u}));
@@ -157,8 +157,8 @@ TEST_F(CommandLineParserTest, ApplyOverridesConfigAndPinsPosition)
 //NOTE: the other half of Apply - an empty optional must leave the ini values in place, not overwrite them with defaults
 TEST_F(CommandLineParserTest, ApplyLeavesConfigAloneWithoutArguments)
 {
-	const UPoint iniPos = _windowConfig.pos;
-	const UPoint iniSize = _windowConfig.size;
+	const UPoint iniPos{_windowConfig.pos};
+	const UPoint iniSize{_windowConfig.size};
 
 	GameConfig gameConfig{};
 	_windowConfig.Apply(Parse({}));

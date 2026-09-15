@@ -46,7 +46,7 @@ private:
 	void CloseSocket();
 	void TryStartWrite();
 	void WriteNextFrame();
-	void ReportError();
+	void ReportError() const;
 	[[nodiscard]] bool IsDrained() const { return _writeQueue.empty() && !_writeInProgress; }
 	void FinishDraining();
 

@@ -19,7 +19,7 @@ constexpr auto kServerExeName{L"BattleCityServer.exe"};
 [[nodiscard]] std::filesystem::path ServerExePath()
 {
 	std::wstring self(MAX_PATH, L'\0');
-	const DWORD written = GetModuleFileNameW(nullptr, self.data(), static_cast<DWORD>(self.size()));
+	const DWORD written{GetModuleFileNameW(nullptr, self.data(), static_cast<DWORD>(self.size()))};
 	if (written == 0u || written == self.size())
 	{
 		return {};
@@ -68,7 +68,7 @@ bool ServerProcess::Start()
 		return true;
 	}
 
-	const std::filesystem::path exe = ServerExePath();
+	const std::filesystem::path exe{ServerExePath()};
 	std::error_code ec;
 	if (exe.empty() || !std::filesystem::exists(exe, ec))
 	{
@@ -77,7 +77,7 @@ bool ServerProcess::Start()
 		return false;
 	}
 
-	auto process = std::make_unique<Process>();
+	auto process{std::make_unique<Process>()};
 
 	process->job = CreateJobObjectW(nullptr, nullptr);
 	if (process->job == nullptr)
@@ -98,7 +98,7 @@ bool ServerProcess::Start()
 	}
 
 	//NOTE: CreateProcess writes into this buffer, so it cannot be a literal
-	std::wstring commandLine = L"\"" + exe.wstring() + L"\"";
+	std::wstring commandLine{L"\"" + exe.wstring() + L"\""};
 
 	STARTUPINFOW startup{};
 	startup.cb = sizeof(startup);

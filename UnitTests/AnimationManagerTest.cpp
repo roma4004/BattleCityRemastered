@@ -117,8 +117,8 @@ protected:
 TEST_F(AnimationManagerTest, BulletExplodesWhereItHit)
 {
 	const ObjRectangle bulletRect{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
-	auto bullet = TestUtils::CreateBullet(bulletRect, _health, _uuid, _allObjects, _events,
-										  _calibre, Direction::DOWN, _gameConfig, Author::Player1);
+	auto bullet{TestUtils::CreateBullet(bulletRect, _health, _allObjects, _events, _calibre, Direction::DOWN,
+										_gameConfig, Author::Player1)};
 	_allObjects.emplace_back(bullet);
 	_allObjects.emplace_back(std::make_shared<BrickWall>(ObjRectangle{.x = 0.0, .y = 8.0, .w = 12.0, .h = 12.0},
 														 _events, _uuid, _gameConfig));
@@ -135,8 +135,8 @@ TEST_F(AnimationManagerTest, ClientBulletExplodesOnDespawn)
 	_gameConfig.gameMode = GameMode::PlayAsClient;
 
 	const ObjRectangle bulletRect{.x = 20.0, .y = 30.0, .w = _calibre.size.x, .h = _calibre.size.y};
-	auto bullet = TestUtils::CreateBullet(bulletRect, _health, _uuid, _allObjects, _events,
-										  _calibre, Direction::DOWN, _gameConfig, Author::Player1);
+	auto bullet{TestUtils::CreateBullet(bulletRect, _health, _allObjects, _events, _calibre, Direction::DOWN,
+										_gameConfig, Author::Player1)};
 	_allObjects.emplace_back(bullet);
 
 	_events->EmitEvent(Key(bullet->GetUuid()), DespawnedEvent{.uuid = bullet->GetUuid()});
@@ -149,8 +149,8 @@ TEST_F(AnimationManagerTest, ClientBulletExplodesOnDespawn)
 TEST_F(AnimationManagerTest, TankExplodesWhereItDied)
 {
 	constexpr ObjRectangle tankRect{.x = 40.0, .y = 50.0, .w = 12.0, .h = 12.0};
-	auto tank = TestUtils::CreatePlayer(tankRect, _health, _uuid, Author::Player1, _allObjects,
-										_events, 1u, Direction::UP, _bulletPool, _gameConfig);
+	const auto tank{TestUtils::CreatePlayer(tankRect, _health, Author::Player1, _allObjects, _events, Direction::UP,
+											_bulletPool, _gameConfig)};
 
 	tank->TakeDamage(static_cast<unsigned int>(tank->GetHealth()), Author::Enemy1);
 
@@ -163,9 +163,9 @@ TEST_F(AnimationManagerTest, TankExplodesWhereItDied)
 TEST_F(AnimationManagerTest, ALiveTankTakenOffTheFieldExplodesNothing)
 {
 	{
-		auto tank = TestUtils::CreatePlayer(ObjRectangle{.x = 0.0, .y = 0.0, .w = 12.0, .h = 12.0}, _health, _uuid,
-											Author::Player1, _allObjects, _events, 1u,
-											Direction::UP, _bulletPool, _gameConfig);
+		auto tank{TestUtils::CreatePlayer(ObjRectangle{.x = 0.0, .y = 0.0, .w = 12.0, .h = 12.0}, _health,
+										  Author::Player1, _allObjects, _events, Direction::UP, _bulletPool,
+										  _gameConfig)};
 	}
 
 	EXPECT_FALSE(_tankExplosion.has_value());
@@ -195,9 +195,8 @@ TEST_F(AnimationManagerTest, WaterTileAsksForItsFlowWhenBuilt)
 
 TEST_F(AnimationManagerTest, HelmetPickupTurnsTheShieldOnAndOff)
 {
-	auto tank = TestUtils::CreatePlayer(ObjRectangle{.x = 0.0, .y = 0.0, .w = 12.0, .h = 12.0}, _health, _uuid,
-										Author::Player1, _allObjects, _events, 1u,
-										Direction::UP, _bulletPool, _gameConfig);
+	auto tank{TestUtils::CreatePlayer(ObjRectangle{.x = 0.0, .y = 0.0, .w = 12.0, .h = 12.0}, _health, Author::Player1,
+									  _allObjects, _events, Direction::UP, _bulletPool, _gameConfig)};
 
 	_events->EmitEvent(Key(Author::Player1), BonusHelmetStatusChangeEvent{.isActive = true});
 
@@ -217,7 +216,7 @@ TEST_F(AnimationManagerTest, FrameAdvancesWhileRunning)
 	_events->EmitEvent(AnimationCreateWaterEvent{.rect = _rect});
 	_events->EmitEvent(DrawEvent{});
 	ASSERT_TRUE(_frame.has_value());
-	const int startFrame = *_frame;
+	const int startFrame{*_frame};
 
 	RunTicks(_ticksPerFrame);
 
@@ -231,7 +230,7 @@ TEST_F(AnimationManagerTest, FrameStandsStillWhilePaused)
 	_events->EmitEvent(AnimationCreateWaterEvent{.rect = _rect});
 	_events->EmitEvent(DrawEvent{});
 	ASSERT_TRUE(_frame.has_value());
-	const int startFrame = *_frame;
+	const int startFrame{*_frame};
 
 	_events->EmitEvent(PauseStatusEvent{.isPaused = true});
 
@@ -247,7 +246,7 @@ TEST_F(AnimationManagerTest, FrameResumesAfterUnpause)
 	_events->EmitEvent(AnimationCreateWaterEvent{.rect = _rect});
 	_events->EmitEvent(DrawEvent{});
 	ASSERT_TRUE(_frame.has_value());
-	const int startFrame = *_frame;
+	const int startFrame{*_frame};
 
 	_events->EmitEvent(PauseStatusEvent{.isPaused = true});
 	RunTicks(1);
@@ -311,14 +310,14 @@ TEST_F(AnimationManagerTest, WaterStaysInTheMainDrawPhase)
 TEST_F(AnimationManagerTest, WaterIsPaintedBeforeAWallOfTheSamePhase)
 {
 	std::vector<std::string_view> painted{};
-	const EventSubscription animationSub = _events->AddListener([&painted](const DrawAnimationEvent&)
+	const EventSubscription animationSub{_events->AddListener([&painted](const DrawAnimationEvent&)
 	{
 		painted.emplace_back("water");
-	});
-	const EventSubscription objectSub = _events->AddListener([&painted](const DrawObjEvent&)
+	})};
+	const EventSubscription objectSub{_events->AddListener([&painted](const DrawObjEvent&)
 	{
 		painted.emplace_back("wall");
-	});
+	})};
 
 	_events->EmitEvent(AnimationCreateWaterEvent{.rect = _rect});
 	_events->EmitEvent(AddToSpawnQueueEvent{.obj = std::make_shared<BrickWall>(_rect, _events, _uuid, _gameConfig)});

@@ -9,7 +9,7 @@ namespace detail
 void ReportListenerException(const char* const context, const char* const what,
 							 const std::source_location& origin) noexcept
 {
-	std::string message = what ? "Exception in " : "Unknown exception in ";
+	std::string message{what ? "Exception in " : "Unknown exception in "};
 	message += context;
 	message += " registered at ";
 	message += origin.line() > 0u
@@ -40,7 +40,7 @@ EventSystem::~EventSystem()
 #ifndef NDEBUG
 	// Anything still subscribed here never had its Unsubscribe() run. Unreachable while every listener
 	// comes in through an EventSubscription, since that one holds the bus alive
-	bool anyLeftoverListeners = false;
+	bool anyLeftoverListeners{false};
 
 	for (const auto& [eventType, eventInfo]: _events)
 	{

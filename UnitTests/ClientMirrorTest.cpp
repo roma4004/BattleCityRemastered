@@ -51,10 +51,8 @@ protected:
 //NOTE: the host sends health as an absolute value - applying the heal here too would land it twice
 TEST_F(ClientMirrorTest, AClientTakesHealthOffTheWireInsteadOfHealingItself)
 {
-	const std::shared_ptr<Tank> enemy =
-			TestUtils::CreateBot(
-					_tankRect, _tankHealth, UuidUtils::GetRandomUuid(), Author::Enemy1, _allObjects,
-					_events, 1u, Direction::UP, _bulletPool, _gameConfig);
+	const std::shared_ptr<Tank> enemy{TestUtils::CreateBot(_tankRect, _tankHealth, Author::Enemy1, _allObjects, _events,
+														   Direction::UP, _bulletPool, _gameConfig)};
 
 	_events->EmitEvent(Key(Author::Enemy1), BonusStarPickupEvent{});
 
@@ -70,7 +68,7 @@ TEST_F(ClientMirrorTest, AClientTakesHealthOffTheWireInsteadOfHealingItself)
 //NOTE: the burst only draws here - what puts the bonus on the field is the host saying it settled
 TEST_F(ClientMirrorTest, ABonusLandsWhenTheHostSaysItSettled)
 {
-	const Uuid uuid = UuidUtils::GetRandomUuid();
+	const Uuid uuid{UuidUtils::GetRandomUuid()};
 
 	_events->EmitEvent(BonusSpawnedEvent{.pos = _bonusPos, .type = BonusType::Star, .uuid = uuid, .isSuper = false});
 	_events->EmitEvent(SpawnAnimationFinishedEvent{.uuid = uuid});
@@ -85,7 +83,7 @@ TEST_F(ClientMirrorTest, ABonusLandsWhenTheHostSaysItSettled)
 //NOTE: a bonus picked up mid-burst is never completed by the host, so no ghost is left behind
 TEST_F(ClientMirrorTest, ABonusRetiredDuringItsBurstNeverLands)
 {
-	const Uuid uuid = UuidUtils::GetRandomUuid();
+	const Uuid uuid{UuidUtils::GetRandomUuid()};
 
 	_events->EmitEvent(BonusSpawnedEvent{.pos = _bonusPos, .type = BonusType::Star, .uuid = uuid, .isSuper = false});
 	_events->EmitEvent(Key(uuid), DespawnedEvent{.uuid = uuid, .reason = DespawnReason::PickedUp});
@@ -96,8 +94,8 @@ TEST_F(ClientMirrorTest, ABonusRetiredDuringItsBurstNeverLands)
 
 TEST_F(ClientMirrorTest, CompletingOneBonusLeavesTheOtherPending)
 {
-	const Uuid settled = UuidUtils::GetRandomUuid();
-	const Uuid pending = UuidUtils::GetRandomUuid();
+	const Uuid settled{UuidUtils::GetRandomUuid()};
+	const Uuid pending{UuidUtils::GetRandomUuid()};
 
 	_events->EmitEvent(BonusSpawnedEvent{.pos = _bonusPos, .type = BonusType::Star, .uuid = settled, .isSuper = false});
 	_events->EmitEvent(BonusSpawnedEvent{.pos = _bonusPos, .type = BonusType::Star, .uuid = pending, .isSuper = false});

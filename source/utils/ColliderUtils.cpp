@@ -8,7 +8,7 @@ bool ColliderUtils::IsCollide(const ObjRectangle& r1, const ObjRectangle& r2) no
 {
 	auto greaterThan = [](const double a, const double b)
 	{
-		constexpr double COLLISION_EPSILON = 0.01;
+		constexpr double COLLISION_EPSILON{0.01};
 		return a > b + COLLISION_EPSILON;
 	};
 
@@ -30,8 +30,8 @@ bool ColliderUtils::IsCollide(const ObjRectangle& r1, const ObjRectangle& r2) no
 
 bool ColliderUtils::IsCollide(const Circle& circle, const ObjRectangle& rect) noexcept
 {
-	const double deltaX = circle.center.x - std::max(rect.x, std::min(circle.center.x, rect.Right()));
-	const double deltaY = circle.center.y - std::max(rect.y, std::min(circle.center.y, rect.Bottom()));
+	const double deltaX{circle.center.x - std::max(rect.x, std::min(circle.center.x, rect.Right()))};
+	const double deltaY{circle.center.y - std::max(rect.y, std::min(circle.center.y, rect.Bottom()))};
 
 	return (deltaX * deltaX + deltaY * deltaY) < (circle.radius * circle.radius);
 }

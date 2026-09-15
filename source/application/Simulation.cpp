@@ -178,15 +178,15 @@ void Simulation::Tick()
 
 	//NOTE: read after PreTickUpdate, not before - that is where the keyboard is polled, so a pause
 	//pressed this frame takes effect this frame
-	const bool isRunning = !_isPaused && _gameConfig.gameState != GameState::Lobby;
+	const bool isRunning{!_isPaused && _gameConfig.gameState != GameState::Lobby};
 	TimeUtils::SetPaused(!isRunning);
 
 	if (isRunning && _gameConfig.IsAuthority())
 	{
 		_events->EmitEvent(RespawnTanksEvent{});//NOTE: on the wall clock, so once a frame
 
-		const double elapsed =
-				std::abs(_deltaTime - kFixedStep) < kStepSnapTolerance ? kFixedStep : _deltaTime;
+		const double elapsed{
+				std::abs(_deltaTime - kFixedStep) < kStepSnapTolerance ? kFixedStep : _deltaTime};
 		_stepAccumulator = std::min(_stepAccumulator + elapsed, kFixedStep * kMaxCatchUpSteps);
 
 		while (_stepAccumulator >= kFixedStep)

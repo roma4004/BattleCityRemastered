@@ -7,6 +7,7 @@
 #include "commands/AnyCommand.h"
 #include "components/EventSystem.h"
 #include <atomic>
+#include <chrono>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/steady_timer.hpp>
@@ -28,7 +29,7 @@ using boost::asio::ip::tcp;
 class Client final : public PeerLink, public std::enable_shared_from_this<Client>
 {
 public:
-	Client(boost::asio::io_context& ioContext, std::string host, uint16_t port,
+	Client(boost::asio::io_context& ioContext, const std::string& host, uint16_t port,
 		   const std::shared_ptr<EventSystem>& events);
 
 	~Client();
@@ -75,7 +76,7 @@ private:
 	//NOTE: one drop can be reported twice, by the read and by the write - give up once
 	bool _reconnectAbandoned{false};
 	static constexpr unsigned char kMaxReconnectAttempts{10u};
-	static constexpr unsigned short kReconnectDelayMs{500u};
-	static constexpr unsigned short kFullServerRetryMs{3000u};
+	static constexpr std::chrono::milliseconds kReconnectDelay{500};
+	static constexpr std::chrono::milliseconds kFullServerRetry{std::chrono::seconds{3}};
 };
 }//namespace network::commands

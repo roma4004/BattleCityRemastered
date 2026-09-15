@@ -22,10 +22,10 @@ MoveLikeBulletBeh::MoveLikeBulletBeh(ObjRectangle& rect, Uuid& uuid, const Uuid&
 double MoveLikeBulletBeh::GetTravelledDistance(const double deltaTime, const Direction dir,
 											   const std::vector<std::shared_ptr<BaseObj>>& objects) const
 {
-	const double step = _calibre.speed * deltaTime;
-	const ObjRectangle nextPosRect = DirectionUtils::Swept(_rect, step, dir);
+	const double step{_calibre.speed * deltaTime};
+	const ObjRectangle nextPosRect{DirectionUtils::Swept(_rect, step, dir)};
 
-	double travelled = std::min(step, DirectionUtils::GapToEdge(_rect, _gameConfig.battlefieldSize, dir));
+	double travelled{std::min(step, DirectionUtils::GapToEdge(_rect, _gameConfig.battlefieldSize, dir))};
 
 	for (const std::shared_ptr<BaseObj>& object: objects)
 	{
@@ -50,7 +50,7 @@ FPoint MoveLikeBulletBeh::GetBlowCenter(const double deltaTime, const Direction 
 
 bool MoveLikeBulletBeh::IsSelfOrAuthor(const BaseObj& object) const
 {
-	const Uuid objectUuid = object.GetUuid();
+	const Uuid objectUuid{object.GetUuid()};
 
 	return objectUuid == _uuid || (_authorUuid != Uuid{} && objectUuid == _authorUuid);
 }
@@ -58,7 +58,7 @@ bool MoveLikeBulletBeh::IsSelfOrAuthor(const BaseObj& object) const
 bool MoveLikeBulletBeh::IsCanMove(const double deltaTime, const Direction dir,
 								  const std::vector<std::shared_ptr<BaseObj>>& objects) const
 {
-	const ObjRectangle nextPosRect = DirectionUtils::Swept(_rect, _calibre.speed * deltaTime, dir);
+	const ObjRectangle nextPosRect{DirectionUtils::Swept(_rect, _calibre.speed * deltaTime, dir)};
 
 	return std::ranges::none_of(objects, [this, nextPosRect](const std::shared_ptr<BaseObj>& object)
 	{
@@ -73,7 +73,7 @@ bool MoveLikeBulletBeh::Move(const Direction dir, const double deltaTime,
 							 const std::vector<std::shared_ptr<BaseObj>>& objects,
 							 std::vector<std::shared_ptr<BaseObj>>& outCollisions)
 {
-	const double speed = _calibre.speed * deltaTime;
+	const double speed{_calibre.speed * deltaTime};
 	if (speed <= DirectionUtils::GapToEdge(_rect, _gameConfig.battlefieldSize, dir)
 		&& IsCanMove(deltaTime, dir, objects))
 	{
@@ -93,12 +93,12 @@ std::vector<std::shared_ptr<BaseObj>> MoveLikeBulletBeh::GetCircleCollisionObjec
 {
 	const Circle circle{.center = blowCenter, .radius = _calibre.damageRadius};
 
-	auto collisions = objects | std::views::filter([this, &circle](const std::shared_ptr<BaseObj>& obj)
+	auto collisions{objects | std::views::filter([this, &circle](const std::shared_ptr<BaseObj>& obj)
 	{
 		return ObjectUtils::IsAlive(obj)
 			   && obj->GetUuid() != _uuid
 			   && ColliderUtils::IsCollide(circle, obj->GetRect());
-	});
+	})};
 
 	return std::vector<std::shared_ptr<BaseObj>>{collisions.begin(), collisions.end()};
 }

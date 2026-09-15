@@ -37,7 +37,6 @@ protected:
 	EventSubscription _fortressWallSub{};
 	GameConfig _gameConfig{};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
-	Uuid _uuid{};
 	double _deltaTimeOneFrame{1.0 / 60.0};
 	double _tankSize{};
 	double _gridSize{};
@@ -69,9 +68,8 @@ protected:
 TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressBricWallkHide)
 {
 	const ObjRectangle rectEnemy{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> enemyBot =
-			TestUtils::CreateBot(
-					rectEnemy, _tankHealth, _uuid, Author::Enemy1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
+	const std::shared_ptr<Tank> enemyBot{TestUtils::CreateBot(rectEnemy, _tankHealth, Author::Enemy1, _allObjects,
+															  _events, Direction::DOWN, _bulletPool, _gameConfig)};
 
 	// register a fortress wall
 	const ObjRectangle fortressRect{.x = _tankSize + 1.0, .y = 0, .w = _gridSize, .h = _gridSize};
@@ -91,17 +89,15 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressBricWallkHide)
 TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressSteelWallHide)
 {
 	const ObjRectangle rectEnemy{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> enemyBot =
-			TestUtils::CreateBot(
-					rectEnemy, _tankHealth, _uuid, Author::Enemy1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
+	const std::shared_ptr<Tank> enemyBot{TestUtils::CreateBot(rectEnemy, _tankHealth, Author::Enemy1, _allObjects,
+															  _events, Direction::DOWN, _bulletPool, _gameConfig)};
 
 	_allObjects.reserve(4);
 	const ObjRectangle rectPlayer{.x = _tankSize * 2.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
+	const std::shared_ptr<Tank> player{TestUtils::CreatePlayer(rectPlayer, _tankHealth, Author::Player1, _allObjects,
+															   _events, Direction::UP, _bulletPool, _gameConfig)};
 	_allObjects.emplace_back(player);
-	bool isPressed{true};
+	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
 
 	// register a fortress wall

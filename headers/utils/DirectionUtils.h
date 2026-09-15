@@ -89,7 +89,7 @@ namespace DirectionUtils
 										 const double distance, const Direction dir)
 {
 	const auto [dx, dy] = Unit(dir);
-	const double gap = GapToEdge(rect, battlefieldSize, dir);
+	const double gap{GapToEdge(rect, battlefieldSize, dir)};
 
 	return dx + dy < 0.0 ? distance <= gap : distance < gap;
 }

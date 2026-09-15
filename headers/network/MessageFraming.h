@@ -6,10 +6,10 @@
 namespace network
 {
 //NOTE: length prefix, not a delimiter - "\n\n" occurs by chance inside a binary ser20 archive
-inline constexpr std::size_t kFrameHeaderSize = 4;
+inline constexpr std::size_t kFrameHeaderSize{4};
 
 //NOTE: guards against a garbage header being read as a multi-gigabyte length
-inline constexpr std::uint32_t kMaxFramePayloadSize = 4u * 1024u * 1024u;
+inline constexpr std::uint32_t kMaxFramePayloadSize{4u * 1024u * 1024u};
 
 inline std::uint32_t DecodeFrameHeader(const char* data)
 {

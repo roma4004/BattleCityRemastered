@@ -27,7 +27,7 @@ protected:
 		_events = std::make_shared<EventSystem>();
 		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, _allObjects);
 		_allObjects.reserve(6u);
-		const auto bulletPool = std::make_shared<BulletPool>(_events, _allObjects, _gameConfig);
+		const auto bulletPool{std::make_shared<BulletPool>(_events, _allObjects, _gameConfig)};
 		TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, _gameConfig.gameMode, _respawnManager,
 								 _tankSpawner);
 		_events->EmitEvent(GameResetEvent{});
@@ -41,13 +41,13 @@ TEST_F(RespawnManagerTest, EnemyDiedRespawnCount)
 {
 	constexpr unsigned short respawnOriginal{20u};
 	unsigned short respawnActual{20u};
-	auto respawnSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
+	auto respawnSub{_events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
 	{
 		if (event.group == RespawnGroup::ENEMY_ALL)
 		{
 			respawnActual = event.respawnCount;
 		}
-	});
+	})};
 
 	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
@@ -63,13 +63,13 @@ TEST_F(RespawnManagerTest, PlayerOneDiedRespawnCount)
 {
 	constexpr unsigned short respawnOriginal{3u};
 	unsigned short respawnActual{3u};
-	auto respawnSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
+	auto respawnSub{_events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
 	{
 		if (event.group == RespawnGroup::PLAYER1)
 		{
 			respawnActual = event.respawnCount;
 		}
-	});
+	})};
 
 	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
@@ -85,13 +85,13 @@ TEST_F(RespawnManagerTest, PlayerTwoDiedRespawnCount)
 {
 	constexpr unsigned short respawnOriginal{3u};
 	unsigned short respawnActual{3u};
-	auto respawnSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
+	auto respawnSub{_events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
 	{
 		if (event.group == RespawnGroup::PLAYER2)
 		{
 			respawnActual = event.respawnCount;
 		}
-	});
+	})};
 
 	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::TwoPlayers, _respawnManager, _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
@@ -107,13 +107,13 @@ TEST_F(RespawnManagerTest, EnemyRunOutRespawnPoints)
 {
 	constexpr unsigned short respawnOriginal{20u};
 	unsigned short respawnActual{20u};
-	auto respawnSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
+	auto respawnSub{_events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
 	{
 		if (event.group == RespawnGroup::ENEMY_ALL)
 		{
 			respawnActual = event.respawnCount;
 		}
-	});
+	})};
 
 	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
@@ -132,13 +132,13 @@ TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPoints)
 {
 	constexpr unsigned short respawnOriginal{3u};
 	unsigned short respawnActual{3u};
-	auto respawnSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
+	auto respawnSub{_events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
 	{
 		if (event.group == RespawnGroup::PLAYER1)
 		{
 			respawnActual = event.respawnCount;
 		}
-	});
+	})};
 
 	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
@@ -157,13 +157,13 @@ TEST_F(RespawnManagerTest, PlayerTwoRunOutRespawnPoints)
 {
 	constexpr unsigned short respawnOriginal{3u};
 	unsigned short respawnActual{3u};
-	auto respawnSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
+	auto respawnSub{_events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
 	{
 		if (event.group == RespawnGroup::PLAYER2)
 		{
 			respawnActual = event.respawnCount;
 		}
-	});
+	})};
 
 	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::TwoPlayers, _respawnManager, _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
@@ -182,13 +182,13 @@ TEST_F(RespawnManagerTest, EnemyRunOutRespawnPointsAndTryMore)
 {
 	constexpr unsigned short respawnOriginal{21u};
 	unsigned short respawnActual{21u};
-	auto respawnSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
+	auto respawnSub{_events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
 	{
 		if (event.group == RespawnGroup::ENEMY_ALL)
 		{
 			respawnActual = event.respawnCount;
 		}
-	});
+	})};
 
 	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
@@ -210,13 +210,13 @@ TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPointsAndTryMore)
 {
 	constexpr unsigned short respawnOriginal{4u};
 	unsigned short respawnActual{3u};
-	auto respawnSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
+	auto respawnSub{_events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
 	{
 		if (event.group == RespawnGroup::PLAYER1)
 		{
 			respawnActual = event.respawnCount;
 		}
-	});
+	})};
 
 	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
@@ -238,13 +238,13 @@ TEST_F(RespawnManagerTest, PlayerTwoRunOutRespawnPointsAndTryMore)
 {
 	constexpr unsigned short respawnOriginal{4u};
 	unsigned short respawnActual{3u};
-	auto respawnSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
+	auto respawnSub{_events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
 	{
 		if (event.group == RespawnGroup::PLAYER2)
 		{
 			respawnActual = event.respawnCount;
 		}
-	});
+	})};
 
 	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::TwoPlayers, _respawnManager, _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});

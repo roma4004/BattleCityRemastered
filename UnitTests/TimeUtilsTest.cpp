@@ -15,7 +15,7 @@ protected:
 TEST_F(TimeUtilsTest, GameClockFreezesWhilePaused)
 {
 	TimeUtils::SetPaused(true);
-	const auto frozen = TimeUtils::Now();
+	const auto frozen{TimeUtils::Now()};
 	std::this_thread::sleep_for(20ms);
 
 	EXPECT_TRUE(TimeUtils::IsPaused());
@@ -31,14 +31,14 @@ TEST_F(TimeUtilsTest, GameClockFreezesWhilePaused)
 TEST_F(TimeUtilsTest, SetPausedIsIdempotent)
 {
 	TimeUtils::SetPaused(true);
-	const auto frozen = TimeUtils::Now();
+	const auto frozen{TimeUtils::Now()};
 	std::this_thread::sleep_for(20ms);
 	TimeUtils::SetPaused(true);
 
 	EXPECT_EQ(TimeUtils::Now(), frozen);
 
 	TimeUtils::SetPaused(false);
-	const auto resumed = TimeUtils::Now();
+	const auto resumed{TimeUtils::Now()};
 	TimeUtils::SetPaused(false);
 
 	EXPECT_GE(TimeUtils::Now(), resumed);
@@ -47,7 +47,7 @@ TEST_F(TimeUtilsTest, SetPausedIsIdempotent)
 // A cooldown does not burn down during the pause and still finishes afterwards
 TEST_F(TimeUtilsTest, CooldownSkipsThePause)
 {
-	Timer timer{100ms};
+	const Timer timer{100ms};
 
 	TimeUtils::SetPaused(true);
 	std::this_thread::sleep_for(250ms);

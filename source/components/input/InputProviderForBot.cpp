@@ -14,14 +14,15 @@
 #include <chrono>
 #include <random>
 
+using namespace std::chrono_literals;
+
 //TODO: if enemy see bullets they should try or prioritize move aside
 InputProviderForBot::InputProviderForBot(const std::vector<std::shared_ptr<BaseObj>>& allObjects,
 										 const GameConfig& gameConfig)
 	: _allObjects{allObjects}
 	, _gameConfig{gameConfig}
-	, _distTurnRate(1000 /*ms*/, 5000 /*ms*/)
 {
-	_randomChangeDirTimer.cooldown = std::chrono::seconds{2};
+	_randomChangeDirTimer.cooldown = 2s;
 	_randomChangeDirTimer.Reset();
 }
 
@@ -63,12 +64,12 @@ bool InputProviderForBot::ChangeDirIfSeenBonus(Tank& self, const Direction dir,
 		}
 
 		//Check free path to bonus
-		if (const std::vector<std::shared_ptr<BaseObj>>& directionObstacles = _driveLineOfSight->SideObstacles(dir);
+		if (const std::vector<std::shared_ptr<BaseObj>>& directionObstacles{_driveLineOfSight->SideObstacles(dir)};
 			!directionObstacles.empty() && IsBonus(directionObstacles.front()))
 		{
 			self.SetDirection(dir);
 
-			_randomChangeDirTimer.Reset(std::chrono::milliseconds(RandUtils::GetRandNumber(_distTurnRate)));
+			_randomChangeDirTimer.Reset(RandUtils::GetRandDuration(kMinTurnDelay, kMaxTurnDelay));
 
 			return true;
 		}
@@ -85,7 +86,7 @@ bool InputProviderForBot::ChangeDirIfSeenOpponent(Tank& self, const Direction di
 		return false;
 	}
 
-	if (const auto& nearestSeenObstacle = sideObstacle.front();
+	if (const auto& nearestSeenObstacle{sideObstacle.front()};
 		IsOpponent(self, nearestSeenObstacle))
 	{
 		if (dir == self.GetDirection())
@@ -110,7 +111,7 @@ std::shared_ptr<BaseObj> InputProviderForBot::Lookup(Tank& self, LineOfSight& li
 {
 	for (const Direction side: {Direction::UP, Direction::LEFT, Direction::DOWN, Direction::RIGHT})
 	{
-		if (const std::vector<std::shared_ptr<BaseObj>>& sideObstacles = lineOfSight.SideObstacles(side);
+		if (const std::vector<std::shared_ptr<BaseObj>>& sideObstacles{lineOfSight.SideObstacles(side)};
 			(this->*trigger)(self, side, sideObstacles))
 		{
 			dir = side;
@@ -137,7 +138,7 @@ std::shared_ptr<BaseObj> InputProviderForBot::HandleLineOfSight(Tank& self)
 	const FPoint bulletSize{.x = self.GetBulletWidth(), .y = self.GetBulletHeight()};
 	LineOfSight lineOfSight(self.GetRect(), bulletSize, _allObjects, _gameConfig);
 
-	auto dir = self.GetDirection();
+	auto dir{self.GetDirection()};
 	std::shared_ptr<BaseObj> nearestSeenObstacle{
 			Lookup(self, lineOfSight, dir, &InputProviderForBot::ChangeDirIfSeenOpponent)};
 	if (nearestSeenObstacle == nullptr)
@@ -157,7 +158,7 @@ std::shared_ptr<BaseObj> InputProviderForBot::HandleLineOfSight(Tank& self)
 	}
 
 	//finding obstacle to shoot if no priority target
-	if (const std::vector<std::shared_ptr<BaseObj>>& sideObstacles = lineOfSight.SideObstacles(dir);
+	if (const std::vector<std::shared_ptr<BaseObj>>& sideObstacles{lineOfSight.SideObstacles(dir)};
 		!sideObstacles.empty())
 	{
 		nearestSeenObstacle = sideObstacles.front();
@@ -181,7 +182,7 @@ std::optional<Direction> InputProviderForBot::PickRandomDirection(const Tank& se
 	const std::size_t maxIndex{freePath.size() - 1u};
 	const auto pathIndex{RandUtils::GetRandNumber(std::uniform_int_distribution<std::size_t>{0u, maxIndex})};
 
-	_randomChangeDirTimer.Reset(std::chrono::milliseconds{RandUtils::GetRandNumber(_distTurnRate)});
+	_randomChangeDirTimer.Reset(RandUtils::GetRandDuration(kMinTurnDelay, kMaxTurnDelay));
 
 	return freePath[pathIndex];
 }
@@ -251,7 +252,7 @@ std::optional<Direction> InputProviderForBot::ChooseDirection(Tank& self, const 
 
 	if (!_randomChangeDirTimer.isActive)// NOTE: bot can change direction by timer
 	{
-		if (const std::optional<Direction> picked = PickRandomDirection(self, deltaTime))
+		if (const std::optional<Direction> picked{PickRandomDirection(self, deltaTime)})
 		{
 			return picked;
 		}

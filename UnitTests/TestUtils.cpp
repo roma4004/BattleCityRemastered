@@ -8,6 +8,10 @@
 #include "entities/BaseObj.h"
 #include "entities/pawns/PawnProperty.h"
 #include "entities/pawns/Tank.h"
+#include "utils/UuidUtils.h"
+#include <chrono>
+
+using namespace std::chrono_literals;
 
 void TestUtils::ApplyGameMode(const std::shared_ptr<EventSystem>& events,
 							  const std::vector<std::shared_ptr<BaseObj>>& allObjects, GameConfig& gameConfig,
@@ -16,7 +20,7 @@ void TestUtils::ApplyGameMode(const std::shared_ptr<EventSystem>& events,
 {
 	gameConfig.gameMode = gameMode;
 	//NOTE: the enemy throttle is wall-clock time, and a test has none to spare
-	gameConfig.enemySpawnCooldown = std::chrono::milliseconds{0};
+	gameConfig.enemySpawnCooldown = 0ms;
 	respawnManager = std::make_shared<RespawnManager>(events, gameMode);
 	//NOTE: production keeps the pools in SpawnManager so they survive a mode change; a fixture has
 	//no such switch, so they live as long as the spawner
@@ -28,20 +32,19 @@ void TestUtils::ApplyGameMode(const std::shared_ptr<EventSystem>& events,
 
 namespace
 {
-[[nodiscard]] PawnProperty MakePawnProperty(const ObjRectangle rect, const int health, const Uuid uuid,
-											const Author author,
+[[nodiscard]] PawnProperty MakePawnProperty(const ObjRectangle rect, const int health, const Author author,
 											const std::vector<std::shared_ptr<BaseObj>>& allObjects,
 											const std::shared_ptr<EventSystem>& events, const unsigned short tier,
 											const double tankSpeed, const Direction dir)
 {
-	BaseObjProperty baseObjProperty{
+	const BaseObjProperty baseObjProperty{
 			.rect = rect,
 			.health = health,
-			.uuid = uuid,
+			.uuid = UuidUtils::GetRandomUuid(),
 			.faction = FactionOf(author)};
 
 	return PawnProperty{
-			.baseObjProperty = std::move(baseObjProperty),
+			.baseObjProperty = baseObjProperty,
 			.allObjects = allObjects,
 			.events = events,
 			.tier = tier,
@@ -52,34 +55,34 @@ namespace
 }//namespace
 
 std::shared_ptr<Tank> TestUtils::CreateBot(
-		const ObjRectangle rect, const int health, const Uuid uuid, const Author author,
-		const std::vector<std::shared_ptr<BaseObj>>& allObjects, std::shared_ptr<EventSystem> events,
-		const unsigned short tier, const Direction dir, std::shared_ptr<BulletPool> bulletPool,
-		const GameConfig& gameConfig)
+		const ObjRectangle rect, const int health, const Author author,
+		const std::vector<std::shared_ptr<BaseObj>>& allObjects, const std::shared_ptr<EventSystem>& events,
+		const Direction dir, const std::shared_ptr<BulletPool>& bulletPool, const GameConfig& gameConfig,
+		const unsigned short tier)
 {
-	PawnProperty pawnProperty{MakePawnProperty(rect, health, uuid, author, allObjects, events, tier,
+	PawnProperty pawnProperty{MakePawnProperty(rect, health, author, allObjects, events, tier,
 											   gameConfig.tankSpeed, dir)};
 
-	auto tank = std::make_shared<Tank>(std::move(pawnProperty), bulletPool,
-									   std::make_unique<InputProviderForBot>(allObjects, gameConfig), gameConfig);
+	auto tank{std::make_shared<Tank>(std::move(pawnProperty), bulletPool,
+									 std::make_unique<InputProviderForBot>(allObjects, gameConfig), gameConfig)};
 	tank->Activate();
 
 	return tank;
 }
 
 std::shared_ptr<Tank> TestUtils::CreatePlayer(
-		const ObjRectangle rect, const int health, const Uuid uuid, const Author author,
-		const std::vector<std::shared_ptr<BaseObj>>& allObjects, std::shared_ptr<EventSystem> events,
-		const unsigned short tier, const Direction dir, std::shared_ptr<BulletPool> bulletPool,
-		const GameConfig& gameConfig)
+		const ObjRectangle rect, const int health, const Author author,
+		const std::vector<std::shared_ptr<BaseObj>>& allObjects, const std::shared_ptr<EventSystem>& events,
+		const Direction dir, const std::shared_ptr<BulletPool>& bulletPool, const GameConfig& gameConfig,
+		const unsigned short tier)
 {
-	PawnProperty pawnProperty{MakePawnProperty(rect, health, uuid, author, allObjects, events, tier,
+	PawnProperty pawnProperty{MakePawnProperty(rect, health, author, allObjects, events, tier,
 											   gameConfig.tankSpeed, dir)};
 
 	const InputChannel channel{author == Author::Player1 ? InputChannel::LocalP1 : InputChannel::LocalP2};
 
-	auto tank = std::make_shared<Tank>(std::move(pawnProperty), bulletPool,
-									   std::make_unique<InputProviderForPlayer>(events, channel), gameConfig);
+	auto tank{std::make_shared<Tank>(std::move(pawnProperty), bulletPool,
+									 std::make_unique<InputProviderForPlayer>(events, channel), gameConfig)};
 	tank->Activate();
 
 	return tank;

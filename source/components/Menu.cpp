@@ -89,7 +89,7 @@ void Menu::DrawMenuText(std::vector<TextBlockLine>& lines) const
 void Menu::DrawControlHints(std::vector<TextBlockLine>& lines) const
 {
 	const Point relativePos{.x = _pos.x + 100, .y = _pos.y + 280};
-	constexpr int yBaseLineForControls = 150;
+	constexpr int yBaseLineForControls{150};
 	_events->EmitEvent(RenderMenuXBoxHintEvent{.pos = Point{.x = relativePos.x + 245, .y = relativePos.y}});
 	_events->EmitEvent(RenderMenuPS5HintEvent{
 			.pos = Point{.x = relativePos.x + 280, .y = relativePos.y + yBaseLineForControls}});

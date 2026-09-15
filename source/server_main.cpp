@@ -29,8 +29,8 @@ int main()
 	std::signal(SIGINT, OnStopSignal);
 	std::signal(SIGTERM, OnStopSignal);
 
-	ProjectConfig projectConfig{ProjectConfig::DefaultFilePath()};
-	if (const auto& configError = projectConfig.LoadError())
+	const ProjectConfig projectConfig{ProjectConfig::DefaultFilePath()};
+	if (const auto& configError{projectConfig.LoadError()})
 	{
 		Log::Error("config " + configError->path.string() + " line " + std::to_string(configError->line) + ": "
 				   + configError->reason + ", running on defaults and leaving the file untouched");
@@ -38,7 +38,7 @@ int main()
 
 	GameConfig gameConfig{};
 
-	const auto events = std::make_shared<EventSystem>();
+	const auto events{std::make_shared<EventSystem>()};
 	//NOTE: no presenter here, so its pacing is all that stands between this loop and a busy spin
 	const FramePerSecondManager fpsManager{events, projectConfig, false};
 	Simulation simulation{events, gameConfig};

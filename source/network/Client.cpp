@@ -11,7 +11,7 @@
 
 namespace network::commands
 {
-Client::Client(boost::asio::io_context& ioContext, std::string host, const uint16_t port,
+Client::Client(boost::asio::io_context& ioContext, const std::string& host, const uint16_t port,
 			   const std::shared_ptr<EventSystem>& events)
 	: PeerLink(tcp::socket(boost::asio::make_strand(ioContext)), "Client", events)
 	, _reconnectTimer(_channel->Socket().get_executor())
@@ -29,7 +29,7 @@ void Client::OnCommand(const AnyCommand& command)
 {
 	//NOTE: the goodbye is peeled off rather than left to the applier - it has to be read on this, the
 	//network thread, while everything else is a game fact and belongs on the game one
-	if (const auto* goodbye = std::get_if<Disconnect>(&command))
+	if (const auto* goodbye{std::get_if<Disconnect>(&command)})
 	{
 		OnDisconnect(*goodbye);
 		return;
@@ -40,7 +40,7 @@ void Client::OnCommand(const AnyCommand& command)
 
 void Client::TryConnect()
 {
-	auto& socket = _channel->Socket();
+	auto& socket{_channel->Socket()};
 	_channel->CloseForReconnect();
 	socket.open(_endpoint.protocol());
 	socket.async_connect(_endpoint, [this](const boost::system::error_code& ec)
@@ -88,12 +88,11 @@ void Client::ScheduleReconnect()
 
 	//NOTE: weak - the timer is our own member, so a shared capture would keep this Client alive
 	//through its own pending handler
-	const std::weak_ptr<Client> weakSelf = weak_from_this();
-	_reconnectTimer.expires_after(
-			std::chrono::milliseconds(_isWaitingForSeat ? kFullServerRetryMs : kReconnectDelayMs));
+	const std::weak_ptr<Client> weakSelf{weak_from_this()};
+	_reconnectTimer.expires_after(_isWaitingForSeat ? kFullServerRetry : kReconnectDelay);
 	_reconnectTimer.async_wait([weakSelf](const boost::system::error_code& timerEc)
 	{
-		const auto self = weakSelf.lock();
+		const auto self{weakSelf.lock()};
 		if (!self)
 		{
 			return;
@@ -148,7 +147,7 @@ void Client::HandleProtocolError()
 	Shutdown();
 }
 
-Client::~Client()
+Client::~Client()// NOLINT(bugprone-exception-escape) - cancel() throws only on an error the timer service never sets
 {
 	Shutdown();
 }
@@ -166,7 +165,7 @@ void Client::Shutdown(const DisconnectReason reason, std::function<void()> onClo
 	_isShuttingDown = true;
 	std::ignore = _reconnectTimer.cancel();
 
-	const bool hasLink = _isConnected;
+	const bool hasLink{_isConnected};
 	_isConnected = false;
 
 	CloseWithFarewell(hasLink, reason, std::move(onClosed));
@@ -185,7 +184,7 @@ void Client::OnSlotAssigned(const PlayerSlotAssignedEvent& event)
 
 void Client::OnNetworkEndFrame(const NetworkEndFrameEvent&)
 {
-	if (auto frame = _replicationOut.TakeFrame())
+	if (auto frame{_replicationOut.TakeFrame()})
 	{
 		_channel->Send(std::move(frame));
 	}
@@ -195,18 +194,18 @@ void Client::StartReading()
 {
 	//NOTE: weak, not shared - the channel outlives nothing here, but it *stores* these callbacks,
 	//so capturing a shared_ptr would close the loop Client -> channel -> callback -> Client
-	const std::weak_ptr<Client> weakSelf = weak_from_this();
+	const std::weak_ptr<Client> weakSelf{weak_from_this()};
 	_channel->SetHandlers(
 			[weakSelf](const std::string& frame)
 			{
-				if (const auto self = weakSelf.lock(); self && !self->DispatchFrame(frame))
+				if (const auto self{weakSelf.lock()}; self && !self->DispatchFrame(frame))
 				{
 					self->HandleProtocolError();
 				}
 			},
 			[weakSelf]
 			{
-				if (const auto self = weakSelf.lock())
+				if (const auto self{weakSelf.lock()})
 				{
 					self->HandleDisconnect();
 				}
@@ -217,7 +216,7 @@ void Client::StartReading()
 
 void Client::OnDisconnect(const Disconnect& command)
 {
-	const auto reason = command.reason;
+	const auto reason{command.reason};
 
 	//NOTE: on the network thread, not in the queued lambda - the EOF arrives well before the game
 	//thread drains the queue, and HandleDisconnect must already know why

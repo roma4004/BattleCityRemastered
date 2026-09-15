@@ -93,18 +93,18 @@ static_assert(
 [[nodiscard]] unsigned int SuperRimColor()
 {
 	using namespace std::chrono;
-	constexpr auto period = milliseconds{1200};
+	constexpr auto period{1200ms};
 	constexpr unsigned int dark{0xB8860Bu};//NOTE: dark goldenrod
 	constexpr unsigned int light{0xFFEC8Cu};//NOTE: pale gold
 
-	const auto phase = duration_cast<milliseconds>(TimeUtils::Now().time_since_epoch()) % period;
-	const float progress = static_cast<float>(phase.count()) / static_cast<float>(period.count());
-	const float wave = 0.5f * (1.f - std::cos(progress * 2.f * std::numbers::pi_v<float>));
+	const auto phase{duration_cast<milliseconds>(TimeUtils::Now().time_since_epoch()) % period};
+	const float progress{static_cast<float>(phase.count()) / static_cast<float>(period.count())};
+	const float wave{0.5f * (1.f - std::cos(progress * 2.f * std::numbers::pi_v<float>))};
 
 	const auto blend = [wave](const unsigned int shift)
 	{
-		const auto from = static_cast<float>(dark >> shift & 0xFFu);
-		const auto to = static_cast<float>(light >> shift & 0xFFu);
+		const auto from{static_cast<float>(dark >> shift & 0xFFu)};
+		const auto to{static_cast<float>(light >> shift & 0xFFu)};
 
 		return static_cast<unsigned int>(std::lerp(from, to, wave)) << shift;
 	};
@@ -239,7 +239,7 @@ void Bonus::PickUpBonus(const Author author)
 	{
 		_events->EmitEvent(StatisticsBonusPickupEvent{.author = author});
 
-		const PickupEmitter emit = GetRecipe(_bonusType).emit;
+		const PickupEmitter emit{GetRecipe(_bonusType).emit};
 		emit(*_events, author, FactionOf(author));
 
 		if (_isSuper)

@@ -63,7 +63,7 @@ class BonusSpawner final
 		bool isSuper{};
 	};
 
-	[[nodiscard]] RolledBonus RollBonus();
+	[[nodiscard]] RolledBonus RollBonus() const;
 	void ResetSpawnRanges();
 	void Materialize(const PendingSpawn& pending) const;
 	bool MaterializePending(Uuid uuid);

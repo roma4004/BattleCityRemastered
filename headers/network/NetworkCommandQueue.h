@@ -21,7 +21,7 @@ public:
 
 	void Enqueue(std::function<void()> command)
 	{
-		std::scoped_lock lock(_mutex);
+		const std::scoped_lock lock{_mutex};
 		_commands.push(std::move(command));
 	}
 
@@ -29,7 +29,7 @@ public:
 	{
 		std::queue<std::function<void()>> localQueue;
 		{
-			std::scoped_lock lock(_mutex);
+			const std::scoped_lock lock{_mutex};
 			std::swap(localQueue, _commands);
 		}
 
@@ -42,7 +42,7 @@ public:
 
 	[[nodiscard]] size_t Size() const
 	{
-		std::scoped_lock lock(_mutex);
+		const std::scoped_lock lock{_mutex};
 		return _commands.size();
 	}
 };

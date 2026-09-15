@@ -42,13 +42,13 @@ public:
 	UPoint battlefieldSize{WorldGeometry::kClassicBattlefieldSize};
 	size_t sideBarWidth{WorldGeometry::kSideBarWidth};
 	int tankHealth{100};
-	std::chrono::milliseconds enemySpawnCooldown{5000};
-	std::chrono::milliseconds bonusLifeTimeCooldown{15000};
+	std::chrono::milliseconds enemySpawnCooldown{std::chrono::seconds{5}};
+	std::chrono::milliseconds bonusLifeTimeCooldown{std::chrono::seconds{15}};
 	double gridOffset{WorldGeometry::kCellSize};
 	double tankSize{gridOffset * 3.0};
 	double tankSpeed{142.0};
 	int bonusSize{static_cast<int>(tankSize)};
 	double botShootObstacleChance{0.35};
-	std::chrono::milliseconds botObstacleShootCooldown{1000};
+	std::chrono::milliseconds botObstacleShootCooldown{std::chrono::seconds{1}};
 	bool skipIntroMusic{false};//NOTE: launch flag, not persisted - autoplay only, sound stays on
 };

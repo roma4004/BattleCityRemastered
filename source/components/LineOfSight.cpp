@@ -69,16 +69,16 @@ void LineOfSight::CheckLineOfSight(const bool isWaterSkip, const std::vector<std
 			continue;
 		}
 
-		const ObjRectangle& upSideRect = _lineOfSightBoundaries[static_cast<size_t>(Direction::UP)];
-		const ObjRectangle& leftSightRect = _lineOfSightBoundaries[static_cast<size_t>(Direction::LEFT)];
-		const ObjRectangle& downSideRect = _lineOfSightBoundaries[static_cast<size_t>(Direction::DOWN)];
-		const ObjRectangle& rightSightRect = _lineOfSightBoundaries[static_cast<size_t>(Direction::RIGHT)];
+		const ObjRectangle& upSideRect{_lineOfSightBoundaries[static_cast<size_t>(Direction::UP)]};
+		const ObjRectangle& leftSightRect{_lineOfSightBoundaries[static_cast<size_t>(Direction::LEFT)]};
+		const ObjRectangle& downSideRect{_lineOfSightBoundaries[static_cast<size_t>(Direction::DOWN)]};
+		const ObjRectangle& rightSightRect{_lineOfSightBoundaries[static_cast<size_t>(Direction::RIGHT)]};
 
 		// NOTE: tank can't pass water (until pickup BonusShip), so we skip water when find opponent to shoot,
 		// but for searching for bonuses, we should not skip, to avoid trying to move through water.
-		const bool isWater = dynamic_cast<WaterTile*>(object.get()) != nullptr;
-		const bool isBush = dynamic_cast<BushTile*>(object.get()) != nullptr;
-		const bool isPenetrable = object->GetIsPenetrable();
+		const bool isWater{dynamic_cast<WaterTile*>(object.get()) != nullptr};
+		const bool isBush{dynamic_cast<BushTile*>(object.get()) != nullptr};
+		const bool isPenetrable{object->GetIsPenetrable()};
 		if (isBush
 			|| (isWater && !isWaterSkip)
 			|| !isPenetrable)

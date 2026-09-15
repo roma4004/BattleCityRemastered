@@ -44,7 +44,7 @@ void LobbyScreen::OnRefusedOrLost(const ClientInDisconnectEvent& event)
 
 void LobbyScreen::OnConnectedToHost(const ClientConnectedToHostEvent&) { _isServerFull = false; }
 
-void LobbyScreen::OnDrawUserInterface(const DrawUserInterfaceEvent&) { Draw(); }
+void LobbyScreen::OnDrawUserInterface(const DrawUserInterfaceEvent&) const { Draw(); }
 
 void LobbyScreen::Display(const bool isDisplayed)
 {
@@ -65,8 +65,8 @@ void LobbyScreen::Draw() const
 	}
 	else
 	{
-		const std::string waitingFor =
-				IsHost(_gameConfig.gameMode) ? "WAITING FOR PLAYER" : "CONNECTING TO HOST";
+		const std::string waitingFor{
+				IsHost(_gameConfig.gameMode) ? "WAITING FOR PLAYER" : "CONNECTING TO HOST"};
 		lines.push_back(TextBlockLine{.color = color, .text = waitingFor});
 	}
 

@@ -15,12 +15,12 @@ PeerLink::PeerLink(tcp::socket socket, std::string ownerName, std::shared_ptr<Ev
 
 bool PeerLink::DispatchFrame(const std::string& frame)
 {
-	const auto batch = network::Deserialize(frame);
+	const auto batch{network::Deserialize(frame)};
 	if (!batch)
 	{
 		constexpr std::size_t maxLoggedBytes{200};
-		const std::string rawData =
-				frame.length() < maxLoggedBytes ? frame : frame.substr(0, maxLoggedBytes) + "...";
+		const std::string rawData{
+				frame.length() < maxLoggedBytes ? frame : frame.substr(0, maxLoggedBytes) + "..."};
 
 		Log::Error(_ownerName + " deserialization: " + batch.error().reason + ", raw size "
 				   + std::to_string(frame.length()) + ", raw data: " + rawData);

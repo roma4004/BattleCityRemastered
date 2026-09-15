@@ -88,7 +88,7 @@ TEST_F(TankPoolTest, AReusedTankListensUnderTheModeItSpawnsUnder)
 
 	_gameConfig.gameMode = GameMode::PlayAsClient;
 	const Uuid uuid{UuidUtils::GetRandomUuid()};
-	const std::shared_ptr<Tank> reused = SpawnTank(uuid);
+	const std::shared_ptr<Tank> reused{SpawnTank(uuid)};
 	reused->Activate();
 
 	constexpr FPoint mirrored{.x = 96.0, .y = 64.0};

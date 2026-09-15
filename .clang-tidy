@@ -8,6 +8,7 @@ bugprone-branch-clone,
 bugprone-copy-constructor-init,
 bugprone-dangling-handle,
 bugprone-dynamic-static-initializers,
+bugprone-exception-escape,
 bugprone-fold-init-type,
 bugprone-forward-declaration-namespace,
 bugprone-forwarding-reference-overload,
@@ -148,6 +149,8 @@ readability-uniqueptr-delete-release,
 readability-use-anyofallof'
 
 CheckOptions:
+  #NOTE: here to guard noexcept - an exception leaving main is an ordinary uncaught one, not a broken promise
+  bugprone-exception-escape.CheckMain: 'false'
   #NOTE: umbrella headers - the check wants the exact sub-header, the project includes the umbrella.
   #*Serialization.h are overload providers: nothing names them, but they supply serialize()
   misc-include-cleaner.IgnoreHeaders: '.*SDL3/.*;.*ser20/.*;.*boost/.*;.*gtest/.*;.*gmock/.*;.*Serialization\.h'

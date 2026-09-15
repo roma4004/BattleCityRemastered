@@ -37,7 +37,7 @@ void ReplicationApplier::Emit(const PositionChange& command) const
 
 void ReplicationApplier::Emit(const TankShot& command) const
 {
-	const Author who = SeatFromWire(command.who);
+	const Author who{SeatFromWire(command.who)};
 	_events->EmitEvent(Key(who), TankShotEvent{.who = who, .dir = command.dir, .bulletUuid = command.uuid});
 }
 
@@ -99,8 +99,8 @@ void ReplicationApplier::Emit(const KeyStateChange& command) const
 //host wrote, so this is the exact inverse of the statistics half of the host bindings
 void ReplicationApplier::Emit(const StatisticsChange& command) const
 {
-	const Author who = SeatFromWire(command.who);
-	const Author author = SeatFromWire(command.author);
+	const Author who{SeatFromWire(command.who)};
+	const Author author{SeatFromWire(command.author)};
 
 	switch (command.statisticsType)
 	{
@@ -158,7 +158,7 @@ void ReplicationApplier::Emit(const BonusStatus& command) const
 {
 	//NOTE: only the bonuses whose effect the client cannot see any other way arrive here - a star and a
 	//caliber land as a TierChange, so either of them is as wrong as a byte outside the enum
-	const Author author = SeatFromWire(command.author);
+	const Author author{SeatFromWire(command.author)};
 	switch (command.bonusType)
 	{
 		case BonusType::Helmet:

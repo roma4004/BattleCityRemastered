@@ -12,10 +12,10 @@ namespace
 std::mutex g_writeMutex;
 }// namespace
 
-bool Log::_consoleEnabled = true;
-bool Log::_fileEnabled = false;
-Log::Level Log::_level = Level::Normal;
-std::string Log::_filename = "game_log.txt";
+bool Log::_consoleEnabled{true};
+bool Log::_fileEnabled{false};
+Log::Level Log::_level{Level::Normal};
+std::string Log::_filename{"game_log.txt"};
 
 void Log::Error(const std::string& message) { Write(message, true); }
 
@@ -80,9 +80,9 @@ void Log::SetFile(const bool enabled, const std::string& filename)
 
 std::string Log::TimeStamp()
 {
-	const auto now = std::chrono::system_clock::now();
-	const auto nowTime = std::chrono::system_clock::to_time_t(now);
-	const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+	const auto now{std::chrono::system_clock::now()};
+	const auto nowTime{std::chrono::system_clock::to_time_t(now)};
+	const auto ms{std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000};
 
 	std::tm timeInfo{};
 	localtime_s(&timeInfo, &nowTime);
@@ -97,7 +97,7 @@ std::string Log::TimeStamp()
 void Log::Write(const std::string& message, const bool isError)
 {
 	const std::scoped_lock lock(g_writeMutex);
-	const std::string line = TimeStamp() + ' ' + message;
+	const std::string line{TimeStamp() + ' ' + message};
 
 	if (_consoleEnabled)
 	{

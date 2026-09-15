@@ -41,16 +41,13 @@ void BulletPool::OnGameReset(const GameResetEvent&)
 
 std::shared_ptr<Bullet> BulletPool::CreateNewBullet() const
 {
-	PawnProperty pawnProperty{.baseObjProperty = {},
-							  .allObjects = _allObjects,
-							  .events = _events};
-
-	return std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig);
+	return std::make_shared<Bullet>(PawnProperty{.baseObjProperty = {}, .allObjects = _allObjects, .events = _events},
+									_gameConfig);
 }
 
 std::shared_ptr<Bullet> BulletPool::SpawnBullet(const BulletResetProperty& property, const std::optional<Uuid>& uuid)
 {
-	std::shared_ptr<Bullet> bullet = _slots.TakeFree();
+	std::shared_ptr<Bullet> bullet{_slots.TakeFree()};
 	if (bullet == nullptr)
 	{
 		bullet = CreateNewBullet();
@@ -70,7 +67,7 @@ std::shared_ptr<Bullet> BulletPool::SpawnBullet(const BulletResetProperty& prope
 //is back on the free list before anything can shoot again
 void BulletPool::OnDeadObjectsSwept(const DeadObjectsSweptEvent&)
 {
-	const std::vector<std::shared_ptr<Bullet>> returned = _slots.ReclaimDead();
+	const std::vector<std::shared_ptr<Bullet>> returned{_slots.ReclaimDead()};
 
 	for (const std::shared_ptr<Bullet>& bullet: returned)
 	{

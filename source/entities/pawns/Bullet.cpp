@@ -72,7 +72,7 @@ void Bullet::Reset(const BulletResetProperty& resetProperty)
 void Bullet::TickUpdate(const double deltaTime)
 {
 	std::vector<std::shared_ptr<BaseObj>> outCollisions;
-	const bool isMove = _moveBeh->Move(_dir, deltaTime, _allObjects, outCollisions);
+	const bool isMove{_moveBeh->Move(_dir, deltaTime, _allObjects, outCollisions)};
 	if (!isMove)
 	{
 		DealDamage(outCollisions);
@@ -106,7 +106,7 @@ void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 			continue;
 		}
 
-		auto* baseObj = target.get();
+		auto* baseObj{target.get()};
 		//NOTE: no tier reaches water or ice; a bush is not here because the tier check below burns it
 		if (dynamic_cast<WaterTile*>(baseObj) != nullptr
 			|| dynamic_cast<IceTile*>(baseObj) != nullptr)
@@ -117,7 +117,7 @@ void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 		if (target->GetIsDestructible() || _calibre.tier > 2u)
 		{
 			target->TakeDamage(_calibre.damage, _author);
-			if (const auto* otherBullet = dynamic_cast<Bullet*>(baseObj))
+			if (const auto* otherBullet{dynamic_cast<Bullet*>(baseObj)})
 			{
 				isBulletHitBullet = true;
 				//NOTE: in case another bullet hits this bullet, we take damage from another bullet and send statistics

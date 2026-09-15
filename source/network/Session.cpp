@@ -48,11 +48,11 @@ void Session::Start()
 {
 	//NOTE: weak, not shared - the channel stores these callbacks, so a shared_ptr would close the
 	//loop Session -> channel -> callback -> Session
-	const std::weak_ptr<Session> weakSelf = weak_from_this();
+	const std::weak_ptr<Session> weakSelf{weak_from_this()};
 	_channel->SetHandlers(
 			[weakSelf](const std::string& frame)
 			{
-				if (const auto self = weakSelf.lock(); self && !self->DispatchFrame(frame))
+				if (const auto self{weakSelf.lock()}; self && !self->DispatchFrame(frame))
 				{
 					//NOTE: finished only once the goodbye is out - CloseAfterFlush still has it to write
 					self->Shutdown(DisconnectReason::ProtocolError, [self] { self->MarkFinished(); });
@@ -60,7 +60,7 @@ void Session::Start()
 			},
 			[weakSelf]
 			{
-				const auto self = weakSelf.lock();
+				const auto self{weakSelf.lock()};
 				if (!self)
 				{
 					return;
@@ -141,7 +141,7 @@ void Session::Handle(const KeyStateChange& command)
 {
 	_commandQueue.Enqueue([this, cmd = command]()
 	{
-		const auto it = kInputEmitters.find(cmd.action);
+		const auto it{kInputEmitters.find(cmd.action)};
 		if (it == kInputEmitters.end())
 		{
 			Log::Error("Session: unhandled input signal "
@@ -149,7 +149,7 @@ void Session::Handle(const KeyStateChange& command)
 			return;
 		}
 
-		const auto& emit = it->second;
+		const auto& emit{it->second};
 		emit(*_events, _slot, cmd.isPressed);
 	});
 }

@@ -10,7 +10,7 @@ constexpr char kFirstSymbol{'0'};
 
 [[nodiscard]] bool IsSkippable(const std::string_view line)
 {
-	const std::size_t firstVisible = line.find_first_not_of(" \t");
+	const std::size_t firstVisible{line.find_first_not_of(" \t")};
 
 	return firstVisible == std::string_view::npos || line[firstVisible] == kCommentPrefix;
 }
@@ -24,7 +24,7 @@ constexpr char kFirstSymbol{'0'};
 		return false;
 	}
 
-	const auto type = static_cast<ObstacleType>(symbol - kFirstSymbol);
+	const auto type{static_cast<ObstacleType>(symbol - kFirstSymbol)};
 
 	return type == ObstacleType::None || IsSpawnableObstacle(type);
 }
@@ -34,12 +34,12 @@ std::expected<MapData, MapError> MapLoader::LoadFromFile(const std::filesystem::
 {
 	//NOTE: a map file never changes while the game runs, so every load after the first skips the disk
 	static std::map<std::filesystem::path, MapData> parsed;
-	if (const auto cached = parsed.find(path); cached != parsed.end())
+	if (const auto cached{parsed.find(path)}; cached != parsed.end())
 	{
 		return cached->second;
 	}
 
-	std::ifstream file{path};
+	const std::ifstream file{path};
 	if (!file)
 	{
 		return std::unexpected(MapError{.path = path, .reason = "cannot open the map file"});
@@ -49,7 +49,7 @@ std::expected<MapData, MapError> MapLoader::LoadFromFile(const std::filesystem::
 	contents << file.rdbuf();
 
 	//NOTE: only a good parse is remembered - a broken path goes back to the disk and complains again
-	auto loaded = Parse(contents.str(), path);
+	auto loaded{Parse(contents.str(), path)};
 	if (!loaded)
 	{
 		return std::unexpected(std::move(loaded).error());
@@ -65,8 +65,8 @@ std::expected<MapData, MapError> MapLoader::Parse(const std::string_view text, s
 
 	for (std::size_t pos = 0u; pos <= text.size();)
 	{
-		const std::size_t lineEnd = std::min(text.find('\n', pos), text.size());
-		std::string_view line = text.substr(pos, lineEnd - pos);
+		const std::size_t lineEnd{std::min(text.find('\n', pos), text.size())};
+		std::string_view line{text.substr(pos, lineEnd - pos)};
 		pos = lineEnd + 1u;
 		++lineNumber;
 

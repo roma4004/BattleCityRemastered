@@ -26,7 +26,7 @@ using AudioHandle = SdlHandle<MIX_Audio, MIX_DestroyAudio>;
 
 struct SDL_Config final
 {
-	static constexpr const char* kWindowTitle{"Battle City remastered"};
+	static constexpr auto kWindowTitle{"Battle City remastered"};
 	static constexpr int kFontSizePtSmall{14};
 	static constexpr int kFontSizePtMedium{24};
 
@@ -85,7 +85,7 @@ private:
 			const SurfaceHandle& surface, const std::filesystem::path& path) const;
 	[[nodiscard]] std::expected<void, InitError> LoadTexturePair(std::string_view configKey,
 																 SurfaceHandle& outSurface,
-																 TextureHandle& outTexture);
+																 TextureHandle& outTexture) const;
 	[[nodiscard]] std::expected<void, InitError> LoadPadHints(std::span<const char* const> configKeys,
 															  std::vector<SurfaceHandle>& outSurfaces,
 															  std::vector<TextureHandle>& outTextures);

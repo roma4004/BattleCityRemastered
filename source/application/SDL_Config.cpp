@@ -67,7 +67,7 @@ std::expected<void, InitError> SDL_Config::Init()
 		  .transform([this]
 		   {
 			   //NOTE: the game runs without sound, so this one failure is reported and dropped
-			   if (const auto audio = InitAudio();
+			   if (const auto audio{InitAudio()};
 				   !audio)
 			   {
 				   Log::Error(audio.error().stage + ": " + audio.error().detail);
@@ -101,7 +101,7 @@ std::expected<void, InitError> SDL_Config::InitVideo()
 	//shared atlas, bleeds neighbouring cells into each other at the edges
 	SDL_SetDefaultTextureScaleMode(renderer.get(), SDL_SCALEMODE_NEAREST);
 
-	if (const auto vsync = SetVSync(projectConfig.VSyncMode());
+	if (const auto vsync{SetVSync(projectConfig.VSyncMode())};
 		!vsync)
 	{
 		return std::unexpected(vsync.error());
@@ -175,7 +175,7 @@ std::expected<void, InitError> SDL_Config::InitAudio()
 										 .detail = SDL_GetError()});
 	}
 
-	const std::string introMusicPath = projectConfig.ResourcePath("Music.LevelStarted").string();
+	const std::string introMusicPath{projectConfig.ResourcePath("Music.LevelStarted").string()};
 	//NOTE: predecoded - one short chunk, and decoding it once keeps the playback path allocation-free
 	if (levelIntroMusic = AudioHandle{MIX_LoadAudio(mixer.get(), introMusicPath.c_str(), true)};
 		levelIntroMusic == nullptr)
@@ -226,9 +226,9 @@ std::expected<TextureHandle, InitError> SDL_Config::CreateTexture(
 
 std::expected<void, InitError> SDL_Config::LoadTexturePair(const std::string_view configKey,
 														   SurfaceHandle& outSurface,
-														   TextureHandle& outTexture)
+														   TextureHandle& outTexture) const
 {
-	const std::filesystem::path path = projectConfig.ResourcePath(std::string{configKey});
+	const std::filesystem::path path{projectConfig.ResourcePath(std::string{configKey})};
 
 	//NOTE: the surface is kept - a device reset rebuilds the texture from it
 	return LoadSurface(path).and_then([&](SurfaceHandle surface)
@@ -253,7 +253,7 @@ std::expected<void, InitError> SDL_Config::LoadPadHints(const std::span<const ch
 		SurfaceHandle surface{nullptr};
 		TextureHandle texture{nullptr};
 
-		if (auto loaded = LoadTexturePair(key, surface, texture);
+		if (auto loaded{LoadTexturePair(key, surface, texture)};
 			!loaded)
 		{
 			return loaded;
@@ -269,24 +269,24 @@ std::expected<void, InitError> SDL_Config::LoadPadHints(const std::span<const ch
 //NOTE: not LoadTexturePair - the atlas needs its colour key punched into the surface in between
 std::expected<void, InitError> SDL_Config::LoadAtlas()
 {
-	const std::filesystem::path path = projectConfig.ResourcePath("Images.SpriteSheet");
+	const std::filesystem::path path{projectConfig.ResourcePath("Images.SpriteSheet")};
 
-	auto surface = LoadSurface(path);
+	auto surface{LoadSurface(path)};
 	if (!surface)
 	{
 		return std::unexpected(surface.error());
 	}
 
-	SDL_Surface* rawSurface = surface->get();
+	SDL_Surface* rawSurface{surface->get()};
 	//NOTE: SDL3 keeps only the format enum on the surface - the channel layout comes from its details
-	const SDL_PixelFormatDetails* formatDetails = SDL_GetPixelFormatDetails(rawSurface->format);
-	const Uint32 colorKey = SDL_MapRGB(formatDetails, SDL_GetSurfacePalette(rawSurface), 0, 0, 1);
+	const SDL_PixelFormatDetails* formatDetails{SDL_GetPixelFormatDetails(rawSurface->format)};
+	const Uint32 colorKey{SDL_MapRGB(formatDetails, SDL_GetSurfacePalette(rawSurface), 0, 0, 1)};
 	if (!SDL_SetSurfaceColorKey(rawSurface, true, colorKey))
 	{
 		return std::unexpected(InitError{.stage = "IMG atlas SetColorKey Error", .detail = SDL_GetError()});
 	}
 
-	auto texture = CreateTexture(*surface, path);
+	auto texture{CreateTexture(*surface, path)};
 	if (!texture)
 	{
 		return std::unexpected(texture.error());
@@ -325,7 +325,7 @@ std::expected<void, InitError> SDL_Config::RecreateTexturesFromSurfaces()
 
 		for (size_t i = 0u; i < surfaces.size(); ++i)
 		{
-			if (auto rebuilt = RebuildTexture(surfaces[i], outTextures[i], name);
+			if (auto rebuilt{RebuildTexture(surfaces[i], outTextures[i], name)};
 				!rebuilt)
 			{
 				return rebuilt;
@@ -352,13 +352,13 @@ std::expected<void, InitError> SDL_Config::RecreateTexturesFromSurfaces()
 
 void SDL_Config::SaveWindowState(ProjectConfig& outProjectConfig) const
 {
-	SDL_Window* sdlWindowRaw = sdlWindow.get();
+	SDL_Window* sdlWindowRaw{sdlWindow.get()};
 	if (sdlWindowRaw == nullptr)
 	{
 		return;
 	}
 
-	constexpr SDL_WindowFlags unsavableFlags = SDL_WINDOW_MINIMIZED | SDL_WINDOW_MAXIMIZED;
+	constexpr SDL_WindowFlags unsavableFlags{SDL_WINDOW_MINIMIZED | SDL_WINDOW_MAXIMIZED};
 	if ((SDL_GetWindowFlags(sdlWindowRaw) & unsavableFlags) != 0u)
 	{
 		return;
@@ -383,10 +383,10 @@ void SDL_Config::SaveWindowState(ProjectConfig& outProjectConfig) const
 		int topBorder{};
 		SDL_GetWindowBordersSize(sdlWindowRaw, &topBorder, nullptr, nullptr, nullptr);
 
-		const int minX = std::max(0, bounds.x);
-		const int minY = std::max(0, bounds.y + topBorder);
-		const int maxX = std::max(minX, bounds.x + bounds.w - width);
-		const int maxY = std::max(minY, bounds.y + bounds.h - height);
+		const int minX{std::max(0, bounds.x)};
+		const int minY{std::max(0, bounds.y + topBorder)};
+		const int maxX{std::max(minX, bounds.x + bounds.w - width)};
+		const int maxY{std::max(minY, bounds.y + bounds.h - height)};
 
 		outProjectConfig.Set("Window.posX", static_cast<unsigned>(std::clamp(posX, minX, maxX)));
 		outProjectConfig.Set("Window.posY", static_cast<unsigned>(std::clamp(posY, minY, maxY)));
@@ -400,8 +400,8 @@ void SDL_Config::SaveWindowState(ProjectConfig& outProjectConfig) const
 
 		//NOTE: stored unscaled, as InitWindow reads it. Queried live - the window may have moved to a
 		//display with another scale
-		const float scale = SDL_GetWindowDisplayScale(sdlWindowRaw);
-		const double divisor = scale > 0.0f ? static_cast<double>(scale) : 1.0;
+		const float scale{SDL_GetWindowDisplayScale(sdlWindowRaw)};
+		const double divisor{scale > 0.0f ? static_cast<double>(scale) : 1.0};
 
 		outProjectConfig.Set("Window.width",
 							 static_cast<unsigned>(std::max(0L, std::lround(static_cast<double>(width) / divisor))));
@@ -413,7 +413,7 @@ void SDL_Config::SaveWindowState(ProjectConfig& outProjectConfig) const
 WindowHandle SDL_Config::InitWindow() const
 {
 	//NOTE: hidden until InitVideo is through - it is resized and moved right after creation
-	constexpr SDL_WindowFlags windowFlags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN;
+	constexpr SDL_WindowFlags windowFlags{SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN};
 
 	WindowHandle window{SDL_CreateWindow(kWindowTitle,
 										 static_cast<int>(windowConfig.size.x),
@@ -427,10 +427,10 @@ WindowHandle SDL_Config::InitWindow() const
 
 	//NOTE: SDL3 window coordinates are plain pixels, so the stored size is unscaled and multiplied here.
 	//SaveWindowState divides it back out, else the window grows by the scale every run
-	if (const float scale = SDL_GetWindowDisplayScale(window.get());
+	if (const float scale{SDL_GetWindowDisplayScale(window.get())};
 		scale > 0.0f)
 	{
-		const double factor = static_cast<double>(scale);
+		const auto factor{static_cast<double>(scale)};
 		SDL_SetWindowSize(window.get(),
 						  static_cast<int>(std::lround(static_cast<double>(windowConfig.size.x) * factor)),
 						  static_cast<int>(std::lround(static_cast<double>(windowConfig.size.y) * factor)));
@@ -446,7 +446,7 @@ WindowHandle SDL_Config::InitWindow() const
 
 RendererHandle SDL_Config::InitRender() const
 {
-	const int monitorIndex = projectConfig.MonitorNumber() - 1;
+	const int monitorIndex{projectConfig.MonitorNumber() - 1};
 
 	//NOTE: SDL3 addresses displays by id, not by index - the ini still holds the 1-based number
 	SDL_Rect bounds{};
@@ -466,15 +466,15 @@ RendererHandle SDL_Config::InitRender() const
 	}
 
 	SDL_Rect bordersSize{};
-	SDL_Window* sdlWindowRaw = sdlWindow.get();
+	SDL_Window* sdlWindowRaw{sdlWindow.get()};
 	SDL_GetWindowBordersSize(sdlWindowRaw, &bordersSize.y, &bordersSize.x, &bordersSize.h, &bordersSize.w);
 
 	//NOTE: centering would override an explicit pos
-	const bool centerOnMonitor =
+	const bool centerOnMonitor{
 			!windowConfig.hasExplicitPos
 			&& (projectConfig.IsFreshIni()
 				|| projectConfig.IsCenterOnStart()
-				|| windowConfig.side != WindowSide::Center);
+				|| windowConfig.side != WindowSide::Center)};
 	if (hasMonitor && centerOnMonitor)
 	{
 		//NOTE: the real window, not the ini one - InitWindow already scaled it
@@ -482,7 +482,7 @@ RendererHandle SDL_Config::InitRender() const
 		int windowHeight{};
 		SDL_GetWindowSize(sdlWindowRaw, &windowWidth, &windowHeight);
 
-		const int halfWindowApart = static_cast<int>(windowConfig.side) * (windowWidth / 2);
+		const int halfWindowApart{static_cast<int>(windowConfig.side) * (windowWidth / 2)};
 
 		const Point screenCenter{.x = bounds.x + bounds.w / 2,
 								 .y = bounds.y + bounds.h / 2};
@@ -491,10 +491,10 @@ RendererHandle SDL_Config::InitRender() const
 
 		//NOTE: the pair spans two windows and must stay on this display. Clamped, not shrunk - they
 		//overlap in the middle instead of leaving the screen; the top margin keeps the title bar
-		const int minX = usableBounds.x;
-		const int minY = usableBounds.y + bordersSize.y;
-		const int maxX = std::max(minX, usableBounds.x + usableBounds.w - windowWidth);
-		const int maxY = std::max(minY, usableBounds.y + usableBounds.h - windowHeight);
+		const int minX{usableBounds.x};
+		const int minY{usableBounds.y + bordersSize.y};
+		const int maxX{std::max(minX, usableBounds.x + usableBounds.w - windowWidth)};
+		const int maxY{std::max(minY, usableBounds.y + usableBounds.h - windowHeight)};
 
 		SDL_SetWindowPosition(sdlWindowRaw, std::clamp(centred.x, minX, maxX), std::clamp(centred.y, minY, maxY));
 	}

@@ -13,7 +13,7 @@ int main(const int argc, char* argv[])
 	Log::SetFile(true);
 	Log::SetLevel(Log::Level::Normal);
 
-	const auto launchOptions = CommandLineParser::Parse(argc, argv);
+	const auto launchOptions{CommandLineParser::Parse(argc, argv)};
 	if (!launchOptions)
 	{
 		Log::Error("bad argument '" + launchOptions.error().arg + "': " + launchOptions.error().reason);
@@ -24,7 +24,7 @@ int main(const int argc, char* argv[])
 	ProjectConfig projectConfig{ProjectConfig::DefaultFilePath()};
 	//NOTE: not fatal - defaults play fine. Said out loud because the file is kept as it is, so
 	//otherwise the settings would just look ignored.
-	if (const auto& configError = projectConfig.LoadError())
+	if (const auto& configError{projectConfig.LoadError()})
 	{
 		Log::Error("config " + configError->path.string() + " line " + std::to_string(configError->line) + ": "
 				   + configError->reason + ", running on defaults and leaving the file untouched");
@@ -37,7 +37,7 @@ int main(const int argc, char* argv[])
 	windowConfig.Apply(*launchOptions);
 
 	SDL_Config sdlEnv{gameConfig, projectConfig, windowConfig};
-	if (const auto init = sdlEnv.Init(); !init)
+	if (const auto init{sdlEnv.Init()}; !init)
 	{
 		Log::Error(init.error().stage + ": " + init.error().detail);
 

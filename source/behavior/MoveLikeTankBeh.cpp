@@ -39,7 +39,7 @@ bool MoveLikeTankBeh::IsBlocking(const std::shared_ptr<BaseObj>& object, const O
 bool MoveLikeTankBeh::IsCanMove(const double deltaTime, const Direction dir,
 								const std::vector<std::shared_ptr<BaseObj>>& objects) const
 {
-	const ObjRectangle tankNextPosRect = DirectionUtils::Swept(_rect, _speed * deltaTime, dir);
+	const ObjRectangle tankNextPosRect{DirectionUtils::Swept(_rect, _speed * deltaTime, dir)};
 
 	auto blocking = [this, &tankNextPosRect](const std::shared_ptr<BaseObj>& object)
 	{
@@ -54,11 +54,11 @@ double MoveLikeTankBeh::GetTravelledDistance(const double step, const Direction 
 											 const std::vector<std::shared_ptr<BaseObj>>& objects,
 											 std::vector<std::shared_ptr<BaseObj>>& outTouched) const
 {
-	const ObjRectangle sweptRect = DirectionUtils::Swept(_rect, step, dir);
+	const ObjRectangle sweptRect{DirectionUtils::Swept(_rect, step, dir)};
 
 	//NOTE: park a pixel short - IsCollide reads a flush touch as a collision
-	constexpr double padding = 1.0;
-	double travelled = step;
+	constexpr double padding{1.0};
+	double travelled{step};
 	outTouched.clear();
 	for (const std::shared_ptr<BaseObj>& object: objects)
 	{
@@ -69,7 +69,7 @@ double MoveLikeTankBeh::GetTravelledDistance(const double step, const Direction 
 
 		outTouched.push_back(object);
 		//NOTE: a negative gap is level with or behind the leading edge - touched, but not in the way
-		if (const double gap = DirectionUtils::GapTo(_rect, object->GetRect(), dir); gap >= 0.0)
+		if (const double gap{DirectionUtils::GapTo(_rect, object->GetRect(), dir)}; gap >= 0.0)
 		{
 			travelled = std::min(travelled, gap - padding);
 		}
@@ -82,18 +82,18 @@ bool MoveLikeTankBeh::Move(const Direction dir, const double deltaTime,
 						   const std::vector<std::shared_ptr<BaseObj>>& objects,
 						   std::vector<std::shared_ptr<BaseObj>>& outCollisions)
 {
-	const double step = _speed * deltaTime;
+	const double step{_speed * deltaTime};
 	if (!DirectionUtils::FitsBeforeEdge(_rect, _gameConfig.battlefieldSize, step, dir))
 	{
 		return false;
 	}
 
-	const double distance = GetTravelledDistance(step, dir, objects, outCollisions);
+	const double distance{GetTravelledDistance(step, dir, objects, outCollisions)};
 
 	//NOTE: ice turns the step into momentum, but only while the way is clear
 	if (outCollisions.empty() && _effects.isTouchTheIce)
 	{
-		if (double& velocity = _velocity[static_cast<size_t>(dir)];
+		if (double& velocity{_velocity[static_cast<size_t>(dir)]};
 			velocity < DirectionUtils::SizeAlong(_rect, dir) * _driftMultiplicator)// clamp max accumulated velocity
 		{
 			velocity += distance * _driftMultiplicator;
@@ -115,10 +115,10 @@ bool MoveLikeTankBeh::Move(const Direction dir, const double deltaTime,
 bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime, const std::vector<std::shared_ptr<BaseObj>>& objects)
 {
 	bool isDrift{false};
-	double speed = _speed * deltaTime;
+	double speed{_speed * deltaTime};
 	for (const Direction dir: {Direction::UP, Direction::LEFT, Direction::DOWN, Direction::RIGHT})
 	{
-		double& velocity = _velocity[static_cast<size_t>(dir)];
+		double& velocity{_velocity[static_cast<size_t>(dir)]};
 		if (velocity <= speed)
 		{
 			continue;

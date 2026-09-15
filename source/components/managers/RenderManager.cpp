@@ -86,7 +86,7 @@ void RenderManager::OnRenderDeviceReset(const RenderDeviceResetEvent&)
 
 	CreateColorTexture(kGrayColor);
 
-	if (const auto recreated = _sdlConfig.RecreateTexturesFromSurfaces();
+	if (const auto recreated{_sdlConfig.RecreateTexturesFromSurfaces()};
 		!recreated)
 	{
 		Log::Error(recreated.error().stage + ": " + recreated.error().detail);
@@ -113,16 +113,16 @@ void RenderManager::OnWindowSizeChangedTo(const WindowSizeChangedToEvent&) { Sna
 
 void RenderManager::SnapWindowToLogicalAspect() const
 {
-	const UPoint logicalSize = _gameConfig.LogicalSize();
+	const UPoint logicalSize{_gameConfig.LogicalSize()};
 	if (logicalSize.x == 0u || logicalSize.y == 0u)
 	{
 		return;
 	}
 
-	const double logicalWidth = static_cast<double>(logicalSize.x);
-	const double logicalHeight = static_cast<double>(logicalSize.y);
+	const auto logicalWidth{static_cast<double>(logicalSize.x)};
+	const auto logicalHeight{static_cast<double>(logicalSize.y)};
 
-	SDL_Window* window = _sdlConfig.sdlWindow.get();
+	SDL_Window* window{_sdlConfig.sdlWindow.get()};
 
 	//NOTE: a maximized or fullscreen window is the window manager's to size - reshaping it here only
 	//fights it, so the letterbox stays and ClearFrame paints its bars instead
@@ -137,8 +137,8 @@ void RenderManager::SnapWindowToLogicalAspect() const
 
 	//NOTE: the mean of the two axes, so it does not matter which edge was dragged - the window keeps
 	//roughly the size the drag asked for and takes the field's shape
-	double scale = (static_cast<double>(windowWidth) / logicalWidth
-					+ static_cast<double>(windowHeight) / logicalHeight) / 2.0;
+	double scale{(static_cast<double>(windowWidth) / logicalWidth
+				  + static_cast<double>(windowHeight) / logicalHeight) / 2.0};
 
 	//NOTE: the desktop is the ceiling - a window the screen cannot hold is worse than a smaller one
 	if (SDL_Rect usable{};
@@ -148,8 +148,8 @@ void RenderManager::SnapWindowToLogicalAspect() const
 										 static_cast<double>(usable.h) / logicalHeight));
 	}
 
-	const int snappedWidth = std::max(1, static_cast<int>(std::lround(logicalWidth * scale)));
-	const int snappedHeight = std::max(1, static_cast<int>(std::lround(logicalHeight * scale)));
+	const int snappedWidth{std::max(1, static_cast<int>(std::lround(logicalWidth * scale)))};
+	const int snappedHeight{std::max(1, static_cast<int>(std::lround(logicalHeight * scale)))};
 	if (snappedWidth == windowWidth && snappedHeight == windowHeight)
 	{
 		return;
@@ -160,7 +160,7 @@ void RenderManager::SnapWindowToLogicalAspect() const
 
 void RenderManager::ApplyLogicalSize()
 {
-	const UPoint logicalSize = _gameConfig.LogicalSize();
+	const UPoint logicalSize{_gameConfig.LogicalSize()};
 
 	//NOTE: letterbox, not stretch - the equal scale on both axes is what the text sizing rests on. The
 	//bars it would add are answered by shaping the window itself, not by distorting the field.
@@ -219,7 +219,7 @@ void RenderManager::DrawEnemyIconBackground(const RenderEnemyIconBackgroundEvent
 
 void RenderManager::DrawEnemyIcons(const RenderEnemyIconsEvent& event) const
 {
-	const unsigned short numberOfIcons = event.count;
+	const unsigned short numberOfIcons{event.count};
 	constexpr SDL_Rect srcRect{.x = static_cast<int>(TextureOffset::kEnemyIcon.x),
 							   .y = static_cast<int>(TextureOffset::kEnemyIcon.y),
 							   .w = static_cast<int>(TextureOffset::kEnemyIcon.w),
@@ -239,14 +239,14 @@ void RenderManager::DrawEnemyIcons(const RenderEnemyIconsEvent& event) const
 		const int posX{startPos.x + col * (imageSize.x + padding.x)};
 		const int posY{startPos.y + row * (imageSize.y + padding.y)};
 
-		SDL_Rect destRect{.x = posX, .y = posY, .w = imageSize.x, .h = imageSize.y};
+		const SDL_Rect destRect{.x = posX, .y = posY, .w = imageSize.x, .h = imageSize.y};
 		RenderCopyWithClipping(_sdlConfig.atlasTexture.get(), srcRect, destRect);
 	}
 }
 
 void RenderManager::DrawPlayerOneIcons(const RenderPlayerOneIconEvent& event) const
 {
-	const unsigned short respawnCount = event.respawnCount;
+	const unsigned short respawnCount{event.respawnCount};
 	constexpr SDL_Rect srcRect{.x = static_cast<int>(TextureOffset::kPlayer1Icon.x),
 							   .y = static_cast<int>(TextureOffset::kPlayer1Icon.y),
 							   .w = static_cast<int>(TextureOffset::kPlayer1Icon.w),
@@ -265,7 +265,7 @@ void RenderManager::DrawPlayerOneIcons(const RenderPlayerOneIconEvent& event) co
 
 void RenderManager::DrawPlayerTwoIcons(const RenderPlayerTwoIconEvent& event) const
 {
-	const unsigned short respawnCount = event.respawnCount;
+	const unsigned short respawnCount{event.respawnCount};
 	constexpr SDL_Rect srcRect{.x = static_cast<int>(TextureOffset::kPlayer2Icon.x),
 							   .y = static_cast<int>(TextureOffset::kPlayer2Icon.y),
 							   .w = static_cast<int>(TextureOffset::kPlayer2Icon.w),
@@ -284,7 +284,7 @@ void RenderManager::DrawPlayerTwoIcons(const RenderPlayerTwoIconEvent& event) co
 
 void RenderManager::DrawStageNumber(const RenderStageNumberEvent& event) const
 {
-	const unsigned short currentStageNumber = event.stageNumber;
+	const unsigned short currentStageNumber{event.stageNumber};
 	constexpr SDL_Rect srcRect{.x = static_cast<int>(TextureOffset::kStageNumberFlag.x),
 							   .y = static_cast<int>(TextureOffset::kStageNumberFlag.y),
 							   .w = static_cast<int>(TextureOffset::kStageNumberFlag.w),
@@ -323,7 +323,7 @@ unsigned int RenderManager::ComponentsToColor(const Uint8 r, const Uint8 g, cons
 
 void RenderManager::DrawMenuBackground(const RenderMenuBackgroundEvent& event) const
 {
-	const Point pos = event.pos;
+	const Point pos{event.pos};
 	const SDL_Rect backgroundRect{.x = pos.x + static_cast<int>(_menuParams.padding / 2u),
 								  .y = pos.y + static_cast<int>(_menuParams.padding / 2u),
 								  .w = static_cast<int>(_menuParams.panelSize.x),
@@ -339,34 +339,34 @@ void RenderManager::DrawMenuBackground(const RenderMenuBackgroundEvent& event) c
 
 void RenderManager::DrawMenuLogo(const RenderMenuLogoEvent& event) const
 {
-	const Point pos = event.pos;
+	const Point pos{event.pos};
 	const SDL_Rect rect{.x = pos.x + 135, .y = pos.y + 42, .w = 300, .h = 75};
 	RenderCopy(_sdlConfig.logoTexture.get(), rect);
 }
 
 void RenderManager::DrawSelectorIcon(const RenderMenuSelectorIconEvent& event) const
 {
-	const Point pos = event.pos;
+	const Point pos{event.pos};
 	const SDL_Rect rect{.x = pos.x, .y = pos.y, .w = 30, .h = 30};
 	RenderCopy(_sdlConfig.selectorIconTexture.get(), rect);
 }
 
 void RenderManager::RenderCopyWithClipping(SDL_Texture* texture, const SDL_Rect srcRect, const SDL_Rect dstRect) const
 {
-	const SDL_FRect src = ToFRect(srcRect);
-	const SDL_FRect dst = ToFRect(dstRect);
+	const SDL_FRect src{ToFRect(srcRect)};
+	const SDL_FRect dst{ToFRect(dstRect)};
 	SDL_RenderTexture(_sdlConfig.renderer.get(), texture, &src, &dst);
 }
 
 void RenderManager::RenderCopy(SDL_Texture* texture, const SDL_Rect dstRect) const
 {
-	const SDL_FRect dst = ToFRect(dstRect);
+	const SDL_FRect dst{ToFRect(dstRect)};
 	SDL_RenderTexture(_sdlConfig.renderer.get(), texture, nullptr, &dst);
 }
 
 void RenderManager::DrawXBoxHint(const RenderMenuXBoxHintEvent& event) const
 {
-	const Point pos = event.pos;
+	const Point pos{event.pos};
 	RenderCopy(_sdlConfig.xboxTextures[3].get(), {.x = pos.x - 75, .y = pos.y + 93, .w = 30, .h = 30});//View button
 	RenderCopy(_sdlConfig.xboxTextures[2].get(), {.x = pos.x - 75, .y = pos.y + 123, .w = 30, .h = 30});//Menu button
 	RenderCopy(_sdlConfig.xboxTextures[5].get(), {.x = pos.x - 75, .y = pos.y + 153, .w = 30, .h = 30});//Y button
@@ -377,7 +377,7 @@ void RenderManager::DrawXBoxHint(const RenderMenuXBoxHintEvent& event) const
 
 void RenderManager::DrawPS5Hint(const RenderMenuPS5HintEvent& event) const
 {
-	const Point pos = event.pos;
+	const Point pos{event.pos};
 	RenderCopy(_sdlConfig.ps5Textures[0].get(), {.x = pos.x, .y = pos.y - 60, .w = 30, .h = 30});//Create button
 	RenderCopy(_sdlConfig.ps5Textures[4].get(), {.x = pos.x, .y = pos.y - 28, .w = 30, .h = 30});//Options button
 	RenderCopy(_sdlConfig.ps5Textures[5].get(), {.x = pos.x, .y = pos.y + 5, .w = 30, .h = 30});//Triangle button
@@ -413,7 +413,7 @@ float RenderManager::CurrentRenderScale() const
 		return 1.f;
 	}
 
-	const float scale = presentation.w / static_cast<float>(logicalWidth);
+	const float scale{presentation.w / static_cast<float>(logicalWidth)};
 
 	return scale > 0.f ? scale : 1.f;
 }
@@ -427,8 +427,8 @@ void RenderManager::TextToRender(const Point pos, const SDL_Color color, const s
 void RenderManager::TextToRenderSized(const Point pos, const SDL_Color color, const std::string& text,
 									  const int basePointSize) const
 {
-	const float scale = CurrentRenderScale();
-	const TextCache::CachedText* cached = _textCache.Acquire(text, color, basePointSize, scale);
+	const float scale{CurrentRenderScale()};
+	const TextCache::CachedText* cached{_textCache.Acquire(text, color, basePointSize, scale)};
 	if (cached == nullptr)
 	{
 		return;
@@ -440,8 +440,8 @@ void RenderManager::TextToRenderSized(const Point pos, const SDL_Color color, co
 void RenderManager::TextToRenderCentered(const SDL_Rect& box, const SDL_Color color, const std::string& text,
 										 const int basePointSize) const
 {
-	const float scale = CurrentRenderScale();
-	const TextCache::CachedText* cached = _textCache.Acquire(text, color, basePointSize, scale);
+	const float scale{CurrentRenderScale()};
+	const TextCache::CachedText* cached{_textCache.Acquire(text, color, basePointSize, scale)};
 	if (cached == nullptr)
 	{
 		return;
@@ -452,7 +452,7 @@ void RenderManager::TextToRenderCentered(const SDL_Rect& box, const SDL_Color co
 
 SDL_Rect RenderManager::MenuPanelRect(const Point menuPos) const
 {
-	const int inset = static_cast<int>(_menuParams.padding / 2u);
+	const auto inset{static_cast<int>(_menuParams.padding / 2u)};
 
 	return SDL_Rect{.x = menuPos.x + inset,
 					.y = menuPos.y + inset,
@@ -463,16 +463,16 @@ SDL_Rect RenderManager::MenuPanelRect(const Point menuPos) const
 //NOTE: the tightest line decides, the line step caps it
 int RenderManager::FitBlockPointSize(const RenderMenuTextBlockEvent& event, const float scale) const
 {
-	const SDL_Rect panel = MenuPanelRect(event.menuPos);
+	const SDL_Rect panel{MenuPanelRect(event.menuPos)};
 
 	for (int pointSize = BasePointSize(false); pointSize > kBlockMinPointSize; --pointSize)
 	{
 		const auto fits = [&](const TextBlockLine& line)
 		{
-			const Point size = _textCache.MeasureString(line.text, pointSize, scale);
-			const bool fitsWidth = event.align == TextBlockAlign::CenteredInPanel
-										   ? size.x <= panel.w
-										   : line.pos.x + size.x <= panel.x + panel.w;
+			const Point size{_textCache.MeasureString(line.text, pointSize, scale)};
+			const bool fitsWidth{event.align == TextBlockAlign::CenteredInPanel
+										 ? size.x <= panel.w
+										 : line.pos.x + size.x <= panel.x + panel.w};
 
 			return fitsWidth && size.y <= event.lineHeight;
 		};
@@ -493,7 +493,7 @@ void RenderManager::DrawMenuTextBlock(const RenderMenuTextBlockEvent& event) con
 		return;
 	}
 
-	const float scale = CurrentRenderScale();
+	const float scale{CurrentRenderScale()};
 	if (event != _menuBlockFit.block || scale != _menuBlockFit.scale)
 	{
 		_menuBlockFit = {.block = event, .scale = scale, .pointSize = FitBlockPointSize(event, scale)};
@@ -501,9 +501,9 @@ void RenderManager::DrawMenuTextBlock(const RenderMenuTextBlockEvent& event) con
 
 	if (event.align == TextBlockAlign::CenteredInPanel)
 	{
-		const SDL_Rect panel = MenuPanelRect(event.menuPos);
-		const int blockHeight = static_cast<int>(event.lines.size()) * event.lineHeight;
-		int lineY = panel.y + (panel.h - blockHeight) / 2;
+		const SDL_Rect panel{MenuPanelRect(event.menuPos)};
+		const int blockHeight{static_cast<int>(event.lines.size()) * event.lineHeight};
+		int lineY{panel.y + (panel.h - blockHeight) / 2};
 
 		for (const TextBlockLine& line: event.lines)
 		{
@@ -517,7 +517,7 @@ void RenderManager::DrawMenuTextBlock(const RenderMenuTextBlockEvent& event) con
 
 	//NOTE: clipped here and not in the block - a line missing from the event would change what
 	//FitBlockPointSize measures, and while the menu slides in that is every line there is
-	const int logicalHeight = static_cast<int>(_gameConfig.LogicalSize().y);
+	const auto logicalHeight{static_cast<int>(_gameConfig.LogicalSize().y)};
 	for (const TextBlockLine& line: event.lines)
 	{
 		if (line.pos.y < logicalHeight)
@@ -530,7 +530,7 @@ void RenderManager::DrawMenuTextBlock(const RenderMenuTextBlockEvent& event) con
 //NOTE: glyphs are sized in output pixels - the logical scale is cancelled and folded into the position
 void RenderManager::DrawText(const TextCache::CachedText& cached, const int x, const int y, const float scale) const
 {
-	SDL_Renderer* const renderer = _sdlConfig.renderer.get();
+	SDL_Renderer* const renderer{_sdlConfig.renderer.get()};
 	SDL_SetRenderScale(renderer, 1.f / scale, 1.f / scale);
 	TTF_DrawRendererText(cached.text.get(), static_cast<float>(x) * scale, static_cast<float>(y) * scale);
 	SDL_SetRenderScale(renderer, 1.f, 1.f);
@@ -554,16 +554,16 @@ SDL_FRect RenderManager::ToFRect(const SDL_Rect& rect)
 
 void RenderManager::FillRect(const SDL_Rect& rect) const
 {
-	const SDL_FRect target = ToFRect(rect);
+	const SDL_FRect target{ToFRect(rect)};
 	SDL_RenderFillRect(_sdlConfig.renderer.get(), &target);
 }
 
 void RenderManager::SetRenderDrawColor(const unsigned int color, const Uint8 transparency) const
 {
-	const Uint8 r = (color >> 16u) & 0xFFu;
-	const Uint8 g = (color >> 8u) & 0xFFu;
-	const Uint8 b = color & 0xFFu;
-	const Uint8 a = transparency;
+	const auto r{static_cast<Uint8>((color >> 16u) & 0xFFu)};
+	const auto g{static_cast<Uint8>((color >> 8u) & 0xFFu)};
+	const auto b{static_cast<Uint8>(color & 0xFFu)};
+	const Uint8 a{transparency};
 
 	SDL_SetRenderDrawColor(_sdlConfig.renderer.get(), r, g, b, a);
 }
@@ -595,7 +595,7 @@ void RenderManager::ClearFrame(const PreTickUpdateEvent&) const
 	SetRenderDrawColor(kGrayColor);
 	SDL_RenderClear(_sdlConfig.renderer.get());
 
-	const UPoint battlefieldSize = _gameConfig.battlefieldSize;
+	const UPoint battlefieldSize{_gameConfig.battlefieldSize};
 	SDL_SetRenderDrawColor(_sdlConfig.renderer.get(), 0u, 0u, 0u, 255u);
 	FillRect(SDL_Rect{.x = 0,
 					  .y = 0,
@@ -662,9 +662,9 @@ std::pair<double, SDL_FlipMode> RenderManager::GetRotateAndAngleAndFlip(const Di
 
 void RenderManager::DrawColorTexture(const RenderColorTextureEvent& event)
 {
-	const ObjRectangle rect = event.rect;
-	const SDL_Rect dstRect = RectToSdlRect(rect);
-	if (const auto it = _colorTextureCache.find(kGrayColor); it != _colorTextureCache.end())
+	const ObjRectangle rect{event.rect};
+	const SDL_Rect dstRect{RectToSdlRect(rect)};
+	if (const auto it{_colorTextureCache.find(kGrayColor)}; it != _colorTextureCache.end())
 	{
 		RenderCopy(it->second.get(), dstRect);
 	}
@@ -673,9 +673,9 @@ void RenderManager::DrawColorTexture(const RenderColorTextureEvent& event)
 void RenderManager::DrawTexture(const RenderTextureEvent& event) const
 {
 	auto [angle, flip] = GetRotateAndAngleAndFlip(event.dir);
-	const SDL_FRect src = ToFRect(RectToSdlRect(event.textureRect));
-	const SDL_FRect dst = ToFRect(RectToSdlRect(event.destRect));
-	SDL_Texture* atlas = _sdlConfig.atlasTexture.get();
+	const SDL_FRect src{ToFRect(RectToSdlRect(event.textureRect))};
+	const SDL_FRect dst{ToFRect(RectToSdlRect(event.destRect))};
+	SDL_Texture* atlas{_sdlConfig.atlasTexture.get()};
 
 	if (event.color != 0u)
 	{
@@ -693,7 +693,7 @@ void RenderManager::DrawTexture(const RenderTextureEvent& event) const
 
 void RenderManager::RenderFPS(const RenderFPSEvent& event) const
 {
-	const unsigned int fps = event.fps;
+	const unsigned int fps{event.fps};
 	if (fps == 0u)
 	{
 		return;
@@ -708,33 +708,33 @@ void RenderManager::RenderFPS(const RenderFPSEvent& event) const
 void RenderManager::DrawHealthBar(const RenderHealthBarEvent& event) const
 {
 	const auto& [rect, health] = event;
-	const float pixelsPerHealthPoint = static_cast<float>(rect.w) / 100.0f;
-	const float healthWidth = static_cast<float>(health) * pixelsPerHealthPoint;
+	const float pixelsPerHealthPoint{static_cast<float>(rect.w) / 100.0f};
+	const float healthWidth{static_cast<float>(health) * pixelsPerHealthPoint};
 	if (healthWidth <= 0.f)
 	{
 		return;
 	}
 
-	const int centerX = static_cast<int>(rect.x + rect.w / 2.0);
-	const int barWidthInt = static_cast<int>(healthWidth);
-	const int healthPosX = centerX - (barWidthInt / 2);
+	const auto centerX{static_cast<int>(rect.x + rect.w / 2.0)};
+	const auto barWidthInt{static_cast<int>(healthWidth)};
+	const int healthPosX{centerX - (barWidthInt / 2)};
 
 	const SDL_Rect healthBarRect{.x = healthPosX, .y = static_cast<int>(rect.y) - 10, .w = barWidthInt, .h = 5};
 
 	unsigned int color;
 	if (health > 70)
 	{
-		constexpr unsigned int colorGreen = 0x408000u;
+		constexpr unsigned int colorGreen{0x408000u};
 		color = colorGreen;
 	}
 	else if (health > 30)
 	{
-		constexpr unsigned int colorYellow = 0xEAEA00u;
+		constexpr unsigned int colorYellow{0xEAEA00u};
 		color = colorYellow;
 	}
 	else
 	{
-		constexpr unsigned int colorRed = 0xFF8080u;
+		constexpr unsigned int colorRed{0xFF8080u};
 		color = colorRed;
 	}
 

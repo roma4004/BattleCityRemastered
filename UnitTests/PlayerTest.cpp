@@ -15,6 +15,7 @@
 #include "entities/pawns/Tank.h"
 #include "enums/Direction.h"
 #include "enums/InputChannel.h"
+#include "geometry/Point.h"
 #include "gtest/gtest.h"
 #include <memory>
 
@@ -54,24 +55,31 @@ protected:
 	}
 
 	void TearDown() override {}
+
+	std::shared_ptr<Tank> CreatePlayer(const FPoint pos, const Author author = Author::Player1,
+									   const Direction dir = Direction::UP)
+	{
+		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _tankSize, .h = _tankSize};
+		auto player{TestUtils::CreatePlayer(rect, _tankHealth, author, _allObjects, _events, dir, _bulletPool,
+											_gameConfig)};
+		_allObjects.emplace_back(player);
+
+		return player;
+	}
 };
 
 TEST_F(PlayerTest, TankMoveInSideScreenUp)
 {
-	const auto windowHeight = static_cast<double>(_gameConfig.battlefieldSize.y);
-	const ObjRectangle rectPlayer{.x = 0.0, .y = windowHeight - _tankSize, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player);
+	const auto windowHeight{static_cast<double>(_gameConfig.battlefieldSize.y)};
+	const auto player{CreatePlayer({.x = 0.0, .y = windowHeight - _tankSize})};
 
-	const FPoint startPos = player->GetPos();
+	const FPoint startPos{player->GetPos()};
 
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveUpEvent{.isPressed = isPressed});
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	const FPoint endPos = player->GetPos();
+	const FPoint endPos{player->GetPos()};
 	EXPECT_NE(startPos.y, endPos.y);
 	EXPECT_EQ(startPos.x, endPos.x);
 	EXPECT_GT(startPos.y, endPos.y);
@@ -79,20 +87,16 @@ TEST_F(PlayerTest, TankMoveInSideScreenUp)
 
 TEST_F(PlayerTest, TankMoveInSideScreenLeft)
 {
-	const auto windowWidth = static_cast<double>(_gameConfig.battlefieldSize.x);
-	const ObjRectangle rectPlayer{.x = windowWidth - _tankSize, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player);
+	const auto windowWidth{static_cast<double>(_gameConfig.battlefieldSize.x)};
+	const auto player{CreatePlayer({.x = windowWidth - _tankSize, .y = 0.0})};
 
-	const FPoint startPos = player->GetPos();
+	const FPoint startPos{player->GetPos()};
 
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveLeftEvent{.isPressed = isPressed});
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	const FPoint endPos = player->GetPos();
+	const FPoint endPos{player->GetPos()};
 	EXPECT_NE(startPos.x, endPos.x);
 	EXPECT_EQ(startPos.y, endPos.y);
 	EXPECT_GT(startPos.x, endPos.x);
@@ -100,19 +104,15 @@ TEST_F(PlayerTest, TankMoveInSideScreenLeft)
 
 TEST_F(PlayerTest, TankMoveInSideScreenDown)
 {
-	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player);
+	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
 
-	const FPoint startPos = player->GetPos();
+	const FPoint startPos{player->GetPos()};
 
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	const FPoint endPos = player->GetPos();
+	const FPoint endPos{player->GetPos()};
 	EXPECT_NE(startPos.y, endPos.y);
 	EXPECT_EQ(startPos.x, endPos.x);
 	EXPECT_LT(startPos.y, endPos.y);
@@ -120,19 +120,15 @@ TEST_F(PlayerTest, TankMoveInSideScreenDown)
 
 TEST_F(PlayerTest, TankMoveInSideScreenRight)
 {
-	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player);
+	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
 
-	const FPoint startPos = player->GetPos();
+	const FPoint startPos{player->GetPos()};
 
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveRightEvent{.isPressed = isPressed});
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	const FPoint endPos = player->GetPos();
+	const FPoint endPos{player->GetPos()};
 	EXPECT_NE(startPos.x, endPos.x);
 	EXPECT_EQ(startPos.y, endPos.y);
 	EXPECT_LT(startPos.x, endPos.x);
@@ -140,13 +136,9 @@ TEST_F(PlayerTest, TankMoveInSideScreenRight)
 
 TEST_F(PlayerTest, TankMoveOutSideScreenUp)
 {
-	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player);
+	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
 
-	const FPoint startPos = player->GetPos();
+	const FPoint startPos{player->GetPos()};
 
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveUpEvent{.isPressed = isPressed});
@@ -157,13 +149,9 @@ TEST_F(PlayerTest, TankMoveOutSideScreenUp)
 
 TEST_F(PlayerTest, TankMoveOutSideScreenLeft)
 {
-	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player);
+	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
 
-	const FPoint startPos = player->GetPos();
+	const FPoint startPos{player->GetPos()};
 
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveLeftEvent{.isPressed = isPressed});
@@ -174,18 +162,11 @@ TEST_F(PlayerTest, TankMoveOutSideScreenLeft)
 
 TEST_F(PlayerTest, TankMoveOutSideScreenDown)
 {
-	const auto windowWidth = static_cast<double>(_gameConfig.battlefieldSize.x);
-	const auto windowHeight = static_cast<double>(_gameConfig.battlefieldSize.y);
-	const ObjRectangle rectPlayer{.x = windowWidth - _tankSize,
-								  .y = windowHeight - _tankSize,
-								  .w = _tankSize,
-								  .h = _tankSize};
-	std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player);
+	const auto windowWidth{static_cast<double>(_gameConfig.battlefieldSize.x)};
+	const auto windowHeight{static_cast<double>(_gameConfig.battlefieldSize.y)};
+	const auto player{CreatePlayer({.x = windowWidth - _tankSize, .y = windowHeight - _tankSize})};
 
-	const FPoint startPos = player->GetPos();
+	const FPoint startPos{player->GetPos()};
 
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
@@ -196,18 +177,11 @@ TEST_F(PlayerTest, TankMoveOutSideScreenDown)
 
 TEST_F(PlayerTest, TankMoveOutSideScreenRight)
 {
-	const auto windowWidth = static_cast<double>(_gameConfig.battlefieldSize.x);
-	const auto windowHeight = static_cast<double>(_gameConfig.battlefieldSize.y);
-	const ObjRectangle rectPlayer{.x = windowWidth - _tankSize,
-								  .y = windowHeight - _tankSize,
-								  .w = _tankSize,
-								  .h = _tankSize};
-	std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player);
+	const auto windowWidth{static_cast<double>(_gameConfig.battlefieldSize.x)};
+	const auto windowHeight{static_cast<double>(_gameConfig.battlefieldSize.y)};
+	const auto player{CreatePlayer({.x = windowWidth - _tankSize, .y = windowHeight - _tankSize})};
 
-	const FPoint startPos = player->GetPos();
+	const FPoint startPos{player->GetPos()};
 
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveRightEvent{.isPressed = isPressed});
@@ -218,14 +192,10 @@ TEST_F(PlayerTest, TankMoveOutSideScreenRight)
 
 TEST_F(PlayerTest, TankSetPos)
 {
-	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player);
+	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
 
-	const auto windowWidth = static_cast<double>(_gameConfig.battlefieldSize.x);
-	const auto windowHeight = static_cast<double>(_gameConfig.battlefieldSize.y);
+	const auto windowWidth{static_cast<double>(_gameConfig.battlefieldSize.x)};
+	const auto windowHeight{static_cast<double>(_gameConfig.battlefieldSize.y)};
 	player->SetPos({.x = windowWidth, .y = windowHeight});
 
 	EXPECT_EQ(player->GetPos(), (FPoint{.x = windowWidth, .y = windowHeight}));
@@ -233,13 +203,9 @@ TEST_F(PlayerTest, TankSetPos)
 
 TEST_F(PlayerTest, TankSetDirection)
 {
-	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::LEFT, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player);
+	const auto player{CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::LEFT)};
 
-	const Direction startDirection = player->GetDirection();
+	const Direction startDirection{player->GetDirection()};
 
 	player->SetDirection(Direction::RIGHT);
 
@@ -249,15 +215,11 @@ TEST_F(PlayerTest, TankSetDirection)
 
 TEST_F(PlayerTest, TankDontMoveWhenShotUp)
 {
-	const auto windowWidth = static_cast<double>(_gameConfig.battlefieldSize.x);
-	const auto windowHeight = static_cast<double>(_gameConfig.battlefieldSize.y);
-	const ObjRectangle rectPlayer{.x = windowWidth / 2.0, .y = windowHeight / 2.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player);
+	const auto windowWidth{static_cast<double>(_gameConfig.battlefieldSize.x)};
+	const auto windowHeight{static_cast<double>(_gameConfig.battlefieldSize.y)};
+	const auto player{CreatePlayer({.x = windowWidth / 2.0, .y = windowHeight / 2.0})};
 
-	const FPoint startPos = player->GetPos();
+	const FPoint startPos{player->GetPos()};
 
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = isPressed});
@@ -268,15 +230,12 @@ TEST_F(PlayerTest, TankDontMoveWhenShotUp)
 
 TEST_F(PlayerTest, TankDontMoveWhenShotLeft)
 {
-	const auto windowWidth = static_cast<double>(_gameConfig.battlefieldSize.x);
-	const auto windowHeight = static_cast<double>(_gameConfig.battlefieldSize.y);
-	const ObjRectangle rectPlayer{.x = windowWidth / 2.0, .y = windowHeight / 2.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::LEFT, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player);
+	const auto windowWidth{static_cast<double>(_gameConfig.battlefieldSize.x)};
+	const auto windowHeight{static_cast<double>(_gameConfig.battlefieldSize.y)};
+	const auto player{CreatePlayer({.x = windowWidth / 2.0, .y = windowHeight / 2.0}, Author::Player1,
+								   Direction::LEFT)};
 
-	const FPoint startPos = player->GetPos();
+	const FPoint startPos{player->GetPos()};
 
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = isPressed});
@@ -287,15 +246,12 @@ TEST_F(PlayerTest, TankDontMoveWhenShotLeft)
 
 TEST_F(PlayerTest, TankDontMoveWhenShotDown)
 {
-	const auto windowWidth = static_cast<double>(_gameConfig.battlefieldSize.x);
-	const auto windowHeight = static_cast<double>(_gameConfig.battlefieldSize.y);
-	const ObjRectangle rectPlayer{.x = windowWidth / 2.0, .y = windowHeight / 2.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player);
+	const auto windowWidth{static_cast<double>(_gameConfig.battlefieldSize.x)};
+	const auto windowHeight{static_cast<double>(_gameConfig.battlefieldSize.y)};
+	const auto player{CreatePlayer({.x = windowWidth / 2.0, .y = windowHeight / 2.0}, Author::Player1,
+								   Direction::DOWN)};
 
-	const FPoint startPos = player->GetPos();
+	const FPoint startPos{player->GetPos()};
 
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = isPressed});
@@ -306,15 +262,12 @@ TEST_F(PlayerTest, TankDontMoveWhenShotDown)
 
 TEST_F(PlayerTest, TankDontMoveWhenShotRight)
 {
-	const auto windowWidth = static_cast<double>(_gameConfig.battlefieldSize.x);
-	const auto windowHeight = static_cast<double>(_gameConfig.battlefieldSize.y);
-	const ObjRectangle rectPlayer{.x = windowWidth / 2.0, .y = windowHeight / 2.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::RIGHT, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player);
+	const auto windowWidth{static_cast<double>(_gameConfig.battlefieldSize.x)};
+	const auto windowHeight{static_cast<double>(_gameConfig.battlefieldSize.y)};
+	const auto player{CreatePlayer({.x = windowWidth / 2.0, .y = windowHeight / 2.0}, Author::Player1,
+								   Direction::RIGHT)};
 
-	const FPoint startPos = player->GetPos();
+	const FPoint startPos{player->GetPos()};
 
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = isPressed});
@@ -325,14 +278,10 @@ TEST_F(PlayerTest, TankDontMoveWhenShotRight)
 
 TEST_F(PlayerTest, TankShotInSideScreenDown)
 {
-	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player);
+	CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
 
 	//success shot down test, try to create an inside screen bullet
-	const size_t size = _allObjects.size();
+	const size_t size{_allObjects.size()};
 
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = isPressed});
@@ -343,14 +292,10 @@ TEST_F(PlayerTest, TankShotInSideScreenDown)
 
 TEST_F(PlayerTest, TankShotInSideScreenRight)
 {
-	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::RIGHT, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player);
+	CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::RIGHT);
 
 	//success shot right test, try to create an inside screen bullet
-	const size_t size = _allObjects.size();
+	const size_t size{_allObjects.size()};
 
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveRightEvent{.isPressed = isPressed});
@@ -362,19 +307,12 @@ TEST_F(PlayerTest, TankShotInSideScreenRight)
 
 TEST_F(PlayerTest, TankShotInSideScreenUp)
 {
-	const auto windowWidth = static_cast<double>(_gameConfig.battlefieldSize.x);
-	const auto windowHeight = static_cast<double>(_gameConfig.battlefieldSize.y);
-	const ObjRectangle rectPlayer{.x = windowWidth - _tankSize,
-								  .y = windowHeight - _tankSize,
-								  .w = _tankSize,
-								  .h = _tankSize};
-	std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::RIGHT, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player);
+	const auto windowWidth{static_cast<double>(_gameConfig.battlefieldSize.x)};
+	const auto windowHeight{static_cast<double>(_gameConfig.battlefieldSize.y)};
+	CreatePlayer({.x = windowWidth - _tankSize, .y = windowHeight - _tankSize}, Author::Player1, Direction::RIGHT);
 
 	//success shot up test, try to create an inside screen bullet
-	const size_t size = _allObjects.size();
+	const size_t size{_allObjects.size()};
 
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveUpEvent{.isPressed = isPressed});
@@ -386,19 +324,12 @@ TEST_F(PlayerTest, TankShotInSideScreenUp)
 
 TEST_F(PlayerTest, TankShotInSideScreenLeft)
 {
-	const auto windowWidth = static_cast<double>(_gameConfig.battlefieldSize.x);
-	const auto windowHeight = static_cast<double>(_gameConfig.battlefieldSize.y);
-	const ObjRectangle rectPlayer{.x = windowWidth - _tankSize,
-								  .y = windowHeight - _tankSize,
-								  .w = _tankSize,
-								  .h = _tankSize};
-	std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::RIGHT, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player);
+	const auto windowWidth{static_cast<double>(_gameConfig.battlefieldSize.x)};
+	const auto windowHeight{static_cast<double>(_gameConfig.battlefieldSize.y)};
+	CreatePlayer({.x = windowWidth - _tankSize, .y = windowHeight - _tankSize}, Author::Player1, Direction::RIGHT);
 
 	//success shot left test, try to create an inside screen bullet
-	const size_t size = _allObjects.size();
+	const size_t size{_allObjects.size()};
 
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveLeftEvent{.isPressed = isPressed});
@@ -410,16 +341,12 @@ TEST_F(PlayerTest, TankShotInSideScreenLeft)
 
 TEST_F(PlayerTest, TankShotOutSideScreen)
 {
-	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player);
+	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
 
 	constexpr bool isPressed{true};
 	{
 		//fail the shot up test, try to create an outside screen bullet
-		const size_t size = _allObjects.size();
+		const size_t size{_allObjects.size()};
 
 		_events->EmitEvent(Key(InputChannel::LocalP1), MoveUpEvent{.isPressed = isPressed});
 		_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = isPressed});
@@ -429,7 +356,7 @@ TEST_F(PlayerTest, TankShotOutSideScreen)
 	}
 	{
 		//fail shot left test, try to create an outside screen bullet
-		const size_t size = _allObjects.size();
+		const size_t size{_allObjects.size()};
 
 		_events->EmitEvent(Key(InputChannel::LocalP1), MoveLeftEvent{.isPressed = isPressed});
 		_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = isPressed});
@@ -442,7 +369,7 @@ TEST_F(PlayerTest, TankShotOutSideScreen)
 					.y = static_cast<double>(_gameConfig.battlefieldSize.y) - _tankSize});
 	{
 		//fail the shot down test, try to create an outside screen bullet
-		const size_t size = _allObjects.size();
+		const size_t size{_allObjects.size()};
 
 		_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
 		_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = isPressed});
@@ -452,7 +379,7 @@ TEST_F(PlayerTest, TankShotOutSideScreen)
 	}
 	{
 		//fail the shot right test, try to create an outside screen bullet
-		const size_t size = _allObjects.size();
+		const size_t size{_allObjects.size()};
 
 		_events->EmitEvent(Key(InputChannel::LocalP1), MoveRightEvent{.isPressed = isPressed});
 		_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = isPressed});
@@ -464,21 +391,12 @@ TEST_F(PlayerTest, TankShotOutSideScreen)
 
 TEST_F(PlayerTest, TankCantPassThroughTank)
 {
-	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player);
-
-	const ObjRectangle rectPlayer2{.x = 0, .y = _tankSize + 1, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player2 =
-			TestUtils::CreatePlayer(
-					rectPlayer2, _tankHealth, _uuid, Author::Player2, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player2);
+	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
+	const auto player2{CreatePlayer({.x = 0, .y = _tankSize + 1}, Author::Player2)};
 
 	//both players should failure, because they face each other blocking move each other
-	const FPoint playerStartPos = player->GetPos();
-	const FPoint player2StartPos = player2->GetPos();
+	const FPoint playerStartPos{player->GetPos()};
+	const FPoint player2StartPos{player2->GetPos()};
 
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveLeftEvent{.isPressed = isPressed});
@@ -491,11 +409,7 @@ TEST_F(PlayerTest, TankCantPassThroughTank)
 
 TEST_F(PlayerTest, TankCantPassThroughBrickWall)
 {
-	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player);
+	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
 
 	_allObjects.emplace_back(
 			std::make_shared<BrickWall>(
@@ -503,7 +417,7 @@ TEST_F(PlayerTest, TankCantPassThroughBrickWall)
 					_gameConfig));
 
 	//moveDown player should failure, because below we have a brickWall obstacle
-	const FPoint startPos = player->GetPos();
+	const FPoint startPos{player->GetPos()};
 
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
@@ -514,11 +428,7 @@ TEST_F(PlayerTest, TankCantPassThroughBrickWall)
 
 TEST_F(PlayerTest, TankCantPassThroughSteelWall)
 {
-	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player);
+	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
 
 	_allObjects.emplace_back(
 			std::make_shared<SteelWall>(
@@ -526,7 +436,7 @@ TEST_F(PlayerTest, TankCantPassThroughSteelWall)
 					_gameConfig));
 
 	//moveDown player should failure, because below we have a steelWall obstacle
-	const FPoint startPos = player->GetPos();
+	const FPoint startPos{player->GetPos()};
 
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
@@ -537,19 +447,15 @@ TEST_F(PlayerTest, TankCantPassThroughSteelWall)
 
 TEST_F(PlayerTest, TankCantPassThroughWater)
 {
-	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player);
+	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
 
-	auto waterTile = std::make_shared<WaterTile>(
+	auto waterTile{std::make_shared<WaterTile>(
 			ObjRectangle{.x = 0.0, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize},
-			_events, _uuid, _gameConfig);
+			_events, _uuid, _gameConfig)};
 	_allObjects.emplace_back(waterTile);
 
 	//moveDown player should failure, because below we have a water obstacle
-	const FPoint startPos = player->GetPos();
+	const FPoint startPos{player->GetPos()};
 
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
@@ -560,18 +466,14 @@ TEST_F(PlayerTest, TankCantPassThroughWater)
 
 TEST_F(PlayerTest, TankCantPassThroughfortressWall)
 {
-	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player);
+	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
 
-	auto fortressWall = std::make_shared<FortressBrickWall>(
-			ObjRectangle{.x = 0.0, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _events, _uuid, _gameConfig);
+	auto fortressWall{std::make_shared<FortressBrickWall>(
+			ObjRectangle{.x = 0.0, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _events, _uuid, _gameConfig)};
 	_allObjects.emplace_back(fortressWall);
 
 	//moveDown player should failure, because below we have a fortressWall obstacle
-	const FPoint startPos = player->GetPos();
+	const FPoint startPos{player->GetPos()};
 
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
@@ -582,15 +484,12 @@ TEST_F(PlayerTest, TankCantPassThroughfortressWall)
 
 TEST_F(PlayerTest, ShotWhileMovingDoesNotBlowUpOnOwnTank)
 {
-	const auto windowWidth = static_cast<double>(_gameConfig.battlefieldSize.x);
-	const auto windowHeight = static_cast<double>(_gameConfig.battlefieldSize.y);
-	const ObjRectangle rectPlayer{.x = windowWidth / 2.0, .y = windowHeight / 2.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::LEFT, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player);
+	const auto windowWidth{static_cast<double>(_gameConfig.battlefieldSize.x)};
+	const auto windowHeight{static_cast<double>(_gameConfig.battlefieldSize.y)};
+	const auto player{CreatePlayer({.x = windowWidth / 2.0, .y = windowHeight / 2.0}, Author::Player1,
+								   Direction::LEFT)};
 
-	const int startHealth = player->GetHealth();
+	const int startHealth{player->GetHealth()};
 
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveLeftEvent{.isPressed = isPressed});
@@ -598,7 +497,7 @@ TEST_F(PlayerTest, ShotWhileMovingDoesNotBlowUpOnOwnTank)
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	ASSERT_EQ(_allObjects.size(), 2u) << "no bullet was spawned";
-	const std::shared_ptr<BaseObj> bullet = _allObjects.back();
+	const std::shared_ptr<BaseObj> bullet{_allObjects.back()};
 
 	for (int frame = 0; frame < 5; ++frame)
 	{
@@ -613,12 +512,11 @@ TEST_F(PlayerTest, ShotWhileMovingDoesNotBlowUpOnOwnTank)
 // The blast of your own bullet still reaches you when firing point-blank at a wall
 TEST_F(PlayerTest, PointBlankShotDamagesTheShooter)
 {
-	const auto windowWidth = static_cast<double>(_gameConfig.battlefieldSize.x);
-	const auto windowHeight = static_cast<double>(_gameConfig.battlefieldSize.y);
+	const auto windowWidth{static_cast<double>(_gameConfig.battlefieldSize.x)};
+	const auto windowHeight{static_cast<double>(_gameConfig.battlefieldSize.y)};
 	const ObjRectangle rectPlayer{.x = windowWidth / 2.0, .y = windowHeight / 2.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::LEFT, _bulletPool, _gameConfig);
+	const std::shared_ptr<Tank> player{TestUtils::CreatePlayer(rectPlayer, _tankHealth, Author::Player1, _allObjects,
+															   _events, Direction::LEFT, _bulletPool, _gameConfig)};
 	_allObjects.emplace_back(player);
 
 	const ObjRectangle rectWall{.x = rectPlayer.x - _gridSize - 12.0,
@@ -627,7 +525,7 @@ TEST_F(PlayerTest, PointBlankShotDamagesTheShooter)
 								.h = _tankSize};
 	_allObjects.emplace_back(std::make_shared<SteelWall>(rectWall, _events, _uuid, _gameConfig));
 
-	const int startHealth = player->GetHealth();
+	const int startHealth{player->GetHealth()};
 
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = isPressed});
@@ -640,17 +538,13 @@ TEST_F(PlayerTest, PointBlankShotDamagesTheShooter)
 // The driver holds its own keyed subscriptions, so it has to go quiet with the tank
 TEST_F(PlayerTest, APlayerTankIgnoresKeysPressedWhileDeactivated)
 {
-	const ObjRectangle rect{.x = _tankSize * 2.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
-	const std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(rect, _tankHealth, _uuid, Author::Player1, _allObjects,
-									_events, 1u, Direction::UP, _bulletPool, _gameConfig);
-	_allObjects.emplace_back(player);
+	const auto player{CreatePlayer({.x = _tankSize * 2.0, .y = _tankSize * 2.0})};
 
 	player->Deactivate();
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = true});
 	player->Activate();
 
-	const FPoint before = player->GetPos();
+	const FPoint before{player->GetPos()};
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(player->GetPos(), before);

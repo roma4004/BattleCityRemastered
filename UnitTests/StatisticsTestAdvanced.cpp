@@ -16,7 +16,6 @@ protected:
 	GameConfig _gameConfig{};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	double _deltaTimeOneFrame{1.0 / 60.0};
-	Uuid _uuid{};
 	double _tankSize{};
 	unsigned short _bulletHealth{1u};
 	EventSubscription _spawnQueueSub{};
@@ -26,7 +25,7 @@ protected:
 		_events = std::make_shared<EventSystem>();
 		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, _allObjects);
 		_statistics = std::make_shared<GameStatistics>(_events);
-		const double gridSize = _gameConfig.gridOffset;
+		const double gridSize{_gameConfig.gridOffset};
 		_tankSize = gridSize * 3.0;// for better turns
 
 		CreateBullet({.x = 0.0, .y = 5.0}, Direction::DOWN, 1u, Author::Player1);
@@ -34,7 +33,6 @@ protected:
 
 	void TearDown() override {}
 
-	//TODO: use this style for others bullet creation
 	void CreateBullet(const FPoint pos, const Direction dir, const unsigned short tier, const Author author)
 	{
 		const BulletCalibre calibre{.speed = 300.0,
@@ -44,10 +42,8 @@ protected:
 									.size{.x = 6.0, .y = 5.0}};
 		// spawn Bullet
 		const ObjRectangle rectBullet{.x = pos.x, .y = pos.y, .w = calibre.size.x, .h = calibre.size.y};
-		std::shared_ptr<Bullet> bullet =
-				TestUtils::CreateBullet(
-						rectBullet, _bulletHealth, _uuid, _allObjects, _events, calibre, dir, _gameConfig,
-						author);
+		const std::shared_ptr<Bullet> bullet{TestUtils::CreateBullet(rectBullet, _bulletHealth, _allObjects, _events,
+																	 calibre, dir, _gameConfig, author)};
 		_allObjects.emplace_back(bullet);
 	}
 };

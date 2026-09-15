@@ -38,7 +38,7 @@ class ScoreBoard final
 	void Subscribe();
 
 	void OnRespawnCountChangedTo(const RespawnCountChangedToEvent& event);
-	void OnDrawUserInterface(const DrawUserInterfaceEvent&);
+	void OnDrawUserInterface(const DrawUserInterfaceEvent&) const;
 	void OnMenuShowed(const MenuShowedEvent& event);
 	void OnPauseStatus(const PauseStatusEvent&);
 	void OnGameStateChangedTo(const GameStateChangedToEvent& event);

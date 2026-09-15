@@ -16,16 +16,16 @@
 namespace
 {
 //NOTE: three rows of four, one of each interesting kind - enough to tell a parse from a guess
-constexpr auto kTinyMap = "# a comment\n"
+constexpr auto kTinyMap{"# a comment\n"
 		"\n"
 		"0123\n"
 		"4567\n"
-		"0000\n";
+		"0000\n"};
 }
 
 TEST(MapLoaderTest, ReadsTheGridAndItsSize)
 {
-	const auto map = MapLoader::Parse(kTinyMap);
+	const auto map{MapLoader::Parse(kTinyMap)};
 
 	ASSERT_TRUE(map.has_value()) << map.error().reason;
 	EXPECT_EQ(map->cols, 4u);
@@ -35,7 +35,7 @@ TEST(MapLoaderTest, ReadsTheGridAndItsSize)
 
 TEST(MapLoaderTest, DigitsFollowTheLegendOrder)
 {
-	const auto map = MapLoader::Parse(kTinyMap);
+	const auto map{MapLoader::Parse(kTinyMap)};
 
 	ASSERT_TRUE(map.has_value()) << map.error().reason;
 	EXPECT_EQ(map->At(0u, 0u), ObstacleType::None);
@@ -50,7 +50,7 @@ TEST(MapLoaderTest, DigitsFollowTheLegendOrder)
 
 TEST(MapLoaderTest, CrLfDoesNotBecomeAnExtraCell)
 {
-	const auto map = MapLoader::Parse("0123\r\n4567\r\n");
+	const auto map{MapLoader::Parse("0123\r\n4567\r\n")};
 
 	ASSERT_TRUE(map.has_value()) << map.error().reason;
 	EXPECT_EQ(map->cols, 4u);
@@ -59,7 +59,7 @@ TEST(MapLoaderTest, CrLfDoesNotBecomeAnExtraCell)
 
 TEST(MapLoaderTest, RaggedRowIsRejectedWithItsLineNumber)
 {
-	const auto map = MapLoader::Parse("# legend\n0000\n000\n");
+	const auto map{MapLoader::Parse("# legend\n0000\n000\n")};
 
 	ASSERT_FALSE(map.has_value());
 	//NOTE: 1-based and counted over the whole file, comments included - that is what the editor shows
@@ -68,7 +68,7 @@ TEST(MapLoaderTest, RaggedRowIsRejectedWithItsLineNumber)
 
 TEST(MapLoaderTest, SymbolOutsideTheLegendIsRejected)
 {
-	const auto map = MapLoader::Parse("0000\n00x0\n");
+	const auto map{MapLoader::Parse("0000\n00x0\n")};
 
 	ASSERT_FALSE(map.has_value());
 	EXPECT_EQ(map.error().line, 2u);
@@ -77,14 +77,14 @@ TEST(MapLoaderTest, SymbolOutsideTheLegendIsRejected)
 TEST(MapLoaderTest, DigitPastTheLastObstacleIsRejected)
 {
 	//NOTE: '8' is one past Ice - a plain range check on the digit would have let it through as a cast
-	const auto map = MapLoader::Parse("0080\n");
+	const auto map{MapLoader::Parse("0080\n")};
 
 	ASSERT_FALSE(map.has_value());
 }
 
 TEST(MapLoaderTest, CommentsOnlyIsNotAMap)
 {
-	const auto map = MapLoader::Parse("# just a legend\n#\n");
+	const auto map{MapLoader::Parse("# just a legend\n#\n")};
 
 	ASSERT_FALSE(map.has_value());
 	EXPECT_EQ(map.error().line, 0u);
@@ -92,7 +92,7 @@ TEST(MapLoaderTest, CommentsOnlyIsNotAMap)
 
 TEST(MapLoaderTest, MissingFileIsAnErrorNotAnEmptyMap)
 {
-	const auto map = MapLoader::LoadFromFile("Resources/Maps/there-is-no-such-level.map");
+	const auto map{MapLoader::LoadFromFile("Resources/Maps/there-is-no-such-level.map")};
 
 	ASSERT_FALSE(map.has_value());
 	EXPECT_EQ(map.error().path, "Resources/Maps/there-is-no-such-level.map");
@@ -101,11 +101,11 @@ TEST(MapLoaderTest, MissingFileIsAnErrorNotAnEmptyMap)
 //NOTE: the one test that reads a real asset - both build systems copy the map next to the test exe
 TEST(MapLoaderTest, ShippedLevelOneParses)
 {
-	constexpr auto path = "Resources/Maps/level1.map";
+	constexpr auto path{"Resources/Maps/level1.map"};
 	ASSERT_TRUE(std::filesystem::exists(path))
 			<< "run the test exe from its own directory - the map is copied next to it";
 
-	const auto map = MapLoader::LoadFromFile(path);
+	const auto map{MapLoader::LoadFromFile(path)};
 
 	ASSERT_TRUE(map.has_value()) << map.error().reason;
 	EXPECT_EQ(map->cols, 52u);
@@ -120,10 +120,10 @@ TEST(MapLoaderTest, TheSameFileIsReadFromDiskOnlyOnce)
 	const std::filesystem::path path{std::filesystem::temp_directory_path() / name};
 
 	std::ofstream{path} << "0123\n4567\n";
-	const auto first = MapLoader::LoadFromFile(path);
+	const auto first{MapLoader::LoadFromFile(path)};
 
 	std::ofstream{path} << "000\n000\n000\n";
-	const auto second = MapLoader::LoadFromFile(path);
+	const auto second{MapLoader::LoadFromFile(path)};
 
 	std::filesystem::remove(path);//NOTE: before the assertions - a failed one would return past it
 
@@ -135,7 +135,7 @@ TEST(MapLoaderTest, TheSameFileIsReadFromDiskOnlyOnce)
 
 TEST(WorldGeometryTest, ClassicMapKeepsTheClassicField)
 {
-	const UPoint battlefieldSize = WorldGeometry::ForMap(52u, 50u);
+	const UPoint battlefieldSize{WorldGeometry::ForMap(52u, 50u)};
 
 	EXPECT_EQ(battlefieldSize.x, 624u);
 	EXPECT_EQ(battlefieldSize.y, 600u);
@@ -143,7 +143,7 @@ TEST(WorldGeometryTest, ClassicMapKeepsTheClassicField)
 
 TEST(WorldGeometryTest, WideMapWidensTheWorldInsteadOfShrinkingTheCell)
 {
-	const UPoint battlefieldSize = WorldGeometry::ForMap(80u, 50u);
+	const UPoint battlefieldSize{WorldGeometry::ForMap(80u, 50u)};
 
 	EXPECT_EQ(battlefieldSize.x, 960u);
 	EXPECT_EQ(battlefieldSize.y, 600u);
@@ -151,7 +151,7 @@ TEST(WorldGeometryTest, WideMapWidensTheWorldInsteadOfShrinkingTheCell)
 
 TEST(WorldGeometryTest, TallMapMakesTheWorldTaller)
 {
-	const UPoint battlefieldSize = WorldGeometry::ForMap(52u, 100u);
+	const UPoint battlefieldSize{WorldGeometry::ForMap(52u, 100u)};
 
 	EXPECT_EQ(battlefieldSize.x, 624u);
 	EXPECT_EQ(battlefieldSize.y, 1200u);
@@ -159,7 +159,7 @@ TEST(WorldGeometryTest, TallMapMakesTheWorldTaller)
 
 TEST(WorldGeometryTest, EmptyMapProducesNoWorld)
 {
-	const UPoint battlefieldSize = WorldGeometry::ForMap(0u, 0u);
+	const UPoint battlefieldSize{WorldGeometry::ForMap(0u, 0u)};
 
 	EXPECT_EQ(battlefieldSize.x, 0u);
 	EXPECT_EQ(battlefieldSize.y, 0u);
@@ -178,9 +178,9 @@ TEST(WorldGeometryTest, LogicalSizeIsTheFieldPlusTheBar)
 //they used to disagree, the client giving it a single cell
 TEST(ObstacleSpawnerTest, ClientGivesTheEagleTheSameSpanTheMapDoes)
 {
-	auto events = std::make_shared<EventSystem>();
+	const auto events{std::make_shared<EventSystem>()};
 	std::vector<std::shared_ptr<BaseObj>> allObjects;
-	auto spawnQueueSub = TestUtils::WireSpawnQueue(events, allObjects);
+	auto spawnQueueSub{TestUtils::WireSpawnQueue(events, allObjects)};
 
 	GameConfig gameConfig{};
 	gameConfig.gameMode = GameMode::PlayAsClient;

@@ -71,12 +71,12 @@ TEST_F(GameStateManagerTest, PlayerTeamWon)
 	howManySpawnCounters.reserve(4u);
 	auto spawnCounterSub = _events->AddListener([&howManySpawnCounters](const TankSpawnEvent& tankSpawnEvent)
 	{
-		const auto& uuid = tankSpawnEvent.uuid;
-		const auto it = std::ranges::find_if(howManySpawnCounters,
-											 [&uuid](const std::pair<unsigned short, Uuid>& p)
-											 {
-												 return p.second == uuid;
-											 });
+		const auto& uuid{tankSpawnEvent.uuid};
+		const auto it{std::ranges::find_if(howManySpawnCounters,
+										   [&uuid](const std::pair<unsigned short, Uuid>& p)
+										   {
+											   return p.second == uuid;
+										   })};
 
 		if (it != howManySpawnCounters.end())
 		{
@@ -92,12 +92,12 @@ TEST_F(GameStateManagerTest, PlayerTeamWon)
 	howManyDiedCounters.reserve(4u);
 	auto diedCounterSub = _events->AddListener([&howManyDiedCounters](const TankDiedEvent& tankDiedEvent)
 	{
-		const auto& uuid = tankDiedEvent.uuid;
-		const auto it = std::ranges::find_if(howManyDiedCounters,
-											 [&uuid](const std::pair<unsigned short, Uuid>& p)
-											 {
-												 return p.second == uuid;
-											 });
+		const auto& uuid{tankDiedEvent.uuid};
+		const auto it{std::ranges::find_if(howManyDiedCounters,
+										   [&uuid](const std::pair<unsigned short, Uuid>& p)
+										   {
+											   return p.second == uuid;
+										   })};
 
 		if (it != howManyDiedCounters.end())
 		{
@@ -109,10 +109,10 @@ TEST_F(GameStateManagerTest, PlayerTeamWon)
 		}
 	});
 
-	auto gameWonSub = _events->AddListener([&isGameWon](const GameFinishedEvent& event)
+	auto gameWonSub{_events->AddListener([&isGameWon](const GameFinishedEvent& event)
 	{
 		isGameWon = event.state == GameState::Won;
-	});
+	})};
 
 	unsigned short respawnEnemyActual{20u};
 	unsigned short respawnPlayerOneActual{3u};
@@ -181,12 +181,12 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 	howManySpawnCounters.reserve(4u);
 	auto spawnCounterSub = _events->AddListener([&howManySpawnCounters](const TankSpawnEvent& tankSpawnEvent)
 	{
-		const auto& uuid = tankSpawnEvent.uuid;
-		const auto it = std::ranges::find_if(howManySpawnCounters,
-											 [&uuid](const std::pair<unsigned short, Uuid>& p)
-											 {
-												 return p.second == uuid;
-											 });
+		const auto& uuid{tankSpawnEvent.uuid};
+		const auto it{std::ranges::find_if(howManySpawnCounters,
+										   [&uuid](const std::pair<unsigned short, Uuid>& p)
+										   {
+											   return p.second == uuid;
+										   })};
 
 		if (it != howManySpawnCounters.end())
 		{
@@ -202,12 +202,12 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 	howManyDiedCounters.reserve(4u);
 	auto diedCounterSub = _events->AddListener([&howManyDiedCounters](const TankDiedEvent& tankDiedEvent)
 	{
-		const auto& uuid = tankDiedEvent.uuid;
-		const auto it = std::ranges::find_if(howManyDiedCounters,
-											 [&uuid](const std::pair<unsigned short, Uuid>& p)
-											 {
-												 return p.second == uuid;
-											 });
+		const auto& uuid{tankDiedEvent.uuid};
+		const auto it{std::ranges::find_if(howManyDiedCounters,
+										   [&uuid](const std::pair<unsigned short, Uuid>& p)
+										   {
+											   return p.second == uuid;
+										   })};
 
 		if (it != howManyDiedCounters.end())
 		{
@@ -219,10 +219,10 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 		}
 	});
 
-	auto gameWonSub = _events->AddListener([&isGameWon](const GameFinishedEvent& event)
+	auto gameWonSub{_events->AddListener([&isGameWon](const GameFinishedEvent& event)
 	{
 		isGameWon = event.state == GameState::Won;
-	});
+	})};
 
 	unsigned short respawnEnemyActual{20u};
 	unsigned short respawnPlayerOneActual{3u};
@@ -246,9 +246,8 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 			});
 
 	const ObjRectangle rectEnemy{.x = _tankSize * 3.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> enemyBot =
-			TestUtils::CreateBot(
-					rectEnemy, _tankHealth, _uuid, Author::Enemy1, _allObjects, _events, 1u, Direction::DOWN, _bulletPool, _gameConfig);
+	const std::shared_ptr<Tank> enemyBot{TestUtils::CreateBot(rectEnemy, _tankHealth, Author::Enemy1, _allObjects,
+															  _events, Direction::DOWN, _bulletPool, _gameConfig)};
 	_allObjects.emplace_back(enemyBot);
 
 	// Spawn bonus extra life
@@ -319,16 +318,16 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBase)
 {
 	bool isGameLose{false};
-	auto gameLoseSub = _events->AddListener([&isGameLose](const GameFinishedEvent& event)
+	auto gameLoseSub{_events->AddListener([&isGameLose](const GameFinishedEvent& event)
 	{
 		isGameLose = event.state == GameState::Over;
-	});
+	})};
 
 	unsigned short respawnActual{3u};
-	auto respawnCountSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
+	auto respawnCountSub{_events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
 	{
 		respawnActual = event.respawnCount;
-	});
+	})};
 
 	EXPECT_EQ(respawnActual, 3u);
 	_events->EmitEvent(RespawnTanksEvent{});
@@ -351,19 +350,19 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBase)
 TEST_F(GameStateManagerTest, PlayerTeamLoseWithThreeDeath)
 {
 	bool isGameLose{false};
-	auto gameLoseSub = _events->AddListener([&isGameLose](const GameFinishedEvent& event)
+	auto gameLoseSub{_events->AddListener([&isGameLose](const GameFinishedEvent& event)
 	{
 		isGameLose = event.state == GameState::Over;
-	});
+	})};
 
 	unsigned short respawnActual{3u};
-	auto respawnCountSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
+	auto respawnCountSub{_events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
 	{
 		if (event.group == RespawnGroup::PLAYER1)
 		{
 			respawnActual = event.respawnCount;
 		}
-	});
+	})};
 
 	EXPECT_FALSE(isGameLose);
 
@@ -384,28 +383,27 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithThreeDeath)
 TEST_F(GameStateManagerTest, PlayerTeamLoseWithExtraLifeDeath)
 {
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	std::shared_ptr<Tank> player =
-			TestUtils::CreatePlayer(
-					rectPlayer, _tankHealth, _uuid, Author::Player1, _allObjects, _events, 1u, Direction::UP, _bulletPool, _gameConfig);
+	const std::shared_ptr<Tank> player{TestUtils::CreatePlayer(rectPlayer, _tankHealth, Author::Player1, _allObjects,
+															   _events, Direction::UP, _bulletPool, _gameConfig)};
 	_allObjects.emplace_back(player);
 
 	bool isGameLose{false};
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
 
-	auto gameLoseSub = _events->AddListener([&isGameLose](const GameFinishedEvent& event)
+	auto gameLoseSub{_events->AddListener([&isGameLose](const GameFinishedEvent& event)
 	{
 		isGameLose = event.state == GameState::Over;
-	});
+	})};
 
 	unsigned short respawnActual{3u};
-	auto respawnCountSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
+	auto respawnCountSub{_events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
 	{
 		if (event.group == RespawnGroup::PLAYER1)
 		{
 			respawnActual = event.respawnCount;
 		}
-	});
+	})};
 
 	// Spawn bonus extra life
 	_bonusSpawner->SpawnBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize}, BonusType::Tank);
@@ -438,10 +436,10 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithExtraLifeDeath)
 TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBaseAndExtraLife)
 {
 	bool isGameLose{false};
-	auto gameLoseSub = _events->AddListener([&isGameLose](const GameFinishedEvent& event)
+	auto gameLoseSub{_events->AddListener([&isGameLose](const GameFinishedEvent& event)
 	{
 		isGameLose = event.state == GameState::Over;
-	});
+	})};
 
 	unsigned short respawnEnemyActual{20u};
 	unsigned short respawnPlayerOneActual{3u};
@@ -478,7 +476,7 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBaseAndExtraLife)
 	EXPECT_EQ(respawnPlayerOneActual, 0u);
 	EXPECT_EQ(respawnPlayerTwoActual, 0u);
 
-	if (const auto player = dynamic_cast<Tank*>(_allObjects.back().get()))
+	if (const auto player{dynamic_cast<Tank*>(_allObjects.back().get())})
 	{
 		auto [x, y] = player->GetPos();//to relative spawn above player
 

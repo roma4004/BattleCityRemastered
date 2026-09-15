@@ -33,7 +33,7 @@ class LobbyScreen final
 	void OnMenuShowed(const MenuShowedEvent& event);
 	void OnRefusedOrLost(const ClientInDisconnectEvent& event);
 	void OnConnectedToHost(const ClientConnectedToHostEvent&);
-	void OnDrawUserInterface(const DrawUserInterfaceEvent&);
+	void OnDrawUserInterface(const DrawUserInterfaceEvent&) const;
 
 	void Display(bool isDisplayed);
 	void Draw() const;

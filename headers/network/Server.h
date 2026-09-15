@@ -25,7 +25,7 @@ using boost::asio::ip::tcp;
 class Server final
 {
 public:
-	Server(boost::asio::io_context& ioContext, std::string host, uint16_t port,
+	Server(boost::asio::io_context& ioContext, const std::string& host, uint16_t port,
 		   const std::shared_ptr<EventSystem>& events);
 
 	~Server();

@@ -4,8 +4,11 @@
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/RenderUIEvents.h"
 #include "components/events/TimingEvents.h"
+#include <chrono>
 #include <cmath>//NOTE: required by GCC only - std::round; MSVC-STL leaks it
 #include <thread>
+
+using namespace std::chrono_literals;
 
 FramePerSecondManager::FramePerSecondManager(const std::shared_ptr<EventSystem>& events,
 											 const ProjectConfig& projectConfig, const bool isVsyncAvailable)
@@ -39,14 +42,14 @@ void FramePerSecondManager::CountFpsAndDeltaTime(const CalculateActualFpsEvent&)
 {
 	if (!_isVsyncAvailable || !_projectConfig.IsVsyncOn())
 	{
-		const auto currentFrameDuration = std::chrono::duration<double>(
-				std::chrono::high_resolution_clock::now() - _startFrameTime);
-		if (const auto timeToWait = _targetFrameDuration - currentFrameDuration;
+		const auto currentFrameDuration{std::chrono::duration<double>(
+				std::chrono::high_resolution_clock::now() - _startFrameTime)};
+		if (const auto timeToWait{_targetFrameDuration - currentFrameDuration};
 			timeToWait.count() > 0)
 		{
-			if (timeToWait.count() > 0.002)
+			if (timeToWait > 2ms)
 			{
-				std::this_thread::sleep_for(timeToWait - std::chrono::milliseconds(1));
+				std::this_thread::sleep_for(timeToWait - 1ms);
 			}
 
 			while (std::chrono::high_resolution_clock::now() - _startFrameTime < _targetFrameDuration)
@@ -56,8 +59,8 @@ void FramePerSecondManager::CountFpsAndDeltaTime(const CalculateActualFpsEvent&)
 		}
 	}
 
-	const double measuredFrameTime =
-			std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - _startFrameTime).count();
+	const double measuredFrameTime{
+			std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - _startFrameTime).count()};
 
 	//NOTE: this long means the loop stalled - a window drag, a breakpoint - and speed * deltaTime would
 	//teleport everything in one step. The threshold is tankSize / tankSpeed, one tank length

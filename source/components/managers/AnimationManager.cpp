@@ -65,7 +65,7 @@ void AnimationManager::OnPostTickUpdate(const PostTickUpdateEvent&)
 	{
 		//NOTE: an owner is what a spawn animation has and an explosion does not - it is the uuid waiting
 		//for this burst to end, and UpdateFrame says true once, on the tick it does
-		if (const bool isFinished = UpdateFrame(object);
+		if (const bool isFinished{UpdateFrame(object)};
 			isFinished && object.owner != Uuid{})
 		{
 			_events->EmitEvent(SpawnAnimationFinishedEvent{.uuid = object.owner});
@@ -107,10 +107,10 @@ void AnimationManager::OnCreateBonusSpawn(const AnimationCreateBonusSpawnEvent& 
 //NOTE: disposed is enough - UpdateFrame skips it, so it never reaches the frame that reports
 void AnimationManager::OnCancelTankSpawn(const AnimationCancelTankSpawnEvent& event)
 {
-	auto matching = _autoAnimatedObjects | std::views::filter([uuid = event.uuid](const AnimatedObject& object)
+	auto matching{_autoAnimatedObjects | std::views::filter([uuid = event.uuid](const AnimatedObject& object)
 	{
 		return object.owner == uuid;
-	});
+	})};
 
 	std::ranges::for_each(matching, [](AnimatedObject& object) { object.markToDispose = true; });
 }
@@ -138,11 +138,11 @@ void AnimationManager::OnCreateWaterFlow(const AnimationCreateWaterEvent& event)
 
 void AnimationManager::OnUpdateTankMove(const AnimationTankUpdateEvent& event)
 {
-	const Author author = event.author;
-	const auto it = std::ranges::find_if(_turnBasedTankObjects, [author](const AnimatedObject& object)
+	const Author author{event.author};
+	const auto it{std::ranges::find_if(_turnBasedTankObjects, [author](const AnimatedObject& object)
 	{
 		return object.author == author;
-	});
+	})};
 
 	if (it == _turnBasedTankObjects.end())
 	{
@@ -185,14 +185,14 @@ void AnimationManager::Create(const Author author, const ObjRectangle rect, cons
 							  const int size, const int scale, const int speed, const int passes, const Uuid owner)
 {
 	//NOTE: chose animation container for water if not then tanks, if not then other objects
-	auto& target =
+	auto& target{
 			type == AnimationType::Water_Flow
 				? _autoAnimatedWaterObjects
 				: type == AnimationType::Tank_Move
 				? _turnBasedTankObjects
-				: _autoAnimatedObjects;
+				: _autoAnimatedObjects};
 
-	if (auto* reusable = FindReusable(target, type))
+	if (auto* reusable{FindReusable(target, type)})
 	{
 		reusable->rect = rect;
 		reusable->dir = {};
@@ -289,10 +289,10 @@ void AnimationManager::OnHelmetEffect(const Author author, const bool isEnable)
 		return;
 	}
 
-	const auto tankIt = std::ranges::find_if(_turnBasedTankObjects, [author](const AnimatedObject& tankObject)
+	const auto tankIt{std::ranges::find_if(_turnBasedTankObjects, [author](const AnimatedObject& tankObject)
 	{
 		return tankObject.author == author;
-	});
+	})};
 
 	if (tankIt == _turnBasedTankObjects.end())
 	{
@@ -303,10 +303,10 @@ void AnimationManager::OnHelmetEffect(const Author author, const bool isEnable)
 	}
 
 	//enable and update if exist
-	const auto helmetIt = std::ranges::find_if(_autoAnimatedObjects, [author](const AnimatedObject& animatedObject)
+	const auto helmetIt{std::ranges::find_if(_autoAnimatedObjects, [author](const AnimatedObject& animatedObject)
 	{
 		return animatedObject.type == AnimationType::Helmet_Effect && animatedObject.author == author;
-	});
+	})};
 
 	if (helmetIt == _autoAnimatedObjects.end())
 	{
@@ -321,12 +321,12 @@ void AnimationManager::OnHelmetEffect(const Author author, const bool isEnable)
 
 void AnimationManager::UpdateHelmetEffect(const Author author, const FPoint& pos)
 {
-	const auto it = std::ranges::find_if(_autoAnimatedObjects, [author](const AnimatedObject& object)
+	const auto it{std::ranges::find_if(_autoAnimatedObjects, [author](const AnimatedObject& object)
 	{
 		return !object.markToDispose
 			   && object.type == AnimationType::Helmet_Effect
 			   && object.author == author;
-	});
+	})};
 
 	if (it != _autoAnimatedObjects.end())
 	{
@@ -338,32 +338,32 @@ void AnimationManager::UpdateHelmetEffect(const Author author, const FPoint& pos
 
 void AnimationManager::DisableTankAnimation(const Author author)
 {
-	auto matching = _turnBasedTankObjects | std::views::filter([author](const AnimatedObject& object)
+	auto matching{_turnBasedTankObjects | std::views::filter([author](const AnimatedObject& object)
 	{
 		return object.author == author;
-	});
+	})};
 
 	std::ranges::for_each(matching, [](AnimatedObject& object) { object.markToDispose = true; });
 }
 
 void AnimationManager::DisableHelmetEffect(const Author author)
 {
-	auto matching = _autoAnimatedObjects | std::views::filter([author](const AnimatedObject& object)
+	auto matching{_autoAnimatedObjects | std::views::filter([author](const AnimatedObject& object)
 	{
 		return !object.markToDispose
 			   && object.type == AnimationType::Helmet_Effect
 			   && object.author == author;
-	});
+	})};
 
 	std::ranges::for_each(matching, [](AnimatedObject& object) { object.markToDispose = true; });
 }
 
 AnimatedObject* AnimationManager::FindReusable(std::vector<AnimatedObject>& container, const AnimationType type)
 {
-	const auto it = std::ranges::find_if(container, [type](const AnimatedObject& object)
+	const auto it{std::ranges::find_if(container, [type](const AnimatedObject& object)
 	{
 		return object.type == type && object.markToDispose;
-	});
+	})};
 
 	return it != container.end() ? std::to_address(it) : nullptr;
 }

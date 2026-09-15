@@ -114,7 +114,7 @@ TextureManager::AtlasFrames TextureManager::GetAnimFrames(const AnimationType ty
 		{
 			//NOTE: the tank spawn burst entered from its last frame and walked backwards, so the bonus
 			//shrinks into place instead of blooming out of it
-			ObjRectangle lastFrame = TextureOffset::kTankSpawn;
+			ObjRectangle lastFrame{TextureOffset::kTankSpawn};
 			lastFrame.x += (kBonusSpawnFrames - 1) * kAtlasCellSize;
 
 			return AtlasFrames{.first = lastFrame, .step = -1};
@@ -133,8 +133,8 @@ TextureManager::AtlasFrames TextureManager::GetAnimFrames(const AnimationType ty
 void TextureManager::Draw(const DrawObjEvent& event) const
 {
 	const auto& [rect, dir, texture, rimColor] = event;
-	const ObjRectangle destRect = rect;
-	const ObjRectangle textureRect = GetTextureRect(texture);
+	const ObjRectangle destRect{rect};
+	const ObjRectangle textureRect{GetTextureRect(texture)};
 	if (constexpr ObjRectangle defaultSdlRect{};
 		ColliderUtils::AreEqualAbsolute(textureRect.x, defaultSdlRect.x)
 		&& ColliderUtils::AreEqualAbsolute(textureRect.y, defaultSdlRect.y)
@@ -159,8 +159,8 @@ void TextureManager::DrawRim(const ObjRectangle& textureRect, const ObjRectangle
 							 const unsigned int color) const
 {
 	constexpr double thickness{1.0};
-	const double scaleX = destRect.w / kAtlasCellSize;
-	const double scaleY = destRect.h / kAtlasCellSize;
+	const double scaleX{destRect.w / kAtlasCellSize};
+	const double scaleY{destRect.h / kAtlasCellSize};
 
 	const auto emitSlice = [this, &textureRect, &destRect, scaleX, scaleY, dir, color]
 	(const double x, const double y, const double w, const double h)
@@ -185,7 +185,7 @@ void TextureManager::DrawRim(const ObjRectangle& textureRect, const ObjRectangle
 void TextureManager::DrawAnimation(const DrawAnimationEvent& event) const
 {
 	const auto& [rect, dir, frame, scale, type, author] = event;
-	ObjRectangle destRect = rect;
+	ObjRectangle destRect{rect};
 	auto [textureRect, step] = GetAnimFrames(type, author, rect, destRect);
 	textureRect.x += static_cast<double>(frame * scale * step);
 	if (constexpr ObjRectangle defaultSdlRect{};
