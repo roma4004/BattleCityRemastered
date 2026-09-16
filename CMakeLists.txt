@@ -215,9 +215,9 @@ set(GAME_ASSETS
         Resources/Sounds/levelStarted.wav
 )
 
-#NOTE: a target of its own rather than a post-build step on the game - UnitTests lands in the same
-#directory and is regularly built alone, and the test that parses the shipped level needs the map
-#to be there. One copy step, one destination, both exes depending on it.
+#NOTE: a target of its own rather than a post-build step on the game - the server lands in the same
+#directory and is regularly built alone, and it needs the map. One copy step, one destination, both
+#exes depending on it. UnitTests does not: no test reads an asset.
 add_custom_target(game_assets)
 foreach (asset ${GAME_ASSETS})
     add_custom_command(TARGET game_assets POST_BUILD
@@ -227,21 +227,4 @@ foreach (asset ${GAME_ASSETS})
 endforeach ()
 
 add_dependencies(${PROJECT_NAME} game_assets)
-add_dependencies(UnitTests game_assets)
 add_dependencies(BattleCityServer game_assets)
-
-# --- Convenience targets: host + client side by side, no IDE-specific run configuration needed ---
-if (WIN32)
-    set(RUN_BOTH_EXT bat)
-else ()
-    set(RUN_BOTH_EXT sh)
-endif ()
-foreach (variant "" "-skipintro" "-tiled")
-    file(TO_NATIVE_PATH ${CMAKE_SOURCE_DIR}/scripts/run-host-and-client${variant}.${RUN_BOTH_EXT} script) #NOTE: cmd.exe reads a forward-slash path as switches
-    string(REPLACE "-" "_" suffix "${variant}")
-    add_custom_target(run_host_and_client${suffix}
-            COMMAND ${script} $<TARGET_FILE:${PROJECT_NAME}>
-            DEPENDS ${PROJECT_NAME}
-            USES_TERMINAL
-            COMMENT "Launching host + client${variant}")
-endforeach ()

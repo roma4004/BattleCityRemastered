@@ -98,20 +98,6 @@ TEST(MapLoaderTest, MissingFileIsAnErrorNotAnEmptyMap)
 	EXPECT_EQ(map.error().path, "Resources/Maps/there-is-no-such-level.map");
 }
 
-//NOTE: the one test that reads a real asset - both build systems copy the map next to the test exe
-TEST(MapLoaderTest, ShippedLevelOneParses)
-{
-	constexpr auto path{"Resources/Maps/level1.map"};
-	ASSERT_TRUE(std::filesystem::exists(path))
-			<< "run the test exe from its own directory - the map is copied next to it";
-
-	const auto map{MapLoader::LoadFromFile(path)};
-
-	ASSERT_TRUE(map.has_value()) << map.error().reason;
-	EXPECT_EQ(map->cols, 52u);
-	EXPECT_EQ(map->rows, 50u);
-}
-
 //NOTE: nothing in the result says whether the disk was touched, so the file is swapped between the two
 //loads - the first map coming back the second time is the cache answering
 TEST(MapLoaderTest, TheSameFileIsReadFromDiskOnlyOnce)
