@@ -22,7 +22,6 @@ void InputProviderForPlayer::OnMoveDown(const MoveDownEvent& event) { _playerKey
 void InputProviderForPlayer::OnMoveRight(const MoveRightEvent& event) { _playerKeys.right = event.isPressed; }
 void InputProviderForPlayer::OnFire(const FireEvent& event) { _playerKeys.shot = event.isPressed; }
 
-//NOTE: same priority the tank spelled out inline - up, then left, then down, then right
 std::optional<Direction> InputProviderForPlayer::ChooseDirection(Tank& /*self*/, const double /*deltaTime*/)
 {
 	if (_playerKeys.up)

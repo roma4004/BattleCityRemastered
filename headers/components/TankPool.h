@@ -15,8 +15,7 @@ class GameConfig;
 class IInputProvider;
 class Tank;
 
-//NOTE: the same arrangement BulletPool has - the pool owns its tanks for the whole match, _allObjects
-//only borrows them. A seat is not a type any more, so any free tank fits any seat.
+//NOTE: the pool owns its tanks and _allObjects only borrows them; any free tank fits any seat
 class TankPool final
 {
 	std::shared_ptr<EventSystem> _events{nullptr};

@@ -13,27 +13,25 @@ namespace network
 {
 namespace
 {
-using namespace network::commands;
-
 //NOTE: the name sits beside the type it names, so reordering the variant cannot make the log lie -
 //and an alternative added without a name here does not compile, there is no catch-all overload
-constexpr const char* NameOf(const PositionChange&) { return "PositionChange"; }
-constexpr const char* NameOf(const TankShot&) { return "TankShot"; }
-constexpr const char* NameOf(const HealthChange&) { return "HealthChange"; }
-constexpr const char* NameOf(const TierChange&) { return "TierChange"; }
-constexpr const char* NameOf(const Despawn&) { return "Despawn"; }
-constexpr const char* NameOf(const StatisticsChange&) { return "StatisticsChange"; }
-constexpr const char* NameOf(const KeyStateChange&) { return "KeyStateChange"; }
-constexpr const char* NameOf(const GameStateChange&) { return "GameStateChange"; }
-constexpr const char* NameOf(const BonusSpawn&) { return "BonusSpawn"; }
-constexpr const char* NameOf(const BonusStatus&) { return "BonusStatus"; }
-constexpr const char* NameOf(const RespawnTank&) { return "RespawnTank"; }
-constexpr const char* NameOf(const ObstacleSpawn&) { return "ObstacleSpawn"; }
-constexpr const char* NameOf(const TankSpawnComplete&) { return "TankSpawnComplete"; }
-constexpr const char* NameOf(const BonusSpawnComplete&) { return "BonusSpawnComplete"; }
-constexpr const char* NameOf(const SignalEvent&) { return "SignalEvent"; }
-constexpr const char* NameOf(const SlotAssignment&) { return "SlotAssignment"; }
-constexpr const char* NameOf(const Disconnect&) { return "Disconnect"; }
+constexpr const char* NameOf(const commands::PositionChange&) { return "PositionChange"; }
+constexpr const char* NameOf(const commands::TankShot&) { return "TankShot"; }
+constexpr const char* NameOf(const commands::HealthChange&) { return "HealthChange"; }
+constexpr const char* NameOf(const commands::TierChange&) { return "TierChange"; }
+constexpr const char* NameOf(const commands::Despawn&) { return "Despawn"; }
+constexpr const char* NameOf(const commands::StatisticsChange&) { return "StatisticsChange"; }
+constexpr const char* NameOf(const commands::KeyStateChange&) { return "KeyStateChange"; }
+constexpr const char* NameOf(const commands::GameStateChange&) { return "GameStateChange"; }
+constexpr const char* NameOf(const commands::BonusSpawn&) { return "BonusSpawn"; }
+constexpr const char* NameOf(const commands::BonusStatus&) { return "BonusStatus"; }
+constexpr const char* NameOf(const commands::RespawnTank&) { return "RespawnTank"; }
+constexpr const char* NameOf(const commands::ObstacleSpawn&) { return "ObstacleSpawn"; }
+constexpr const char* NameOf(const commands::TankSpawnComplete&) { return "TankSpawnComplete"; }
+constexpr const char* NameOf(const commands::BonusSpawnComplete&) { return "BonusSpawnComplete"; }
+constexpr const char* NameOf(const commands::SignalEvent&) { return "SignalEvent"; }
+constexpr const char* NameOf(const commands::SlotAssignment&) { return "SlotAssignment"; }
+constexpr const char* NameOf(const commands::Disconnect&) { return "Disconnect"; }
 
 std::string Describe(const commands::CommandBatch& batch)
 {

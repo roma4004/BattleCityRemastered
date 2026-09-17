@@ -1,9 +1,9 @@
 #include "behavior/MoveLikeTankBeh.h"
 #include "geometry/Point.h"
 #include "application/GameConfig.h"
-#include "entities/obstacles/WaterTile.h"
 #include "entities/pawns/Tank.h"
 #include "enums/Direction.h"
+#include "enums/Terrain.h"
 #include "utils/ColliderUtils.h"
 #include "utils/DirectionUtils.h"
 #include "utils/ObjectUtils.h"
@@ -28,7 +28,7 @@ bool MoveLikeTankBeh::IsBlocking(const std::shared_ptr<BaseObj>& object, const O
 	}
 
 	//NOTE: the ship bonus carries the tank over the water for the rest of its life
-	if (_effects.isShipActive && dynamic_cast<const WaterTile*>(object.get()) != nullptr)
+	if (_effects.isShipActive && object->GetTerrain() == Terrain::Water)
 	{
 		return false;
 	}
@@ -49,7 +49,6 @@ bool MoveLikeTankBeh::IsCanMove(const double deltaTime, const Direction dir,
 	return std::ranges::none_of(objects, blocking);
 }
 
-//NOTE: distance and contacts in one pass - the same list used to be walked three times
 double MoveLikeTankBeh::GetTravelledDistance(const double step, const Direction dir,
 											 const std::vector<std::shared_ptr<BaseObj>>& objects,
 											 std::vector<std::shared_ptr<BaseObj>>& outTouched) const
@@ -148,7 +147,6 @@ std::vector<Direction> MoveLikeTankBeh::GetFreePathSides(
 		const double deltaTime, const std::optional<Direction> excludeDirection,
 		const std::vector<std::shared_ptr<BaseObj>>& objects) const
 {
-	//NOTE: four sides at most, so one allocation instead of the three a vector takes growing 1-2-4
 	std::vector<Direction> freePath;
 	freePath.reserve(4u);
 

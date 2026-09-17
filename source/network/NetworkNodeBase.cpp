@@ -40,8 +40,7 @@ void NetworkNodeBase::StartIoThread()
 
 void NetworkNodeBase::StopIoThread(const std::function<void(std::function<void()>)>& shutdownNode)
 {
-	//NOTE: the node is shut down on its own io_context thread, not here - closing sockets from
-	//outside would race the handlers still queued on it
+	//NOTE: shut down on the io_context's own thread, so closing sockets cannot race handlers queued there
 	if (shutdownNode && !_ioContext->stopped())
 	{
 		auto shutdownDone{std::make_shared<std::promise<void>>()};
@@ -60,8 +59,7 @@ void NetworkNodeBase::StopIoThread(const std::function<void(std::function<void()
 			});
 		});
 
-		//NOTE: a timeout is not fatal - stop() below tears the context down anyway - but silence here
-		//would hide a goodbye that never made it onto the wire
+		//NOTE: not fatal, stop() tears the context down anyway - logged so a lost goodbye does not go unnoticed
 		if (shutdownFuture.wait_for(kShutdownTimeout) == std::future_status::timeout)
 		{
 			Log::Error(_name + " shutdown timed out after " + std::to_string(kShutdownTimeout.count()) + " ms");

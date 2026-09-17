@@ -16,8 +16,7 @@ enum class BonusType : char8_t
 	lastId
 };
 
-//NOTE: the spawnable ids are the interior of the enum - everything strictly between the two ends.
-//None is not one of them: it is what a default-constructed BonusType is, that is, "not set yet"
+//NOTE: spawnable ids lie strictly between None, which means "not set yet", and lastId
 inline constexpr int kFirstSpawnableBonusId{static_cast<int>(BonusType::None) + 1};
 inline constexpr int kLastSpawnableBonusId{static_cast<int>(BonusType::lastId) - 1};
 

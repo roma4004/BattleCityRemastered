@@ -22,8 +22,7 @@ int main(const int argc, char* argv[])
 	}
 
 	ProjectConfig projectConfig{ProjectConfig::DefaultFilePath()};
-	//NOTE: not fatal - defaults play fine. Said out loud because the file is kept as it is, so
-	//otherwise the settings would just look ignored.
+	//NOTE: not fatal, but logged - the file is left untouched, and its settings would silently look ignored
 	if (const auto& configError{projectConfig.LoadError()})
 	{
 		Log::Error("config " + configError->path.string() + " line " + std::to_string(configError->line) + ": "
@@ -47,8 +46,7 @@ int main(const int argc, char* argv[])
 	Game game{gameConfig, projectConfig, windowConfig, sdlEnv, *launchOptions};
 	game.Run();
 
-	//NOTE: before sdlEnv drops the window and while projectConfig is still alive - its destructor
-	//is what writes the ini, and it outlives both
+	//NOTE: while the window still exists; projectConfig's destructor writes the ini afterwards
 	sdlEnv.SaveWindowState(projectConfig);
 
 	return game.Result();

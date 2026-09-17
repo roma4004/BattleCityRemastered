@@ -1,7 +1,6 @@
 #pragma once
 
-//NOTE: which sprite an entity draws, not where it sits in the atlas - that mapping is TextureManager's.
-//The still half of what AnimationType already does for the animated one
+//NOTE: which still sprite an entity draws, not its place in the atlas
 enum class TextureType : char8_t
 {
 	None,

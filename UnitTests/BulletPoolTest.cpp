@@ -36,8 +36,7 @@ protected:
 	{
 		_events = std::make_shared<EventSystem>();
 		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, _allObjects);
-		//NOTE: the pool goes first on purpose - it used to listen on PostTickUpdate alongside the
-		//sweep, and then this order alone decided whether a free slot was still in the world
+		//NOTE: the pool before the sweep on purpose - reclaiming on PostTickUpdate it would run first and get caught
 		_bulletPool = std::make_shared<BulletPool>(_events, _allObjects, _gameConfig);
 		_disposalSub = TestUtils::WireWorldDisposal(_events, _allObjects);
 		_tankSize = _gameConfig.tankSize;
@@ -46,7 +45,6 @@ protected:
 	}
 };
 
-// More shots than the pool pre-generates, then all of them die: the very same objects come back
 TEST_F(BulletPoolTest, SpentBulletsAreHandedOutAgain)
 {
 	constexpr size_t shots{25u};
@@ -81,7 +79,6 @@ TEST_F(BulletPoolTest, SpentBulletsAreHandedOutAgain)
 	EXPECT_EQ(firstRound, secondRound);
 }
 
-// A bullet that went back to the pool is off the bus again, so it neither draws nor ticks there
 TEST_F(BulletPoolTest, ReturnedBulletLeavesTheBus)
 {
 	int bulletDraws{0};
@@ -115,8 +112,7 @@ TEST_F(BulletPoolTest, ReturnedBulletLeavesTheBus)
 	EXPECT_EQ(1, bulletDraws);
 }
 
-// A slot is free only once the world has let go of the bullet: handed back any earlier, it sits in
-// the free list and in _allObjects at the same time, and the next shot reuses an object still there
+// Handed back any earlier, a bullet sits in the free list and in _allObjects at once, and the next shot reuses it
 TEST_F(BulletPoolTest, ASlotComesBackOnlyAfterTheWorldLetGo)
 {
 	const std::shared_ptr<Bullet> bullet{_bulletPool->SpawnBullet({})};

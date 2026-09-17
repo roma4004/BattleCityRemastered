@@ -5,8 +5,7 @@
 
 namespace ser20
 {
-//NOTE: as UuidSerialization - the point types stay plain structs; only commands that put them on
-//the wire pull this in.
+//NOTE: non-intrusive, so Point.h stays free of ser20 - only the command serialization includes this
 template<class Archive>
 void serialize(Archive& ar, FPoint& point, const unsigned int /*version*/)
 {

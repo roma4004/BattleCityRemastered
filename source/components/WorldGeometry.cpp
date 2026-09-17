@@ -7,8 +7,7 @@ UPoint WorldGeometry::ForMap(const std::size_t cols, const std::size_t rows)
 		return {};
 	}
 
-	//NOTE: one cell size for both axes - a rectangular cell would make the tank rectangular too, and
-	//the bullet's circular blast radius elliptic
+	//NOTE: one cell size for both axes keeps the tank square and the bullet's blast circular
 	return UPoint{.x = static_cast<std::size_t>(static_cast<double>(cols) * kCellSize),
 				  .y = static_cast<std::size_t>(static_cast<double>(rows) * kCellSize)};
 }

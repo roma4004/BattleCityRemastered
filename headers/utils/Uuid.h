@@ -6,7 +6,7 @@
 #include <cstring>
 #include <typeindex>//NOTE: required by GCC only - cheapest header declaring std::hash; MSVC-STL leaks it
 
-//NOTE: our own 16 bytes instead of boost::uuids::uuid - that header is ~92k lines preprocessed
+//NOTE: 16 bytes of our own, so holding a Uuid costs no boost::uuids include (~92k lines preprocessed)
 struct Uuid final
 {
 	std::uint8_t data[16]{};

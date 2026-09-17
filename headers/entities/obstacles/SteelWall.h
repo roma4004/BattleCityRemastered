@@ -16,7 +16,8 @@ class SteelWall : public Obstacle
 protected:
 	void EmitDeathStatistics(Author author) override;
 
-	static constexpr CollisionTags kCollision{tags::Impassable{}, tags::Indestructible{}, tags::Impenetrable{}};
+	static constexpr CollisionTags kCollision{tags::Impassable{}, tags::Indestructible{}, tags::Impenetrable{},
+											  tags::NoTerrain{}};
 
 public:
 	SteelWall(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, Uuid uuid, const GameConfig& gameConfig);

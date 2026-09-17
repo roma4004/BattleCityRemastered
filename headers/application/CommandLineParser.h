@@ -10,11 +10,9 @@ struct ArgError final
 	std::string reason{};
 };
 
-//NOTE: parses only, applying is GameConfig's job
 class CommandLineParser final
 {
 public:
-	//NOTE: a malformed value stops the parse - silently ignoring "size=800x600" is
-	//indistinguishable from the flag not working
+	//NOTE: a malformed value such as "size=800x600" fails the whole parse, so a typo never passes for a dead flag
 	[[nodiscard]] static std::expected<LaunchOptions, ArgError> Parse(int argc, const char* const* argv);
 };

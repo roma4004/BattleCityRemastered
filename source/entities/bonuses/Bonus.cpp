@@ -14,6 +14,7 @@
 #include "utils/TimeUtils.h"
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <cmath>
 #include <numbers>
 #include <ranges>
@@ -92,7 +93,9 @@ static_assert(
 //NOTE: driven by the clock rather than by a tick - bonuses do not tick on the client, but they do draw
 [[nodiscard]] unsigned int SuperRimColor()
 {
-	using namespace std::chrono;
+	using namespace std::chrono_literals;
+	using std::chrono::duration_cast;
+	using std::chrono::milliseconds;
 	constexpr auto period{1200ms};
 	constexpr unsigned int dark{0xB8860Bu};//NOTE: dark goldenrod
 	constexpr unsigned int light{0xFFEC8Cu};//NOTE: pale gold

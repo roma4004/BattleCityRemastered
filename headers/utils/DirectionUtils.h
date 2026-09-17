@@ -51,7 +51,6 @@ namespace DirectionUtils
 	return FPoint{.x = point.x + dx * distance, .y = point.y + dy * distance};
 }
 
-// the length of the rectangle along the movement axis
 [[nodiscard]] inline double SizeAlong(const ObjRectangle& rect, const Direction dir)
 {
 	return Unit(dir).y != 0.0 ? rect.h : rect.w;

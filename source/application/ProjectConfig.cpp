@@ -36,8 +36,7 @@ ProjectConfig::ProjectConfig(std::filesystem::path filePath, const bool skipIni)
 
 ProjectConfig::~ProjectConfig()
 {
-	//NOTE: _loadError means the file is there and unparseable - saving would overwrite it with
-	//the defaults, which the constructor already refused to do
+	//NOTE: _loadError means an unparseable file is there, and saving would overwrite it with the defaults
 	if (!_skipIniLoad && !_loadError)
 	{
 		SaveIni(_filePath);
@@ -66,8 +65,7 @@ std::expected<void, ConfigError> ProjectConfig::LoadIni(const std::filesystem::p
 	}
 	catch (const boost::property_tree::ini_parser_error& err)
 	{
-		//NOTE: boost reports line 0 for a file it could not open and a 1-based line for bad
-		//contents - the two need opposite handling upstream
+		//NOTE: boost reports line 0 for a file it could not open, a 1-based line for bad contents
 		return std::unexpected(ConfigError{.path = filePath, .reason = err.message(), .line = err.line()});
 	}
 

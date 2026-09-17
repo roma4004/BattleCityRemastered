@@ -89,7 +89,7 @@ std::expected<LaunchOptions, ArgError> CommandLineParser::Parse(const int argc, 
 				launchOptions.windowSize = ParsePoint(value);
 				if (launchOptions.windowSize && (launchOptions.windowSize->x == 0 || launchOptions.windowSize->y == 0))
 				{
-					launchOptions.windowSize.reset();//NOTE: a zero-sized window is worse than none
+					launchOptions.windowSize.reset();
 				}
 
 				if (!launchOptions.windowSize)

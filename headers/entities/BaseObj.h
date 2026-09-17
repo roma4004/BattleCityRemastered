@@ -7,6 +7,7 @@
 #include "interfaces/IObstacle.h"
 #include "utils/Uuid.h"
 
+enum class Terrain : char8_t;
 struct FPoint;
 struct BaseObjProperty;
 
@@ -34,8 +35,7 @@ protected:
 	~BaseObj() override;
 
 public:
-	//NOTE: entering and leaving the world, not construction and destruction - an object is
-	//built first and subscribes only when the world takes it, so the call reaches the leaf
+	//NOTE: entering and leaving the world; called on a fully built object, so the virtual call reaches the leaf
 	virtual void Activate() {}
 	virtual void Deactivate() {}
 
@@ -73,7 +73,9 @@ public:
 
 	[[nodiscard]] bool GetIsPenetrable() const override;
 
-	//NOTE: the member as it is, not a computed value - GetPos below is the counter-example
+	[[nodiscard]] Terrain GetTerrain() const;
+
+	//NOTE: a reference to the live member, so it follows the object as it moves
 	[[nodiscard]] virtual const ObjRectangle& GetRect() const;
 
 	[[nodiscard]] virtual Uuid GetUuid() const;

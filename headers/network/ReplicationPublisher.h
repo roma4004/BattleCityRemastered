@@ -18,16 +18,12 @@ class ReplicationPublisher final
 public:
 	explicit ReplicationPublisher(const std::shared_ptr<EventSystem>& events);
 
-	//NOTE: one frame out, or nothing when there was nothing to say. The archive and the length prefix
-	//are the same on every node; delivery is not - one socket for a client, every session for a server
+	//NOTE: everything published since the last call as one frame, or nullptr when there was nothing
 	[[nodiscard]] std::shared_ptr<const std::string> TakeFrame();
 
-	//NOTE: for what no local event announces - the readiness a client sends the moment its socket
-	//connects, from the io thread
 	void Publish(AnyCommand command);
 
-	//NOTE: origin is forwarded, not defaulted inside - otherwise every Bind call site collapses onto
-	//this one line in the debug listener registry
+	//NOTE: origin defaults here and is forwarded, so the debug listener registry names each Bind call site
 	template<class EventT, class ToCommand>
 	void Bind(ToCommand toCommand, const std::source_location& origin = std::source_location::current())
 	{
@@ -37,8 +33,7 @@ public:
 		}, origin));
 	}
 
-	//NOTE: the keyed half of the same thing - a client's keyboard belongs to a seat, so its input
-	//listeners sit under that channel instead of the broadcast bucket
+	//NOTE: the keyed form, for an event emitted under a key such as a seat's input channel
 	template<class EventT, class KeyT, class ToCommand>
 	void Bind(detail::EventKey<KeyT> key, ToCommand toCommand,
 			  const std::source_location& origin = std::source_location::current())

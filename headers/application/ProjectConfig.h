@@ -9,7 +9,7 @@
 #include <string>
 #include <boost/property_tree/ptree.hpp>
 
-//NOTE: shaped like MapError. line 0 means the whole file, and that decides whether it gets rewritten
+//NOTE: line 0 means the file could not be opened, and only such a file is rewritten with the defaults
 struct ConfigError final
 {
 	std::filesystem::path path{};
@@ -17,8 +17,8 @@ struct ConfigError final
 	std::size_t line{};
 };
 
-//NOTE: startup input - the ini store and where the assets live. Split from GameConfig because this
-//half stops changing once the game runs, and to keep property_tree out of 40 unrelated files.
+//NOTE: startup input - the ini store and asset paths, fixed once the game runs. Kept apart from GameConfig
+//so property_tree stays out of everything that includes that
 class ProjectConfig final
 {
 public:
@@ -35,8 +35,7 @@ public:
 	//NOTE: the default doubles as the message SDL prints when the key is missing
 	[[nodiscard]] std::filesystem::path ResourcePath(const std::string& key) const;
 
-	//NOTE: SDL takes more than on/off - -1 is adaptive, n waits n refreshes, 0 is off. An older ini
-	//holding true/false does not parse as an int and falls back to the default, which is off either way
+	//NOTE: -1 is adaptive, n waits n refreshes, 0 is off; a true/false value does not parse and reads as 0
 	[[nodiscard]] int VSyncMode() const { return Get<int>("Window.vsync", 0); }
 	[[nodiscard]] bool IsVsyncOn() const { return VSyncMode() != 0; }
 	[[nodiscard]] int MonitorNumber() const { return Get<int>("Window.MonitorNumber", 1); }

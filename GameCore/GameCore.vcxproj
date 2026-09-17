@@ -321,6 +321,7 @@
     <ClInclude Include="..\headers\enums\RespawnGroup.h" />
     <ClInclude Include="..\headers\enums\StatisticsType.h" />
     <ClInclude Include="..\headers\enums\TankType.h" />
+    <ClInclude Include="..\headers\enums\Terrain.h" />
     <ClInclude Include="..\headers\enums\TextBlockAlign.h" />
     <ClInclude Include="..\headers\enums\TextureOffset.h" />
     <ClInclude Include="..\headers\enums\WindowSide.h" />

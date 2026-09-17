@@ -7,7 +7,6 @@ class BaseObj;
 class ObjectUtils final
 {
 public:
-	//NOTE: a corpse lingers in _allObjects until DisposeDeadObject runs on PostTickUpdate, so every
-	//pass over the container in between has to skip it instead of treating it as a live object
+	//NOTE: a dead object stays in _allObjects until the PostTickUpdate sweep, so every pass must skip it
 	[[nodiscard]] static bool IsAlive(const std::shared_ptr<BaseObj>& object);
 };

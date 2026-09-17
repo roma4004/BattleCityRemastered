@@ -10,7 +10,7 @@ namespace network::commands
 struct StatisticsChange final
 {
 	StatisticsType statisticsType{};
-	//NOTE: only the tank facts carry it - which counter they land in is the receiver's call, not the wire's
+	//NOTE: only the tank facts carry it; the receiver picks the counter
 	Author who{};
 	Author author{};
 	//NOTE: only TankDied carries it - a name is not identity

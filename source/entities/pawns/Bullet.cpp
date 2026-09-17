@@ -8,11 +8,10 @@
 #include "components/events/ObjectLifecycleEvents.h"
 #include "components/events/ReplicationEvents.h"
 #include "components/events/StatisticsEvents.h"
-#include "entities/obstacles/IceTile.h"
-#include "entities/obstacles/WaterTile.h"
 #include "entities/pawns/BulletResetProperty.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/GameMode.h"
+#include "enums/Terrain.h"
 #include "enums/TextureType.h"
 #include "interfaces/IMoveBeh.h"
 #include "utils/UuidUtils.h"
@@ -108,8 +107,7 @@ void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 
 		auto* baseObj{target.get()};
 		//NOTE: no tier reaches water or ice; a bush is not here because the tier check below burns it
-		if (dynamic_cast<WaterTile*>(baseObj) != nullptr
-			|| dynamic_cast<IceTile*>(baseObj) != nullptr)
+		if (const Terrain terrain{baseObj->GetTerrain()}; terrain == Terrain::Water || terrain == Terrain::Ice)
 		{
 			continue;
 		}
@@ -128,7 +126,7 @@ void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 
 	if (isBulletHitBullet == false)
 	{
-		//NOTE: call BaseObj::TakeDamage to skip statistic unnecessary record
+		//NOTE: BaseObj's skips Pawn's HealthChangedEvent; the statistics still go out through the override
 		BaseObj::TakeDamage(_calibre.damage, _author);
 	}
 

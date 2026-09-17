@@ -305,8 +305,7 @@ TEST_F(AnimationManagerTest, WaterStaysInTheMainDrawPhase)
 	EXPECT_TRUE(WasDrawn(AnimationType::Water_Flow));
 }
 
-// The manager is there before the match and a wall only from the moment it spawns, so inside the
-// shared phase the terrain is always painted first - no field order decides this
+// The manager subscribes before the match and a wall only when it spawns, so the water paints first
 TEST_F(AnimationManagerTest, WaterIsPaintedBeforeAWallOfTheSamePhase)
 {
 	std::vector<std::string_view> painted{};

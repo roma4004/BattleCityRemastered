@@ -5,8 +5,7 @@
 
 namespace ser20
 {
-//NOTE: Uuid lives outside ser20, so the overload goes here where ser20's own lookup finds it.
-//16 raw bytes - the same wire format boost::uuids::uuid had.
+//NOTE: in namespace ser20, where its lookup finds the overload; 16 raw bytes, the layout boost::uuids::uuid uses
 template<class Archive>
 void serialize(Archive& ar, Uuid& uuid, const unsigned int /*version*/)
 {

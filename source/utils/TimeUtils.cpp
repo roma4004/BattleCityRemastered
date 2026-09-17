@@ -10,7 +10,7 @@ struct GameClock
 };
 
 GameClock gameClock{};
-}
+}// namespace
 
 TimeUtils::time_point TimeUtils::Now()
 {

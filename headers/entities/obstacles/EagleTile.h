@@ -21,7 +21,8 @@ protected:
 	void EmitDeathStatistics(Author author) override;
 	void OnDespawned(const DespawnedEvent& event) override;
 
-	static constexpr CollisionTags kCollision{tags::Impassable{}, tags::Destructible{}, tags::Impenetrable{}};
+	static constexpr CollisionTags kCollision{tags::Impassable{}, tags::Destructible{}, tags::Impenetrable{},
+											  tags::NoTerrain{}};
 
 public:
 	EagleTile(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, Uuid uuid, const GameConfig& gameConfig);

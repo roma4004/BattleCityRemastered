@@ -1,6 +1,6 @@
 #pragma once
 
-//NOTE: what happens to a line's own pos - the two are different layouts, not a flag on one
+//NOTE: what happens to each line's own pos
 enum class TextBlockAlign : char8_t
 {
 	//NOTE: each line lands where it says; the panel only caps the point size

@@ -52,8 +52,7 @@ struct SDL_Config final
 	WindowHandle sdlWindow{};
 	RendererHandle renderer{};
 	std::filesystem::path fontPath{};
-	//NOTE: opened up front only so a missing font fails Init - drawing goes through the text cache,
-	//which opens every size it needs itself
+	//NOTE: opened up front so a missing font fails Init; the text cache opens its own sizes, this one is its fallback
 	FontHandle font{};
 	//NOTE: the mixer owns the audio device - it has to outlive every MIX_Audio loaded through it
 	MixerHandle mixer{};
@@ -76,7 +75,7 @@ private:
 	[[nodiscard]] std::expected<void, InitError> InitVideo();
 	[[nodiscard]] std::expected<void, InitError> InitFonts();
 	[[nodiscard]] std::expected<void, InitError> InitTextures();
-	//NOTE: can fail like the rest; whether that is fatal is decided in Init(), not here
+	//NOTE: returns its failure like the rest, though Init() only logs it - the game runs without sound
 	[[nodiscard]] std::expected<void, InitError> InitAudio();
 
 	[[nodiscard]] static std::expected<SurfaceHandle, InitError> LoadSurface(
@@ -94,8 +93,7 @@ private:
 																TextureHandle& outTexture,
 																std::string_view name) const;
 
-	//NOTE: an explicit --window-pos/-size is a one-off, and a host/client window is placed by offset -
-	//neither belongs in the ini
+	//NOTE: a pos/size from the command line and a window put on a side are one-offs - neither goes to the ini
 	[[nodiscard]] bool ShouldPersistWindowPos() const;
 	[[nodiscard]] bool ShouldPersistWindowSize() const;
 

@@ -27,7 +27,6 @@ enum class Author : char8_t
 	return author >= Author::None && author < Author::lastId ? author : Author::None;
 }
 
-//NOTE: the team is a property of the seat, never a second field next to it
 [[nodiscard]] constexpr Faction FactionOf(const Author author)
 {
 	switch (author)
@@ -48,7 +47,6 @@ enum class Author : char8_t
 	return Faction::Neutral;
 }
 
-//NOTE: many to one - both tank types that can drive a player's seat answer to the same author
 [[nodiscard]] constexpr Author SeatOf(const TankType type)
 {
 	switch (type)

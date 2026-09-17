@@ -137,8 +137,7 @@ void ScoreBoard::OnPauseStatus(const PauseStatusEvent& /*event*/)
 	/*DisplayScore(isPause);*/
 }
 
-//NOTE: the scoreboard is a view of Won/Over, and the phase is the one thing every mode agrees on -
-//a client never runs the win check itself, it is told the phase over the wire
+//NOTE: driven by the phase, which a client gets over the wire - it never runs the win check itself
 void ScoreBoard::OnGameStateChangedTo(const GameStateChangedToEvent& event)
 {
 	if (event.state == GameState::Won || event.state == GameState::Over)

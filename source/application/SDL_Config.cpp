@@ -30,7 +30,7 @@ constexpr std::array kXBoxKeys{"Images.XBox_D-Pad",
 							   "Images.XBox_View",
 							   "Images.XBox_A",
 							   "Images.XBox_Y"};
-}
+}// namespace
 
 SDL_Config::SDL_Config(const GameConfig& config, const ProjectConfig& project, const WindowConfig& window)
 	: gameConfig{config}

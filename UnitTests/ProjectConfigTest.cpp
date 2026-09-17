@@ -12,7 +12,7 @@
 
 namespace
 {
-//NOTE: the file's fate is the behaviour under test, so unlike MapLoader these cases need a real one
+//NOTE: what happens to the file is the behaviour under test, so these cases need a real one on disk
 class TempIni final
 {
 	std::filesystem::path _path;
@@ -70,13 +70,13 @@ TEST(ProjectConfigTest, UnparseableFileIsReportedAndLeftUntouched)
 		EXPECT_EQ(projectConfig.LoadError().value_or(ConfigError{}).line, 3u);
 
 		const WindowConfig windowConfig{projectConfig};
-		EXPECT_EQ(windowConfig.size, (UPoint{.x = 800u, .y = 600u}));//NOTE: defaults, not the file's 800
+		EXPECT_EQ(windowConfig.size, (UPoint{.x = 800u, .y = 600u}));//NOTE: defaults; the file's width is 800 too
 	}
 
 	EXPECT_EQ(ini.Read(), broken);
 }
 
-//NOTE: drives the centering branch in SDL_Config::InitRender - a run with nothing saved to restore
+//NOTE: a fresh ini has no saved position to restore, so the window is centred on the monitor
 TEST(ProjectConfigTest, MissingAndUnparseableFilesBothCountAsFresh)
 {
 	const TempIni missing{"battlecity_fresh_missing.ini"};

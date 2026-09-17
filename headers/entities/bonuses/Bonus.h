@@ -20,7 +20,8 @@ class GameConfig;
 class Bonus final : public BaseObj, public IDrawable, public IPickupableBonus
 {
 public:
-	static constexpr CollisionTags kCollision{tags::Impassable{}, tags::Destructible{}, tags::Impenetrable{}};
+	static constexpr CollisionTags kCollision{tags::Impassable{}, tags::Destructible{}, tags::Impenetrable{},
+											  tags::NoTerrain{}};
 
 private:
 	const GameConfig& _gameConfig;

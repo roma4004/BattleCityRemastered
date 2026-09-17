@@ -5,7 +5,7 @@
 
 namespace network
 {
-//NOTE: length prefix, not a delimiter - "\n\n" occurs by chance inside a binary ser20 archive
+//NOTE: a big-endian length prefix - a binary ser20 archive has no byte sequence safe to use as a delimiter
 inline constexpr std::size_t kFrameHeaderSize{4};
 
 //NOTE: guards against a garbage header being read as a multi-gigabyte length

@@ -40,7 +40,7 @@ void TankPool::Subscribe()
 	_subs.push_back(_events->AddListener(this, &TankPool::OnDeadObjectsSwept));
 }
 
-//NOTE: shelved, not dropped - a mode switch changes who fills the seats, not what a tank is made of
+//NOTE: every tank goes back on the shelf - a mode switch changes who fills the seats, not the tanks
 void TankPool::OnGameReset(const GameResetEvent&)
 {
 	_slots.ReclaimAll();

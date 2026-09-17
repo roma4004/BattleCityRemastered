@@ -16,7 +16,6 @@ BulletPool::BulletPool(const std::shared_ptr<EventSystem>& events,
 	, _allObjects{allObjects}
 	, _gameConfig{gameConfig}
 {
-	// Pre-generate 20 default bullets
 	for (size_t i = 0u; i < 20u; ++i)
 	{
 		_slots.AddFree(CreateNewBullet());
@@ -53,8 +52,7 @@ std::shared_ptr<Bullet> BulletPool::SpawnBullet(const BulletResetProperty& prope
 		bullet = CreateNewBullet();
 	}
 
-	//NOTE: the pool names the shot, not the shooter - a reused slot would otherwise fire under the
-	//uuid of the bullet before it. Safe here because a pooled bullet is unsubscribed until Reset
+	//NOTE: a fresh uuid per shot, or a reused slot fires under its predecessor's; safe while off the bus
 	bullet->SetId(uuid.value_or(UuidUtils::GetRandomUuid()));
 	bullet->Reset(property);
 
@@ -63,8 +61,7 @@ std::shared_ptr<Bullet> BulletPool::SpawnBullet(const BulletResetProperty& prope
 	return bullet;
 }
 
-//NOTE: the same frame step that takes a dead object out of _allObjects - a bullet spent this frame
-//is back on the free list before anything can shoot again
+//NOTE: right after the sweep, so a bullet spent this frame is free again before the next shot
 void BulletPool::OnDeadObjectsSwept(const DeadObjectsSweptEvent&)
 {
 	const std::vector<std::shared_ptr<Bullet>> returned{_slots.ReclaimDead()};

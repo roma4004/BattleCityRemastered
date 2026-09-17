@@ -5,8 +5,7 @@
 #include "geometry/ObjRectangle.h"
 #include "utils/Uuid.h"
 
-//NOTE: everything a pooled tank has to forget between two lives - the faction and the tier follow
-//from the seat, so they are not fields here
+//NOTE: what a pooled tank takes on for its next life; the faction follows from the author, the tier restarts at 1
 struct TankResetProperty final
 {
 	Uuid uuid{};

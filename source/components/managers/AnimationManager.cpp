@@ -63,8 +63,7 @@ void AnimationManager::OnPostTickUpdate(const PostTickUpdateEvent&)
 
 	for (AnimatedObject& object: _autoAnimatedObjects)
 	{
-		//NOTE: an owner is what a spawn animation has and an explosion does not - it is the uuid waiting
-		//for this burst to end, and UpdateFrame says true once, on the tick it does
+		//NOTE: only a spawn burst has an owner, the uuid waiting for it; UpdateFrame reports the end once
 		if (const bool isFinished{UpdateFrame(object)};
 			isFinished && object.owner != Uuid{})
 		{
@@ -149,7 +148,6 @@ void AnimationManager::OnUpdateTankMove(const AnimationTankUpdateEvent& event)
 		return;
 	}
 
-	//Update tank animation position and dir
 	it->rect.x = event.pos.x;
 	it->rect.y = event.pos.y;
 	it->dir = event.dir;
@@ -166,7 +164,7 @@ void AnimationManager::OnHelmetEffect(const AnimationBonusHelmetChangeEvent& eve
 void AnimationManager::Reset()
 {
 	_autoAnimatedObjects.clear();
-	_turnBasedTankObjects.clear();//NOTE: all tank_animation will be removed when tank died
+	_turnBasedTankObjects.clear();
 	_autoAnimatedWaterObjects.clear();
 }
 
@@ -184,7 +182,6 @@ void AnimationManager::DrawObject(const AnimatedObject& object) const
 void AnimationManager::Create(const Author author, const ObjRectangle rect, const AnimationType type,
 							  const int size, const int scale, const int speed, const int passes, const Uuid owner)
 {
-	//NOTE: chose animation container for water if not then tanks, if not then other objects
 	auto& target{
 			type == AnimationType::Water_Flow
 				? _autoAnimatedWaterObjects
@@ -245,7 +242,7 @@ void AnimationManager::CreateAnimation(const AnimationType type, const ObjRectan
 {
 	if (type == AnimationType::Tank_Explosion)
 	{
-		DisableTankAnimation(author);//NOTE: for tank we need to disable previous animation
+		DisableTankAnimation(author);
 	}
 
 	const auto& [size, scale, speed, passes] = GetPreset(type);
@@ -302,7 +299,6 @@ void AnimationManager::OnHelmetEffect(const Author author, const bool isEnable)
 		return;
 	}
 
-	//enable and update if exist
 	const auto helmetIt{std::ranges::find_if(_autoAnimatedObjects, [author](const AnimatedObject& animatedObject)
 	{
 		return animatedObject.type == AnimationType::Helmet_Effect && animatedObject.author == author;
@@ -330,7 +326,6 @@ void AnimationManager::UpdateHelmetEffect(const Author author, const FPoint& pos
 
 	if (it != _autoAnimatedObjects.end())
 	{
-		//Update helmet animation position
 		it->rect.x = pos.x;
 		it->rect.y = pos.y;
 	}

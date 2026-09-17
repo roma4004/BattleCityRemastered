@@ -12,13 +12,12 @@
 #include "components/events/ReplicationEvents.h"
 #include "components/events/StatisticsEvents.h"
 #include "entities/BulletCalibre.h"
-#include "entities/obstacles/BushTile.h"
-#include "entities/obstacles/IceTile.h"
 #include "entities/pawns/PawnProperty.h"
 #include "entities/pawns/TankResetProperty.h"
 #include "geometry/Point.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
+#include "enums/Terrain.h"
 #include "interfaces/IInputProvider.h"
 #include "interfaces/IMoveBeh.h"
 #include "interfaces/IPickupableBonus.h"
@@ -158,10 +157,8 @@ void Tank::OnBonusShipApplied(const BonusShipAppliedEvent&) { OnBonusShip(); }
 
 void Tank::SubscribeBonus()
 {
-	//NOTE: these land on a whole team, so the bus picks by faction instead of every tank comparing
 	_subs.push_back(_events->AddListener(Key(_faction), this, &Tank::OnBonusTimer));
 	_subs.push_back(_events->AddListener(Key(_faction), this, &Tank::OnBonusGrenade));
-	//NOTE: these land on one seat, so the bus picks instead of every tank comparing
 	_subs.push_back(_events->AddListener(Key(_author), this, &Tank::OnBonusHelmetStatusChange));
 	_subs.push_back(_events->AddListener(Key(_author), this, &Tank::OnBonusStarPickup));
 	_subs.push_back(_events->AddListener(Key(_author), this, &Tank::OnBonusCaliberPickup));
@@ -205,8 +202,7 @@ void Tank::EmitMoved() const
 	}
 }
 
-//NOTE: one loop for every tank there is - the driver answers where to go and whether to fire, the
-//tank does the rest the same way whoever is at the wheel
+//NOTE: the same loop whoever drives - the driver only answers where to go and whether to fire
 void Tank::TickUpdate(const double deltaTime)
 {
 	if (_shootTimer.isActive && _shootTimer.IsCooldownFinish())
@@ -429,7 +425,7 @@ void Tank::OnPosChanged(const PosChangedEvent& event)
 
 	_effects.isTouchTheBushes = IsTouchBush();
 
-	//NOTE: fix for tank truck animation tick
+	//NOTE: the client's only move, so the track animation has to advance from here
 	_events->EmitEvent(AnimationTankUpdateEvent{.author = _author, .pos = event.pos, .dir = event.dir});
 }
 
@@ -439,7 +435,7 @@ bool Tank::IsTouchBush() const
 	{
 		return _uuid != object->GetUuid()
 			   && ColliderUtils::IsCollide(_rect, object->GetRect())
-			   && dynamic_cast<BushTile*>(object.get()) != nullptr;
+			   && object->GetTerrain() == Terrain::Bush;
 	})};
 
 	return !bushCollisionsFilter.empty();
@@ -451,7 +447,7 @@ bool Tank::IsTouchIce() const
 	{
 		return _uuid != object->GetUuid()
 			   && ColliderUtils::IsCollide(_rect, object->GetRect())
-			   && dynamic_cast<IceTile*>(object.get()) != nullptr;
+			   && object->GetTerrain() == Terrain::Ice;
 	})};
 
 	return !bushCollisionsFilter.empty();

@@ -34,7 +34,7 @@ void Menu::OnMenuShowed(const MenuShowedEvent& event) { DisplayMenu(event.isShow
 
 void Menu::Draw()
 {
-	// first time animation, slow scrolling from bottom corner to vertical center
+	//NOTE: the opening slide - the menu scrolls up from below the screen to its resting place
 	if (constexpr int yOffsetEnd = 0; _yOffsetStart > yOffsetEnd)
 	{
 		_yOffsetStart -= 3;

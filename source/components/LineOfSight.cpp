@@ -1,9 +1,9 @@
 #include "components/LineOfSight.h"
 #include "geometry/Point.h"
 #include "application/GameConfig.h"
-#include "entities/obstacles/BushTile.h"
-#include "entities/obstacles/WaterTile.h"
+#include "entities/BaseObj.h"
 #include "enums/Direction.h"
+#include "enums/Terrain.h"
 #include "utils/ColliderUtils.h"
 #include "utils/ObjectUtils.h"
 #include <algorithm>
@@ -76,8 +76,8 @@ void LineOfSight::CheckLineOfSight(const bool isWaterSkip, const std::vector<std
 
 		// NOTE: tank can't pass water (until pickup BonusShip), so we skip water when find opponent to shoot,
 		// but for searching for bonuses, we should not skip, to avoid trying to move through water.
-		const bool isWater{dynamic_cast<WaterTile*>(object.get()) != nullptr};
-		const bool isBush{dynamic_cast<BushTile*>(object.get()) != nullptr};
+		const bool isWater{object->GetTerrain() == Terrain::Water};
+		const bool isBush{object->GetTerrain() == Terrain::Bush};
 		const bool isPenetrable{object->GetIsPenetrable()};
 		if (isBush
 			|| (isWater && !isWaterSkip)

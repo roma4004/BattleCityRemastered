@@ -3,14 +3,12 @@
 #include "components/EventSystem.h"
 #include "enums/Author.h"
 #include "geometry/ObjRectangle.h"
-#include <cstdint>
 #include <memory>
 #include <vector>
 
 enum class AnimationType : char8_t;
 enum class TextureType : char8_t;
 enum class Direction : char8_t;
-using Uint8 = uint8_t;
 struct DrawObjEvent;
 struct DrawAnimationEvent;
 class BaseObj;

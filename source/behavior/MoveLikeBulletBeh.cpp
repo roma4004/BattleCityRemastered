@@ -41,7 +41,6 @@ double MoveLikeBulletBeh::GetTravelledDistance(const double deltaTime, const Dir
 	return std::max(0.0, travelled);
 }
 
-// Where the bullet stopped, not where the frame step would have taken it - the blast is centred there
 FPoint MoveLikeBulletBeh::GetBlowCenter(const double deltaTime, const Direction dir,
 										const std::vector<std::shared_ptr<BaseObj>>& objects) const
 {
@@ -82,7 +81,7 @@ bool MoveLikeBulletBeh::Move(const Direction dir, const double deltaTime,
 		return true;
 	}
 
-	// Self-destroy with deal damage when the edge of windows is reached
+	//NOTE: stopped by the edge or by an obstacle - the blast hits everything around where it stopped
 	outCollisions = GetCircleCollisionObjects(GetBlowCenter(deltaTime, dir, objects), objects);
 
 	return false;

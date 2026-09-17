@@ -18,7 +18,7 @@ class MoveLikeTankBeh final : public IMoveBeh
 	ObjRectangle& _rect;
 	double& _speed;
 	BonusEffectProperty& _effects;
-	//NOTE: indexed by Direction - four named velocities were the same four lines four times
+	//NOTE: indexed by Direction
 	std::array<double, 4> _velocity{};
 	double _driftMultiplicator{1.5};
 	const GameConfig& _gameConfig;

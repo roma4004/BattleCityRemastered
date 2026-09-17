@@ -53,8 +53,7 @@ TTF_Font* TextCache::FontForScale(const int basePointSize, const float scale)
 		scaledFont = _sdlConfig.OpenFont(pixelSize);
 	}
 
-	//NOTE: the startup font is the last resort only - it is fixed at its own pixel size and ignores the
-	//scale, so a line drawn with it comes out the wrong size
+	//NOTE: the startup font is a last resort - fixed at its own size, it draws the line at the wrong scale
 	return scaledFont ? scaledFont.get() : _sdlConfig.font.get();
 }
 
@@ -98,7 +97,7 @@ const TextCache::CachedText* TextCache::Acquire(const std::string& text, const S
 		return &it->second;
 	}
 
-	//NOTE: a counter line is a fresh key every tick - drop all instead of growing, the few on screen refill
+	//NOTE: a counter line is a fresh key every tick - dropping all bounds the cache, the few on screen refill
 	if (_entries.size() >= kMaxEntries)
 	{
 		Clear();

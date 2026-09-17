@@ -29,7 +29,6 @@ void BonusManager::Subscribe()
 	_subs.push_back(_events->AddListener(this, &BonusManager::OnBonusHelmetPickup));
 	_subs.push_back(_events->AddListener(this, &BonusManager::OnBonusShovelPickup));
 	_subs.push_back(_events->AddListener(this, &BonusManager::OnBonusCreated));
-	//NOTE: continue effects after respawn
 	_subs.push_back(_events->AddListener(this, &BonusManager::ApplyBonusEffectsOnSpawnTo));
 }
 
@@ -53,7 +52,7 @@ void BonusManager::OnBonusCreated(const BonusCreatedEvent& event)
 											  .lifeTime = Timer{_gameConfig.bonusLifeTimeCooldown}});
 }
 
-//NOTE: one clock for every bonus on the field, instead of a tick subscription inside each of them
+//NOTE: one clock for every bonus on the field - a Bonus keeps no timer of its own
 void BonusManager::ExpireBonuses()
 {
 	for (const auto& [bonus, lifeTime]: _spawnedBonuses)
@@ -73,8 +72,7 @@ void BonusManager::ExpireBonuses()
 	});
 }
 
-//NOTE: one reading of the clock for both passes - asking twice let a deadline fall between them,
-//and that effect vanished unannounced, leaving its helmet on
+//NOTE: one reading of the clock for both passes - two could let an effect expire unannounced between them
 void BonusManager::ExpireEffects()
 {
 	const auto isExpired = [now = TimeUtils::Now()](const ActiveEffect& effect)
@@ -136,8 +134,7 @@ void BonusManager::FinishEffect(const BonusType type, const EffectTarget& target
 
 void BonusManager::EmitEffectStatus(const BonusType type, const EffectTarget& target, const bool isActive) const
 {
-	//NOTE: the type is what says which alternative the target holds, so every get here is the one
-	//StartEffect put in
+	//NOTE: the type decides which alternative the target holds, so each std::get matches what was stored
 	switch (type)
 	{
 		case BonusType::Timer:
@@ -181,8 +178,7 @@ void BonusManager::OnBonusShovelPickup(const BonusShovelPickupEvent& event)
 
 void BonusManager::ApplyBonusEffectsOnSpawnTo(const BonusReApplyEvent& event)
 {
-	//NOTE: effect timing is the host's - the client is told when one starts and when it ends, and
-	//keeps no clock of its own to go stale
+	//NOTE: effect timing is the host's - the client only hears when an effect starts and ends
 	if (!_gameConfig.IsAuthority())
 	{
 		return;

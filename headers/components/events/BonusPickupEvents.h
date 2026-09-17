@@ -4,8 +4,7 @@
 
 enum class Faction : char8_t;
 
-//NOTE: a pickup is keyed by the side its effect lands on - the tank that picked it up, or a faction
-//when the whole team is hit. The key already says who, so there is nothing left to put inside
+//NOTE: keyed by whom the effect lands on - the picking tank's seat, or a faction for a whole team - so no payload
 struct BonusStarPickupEvent {};
 
 struct BonusCaliberPickupEvent {};
@@ -24,7 +23,7 @@ struct BonusTankPickupEvent
 	Author author{};
 };
 
-//NOTE: BonusManager owns both teams' effects at once, so the faction is payload here too
+//NOTE: broadcast - BonusManager handles both teams' effects, so the faction travels as payload
 struct BonusShovelPickupEvent
 {
 	Faction faction{};
@@ -42,7 +41,7 @@ struct BonusTimerStatusChangeEvent
 	bool isActive;
 };
 
-//NOTE: keyed by the tank it is on
+//NOTE: keyed by the seat it is on
 struct BonusHelmetStatusChangeEvent
 {
 	bool isActive;

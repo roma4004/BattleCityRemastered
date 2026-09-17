@@ -23,8 +23,7 @@
 
 namespace
 {
-//NOTE: movement is speed * deltaTime, so a step that follows the frame makes the same input land
-//differently on every machine
+//NOTE: movement is speed * deltaTime, so a frame-length step lands the same input differently per machine
 constexpr double kFixedStep{1.0 / 60.0};
 
 constexpr double kStepSnapTolerance{kFixedStep / 20.0};
@@ -101,8 +100,7 @@ void Simulation::OnGameModeChangedTo(const GameModeChangedToEvent& event)
 	}
 }
 
-//NOTE: the reset empties the field and the map fills it - stated in order here, rather than left to
-//two listeners of MatchStartedEvent and whichever subscribed first
+//NOTE: the reset empties the field and the map fills it, in this order
 void Simulation::OnMatchStarted(const MatchStartedEvent&)
 {
 	_events->EmitEvent(GameResetEvent{});

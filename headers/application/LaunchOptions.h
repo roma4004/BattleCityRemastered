@@ -8,8 +8,7 @@
 //NOTE: empty optional means "not passed" - the ini value stays
 struct LaunchOptions final
 {
-	//NOTE: no mode on the command line means the attract match - the mode only names who fills the
-	//seats, the demo itself is a phase
+	//NOTE: no mode given means the demo; the mode still names who fills the seats, the demo is a phase
 	GameMode gameMode{GameMode::CoopWithBot};
 	bool isDemo{true};
 	bool skipIntroMusic{false};

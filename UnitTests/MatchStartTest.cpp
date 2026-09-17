@@ -9,8 +9,6 @@
 #include <string_view>
 #include <vector>
 
-// The reset empties the field and the map fills it. Both used to hang off MatchStartedEvent, so the
-// order held only because Simulation had subscribed while the spawner did not yet exist.
 class MatchStartTest : public testing::Test
 {
 protected:
@@ -37,6 +35,7 @@ protected:
 	}
 };
 
+//NOTE: the reset and the map load used to hang off MatchStartedEvent, ordered only by who subscribed first
 TEST_F(MatchStartTest, TheMapFillsTheFieldTheResetJustEmptied)
 {
 	_events->EmitEvent(MatchStartedEvent{});

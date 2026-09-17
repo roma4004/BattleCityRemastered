@@ -22,7 +22,7 @@
 
 namespace
 {
-//NOTE: four enemy seats and two player ones, the same count TankPool pre-builds
+//NOTE: as many tanks as TankPool pre-builds
 constexpr std::size_t kSeatCount{6u};
 }//namespace
 
@@ -56,11 +56,10 @@ protected:
 	}
 };
 
-//NOTE: a mode change ends the match and rebuilds every spawner, so the pool is the only thing that
-//can carry a tank across it
+//NOTE: a mode change rebuilds every spawner, so only the pool can carry a tank across it
 TEST_F(TankPoolTest, AResetShelvesLiveTanksInsteadOfDroppingThem)
 {
-	//NOTE: weak, not a raw pointer - a dropped tank frees an address the next one can be handed back
+	//NOTE: weak, so a dropped tank shows as expired - its freed address could come back in the next one
 	const std::weak_ptr<Tank> shelved{SpawnTank(UuidUtils::GetRandomUuid())};
 
 	_events->EmitEvent(GameResetEvent{});
@@ -77,8 +76,7 @@ TEST_F(TankPoolTest, AResetShelvesLiveTanksInsteadOfDroppingThem)
 	EXPECT_NE(std::ranges::find(reused, shelved.lock().get()), reused.end());
 }
 
-//NOTE: the mode is a copy inside the pawn, and Subscribe() branches on it - a tank that sat in the
-//pool through a switch to a client would otherwise never listen for the host's updates
+//NOTE: Subscribe() reads the mode on activation - a tank pooled across a switch to a client must hear the host
 TEST_F(TankPoolTest, AReusedTankListensUnderTheModeItSpawnsUnder)
 {
 	_gameConfig.gameMode = GameMode::OnePlayer;

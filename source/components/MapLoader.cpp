@@ -28,7 +28,7 @@ constexpr char kFirstSymbol{'0'};
 
 	return type == ObstacleType::None || IsSpawnableObstacle(type);
 }
-}
+}// namespace
 
 std::expected<MapData, MapError> MapLoader::LoadFromFile(const std::filesystem::path& path)
 {

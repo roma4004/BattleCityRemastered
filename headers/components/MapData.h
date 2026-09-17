@@ -6,8 +6,7 @@
 #include <string>
 #include <vector>
 
-//NOTE: a cell is a quarter of a classic brick block, not a whole one - four across and four down
-//make one block, and that is what lets a wall crumble by quarters
+//NOTE: four cells across and four down make one classic brick block, so a wall crumbles by quarters
 struct MapData
 {
 	std::size_t cols{};

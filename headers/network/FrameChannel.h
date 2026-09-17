@@ -35,8 +35,8 @@ public:
 	void CloseAfterFlush(DrainHandler onClosed);
 	void SetWriteEnabled(bool enabled);
 
-	//NOTE: stale across threads, but only as "still open" - a dead session lives one frame longer.
-	//An atomic reaped it before its error handler reported the loss: measured, not guessed
+	//NOTE: read unsynchronised - a dead session may look open one frame longer, which lets its error
+	//handler report the loss before the session is reaped
 	[[nodiscard]] bool IsOpen() const { return _socket.is_open(); }
 	[[nodiscard]] tcp::socket& Socket() { return _socket; }
 

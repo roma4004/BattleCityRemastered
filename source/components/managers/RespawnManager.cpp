@@ -83,8 +83,7 @@ void RespawnManager::ResetRespawnStat()
 	_playersDeathCount = 0u;
 }
 
-//NOTE: a reset means a fresh match, so every seat is owed a tank again - ResetRespawnStat clears the
-//availability flags and nothing else ever sets them back
+//NOTE: a reset means a fresh match, so every seat is owed a tank again
 void RespawnManager::ResetSpawn()
 {
 	ResetRespawnStat();

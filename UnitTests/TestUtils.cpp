@@ -22,8 +22,7 @@ void TestUtils::ApplyGameMode(const std::shared_ptr<EventSystem>& events,
 	//NOTE: the enemy throttle is wall-clock time, and a test has none to spare
 	gameConfig.enemySpawnCooldown = 0ms;
 	respawnManager = std::make_shared<RespawnManager>(events, gameMode);
-	//NOTE: production keeps the pools in SpawnManager so they survive a mode change; a fixture has
-	//no such switch, so they live as long as the spawner
+	//NOTE: SpawnManager keeps the pools across mode changes; a fixture has none, so they live with the spawner
 	const auto bulletPool{std::make_shared<BulletPool>(events, allObjects, gameConfig)};
 	tankSpawner = std::make_shared<TankSpawner>(gameConfig, allObjects, events,
 												std::make_shared<TankPool>(events, allObjects, gameConfig,

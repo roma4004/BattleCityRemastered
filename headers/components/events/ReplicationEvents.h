@@ -25,7 +25,7 @@ struct HealthChangedEvent
 	Uuid uuid;
 };
 
-//NOTE: the result of an upgrade, not its cause - the client sets it instead of replaying the formula
+//NOTE: the tier an upgrade ended at - the client sets it as is
 struct TierChangedEvent
 {
 	unsigned short tier;

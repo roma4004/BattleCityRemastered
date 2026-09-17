@@ -37,8 +37,7 @@ public:
 		});
 	}
 
-	//NOTE: the other half of what SpawnManager does on PostTickUpdate - a fixture that cares about
-	//an object leaving the world has to sweep it out, otherwise nothing ever calls Deactivate
+	//NOTE: stands in for SpawnManager's sweep on PostTickUpdate - without it nothing calls Deactivate
 	[[nodiscard]] static EventSubscription WireWorldDisposal(const std::shared_ptr<EventSystem>& events,
 															 std::vector<std::shared_ptr<BaseObj>>& allObjects)
 	{
@@ -63,8 +62,7 @@ public:
 		});
 	}
 
-	//NOTE: stands in for AnimationManager - a spawn burst takes a couple of seconds of frames, and a
-	//test has none to spare, so it is over where it starts
+	//NOTE: stands in for AnimationManager - a spawn burst ends the moment it starts
 	[[nodiscard]] static std::vector<EventSubscription> WireInstantSpawnAnimations(
 			const std::shared_ptr<EventSystem>& events)
 	{
@@ -133,16 +131,14 @@ public:
 	}
 };
 
-//NOTE: an epsilon comparison is not transitive, so it is no equivalence relation and has no
-//business being spelled == on the type. Production never compares FPoints; the tests do.
+//NOTE: test-only - an epsilon comparison is not transitive, so it has no business as == on the type itself
 [[nodiscard]] inline bool operator==(const FPoint& lhs, const FPoint& rhs) noexcept
 {
 	static constexpr double epsilon{1e-4};
 	return std::abs(lhs.x - rhs.x) < epsilon && std::abs(lhs.y - rhs.y) < epsilon;
 }
 
-//NOTE: here, not in Point.h, to keep <ostream> out of the ~40 files that never print a point.
-//Found by ADL, so the test TU has to include this header.
+//NOTE: gtest finds these by ADL, so a test printing a point includes this header; Point.h stays free of <ostream>
 inline void PrintTo(const FPoint& point, std::ostream* os)
 {
 	*os << "FPoint(x: " << point.x << ", y: " << point.y << ")";

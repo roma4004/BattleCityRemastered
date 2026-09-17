@@ -703,8 +703,7 @@ TEST_F(NetworkTest, EachClientPutsOnlyItsOwnSeatOnTheWire)
 	EXPECT_FALSE(strayArrived) << "a client sent the keyboard half of a seat it was never given";
 }
 
-//NOTE: a bare EOF reads as a dropped link, so an untold third player spends ten quick retries and
-// gives up on a host that is up and simply busy
+//NOTE: a bare EOF reads as a dropped link - an untold third player would burn its retries on a busy host
 TEST_F(NetworkTest, AThirdClientIsToldTheSeatsAreTaken)
 {
 	std::optional<PlayerSlot> firstSeat{};

@@ -11,8 +11,6 @@
 #include <string>
 #include <vector>
 
-// The host answers a ready with the whole world, so a ready sent before the client clears its own
-// erases exactly the world it asked for.
 class ClientHandshakeTest : public testing::Test
 {
 protected:
@@ -45,6 +43,7 @@ protected:
 	}
 };
 
+//NOTE: the host answers a ready with the whole world, which a reset after the ready would erase
 TEST_F(ClientHandshakeTest, TheReadyFollowsTheWorldReset)
 {
 	_simulation.ApplyGameMode(GameMode::PlayAsClient);

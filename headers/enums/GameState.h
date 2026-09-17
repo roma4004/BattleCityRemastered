@@ -2,8 +2,7 @@
 
 #include <cstdint>
 
-//NOTE: the phase, not the mode - a lobby happens *as* a host or *as* a client, a demo runs *in*
-//whatever mode fills the seats. No Score: the scoreboard is a view of Won/Over
+//NOTE: what is happening, whatever mode fills the seats; the scoreboard is a view of Won and Over
 enum class GameState : char8_t
 {
 	Menu,

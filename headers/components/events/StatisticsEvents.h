@@ -27,7 +27,6 @@ struct StatisticsBonusDestroyedEvent final
 	Author author{};
 };
 
-//NOTE: bonus just ran out its timeout
 struct StatisticsBonusExpiredEvent final {};
 
 struct StatisticsTankHitEvent final

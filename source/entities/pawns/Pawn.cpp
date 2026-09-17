@@ -58,8 +58,7 @@ void Pawn::OnHealthChanged(const HealthChangedEvent& event) { SetHealth(event.he
 
 void Pawn::SubscribeTickUpdate()
 {
-	//NOTE: guarded - a tank that spawns with no grenade running gets an unfreeze it never asked
-	//for (Tank::OnBonusTimerReApplyOnSpawn), and it arrives while the tick is already subscribed.
+	//NOTE: guarded - a tank spawning with no timer bonus running is unfrozen while already ticking
 	if (!_tickUpdateSub)
 	{
 		_tickUpdateSub = _events->AddListener(this, &Pawn::OnTickUpdate);
@@ -68,8 +67,7 @@ void Pawn::SubscribeTickUpdate()
 
 void Pawn::OnTickUpdate(const TickUpdateEvent& event)
 {
-	//NOTE: a pawn killed earlier in this same tick keeps its subscription until PostTickUpdate,
-	//so the broadcast still reaches it - a corpse neither moves nor shoots
+	//NOTE: a pawn killed earlier this tick stays subscribed until PostTickUpdate - a corpse neither moves nor shoots
 	if (!GetIsAlive())
 	{
 		return;

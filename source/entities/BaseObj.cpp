@@ -55,8 +55,7 @@ void BaseObj::MoveY(const double i) { _rect.y += i; }
 
 int BaseObj::GetHealth() const { return _health; }
 
-//NOTE: health alone never buries anyone - the client learns of a death from DespawnedEvent, and the
-//host decides it in TakeDamage
+//NOTE: never kills - the host decides a death in TakeDamage, the client hears of it from DespawnedEvent
 void BaseObj::SetHealth(const int health) { _health = health; }
 
 void BaseObj::SetIsAlive(const bool isAlive) { _isAlive = isAlive; }
@@ -69,8 +68,7 @@ void BaseObj::EmitDeathStatistics(Author) {}
 
 void BaseObj::TakeDamage(const unsigned int damage, const Author author)
 {
-	//NOTE: a corpse lingers in _allObjects until DisposeDeadObject on PostTickUpdate - it is still in
-	//the blast radius of the next shot, and hitting it again would report a second death
+	//NOTE: a corpse stays in _allObjects until the PostTickUpdate sweep, and a second hit would report a second death
 	if (!_isAlive)
 	{
 		return;
@@ -92,3 +90,5 @@ bool BaseObj::GetIsPassable() const { return _collision.passable; }
 bool BaseObj::GetIsDestructible() const { return _collision.destructible; }
 
 bool BaseObj::GetIsPenetrable() const { return _collision.penetrable; }
+
+Terrain BaseObj::GetTerrain() const { return _collision.terrain; }

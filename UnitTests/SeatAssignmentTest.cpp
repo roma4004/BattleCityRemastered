@@ -21,7 +21,7 @@ TEST_F(SeatAssignmentTest, TheNthDeviceDrivesTheNthSeat)
 	EXPECT_EQ(SlotForDevice(1u, false), PlayerSlot::P2);
 }
 
-//NOTE: one flag for every device - a pair playing on pads has to swap with the keyboard, not against it
+//NOTE: one flag for every device, so a pair playing on pads swaps together with the keyboard
 TEST_F(SeatAssignmentTest, TheSwapFlipsEveryDevice)
 {
 	EXPECT_EQ(SlotForDevice(0u, true), PlayerSlot::P2);

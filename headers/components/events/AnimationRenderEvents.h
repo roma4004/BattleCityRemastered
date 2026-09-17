@@ -10,7 +10,7 @@ enum class Direction : char8_t;
 enum class AnimationType : char8_t;
 enum class TextureType : char8_t;
 
-//NOTE: these two are also the spawn's clock - AnimationManager reports the last frame by uuid
+//NOTE: also the spawn's clock - AnimationManager reports the last frame by uuid
 struct AnimationCreateTankSpawnEvent
 {
 	ObjRectangle rect;
@@ -23,6 +23,7 @@ struct AnimationCancelTankSpawnEvent
 	Uuid uuid;
 };
 
+//NOTE: also the spawn's clock - AnimationManager reports the last frame by uuid
 struct AnimationCreateBonusSpawnEvent
 {
 	ObjRectangle rect;

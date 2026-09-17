@@ -563,6 +563,9 @@
     <ClInclude Include="..\headers\enums\TankType.h">
       <Filter>headers\enums</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\enums\Terrain.h">
+      <Filter>headers\enums</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\enums\TextBlockAlign.h">
       <Filter>headers\enums</Filter>
     </ClInclude>

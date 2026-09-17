@@ -23,7 +23,7 @@ namespace
 
 	return count;
 }
-}
+}// namespace
 
 UserInput::UserInput(const std::shared_ptr<EventSystem>& events, const WindowConfig& windowConfig,
 					 const SDL_Config& sdlConfig)

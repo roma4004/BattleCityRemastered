@@ -35,8 +35,7 @@ void Log::Detail(const std::string& message)
 	}
 }
 
-//NOTE: read without the lock - the level is set once at startup, and locking here would serialise
-//every frame's worth of skipped calls at the normal level
+//NOTE: unlocked - the level is set once at startup, and this runs for every skipped detail line
 bool Log::IsDetailed() { return _level >= Level::Detailed; }
 
 void Log::SetConsole(const bool enabled)
@@ -65,8 +64,7 @@ void Log::SetFile(const bool enabled, const std::string& filename)
 		return;
 	}
 
-	//NOTE: truncate once here, append on every write - so a run starts clean without holding the
-	//file open across the whole session
+	//NOTE: truncated here and appended to per write, so a run starts clean without holding the file open
 	if (std::ofstream file{_filename, std::ios::out | std::ios::trunc}; file.is_open())
 	{
 		file << TimeStamp() << " log started" << '\n';

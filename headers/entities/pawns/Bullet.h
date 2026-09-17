@@ -34,7 +34,8 @@ protected:
 	void TickUpdate(double deltaTime) override;
 
 public:
-	static constexpr CollisionTags kCollision{tags::Passable{}, tags::Destructible{}, tags::Impenetrable{}};
+	static constexpr CollisionTags kCollision{tags::Passable{}, tags::Destructible{}, tags::Impenetrable{},
+											  tags::NoTerrain{}};
 
 	Bullet(PawnProperty pawnProperty, const GameConfig& gameConfig, const BulletCalibre& calibre = {});
 

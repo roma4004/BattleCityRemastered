@@ -30,7 +30,7 @@ struct RenderMenuBackgroundEvent
 	Point pos;
 };
 
-//NOTE: one size for every line - per-line sizes would break the block apart
+//NOTE: no size of its own - the renderer fits one font size to the whole block
 struct TextBlockLine
 {
 	Point pos{};

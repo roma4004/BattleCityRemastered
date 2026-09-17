@@ -17,14 +17,13 @@ public:
 	//NOTE: asked every frame, cooldown or not - a bot aims during this pass
 	[[nodiscard]] virtual bool ShouldShoot(Tank& self) = 0;
 
-	//NOTE: empty, not pure - the only decision taken after the move, and a player who drove into a
-	//wall goes on holding the key, so a keyboard has nothing to revise
+	//NOTE: asked after a blocked move; a player keeps holding the key into the wall, so only a bot revises
 	[[nodiscard]] virtual std::optional<Direction> ReviseWhenMoveBlocked(Tank& /*self*/, double /*deltaTime*/)
 	{
 		return std::nullopt;
 	}
 
-	//NOTE: empty, not pure - a bot reads the field, so there is nothing for it to subscribe to
+	//NOTE: a bot reads the field and has nothing to subscribe to
 	virtual void Enable() {}
 	virtual void Disable() {}
 };

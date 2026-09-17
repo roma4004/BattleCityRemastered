@@ -103,7 +103,8 @@ protected:
 	[[nodiscard]] bool IsTouchIce() const;
 
 public:
-	static constexpr CollisionTags kCollision{tags::Impassable{}, tags::Destructible{}, tags::Impenetrable{}};
+	static constexpr CollisionTags kCollision{tags::Impassable{}, tags::Destructible{}, tags::Impenetrable{},
+											  tags::NoTerrain{}};
 
 	Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool,
 		 std::unique_ptr<IInputProvider> inputProvider, const GameConfig& gameConfig);
