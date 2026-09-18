@@ -9,7 +9,7 @@ class UuidUtils final
 {
 public:
 	[[nodiscard]] static Uuid GetRandomUuid();
-	[[nodiscard]] static Uuid GetNilUuid();
+	[[nodiscard]] static Uuid GetNilUuid() noexcept;
 	[[nodiscard]] static std::string GetStringUuid(Uuid uuid);
 	//NOTE: throws on malformed input, so it is for literals in tests and fixtures, not for the wire
 	[[nodiscard]] static Uuid GetUuidFromString(std::string_view text);

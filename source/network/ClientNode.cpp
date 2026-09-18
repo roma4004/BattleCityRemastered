@@ -1,16 +1,12 @@
 #include "network/ClientNode.h"
 #include "network/Client.h"
-#include "network/Endpoints.h"
 #include <boost/asio/post.hpp>
 
 namespace network::commands
 {
-ClientNode::ClientNode(const std::shared_ptr<EventSystem>& events)
-	: ClientNode(std::string(kDefaultHost), kDefaultPort, events) {}
-
-ClientNode::ClientNode(const std::string& host, uint16_t port, const std::shared_ptr<EventSystem>& events)
+ClientNode::ClientNode(const ServerAddress& address, const std::shared_ptr<EventSystem>& events)
 	: NetworkNodeBase(events, "ClientNode")
-	, _client{std::make_shared<Client>(IoContext(), host, port, events)}
+	, _client{std::make_shared<Client>(IoContext(), address, events)}
 {
 	StartIoThread();
 	SubscribeToNetCommandUpdate();

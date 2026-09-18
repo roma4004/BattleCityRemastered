@@ -23,7 +23,7 @@ public:
 	//NOTE: only at Detailed. Ask IsDetailed() first when building the message costs something.
 	static void Detail(const std::string& message);
 
-	[[nodiscard]] static bool IsDetailed();
+	[[nodiscard]] static bool IsDetailed() noexcept;
 
 	static void SetConsole(bool enabled);
 	static void SetFile(bool enabled, const std::string& filename = "game_log.txt");

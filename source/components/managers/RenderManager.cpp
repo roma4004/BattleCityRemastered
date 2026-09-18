@@ -124,8 +124,7 @@ void RenderManager::SnapWindowToLogicalAspect() const
 
 	SDL_Window* window{_sdlConfig.sdlWindow.get()};
 
-	//NOTE: a maximized or fullscreen window is the window manager's to size - reshaping it here only
-	//fights it, so the letterbox stays and ClearFrame paints its bars instead
+	//NOTE: a maximized window is the window manager's to size - reshaping it here only fights it, so bars stay
 	if ((SDL_GetWindowFlags(window) & (SDL_WINDOW_MAXIMIZED | SDL_WINDOW_FULLSCREEN)) != 0u)
 	{
 		return;
@@ -135,8 +134,7 @@ void RenderManager::SnapWindowToLogicalAspect() const
 	int windowHeight{};
 	SDL_GetWindowSize(window, &windowWidth, &windowHeight);
 
-	//NOTE: the mean of the two axes, so it does not matter which edge was dragged - the window keeps
-	//roughly the size the drag asked for and takes the field's shape
+	//NOTE: the mean of both axes, so either edge dragged keeps roughly the asked size and the field's shape
 	double scale{(static_cast<double>(windowWidth) / logicalWidth
 				  + static_cast<double>(windowHeight) / logicalHeight) / 2.0};
 
@@ -162,8 +160,7 @@ void RenderManager::ApplyLogicalSize()
 {
 	const UPoint logicalSize{_gameConfig.LogicalSize()};
 
-	//NOTE: letterbox, not stretch - the equal scale on both axes is what the text sizing rests on. The
-	//bars it would add are answered by shaping the window itself, not by distorting the field.
+	//NOTE: letterbox, not stretch - text sizing rests on the equal scale, and the bars are answered by the window shape
 	SDL_SetRenderLogicalPresentation(_sdlConfig.renderer.get(),
 									 static_cast<int>(logicalSize.x),
 									 static_cast<int>(logicalSize.y),
@@ -316,8 +313,7 @@ SDL_Color RenderManager::IntToColor(const unsigned int color)
 
 unsigned int RenderManager::ComponentsToColor(const Uint8 r, const Uint8 g, const Uint8 b, const Uint8 a)
 {
-	//NOTE: Uint8 promotes to int, and shifting 255 by 24 leaves the sign bit - the widening keeps the
-	//whole thing unsigned
+	//NOTE: Uint8 promotes to int and 255 << 24 lands on the sign bit - the widening keeps it unsigned
 	return (Uint32{a} << 24u) | (Uint32{r} << 16u) | (Uint32{g} << 8u) | Uint32{b};
 }
 
@@ -399,8 +395,7 @@ int RenderManager::BasePointSize(const bool isMediumFontSize)
 
 float RenderManager::CurrentRenderScale() const
 {
-	//NOTE: the logical presentation is kept apart from the render scale, so SDL_GetRenderScale does not
-	//report it - the letterbox rect is what maps a logical pixel onto the window
+	//NOTE: SDL_GetRenderScale misses the logical presentation - the letterbox rect maps a logical pixel to the window
 	int logicalWidth{};
 	int logicalHeight{};
 	SDL_RendererLogicalPresentation mode{SDL_LOGICAL_PRESENTATION_DISABLED};
@@ -515,8 +510,7 @@ void RenderManager::DrawMenuTextBlock(const RenderMenuTextBlockEvent& event) con
 		return;
 	}
 
-	//NOTE: clipped here and not in the block - a line missing from the event would change what
-	//FitBlockPointSize measures, and while the menu slides in that is every line there is
+	//NOTE: clipped here, not in the block - a line missing from the event would change what FitBlockPointSize measures
 	const auto logicalHeight{static_cast<int>(_gameConfig.LogicalSize().y)};
 	for (const TextBlockLine& line: event.lines)
 	{
@@ -579,19 +573,16 @@ void RenderManager::CreateColorTexture(const unsigned int color)
 
 	SetRenderDrawColor(color);
 
-	SDL_RenderClear(_sdlConfig.renderer.get());// Fill rect with color
+	SDL_RenderClear(_sdlConfig.renderer.get());
 
 	SDL_SetRenderTarget(_sdlConfig.renderer.get(), nullptr);
 
 	_colorTextureCache.insert_or_assign(color, std::move(colorTexture));
 }
 
-//NOTE: the clear ignores the logical presentation and covers the whole window, so the gray goes down
-//first and the field is painted black back over it - what stays gray is exactly the letterbox bars
+//NOTE: the clear covers the whole window - gray first, the field painted black over it, so only the bars stay gray
 void RenderManager::ClearFrame(const PreTickUpdateEvent&) const
 {
-	//NOTE: grey everywhere, black over the field only - that is the side panel's background,
-	//it needs no fill of its own
 	SetRenderDrawColor(kGrayColor);
 	SDL_RenderClear(_sdlConfig.renderer.get());
 
@@ -624,8 +615,7 @@ void RenderManager::OnPlayerSlotAssigned(const PlayerSlotAssignedEvent& event)
 	UpdateWindowTitle();
 }
 
-//NOTE: two clients look alike on screen, so the caption carries the seat the server gave this
-//one - which is also the keyboard half that drives it
+//NOTE: two clients look alike, so the caption carries the seat - the keyboard half that drives this one
 void RenderManager::UpdateWindowTitle() const
 {
 	std::string title{SDL_Config::kWindowTitle};
@@ -700,8 +690,7 @@ void RenderManager::RenderFPS(const RenderFPSEvent& event) const
 	}
 
 	constexpr SDL_Color textColor{.r = 140u, .g = 0u, .b = 255u, .a = 255u};
-	//NOTE: three digits at the medium size are 72 px against a 71 px column - the pixel over the edge
-	//buys reusing the one font opened at startup
+	//NOTE: three digits are 72 px in a 71 px column - the pixel over buys reusing the one font opened at startup
 	TextToRenderCentered(_fpsBox, textColor, std::to_string(fps), SDL_Config::kFontSizePtMedium);
 }
 

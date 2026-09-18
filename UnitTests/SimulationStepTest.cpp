@@ -38,6 +38,8 @@ protected:
 	static constexpr double kStep{1.0 / 60.0};
 };
 
+// a frame worth exactly one step: the world advances once, and by the fixed step rather than by the
+// frame's own length
 TEST_F(SimulationStepTest, AFrameOfOneStepAdvancesTheWorldOnce)
 {
 	Frame(kStep);
@@ -46,7 +48,7 @@ TEST_F(SimulationStepTest, AFrameOfOneStepAdvancesTheWorldOnce)
 	EXPECT_DOUBLE_EQ(kStep, _steps.front());
 }
 
-// A slow frame is paid for in whole steps, not in one long one
+// a frame three steps long is paid in three equal steps, not one long one
 TEST_F(SimulationStepTest, AFrameOfThreeStepsAdvancesTheWorldThreeTimes)
 {
 	Frame(kStep * 3.0);
@@ -58,7 +60,7 @@ TEST_F(SimulationStepTest, AFrameOfThreeStepsAdvancesTheWorldThreeTimes)
 	}
 }
 
-// The remainder is carried, so two half-frames are one step and nothing is lost
+// half a step moves nothing and is kept; the next half completes it
 TEST_F(SimulationStepTest, AFrameShorterThanAStepIsCarriedIntoTheNext)
 {
 	Frame(kStep / 2.0);

@@ -17,7 +17,6 @@ class EagleTile final : public Obstacle, public IFortress
 	void OnDraw(const DrawEvent&) const;
 
 protected:
-	//NOTE: empty - the eagle announces its death as PlayersBaseFinishedEvent from the destructor
 	void EmitDeathStatistics(Author author) override;
 	void OnDespawned(const DespawnedEvent& event) override;
 

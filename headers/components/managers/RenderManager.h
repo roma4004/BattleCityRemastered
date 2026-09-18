@@ -169,7 +169,6 @@ class RenderManager final
 	void DrawHealthBar(const RenderHealthBarEvent& event) const;
 	void InitMenu(const GameConfig& gameConfig);
 
-	//NOTE: the band above the enemy icon background - the counter is centred in it
 	[[nodiscard]] static SDL_Rect CalcFpsBox(const UPoint& battlefieldSize);
 	[[nodiscard]] int SideBarColumnX() const;
 

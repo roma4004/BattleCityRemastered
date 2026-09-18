@@ -6,7 +6,6 @@
 
 namespace network::commands
 {
-//NOTE: wire DTO - serialization lives in CommandSerialization.h
 struct StatisticsChange final
 {
 	StatisticsType statisticsType{};

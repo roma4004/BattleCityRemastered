@@ -114,31 +114,30 @@ public:
 	void Activate() override;
 	void Deactivate() override;
 
-	//BaseObj overrides
 	void TakeDamage(unsigned int damage, Author author) override;
 
 	//NOTE: back into service from the pool - everything a previous life could have changed
 	void Reset(const TankResetProperty& resetProperty, std::unique_ptr<IInputProvider> driver);
 
-	[[nodiscard]] unsigned int GetTier() const;
+	[[nodiscard]] unsigned int GetTier() const noexcept;
 
 	//NOTE: what the driver needs of the tank it drives
-	[[nodiscard]] bool CanShoot() const;
+	[[nodiscard]] bool CanShoot() const noexcept;
 	[[nodiscard]] std::vector<Direction> GetFreePathSides(double deltaTime,
 												  std::optional<Direction> excludeDirection) const;
 
-	[[nodiscard]] double GetBulletWidth() const;
+	[[nodiscard]] double GetBulletWidth() const noexcept;
 	void SetBulletWidth(double bulletWidth);
 
-	[[nodiscard]] double GetBulletHeight() const;
+	[[nodiscard]] double GetBulletHeight() const noexcept;
 	void SetBulletHeight(double bulletHeight);
 
-	[[nodiscard]] double GetBulletSpeed() const;
+	[[nodiscard]] double GetBulletSpeed() const noexcept;
 	void SetBulletSpeed(double bulletSpeed);
 
-	[[nodiscard]] unsigned int GetBulletDamage() const;
+	[[nodiscard]] unsigned int GetBulletDamage() const noexcept;
 	void SetBulletDamage(unsigned int bulletDamage);
 
-	[[nodiscard]] double GetBulletDamageRadius() const;
+	[[nodiscard]] double GetBulletDamageRadius() const noexcept;
 	void SetBulletDamageRadius(double bulletDamageRadius);
 };

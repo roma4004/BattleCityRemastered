@@ -48,7 +48,7 @@ void TankSpawner::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &TankSpawner::Reset));
 	_subs.push_back(_events->AddListener(this, &TankSpawner::OnRespawnTank));
-	//NOTE: a tank is the host's call - the client ignores its own burst and waits for TankSpawnComplete
+	//NOTE: a tank is the host's call - the client's burst never finishes and waits for TankSpawnComplete
 	if (IsAuthority(_gameMode))
 	{
 		_subs.push_back(_events->AddListener(this, &TankSpawner::OnSpawnAnimationFinished));
@@ -337,8 +337,9 @@ void TankSpawner::DelayedSpawnStart(const ObjRectangle rect, const int health, c
 
 	_events->EmitEvent(TankSpawnEvent{.uuid = uuid});
 
-	//NOTE: the burst is also the countdown - the tank lands when its last frame is done
-	_events->EmitEvent(AnimationCreateTankSpawnEvent{.rect = rect, .uuid = uuid});
+	//NOTE: the burst is also the countdown - the tank lands when its last frame is done; a client's never
+	//ends by itself, so it lasts exactly as long as the host's
+	_events->EmitEvent(AnimationCreateTankSpawnEvent{.rect = rect, .uuid = uuid, .isEndless = IsClient(_gameMode)});
 }
 
 //NOTE: a seat keeps its uuid for the match, so an entry left pending would shadow its next spawn

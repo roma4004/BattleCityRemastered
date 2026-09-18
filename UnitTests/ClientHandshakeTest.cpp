@@ -43,7 +43,7 @@ protected:
 	}
 };
 
-//NOTE: the host answers a ready with the whole world, which a reset after the ready would erase
+//NOTE: the server answers a ready with the whole world, which a reset after the ready would erase
 TEST_F(ClientHandshakeTest, TheReadyFollowsTheWorldReset)
 {
 	_simulation.ApplyGameMode(GameMode::PlayAsClient);
@@ -66,7 +66,7 @@ TEST_F(ClientHandshakeTest, NothingIsAnnouncedBeforeTheLinkIsUp)
 	EXPECT_EQ(Count("ready"), 0);
 }
 
-//NOTE: the host counts readies - two from one client fill both seats and start a match alone
+//NOTE: the server counts readies - two from one client fill both seats and start a match alone
 TEST_F(ClientHandshakeTest, TheLinkArrivingWithTheLobbyStillAnnouncesOnce)
 {
 	_simulation.ApplyGameMode(GameMode::PlayAsClient);
@@ -77,7 +77,7 @@ TEST_F(ClientHandshakeTest, TheLinkArrivingWithTheLobbyStillAnnouncesOnce)
 	EXPECT_EQ(Count("ready"), 1);
 }
 
-TEST_F(ClientHandshakeTest, TheHostsLobbyMakesAConnectedClientReportAgain)
+TEST_F(ClientHandshakeTest, TheServersLobbyMakesAConnectedClientReportAgain)
 {
 	_simulation.ApplyGameMode(GameMode::PlayAsClient);
 	_events->EmitEvent(ClientConnectedToHostEvent{});

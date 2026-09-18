@@ -21,6 +21,7 @@
 
 namespace network::commands
 {
+//NOTE: every alternative is a plain wire DTO - their serialization lives in CommandSerialization.h
 //NOTE: ser20 puts the alternative index on the wire - append only, inserting renumbers everything after
 using AnyCommand = std::variant<
 	BonusSpawn, BonusStatus, Despawn, GameStateChange, HealthChange,

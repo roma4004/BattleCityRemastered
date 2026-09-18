@@ -83,7 +83,6 @@ void RespawnManager::ResetRespawnStat()
 	_playersDeathCount = 0u;
 }
 
-//NOTE: a reset means a fresh match, so every seat is owed a tank again
 void RespawnManager::ResetSpawn()
 {
 	ResetRespawnStat();
@@ -191,7 +190,7 @@ void RespawnManager::OnTankSpawn(const TankSpawnEvent& event)
 	}
 }
 
-bool RespawnManager::IsEnemyGroup(const RespawnGroup group)
+bool RespawnManager::IsEnemyGroup(const RespawnGroup group) noexcept
 {
 	return group == RespawnGroup::ENEMY_ALL;
 }

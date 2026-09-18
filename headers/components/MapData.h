@@ -6,7 +6,6 @@
 #include <string>
 #include <vector>
 
-//NOTE: four cells across and four down make one classic brick block, so a wall crumbles by quarters
 struct MapData
 {
 	std::size_t cols{};

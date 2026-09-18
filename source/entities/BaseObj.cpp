@@ -19,9 +19,9 @@ Uuid BaseObj::GetUuid() const { return _uuid; }
 
 void BaseObj::SetId(const Uuid uuid) { _uuid = uuid; }
 
-Faction BaseObj::GetFaction() const { return _faction; }
+Faction BaseObj::GetFaction() const noexcept { return _faction; }
 
-FPoint BaseObj::GetPos() const { return FPoint{.x = _rect.x, .y = _rect.y}; }
+FPoint BaseObj::GetPos() const noexcept { return FPoint{.x = _rect.x, .y = _rect.y}; }
 
 void BaseObj::SetPos(const FPoint& pos)
 {
@@ -29,23 +29,23 @@ void BaseObj::SetPos(const FPoint& pos)
 	_rect.y = pos.y;
 }
 
-double BaseObj::GetRightSide() const { return _rect.Right(); }
+double BaseObj::GetRightSide() const noexcept { return _rect.Right(); }
 
-double BaseObj::GetBottomSide() const { return _rect.Bottom(); }
+double BaseObj::GetBottomSide() const noexcept { return _rect.Bottom(); }
 
-double BaseObj::GetX() const { return _rect.x; }
+double BaseObj::GetX() const noexcept { return _rect.x; }
 
 void BaseObj::SetX(const FPoint& pos) { _rect.x = pos.x; }
 
-double BaseObj::GetY() const { return _rect.y; }
+double BaseObj::GetY() const noexcept { return _rect.y; }
 
 void BaseObj::SetY(const FPoint& pos) { _rect.y = pos.y; }
 
-double BaseObj::GetWidth() const { return _rect.w; }
+double BaseObj::GetWidth() const noexcept { return _rect.w; }
 
 void BaseObj::SetWidth(const double width) { _rect.w = width; }
 
-double BaseObj::GetHeight() const { return _rect.h; }
+double BaseObj::GetHeight() const noexcept { return _rect.h; }
 
 void BaseObj::SetHeight(const double height) { _rect.h = height; }
 
@@ -91,4 +91,4 @@ bool BaseObj::GetIsDestructible() const { return _collision.destructible; }
 
 bool BaseObj::GetIsPenetrable() const { return _collision.penetrable; }
 
-Terrain BaseObj::GetTerrain() const { return _collision.terrain; }
+Terrain BaseObj::GetTerrain() const noexcept { return _collision.terrain; }

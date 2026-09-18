@@ -9,6 +9,8 @@
 #include <memory>
 #include <vector>
 
+// the menu keys are read on PreTickUpdate, so every case here presses what it needs, runs one tick and
+// counts what came out of it - the mode is applied at most once per press
 class MenuInputTest : public testing::Test
 {
 protected:
@@ -35,6 +37,7 @@ protected:
 	}
 };
 
+// one press of the menu key opens it, and applies nothing
 TEST_F(MenuInputTest, MenuKeyOnlyTogglesTheMenu)
 {
 	_events->EmitEvent(MenuReleasedEvent{});
@@ -45,6 +48,7 @@ TEST_F(MenuInputTest, MenuKeyOnlyTogglesTheMenu)
 	EXPECT_EQ(_applyCount, 0);
 }
 
+// a second press closes it again - still nothing applied, so leaving the menu is not a choice
 TEST_F(MenuInputTest, MenuKeyClosesWhatItOpenedWithoutApplyingAnything)
 {
 	_events->EmitEvent(MenuReleasedEvent{});
@@ -57,7 +61,7 @@ TEST_F(MenuInputTest, MenuKeyClosesWhatItOpenedWithoutApplyingAnything)
 	EXPECT_EQ(_applyCount, 0);
 }
 
-//NOTE: hiding follows the match starting, not the apply - a host with no client stays in the lobby
+//NOTE: hiding follows the match starting, not the apply - a server with no client stays in the lobby
 TEST_F(MenuInputTest, ConfirmAppliesTheModeAndDoesNotHideTheMenuItself)
 {
 	_events->EmitEvent(MenuReleasedEvent{});
@@ -81,6 +85,7 @@ TEST_F(MenuInputTest, ReleasingConfirmStopsItFromApplyingAgain)
 	EXPECT_EQ(_applyCount, 1);
 }
 
+// confirm without opening the menu first has nothing to apply
 TEST_F(MenuInputTest, ConfirmIsIgnoredWhileTheMenuIsClosed)
 {
 	_events->EmitEvent(EnterEvent{.isPressed = true});

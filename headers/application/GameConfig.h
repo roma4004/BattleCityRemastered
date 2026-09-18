@@ -3,6 +3,7 @@
 #include "enums/GameMode.h"
 #include "enums/GameState.h"
 #include "enums/PlayerSlot.h"
+#include "network/Endpoints.h"
 #include <chrono>
 #include <cstddef>
 #include <optional>
@@ -21,10 +22,11 @@ public:
 	GameState gameState{GameState::Menu};
 
 	std::optional<PlayerSlot> ownSlot{};
+	network::ServerAddress serverAddress{};
 
-	[[nodiscard]] bool IsAuthority() const { return ::IsAuthority(gameMode); }
-	[[nodiscard]] bool IsClient() const { return ::IsClient(gameMode); }
-	[[nodiscard]] bool IsHost() const { return ::IsHost(gameMode); }
+	[[nodiscard]] bool IsAuthority() const noexcept { return ::IsAuthority(gameMode); }
+	[[nodiscard]] bool IsClient() const noexcept { return ::IsClient(gameMode); }
+	[[nodiscard]] bool IsHost() const noexcept { return ::IsHost(gameMode); }
 
 	//NOTE: false for both seats on the dedicated server - it drives no tank of its own
 	[[nodiscard]] bool IsOwnSlot(const PlayerSlot slot) const
@@ -36,8 +38,8 @@ public:
 
 		return !IsClient() || ownSlot == slot;
 	}
-	[[nodiscard]] bool HasSecondPlayer() const { return ::HasSecondPlayer(gameMode); }
-	[[nodiscard]] UPoint LogicalSize() const;
+	[[nodiscard]] bool HasSecondPlayer() const noexcept { return ::HasSecondPlayer(gameMode); }
+	[[nodiscard]] UPoint LogicalSize() const noexcept;
 
 	UPoint battlefieldSize{WorldGeometry::kClassicBattlefieldSize};
 	size_t sideBarWidth{WorldGeometry::kSideBarWidth};
@@ -50,5 +52,5 @@ public:
 	int bonusSize{static_cast<int>(tankSize)};
 	double botShootObstacleChance{0.35};
 	std::chrono::milliseconds botObstacleShootCooldown{std::chrono::seconds{1}};
-	bool skipIntroMusic{false};//NOTE: launch flag, not persisted - autoplay only, sound stays on
+	bool isMuted{false};
 };

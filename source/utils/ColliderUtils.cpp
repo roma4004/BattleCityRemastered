@@ -12,19 +12,16 @@ bool ColliderUtils::IsCollide(const ObjRectangle& r1, const ObjRectangle& r2) no
 		return a > b + COLLISION_EPSILON;
 	};
 
-	// Check if one rectangle is to the right of the other
 	if (greaterThan(r1.x, r2.x + r2.w) || greaterThan(r2.x, r1.x + r1.w))
 	{
 		return false;
 	}
 
-	// Check if one rectangle is above the other
 	if (greaterThan(r1.y, r2.y + r2.h) || greaterThan(r2.y, r1.y + r1.h))
 	{
 		return false;
 	}
 
-	// If neither of the above conditions is matched, the rectangles overlap
 	return true;
 }
 
@@ -36,7 +33,6 @@ bool ColliderUtils::IsCollide(const Circle& circle, const ObjRectangle& rect) no
 	return (deltaX * deltaX + deltaY * deltaY) < (circle.radius * circle.radius);
 }
 
-// Check if the absolute difference is within the allowed error margin
 bool ColliderUtils::AreEqualAbsolute(const double a, const double b, const double epsilon) noexcept
 {
 	return std::fabs(a - b) <= epsilon;

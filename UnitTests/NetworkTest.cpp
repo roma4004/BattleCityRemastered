@@ -6,6 +6,7 @@
 #include "components/events/InputEvents.h"
 #include "components/events/ObjectLifecycleEvents.h"
 #include "components/events/ReplicationEvents.h"
+#include "components/events/ServerConsoleEvents.h"
 #include "components/events/StatisticsEvents.h"
 #include "components/events/TimingEvents.h"
 #include "enums/BonusType.h"
@@ -46,7 +47,7 @@ protected:
 
 	//NOTE: one bus per node - on a shared bus a listener fires off the local emit before anything
 	//crosses the wire, and the test passes with no networking at all
-	std::shared_ptr<EventSystem> _hostEvents{std::make_shared<EventSystem>()};
+	std::shared_ptr<EventSystem> _serverEvents{std::make_shared<EventSystem>()};
 	std::shared_ptr<EventSystem> _clientEvents{std::make_shared<EventSystem>()};
 	//NOTE: a seat is handed out per connection, so telling the two apart takes a second game process
 	std::shared_ptr<EventSystem> _secondClientEvents{std::make_shared<EventSystem>()};
@@ -57,15 +58,15 @@ protected:
 	//NOTE: stands in for MainLoop, in its order - nothing is received or sent without it
 	void Pump() const
 	{
-		_hostEvents->EmitEvent(NetCommandUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		_serverEvents->EmitEvent(NetCommandUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 		_clientEvents->EmitEvent(NetCommandUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 		_secondClientEvents->EmitEvent(NetCommandUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 		_thirdClientEvents->EmitEvent(NetCommandUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-		_hostEvents->EmitEvent(PreTickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		_serverEvents->EmitEvent(PreTickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 		_clientEvents->EmitEvent(PreTickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 		_secondClientEvents->EmitEvent(PreTickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 		_thirdClientEvents->EmitEvent(PreTickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-		_hostEvents->EmitEvent(NetworkEndFrameEvent{});
+		_serverEvents->EmitEvent(NetworkEndFrameEvent{});
 		_clientEvents->EmitEvent(NetworkEndFrameEvent{});
 		_secondClientEvents->EmitEvent(NetworkEndFrameEvent{});
 		_thirdClientEvents->EmitEvent(NetworkEndFrameEvent{});
@@ -86,14 +87,14 @@ protected:
 	}
 
 	//NOTE: port 0 - the OS picks a free one, so a leftover socket cannot collide
-	[[nodiscard]] std::unique_ptr<network::commands::ServerNode> MakeHost() const
+	[[nodiscard]] std::unique_ptr<network::commands::ServerNode> MakeServer() const
 	{
-		return std::make_unique<network::commands::ServerNode>("127.0.0.1", 0, _hostEvents);
+		return std::make_unique<network::commands::ServerNode>(network::ServerAddress{.port = 0}, _serverEvents);
 	}
 
 	[[nodiscard]] std::unique_ptr<network::commands::ClientNode> MakeClient(const uint16_t port) const
 	{
-		return std::make_unique<network::commands::ClientNode>("127.0.0.1", port, _clientEvents);
+		return std::make_unique<network::commands::ClientNode>(network::ServerAddress{.port = port}, _clientEvents);
 	}
 
 	[[nodiscard]] EventSubscription AnnounceReadyOnConnect() const
@@ -117,7 +118,8 @@ protected:
 
 			try
 			{
-				server = std::make_unique<network::commands::ServerNode>("127.0.0.1", port, _hostEvents);
+				server = std::make_unique<network::commands::ServerNode>(network::ServerAddress{.port = port},
+																		_serverEvents);
 			}
 			catch (const std::exception&)
 			{
@@ -136,7 +138,7 @@ protected:
 
 TEST_F(NetworkTest, PosEventReplication)
 {
-	const auto server{MakeHost()};
+	const auto server{MakeServer()};
 	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
@@ -147,7 +149,7 @@ TEST_F(NetworkTest, PosEventReplication)
 	auto posSub{_clientEvents->AddListener(Key(_uuid),
 										   [&received](const PosChangedEvent& event) { received = event; })};
 
-	_hostEvents->EmitEvent(
+	_serverEvents->EmitEvent(
 			PosChangedEvent{.pos = posOrigin, .dir = directionOrigin, .uuid = _uuid});
 
 	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
@@ -158,7 +160,7 @@ TEST_F(NetworkTest, PosEventReplication)
 
 TEST_F(NetworkTest, ShotEventReplication)
 {
-	const auto server{MakeHost()};
+	const auto server{MakeServer()};
 	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
@@ -169,7 +171,7 @@ TEST_F(NetworkTest, ShotEventReplication)
 	auto shotSub{_clientEvents->AddListener(Key(who),
 											[&received](const TankShotEvent& event) { received = event; })};
 
-	_hostEvents->EmitEvent(TankShotEvent{.who = who, .dir = direction, .bulletUuid = _uuid});
+	_serverEvents->EmitEvent(TankShotEvent{.who = who, .dir = direction, .bulletUuid = _uuid});
 
 	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
 	const auto& event{received.value()};
@@ -179,7 +181,7 @@ TEST_F(NetworkTest, ShotEventReplication)
 
 TEST_F(NetworkTest, HealthEventReplication)
 {
-	const auto server{MakeHost()};
+	const auto server{MakeServer()};
 	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
@@ -192,7 +194,7 @@ TEST_F(NetworkTest, HealthEventReplication)
 												  received = event.health;
 											  })};
 
-	_hostEvents->EmitEvent(HealthChangedEvent{.health = healthOrigin, .uuid = _uuid});
+	_serverEvents->EmitEvent(HealthChangedEvent{.health = healthOrigin, .uuid = _uuid});
 
 	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
 	EXPECT_EQ(healthOrigin, *received);
@@ -201,7 +203,7 @@ TEST_F(NetworkTest, HealthEventReplication)
 //NOTE: two despawns - a destroyed bullet and a picked-up bonus travel the same command
 TEST_F(NetworkTest, DespawnEventReplication)
 {
-	const auto server{MakeHost()};
+	const auto server{MakeServer()};
 	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
@@ -212,8 +214,8 @@ TEST_F(NetworkTest, DespawnEventReplication)
 												   received.push_back(event);
 											   })};
 
-	_hostEvents->EmitEvent(DespawnedEvent{.uuid = _uuid, .reason = DespawnReason::Destroyed});
-	_hostEvents->EmitEvent(DespawnedEvent{.uuid = _uuid, .reason = DespawnReason::PickedUp});
+	_serverEvents->EmitEvent(DespawnedEvent{.uuid = _uuid, .reason = DespawnReason::Destroyed});
+	_serverEvents->EmitEvent(DespawnedEvent{.uuid = _uuid, .reason = DespawnReason::PickedUp});
 
 	ASSERT_TRUE(PumpUntil([&received] { return received.size() == 2u; }));
 	EXPECT_EQ(_uuid, received[0].uuid);
@@ -223,7 +225,7 @@ TEST_F(NetworkTest, DespawnEventReplication)
 
 TEST_F(NetworkTest, StatisticsEventReplication)
 {
-	const auto server{MakeHost()};
+	const auto server{MakeServer()};
 	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
@@ -231,30 +233,30 @@ TEST_F(NetworkTest, StatisticsEventReplication)
 	auto statsSub{_clientEvents->AddListener(
 			[&received](const StatisticsBulletHitEvent& event) { received = event; })};
 
-	_hostEvents->EmitEvent(StatisticsBulletHitEvent{.author = Author::Enemy1});
+	_serverEvents->EmitEvent(StatisticsBulletHitEvent{.author = Author::Enemy1});
 
 	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
 	EXPECT_EQ(Author::Enemy1, received.value().author);
 }
 
-TEST_F(NetworkTest, PauseRequestFromClientPausesHost)
+TEST_F(NetworkTest, PauseRequestFromClientPausesTheServer)
 {
-	const auto server{MakeHost()};
+	const auto server{MakeServer()};
 	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
-	bool hostPauseToggled{false};
-	auto pauseSub{_hostEvents->AddListener(
-			[&hostPauseToggled](const PauseReleasedEvent&) { hostPauseToggled = true; })};
+	bool serverPauseToggled{false};
+	auto pauseSub{_serverEvents->AddListener(
+			[&serverPauseToggled](const PauseReleasedEvent&) { serverPauseToggled = true; })};
 
 	_clientEvents->EmitEvent(PauseRequestedEvent{.isPaused = true});
 
-	EXPECT_TRUE(PumpUntil([&hostPauseToggled] { return hostPauseToggled; }));
+	EXPECT_TRUE(PumpUntil([&serverPauseToggled] { return serverPauseToggled; }));
 }
 
 TEST_F(NetworkTest, BonusSpawnEventReplication)
 {
-	const auto server{MakeHost()};
+	const auto server{MakeServer()};
 	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
@@ -265,7 +267,7 @@ TEST_F(NetworkTest, BonusSpawnEventReplication)
 	auto bonusSpawnSub{_clientEvents->AddListener(
 			[&received](const BonusSpawnedEvent& event) { received = event; })};
 
-	_hostEvents->EmitEvent(BonusSpawnedEvent{.pos = pos, .type = type, .uuid = _uuid, .isSuper = true});
+	_serverEvents->EmitEvent(BonusSpawnedEvent{.pos = pos, .type = type, .uuid = _uuid, .isSuper = true});
 
 	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
 	const auto& event{received.value()};
@@ -278,7 +280,7 @@ TEST_F(NetworkTest, BonusSpawnEventReplication)
 //NOTE: what makes the bonus real on the client - its own burst only draws
 TEST_F(NetworkTest, BonusSpawnCompleteEventReplication)
 {
-	const auto server{MakeHost()};
+	const auto server{MakeServer()};
 	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
@@ -286,7 +288,7 @@ TEST_F(NetworkTest, BonusSpawnCompleteEventReplication)
 	auto bonusSpawnCompleteSub{_clientEvents->AddListener(
 			[&received](const BonusSpawnCompletedEvent& event) { received = event.uuid; })};
 
-	_hostEvents->EmitEvent(BonusSpawnCompletedEvent{.uuid = _uuid});
+	_serverEvents->EmitEvent(BonusSpawnCompletedEvent{.uuid = _uuid});
 
 	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
 	EXPECT_EQ(_uuid, *received);
@@ -294,7 +296,7 @@ TEST_F(NetworkTest, BonusSpawnCompleteEventReplication)
 
 TEST_F(NetworkTest, BonusStatusEventReplication)
 {
-	const auto server{MakeHost()};
+	const auto server{MakeServer()};
 	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
@@ -308,7 +310,7 @@ TEST_F(NetworkTest, BonusStatusEventReplication)
 													   received = event.isActive;
 												   })};
 
-	_hostEvents->EmitEvent(BonusHelmetAppliedEvent{.author = authorOrigin, .isActive = isActiveOrigin});
+	_serverEvents->EmitEvent(BonusHelmetAppliedEvent{.author = authorOrigin, .isActive = isActiveOrigin});
 
 	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
 	EXPECT_EQ(isActiveOrigin, *received);
@@ -318,7 +320,7 @@ TEST_F(NetworkTest, BonusStatusEventReplication)
 //the upgrade formula, exactly as it does with health
 TEST_F(NetworkTest, TierEventReplication)
 {
-	const auto server{MakeHost()};
+	const auto server{MakeServer()};
 	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
@@ -328,7 +330,7 @@ TEST_F(NetworkTest, TierEventReplication)
 	auto tierSub{_clientEvents->AddListener(Key(_uuid),
 											[&received](const TierChangedEvent& event) { received = event.tier; })};
 
-	_hostEvents->EmitEvent(TierChangedEvent{.tier = tierOrigin, .uuid = _uuid});
+	_serverEvents->EmitEvent(TierChangedEvent{.tier = tierOrigin, .uuid = _uuid});
 
 	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
 	EXPECT_EQ(tierOrigin, *received);
@@ -337,7 +339,7 @@ TEST_F(NetworkTest, TierEventReplication)
 //NOTE: no payload of its own - under test is that its alternative reaches the right seat
 TEST_F(NetworkTest, BonusShipStatusEventReplication)
 {
-	const auto server{MakeHost()};
+	const auto server{MakeServer()};
 	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
@@ -347,14 +349,14 @@ TEST_F(NetworkTest, BonusShipStatusEventReplication)
 	auto bonusShipSub{_clientEvents->AddListener(Key(authorOrigin),
 												 [&received](const BonusShipAppliedEvent&) { received = true; })};
 
-	_hostEvents->EmitEvent(BonusShipAppliedEvent{.author = authorOrigin});
+	_serverEvents->EmitEvent(BonusShipAppliedEvent{.author = authorOrigin});
 
 	EXPECT_TRUE(PumpUntil([&received] { return received; }));
 }
 
 TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 {
-	const auto server{MakeHost()};
+	const auto server{MakeServer()};
 	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
@@ -365,7 +367,7 @@ TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 	auto obstacleSpawnSub{_clientEvents->AddListener(
 			[&received](const ObstacleSpawnedEvent& event) { received = event; })};
 
-	_hostEvents->EmitEvent(ObstacleSpawnedEvent{.pos = posOrigin, .type = obstacleType, .uuid = _uuid});
+	_serverEvents->EmitEvent(ObstacleSpawnedEvent{.pos = posOrigin, .type = obstacleType, .uuid = _uuid});
 
 	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
 	const auto& event{received.value()};
@@ -377,7 +379,7 @@ TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 //NOTE: a whole map in one batch - one frame, and every command has to come out of it in order
 TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 {
-	const auto server{MakeHost()};
+	const auto server{MakeServer()};
 	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
@@ -399,7 +401,7 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 
 	for (const auto& pos: sent)
 	{
-		_hostEvents->EmitEvent(ObstacleSpawnedEvent{.pos = pos, .type = obstacleType, .uuid = _uuid});
+		_serverEvents->EmitEvent(ObstacleSpawnedEvent{.pos = pos, .type = obstacleType, .uuid = _uuid});
 	}
 
 	ASSERT_TRUE(PumpUntil([&received] { return received.size() == itemsInMassiveTest; }))
@@ -415,7 +417,7 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 
 TEST_F(NetworkTest, RespawnTankEventReplication)
 {
-	const auto server{MakeHost()};
+	const auto server{MakeServer()};
 	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
@@ -437,7 +439,7 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 
 	for (const auto tankType: tankTypes)
 	{
-		_hostEvents->EmitEvent(TankRespawnedEvent{.type = tankType, .uuid = _uuid, .pos = posOrigin});
+		_serverEvents->EmitEvent(TankRespawnedEvent{.type = tankType, .uuid = _uuid, .pos = posOrigin});
 	}
 
 	ASSERT_TRUE(PumpUntil([&received] { return received.size() == expectedCount; }));
@@ -449,23 +451,23 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 	}
 }
 
-//NOTE: the link and what rides it - a host still thinking the old client plays reconnects nothing
+//NOTE: the link and what rides it - a server still thinking the old client plays reconnects nothing
 TEST_F(NetworkTest, ClientReconnectsAfterEstablishedLinkDrops)
 {
-	auto server{MakeHost()};
+	auto server{MakeServer()};
 	const uint16_t port{server->GetBoundPort()};
 	const auto client{MakeClient(port)};
 
 	int readySignals{0};
 	int linksUp{0};
 	std::vector<EventSubscription> subs{};
-	subs.push_back(_hostEvents->AddListener(
+	subs.push_back(_serverEvents->AddListener(
 			[&readySignals](const ServerInClientReadyToStartGameEvent&) { ++readySignals; }));
 	subs.push_back(_clientEvents->AddListener([&linksUp](const ClientConnectedToHostEvent&) { ++linksUp; }));
 	subs.push_back(AnnounceReadyOnConnect());
 
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
-	ASSERT_TRUE(PumpUntil([&readySignals] { return readySignals == 1; })) << "host never got the first ready";
+	ASSERT_TRUE(PumpUntil([&readySignals] { return readySignals == 1; })) << "the server never got the first ready";
 
 	//NOTE: Abort, not just reset - this test is about a link that dies without a goodbye
 	server->Abort();
@@ -480,21 +482,21 @@ TEST_F(NetworkTest, ClientReconnectsAfterEstablishedLinkDrops)
 	}
 
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }, 10s))
-			<< "client did not reconnect after the host came back";
+			<< "client did not reconnect after the server came back";
 
 	//NOTE: pumped, not read straight off - IsConnected flips before the event behind it is drained
 	EXPECT_TRUE(PumpUntil([&linksUp] { return linksUp == 2; }))
 			<< "client did not tell its own side the link was back";
 
 	EXPECT_TRUE(PumpUntil([&readySignals] { return readySignals == 2; }))
-			<< "reconnected client never asked the host to start the match again";
+			<< "reconnected client never asked the server to start the match again";
 }
 
 //NOTE: the other half of ClientQuitTellsHostWhy, and the case the reconnect test cannot cover -
-//here the host outlives the loss and has to take the next client on the same acceptor
-TEST_F(NetworkTest, HostLearnsTheClientDroppedWithoutSayingGoodbye)
+//here the server outlives the loss and has to take the next client on the same acceptor
+TEST_F(NetworkTest, TheServerLearnsTheClientDroppedWithoutSayingGoodbye)
 {
-	const auto server{MakeHost()};
+	const auto server{MakeServer()};
 	const uint16_t port{server->GetBoundPort()};
 	auto client{MakeClient(port)};
 
@@ -502,10 +504,10 @@ TEST_F(NetworkTest, HostLearnsTheClientDroppedWithoutSayingGoodbye)
 	int readySignals{0};
 	std::optional<DisconnectReason> announced{};
 	std::vector<EventSubscription> subs{};
-	subs.push_back(_hostEvents->AddListener([&clientLost](const ServerClientLostEvent&) { clientLost = true; }));
-	subs.push_back(_hostEvents->AddListener(
+	subs.push_back(_serverEvents->AddListener([&clientLost](const ServerClientLostEvent&) { clientLost = true; }));
+	subs.push_back(_serverEvents->AddListener(
 			[&readySignals](const ServerInClientReadyToStartGameEvent&) { ++readySignals; }));
-	subs.push_back(_hostEvents->AddListener(
+	subs.push_back(_serverEvents->AddListener(
 			[&announced](const ServerInDisconnectEvent& event) { announced = event.reason; }));
 	subs.push_back(AnnounceReadyOnConnect());
 
@@ -516,20 +518,19 @@ TEST_F(NetworkTest, HostLearnsTheClientDroppedWithoutSayingGoodbye)
 	client.reset();
 
 	ASSERT_TRUE(PumpUntil([&clientLost] { return clientLost; }))
-			<< "host never noticed the client stopped answering";
+			<< "the server never noticed the client stopped answering";
 	EXPECT_FALSE(announced.has_value()) << "a dropped link reported itself as an announced leave";
 
 	const auto secondClient{MakeClient(port)};
 	ASSERT_TRUE(PumpUntil([&secondClient] { return secondClient->IsConnected(); }))
-			<< "host stopped accepting after losing the first client";
+			<< "the server stopped accepting after losing the first client";
 	EXPECT_TRUE(PumpUntil([&readySignals] { return readySignals == 2; }))
 			<< "host never got a ready from the client that replaced the lost one";
 }
 
-//NOTE: like the reconnection test above - about the link, not about a command riding it
 TEST_F(NetworkTest, HostShutdownTellsClientWhyAndKeepsTheReconnect)
 {
-	auto server{MakeHost()};
+	auto server{MakeServer()};
 	const uint16_t port{server->GetBoundPort()};
 	const auto client{MakeClient(port)};
 
@@ -544,7 +545,7 @@ TEST_F(NetworkTest, HostShutdownTellsClientWhyAndKeepsTheReconnect)
 
 	server.reset();//NOTE: the goodbye goes out from inside the destructor before the socket closes
 
-	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); })) << "client never got the host's goodbye";
+	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); })) << "client never got the server's goodbye";
 	EXPECT_EQ(DisconnectReason::HostShutdown, *received);
 
 	if (!ReboundHost(server, port))
@@ -553,13 +554,13 @@ TEST_F(NetworkTest, HostShutdownTellsClientWhyAndKeepsTheReconnect)
 	}
 
 	EXPECT_TRUE(PumpUntil([&client] { return client->IsConnected(); }, 10s))
-			<< "client did not dial back the host that only announced a restart";
+			<< "client did not dial back the server that only announced a restart";
 	EXPECT_FALSE(gaveUp) << "client gave up on a host that was restarting the same mode";
 }
 
 TEST_F(NetworkTest, ClientQuitTellsHostWhy)
 {
-	const auto server{MakeHost()};
+	const auto server{MakeServer()};
 	auto client{MakeClient(server->GetBoundPort())};
 
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
@@ -567,9 +568,9 @@ TEST_F(NetworkTest, ClientQuitTellsHostWhy)
 	std::optional<DisconnectReason> received{};
 	bool clientLost{false};
 	std::vector<EventSubscription> subs{};
-	subs.push_back(_hostEvents->AddListener(
+	subs.push_back(_serverEvents->AddListener(
 			[&received](const ServerInDisconnectEvent& event) { received = event.reason; }));
-	subs.push_back(_hostEvents->AddListener([&clientLost](const ServerClientLostEvent&) { clientLost = true; }));
+	subs.push_back(_serverEvents->AddListener([&clientLost](const ServerClientLostEvent&) { clientLost = true; }));
 
 	client.reset();
 
@@ -585,7 +586,7 @@ TEST_F(NetworkTest, ClientQuitTellsHostWhy)
 // as the wrong effect on the wrong seat in silence. The ship lands keyed on its seat, the tank broadcasts
 TEST_F(NetworkTest, ShipAndTankEffectsKeepTheirOwnEventAcrossTheWire)
 {
-	const auto server{MakeHost()};
+	const auto server{MakeServer()};
 	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
@@ -601,8 +602,8 @@ TEST_F(NetworkTest, ShipAndTankEffectsKeepTheirOwnEventAcrossTheWire)
 	subs.push_back(_clientEvents->AddListener(
 			[&tank](const BonusTankAppliedEvent& event) { tank = event.author; }));
 
-	_hostEvents->EmitEvent(BonusShipAppliedEvent{.author = shipSeat});
-	_hostEvents->EmitEvent(BonusTankAppliedEvent{.author = tankSeat});
+	_serverEvents->EmitEvent(BonusShipAppliedEvent{.author = shipSeat});
+	_serverEvents->EmitEvent(BonusTankAppliedEvent{.author = tankSeat});
 
 	ASSERT_TRUE(PumpUntil([&ship, &tank] { return ship.has_value() && tank.has_value(); }));
 	EXPECT_EQ(shipSeat, *ship);
@@ -619,13 +620,12 @@ TEST_F(NetworkTest, TheServerHandsOutTheSeatsInOrder)
 	subs.push_back(_clientEvents->AddListener([&first](const PlayerSlotAssignedEvent& e) { first = e.slot; }));
 	subs.push_back(_secondClientEvents->AddListener([&second](const PlayerSlotAssignedEvent& e) { second = e.slot; }));
 
-	const auto server{MakeHost()};
+	const auto server{MakeServer()};
 	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&first] { return first.has_value(); })) << "the first client was told no seat";
 	//NOTE: dialled only once the first seat is out, so the accept order is the test's, not the OS's
-	const auto secondClient{std::make_unique<network::commands::ClientNode>("127.0.0.1",
-																			   server->GetBoundPort(),
-																			   _secondClientEvents)};
+	const auto secondClient{std::make_unique<network::commands::ClientNode>(
+			network::ServerAddress{.port = server->GetBoundPort()}, _secondClientEvents)};
 	ASSERT_TRUE(PumpUntil([&second] { return second.has_value(); })) << "the second client was told no seat";
 
 	EXPECT_EQ(PlayerSlot::P1, *first);
@@ -642,24 +642,23 @@ TEST_F(NetworkTest, ASeatComesBackWhenItsClientSaysGoodbye)
 	subs.push_back(_clientEvents->AddListener([&first](const PlayerSlotAssignedEvent& e) { first = e.slot; }));
 	subs.push_back(_secondClientEvents->AddListener([&second](const PlayerSlotAssignedEvent& e) { second = e.slot; }));
 
-	const auto server{MakeHost()};
+	const auto server{MakeServer()};
 	auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&first] { return first.has_value(); })) << "the first client was told no seat";
 	ASSERT_EQ(PlayerSlot::P1, *first);
 
 	bool goodbye{false};
-	subs.push_back(_hostEvents->AddListener([&goodbye](const ServerInDisconnectEvent&) { goodbye = true; }));
+	subs.push_back(_serverEvents->AddListener([&goodbye](const ServerInDisconnectEvent&) { goodbye = true; }));
 
 	client.reset();
 	ASSERT_TRUE(PumpUntil([&goodbye] { return goodbye; })) << "host never got the client's goodbye";
 
-	const auto next{std::make_unique<network::commands::ClientNode>("127.0.0.1", server->GetBoundPort(),
-																			  _secondClientEvents)};
+	const auto next{std::make_unique<network::commands::ClientNode>(
+			network::ServerAddress{.port = server->GetBoundPort()}, _secondClientEvents)};
 	ASSERT_TRUE(PumpUntil([&second] { return second.has_value(); })) << "the freed seat was never handed out";
 	EXPECT_EQ(PlayerSlot::P1, *second) << "the seat of a client that quit is still held by its session";
 }
 
-// A client drives the keyboard half of the seat it was given, and only that one
 TEST_F(NetworkTest, EachClientPutsOnlyItsOwnSeatOnTheWire)
 {
 	std::optional<PlayerSlot> firstSeat{};
@@ -669,28 +668,27 @@ TEST_F(NetworkTest, EachClientPutsOnlyItsOwnSeatOnTheWire)
 	subs.push_back(_secondClientEvents->AddListener(
 			[&secondSeat](const PlayerSlotAssignedEvent& e) { secondSeat = e.slot; }));
 
-	const auto server{MakeHost()};
+	const auto server{MakeServer()};
 	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&firstSeat] { return firstSeat.has_value(); }));
-	const auto secondClient{std::make_unique<network::commands::ClientNode>("127.0.0.1",
-																			   server->GetBoundPort(),
-																			   _secondClientEvents)};
+	const auto secondClient{std::make_unique<network::commands::ClientNode>(
+			network::ServerAddress{.port = server->GetBoundPort()}, _secondClientEvents)};
 	ASSERT_TRUE(PumpUntil([&secondSeat] { return secondSeat.has_value(); }));
 
 	bool firstSeatMoved{false};
 	bool secondSeatMoved{false};
 	bool strayArrived{false};
-	subs.push_back(_hostEvents->AddListener(Key(InputChannel::RemoteP1),
+	subs.push_back(_serverEvents->AddListener(Key(InputChannel::RemoteP1),
 											[&firstSeatMoved](const MoveUpEvent& e)
 											{
 												firstSeatMoved = e.isPressed;
 											}));
-	subs.push_back(_hostEvents->AddListener(Key(InputChannel::RemoteP2),
+	subs.push_back(_serverEvents->AddListener(Key(InputChannel::RemoteP2),
 											[&secondSeatMoved](const MoveUpEvent& e)
 											{
 												secondSeatMoved = e.isPressed;
 											}));
-	subs.push_back(_hostEvents->AddListener(Key(InputChannel::RemoteP1),
+	subs.push_back(_serverEvents->AddListener(Key(InputChannel::RemoteP1),
 											[&strayArrived](const MoveDownEvent&) { strayArrived = true; }));
 
 	//NOTE: the stray goes first - the wire keeps its order, so once the press behind it has landed,
@@ -716,14 +714,14 @@ TEST_F(NetworkTest, AThirdClientIsToldTheSeatsAreTaken)
 	subs.push_back(_thirdClientEvents->AddListener(
 			[&refusal](const ClientInDisconnectEvent& e) { refusal = e.reason; }));
 
-	const auto server{MakeHost()};
+	const auto server{MakeServer()};
 	const uint16_t port{server->GetBoundPort()};
 	const auto client{MakeClient(port)};
-	const auto secondClient{std::make_unique<network::commands::ClientNode>("127.0.0.1", port,
+	const auto secondClient{std::make_unique<network::commands::ClientNode>(network::ServerAddress{.port = port},
 																					_secondClientEvents)};
 	ASSERT_TRUE(PumpUntil([&firstSeat, &secondSeat] { return firstSeat && secondSeat; }));
 
-	const auto thirdClient{std::make_unique<network::commands::ClientNode>("127.0.0.1", port,
+	const auto thirdClient{std::make_unique<network::commands::ClientNode>(network::ServerAddress{.port = port},
 																				   _thirdClientEvents)};
 
 	ASSERT_TRUE(PumpUntil([&refusal] { return refusal.has_value(); })) << "the third client heard nothing";
@@ -762,7 +760,7 @@ TEST(SerializerTest, ABatchSurvivesTheRoundTrip)
 // them apart. Every type here carries a different author - identical payloads would hide a crossed wire
 TEST_F(NetworkTest, EveryStatisticsTypeKeepsItsOwnEventAcrossTheWire)
 {
-	const auto server{MakeHost()};
+	const auto server{MakeServer()};
 	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
@@ -786,13 +784,13 @@ TEST_F(NetworkTest, EveryStatisticsTypeKeepsItsOwnEventAcrossTheWire)
 	subs.push_back(_clientEvents->AddListener(
 			[&bonusExpired](const StatisticsBonusExpiredEvent&) { bonusExpired = true; }));
 
-	_hostEvents->EmitEvent(StatisticsTankHitEvent{.who = Author::Player1, .author = Author::Enemy1});
-	_hostEvents->EmitEvent(TankDiedEvent{.who = Author::Player2, .uuid = _uuid, .author = Author::Enemy2});
-	_hostEvents->EmitEvent(BrickWallDiedEvent{.author = Author::Enemy3});
-	_hostEvents->EmitEvent(SteelWallDiedEvent{.author = Author::Enemy4});
-	_hostEvents->EmitEvent(StatisticsBonusPickupEvent{.author = Author::Player1});
-	_hostEvents->EmitEvent(StatisticsBonusDestroyedEvent{.author = Author::Player2});
-	_hostEvents->EmitEvent(StatisticsBonusExpiredEvent{});
+	_serverEvents->EmitEvent(StatisticsTankHitEvent{.who = Author::Player1, .author = Author::Enemy1});
+	_serverEvents->EmitEvent(TankDiedEvent{.who = Author::Player2, .uuid = _uuid, .author = Author::Enemy2});
+	_serverEvents->EmitEvent(BrickWallDiedEvent{.author = Author::Enemy3});
+	_serverEvents->EmitEvent(SteelWallDiedEvent{.author = Author::Enemy4});
+	_serverEvents->EmitEvent(StatisticsBonusPickupEvent{.author = Author::Player1});
+	_serverEvents->EmitEvent(StatisticsBonusDestroyedEvent{.author = Author::Player2});
+	_serverEvents->EmitEvent(StatisticsBonusExpiredEvent{});
 
 	ASSERT_TRUE(PumpUntil([&]
 	{
@@ -808,4 +806,39 @@ TEST_F(NetworkTest, EveryStatisticsTypeKeepsItsOwnEventAcrossTheWire)
 	EXPECT_EQ(Author::Enemy4, steelDied.value().author);
 	EXPECT_EQ(Author::Player1, bonusPickup.value().author);
 	EXPECT_EQ(Author::Player2, bonusDestroyed.value().author);
+}
+
+//NOTE: a kicked client that dialled straight back would sit in the seat it was sent away from
+TEST_F(NetworkTest, AKickedClientIsToldWhyAndDoesNotDialBack)
+{
+	std::optional<DisconnectReason> reason{};
+	bool isAbandoned{};
+	bool isSeatFreed{};
+	std::vector<EventSubscription> subs{};
+	subs.push_back(_clientEvents->AddListener([&reason](const ClientInDisconnectEvent& e) { reason = e.reason; }));
+	subs.push_back(_clientEvents->AddListener(
+			[&isAbandoned](const ClientReconnectAbandonedEvent&) { isAbandoned = true; }));
+	subs.push_back(_serverEvents->AddListener([&isSeatFreed](const ServerClientLostEvent&) { isSeatFreed = true; }));
+
+	const auto server{MakeServer()};
+	const auto client{MakeClient(server->GetBoundPort())};
+	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
+
+	_serverEvents->EmitEvent(ServerKickRequestedEvent{.slot = PlayerSlot::P1});
+
+	ASSERT_TRUE(PumpUntil([&reason, &isAbandoned, &isSeatFreed] { return reason && isAbandoned && isSeatFreed; }))
+			<< "told why: " << reason.has_value() << ", gave up: " << isAbandoned << ", seat freed: " << isSeatFreed;
+	EXPECT_EQ(*reason, DisconnectReason::Kicked);
+}
+
+TEST_F(NetworkTest, AClosedServerSeatsNoClientUntilItOpens)
+{
+	const auto server{MakeServer()};
+	_serverEvents->EmitEvent(ServerAcceptingChangedEvent{.isAccepting = false});
+
+	const auto client{MakeClient(server->GetBoundPort())};
+	EXPECT_FALSE(PumpUntil([&client] { return client->IsConnected(); }, 1s)) << "a closed server seated a client";
+
+	_serverEvents->EmitEvent(ServerAcceptingChangedEvent{.isAccepting = true});
+	EXPECT_TRUE(PumpUntil([&client] { return client->IsConnected(); })) << "the reopened server never seated it";
 }

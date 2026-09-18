@@ -160,6 +160,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\source\application\CommandLineParser.cpp" />
+    <ClCompile Include="..\source\application\ConsoleCommand.cpp" />
     <ClCompile Include="..\source\application\GameConfig.cpp" />
     <ClCompile Include="..\source\application\WindowConfig.cpp" />
     <ClCompile Include="..\source\application\ProjectConfig.cpp" />
@@ -175,6 +176,7 @@
     <ClCompile Include="..\source\components\input\InputProviderForMenu.cpp" />
     <ClCompile Include="..\source\components\input\InputProviderForBot.cpp" />
     <ClCompile Include="..\source\components\input\InputProviderForPlayer.cpp" />
+    <ClCompile Include="..\source\components\input\GamepadDirection.cpp" />
     <ClCompile Include="..\source\components\LineOfSight.cpp" />
     <ClCompile Include="..\source\components\managers\AnimationManager.cpp" />
     <ClCompile Include="..\source\components\managers\BonusManager.cpp" />
@@ -230,6 +232,7 @@
   <!-- Headers matching the .cpp files above; moved here from BattleCityRemastered.vcxproj so header+impl live in the same project. -->
   <ItemGroup>
     <ClInclude Include="..\headers\application\CommandLineParser.h" />
+    <ClInclude Include="..\headers\application\ConsoleCommand.h" />
     <ClInclude Include="..\headers\application\GameConfig.h" />
     <ClInclude Include="..\headers\application\WindowConfig.h" />
     <ClInclude Include="..\headers\application\ProjectConfig.h" />
@@ -245,6 +248,7 @@
     <ClInclude Include="..\headers\components\events\AnimationRenderEvents.h" />
     <ClInclude Include="..\headers\components\events\BonusPickupEvents.h" />
     <ClInclude Include="..\headers\components\events\CoreLifecycleEvents.h" />
+    <ClInclude Include="..\headers\components\events\ServerConsoleEvents.h" />
     <ClInclude Include="..\headers\components\events\GameModeEvents.h" />
     <ClInclude Include="..\headers\components\events\InputEvents.h" />
     <ClInclude Include="..\headers\components\events\ObjectLifecycleEvents.h" />
@@ -257,6 +261,7 @@
     <ClInclude Include="..\headers\components\input\InputProviderForMenu.h" />
     <ClInclude Include="..\headers\components\input\InputProviderForBot.h" />
     <ClInclude Include="..\headers\components\input\InputProviderForPlayer.h" />
+    <ClInclude Include="..\headers\components\input\GamepadDirection.h" />
     <ClInclude Include="..\headers\components\input\MouseButton.h" />
     <ClInclude Include="..\headers\components\input\PlayerKeys.h" />
     <ClInclude Include="..\headers\components\LineOfSight.h" />

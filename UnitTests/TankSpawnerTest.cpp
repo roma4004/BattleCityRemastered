@@ -20,6 +20,7 @@
 #include "gtest/gtest.h"
 #include <algorithm>
 #include <memory>
+#include <optional>
 
 class TankSpawnerTest : public testing::Test
 {
@@ -86,10 +87,10 @@ TEST_F(TankSpawnerTest, PlayAsHostGameModeStart)
 	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
 	_events->EmitEvent(RespawnTanksEvent{});
-	EXPECT_EQ(_allObjects.size(), 6u);// No one set pause, so expected spawn all
+	EXPECT_EQ(_allObjects.size(), 6u);
 }
 
-// A client puts no tank on the field on its own - it waits for the host to say the spawn is done
+// A client puts no tank on the field on its own - it waits for the server to say the spawn is done
 TEST_F(TankSpawnerTest, PlayAsClientGameModeStart)
 {
 	std::vector<Uuid> spawning{};
@@ -153,8 +154,45 @@ TEST_F(TankSpawnerTest, GrenadeCancelsEnemiesStillSpawning)
 	}
 }
 
+TEST_F(TankSpawnerTest, AServerBurstCountsTheSpawnDown)
+{
+	std::vector<AnimationCreateTankSpawnEvent> bursts{};
+	const EventSubscription burstSub{_events->AddListener(
+			[&bursts](const AnimationCreateTankSpawnEvent& event) { bursts.push_back(event); })};
+
+	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
+	_events->EmitEvent(GameResetEvent{});
+	_events->EmitEvent(RespawnTankEvent{.type = TankType::PLAYER1, .uuid = UuidUtils::GetRandomUuid()});
+
+	ASSERT_EQ(bursts.size(), 1u);
+	EXPECT_FALSE(bursts.front().isEndless);
+}
+
+//NOTE: the server's loop may run slower than ours - a burst of our own would end before the tank lands
+TEST_F(TankSpawnerTest, AClientBurstWaitsForTheServer)
+{
+	std::optional<AnimationCreateTankSpawnEvent> burst{};
+	const EventSubscription burstSub{_events->AddListener(
+			[&burst](const AnimationCreateTankSpawnEvent& event) { burst = event; })};
+
+	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsClient, _respawnManager,
+							 _tankSpawner);
+	_events->EmitEvent(GameResetEvent{});
+
+	const Uuid uuid{UuidUtils::GetRandomUuid()};
+	_events->EmitEvent(TankRespawnedEvent{.type = TankType::ENEMY1, .uuid = uuid, .pos = {.x = 0.0, .y = 0.0}});
+
+	ASSERT_TRUE(burst.has_value());
+	EXPECT_TRUE(burst->isEndless);
+	EXPECT_TRUE(_allObjects.empty());
+
+	_events->EmitEvent(TankSpawnCompletedEvent{.uuid = uuid});
+
+	EXPECT_EQ(_allObjects.size(), 1u);
+}
+
 //NOTE: no cancel command exists - a client drops its pending entry on the death itself
-TEST_F(TankSpawnerTest, AClientDropsASpawnTheHostCancelled)
+TEST_F(TankSpawnerTest, AClientDropsASpawnTheServerCancelled)
 {
 	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsClient, _respawnManager,
 							 _tankSpawner);
@@ -188,7 +226,7 @@ TEST_F(TankSpawnerTest, AClientSpawnsOnTheLatestRectAfterACancel)
 	EXPECT_EQ(_allObjects.front()->GetRect().x, currentPos.x);
 }
 
-TEST_F(TankSpawnerTest, AHostTakesBothSeatsOffTheWire)
+TEST_F(TankSpawnerTest, AServerTakesBothSeatsOffTheWire)
 {
 	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});

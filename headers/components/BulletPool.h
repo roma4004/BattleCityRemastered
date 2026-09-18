@@ -38,7 +38,6 @@ public:
 	BulletPool(const std::shared_ptr<EventSystem>& events, const std::vector<std::shared_ptr<BaseObj>>& allObjects,
 			   const GameConfig& gameConfig);
 
-	//NOTE: armed here - the pool owns both the free list and Bullet::Reset
 	[[nodiscard]] std::shared_ptr<Bullet> SpawnBullet(const BulletResetProperty& property,
 													 const std::optional<Uuid>& uuid = std::nullopt);
 };

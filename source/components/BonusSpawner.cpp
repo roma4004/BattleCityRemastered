@@ -62,7 +62,6 @@ void BonusSpawner::Subscribe()
 
 void BonusSpawner::OnSpawnAnimationFinished(const SpawnAnimationFinishedEvent& event)
 {
-	//NOTE: the signal goes out only for a bonus that really settled - one already picked up gets none
 	if (MaterializePending(event.uuid) && _gameConfig.IsHost())
 	{
 		_events->EmitEvent(BonusSpawnCompletedEvent{.uuid = event.uuid});
@@ -142,7 +141,7 @@ void BonusSpawner::SpawnBonus(const ObjRectangle rect, const BonusType type, Uui
 
 	_pendingSpawns.emplace_back(PendingSpawn{.rect = rect, .type = type, .uuid = uuid, .isSuper = isSuper});
 
-	_events->EmitEvent(AnimationCreateBonusSpawnEvent{.rect = rect, .uuid = uuid});
+	_events->EmitEvent(AnimationCreateBonusSpawnEvent{.rect = rect, .uuid = uuid, .isEndless = _gameConfig.IsClient()});
 }
 
 void BonusSpawner::Materialize(const PendingSpawn& pending) const

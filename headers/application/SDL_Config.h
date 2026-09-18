@@ -37,10 +37,8 @@ struct SDL_Config final
 
 	[[nodiscard]] std::expected<void, InitError> Init();
 
-	//NOTE: the only way in - the ini value at startup, a runtime switch later
 	[[nodiscard]] std::expected<void, InitError> SetVSync(int mode);
 
-	//NOTE: the kept surfaces are the source of truth once a device reset takes the textures
 	[[nodiscard]] std::expected<void, InitError> RecreateTexturesFromSurfaces();
 
 	void SaveWindowState(ProjectConfig& outProjectConfig) const;
@@ -71,11 +69,9 @@ struct SDL_Config final
 	std::vector<SurfaceHandle> surfaceXBox;
 
 private:
-	//NOTE: one group per subsystem - each either fills the fields above or names what refused
 	[[nodiscard]] std::expected<void, InitError> InitVideo();
 	[[nodiscard]] std::expected<void, InitError> InitFonts();
 	[[nodiscard]] std::expected<void, InitError> InitTextures();
-	//NOTE: returns its failure like the rest, though Init() only logs it - the game runs without sound
 	[[nodiscard]] std::expected<void, InitError> InitAudio();
 
 	[[nodiscard]] static std::expected<SurfaceHandle, InitError> LoadSurface(

@@ -84,7 +84,7 @@ void Pawn::Unsubscribe()
 	_tickUpdateSub = EventSubscription{};
 }
 
-Author Pawn::GetAuthor() const { return _author; }
+Author Pawn::GetAuthor() const noexcept { return _author; }
 
 void Pawn::TakeDamage(const unsigned int damage, const Author author)
 {
@@ -111,8 +111,8 @@ void Pawn::Heal(const int amount)
 	}
 }
 
-Direction Pawn::GetDirection() const { return _dir; }
+Direction Pawn::GetDirection() const noexcept { return _dir; }
 
 void Pawn::SetDirection(const Direction dir) { _dir = dir; }
 
-double Pawn::GetSpeed() const { return _speed; }
+double Pawn::GetSpeed() const noexcept { return _speed; }

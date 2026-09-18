@@ -30,7 +30,7 @@ public:
 	[[nodiscard]] static std::filesystem::path DefaultFilePath();
 
 	//NOTE: only a file that exists and does not parse lands here; a missing one is written, not reported
-	[[nodiscard]] const std::optional<ConfigError>& LoadError() const { return _loadError; }
+	[[nodiscard]] const std::optional<ConfigError>& LoadError() const noexcept { return _loadError; }
 
 	//NOTE: the default doubles as the message SDL prints when the key is missing
 	[[nodiscard]] std::filesystem::path ResourcePath(const std::string& key) const;
@@ -40,7 +40,9 @@ public:
 	[[nodiscard]] bool IsVsyncOn() const { return VSyncMode() != 0; }
 	[[nodiscard]] int MonitorNumber() const { return Get<int>("Window.MonitorNumber", 1); }
 	[[nodiscard]] bool IsCenterOnStart() const { return Get<bool>("Window.centerOnStart", false); }
-	[[nodiscard]] bool IsFreshIni() const { return _isFreshIni; }
+	//NOTE: out of 32767 - a worn stick rests further from the centre
+	[[nodiscard]] int GamepadDeadZone() const { return Get<int>("Gamepad.deadZone", 8000); }
+	[[nodiscard]] bool IsFreshIni() const noexcept { return _isFreshIni; }
 
 	template<typename T>
 	[[nodiscard]] T Get(const std::string& key, const T& defaultValue) const

@@ -39,4 +39,6 @@ class FramePerSecondManager final
 public:
 	FramePerSecondManager(const std::shared_ptr<EventSystem>& events, const ProjectConfig& projectConfig,
 						  bool isVsyncAvailable);
+
+	[[nodiscard]] unsigned int ActualFps() const noexcept { return _lastDisplayedFps; }
 };

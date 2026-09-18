@@ -22,12 +22,12 @@ enum class Author : char8_t
 };
 
 //NOTE: the wire carries a raw byte, so a value from it lands on no seat unless it names one
-[[nodiscard]] constexpr Author SeatFromWire(const Author author)
+[[nodiscard]] constexpr Author SeatFromWire(const Author author) noexcept
 {
 	return author >= Author::None && author < Author::lastId ? author : Author::None;
 }
 
-[[nodiscard]] constexpr Faction FactionOf(const Author author)
+[[nodiscard]] constexpr Faction FactionOf(const Author author) noexcept
 {
 	switch (author)
 	{
@@ -47,7 +47,7 @@ enum class Author : char8_t
 	return Faction::Neutral;
 }
 
-[[nodiscard]] constexpr Author SeatOf(const TankType type)
+[[nodiscard]] constexpr Author SeatOf(const TankType type) noexcept
 {
 	switch (type)
 	{
@@ -70,7 +70,7 @@ enum class Author : char8_t
 	return Author::None;
 }
 
-[[nodiscard]] constexpr std::string_view ToString(const Author author)
+[[nodiscard]] constexpr std::string_view ToString(const Author author) noexcept
 {
 	switch (author)
 	{

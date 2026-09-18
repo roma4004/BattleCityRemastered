@@ -2,7 +2,6 @@
 
 #include "geometry/ObjRectangle.h"
 
-//NOTE: static - one copy of the atlas layout, no instance to hold
 struct TextureOffset
 {
 	// NOTE: the sheet is a 16x16 grid holding 13x13 tanks, off-centre by a pixel - without the offset

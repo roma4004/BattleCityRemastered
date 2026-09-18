@@ -50,7 +50,7 @@ protected:
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, _allObjects, _gameConfig);
 		_instantSpawnAnimationSubs = TestUtils::WireInstantSpawnAnimations(_events);
 		_gridSize = _gameConfig.gridOffset;
-		_tankSize = _gridSize * 3.0;// for better turns
+		_tankSize = _gridSize * 3.0;
 
 		//NOTE: the wall roll is pinned open, or every test that expects a shot at an obstacle would flake
 		_gameConfig.botShootObstacleChance = 1.0;
@@ -87,7 +87,6 @@ TEST_F(EnemyBotTest, EnemyShootToCoop)
 {
 	CreateBot({.x = 0.0, .y = _tankSize * 3.0}, Author::Player1, Direction::UP);
 
-	// Spawn Enemy in line of sight
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
 
 	const size_t sizeBefore{_allObjects.size()};
@@ -96,7 +95,7 @@ TEST_F(EnemyBotTest, EnemyShootToCoop)
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	const size_t sizeAfter{_allObjects.size()};
-	EXPECT_LT(sizeBefore, sizeAfter);// Bullet should be spawned
+	EXPECT_LT(sizeBefore, sizeAfter);
 	EXPECT_EQ(sizeAfter, 4u);
 }
 
@@ -104,7 +103,6 @@ TEST_F(EnemyBotTest, EnemyShootToPlayer1)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
 
-	// Spawn Player aligned enemy in line of sight
 	CreatePlayer({.x = 0.0, .y = _tankSize * 3.0});
 
 	const size_t sizeBefore{_allObjects.size()};
@@ -113,7 +111,7 @@ TEST_F(EnemyBotTest, EnemyShootToPlayer1)
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	const size_t sizeAfter{_allObjects.size()};
-	EXPECT_LT(sizeBefore, sizeAfter);// Bullet should be spawned
+	EXPECT_LT(sizeBefore, sizeAfter);
 	EXPECT_EQ(sizeAfter, 3u);
 }
 
@@ -121,7 +119,6 @@ TEST_F(EnemyBotTest, EnemyShootToPlayer2)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
 
-	// Spawn Player aligned enemy in line of sight
 	CreatePlayer({.x = 0.0, .y = _tankSize * 3.0}, Author::Player2);
 
 	const size_t sizeBefore{_allObjects.size()};
@@ -130,7 +127,7 @@ TEST_F(EnemyBotTest, EnemyShootToPlayer2)
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	const size_t sizeAfter{_allObjects.size()};
-	EXPECT_LT(sizeBefore, sizeAfter);// Bullet should be spawned
+	EXPECT_LT(sizeBefore, sizeAfter);
 	EXPECT_EQ(sizeAfter, 3u);
 }
 
@@ -138,7 +135,6 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayer1IfTooClose)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
 
-	// Spawn Player aligned enemy in line of sight
 	CreatePlayer({.x = 0.0, .y = _tankSize * 2.0 + 7.0});
 
 	const size_t sizeBefore{_allObjects.size()};
@@ -147,7 +143,7 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayer1IfTooClose)
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	const size_t sizeAfter{_allObjects.size()};
-	EXPECT_LT(sizeBefore, sizeAfter);// Bullet should be spawned
+	EXPECT_LT(sizeBefore, sizeAfter);
 	EXPECT_EQ(sizeAfter, 3u);
 }
 
@@ -155,7 +151,6 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayer2IfTooClose)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
 
-	// Spawn Player aligned enemy in line of sight
 	CreatePlayer({.x = 0.0, .y = _tankSize * 2.0 + 7.0}, Author::Player2);
 
 	const size_t sizeBefore{_allObjects.size()};
@@ -164,17 +159,14 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayer2IfTooClose)
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	const size_t sizeAfter{_allObjects.size()};
-	EXPECT_LT(sizeBefore, sizeAfter);// Bullet should be spawned
+	EXPECT_LT(sizeBefore, sizeAfter);
 	EXPECT_EQ(sizeAfter, 3u);
 }
 
-// check that enemy don't shoot the allied tanks
 TEST_F(EnemyBotTest, EnemyNoShootToAllied)
 {
-	// Spawn first Enemy
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
 
-	// Spawn second Enemy in line of sight of the first
 	CreateBot({.x = 0.0, .y = _tankSize * 3.0}, Author::Enemy2, Direction::DOWN);
 
 	const size_t sizeBefore{_allObjects.size()};
@@ -185,13 +177,10 @@ TEST_F(EnemyBotTest, EnemyNoShootToAllied)
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
 
-// check that enemy doesn't shoot the allied tanks even if too close to them
 TEST_F(EnemyBotTest, EnemyNoShootToAlliedIfTooClose)
 {
-	// Spawn first enemy
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::UP);
 
-	// Spawn second Enemy in line of sight of the first
 	CreateBot({.x = 0.0, .y = _tankSize * 2.0 + 6.0}, Author::Enemy2, Direction::DOWN);
 
 	const size_t sizeBefore{_allObjects.size()};
@@ -335,7 +324,6 @@ TEST_F(EnemyBotTest, EnemyShootToPlayerBehindWater)
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0 + 1.0, .w = _tankSize, .h = _tankSize};
 	_allObjects.emplace_back(std::make_shared<WaterTile>(rect, _events, _uuid, _gameConfig));
 
-	// Spawn player aligned enemy in line of sight
 	const auto player{CreatePlayer({.x = 0.0, .y = _tankSize * 3.0 + 2.0})};
 
 	const size_t sizeBefore{_allObjects.size()};
@@ -356,7 +344,6 @@ TEST_F(EnemyBotTest, EnemyShootToPlayerInTheWater)
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0 + 1.0, .w = _tankSize, .h = _tankSize};
 	_allObjects.emplace_back(std::make_shared<WaterTile>(rect, _events, _uuid, _gameConfig));
 
-	// Spawn player aligned enemy in line of sight
 	CreatePlayer({.x = 0.0, .y = _tankSize * 2.0 + 1.0});
 
 	const size_t sizeBefore{_allObjects.size()};
@@ -376,7 +363,6 @@ TEST_F(EnemyBotTest, EnemyShootToPlayerBehindIce)
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0 + 1.0, .w = _tankSize, .h = _tankSize};
 	_allObjects.emplace_back(std::make_shared<IceTile>(rect, _events, _uuid, _gameConfig));
 
-	// Spawn player aligned enemy in line of sight
 	CreatePlayer({.x = 0.0, .y = _tankSize * 3.0 + 2.0});
 
 	const size_t sizeBefore{_allObjects.size()};
@@ -396,7 +382,6 @@ TEST_F(EnemyBotTest, EnemyShootToPlayerInTheIce)
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0 + 1.0, .w = _tankSize, .h = _tankSize};
 	_allObjects.emplace_back(std::make_shared<IceTile>(rect, _events, _uuid, _gameConfig));
 
-	// Spawn player aligned enemy in line of sight
 	CreatePlayer({.x = 0.0, .y = _tankSize * 2.0 + 1.0});
 
 	const size_t sizeBefore{_allObjects.size()};
@@ -416,7 +401,6 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayerBehindBrickWall)
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0 + 1.0, .w = _tankSize, .h = _tankSize};
 	_allObjects.emplace_back(std::make_shared<BrickWall>(rect, _events, _uuid, _gameConfig));
 
-	// Spawn player aligned enemy in line of sight
 	CreatePlayer({.x = 0.0, .y = _tankSize * 3.0 + 2.0});
 
 	const size_t sizeBefore{_allObjects.size()};
@@ -436,7 +420,6 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayerBehindSteelWall)
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0 + 1.0, .w = _tankSize, .h = _tankSize};
 	_allObjects.emplace_back(std::make_shared<SteelWall>(rect, _events, _uuid, _gameConfig));
 
-	// Spawn player aligned enemy in line of sight
 	CreatePlayer({.x = 0.0, .y = _tankSize * 3.0 + 2.0});
 
 	const size_t sizeBefore{_allObjects.size()};
@@ -456,7 +439,6 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayerBehindFortressWall)
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0 + 1.0, .w = _tankSize, .h = _tankSize};
 	_allObjects.emplace_back(std::make_shared<FortressBrickWall>(rect, _events, _uuid, _gameConfig));
 
-	// Spawn player aligned enemy in line of sight
 	CreatePlayer({.x = 0.0, .y = _tankSize * 3.0 + 2.0});
 
 	const size_t sizeBefore{_allObjects.size()};
@@ -476,7 +458,6 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayerBehindBush)
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0 + 1.0, .w = _tankSize, .h = _tankSize};
 	_allObjects.emplace_back(std::make_shared<BushTile>(rect, _events, _uuid, _gameConfig));
 
-	// Spawn player aligned enemy in line of sight
 	CreatePlayer({.x = 0.0, .y = _tankSize * 3.0 + 2.0});
 
 	const size_t sizeBefore{_allObjects.size()};
@@ -496,7 +477,6 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayerInTheBush)
 	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0 + 1.0, .w = _tankSize, .h = _tankSize};
 	_allObjects.emplace_back(std::make_shared<BushTile>(rect, _events, _uuid, _gameConfig));
 
-	// Spawn player aligned enemy in line of sight
 	CreatePlayer({.x = 0.0, .y = _tankSize * 2.0 + 1.0});
 
 	const size_t sizeBefore{_allObjects.size()};

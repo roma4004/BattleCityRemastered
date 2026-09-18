@@ -1,16 +1,12 @@
 #include "network/ServerNode.h"
-#include "network/Endpoints.h"
 #include "network/Server.h"
 #include <boost/asio/post.hpp>
 
 namespace network::commands
 {
-ServerNode::ServerNode(const std::shared_ptr<EventSystem>& events)
-	: ServerNode(std::string(kDefaultHost), kDefaultPort, events) {}
-
-ServerNode::ServerNode(const std::string& host, uint16_t port, const std::shared_ptr<EventSystem>& events)
+ServerNode::ServerNode(const ServerAddress& address, const std::shared_ptr<EventSystem>& events)
 	: NetworkNodeBase(events, "ServerNode")
-	, _server{std::make_unique<Server>(IoContext(), host, port, events)}
+	, _server{std::make_unique<Server>(IoContext(), address, events)}
 {
 	StartIoThread();
 	SubscribeToNetCommandUpdate();

@@ -1,9 +1,8 @@
 #pragma once
 
+#include "Endpoints.h"
 #include "NetworkNodeBase.h"
-#include <cstdint>
 #include <memory>
-#include <string>
 
 namespace network::commands
 {
@@ -12,8 +11,7 @@ class Client;
 class ClientNode final : public NetworkNodeBase
 {
 public:
-	explicit ClientNode(const std::shared_ptr<EventSystem>& events);
-	ClientNode(const std::string& host, uint16_t port, const std::shared_ptr<EventSystem>& events);
+	ClientNode(const ServerAddress& address, const std::shared_ptr<EventSystem>& events);
 
 	~ClientNode() override;
 

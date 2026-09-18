@@ -24,6 +24,7 @@
 #include "geometry/Point.h"
 #include "gtest/gtest.h"
 #include <memory>
+#include <optional>
 
 class BonusTest : public testing::Test// NOLINT(clang-diagnostic-padded)
 {
@@ -63,7 +64,7 @@ protected:
 		_obstacleSpawner = std::make_unique<ObstacleSpawner>(_events, _gameConfig);
 		_fortressWallSub = TestUtils::TrackFortressWall(_events, &_fortressWall);
 		_gridSize = _gameConfig.gridOffset;
-		_tankSize = _gridSize * 3.0;// for better turns
+		_tankSize = _gridSize * 3.0;
 
 		_allObjects.reserve(4);
 	}
@@ -328,7 +329,6 @@ TEST_F(BonusTest, StarNotPickUpTierTheSame)
 	EXPECT_EQ(player->GetTier(), 1u);
 }
 
-// NOTE: when player pick up shovel bonus fortressWalls become steelWalls for a while then return to regular brickWalls
 TEST_F(BonusTest, ShovelPickUpByPlayerThenFortressWallTurnIntoSteelWall)
 {
 	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
@@ -384,7 +384,6 @@ TEST_F(BonusTest, WaterBlocksTankWithoutShip)
 	EXPECT_LE(player->GetBottomSide(), waterRect.y);
 }
 
-// The Ship bonus carries the tank over the water for the rest of its life
 TEST_F(BonusTest, ShipPickUpCanCrossWater)
 {
 	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
@@ -395,7 +394,7 @@ TEST_F(BonusTest, ShipPickUpCanCrossWater)
 	const ObjRectangle waterRect{.x = 0.0, .y = _tankSize * 2.0 + 2.0, .w = _gridSize, .h = _gridSize};
 	_events->EmitEvent(SpawnObstacleEvent{.rect = waterRect, .type = ObstacleType::Water});
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});// pick the bonus up
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	//NOTE: no Game here to sweep the dead bonus out of the way
 	std::erase_if(_allObjects, [](const std::shared_ptr<BaseObj>& object) { return !object->GetIsAlive(); });
@@ -409,7 +408,6 @@ TEST_F(BonusTest, ShipPickUpCanCrossWater)
 	EXPECT_GT(player->GetY(), waterRect.y + waterRect.h);
 }
 
-// A super bonus applies its effect twice - the star lifts the tier by two
 TEST_F(BonusTest, SuperStarPickUpTierIncreaseTwice)
 {
 	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
@@ -427,12 +425,11 @@ TEST_F(BonusTest, SuperStarPickUpTierIncreaseTwice)
 	EXPECT_EQ(player->GetTier(), 3u);
 }
 
-// A delayed spawn plays its animation first and only then puts the bonus on the field
 TEST_F(BonusTest, DelayedSpawnLandsAfterAnimation)
 {
-	bool animationStarted{false};
+	std::optional<AnimationCreateBonusSpawnEvent> burst{};
 	auto animationSub{_events->AddListener(
-			[&animationStarted](const AnimationCreateBonusSpawnEvent&) { animationStarted = true; })};
+			[&burst](const AnimationCreateBonusSpawnEvent& event) { burst = event; })};
 
 	//NOTE: this one is about the wait itself, so it drops the fixture's stand-in for the animation
 	_instantSpawnAnimationSubs.clear();
@@ -440,7 +437,8 @@ TEST_F(BonusTest, DelayedSpawnLandsAfterAnimation)
 	const Uuid uuid{UuidUtils::GetRandomUuid()};
 	_bonusSpawner->SpawnBonus({.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize}, BonusType::Star, uuid);
 
-	EXPECT_TRUE(animationStarted);
+	ASSERT_TRUE(burst.has_value());
+	EXPECT_FALSE(burst->isEndless);
 	EXPECT_TRUE(_allObjects.empty());
 
 	_events->EmitEvent(SpawnAnimationFinishedEvent{.uuid = uuid});

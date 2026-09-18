@@ -11,6 +11,8 @@
 #include "gtest/gtest.h"
 #include <memory>
 
+// the board follows the phase of the match, not the score: each case sets a mode, announces a phase and
+// reads whether the board was put up
 class ScoreBoardTest : public testing::Test
 {
 protected:
@@ -36,6 +38,7 @@ protected:
 	}
 };
 
+// a local match lost
 TEST_F(ScoreBoardTest, GameOverShowsScore)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::OnePlayer});
@@ -46,6 +49,7 @@ TEST_F(ScoreBoardTest, GameOverShowsScore)
 	EXPECT_TRUE(_isScoreShowed);
 }
 
+// and won - the board goes up either way
 TEST_F(ScoreBoardTest, GameWonShowsScore)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::OnePlayer});
@@ -54,7 +58,7 @@ TEST_F(ScoreBoardTest, GameWonShowsScore)
 	EXPECT_TRUE(_isScoreShowed);
 }
 
-//NOTE: a client never runs the win check, so the phase arriving from the host is all it has to go on
+//NOTE: a client never runs the win check, so the phase arriving from the server is all it has to go on
 TEST_F(ScoreBoardTest, HostAnnouncedGameOverShowsScoreOnClient)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsClient});
@@ -66,6 +70,7 @@ TEST_F(ScoreBoardTest, HostAnnouncedGameOverShowsScoreOnClient)
 	EXPECT_TRUE(_isScoreShowed);
 }
 
+// the board is up on the client, then the server announces Playing again: it comes down
 TEST_F(ScoreBoardTest, NextMatchHidesScore)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsClient});
@@ -77,6 +82,7 @@ TEST_F(ScoreBoardTest, NextMatchHidesScore)
 	EXPECT_FALSE(_isScoreShowed);
 }
 
+// the attract demo ends the same way, but nobody was playing - no board
 TEST_F(ScoreBoardTest, DemoKeepsScoreHidden)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::OnePlayer});

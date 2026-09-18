@@ -100,7 +100,6 @@ void ScoreBoard::Subscribe()
 		_drawSub = _events->AddListener(this, &ScoreBoard::OnDrawUserInterface);
 	}
 
-	//NOTE: avoid showing score and menu at the same time
 	_subs.push_back(_events->AddListener(this, &ScoreBoard::OnMenuShowed));
 	_subs.push_back(_events->AddListener(this, &ScoreBoard::OnPauseStatus));
 	_subs.push_back(_events->AddListener(this, &ScoreBoard::OnGameStateChangedTo));

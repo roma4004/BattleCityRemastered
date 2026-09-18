@@ -11,7 +11,6 @@ struct Point final
 {
 	int x{}, y{};
 
-	//NOTE: != comes free with it since C++20
 	[[nodiscard]] bool operator==(const Point& rhs) const noexcept = default;
 };
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Endpoints.h"
 #include "enums/DisconnectReason.h"
 #include "ReplicationPublisher.h"
 #include "Session.h"
@@ -16,6 +17,10 @@
 #include <vector>
 
 struct NetworkEndFrameEvent;
+struct ServerStatusRequestedEvent;
+struct ServerPlayersRequestedEvent;
+struct ServerKickRequestedEvent;
+struct ServerAcceptingChangedEvent;
 class EventSystem;
 
 namespace network::commands
@@ -25,7 +30,7 @@ using boost::asio::ip::tcp;
 class Server final
 {
 public:
-	Server(boost::asio::io_context& ioContext, const std::string& host, uint16_t port,
+	Server(boost::asio::io_context& ioContext, const ServerAddress& address,
 		   const std::shared_ptr<EventSystem>& events);
 
 	~Server();
@@ -34,7 +39,8 @@ public:
 
 	void Shutdown(DisconnectReason reason, const std::function<void()>& onClosed);
 
-	[[nodiscard]] uint16_t GetBoundPort() const { return _acceptor.local_endpoint().port(); }
+	//NOTE: remembered, not asked - a closed acceptor has no local endpoint
+	[[nodiscard]] uint16_t GetBoundPort() const noexcept { return _endpoint.port(); }
 
 	void ProcessNetworkCommands() const;
 
@@ -57,8 +63,14 @@ private:
 	void SendToAll(const std::shared_ptr<const std::string>& message);
 	void CleanupDeadSessions();
 	void CloseAcceptor();
+	void OpenAcceptor();
+	void OnStatusRequested(const ServerStatusRequestedEvent&) const;
+	void OnPlayersRequested(const ServerPlayersRequestedEvent&) const;
+	void OnKickRequested(const ServerKickRequestedEvent& event) const;
+	void OnAcceptingChanged(const ServerAcceptingChangedEvent& event);
 
 	tcp::acceptor _acceptor;
+	tcp::endpoint _endpoint;
 	std::shared_ptr<EventSystem> _events{nullptr};
 	ReplicationPublisher _replicationOut;
 	std::vector<EventSubscription> _subs{};

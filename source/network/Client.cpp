@@ -9,13 +9,29 @@
 #include <utility>
 #include <variant>
 
+namespace
+{
+//NOTE: a server told to listen everywhere is dialled on this machine - 0.0.0.0 is not a place to connect to
+boost::asio::ip::address DialAddress(const std::string& host)
+{
+	auto address{boost::asio::ip::make_address(host)};
+	if (address.is_unspecified())
+	{
+		address = address.is_v6() ? boost::asio::ip::address{boost::asio::ip::address_v6::loopback()}
+								  : boost::asio::ip::address{boost::asio::ip::address_v4::loopback()};
+	}
+
+	return address;
+}
+}//namespace
+
 namespace network::commands
 {
-Client::Client(boost::asio::io_context& ioContext, const std::string& host, const uint16_t port,
+Client::Client(boost::asio::io_context& ioContext, const ServerAddress& address,
 			   const std::shared_ptr<EventSystem>& events)
 	: PeerLink(tcp::socket(boost::asio::make_strand(ioContext)), "Client", events)
 	, _reconnectTimer(_channel->Socket().get_executor())
-	, _endpoint{tcp::endpoint(boost::asio::ip::make_address(host), port)}
+	, _endpoint{tcp::endpoint(DialAddress(address.host), address.port)}
 	, _replicationIn{events, _commandQueue}
 	, _replicationOut{events}
 {
@@ -220,7 +236,8 @@ void Client::OnDisconnect(const Disconnect& command)
 
 	//NOTE: on the network thread, not in the queued lambda - the EOF arrives well before the game
 	//thread drains the queue, and HandleDisconnect must already know why
-	_isLinkUnrecoverable = reason == DisconnectReason::ProtocolError;
+	//NOTE: giving up is what makes a kick stick - dialling back would take the seat again
+	_isLinkUnrecoverable = reason == DisconnectReason::ProtocolError || reason == DisconnectReason::Kicked;
 	_isWaitingForSeat = reason == DisconnectReason::ServerFull;
 
 	_commandQueue.Enqueue([this, reason]()

@@ -74,6 +74,5 @@ class GameStatistics final
 public:
 	explicit GameStatistics(const std::shared_ptr<EventSystem>& events);
 
-	//NOTE: read-only view of the whole block - the scoreboard walks these by pointer-to-member
-	[[nodiscard]] const StatisticsData& GetData() const { return _data; }
+	[[nodiscard]] const StatisticsData& GetData() const noexcept { return _data; }
 };

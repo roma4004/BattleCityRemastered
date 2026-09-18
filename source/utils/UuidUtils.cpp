@@ -25,7 +25,7 @@ Uuid UuidUtils::GetRandomUuid()
 }
 
 //NOTE: boost's nil is all-zero bytes, which is exactly a default-constructed Uuid - no boost needed
-Uuid UuidUtils::GetNilUuid() { return Uuid{}; }
+Uuid UuidUtils::GetNilUuid() noexcept { return Uuid{}; }
 
 std::string UuidUtils::GetStringUuid(const Uuid uuid) { return boost::uuids::to_string(ToBoost(uuid)); }
 

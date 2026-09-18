@@ -5,7 +5,6 @@
 
 namespace network::commands
 {
-//NOTE: wire DTO - serialization lives in CommandSerialization.h
 struct Despawn final
 {
 	Uuid uuid{};

@@ -32,7 +32,7 @@ protected:
 	GameConfig _gameConfig{};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	double _deltaTimeOneFrame{1.0 / 60.0};
-	Uuid _uuid{};// Uuid keeps boost::uuids::uuid's 8-byte alignment
+	Uuid _uuid{};
 	double _tankSize{};
 	double _gridSize{};
 	unsigned short _tankHealth{100u};
@@ -49,7 +49,7 @@ protected:
 								 _tankSpawner);
 		_instantSpawnAnimationSubs = TestUtils::WireInstantSpawnAnimations(_events);
 		_gridSize = _gameConfig.gridOffset;
-		_tankSize = _gridSize * 3.0;// for better turns
+		_tankSize = _gridSize * 3.0;
 
 		_allObjects.reserve(4u);
 	}
@@ -280,7 +280,6 @@ TEST_F(PlayerTest, TankShotInSideScreenDown)
 {
 	CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
 
-	//success shot down test, try to create an inside screen bullet
 	const size_t size{_allObjects.size()};
 
 	constexpr bool isPressed{true};
@@ -294,7 +293,6 @@ TEST_F(PlayerTest, TankShotInSideScreenRight)
 {
 	CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::RIGHT);
 
-	//success shot right test, try to create an inside screen bullet
 	const size_t size{_allObjects.size()};
 
 	constexpr bool isPressed{true};
@@ -311,7 +309,6 @@ TEST_F(PlayerTest, TankShotInSideScreenUp)
 	const auto windowHeight{static_cast<double>(_gameConfig.battlefieldSize.y)};
 	CreatePlayer({.x = windowWidth - _tankSize, .y = windowHeight - _tankSize}, Author::Player1, Direction::RIGHT);
 
-	//success shot up test, try to create an inside screen bullet
 	const size_t size{_allObjects.size()};
 
 	constexpr bool isPressed{true};
@@ -328,7 +325,6 @@ TEST_F(PlayerTest, TankShotInSideScreenLeft)
 	const auto windowHeight{static_cast<double>(_gameConfig.battlefieldSize.y)};
 	CreatePlayer({.x = windowWidth - _tankSize, .y = windowHeight - _tankSize}, Author::Player1, Direction::RIGHT);
 
-	//success shot left test, try to create an inside screen bullet
 	const size_t size{_allObjects.size()};
 
 	constexpr bool isPressed{true};
@@ -345,7 +341,6 @@ TEST_F(PlayerTest, TankShotOutSideScreen)
 
 	constexpr bool isPressed{true};
 	{
-		//fail the shot up test, try to create an outside screen bullet
 		const size_t size{_allObjects.size()};
 
 		_events->EmitEvent(Key(InputChannel::LocalP1), MoveUpEvent{.isPressed = isPressed});
@@ -355,7 +350,6 @@ TEST_F(PlayerTest, TankShotOutSideScreen)
 		EXPECT_EQ(size, _allObjects.size());
 	}
 	{
-		//fail shot left test, try to create an outside screen bullet
 		const size_t size{_allObjects.size()};
 
 		_events->EmitEvent(Key(InputChannel::LocalP1), MoveLeftEvent{.isPressed = isPressed});
@@ -368,7 +362,6 @@ TEST_F(PlayerTest, TankShotOutSideScreen)
 	player->SetPos({.x = static_cast<double>(_gameConfig.battlefieldSize.x) - _tankSize,
 					.y = static_cast<double>(_gameConfig.battlefieldSize.y) - _tankSize});
 	{
-		//fail the shot down test, try to create an outside screen bullet
 		const size_t size{_allObjects.size()};
 
 		_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
@@ -378,7 +371,6 @@ TEST_F(PlayerTest, TankShotOutSideScreen)
 		EXPECT_EQ(size, _allObjects.size());
 	}
 	{
-		//fail the shot right test, try to create an outside screen bullet
 		const size_t size{_allObjects.size()};
 
 		_events->EmitEvent(Key(InputChannel::LocalP1), MoveRightEvent{.isPressed = isPressed});
@@ -394,7 +386,6 @@ TEST_F(PlayerTest, TankCantPassThroughTank)
 	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
 	const auto player2{CreatePlayer({.x = 0, .y = _tankSize + 1}, Author::Player2)};
 
-	//both players should failure, because they face each other blocking move each other
 	const FPoint playerStartPos{player->GetPos()};
 	const FPoint player2StartPos{player2->GetPos()};
 
@@ -416,7 +407,6 @@ TEST_F(PlayerTest, TankCantPassThroughBrickWall)
 					ObjRectangle{.x = 0.0, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _events, _uuid,
 					_gameConfig));
 
-	//moveDown player should failure, because below we have a brickWall obstacle
 	const FPoint startPos{player->GetPos()};
 
 	constexpr bool isPressed{true};
@@ -435,7 +425,6 @@ TEST_F(PlayerTest, TankCantPassThroughSteelWall)
 					ObjRectangle{.x = 0.0, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _events, _uuid,
 					_gameConfig));
 
-	//moveDown player should failure, because below we have a steelWall obstacle
 	const FPoint startPos{player->GetPos()};
 
 	constexpr bool isPressed{true};
@@ -454,7 +443,6 @@ TEST_F(PlayerTest, TankCantPassThroughWater)
 			_events, _uuid, _gameConfig)};
 	_allObjects.emplace_back(waterTile);
 
-	//moveDown player should failure, because below we have a water obstacle
 	const FPoint startPos{player->GetPos()};
 
 	constexpr bool isPressed{true};
@@ -472,7 +460,6 @@ TEST_F(PlayerTest, TankCantPassThroughfortressWall)
 			ObjRectangle{.x = 0.0, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _events, _uuid, _gameConfig)};
 	_allObjects.emplace_back(fortressWall);
 
-	//moveDown player should failure, because below we have a fortressWall obstacle
 	const FPoint startPos{player->GetPos()};
 
 	constexpr bool isPressed{true};
@@ -509,7 +496,6 @@ TEST_F(PlayerTest, ShotWhileMovingDoesNotBlowUpOnOwnTank)
 	EXPECT_EQ(player->GetHealth(), startHealth) << "tank damaged by its own bullet";
 }
 
-// The blast of your own bullet still reaches you when firing point-blank at a wall
 TEST_F(PlayerTest, PointBlankShotDamagesTheShooter)
 {
 	const auto windowWidth{static_cast<double>(_gameConfig.battlefieldSize.x)};

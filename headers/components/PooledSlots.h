@@ -74,5 +74,5 @@ public:
 		_inPlay.clear();
 	}
 
-	[[nodiscard]] std::size_t FreeCount() const { return _free.size(); }
+	[[nodiscard]] std::size_t FreeCount() const noexcept { return _free.size(); }
 };

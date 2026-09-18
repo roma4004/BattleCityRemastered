@@ -53,6 +53,7 @@ TEST_F(TankHealTest, AMaxedTankStillReportsTheHealth)
 	EXPECT_EQ(_reportedHealth.front().uuid, enemy->GetUuid());
 }
 
+// the ordinary path next to it: a tier-one enemy takes a star, upgrades, and reports the same heal
 TEST_F(TankHealTest, AnUpgradingTankReportsTheHealthToo)
 {
 	const std::shared_ptr<Tank> enemy{TestUtils::CreateBot(_tankRect, _tankHealth, Author::Enemy2, _allObjects, _events,

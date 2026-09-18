@@ -16,8 +16,7 @@
 
 class EventSystem;
 
-// Unsubscribes when it dies, and holds the bus alive for as long as it lives. Unsubscribing early is
-// destroying the handle: erase it from its vector, or move-assign a fresh one over a named member
+// Unsubscribes when it dies and holds the bus alive meanwhile; to unsubscribe early, destroy the handle
 class EventSubscription final
 {
 public:
@@ -52,8 +51,7 @@ public:
 
 	~EventSubscription() { Unsubscribe(); }
 
-	// True while this handle owns a live subscription, so a Subscribe() can skip an already-filled slot
-	explicit operator bool() const { return static_cast<bool>(_unsubscribe); }
+	explicit operator bool() const noexcept { return static_cast<bool>(_unsubscribe); }
 
 private:
 	void Unsubscribe()
@@ -112,8 +110,7 @@ void InvokeGuarded(const char* const context, ListenerT& listener, const CallArg
 	}
 }
 
-// A callback may unsubscribe anyone, itself included; mid-dispatch that only clears `alive` and frees
-// nothing, so the lookahead below cannot end up on released memory
+// A callback may unsubscribe anyone: mid-dispatch that only clears `alive`, so the lookahead cannot dangle
 template<typename ListenerListT, typename... CallArgs>
 void EmitToList(const char* const context, ListenerListT& listeners, const CallArgs&... args)
 {
@@ -169,8 +166,7 @@ void ReportLeftoverListener(const char* kind, const char* eventTypeName,
 #endif
 }// namespace detail
 
-// Wraps a per-instance key, a tank's uuid say: the emit then reaches only listeners registered under
-// that same (EventType, key) pair, and the broadcast bucket for the type stays untouched
+// Wraps a per-instance key: an emit reaches only that (EventType, key) pair, leaving the broadcast bucket alone
 template<typename KeyT>
 detail::EventKey<KeyT> Key(KeyT key)
 {
@@ -200,8 +196,7 @@ struct callable_signature<void (Class::*)() const> : callable_signature_zero_arg
 template<typename Class>
 struct callable_signature<void (Class::*)()> : callable_signature_zero_args<Class> {};
 
-// Shared body for every callable shape carrying a concrete Args... pack - const lambda, mutable
-// lambda, function pointer, std::function. They inherit it whole and differ only in the match
+// Shared body for every callable shape with a concrete Args... pack; they inherit it whole and differ in the match
 template<typename... Args>
 struct callable_signature_args
 {
@@ -270,8 +265,7 @@ public:
 		return std::prev(_listeners.end());
 	}
 
-	// Copied into every listener, never forwarded: several listeners share one payload, and the first
-	// by-value parameter would move out of it
+	// Copied into every listener, never forwarded - the first by-value parameter would move out of a shared payload
 	template<typename... FwdArgs>
 	void Emit(FwdArgs&&... args)
 	{
@@ -296,8 +290,7 @@ public:
 		_listeners.erase(handle);
 	}
 
-	//NOTE: a dead node exists only inside a dispatch, and the bus cannot be destroyed in the middle of
-	//its own - so at rest a non-empty list means live listeners
+	//NOTE: a dead node exists only inside a dispatch, so at rest a non-empty list means live listeners
 	bool HasListeners() const override { return !_listeners.empty(); }
 
 #ifndef NDEBUG
@@ -360,8 +353,7 @@ public:
 	{
 		if (const auto it{_listeners.find(key)}; it != _listeners.end())
 		{
-			//NOTE: the list is bound by reference before the walk - a listener added under a new key
-			//mid-dispatch can rehash the map, which invalidates its iterators but not its elements
+			//NOTE: bound by reference before the walk - a rehash mid-dispatch kills the map's iterators, not its elements
 			ListenerList& listeners{it->second};
 
 			++_emitDepth;
@@ -387,8 +379,7 @@ public:
 
 			it->second.erase(handle);
 
-			//NOTE: keys are per-instance (a tank's uuid, a player slot) - a key whose last listener left
-			//would otherwise sit in the map for the rest of the match
+			//NOTE: keys are per-instance, so a key whose last listener left would sit in the map till the match ends
 			if (it->second.empty())
 			{
 				_listeners.erase(it);
@@ -412,8 +403,7 @@ public:
 #endif
 
 private:
-	// One counter for the whole map: a dispatch on any key must hold off every sweep, since the
-	// callback it runs is free to unsubscribe under a different key.
+	// One counter for the whole map: a callback may unsubscribe under any key, so any dispatch holds off every sweep
 	void FinishDeferredRemovals()
 	{
 		if (_emitDepth > 0 || !_hasDead)
@@ -481,8 +471,7 @@ public:
 
 	~EventSystem();
 
-	// EventType is deduced from the listener's parameter. Never pass `origin` by hand - as a default
-	// argument it resolves at the call site, which is the point; only the overloads below forward it
+	// EventType is deduced from the listener's parameter; `origin` stays a default argument, resolved at the call site
 	template<Callable CallableT>
 	[[nodiscard]] EventSubscription AddListener(CallableT&& callback,
 												const std::source_location& origin = std::source_location::current())

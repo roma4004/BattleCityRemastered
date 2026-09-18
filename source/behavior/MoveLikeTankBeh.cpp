@@ -92,8 +92,8 @@ bool MoveLikeTankBeh::Move(const Direction dir, const double deltaTime,
 	//NOTE: ice turns the step into momentum, but only while the way is clear
 	if (outCollisions.empty() && _effects.isTouchTheIce)
 	{
-		if (double& velocity{_velocity[static_cast<size_t>(dir)]};
-			velocity < DirectionUtils::SizeAlong(_rect, dir) * _driftMultiplicator)// clamp max accumulated velocity
+		const double maxVelocity{DirectionUtils::SizeAlong(_rect, dir) * _driftMultiplicator};
+		if (double& velocity{_velocity[static_cast<size_t>(dir)]}; velocity < maxVelocity)
 		{
 			velocity += distance * _driftMultiplicator;
 		}

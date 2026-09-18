@@ -18,6 +18,8 @@ struct DrawEvent;
 struct PostDrawEvent;
 struct AnimationCreateBonusSpawnEvent;
 struct AnimationCancelTankSpawnEvent;
+struct TankSpawnCompletedEvent;
+struct BonusSpawnCompletedEvent;
 struct AnimationCreateTankMoveEvent;
 struct AnimationCreateTankExplosionEvent;
 struct AnimationCreateBulletExplosionEvent;
@@ -41,6 +43,8 @@ private:
 	void OnCreateTankSpawn(const AnimationCreateTankSpawnEvent& event);
 	void OnCreateBonusSpawn(const AnimationCreateBonusSpawnEvent& event);
 	void OnCancelTankSpawn(const AnimationCancelTankSpawnEvent& event);
+	void OnTankSpawnCompleted(const TankSpawnCompletedEvent& event);
+	void OnBonusSpawnCompleted(const BonusSpawnCompletedEvent& event);
 	void OnCreateTankMove(const AnimationCreateTankMoveEvent& event);
 	void OnCreateTankExplosion(const AnimationCreateTankExplosionEvent& event);
 	void OnCreateBulletExplosion(const AnimationCreateBulletExplosionEvent& event);
@@ -53,12 +57,14 @@ private:
 
 	void Create(Author author, ObjRectangle rect, AnimationType type, int size, int scale,
 				int speed, int passes, Uuid owner);
-	void CreateAnimation(AnimationType type, ObjRectangle rect, Author author, Uuid owner = {});
+	[[nodiscard]] std::vector<AnimatedObject>& ContainerOf(AnimationType type);
+	void CreateAnimation(AnimationType type, ObjRectangle rect, Author author, Uuid owner = {}, bool isEndless = false);
 
 	static bool UpdateFrame(AnimatedObject& object);
 	void OnHelmetEffect(Author author, bool isEnable);
 	void UpdateHelmetEffect(Author author, const FPoint& pos);
 
+	void Cancel(AnimationType type, Uuid owner);
 	void DisableTankAnimation(Author author);
 	void DisableHelmetEffect(Author author);
 
@@ -82,7 +88,7 @@ private:
 
 
 	std::shared_ptr<EventSystem> _events{nullptr};
-	bool _isPaused{false};
+	bool _isPaused{};
 	std::vector<EventSubscription> _subs{};
 	std::vector<AnimatedObject> _autoAnimatedObjects{};//advanced on TickUpdate() (eg. explosions, spawn, helmet)
 	std::vector<AnimatedObject> _turnBasedTankObjects{};//advanced on movement (eg. tank move event)

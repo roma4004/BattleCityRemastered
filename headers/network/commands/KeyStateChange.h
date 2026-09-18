@@ -4,7 +4,6 @@
 
 namespace network::commands
 {
-//NOTE: wire DTO - serialization lives in CommandSerialization.h
 struct KeyStateChange final
 {
 	InputSignal action{};

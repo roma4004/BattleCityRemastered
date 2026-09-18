@@ -84,16 +84,16 @@ void Bullet::TickUpdate(const double deltaTime)
 	}
 }
 
-unsigned int Bullet::GetDamage() const { return _calibre.damage; }
+unsigned int Bullet::GetDamage() const noexcept { return _calibre.damage; }
 
-double Bullet::GetDamageRadius() const { return _calibre.damageRadius; }
+double Bullet::GetDamageRadius() const noexcept { return _calibre.damageRadius; }
 
 void Bullet::EmitDamageStatistics(const Author author)
 {
 	_events->EmitEvent(StatisticsBulletHitEvent{.author = author});
 }
 
-unsigned int Bullet::GetTier() const { return _calibre.tier; }
+unsigned int Bullet::GetTier() const noexcept { return _calibre.tier; }
 
 void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 {

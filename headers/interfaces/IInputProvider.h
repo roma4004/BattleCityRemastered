@@ -5,7 +5,6 @@
 enum class Direction : char8_t;
 class Tank;
 
-//NOTE: who drives the tank - two answers every driver owes, and three hooks it may leave alone
 class IInputProvider
 {
 public:

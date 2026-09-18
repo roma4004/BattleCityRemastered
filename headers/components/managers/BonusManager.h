@@ -27,7 +27,6 @@ class BonusManager final
 
 	//NOTE: one bonus pickup is worth this much of its effect - a super one simply lands twice
 	static constexpr milliseconds kEffectDuration{std::chrono::seconds{15}};
-	//NOTE: the shorter grace a tank gets for free when it respawns
 	static constexpr milliseconds kRespawnHelmetDuration{std::chrono::seconds{5}};
 
 	//NOTE: the field owns the bonus, this only watches its clock - weak, so a spent one drops out

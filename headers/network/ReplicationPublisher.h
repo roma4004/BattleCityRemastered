@@ -33,17 +33,6 @@ public:
 		}, origin));
 	}
 
-	//NOTE: the keyed form, for an event emitted under a key such as a seat's input channel
-	template<class EventT, class KeyT, class ToCommand>
-	void Bind(detail::EventKey<KeyT> key, ToCommand toCommand,
-			  const std::source_location& origin = std::source_location::current())
-	{
-		_subs.push_back(_events->AddListener(key, [this, toCommand](const EventT& event)
-		{
-			Publish(toCommand(event));
-		}, origin));
-	}
-
 private:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};

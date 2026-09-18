@@ -34,7 +34,8 @@ protected:
 //asserting on steady-state positions
 constexpr int kFramesToSettleSlideIn{250};
 
-// Nothing falls off the bottom once the menu has arrived - a line added to the hints would
+// let the slide-in finish, then check every line of the block the renderer last got stands above the
+// bottom of the logical screen
 TEST_F(MenuTextBlockTest, AllLinesFitOnTheClassicScreenOnceSettled)
 {
 	for (int frame{0}; frame < kFramesToSettleSlideIn; ++frame)

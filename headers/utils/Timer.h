@@ -15,10 +15,10 @@ struct Timer
 
 	explicit Timer(milliseconds newCooldown);
 
-	[[nodiscard]] bool IsCooldownFinish() const;
+	[[nodiscard]] bool IsCooldownFinish() const noexcept;
 
 	//NOTE: one reading for a whole sweep - asking twice lets a deadline fall between the two answers
-	[[nodiscard]] bool IsCooldownFinish(const TimeUtils::time_point& now) const;
+	[[nodiscard]] bool IsCooldownFinish(const TimeUtils::time_point& now) const noexcept;
 
 	void Reset();
 	void Reset(milliseconds newCooldown);

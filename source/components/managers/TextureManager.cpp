@@ -141,7 +141,6 @@ void TextureManager::Draw(const DrawObjEvent& event) const
 		&& ColliderUtils::AreEqualAbsolute(textureRect.w, defaultSdlRect.w)
 		&& ColliderUtils::AreEqualAbsolute(textureRect.h, defaultSdlRect.h))
 	{
-		//NOTE: fallback draw to non-texture, rectangle filled by color
 		_events->EmitEvent(RenderColorTextureEvent{.rect = rect});
 	}
 
@@ -194,7 +193,6 @@ void TextureManager::DrawAnimation(const DrawAnimationEvent& event) const
 		&& ColliderUtils::AreEqualAbsolute(textureRect.w, defaultSdlRect.w)
 		&& ColliderUtils::AreEqualAbsolute(textureRect.h, defaultSdlRect.h))
 	{
-		//NOTE: fallback draw to non-texture, rectangle filled by color
 		_events->EmitEvent(RenderColorTextureEvent{.rect = rect});
 	}
 

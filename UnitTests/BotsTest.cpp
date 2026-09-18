@@ -54,7 +54,7 @@ protected:
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, _allObjects, _gameConfig);
 		_instantSpawnAnimationSubs = TestUtils::WireInstantSpawnAnimations(_events);
 		_gridSize = _gameConfig.gridOffset;
-		_tankSize = _gridSize * 3.0;// for better turns
+		_tankSize = _gridSize * 3.0;
 
 		//NOTE: the wall roll is pinned open, or every test that expects a shot at an obstacle would flake
 		_gameConfig.botShootObstacleChance = 1.0;
@@ -95,13 +95,10 @@ TEST_F(BotsTest, BotsChangeDirectionIfOpponentSeen)
 	EXPECT_EQ(endDirEnemy, Direction::LEFT);
 }
 
-// Check that a bot does not aim at a seat on its own team - the mirror of the test above, same
-// geometry, only the neighbour is an ally
 TEST_F(BotsTest, BotsNoChangeDirectionIfPlayerAllySeen)
 {
 	const auto coopBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN)};
 
-	// Spawn Player exactly where an enemy made the bot turn in the test above
 	const ObjRectangle playerRect{.x = _tankSize * 3.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	_allObjects.emplace_back(TestUtils::CreatePlayer(playerRect, _tankHealth, Author::Player2, _allObjects, _events,
 													 Direction::DOWN, _bulletPool, _gameConfig));
@@ -115,7 +112,6 @@ TEST_F(BotsTest, BotsNoChangeDirectionIfBotAllySeen)
 {
 	const auto coopBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN)};
 
-	// Spawn a second Coop in the same spot the enemy took above
 	const auto secondCoopBot{CreateBot({.x = _tankSize * 3.0, .y = 0.0}, Author::Player2, Direction::DOWN)};
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
@@ -129,7 +125,6 @@ TEST_F(BotsTest, BotsNoChangeDirectionIfOpponentTooClose)
 {
 	const auto coopBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN)};
 
-	// Spawn Enemy side by side, with no gap at all
 	const auto enemyBot{CreateBot({.x = _tankSize, .y = 0.0}, Author::Enemy1, Direction::DOWN)};
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
@@ -402,7 +397,6 @@ TEST_F(BotsTest, ReloadingBotDoesNotTurnToANewOpponent)
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 	ASSERT_EQ(bot->GetDirection(), Direction::RIGHT);
 
-	// a second target below, while the first shot is still cooling down
 	CreateBot({.x = 0.0, .y = _tankSize * 3.0}, Author::Enemy2, Direction::UP);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
@@ -507,7 +501,6 @@ TEST_F(BotsTest, BotHoldsFireAtAWallWhenTheChanceIsZero)
 	ASSERT_EQ(bot->GetDirection(), Direction::DOWN) << "the control failed - the bot looked away from the wall";
 }
 
-// The other end of the same dial: at one the wall is shot the first frame it is seen
 TEST_F(BotsTest, BotShootsAWallWhenTheChanceIsOne)
 {
 	_gameConfig.botShootObstacleChance = 1.0;

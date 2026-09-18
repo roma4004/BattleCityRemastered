@@ -59,8 +59,7 @@ SDL_Config::~SDL_Config()
 
 std::expected<void, InitError> SDL_Config::Init()
 {
-	//NOTE: every group fills this object's fields; and_then stops at the first one that refuses, so
-	//no later group ever runs on a half-built environment
+	//NOTE: every group fills this object's fields; and_then stops at the first refusal, so none runs half-built
 	return InitVideo()
 		  .and_then([this] { return InitFonts(); })
 		  .and_then([this] { return InitTextures(); })
@@ -97,8 +96,7 @@ std::expected<void, InitError> SDL_Config::InitVideo()
 
 	SDL_SetRenderDrawBlendMode(renderer.get(), SDL_BLENDMODE_BLEND);
 
-	//NOTE: SDL3 flipped the default to linear filtering; on pixel art that blurs every sprite and, on a
-	//shared atlas, bleeds neighbouring cells into each other at the edges
+	//NOTE: SDL3 defaults to linear filtering, which blurs pixel art and bleeds neighbouring atlas cells
 	SDL_SetDefaultTextureScaleMode(renderer.get(), SDL_SCALEMODE_NEAREST);
 
 	if (const auto vsync{SetVSync(projectConfig.VSyncMode())};
@@ -112,8 +110,7 @@ std::expected<void, InitError> SDL_Config::InitVideo()
 	return {};
 }
 
-//TODO: runtime switch - update Window.vsync in ProjectConfig too, FramePerSecondManager reads it
-//every frame; the renderer and its textures survive the call
+//TODO: runtime switch - update Window.vsync too (read every frame); the renderer and its textures survive it
 std::expected<void, InitError> SDL_Config::SetVSync(const int mode)
 {
 	if (!SDL_SetRenderVSync(renderer.get(), mode))
@@ -185,7 +182,7 @@ std::expected<void, InitError> SDL_Config::InitAudio()
 
 	//TODO: move to soundManager
 	//NOTE: autoplay only - device and chunk stay ready
-	if (gameConfig.skipIntroMusic)
+	if (gameConfig.isMuted)
 	{
 		return {};
 	}
@@ -398,8 +395,7 @@ void SDL_Config::SaveWindowState(ProjectConfig& outProjectConfig) const
 		int height{};
 		SDL_GetWindowSize(sdlWindowRaw, &width, &height);
 
-		//NOTE: stored unscaled, as InitWindow reads it. Queried live - the window may have moved to a
-		//display with another scale
+		//NOTE: stored unscaled as InitWindow reads it, and queried live - the window may have moved displays
 		const float scale{SDL_GetWindowDisplayScale(sdlWindowRaw)};
 		const double divisor{scale > 0.0f ? static_cast<double>(scale) : 1.0};
 
@@ -425,8 +421,7 @@ WindowHandle SDL_Config::InitWindow() const
 		return window;
 	}
 
-	//NOTE: SDL3 window coordinates are plain pixels, so the stored size is unscaled and multiplied here.
-	//SaveWindowState divides it back out, else the window grows by the scale every run
+	//NOTE: the stored size is unscaled, multiplied here and divided back in SaveWindowState, else it grows each run
 	if (const float scale{SDL_GetWindowDisplayScale(window.get())};
 		scale > 0.0f)
 	{
@@ -469,7 +464,6 @@ RendererHandle SDL_Config::InitRender() const
 	SDL_Window* sdlWindowRaw{sdlWindow.get()};
 	SDL_GetWindowBordersSize(sdlWindowRaw, &bordersSize.y, &bordersSize.x, &bordersSize.h, &bordersSize.w);
 
-	//NOTE: centering would override an explicit pos
 	const bool centerOnMonitor{
 			!windowConfig.hasExplicitPos
 			&& (projectConfig.IsFreshIni()
@@ -489,8 +483,7 @@ RendererHandle SDL_Config::InitRender() const
 		const Point centred{.x = screenCenter.x - windowWidth / 2 + halfWindowApart,
 							.y = screenCenter.y - windowHeight / 2 - bordersSize.y};
 
-		//NOTE: the pair spans two windows and must stay on this display. Clamped, not shrunk - they
-		//overlap in the middle instead of leaving the screen; the top margin keeps the title bar
+		//NOTE: the pair must stay on this display: clamped, not shrunk - they overlap rather than leave the screen
 		const int minX{usableBounds.x};
 		const int minY{usableBounds.y + bordersSize.y};
 		const int maxX{std::max(minX, usableBounds.x + usableBounds.w - windowWidth)};

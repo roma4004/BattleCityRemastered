@@ -53,5 +53,5 @@ public:
 
 	void PickUpBonus(Author author) override;
 
-	[[nodiscard]] bool GetIsSuper() const;
+	[[nodiscard]] bool GetIsSuper() const noexcept;
 };

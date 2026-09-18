@@ -25,7 +25,7 @@ protected:
 	}
 };
 
-// A game reset releases a pause that was set from outside the menu
+// pause from outside, then reset the game: the pause is lifted, so a fresh match never starts frozen
 TEST_F(PauseSyncTest, GameResetReleasesExternalPause)
 {
 	_events->EmitEvent(SetPauseEvent{.isPaused = true});
@@ -36,7 +36,8 @@ TEST_F(PauseSyncTest, GameResetReleasesExternalPause)
 	EXPECT_FALSE(_isPaused);
 }
 
-// The pause toggle sees an external pause instead of flipping past it
+// pause from outside, then press the pause key: the key releases it instead of toggling into a
+// second pause nobody can leave
 TEST_F(PauseSyncTest, ToggleReleasesExternalPause)
 {
 	_events->EmitEvent(SetPauseEvent{.isPaused = true});
@@ -47,7 +48,7 @@ TEST_F(PauseSyncTest, ToggleReleasesExternalPause)
 	EXPECT_FALSE(_isPaused);
 }
 
-// The same request twice does not flip the flag back
+// two identical pause requests, then one release - the extra request does not need a second release
 TEST_F(PauseSyncTest, RepeatedRequestIsIdempotent)
 {
 	_events->EmitEvent(SetPauseEvent{.isPaused = true});

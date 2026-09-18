@@ -8,6 +8,8 @@
 #include "gtest/gtest.h"
 #include <memory>
 
+// every test here lets the player's own bullet, fired downwards in SetUp, meet one flying up at it in
+// the same tick, and reads who got the hit counted; what differs is who shot the incoming one
 class StatisticsTestAdvanced : public testing::Test// NOLINT(clang-diagnostic-padded)
 {
 protected:
@@ -26,7 +28,7 @@ protected:
 		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, _allObjects);
 		_statistics = std::make_shared<GameStatistics>(_events);
 		const double gridSize{_gameConfig.gridOffset};
-		_tankSize = gridSize * 3.0;// for better turns
+		_tankSize = gridSize * 3.0;
 
 		CreateBullet({.x = 0.0, .y = 5.0}, Direction::DOWN, 1u, Author::Player1);
 	}
@@ -40,7 +42,6 @@ protected:
 									.damageRadius = 12.0,
 									.tier = tier,
 									.size{.x = 6.0, .y = 5.0}};
-		// spawn Bullet
 		const ObjRectangle rectBullet{.x = pos.x, .y = pos.y, .w = calibre.size.x, .h = calibre.size.y};
 		const std::shared_ptr<Bullet> bullet{TestUtils::CreateBullet(rectBullet, _bulletHealth, _allObjects, _events,
 																	 calibre, dir, _gameConfig, author)};
@@ -48,6 +49,7 @@ protected:
 	}
 };
 
+// the incoming one is an enemy's
 TEST_F(StatisticsTestAdvanced, BulletHitByEnemyBullet)
 {
 	CreateBullet({.x = 0.0, .y = 5.0 + 1}, Direction::UP, 1u, Author::Enemy1);
@@ -61,6 +63,7 @@ TEST_F(StatisticsTestAdvanced, BulletHitByEnemyBullet)
 	EXPECT_EQ(_statistics->GetData().bulletHitByEnemy, 1u);
 }
 
+// the incoming one is player two's - friendly fire counts the same
 TEST_F(StatisticsTestAdvanced, BulletHitByPlayerOne)
 {
 	CreateBullet({.x = 0.0, .y = 5.0 + 1}, Direction::UP, 1u, Author::Player2);

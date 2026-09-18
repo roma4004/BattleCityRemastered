@@ -88,6 +88,7 @@ void ProjectConfig::DefaultInitIni()
 		Set("Sound.onOff", true);
 
 		Set("Control.swap", false);
+		Set("Gamepad.deadZone", 8000);
 
 		Set("Fonts.BattleCity", "Resources/Fonts/PressStart2P-vaV7.ttf");
 		Set("Images.Logo", "Resources/Images/Title.png");

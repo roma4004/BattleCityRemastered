@@ -15,6 +15,7 @@ protected:
 	}
 };
 
+// without the swap the first device takes player one, the second player two
 TEST_F(SeatAssignmentTest, TheNthDeviceDrivesTheNthSeat)
 {
 	EXPECT_EQ(SlotForDevice(0u, false), PlayerSlot::P1);
@@ -28,6 +29,7 @@ TEST_F(SeatAssignmentTest, TheSwapFlipsEveryDevice)
 	EXPECT_EQ(SlotForDevice(1u, true), PlayerSlot::P1);
 }
 
+// the spawned server plays nothing, so neither half is its own
 TEST_F(SeatAssignmentTest, TheDedicatedServerOwnsNoSeat)
 {
 	_gameConfig.gameMode = GameMode::PlayAsHost;
@@ -35,6 +37,7 @@ TEST_F(SeatAssignmentTest, TheDedicatedServerOwnsNoSeat)
 	ExpectSeatsOwned(false, false);
 }
 
+// two players at one keyboard own both
 TEST_F(SeatAssignmentTest, AHotSeatOwnsBothHalves)
 {
 	_gameConfig.gameMode = GameMode::TwoPlayers;
@@ -42,7 +45,7 @@ TEST_F(SeatAssignmentTest, AHotSeatOwnsBothHalves)
 	ExpectSeatsOwned(true, true);
 }
 
-//NOTE: the other tank mirrors the host's - a keyboard half wired to it would twitch under our keys
+//NOTE: the other tank mirrors the server's - a keyboard half wired to it would twitch under our keys
 TEST_F(SeatAssignmentTest, AClientOwnsOnlyTheSeatItWasGiven)
 {
 	_gameConfig.gameMode = GameMode::PlayAsClient;
@@ -51,7 +54,7 @@ TEST_F(SeatAssignmentTest, AClientOwnsOnlyTheSeatItWasGiven)
 	ExpectSeatsOwned(false, true);
 }
 
-//NOTE: a default would hand the first seat to whoever asks before the host has answered
+//NOTE: a default would hand the first seat to whoever asks before the server has answered
 TEST_F(SeatAssignmentTest, AClientOwnsNothingBeforeTheSeatArrives)
 {
 	_gameConfig.gameMode = GameMode::PlayAsClient;

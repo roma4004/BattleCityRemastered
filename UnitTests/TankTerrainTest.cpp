@@ -57,6 +57,7 @@ protected:
 	}
 };
 
+// the control for the two bush cases: on open ground the bar is drawn
 TEST_F(TankTerrainTest, HealthBarIsDrawnOnPlainGround)
 {
 	const std::shared_ptr<Tank> tank{SpawnPlayerAt({.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize})};
@@ -74,6 +75,7 @@ TEST_F(TankTerrainTest, HealthBarIsDrawnOnPlainGround)
 	EXPECT_EQ(tank->GetDirection(), Direction::DOWN);
 }
 
+// put the tank inside a bush: no bar, so a hidden tank is not given away by its own health
 TEST_F(TankTerrainTest, HealthBarIsHiddenWhileTheTankStandsInABush)
 {
 	SpawnPlayerAt({.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize});
@@ -92,7 +94,7 @@ TEST_F(TankTerrainTest, HealthBarIsHiddenWhileTheTankStandsInABush)
 	EXPECT_FALSE(isHealthBarDrawn);
 }
 
-//NOTE: the flag is re-read every frame, so taking the bush away is enough to bring the bar back
+// burn the bush out from under a standing tank: the bar is back on the next frame
 TEST_F(TankTerrainTest, HealthBarComesBackOnceTheBushIsGone)
 {
 	SpawnPlayerAt({.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize});

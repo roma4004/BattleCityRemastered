@@ -6,10 +6,9 @@
 #include <algorithm>
 #include <cmath>
 
-//NOTE: the one place that turns a direction into an axis and a sign
 namespace DirectionUtils
 {
-[[nodiscard]] inline FPoint Unit(const Direction dir)
+[[nodiscard]] constexpr FPoint Unit(const Direction dir) noexcept
 {
 	switch (dir)
 	{
@@ -27,7 +26,7 @@ namespace DirectionUtils
 }
 
 // the rectangle a step of that length sweeps through, the starting position included
-[[nodiscard]] inline ObjRectangle Swept(const ObjRectangle& rect, const double distance, const Direction dir)
+[[nodiscard]] inline ObjRectangle Swept(const ObjRectangle& rect, const double distance, const Direction dir) noexcept
 {
 	const auto [dx, dy] = Unit(dir);
 
@@ -37,27 +36,28 @@ namespace DirectionUtils
 						.h = rect.h + std::abs(dy) * distance};
 }
 
-[[nodiscard]] inline ObjRectangle Moved(const ObjRectangle& rect, const double distance, const Direction dir)
+[[nodiscard]] constexpr ObjRectangle Moved(const ObjRectangle& rect, const double distance,
+										  const Direction dir) noexcept
 {
 	const auto [dx, dy] = Unit(dir);
 
 	return ObjRectangle{.x = rect.x + dx * distance, .y = rect.y + dy * distance, .w = rect.w, .h = rect.h};
 }
 
-[[nodiscard]] inline FPoint Moved(const FPoint point, const double distance, const Direction dir)
+[[nodiscard]] constexpr FPoint Moved(const FPoint point, const double distance, const Direction dir) noexcept
 {
 	const auto [dx, dy] = Unit(dir);
 
 	return FPoint{.x = point.x + dx * distance, .y = point.y + dy * distance};
 }
 
-[[nodiscard]] inline double SizeAlong(const ObjRectangle& rect, const Direction dir)
+[[nodiscard]] constexpr double SizeAlong(const ObjRectangle& rect, const Direction dir) noexcept
 {
-	return Unit(dir).y != 0.0 ? rect.h : rect.w;
+	return dir == Direction::UP || dir == Direction::DOWN ? rect.h : rect.w;
 }
 
 // free space ahead of the leading edge - negative once the target is already behind it
-[[nodiscard]] inline double GapTo(const ObjRectangle& rect, const ObjRectangle& target, const Direction dir)
+[[nodiscard]] constexpr double GapTo(const ObjRectangle& rect, const ObjRectangle& target, const Direction dir) noexcept
 {
 	switch (dir)
 	{
@@ -74,7 +74,8 @@ namespace DirectionUtils
 	return 0.0;
 }
 
-[[nodiscard]] inline double GapToEdge(const ObjRectangle& rect, const UPoint battlefieldSize, const Direction dir)
+[[nodiscard]] constexpr double GapToEdge(const ObjRectangle& rect, const UPoint battlefieldSize,
+										 const Direction dir) noexcept
 {
 	const auto [dx, dy] = Unit(dir);
 	const ObjRectangle border{.x = dx > 0.0 ? static_cast<double>(battlefieldSize.x) : 0.0,
@@ -84,8 +85,8 @@ namespace DirectionUtils
 }
 
 //NOTE: asymmetric - pixel 0 is on screen, pixel battlefieldSize is already past it
-[[nodiscard]] inline bool FitsBeforeEdge(const ObjRectangle& rect, const UPoint battlefieldSize,
-										 const double distance, const Direction dir)
+[[nodiscard]] constexpr bool FitsBeforeEdge(const ObjRectangle& rect, const UPoint battlefieldSize,
+											const double distance, const Direction dir) noexcept
 {
 	const auto [dx, dy] = Unit(dir);
 	const double gap{GapToEdge(rect, battlefieldSize, dir)};

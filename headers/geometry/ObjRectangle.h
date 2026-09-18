@@ -6,28 +6,26 @@ struct ObjRectangle final
 {
 	double x{}, y{}, w{}, h{};
 
-	[[nodiscard]] double Area() const;
+	[[nodiscard]] constexpr double Area() const noexcept;
 
-	// Get the x-coordinate of the right side
-	[[nodiscard]] double Right() const;
+	[[nodiscard]] constexpr double Right() const noexcept;
 
-	// Get the y-coordinate of the bottom side
-	[[nodiscard]] double Bottom() const;
+	[[nodiscard]] constexpr double Bottom() const noexcept;
 
-	[[nodiscard]] FPoint Center() const;
+	[[nodiscard]] constexpr FPoint Center() const noexcept;
 
-	[[nodiscard]] ObjRectangle GetScaledBy(double scale) const;
+	[[nodiscard]] constexpr ObjRectangle GetScaledBy(double scale) const noexcept;
 };
 
-inline double ObjRectangle::Area() const { return w * h; }
+constexpr double ObjRectangle::Area() const noexcept { return w * h; }
 
-inline double ObjRectangle::Right() const { return x + w; }
+constexpr double ObjRectangle::Right() const noexcept { return x + w; }
 
-inline double ObjRectangle::Bottom() const { return y + h; }
+constexpr double ObjRectangle::Bottom() const noexcept { return y + h; }
 
-inline FPoint ObjRectangle::Center() const { return FPoint{.x = x + w / 2.0, .y = y + h / 2.0}; }
+constexpr FPoint ObjRectangle::Center() const noexcept { return FPoint{.x = x + w / 2.0, .y = y + h / 2.0}; }
 
-inline ObjRectangle ObjRectangle::GetScaledBy(const double scale) const
+constexpr ObjRectangle ObjRectangle::GetScaledBy(const double scale) const noexcept
 {
 	ObjRectangle rectAfterScale{.x = x, .y = y, .w = w * scale, .h = h * scale};
 	rectAfterScale.x -= (rectAfterScale.w - w) / 2;

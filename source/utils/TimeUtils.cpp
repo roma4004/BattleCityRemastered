@@ -12,7 +12,7 @@ struct GameClock
 GameClock gameClock{};
 }// namespace
 
-TimeUtils::time_point TimeUtils::Now()
+TimeUtils::time_point TimeUtils::Now() noexcept
 {
 	return (gameClock.isPaused ? gameClock.pauseStartedAt : clock::now()) - gameClock.pausedTotal;
 }
@@ -36,4 +36,4 @@ void TimeUtils::SetPaused(const bool isPaused)
 	}
 }
 
-bool TimeUtils::IsPaused() { return gameClock.isPaused; }
+bool TimeUtils::IsPaused() noexcept { return gameClock.isPaused; }

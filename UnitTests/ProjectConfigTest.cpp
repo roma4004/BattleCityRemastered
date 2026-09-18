@@ -47,6 +47,8 @@ public:
 };
 }//namespace
 
+// point the config at a path with no file: it is written with defaults, and the absence is not an
+// error the caller has to show
 TEST(ProjectConfigTest, MissingFileIsWrittenAndNotReported)
 {
 	const TempIni ini{"battlecity_missing.ini"};
@@ -62,7 +64,8 @@ TEST(ProjectConfigTest, MissingFileIsWrittenAndNotReported)
 //NOTE: the file used to be replaced by defaults, erasing the very line that needed fixing
 TEST(ProjectConfigTest, UnparseableFileIsReportedAndLeftUntouched)
 {
-	constexpr std::string_view broken{"[Window]\nwidth=800\n=nokey\n"};//NOTE: boost: "key expected", line 3
+	//NOTE: boost: "key expected", line 3; the width differs from the default, so reading it would show
+	constexpr std::string_view broken{"[Window]\nwidth=1024\n=nokey\n"};
 	const TempIni ini{"battlecity_broken.ini", broken};
 
 	{
@@ -70,7 +73,7 @@ TEST(ProjectConfigTest, UnparseableFileIsReportedAndLeftUntouched)
 		EXPECT_EQ(projectConfig.LoadError().value_or(ConfigError{}).line, 3u);
 
 		const WindowConfig windowConfig{projectConfig};
-		EXPECT_EQ(windowConfig.size, (UPoint{.x = 800u, .y = 600u}));//NOTE: defaults; the file's width is 800 too
+		EXPECT_EQ(windowConfig.size, (UPoint{.x = 800u, .y = 600u}));
 	}
 
 	EXPECT_EQ(ini.Read(), broken);
@@ -86,6 +89,7 @@ TEST(ProjectConfigTest, MissingAndUnparseableFilesBothCountAsFresh)
 	EXPECT_TRUE(ProjectConfig{broken.Path()}.IsFreshIni());
 }
 
+// an ini with a saved position: not fresh, so the window is put back where it was instead of centred
 TEST(ProjectConfigTest, AReadableFileIsNotFreshAndCenteringIsOptIn)
 {
 	const TempIni ini{"battlecity_saved.ini", "[Window]\nposX=340\nposY=180\n"};
@@ -98,6 +102,7 @@ TEST(ProjectConfigTest, AReadableFileIsNotFreshAndCenteringIsOptIn)
 	EXPECT_EQ(windowConfig.pos, (UPoint{.x = 340u, .y = 180u}));
 }
 
+// centerOnStart written into the file reaches IsCenterOnStart
 TEST(ProjectConfigTest, CenterOnStartIsReadBackFromTheFile)
 {
 	const TempIni ini{"battlecity_centered.ini", "[Window]\ncenterOnStart=true\n"};

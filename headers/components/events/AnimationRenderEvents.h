@@ -10,24 +10,26 @@ enum class Direction : char8_t;
 enum class AnimationType : char8_t;
 enum class TextureType : char8_t;
 
-//NOTE: also the spawn's clock - AnimationManager reports the last frame by uuid
+//NOTE: also the spawn's clock - AnimationManager reports the last frame by uuid; an endless burst is a
+//client's, which lands on the host's word and so plays until TankSpawnCompletedEvent
 struct AnimationCreateTankSpawnEvent
 {
 	ObjRectangle rect;
 	Uuid uuid;
+	bool isEndless{};
 };
 
-//NOTE: the burst is the countdown, so a cancelled spawn has to stop it or the tank still lands
+//NOTE: a cancelled burst never reports, so the tank waiting for it never lands
 struct AnimationCancelTankSpawnEvent
 {
 	Uuid uuid;
 };
 
-//NOTE: also the spawn's clock - AnimationManager reports the last frame by uuid
 struct AnimationCreateBonusSpawnEvent
 {
 	ObjRectangle rect;
 	Uuid uuid;
+	bool isEndless{};
 };
 
 struct AnimationTankUpdateEvent

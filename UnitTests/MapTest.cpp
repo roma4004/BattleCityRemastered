@@ -11,19 +11,32 @@
 #include <filesystem>
 #include <fstream>
 #include <string>
+#include <system_error>
 #include "TestUtils.h"//NOTE: PrintTo for the Point types
 
-namespace
+// the loader turns a character grid into a map, or says what went wrong - each case feeds it one grid,
+// whole or broken, and reads back the map or the error
+class MapLoaderTest : public testing::Test
 {
-//NOTE: three rows of four, one of each interesting kind - enough to tell a parse from a guess
-constexpr auto kTinyMap{"# a comment\n"
-		"\n"
-		"0123\n"
-		"4567\n"
-		"0000\n"};
-}
+protected:
+	//NOTE: three rows of four, one of each interesting kind - enough to tell a parse from a guess
+	static constexpr auto kTinyMap{"# a comment\n"
+			"\n"
+			"0123\n"
+			"4567\n"
+			"0000\n"};
 
-TEST(MapLoaderTest, ReadsTheGridAndItsSize)
+	//NOTE: swept whatever the assertions did, so a failed one leaves nothing on disk
+	std::filesystem::path _tempMap{};
+
+	void TearDown() override
+	{
+		std::error_code ec;
+		std::filesystem::remove(_tempMap, ec);
+	}
+};
+
+TEST_F(MapLoaderTest, ReadsTheGridAndItsSize)
 {
 	const auto map{MapLoader::Parse(kTinyMap)};
 
@@ -33,7 +46,7 @@ TEST(MapLoaderTest, ReadsTheGridAndItsSize)
 	EXPECT_EQ(map->cells.size(), 12u);
 }
 
-TEST(MapLoaderTest, DigitsFollowTheLegendOrder)
+TEST_F(MapLoaderTest, DigitsFollowTheLegendOrder)
 {
 	const auto map{MapLoader::Parse(kTinyMap)};
 
@@ -48,7 +61,7 @@ TEST(MapLoaderTest, DigitsFollowTheLegendOrder)
 	EXPECT_EQ(map->At(3u, 1u), ObstacleType::Ice);
 }
 
-TEST(MapLoaderTest, CrLfDoesNotBecomeAnExtraCell)
+TEST_F(MapLoaderTest, CrLfDoesNotBecomeAnExtraCell)
 {
 	const auto map{MapLoader::Parse("0123\r\n4567\r\n")};
 
@@ -57,7 +70,7 @@ TEST(MapLoaderTest, CrLfDoesNotBecomeAnExtraCell)
 	EXPECT_EQ(map->rows, 2u);
 }
 
-TEST(MapLoaderTest, RaggedRowIsRejectedWithItsLineNumber)
+TEST_F(MapLoaderTest, RaggedRowIsRejectedWithItsLineNumber)
 {
 	const auto map{MapLoader::Parse("# legend\n0000\n000\n")};
 
@@ -66,7 +79,7 @@ TEST(MapLoaderTest, RaggedRowIsRejectedWithItsLineNumber)
 	EXPECT_EQ(map.error().line, 3u);
 }
 
-TEST(MapLoaderTest, SymbolOutsideTheLegendIsRejected)
+TEST_F(MapLoaderTest, SymbolOutsideTheLegendIsRejected)
 {
 	const auto map{MapLoader::Parse("0000\n00x0\n")};
 
@@ -74,7 +87,7 @@ TEST(MapLoaderTest, SymbolOutsideTheLegendIsRejected)
 	EXPECT_EQ(map.error().line, 2u);
 }
 
-TEST(MapLoaderTest, DigitPastTheLastObstacleIsRejected)
+TEST_F(MapLoaderTest, DigitPastTheLastObstacleIsRejected)
 {
 	//NOTE: '8' is one past Ice - a plain range check on the digit would have let it through as a cast
 	const auto map{MapLoader::Parse("0080\n")};
@@ -82,7 +95,7 @@ TEST(MapLoaderTest, DigitPastTheLastObstacleIsRejected)
 	ASSERT_FALSE(map.has_value());
 }
 
-TEST(MapLoaderTest, CommentsOnlyIsNotAMap)
+TEST_F(MapLoaderTest, CommentsOnlyIsNotAMap)
 {
 	const auto map{MapLoader::Parse("# just a legend\n#\n")};
 
@@ -90,7 +103,7 @@ TEST(MapLoaderTest, CommentsOnlyIsNotAMap)
 	EXPECT_EQ(map.error().line, 0u);
 }
 
-TEST(MapLoaderTest, MissingFileIsAnErrorNotAnEmptyMap)
+TEST_F(MapLoaderTest, MissingFileIsAnErrorNotAnEmptyMap)
 {
 	const auto map{MapLoader::LoadFromFile("Resources/Maps/there-is-no-such-level.map")};
 
@@ -100,7 +113,7 @@ TEST(MapLoaderTest, MissingFileIsAnErrorNotAnEmptyMap)
 
 //NOTE: nothing in the result says whether the disk was touched, so the file is swapped between the two
 //loads - the first map coming back the second time is the cache answering
-TEST(MapLoaderTest, TheSameFileIsReadFromDiskOnlyOnce)
+TEST_F(MapLoaderTest, TheSameFileIsReadFromDiskOnlyOnce)
 {
 	const std::string name{"battlecity_cache_" + UuidUtils::GetStringUuid(UuidUtils::GetRandomUuid()) + ".map"};
 	const std::filesystem::path path{std::filesystem::temp_directory_path() / name};
@@ -160,7 +173,7 @@ TEST(WorldGeometryTest, LogicalSizeIsTheFieldPlusTheBar)
 	EXPECT_EQ(gameConfig.LogicalSize().y, 600u);
 }
 
-//NOTE: the host sizes an eagle from the map, the client from a spawn event carrying only a position -
+//NOTE: the server sizes an eagle from the map, the client from a spawn event carrying only a position -
 //they used to disagree, the client giving it a single cell
 TEST(ObstacleSpawnerTest, ClientGivesTheEagleTheSameSpanTheMapDoes)
 {

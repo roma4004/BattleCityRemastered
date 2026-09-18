@@ -4,10 +4,19 @@
     <Filter Include="source">
       <UniqueIdentifier>{8b1d0e42-7a6c-4f39-9c05-1e3a7d5b2f68}</UniqueIdentifier>
     </Filter>
+    <Filter Include="headers">
+      <UniqueIdentifier>{4e8972ba-55ea-493c-a9ef-d071f88f7ce3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\server_main.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\application\ServerConsole.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClInclude Include="..\headers\application\ServerConsole.h">
+      <Filter>headers</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

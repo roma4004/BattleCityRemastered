@@ -56,26 +56,30 @@ bool InputProviderForBot::ChangeDirIfSeenBonus(Tank& self, const Direction dir,
 		return false;
 	}
 
-	if (IsBonus(sideObstacle.front()))
+	if (!IsBonus(sideObstacle.front()) || !CanDriveToBonus(self, dir))
 	{
-		if (_driveLineOfSight == nullptr)
-		{
-			_driveLineOfSight = std::make_unique<LineOfSight>(self.GetRect(), _allObjects, _gameConfig, false);
-		}
-
-		//Check free path to bonus
-		if (const std::vector<std::shared_ptr<BaseObj>>& directionObstacles{_driveLineOfSight->SideObstacles(dir)};
-			!directionObstacles.empty() && IsBonus(directionObstacles.front()))
-		{
-			self.SetDirection(dir);
-
-			_randomChangeDirTimer.Reset(RandUtils::GetRandDuration(kMinTurnDelay, kMaxTurnDelay));
-
-			return true;
-		}
+		return false;
 	}
 
-	return false;
+	self.SetDirection(dir);
+
+	_randomChangeDirTimer.Reset(RandUtils::GetRandDuration(kMinTurnDelay, kMaxTurnDelay));
+
+	return true;
+}
+
+//NOTE: the shooting pass sees the bonus through what a bullet flies over, so the way there is asked again
+//on a drivable pass - a bonus across water is seen and not reachable
+bool InputProviderForBot::CanDriveToBonus(const Tank& self, const Direction dir)
+{
+	if (_driveLineOfSight == nullptr)
+	{
+		_driveLineOfSight = std::make_unique<LineOfSight>(self.GetRect(), _allObjects, _gameConfig, false);
+	}
+
+	const std::vector<std::shared_ptr<BaseObj>>& obstacles{_driveLineOfSight->SideObstacles(dir)};
+
+	return !obstacles.empty() && IsBonus(obstacles.front());
 }
 
 bool InputProviderForBot::ChangeDirIfSeenOpponent(Tank& self, const Direction dir,
@@ -157,14 +161,16 @@ std::shared_ptr<BaseObj> InputProviderForBot::HandleLineOfSight(Tank& self)
 		return nearestSeenObstacle;
 	}
 
-	//finding obstacle to shoot if no priority target
-	if (const std::vector<std::shared_ptr<BaseObj>>& sideObstacles{lineOfSight.SideObstacles(dir)};
-		!sideObstacles.empty())
-	{
-		nearestSeenObstacle = sideObstacles.front();
-	}
+	return NearestAhead(lineOfSight, dir);
+}
 
-	return nearestSeenObstacle;
+//NOTE: nothing worth turning for, so the bot keeps its heading and takes whatever stands in it - that is
+//what it ends up shooting at
+std::shared_ptr<BaseObj> InputProviderForBot::NearestAhead(LineOfSight& lineOfSight, const Direction dir)
+{
+	const std::vector<std::shared_ptr<BaseObj>>& obstacles{lineOfSight.SideObstacles(dir)};
+
+	return obstacles.empty() ? nullptr : obstacles.front();
 }
 
 std::optional<Direction> InputProviderForBot::PickRandomDirection(const Tank& self, const double deltaTime,
@@ -220,7 +226,7 @@ bool InputProviderForBot::ShouldShootObstacle(const Tank& self, const std::share
 		return false;
 	}
 
-	//NOTE: the eagle and the walls around it
+	//NOTE: the eagle and the walls around it - a player's bot shooting those would lose the match for its own side
 	return self.GetFaction() == Faction::EnemyTeam || dynamic_cast<IFortress*>(obj.get()) == nullptr;
 }
 
@@ -250,7 +256,7 @@ std::optional<Direction> InputProviderForBot::ChooseDirection(Tank& self, const 
 		_randomChangeDirTimer.isActive = false;
 	}
 
-	if (!_randomChangeDirTimer.isActive)// NOTE: bot can change direction by timer
+	if (!_randomChangeDirTimer.isActive)
 	{
 		if (const std::optional<Direction> picked{PickRandomDirection(self, deltaTime)})
 		{
@@ -262,9 +268,9 @@ std::optional<Direction> InputProviderForBot::ChooseDirection(Tank& self, const 
 	return self.GetDirection();
 }
 
+//NOTE: called when the bot is stuck against an obstacle, so the side it faces is the one side it must not pick
 std::optional<Direction> InputProviderForBot::ReviseWhenMoveBlocked(Tank& self, const double deltaTime)
 {
-	// NOTE: bot got stuck against an obstacle, so pick among the remaining 3 sides, excluding the blocked one
 	constexpr bool excludeCurrentDirection{true};
 
 	return PickRandomDirection(self, deltaTime, excludeCurrentDirection);

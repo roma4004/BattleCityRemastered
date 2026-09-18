@@ -4,6 +4,7 @@
 #include "components/events/AnimationRenderEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/InputEvents.h"
+#include "components/events/ReplicationEvents.h"
 #include "components/events/SpawnEvents.h"
 #include "components/events/TimingEvents.h"
 #include "enums/Author.h"
@@ -37,6 +38,8 @@ void AnimationManager::Subscribe()
 	_subs.push_back(_events->AddListener(this, &AnimationManager::OnCreateTankSpawn));
 	_subs.push_back(_events->AddListener(this, &AnimationManager::OnCreateBonusSpawn));
 	_subs.push_back(_events->AddListener(this, &AnimationManager::OnCancelTankSpawn));
+	_subs.push_back(_events->AddListener(this, &AnimationManager::OnTankSpawnCompleted));
+	_subs.push_back(_events->AddListener(this, &AnimationManager::OnBonusSpawnCompleted));
 	_subs.push_back(_events->AddListener(this, &AnimationManager::OnCreateTankExplosion));
 	_subs.push_back(_events->AddListener(this, &AnimationManager::OnCreateBulletExplosion));
 	_subs.push_back(_events->AddListener(this, &AnimationManager::OnCreateTankMove));
@@ -95,23 +98,29 @@ void AnimationManager::OnPostDraw(const PostDrawEvent&) const
 
 void AnimationManager::OnCreateTankSpawn(const AnimationCreateTankSpawnEvent& event)
 {
-	CreateAnimation(AnimationType::Tank_Spawn, event.rect, Author::None, event.uuid);
+	CreateAnimation(AnimationType::Tank_Spawn, event.rect, Author::None, event.uuid, event.isEndless);
 }
 
 void AnimationManager::OnCreateBonusSpawn(const AnimationCreateBonusSpawnEvent& event)
 {
-	CreateAnimation(AnimationType::Bonus_Spawn, event.rect, Author::None, event.uuid);
+	CreateAnimation(AnimationType::Bonus_Spawn, event.rect, Author::None, event.uuid, event.isEndless);
 }
 
 //NOTE: disposed is enough - UpdateFrame skips it, so it never reaches the frame that reports
 void AnimationManager::OnCancelTankSpawn(const AnimationCancelTankSpawnEvent& event)
 {
-	auto matching{_autoAnimatedObjects | std::views::filter([uuid = event.uuid](const AnimatedObject& object)
-	{
-		return object.owner == uuid;
-	})};
+	Cancel(AnimationType::Tank_Spawn, event.uuid);
+}
 
-	std::ranges::for_each(matching, [](AnimatedObject& object) { object.markToDispose = true; });
+//NOTE: a client's burst is endless and ends only here; the host's has already ended by the time it lands
+void AnimationManager::OnTankSpawnCompleted(const TankSpawnCompletedEvent& event)
+{
+	Cancel(AnimationType::Tank_Spawn, event.uuid);
+}
+
+void AnimationManager::OnBonusSpawnCompleted(const BonusSpawnCompletedEvent& event)
+{
+	Cancel(AnimationType::Bonus_Spawn, event.uuid);
 }
 
 void AnimationManager::OnCreateTankMove(const AnimationCreateTankMoveEvent& event)
@@ -182,12 +191,7 @@ void AnimationManager::DrawObject(const AnimatedObject& object) const
 void AnimationManager::Create(const Author author, const ObjRectangle rect, const AnimationType type,
 							  const int size, const int scale, const int speed, const int passes, const Uuid owner)
 {
-	auto& target{
-			type == AnimationType::Water_Flow
-				? _autoAnimatedWaterObjects
-				: type == AnimationType::Tank_Move
-				? _turnBasedTankObjects
-				: _autoAnimatedObjects};
+	auto& target{ContainerOf(type)};
 
 	if (auto* reusable{FindReusable(target, type)})
 	{
@@ -195,6 +199,7 @@ void AnimationManager::Create(const Author author, const ObjRectangle rect, cons
 		reusable->dir = {};
 		reusable->currentFrameIndex = 0;
 		reusable->ticksSinceLastFrame = 0;
+		reusable->passes = passes;
 		reusable->passesDone = 0;
 		reusable->owner = owner;
 		reusable->author = author;
@@ -204,6 +209,15 @@ void AnimationManager::Create(const Author author, const ObjRectangle rect, cons
 	{
 		target.emplace_back(author, rect, type, size, scale, speed, passes, owner);
 	}
+}
+
+std::vector<AnimatedObject>& AnimationManager::ContainerOf(const AnimationType type)
+{
+	return type == AnimationType::Water_Flow
+			   ? _autoAnimatedWaterObjects
+			   : type == AnimationType::Tank_Move
+			   ? _turnBasedTankObjects
+			   : _autoAnimatedObjects;
 }
 
 constexpr AnimationManager::AnimationPreset AnimationManager::GetPreset(const AnimationType type)
@@ -238,7 +252,7 @@ constexpr AnimationManager::AnimationPreset AnimationManager::GetPreset(const An
 }
 
 void AnimationManager::CreateAnimation(const AnimationType type, const ObjRectangle rect, const Author author,
-									   const Uuid owner)
+									   const Uuid owner, const bool isEndless)
 {
 	if (type == AnimationType::Tank_Explosion)
 	{
@@ -246,7 +260,7 @@ void AnimationManager::CreateAnimation(const AnimationType type, const ObjRectan
 	}
 
 	const auto& [size, scale, speed, passes] = GetPreset(type);
-	Create(author, rect, type, size, scale, speed, passes, owner);
+	Create(author, rect, type, size, scale, speed, isEndless ? kEndlessAnimation : passes, owner);
 }
 
 bool AnimationManager::UpdateFrame(AnimatedObject& object)
@@ -329,6 +343,16 @@ void AnimationManager::UpdateHelmetEffect(const Author author, const FPoint& pos
 		it->rect.x = pos.x;
 		it->rect.y = pos.y;
 	}
+}
+
+void AnimationManager::Cancel(const AnimationType type, const Uuid owner)
+{
+	auto matching{ContainerOf(type) | std::views::filter([type, owner](const AnimatedObject& object)
+	{
+		return object.type == type && object.owner == owner;
+	})};
+
+	std::ranges::for_each(matching, [](AnimatedObject& object) { object.markToDispose = true; });
 }
 
 void AnimationManager::DisableTankAnimation(const Author author)

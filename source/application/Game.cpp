@@ -1,4 +1,5 @@
 #include "application/Game.h"
+#include "application/ProjectConfig.h"
 #include "utils/Log.h"
 #include "application/ServerProcess.h"
 #include "application/GameConfig.h"
@@ -19,15 +20,17 @@
 #include "components/managers/RenderManager.h"
 #include "components/managers/TextureManager.h"
 #include "enums/GameMode.h"
+#include <cstdint>
 #include <exception>
 #include <memory>
+#include <optional>
 
 Game::Game(GameConfig& gameConfig, const ProjectConfig& projectConfig, const WindowConfig& windowConfig,
 		   SDL_Config& sdlConfig, const LaunchOptions& launchOptions)
 	: _events{std::make_shared<EventSystem>()}
 	, _menu{std::make_unique<Menu>(_events, gameConfig)}
 	, _textureManager(std::make_unique<TextureManager>(_events))
-	, _userInput{std::make_unique<UserInput>(_events, windowConfig, sdlConfig)}
+	, _userInput{std::make_unique<UserInput>(_events, windowConfig, sdlConfig, projectConfig.GamepadDeadZone())}
 	, _fpsManager{std::make_unique<FramePerSecondManager>(_events, projectConfig, true)}
 	, _simulation{std::make_unique<Simulation>(_events, gameConfig)}
 	, _renderManager{std::make_unique<RenderManager>(_events, gameConfig, sdlConfig)}
@@ -88,13 +91,17 @@ void Game::EnterGameMode(const GameMode mode)
 		_serverProcess = std::make_unique<ServerProcess>();
 	}
 
-	if (!_serverProcess->Start())
+	const std::optional<std::uint16_t> port{_serverProcess->Start(_gameConfig.serverAddress)};
+	if (!port)
 	{
 		_serverProcess.reset();
 		_events->EmitEvent(ShowMenuEvent{.show = true});
 
 		return;
 	}
+
+	//NOTE: with --port=auto the child picked its own, so this is the first moment the game knows where to dial
+	_gameConfig.serverAddress.port = *port;
 
 	_simulation->ApplyGameMode(GameMode::PlayAsClient);
 }

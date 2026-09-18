@@ -9,6 +9,7 @@
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/InputEvents.h"
 #include "components/events/ObjectLifecycleEvents.h"
+#include "components/events/ReplicationEvents.h"
 #include "components/events/SpawnEvents.h"
 #include "components/events/TimingEvents.h"
 #include "components/managers/AnimationManager.h"
@@ -112,8 +113,6 @@ protected:
 	}
 };
 
-// --- what the game logic asks for, and with which data
-
 TEST_F(AnimationManagerTest, BulletExplodesWhereItHit)
 {
 	const ObjRectangle bulletRect{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
@@ -129,7 +128,7 @@ TEST_F(AnimationManagerTest, BulletExplodesWhereItHit)
 	EXPECT_EQ(_bulletExplosion->rect.y, bullet->GetRect().y);
 }
 
-//NOTE: the client never runs the collision itself - the burst has to come from the host's despawn
+//NOTE: the client never runs the collision itself - the burst has to come from the server's despawn
 TEST_F(AnimationManagerTest, ClientBulletExplodesOnDespawn)
 {
 	_gameConfig.gameMode = GameMode::PlayAsClient;
@@ -277,6 +276,66 @@ TEST_F(AnimationManagerTest, ACancelledBurstNeverReports)
 
 	_events->EmitEvent(AnimationCancelTankSpawnEvent{.uuid = _burstUuid});
 
+	RunTicks(_ticksPerBurst);
+
+	EXPECT_FALSE(_finished.has_value());
+}
+
+TEST_F(AnimationManagerTest, ACancelLeavesTheOwnersOtherAnimations)
+{
+	_events->EmitEvent(AnimationCreateBonusSpawnEvent{.rect = _rect, .uuid = _burstUuid});
+
+	_events->EmitEvent(AnimationCancelTankSpawnEvent{.uuid = _burstUuid});
+
+	RunTicks(_ticksPerBurst * 2);
+
+	EXPECT_TRUE(_finished.has_value());
+}
+
+//NOTE: a client's burst waits for the server's word, so it has to outlast a burst of its own
+TEST_F(AnimationManagerTest, AnEndlessTankBurstPlaysUntilTheTankLands)
+{
+	_events->EmitEvent(AnimationCreateTankSpawnEvent{.rect = _rect, .uuid = _burstUuid, .isEndless = true});
+
+	RunTicks(_ticksPerBurst);
+	_events->EmitEvent(PostDrawEvent{});
+
+	EXPECT_FALSE(_finished.has_value());
+	EXPECT_TRUE(WasDrawn(AnimationType::Tank_Spawn));
+
+	_drawn.clear();
+	_events->EmitEvent(TankSpawnCompletedEvent{.uuid = _burstUuid});
+	_events->EmitEvent(PostDrawEvent{});
+
+	EXPECT_FALSE(WasDrawn(AnimationType::Tank_Spawn));
+}
+
+TEST_F(AnimationManagerTest, AnEndlessBonusBurstPlaysUntilTheBonusLands)
+{
+	_events->EmitEvent(AnimationCreateBonusSpawnEvent{.rect = _rect, .uuid = _burstUuid, .isEndless = true});
+
+	RunTicks(_ticksPerBurst * 2);
+	_events->EmitEvent(PostDrawEvent{});
+
+	EXPECT_FALSE(_finished.has_value());
+	EXPECT_TRUE(WasDrawn(AnimationType::Bonus_Spawn));
+
+	_drawn.clear();
+	_events->EmitEvent(BonusSpawnCompletedEvent{.uuid = _burstUuid});
+	_events->EmitEvent(PostDrawEvent{});
+
+	EXPECT_FALSE(WasDrawn(AnimationType::Bonus_Spawn));
+}
+
+//NOTE: a finished burst's slot is reused - a client that watched the demo first must not inherit its end
+TEST_F(AnimationManagerTest, AnEndlessBurstInAReusedSlotStaysEndless)
+{
+	_events->EmitEvent(AnimationCreateTankSpawnEvent{.rect = _rect, .uuid = _burstUuid});
+	RunTicks(_ticksPerBurst);
+	ASSERT_TRUE(_finished.has_value());
+
+	_finished.reset();
+	_events->EmitEvent(AnimationCreateTankSpawnEvent{.rect = _rect, .uuid = _burstUuid, .isEndless = true});
 	RunTicks(_ticksPerBurst);
 
 	EXPECT_FALSE(_finished.has_value());

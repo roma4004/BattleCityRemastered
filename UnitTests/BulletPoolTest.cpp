@@ -45,6 +45,8 @@ protected:
 	}
 };
 
+// take 25 bullets from a pool that pre-generates 20, kill them all, sweep, take 25 again: the second
+// round is the same 25 objects
 TEST_F(BulletPoolTest, SpentBulletsAreHandedOutAgain)
 {
 	constexpr size_t shots{25u};
@@ -79,6 +81,8 @@ TEST_F(BulletPoolTest, SpentBulletsAreHandedOutAgain)
 	EXPECT_EQ(firstRound, secondRound);
 }
 
+// a player fires and the bullet draws once; kill it, sweep, and the next draw finds nothing - a
+// reclaimed bullet is off the bus, not merely invisible
 TEST_F(BulletPoolTest, ReturnedBulletLeavesTheBus)
 {
 	int bulletDraws{0};

@@ -11,4 +11,5 @@ enum class DisconnectReason : std::uint8_t
 
 	ProtocolError,
 	ServerFull,
+	Kicked,
 };

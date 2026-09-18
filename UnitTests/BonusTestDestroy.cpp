@@ -60,7 +60,7 @@ protected:
 		_obstacleSpawner = std::make_unique<ObstacleSpawner>(_events, _gameConfig);
 		_fortressWallSub = TestUtils::TrackFortressWall(_events, &_fortressWall);
 		_gridSize = _gameConfig.gridOffset;
-		_tankSize = _gridSize * 3.0;// for better turns
+		_tankSize = _gridSize * 3.0;
 
 		_allObjects.reserve(4);
 	}

@@ -181,9 +181,9 @@ void Tank::TakeDamage(const unsigned int damage, const Author author)
 	}
 }
 
-unsigned int Tank::GetTier() const { return _tier; }
+unsigned int Tank::GetTier() const noexcept { return _tier; }
 
-bool Tank::CanShoot() const { return !_shootTimer.isActive; }
+bool Tank::CanShoot() const noexcept { return !_shootTimer.isActive; }
 
 std::vector<Direction> Tank::GetFreePathSides(const double deltaTime,
 											 const std::optional<Direction> excludeDirection) const
@@ -275,23 +275,23 @@ void Tank::Shot(const std::optional<Uuid> withUuid)
 	_shootTimer.Reset();
 }
 
-double Tank::GetBulletWidth() const { return _calibre.size.x; }
+double Tank::GetBulletWidth() const noexcept { return _calibre.size.x; }
 
 void Tank::SetBulletWidth(const double bulletWidth) { _calibre.size.x = bulletWidth; }
 
-double Tank::GetBulletHeight() const { return _calibre.size.y; }
+double Tank::GetBulletHeight() const noexcept { return _calibre.size.y; }
 
 void Tank::SetBulletHeight(const double bulletHeight) { _calibre.size.y = bulletHeight; }
 
-double Tank::GetBulletSpeed() const { return _calibre.speed; }
+double Tank::GetBulletSpeed() const noexcept { return _calibre.speed; }
 
 void Tank::SetBulletSpeed(const double bulletSpeed) { _calibre.speed = bulletSpeed; }
 
-unsigned int Tank::GetBulletDamage() const { return _calibre.damage; }
+unsigned int Tank::GetBulletDamage() const noexcept { return _calibre.damage; }
 
 void Tank::SetBulletDamage(const unsigned int bulletDamage) { _calibre.damage = bulletDamage; }
 
-double Tank::GetBulletDamageRadius() const { return _calibre.damageRadius; }
+double Tank::GetBulletDamageRadius() const noexcept { return _calibre.damageRadius; }
 
 void Tank::SetBulletDamageRadius(const double bulletDamageRadius) { _calibre.damageRadius = bulletDamageRadius; }
 

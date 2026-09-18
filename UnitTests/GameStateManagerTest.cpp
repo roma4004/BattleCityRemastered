@@ -22,6 +22,8 @@
 #include <iostream>
 #include <memory>
 
+// each case plays a one-player match out by hand - kill everything in _allObjects, ask for a respawn,
+// repeat - and watches the life counts until GameFinishedEvent says Won or Over
 class GameStateManagerTest : public testing::Test// NOLINT(clang-diagnostic-padded)
 {
 protected:
@@ -55,7 +57,7 @@ protected:
 		_events->EmitEvent(GameResetEvent{});
 		_instantSpawnAnimationSubs = TestUtils::WireInstantSpawnAnimations(_events);
 		_gridSize = _gameConfig.gridOffset;
-		_tankSize = _gridSize * 3.0;// for better turns
+		_tankSize = _gridSize * 3.0;
 
 		_allObjects.reserve(4u);
 	}
@@ -63,6 +65,7 @@ protected:
 	void TearDown() override {}
 };
 
+// nothing but the plain course of a match: five waves of four enemies each empty the pool of 20
 TEST_F(GameStateManagerTest, PlayerTeamWon)
 {
 	bool isGameWon{false};
@@ -80,11 +83,11 @@ TEST_F(GameStateManagerTest, PlayerTeamWon)
 
 		if (it != howManySpawnCounters.end())
 		{
-			it->first++;// Increment count if UUID found
+			it->first++;
 		}
 		else
 		{
-			howManySpawnCounters.emplace_back(1u, uuid);// Add new entry if UUID not found
+			howManySpawnCounters.emplace_back(1u, uuid);
 		}
 	});
 
@@ -101,11 +104,11 @@ TEST_F(GameStateManagerTest, PlayerTeamWon)
 
 		if (it != howManyDiedCounters.end())
 		{
-			it->first++;// Increment count if UUID found
+			it->first++;
 		}
 		else
 		{
-			howManyDiedCounters.emplace_back(1u, uuid);// Add new entry if UUID not found
+			howManyDiedCounters.emplace_back(1u, uuid);
 		}
 	});
 
@@ -173,6 +176,8 @@ TEST_F(GameStateManagerTest, PlayerTeamWon)
 
 }
 
+// an enemy takes the extra-life tank first, so the pool holds 21 and the win waits for that one
+// leftover enemy
 TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 {
 	bool isGameWon{false};
@@ -190,11 +195,11 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 
 		if (it != howManySpawnCounters.end())
 		{
-			it->first++;// Increment count if UUID found
+			it->first++;
 		}
 		else
 		{
-			howManySpawnCounters.emplace_back(1u, uuid);// Add new entry if UUID not found
+			howManySpawnCounters.emplace_back(1u, uuid);
 		}
 	});
 
@@ -211,11 +216,11 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 
 		if (it != howManyDiedCounters.end())
 		{
-			it->first++;// Increment count if UUID found
+			it->first++;
 		}
 		else
 		{
-			howManyDiedCounters.emplace_back(1u, uuid);// Add new entry if UUID not found
+			howManyDiedCounters.emplace_back(1u, uuid);
 		}
 	});
 
@@ -255,7 +260,6 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 			{.x = _tankSize * 3.0, .y = _tankSize * 3.0 + _tankSize + 1.0, .w = _tankSize, .h = _tankSize},
 			BonusType::Tank);
 
-	//let enemy pick up
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(respawnEnemyActual, 21u);
@@ -282,7 +286,7 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 	EXPECT_EQ(_allObjects.size(), 0u);
 	EXPECT_EQ(respawnEnemyActual, 5u);
 
-	EXPECT_FALSE(isGameWon);//Check that we still not win
+	EXPECT_FALSE(isGameWon);
 
 	std::cout << "spawn extra life tank" << '\n';
 	_events->EmitEvent(RespawnTanksEvent{});//spawn 4 enemies
@@ -314,7 +318,8 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 
 }
 
-// Player team lose with broken base
+// the eagle falls with the player still alive: every remaining life is taken away at once, and the
+// death that follows ends the match
 TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBase)
 {
 	bool isGameLose{false};
@@ -346,7 +351,7 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBase)
 
 }
 
-// Player team lose with three deaths in a row
+// the base stands - the player simply dies three times
 TEST_F(GameStateManagerTest, PlayerTeamLoseWithThreeDeath)
 {
 	bool isGameLose{false};
@@ -379,7 +384,7 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithThreeDeath)
 
 }
 
-// Player team lose with four deaths with extra life
+// the player takes the extra-life tank first, so it takes four deaths instead of three
 TEST_F(GameStateManagerTest, PlayerTeamLoseWithExtraLifeDeath)
 {
 	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
@@ -421,18 +426,19 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithExtraLifeDeath)
 	}
 	EXPECT_EQ(respawnActual, 1u);
 
-	EXPECT_FALSE(isGameLose);//Check that we still don't lose because of having extra life
+	EXPECT_FALSE(isGameLose);
 
 	_events->EmitEvent(RespawnTanksEvent{});
 	_events->EmitEvent(TankDiedEvent{.uuid = _allObjects.back()->GetUuid()});
 	_allObjects.pop_back();
 
 	EXPECT_EQ(respawnActual, 0u);
-	EXPECT_TRUE(isGameLose);//Check that we lose after one death after
+	EXPECT_TRUE(isGameLose);
 
 }
 
-// Player team lose with broken base
+// the base falls (lives to zero), and only then the player takes an extra life: it buys exactly one
+// more death, not a return to three
 TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBaseAndExtraLife)
 {
 	bool isGameLose{false};
@@ -478,7 +484,7 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBaseAndExtraLife)
 
 	if (const auto player{dynamic_cast<Tank*>(_allObjects.back().get())})
 	{
-		auto [x, y] = player->GetPos();//to relative spawn above player
+		auto [x, y] = player->GetPos();
 
 		// Spawn bonus extra life near player
 		_bonusSpawner->SpawnBonus({.x = x, .y = y - _tankSize + 1.0, .w = _tankSize, .h = _tankSize},

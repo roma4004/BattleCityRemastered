@@ -36,7 +36,7 @@ void Log::Detail(const std::string& message)
 }
 
 //NOTE: unlocked - the level is set once at startup, and this runs for every skipped detail line
-bool Log::IsDetailed() { return _level >= Level::Detailed; }
+bool Log::IsDetailed() noexcept { return _level >= Level::Detailed; }
 
 void Log::SetConsole(const bool enabled)
 {

@@ -51,7 +51,7 @@ TEST_F(GameStateTest, NetworkGameStartsInTheLobby)
 	EXPECT_EQ(GameState::Lobby, _stateManager->GetState());
 }
 
-TEST_F(GameStateTest, HostLeavesTheLobbyOnceBothSeatsAreReady)
+TEST_F(GameStateTest, TheServerLeavesTheLobbyOnceBothSeatsAreReady)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{});
@@ -62,7 +62,7 @@ TEST_F(GameStateTest, HostLeavesTheLobbyOnceBothSeatsAreReady)
 }
 
 //NOTE: the link says nothing about the other seat - starting on it played alone on an empty field
-TEST_F(GameStateTest, AClientStaysInTheLobbyUntilTheHostSaysOtherwise)
+TEST_F(GameStateTest, AClientStaysInTheLobbyUntilTheServerSaysOtherwise)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsClient});
 	_events->EmitEvent(ClientConnectedToHostEvent{});
@@ -246,7 +246,7 @@ TEST_F(GameStateTest, TheLastPeerToJoinStartsTheMatch)
 
 // A count, not a flag: the seat the player who stayed still holds must not be counted twice when
 // the one who left is replaced
-TEST_F(GameStateTest, AHostThatLostOnePlayerRestartsOnOneArrival)
+TEST_F(GameStateTest, AServerThatLostOnePlayerRestartsOnOneArrival)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{});
@@ -259,8 +259,8 @@ TEST_F(GameStateTest, AHostThatLostOnePlayerRestartsOnOneArrival)
 	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
 }
 
-// The other side of the same counter - a client waits for the host, and the host is one peer
-TEST_F(GameStateTest, AClientStartsTheMatchOnlyWhenTheHostAnnouncesIt)
+// The other side of the same counter - a client waits for the server, and the server is one peer
+TEST_F(GameStateTest, AClientStartsTheMatchOnlyWhenTheServerAnnouncesIt)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsClient});
 	_matchStarts = 0;
@@ -273,7 +273,7 @@ TEST_F(GameStateTest, AClientStartsTheMatchOnlyWhenTheHostAnnouncesIt)
 	EXPECT_EQ(_matchStarts, 1);
 }
 
-TEST_F(GameStateTest, ARestartPutsTheHostBackToWaitingForBothSeats)
+TEST_F(GameStateTest, ARestartPutsTheServerBackToWaitingForBothSeats)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{});

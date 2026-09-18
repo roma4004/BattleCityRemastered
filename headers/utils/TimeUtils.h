@@ -8,9 +8,9 @@ public:
 	using clock = std::chrono::steady_clock;
 	using time_point = clock::time_point;
 
-	[[nodiscard]] static time_point Now();
+	[[nodiscard]] static time_point Now() noexcept;
 
 	static void SetPaused(bool isPaused);
 
-	[[nodiscard]] static bool IsPaused();
+	[[nodiscard]] static bool IsPaused() noexcept;
 };

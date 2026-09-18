@@ -5,6 +5,7 @@
 #include "enums/InputSignal.h"
 #include "enums/PlayerSlot.h"
 #include <atomic>
+#include <chrono>
 #include <functional>
 #include <memory>
 #include <string>
@@ -20,13 +21,15 @@ using boost::asio::ip::tcp;
 class Session final : public PeerLink, public std::enable_shared_from_this<Session>
 {
 public:
-	Session(tcp::socket sock, const std::shared_ptr<EventSystem>& events, PlayerSlot slot);
+	Session(tcp::socket sock, const std::shared_ptr<EventSystem>& events, PlayerSlot slot, std::string address);
 
 	~Session();
 
 	//NOTE: the seat is the session's, fixed when the server accepted it - a press off the wire names
 	//the key, and the seat says whose it is
 	[[nodiscard]] PlayerSlot GetSlot() const { return _slot; }
+	[[nodiscard]] const std::string& Address() const noexcept { return _address; }
+	[[nodiscard]] std::chrono::steady_clock::time_point ConnectedAt() const noexcept { return _connectedAt; }
 
 	//NOTE: the cue to drop this session, and the only field the game thread reads without a lock
 	[[nodiscard]] bool IsFinished() const { return _isFinished.load(std::memory_order_acquire); }
@@ -38,6 +41,8 @@ public:
 
 	//NOTE: onClosed fires once the goodbye is written, or turned out undeliverable
 	void Shutdown(DisconnectReason reason, std::function<void()> onClosed);
+	//NOTE: told why, so the client does not dial straight back into the seat
+	void Kick();
 
 private:
 	using InputEmitter = std::function<void(EventSystem&, PlayerSlot, bool)>;
@@ -68,6 +73,9 @@ private:
 	void Handle(const BonusStatus&) const {}
 	void Handle(const SlotAssignment&) const {}
 
+	//NOTE: on the channel's strand - the seat is given up here, once, whatever took the link
+	void LoseLink();
+
 	//NOTE: raised on our strand after the last Enqueue, so everything this session read is in the
 	//queue by the time cleanup is free to sweep it
 	void MarkFinished() { _isFinished.store(true, std::memory_order_release); }
@@ -75,6 +83,8 @@ private:
 	static const std::unordered_map<InputSignal, InputEmitter> kInputEmitters;
 
 	const PlayerSlot _slot;
+	const std::string _address;
+	const std::chrono::steady_clock::time_point _connectedAt{std::chrono::steady_clock::now()};
 	bool _isPeerGone{false};
 	std::atomic_bool _isFinished{false};
 };

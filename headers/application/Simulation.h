@@ -1,6 +1,7 @@
 #pragma once
 
 #include "components/EventSystem.h"
+#include <cstdint>
 #include <memory>
 #include <vector>
 
@@ -31,6 +32,7 @@ class Simulation final
 	std::shared_ptr<EventSystem> _events{nullptr};
 
 	std::unique_ptr<INetworkNode> _networkNode{nullptr};
+	std::uint16_t _boundPort{};
 	std::unique_ptr<GameStateManager> _stateManager{nullptr};
 	//NOTE: a wall subscribes when it spawns, after every manager here, so it paints over the burst in any field order
 	std::unique_ptr<AnimationManager> _animationManager{nullptr};
@@ -84,6 +86,9 @@ public:
 	void LeaveGameMode();
 
 	void ApplyGameMode(GameMode gameMode);
+
+	//NOTE: what the server ended up listening on - the same as asked for, unless the port was 0
+	[[nodiscard]] std::uint16_t BoundPort() const noexcept { return _boundPort; }
 
 	[[nodiscard]] bool TryRestartMatch() const;
 

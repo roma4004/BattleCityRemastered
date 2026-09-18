@@ -21,7 +21,7 @@ inline constexpr int kFirstSpawnableBonusId{static_cast<int>(BonusType::None) + 
 inline constexpr int kLastSpawnableBonusId{static_cast<int>(BonusType::lastId) - 1};
 
 //NOTE: the one gate for values that arrive from outside the code - the wire
-[[nodiscard]] constexpr bool IsSpawnableBonus(const BonusType type)
+[[nodiscard]] constexpr bool IsSpawnableBonus(const BonusType type) noexcept
 {
 	const auto id{static_cast<int>(type)};
 

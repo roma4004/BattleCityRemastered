@@ -5,6 +5,8 @@
 #include "application/SDL_Config.h"
 #include "application/WindowConfig.h"
 #include "utils/Log.h"
+#include <algorithm>
+#include <iostream>
 
 //TODO: how to improve event system, duplicated code, std::string_view, NRVO, remove std::function, cleanup
 int main(const int argc, char* argv[])
@@ -19,6 +21,14 @@ int main(const int argc, char* argv[])
 		Log::Error("bad argument '" + launchOptions.error().arg + "': " + launchOptions.error().reason);
 
 		return 1;
+	}
+
+	if (launchOptions->isHelpRequested)
+	{
+		//NOTE: past the log on purpose - a timestamped help line reads wrong and lands in the log file
+		std::ranges::for_each(kUsage, [](const char* line) { std::cout << line << '\n'; });
+
+		return 0;
 	}
 
 	ProjectConfig projectConfig{ProjectConfig::DefaultFilePath()};

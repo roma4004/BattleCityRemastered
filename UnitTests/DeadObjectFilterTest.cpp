@@ -50,7 +50,8 @@ protected:
 	}
 };
 
-// Two tanks reach the same bonus within one tick - only the first one gets it
+// two players step onto the same bonus in one tick: it dies once and reports a single pickup, not
+// one per tank that reached it
 TEST_F(DeadObjectFilterTest, BonusIsPickedUpOncePerFrame)
 {
 	int pickups{0};
@@ -84,7 +85,8 @@ TEST_F(DeadObjectFilterTest, BonusIsPickedUpOncePerFrame)
 	EXPECT_EQ(1, pickups);
 }
 
-// Two bullets land on the same brick wall within one tick - it dies once, not into negative health
+// a one-cell wall takes a bullet from each side in the same tick: one death event, health stops at
+// zero instead of going negative
 TEST_F(DeadObjectFilterTest, BrickWallHitByTwoBulletsDiesOnce)
 {
 	int deaths{0};
@@ -112,7 +114,8 @@ TEST_F(DeadObjectFilterTest, BrickWallHitByTwoBulletsDiesOnce)
 	EXPECT_EQ(1, deaths);
 }
 
-// The second bullet arrives after the tank died earlier in the same tick - it must not kill it again
+// two enemy bullets reach a one-health player in the same tick: he dies once, the second bullet finds
+// a corpse and is not counted
 TEST_F(DeadObjectFilterTest, TankKilledThisFrameTakesNoSecondHit)
 {
 	int deaths{0};

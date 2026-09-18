@@ -6,13 +6,16 @@
 #include "network/Serializer.h"
 #include "utils/Log.h"
 #include <string>
+#include <utility>
 #include <variant>
 
 namespace network::commands
 {
-Session::Session(tcp::socket sock, const std::shared_ptr<EventSystem>& events, const PlayerSlot slot)
+Session::Session(tcp::socket sock, const std::shared_ptr<EventSystem>& events, const PlayerSlot slot,
+				 std::string address)
 	: PeerLink(std::move(sock), "Session", events)
-	, _slot{slot} {}
+	, _slot{slot}
+	, _address{std::move(address)} {}
 
 void Session::OnCommand(const AnyCommand& command)
 {
@@ -29,6 +32,30 @@ void Session::Shutdown() { _channel->Close(); }
 void Session::Shutdown(const DisconnectReason reason, std::function<void()> onClosed)
 {
 	CloseWithFarewell(_channel->IsOpen(), reason, std::move(onClosed));
+}
+
+void Session::Kick()
+{
+	Shutdown(DisconnectReason::Kicked, [weakSelf = weak_from_this()]
+	{
+		if (const auto self{weakSelf.lock()})
+		{
+			self->LoseLink();
+		}
+	});
+}
+
+void Session::LoseLink()
+{
+	_channel->Close();
+
+	if (!_isPeerGone)
+	{
+		_isPeerGone = true;
+		_commandQueue.Enqueue([self = shared_from_this()] { self->_events->EmitEvent(ServerClientLostEvent{}); });
+	}
+
+	MarkFinished();
 }
 
 void Session::Handle(const Disconnect& command)
@@ -60,24 +87,10 @@ void Session::Start()
 			},
 			[weakSelf]
 			{
-				const auto self{weakSelf.lock()};
-				if (!self)
+				if (const auto self{weakSelf.lock()})
 				{
-					return;
+					self->LoseLink();
 				}
-
-				self->_channel->Close();
-
-				if (!self->_isPeerGone)
-				{
-					self->_isPeerGone = true;
-					self->_commandQueue.Enqueue([self]
-					{
-						self->_events->EmitEvent(ServerClientLostEvent{});
-					});
-				}
-
-				self->MarkFinished();
 			});
 
 	_channel->StartReading();

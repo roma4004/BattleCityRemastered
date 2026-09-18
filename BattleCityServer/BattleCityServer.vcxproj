@@ -52,6 +52,8 @@
        is only the entry point of the console server. -->
   <ItemGroup>
     <ClCompile Include="..\source\server_main.cpp" />
+    <ClCompile Include="..\source\application\ServerConsole.cpp" />
+    <ClInclude Include="..\headers\application\ServerConsole.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GameCore\GameCore.vcxproj">

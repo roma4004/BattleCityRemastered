@@ -30,16 +30,15 @@ public:
 	void Activate() override;
 	void Deactivate() override;
 
-	//BaseObj overrides
 	void TakeDamage(unsigned int damage, Author author) override;
-	[[nodiscard]] Author GetAuthor() const;
+	[[nodiscard]] Author GetAuthor() const noexcept;
 
 	void Heal(int amount);
 
-	[[nodiscard]] Direction GetDirection() const;
+	[[nodiscard]] Direction GetDirection() const noexcept;
 	void SetDirection(Direction dir);
 
-	[[nodiscard]] double GetSpeed() const;
+	[[nodiscard]] double GetSpeed() const noexcept;
 
 protected:
 	double _speed{};

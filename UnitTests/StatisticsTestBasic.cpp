@@ -51,7 +51,7 @@ protected:
 		_instantSpawnAnimationSubs = TestUtils::WireInstantSpawnAnimations(_events);
 		_statistics = std::make_shared<GameStatistics>(_events);
 		const double gridSize{_gameConfig.gridOffset};
-		_tankSize = gridSize * 3.0;// for better turns
+		_tankSize = gridSize * 3.0;
 
 		_allObjects.reserve(5);
 	}

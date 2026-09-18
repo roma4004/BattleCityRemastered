@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="headers">
@@ -93,6 +93,9 @@
     <ClCompile Include="..\source\application\CommandLineParser.cpp">
       <Filter>source\application</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\application\ConsoleCommand.cpp">
+      <Filter>source\application</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\application\GameConfig.cpp">
       <Filter>source\application</Filter>
     </ClCompile>
@@ -128,6 +131,9 @@
     </ClCompile>
     <ClCompile Include="..\source\components\GameStatistics.cpp">
       <Filter>source\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\components\input\GamepadDirection.cpp">
+      <Filter>source\components\input</Filter>
     </ClCompile>
     <ClCompile Include="..\source\components\input\InputProviderForBot.cpp">
       <Filter>source\components\input</Filter>
@@ -296,6 +302,9 @@
     <ClInclude Include="..\headers\application\CommandLineParser.h">
       <Filter>headers\application</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\application\ConsoleCommand.h">
+      <Filter>headers\application</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\application\GameConfig.h">
       <Filter>headers\application</Filter>
     </ClInclude>
@@ -353,6 +362,9 @@
     <ClInclude Include="..\headers\components\events\ReplicationEvents.h">
       <Filter>headers\components\events</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\components\events\ServerConsoleEvents.h">
+      <Filter>headers\components\events</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\components\events\SpawnEvents.h">
       <Filter>headers\components\events</Filter>
     </ClInclude>
@@ -367,6 +379,9 @@
     </ClInclude>
     <ClInclude Include="..\headers\components\GameStatistics.h">
       <Filter>headers\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\input\GamepadDirection.h">
+      <Filter>headers\components\input</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\components\input\InputProviderForBot.h">
       <Filter>headers\components\input</Filter>

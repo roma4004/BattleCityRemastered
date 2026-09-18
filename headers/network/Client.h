@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Endpoints.h"
 #include "enums/DisconnectReason.h"
 #include "PeerLink.h"
 #include "ReplicationApplier.h"
@@ -12,10 +13,8 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/steady_timer.hpp>
 #include <boost/asio/strand.hpp>
-#include <cstdint>
 #include <functional>
 #include <memory>
-#include <string>
 #include <vector>
 
 struct NetworkEndFrameEvent;
@@ -29,7 +28,7 @@ using boost::asio::ip::tcp;
 class Client final : public PeerLink, public std::enable_shared_from_this<Client>
 {
 public:
-	Client(boost::asio::io_context& ioContext, const std::string& host, uint16_t port,
+	Client(boost::asio::io_context& ioContext, const ServerAddress& address,
 		   const std::shared_ptr<EventSystem>& events);
 
 	~Client();

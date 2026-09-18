@@ -58,5 +58,5 @@ class GameStateManager final
 public:
 	explicit GameStateManager(const std::shared_ptr<EventSystem>& events);
 
-	[[nodiscard]] GameState GetState() const { return _state; }
+	[[nodiscard]] GameState GetState() const noexcept { return _state; }
 };

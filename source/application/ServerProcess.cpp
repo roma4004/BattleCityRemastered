@@ -1,14 +1,77 @@
 #include "application/ServerProcess.h"
+#include "network/Endpoints.h"
 #include "utils/Log.h"
+#include <charconv>
+#include <chrono>
+#include <cstdint>
 #include <filesystem>
+#include <fstream>
 #include <memory>
+#include <optional>
 #include <string>
 #include <system_error>
+#include <thread>
 #include <windows.h>
 
 namespace
 {
 constexpr auto kServerExeName{L"BattleCityServer.exe"};
+//NOTE: relative, so the name on the command line stays ASCII whatever the install path is - the child
+//runs with the exe's folder as its working directory. Two games hosting at once would share it, and the
+//second one would read the first one's port - a lobby is what fixes that, not a longer name
+constexpr auto kPortFileName{"server-port.txt"};
+constexpr auto kPortWait{std::chrono::seconds{5}};
+constexpr auto kPortPollStep{std::chrono::milliseconds{20}};
+
+//NOTE: the three options the child reads back - the host stays a bare literal, the port is its own word
+std::string ChildArguments(const network::ServerAddress& address)
+{
+	return " --address=" + address.host + " --port=" + std::to_string(address.port) + " --port-file="
+		   + kPortFileName;
+}
+
+std::optional<std::uint16_t> ReadPortFile(const std::filesystem::path& path)
+{
+	std::ifstream file{path};
+	std::string text;
+	if (!(file >> text))
+	{
+		return std::nullopt;
+	}
+
+	unsigned port{};
+	const auto* const first{text.data()};
+	const auto* const last{first + text.size()};
+	const auto [ptr, error] = std::from_chars(first, last, port);
+	if (error != std::errc{} || ptr != last || port == 0u || port > 65535u)
+	{
+		return std::nullopt;
+	}
+
+	return static_cast<std::uint16_t>(port);
+}
+
+//NOTE: the game dials the port, so it has to be in hand before the client node is built - hence a wait
+//here rather than a retry around the first connect. A child that died says so at once, without the timeout
+std::optional<std::uint16_t> WaitForPort(const std::filesystem::path& portFile, const HANDLE process)
+{
+	for (auto waited{std::chrono::milliseconds::zero()}; waited < kPortWait; waited += kPortPollStep)
+	{
+		if (const std::optional<std::uint16_t> port{ReadPortFile(portFile)})
+		{
+			return port;
+		}
+
+		if (WaitForSingleObject(process, 0u) != WAIT_TIMEOUT)
+		{
+			return std::nullopt;
+		}
+
+		std::this_thread::sleep_for(kPortPollStep);
+	}
+
+	return std::nullopt;
+}
 
 [[nodiscard]] std::string LastErrorText(const char* what)
 {
@@ -61,11 +124,11 @@ ServerProcess::ServerProcess() = default;
 
 ServerProcess::~ServerProcess() = default;
 
-bool ServerProcess::Start()
+std::optional<std::uint16_t> ServerProcess::Start(const network::ServerAddress& address)
 {
 	if (IsRunning())
 	{
-		return true;
+		return _boundPort;
 	}
 
 	const std::filesystem::path exe{ServerExePath()};
@@ -74,8 +137,12 @@ bool ServerProcess::Start()
 	{
 		Log::Error("ServerProcess: " + exe.string() + " is not next to the game exe");
 
-		return false;
+		return std::nullopt;
 	}
+
+	//NOTE: gone before the child starts, so what turns up later is this run's port and not the last one's
+	const std::filesystem::path portFile{exe.parent_path() / kPortFileName};
+	std::filesystem::remove(portFile, ec);
 
 	auto process{std::make_unique<Process>()};
 
@@ -84,7 +151,7 @@ bool ServerProcess::Start()
 	{
 		Log::Error("ServerProcess: " + LastErrorText("CreateJobObject"));
 
-		return false;
+		return std::nullopt;
 	}
 
 	//NOTE: the OS closes the handle for us if the game crashes without running its destructor
@@ -94,11 +161,12 @@ bool ServerProcess::Start()
 	{
 		Log::Error("ServerProcess: " + LastErrorText("SetInformationJobObject"));
 
-		return false;
+		return std::nullopt;
 	}
 
 	//NOTE: CreateProcess writes into this buffer, so it cannot be a literal
-	std::wstring commandLine{L"\"" + exe.wstring() + L"\""};
+	const std::string argument{ChildArguments(address)};
+	std::wstring commandLine{L"\"" + exe.wstring() + L"\"" + std::wstring(argument.begin(), argument.end())};
 
 	STARTUPINFOW startup{};
 	startup.cb = sizeof(startup);
@@ -115,7 +183,7 @@ bool ServerProcess::Start()
 	{
 		Log::Error("ServerProcess: " + LastErrorText("CreateProcess"));
 
-		return false;
+		return std::nullopt;
 	}
 
 	process->process = info.hProcess;
@@ -126,15 +194,25 @@ bool ServerProcess::Start()
 		Log::Error("ServerProcess: " + LastErrorText("AssignProcessToJobObject"));
 		TerminateProcess(info.hProcess, 1u);
 
-		return false;
+		return std::nullopt;
 	}
 
 	ResumeThread(info.hThread);
 
 	_process = std::move(process);
-	Log::Info("ServerProcess: started BattleCityServer");
 
-	return true;
+	_boundPort = WaitForPort(portFile, info.hProcess);
+	if (!_boundPort)
+	{
+		Log::Error("ServerProcess: BattleCityServer never reported a port");
+		_process.reset();
+
+		return std::nullopt;
+	}
+
+	Log::Info("ServerProcess: started BattleCityServer on port " + std::to_string(*_boundPort));
+
+	return _boundPort;
 }
 
 bool ServerProcess::IsRunning() const

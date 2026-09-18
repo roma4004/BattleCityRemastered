@@ -45,7 +45,6 @@ constexpr std::array s_recipes{
 		BonusRecipe{.type = BonusType::Grenade,
 					.emit = [](EventSystem& events, Author, const Faction faction)
 					{
-						//NOTE: the one bonus whose effect lands on the other side
 						events.EmitEvent(Key(EnemiesOf(faction)), BonusGrenadePickupEvent{});
 					}},
 		BonusRecipe{.type = BonusType::Tank,
@@ -97,8 +96,8 @@ static_assert(
 	using std::chrono::duration_cast;
 	using std::chrono::milliseconds;
 	constexpr auto period{1200ms};
-	constexpr unsigned int dark{0xB8860Bu};//NOTE: dark goldenrod
-	constexpr unsigned int light{0xFFEC8Cu};//NOTE: pale gold
+	constexpr unsigned int dark{0xB8860Bu};
+	constexpr unsigned int light{0xFFEC8Cu};
 
 	const auto phase{duration_cast<milliseconds>(TimeUtils::Now().time_since_epoch()) % period};
 	const float progress{static_cast<float>(phase.count()) / static_cast<float>(period.count())};
@@ -202,7 +201,7 @@ void Bonus::Draw() const
 									.rimColor = _isSuper ? SuperRimColor() : 0u});
 }
 
-bool Bonus::GetIsSuper() const { return _isSuper; }
+bool Bonus::GetIsSuper() const noexcept { return _isSuper; }
 
 void Bonus::Expire()
 {

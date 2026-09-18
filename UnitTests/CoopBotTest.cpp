@@ -50,7 +50,7 @@ protected:
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, _allObjects, _gameConfig);
 		_instantSpawnAnimationSubs = TestUtils::WireInstantSpawnAnimations(_events);
 		_gridSize = _gameConfig.gridOffset;
-		_tankSize = _gridSize * 3.0;// for better turns
+		_tankSize = _gridSize * 3.0;
 
 		//NOTE: the wall roll is pinned open, or every test that expects a shot at an obstacle would flake
 		_gameConfig.botShootObstacleChance = 1.0;
@@ -76,7 +76,6 @@ TEST_F(CoopBotTest, CoopNoChangeDirIfBonusOutsideLineOfSight)
 {
 	const auto coopBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN)};
 
-	// Spawn a bonus diagonally, out of the bot's direct line of sight
 	_bonusSpawner->SpawnRandomBonus({.x = _tankSize * 2.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize});
 
 	const Direction startDirCoop{coopBot->GetDirection()};
@@ -92,7 +91,6 @@ TEST_F(CoopBotTest, CoopShootToEnemy)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
 
-	// Spawn Enemy in line of sight
 	CreateBot({.x = 0.0, .y = _tankSize * 3.0}, Author::Enemy1, Direction::UP);
 
 	const size_t sizeBefore{_allObjects.size()};
@@ -101,7 +99,7 @@ TEST_F(CoopBotTest, CoopShootToEnemy)
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	const size_t sizeAfter{_allObjects.size()};
-	EXPECT_LT(sizeBefore, sizeAfter);// Bullet should be spawned
+	EXPECT_LT(sizeBefore, sizeAfter);
 	EXPECT_EQ(sizeAfter, 4u);
 }
 
@@ -109,7 +107,6 @@ TEST_F(CoopBotTest, CoopNoShootToCoop)
 {
 	const auto coopBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN)};
 
-	// Spawn another coopBot in line of sight first one
 	CreateBot({.x = 0.0, .y = _tankSize * 2.0}, Author::Player2, Direction::UP);
 
 	const size_t sizeBefore{_allObjects.size()};
@@ -123,7 +120,6 @@ TEST_F(CoopBotTest, CoopNoShootToPlayer1)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
 
-	// Spawn Player in line of sight Coop
 	const ObjRectangle rectPlayer{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
 	_allObjects.emplace_back(TestUtils::CreatePlayer(rectPlayer, _tankHealth, Author::Player1, _allObjects, _events,
 													 Direction::UP, _bulletPool, _gameConfig));

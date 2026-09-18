@@ -3,6 +3,7 @@
 #include "components/BonusSpawner.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
+#include "components/events/AnimationRenderEvents.h"
 #include "components/events/BonusPickupEvents.h"
 #include "components/events/ObjectLifecycleEvents.h"
 #include "components/events/ReplicationEvents.h"
@@ -16,6 +17,7 @@
 #include "utils/UuidUtils.h"
 #include "gtest/gtest.h"
 #include <memory>
+#include <optional>
 #include <vector>
 
 class ClientMirrorTest : public testing::Test
@@ -48,7 +50,7 @@ protected:
 	}
 };
 
-//NOTE: the host sends health as an absolute value - applying the heal here too would land it twice
+//NOTE: the server sends health as an absolute value - applying the heal here too would land it twice
 TEST_F(ClientMirrorTest, AClientTakesHealthOffTheWireInsteadOfHealingItself)
 {
 	const std::shared_ptr<Tank> enemy{TestUtils::CreateBot(_tankRect, _tankHealth, Author::Enemy1, _allObjects, _events,
@@ -65,8 +67,8 @@ TEST_F(ClientMirrorTest, AClientTakesHealthOffTheWireInsteadOfHealingItself)
 	EXPECT_EQ(enemy->GetHealth(), _tankHealth + _bonusHeal);
 }
 
-//NOTE: the burst only draws here - what puts the bonus on the field is the host saying it settled
-TEST_F(ClientMirrorTest, ABonusLandsWhenTheHostSaysItSettled)
+//NOTE: the burst only draws here - what puts the bonus on the field is the server saying it settled
+TEST_F(ClientMirrorTest, ABonusLandsWhenTheServerSaysItSettled)
 {
 	const Uuid uuid{UuidUtils::GetRandomUuid()};
 
@@ -80,7 +82,21 @@ TEST_F(ClientMirrorTest, ABonusLandsWhenTheHostSaysItSettled)
 	EXPECT_EQ(_allObjects.size(), 1u);
 }
 
-//NOTE: a bonus picked up mid-burst is never completed by the host, so no ghost is left behind
+//NOTE: the server's loop may run slower than ours - a burst of our own would end before the bonus lands
+TEST_F(ClientMirrorTest, AClientBonusBurstWaitsForTheServer)
+{
+	std::optional<AnimationCreateBonusSpawnEvent> burst{};
+	const EventSubscription burstSub{_events->AddListener(
+			[&burst](const AnimationCreateBonusSpawnEvent& event) { burst = event; })};
+
+	const Uuid uuid{UuidUtils::GetRandomUuid()};
+	_events->EmitEvent(BonusSpawnedEvent{.pos = _bonusPos, .type = BonusType::Star, .uuid = uuid, .isSuper = false});
+
+	ASSERT_TRUE(burst.has_value());
+	EXPECT_TRUE(burst->isEndless);
+}
+
+//NOTE: a bonus picked up mid-burst is never completed by the server, so no ghost is left behind
 TEST_F(ClientMirrorTest, ABonusRetiredDuringItsBurstNeverLands)
 {
 	const Uuid uuid{UuidUtils::GetRandomUuid()};

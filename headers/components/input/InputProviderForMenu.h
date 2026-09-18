@@ -61,7 +61,7 @@ public:
 	void Reset();
 	void MenuUpdate();
 	void TogglePause();
-	bool GetPause() const;
+	bool GetPause() const noexcept;
 	void SetPause(bool value);
 
 	void ToggleUp();

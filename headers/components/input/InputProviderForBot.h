@@ -13,7 +13,6 @@ class GameConfig;
 class LineOfSight;
 class Tank;
 
-//NOTE: the turn timer and the line-of-sight pass - state of a decision, not of a tank
 class InputProviderForBot final : public IInputProvider
 {
 	const std::vector<std::shared_ptr<BaseObj>>& _allObjects;
@@ -47,6 +46,10 @@ class InputProviderForBot final : public IInputProvider
 
 	//NOTE: a bot must not fire into something closer than its own blast, or the shot takes it too
 	[[nodiscard]] static bool IsClearToFire(const Tank& self, Direction dir, const BaseObj& target);
+
+	[[nodiscard]] bool CanDriveToBonus(const Tank& self, Direction dir);
+
+	[[nodiscard]] static std::shared_ptr<BaseObj> NearestAhead(LineOfSight& lineOfSight, Direction dir);
 
 	[[nodiscard]] std::shared_ptr<BaseObj> HandleLineOfSight(Tank& self);
 

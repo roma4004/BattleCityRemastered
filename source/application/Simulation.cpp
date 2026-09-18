@@ -1,4 +1,5 @@
 #include "application/Simulation.h"
+#include "utils/Log.h"
 #include "application/GameConfig.h"
 #include "components/EventSystem.h"
 #include "components/GameStatistics.h"
@@ -90,13 +91,27 @@ void Simulation::OnGameModeChangedTo(const GameModeChangedToEvent& event)
 	//connect) while the outgoing one still holds both
 	_networkNode.reset();
 
+	_boundPort = 0u;
+
 	if (IsHost(event.mode))
 	{
-		_networkNode = std::make_unique<network::commands::ServerNode>(_events);
+		auto server{std::make_unique<network::commands::ServerNode>(_gameConfig.serverAddress, _events)};
+		//NOTE: asked for port 0, the OS picked one - read it here, while the concrete type is still in hand
+		_boundPort = server->GetBoundPort();
+		_networkNode = std::move(server);
 	}
 	else if (IsClient(event.mode))
 	{
-		_networkNode = std::make_unique<network::commands::ClientNode>(_events);
+		//NOTE: a port nobody named is a free one, which only a server can use - a client has nothing to dial
+		if (_gameConfig.serverAddress.port == network::kAnyFreePort)
+		{
+			Log::Error("no server port to join: pass --port=N, or let the game bring its own server up"
+					   " with --server");
+
+			return;
+		}
+
+		_networkNode = std::make_unique<network::commands::ClientNode>(_gameConfig.serverAddress, _events);
 	}
 }
 

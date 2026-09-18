@@ -77,7 +77,6 @@ TEST_F(BulletTest, BulletMoveInsideScreen)
 	const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};
 
 	{
-		//success bullet moves down test, try to move inside a screen bullet
 		bullet->SetDirection(Direction::DOWN);
 		const FPoint bulletStartPos{bullet->GetPos()};
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
@@ -86,7 +85,6 @@ TEST_F(BulletTest, BulletMoveInsideScreen)
 		EXPECT_EQ(bulletStartPos.x, bulletEndPos.x);
 	}
 	{
-		//success bullet right test, try to move inside a screen bullet
 		bullet->SetDirection(Direction::RIGHT);
 		const FPoint bulletStartPos{bullet->GetPos()};
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
@@ -100,7 +98,6 @@ TEST_F(BulletTest, BulletMoveInsideScreen)
 
 	bullet->SetPos({.x = windowWidth - _calibre.size.x, .y = windowHeight - _calibre.size.y});
 	{
-		//success shot up test, try to create an inside screen bullet
 		bullet->SetDirection(Direction::UP);
 		const FPoint bulletStartPos{bullet->GetPos()};
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
@@ -109,7 +106,6 @@ TEST_F(BulletTest, BulletMoveInsideScreen)
 		EXPECT_EQ(bulletStartPos.x, bulletEndPos.x);
 	}
 	{
-		//success move left test, try to move inside a screen bullet
 		bullet->SetDirection(Direction::LEFT);
 		const FPoint bulletStartPos{bullet->GetPos()};
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
@@ -128,14 +124,12 @@ TEST_F(BulletTest, BulletMoveOutSideScreen)
 
 	bullet->SetPos({.x = windowWidth - _calibre.size.x, .y = windowHeight - _calibre.size.y});
 	{
-		//fail bullet move down test, try to move an outside screen bullet
 		bullet->SetDirection(Direction::DOWN);
 		const FPoint bulletStartPos{bullet->GetPos()};
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 		EXPECT_EQ(bulletStartPos, bullet->GetPos());
 	}
 	{
-		//fail the bullet move right test, try to move an outside screen bullet
 		bullet->SetDirection(Direction::RIGHT);
 		const FPoint bulletStartPos{bullet->GetPos()};
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
@@ -144,14 +138,12 @@ TEST_F(BulletTest, BulletMoveOutSideScreen)
 
 	bullet->SetPos({.x = 0.0, .y = 0.0});
 	{
-		//fail bullet move up test, try to move an outside screen bullet
 		bullet->SetDirection(Direction::UP);
 		const FPoint bulletStartPos{bullet->GetPos()};
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 		EXPECT_EQ(bulletStartPos, bullet->GetPos());
 	}
 	{
-		//fail the bullet move left test, try to move an outside screen bullet
 		bullet->SetDirection(Direction::LEFT);
 		const FPoint bulletStartPos{bullet->GetPos()};
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
@@ -270,7 +262,7 @@ TEST_F(BulletTest, BulletDamageTank)
 	CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
 
 	const double gridSize{_gameConfig.gridOffset};
-	const double tankSize{gridSize * 3};// for better turns
+	const double tankSize{gridSize * 3};
 	constexpr unsigned short tankHealth{1u};
 	const auto bulletPool{std::make_shared<BulletPool>(_events, _allObjects, _gameConfig)};
 	const ObjRectangle rectEnemy{.x = 0, .y = _calibre.size.y, .w = tankSize, .h = tankSize};

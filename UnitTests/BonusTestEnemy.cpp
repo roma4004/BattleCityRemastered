@@ -21,6 +21,8 @@
 #include "enums/Faction.h"
 #include <memory>
 
+// the shovel in an enemy's hands is the mirror of the player's: instead of upgrading the fortress wall
+// it takes the wall away, whatever the wall is made of
 class BonusTestEnemy : public testing::Test// NOLINT(clang-diagnostic-padded)
 {
 protected:
@@ -57,21 +59,20 @@ protected:
 		_obstacleSpawner = std::make_unique<ObstacleSpawner>(_events, _gameConfig);
 		_fortressWallSub = TestUtils::TrackFortressWall(_events, &_fortressWall);
 		_gridSize = _gameConfig.gridOffset;
-		_tankSize = _gridSize * 3.0;// for better turns
+		_tankSize = _gridSize * 3.0;
 	}
 
 	void TearDown() override {}
 };
 
 
-// NOTE: when the enemy picks up bonusShovel, then fortressWalls hide (destroy) brick walls around it
+// the wall is brick when the enemy takes the shovel
 TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressBricWallkHide)
 {
 	const ObjRectangle rectEnemy{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
 	const std::shared_ptr<Tank> enemyBot{TestUtils::CreateBot(rectEnemy, _tankHealth, Author::Enemy1, _allObjects,
 															  _events, Direction::DOWN, _bulletPool, _gameConfig)};
 
-	// register a fortress wall
 	const ObjRectangle fortressRect{.x = _tankSize + 1.0, .y = 0, .w = _gridSize, .h = _gridSize};
 	_events->EmitEvent(SpawnObstacleEvent{.rect = fortressRect, .type = ObstacleType::Fortress});
 
@@ -84,8 +85,7 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressBricWallkHide)
 	EXPECT_FALSE(_fortressWall->GetIsAlive());
 }
 
-// NOTE: player pickup bonusShovel, then fortressWalls become steelWalls (BonusShovel_Pickup),
-//       then enemy pickup bonusShovel, then fortressWalls should hide (destroy) steel walls around it
+// a player takes a shovel first, so the enemy's finds steel - it goes just the same
 TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressSteelWallHide)
 {
 	const ObjRectangle rectEnemy{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
@@ -100,7 +100,6 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressSteelWallHide)
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
 
-	// register a fortress wall
 	const ObjRectangle fortressRect{.x = _tankSize * 3.0 + 1.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize};
 	_events->EmitEvent(SpawnObstacleEvent{.rect = fortressRect, .type = ObstacleType::Fortress});
 

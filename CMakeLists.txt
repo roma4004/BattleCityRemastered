@@ -39,6 +39,7 @@ set(GAME_PLATFORM_SOURCES
 # GameCore sources: every game .cpp except main.cpp (the exe's own entry point) and the platform list above
 set(GAME_CORE_SOURCES
         source/application/CommandLineParser.cpp
+        source/application/ConsoleCommand.cpp
         source/application/GameConfig.cpp
         source/application/WindowConfig.cpp
         source/application/ProjectConfig.cpp
@@ -65,6 +66,7 @@ set(GAME_CORE_SOURCES
         source/components/input/InputProviderForMenu.cpp
         source/components/input/InputProviderForBot.cpp
         source/components/input/InputProviderForPlayer.cpp
+        source/components/input/GamepadDirection.cpp
         source/components/managers/AnimationManager.cpp
         source/components/managers/BonusManager.cpp
         source/components/managers/FramePerSecondManager.cpp
@@ -120,10 +122,12 @@ set(UNIT_TESTS_SOURCES
         UnitTests/BulletsTestBasic.cpp
         UnitTests/ClientHandshakeTest.cpp
         UnitTests/CommandLineParserTest.cpp
+        UnitTests/ConsoleCommandTest.cpp
         UnitTests/ProjectConfigTest.cpp
         UnitTests/CoopBotTest.cpp
         UnitTests/DeadObjectFilterTest.cpp
         UnitTests/DirectionUtilsTest.cpp
+        UnitTests/GamepadDirectionTest.cpp
         UnitTests/EnemyBotTest.cpp
         UnitTests/GameStateManagerTest.cpp
         UnitTests/GameStateTest.cpp
@@ -179,7 +183,7 @@ target_link_libraries(GamePlatform PUBLIC
 add_executable(${PROJECT_NAME} source/main.cpp)
 #NOTE: GameCore alone, exactly like UnitTests - SDL cannot reach BattleCityServer by
 #construction, and the console is all the output it has
-add_executable(BattleCityServer source/server_main.cpp)
+add_executable(BattleCityServer source/server_main.cpp source/application/ServerConsole.cpp)
 add_executable(UnitTests ${UNIT_TESTS_SOURCES})
 
 target_include_directories(UnitTests PRIVATE headers)

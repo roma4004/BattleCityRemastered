@@ -7,6 +7,7 @@
 #include "components/events/InputEvents.h"
 #include "components/events/RenderUIEvents.h"
 #include "components/events/TimingEvents.h"
+#include "enums/Direction.h"
 #include "enums/GameMode.h"
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_gamepad.h>
@@ -26,10 +27,11 @@ namespace
 }// namespace
 
 UserInput::UserInput(const std::shared_ptr<EventSystem>& events, const WindowConfig& windowConfig,
-					 const SDL_Config& sdlConfig)
+					 const SDL_Config& sdlConfig, const int gamepadDeadZone)
 	: _selectedGameMode{GameMode::OnePlayer}
 	, _windowSize{windowConfig.size}
 	, _events{events}
+	, _gamepadDeadZone{gamepadDeadZone}
 	, _sdlConfig{sdlConfig}
 {
 	Subscribe();
@@ -269,7 +271,7 @@ void UserInput::KeyboardEvents(const SDL_Event& event) const
 	}
 }
 
-void UserInput::GamepadKeyPressRelease(const SDL_Event& event, const bool& isPressed) const
+void UserInput::GamepadKeyPressRelease(const SDL_Event& event, const bool& isPressed)
 {
 	if (ConnectedJoystickCount() > 0)
 	{
@@ -303,16 +305,16 @@ void UserInput::GamepadKeyPressRelease(const SDL_Event& event, const bool& isPre
 				}
 				break;
 			case SDL_GAMEPAD_BUTTON_DPAD_UP:
-				_events->EmitEvent(Key(LocalInput(controllerSlot)), MoveUpEvent{.isPressed = isPressed});
+				SteerByDpad(event.gbutton.which, Direction::UP, isPressed);
 				break;
 			case SDL_GAMEPAD_BUTTON_DPAD_DOWN:
-				_events->EmitEvent(Key(LocalInput(controllerSlot)), MoveDownEvent{.isPressed = isPressed});
+				SteerByDpad(event.gbutton.which, Direction::DOWN, isPressed);
 				break;
 			case SDL_GAMEPAD_BUTTON_DPAD_LEFT:
-				_events->EmitEvent(Key(LocalInput(controllerSlot)), MoveLeftEvent{.isPressed = isPressed});
+				SteerByDpad(event.gbutton.which, Direction::LEFT, isPressed);
 				break;
 			case SDL_GAMEPAD_BUTTON_DPAD_RIGHT:
-				_events->EmitEvent(Key(LocalInput(controllerSlot)), MoveRightEvent{.isPressed = isPressed});
+				SteerByDpad(event.gbutton.which, Direction::RIGHT, isPressed);
 				break;
 			case SDL_GAMEPAD_BUTTON_START:
 				if (isPressed == false)
@@ -347,6 +349,11 @@ void UserInput::GamepadEvents(const SDL_Event& event)
 			GamepadKeyPressRelease(event, false);
 			break;
 		}
+		case SDL_EVENT_GAMEPAD_AXIS_MOTION:
+		{
+			SteerByStick(event.gaxis);
+			break;
+		}
 		case SDL_EVENT_GAMEPAD_ADDED:
 		{
 			Log::Info("joysticks: " + std::to_string(ConnectedJoystickCount()));
@@ -357,11 +364,114 @@ void UserInput::GamepadEvents(const SDL_Event& event)
 		{
 			const SDL_JoystickID instanceId{event.gdevice.which};
 			Log::Info("controller removed (instance " + std::to_string(instanceId) + ')');
-			DisconnectController(instanceId);
+			ReleaseGamepad(instanceId);
 			break;
 		}
 
 		default:
+			break;
+	}
+}
+
+void UserInput::SteerByDpad(const SDL_JoystickID instanceId, const Direction dir, const bool isPressed)
+{
+	GamepadDirection& direction{DirectionOf(instanceId)};
+	const std::optional<Direction> before{direction.Held()};
+	if (isPressed)
+	{
+		direction.PressDpad(dir);
+	}
+	else
+	{
+		direction.ReleaseDpad(dir);
+	}
+
+	EmitHeldChange(instanceId, before, direction.Held());
+}
+
+void UserInput::SteerByStick(const SDL_GamepadAxisEvent& event)
+{
+	if (event.axis != SDL_GAMEPAD_AXIS_LEFTX && event.axis != SDL_GAMEPAD_AXIS_LEFTY)
+	{
+		return;
+	}
+
+	GamepadDirection& direction{DirectionOf(event.which)};
+	const std::optional<Direction> before{direction.Held()};
+	if (event.axis == SDL_GAMEPAD_AXIS_LEFTX)
+	{
+		direction.MoveStickX(event.value);
+	}
+	else
+	{
+		direction.MoveStickY(event.value);
+	}
+
+	EmitHeldChange(event.which, before, direction.Held());
+}
+
+//NOTE: the held direction goes first and the seat second - a pad pulled out mid-turn would otherwise
+//leave the tank driving with nothing to stop it
+void UserInput::ReleaseGamepad(const SDL_JoystickID instanceId)
+{
+	if (const auto it{_gamepadDirections.find(instanceId)}; it != _gamepadDirections.end())
+	{
+		EmitHeldChange(instanceId, it->second.Held(), std::nullopt);
+		_gamepadDirections.erase(it);
+	}
+
+	const auto isSameId = [instanceId](const std::shared_ptr<SDL_Gamepad>& controller)
+	{
+		return IsSameController(controller, instanceId);
+	};
+
+	if (const auto it{std::ranges::find_if(_slotsForController, isSameId)}; it != _slotsForController.end())
+	{
+		it->reset();
+	}
+}
+
+GamepadDirection& UserInput::DirectionOf(const SDL_JoystickID instanceId)
+{
+	return _gamepadDirections.try_emplace(instanceId, _gamepadDeadZone).first->second;
+}
+
+//NOTE: the tank reads held flags, so only a change is sent - the old side let go before the new one pressed
+void UserInput::EmitHeldChange(const SDL_JoystickID instanceId, const std::optional<Direction> before,
+							   const std::optional<Direction> after) const
+{
+	if (before == after)
+	{
+		return;
+	}
+
+	const InputChannel channel{LocalInput(ControllerSlotDefiner(instanceId))};
+	if (before)
+	{
+		EmitMove(channel, *before, false);
+	}
+
+	if (after)
+	{
+		EmitMove(channel, *after, true);
+	}
+}
+
+void UserInput::EmitMove(const InputChannel channel, const Direction dir, const bool isPressed) const
+{
+	switch (dir)
+	{
+		case Direction::UP:
+			_events->EmitEvent(Key(channel), MoveUpEvent{.isPressed = isPressed});
+			break;
+		case Direction::LEFT:
+			_events->EmitEvent(Key(channel), MoveLeftEvent{.isPressed = isPressed});
+			break;
+		case Direction::DOWN:
+			_events->EmitEvent(Key(channel), MoveDownEvent{.isPressed = isPressed});
+			break;
+		case Direction::RIGHT:
+			_events->EmitEvent(Key(channel), MoveRightEvent{.isPressed = isPressed});
 			break;
 	}
 }
@@ -417,9 +527,9 @@ void UserInput::Update()
 	OnWindowDragStop();
 }
 
-bool UserInput::IsShutdown() const { return _isShutdown; }
+bool UserInput::IsShutdown() const noexcept { return _isShutdown; }
 
-bool UserInput::IsPause() const { return _isPause; }
+bool UserInput::IsPause() const noexcept { return _isPause; }
 
 void UserInput::ConnectController(const std::shared_ptr<SDL_Gamepad>& newController)
 {
@@ -433,20 +543,6 @@ void UserInput::ConnectController(const std::shared_ptr<SDL_Gamepad>& newControl
 	else
 	{
 		_slotsForController.push_back(newController);
-	}
-}
-
-void UserInput::DisconnectController(const SDL_JoystickID instanceId)
-{
-	const auto isSameId = [instanceId](const std::shared_ptr<SDL_Gamepad>& controller)
-	{
-		return IsSameController(controller, instanceId);
-	};
-
-	if (const auto it{std::ranges::find_if(_slotsForController, isSameId)};
-		it != _slotsForController.end())
-	{
-		it->reset();
 	}
 }
 

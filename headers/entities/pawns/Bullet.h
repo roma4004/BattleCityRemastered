@@ -41,13 +41,13 @@ public:
 
 	~Bullet() override;
 
-	[[nodiscard]] unsigned int GetDamage() const;
+	[[nodiscard]] unsigned int GetDamage() const noexcept;
 
-	[[nodiscard]] double GetDamageRadius() const;
+	[[nodiscard]] double GetDamageRadius() const noexcept;
 
 	[[nodiscard]] Uuid GetUuid() const override;
 
-	[[nodiscard]] unsigned int GetTier() const;
+	[[nodiscard]] unsigned int GetTier() const noexcept;
 
 	void DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList);
 };

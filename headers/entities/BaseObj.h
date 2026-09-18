@@ -39,21 +39,21 @@ public:
 	virtual void Activate() {}
 	virtual void Deactivate() {}
 
-	[[nodiscard]] FPoint GetPos() const;
+	[[nodiscard]] FPoint GetPos() const noexcept;
 	void SetPos(const FPoint& pos);
-	[[nodiscard]] double GetRightSide() const;
+	[[nodiscard]] double GetRightSide() const noexcept;
 
-	[[nodiscard]] double GetBottomSide() const;
-	[[nodiscard]] double GetX() const;
+	[[nodiscard]] double GetBottomSide() const noexcept;
+	[[nodiscard]] double GetX() const noexcept;
 	void SetX(const FPoint& pos);
 
-	[[nodiscard]] double GetY() const;
+	[[nodiscard]] double GetY() const noexcept;
 	void SetY(const FPoint& pos);
 
-	[[nodiscard]] double GetWidth() const;
+	[[nodiscard]] double GetWidth() const noexcept;
 	void SetWidth(double width);
 
-	[[nodiscard]] double GetHeight() const;
+	[[nodiscard]] double GetHeight() const noexcept;
 	void SetHeight(double height);
 
 	void MoveX(double i);
@@ -73,12 +73,12 @@ public:
 
 	[[nodiscard]] bool GetIsPenetrable() const override;
 
-	[[nodiscard]] Terrain GetTerrain() const;
+	[[nodiscard]] Terrain GetTerrain() const noexcept;
 
 	//NOTE: a reference to the live member, so it follows the object as it moves
 	[[nodiscard]] virtual const ObjRectangle& GetRect() const;
 
 	[[nodiscard]] virtual Uuid GetUuid() const;
 	virtual void SetId(Uuid uuid);
-	[[nodiscard]] Faction GetFaction() const;
+	[[nodiscard]] Faction GetFaction() const noexcept;
 };

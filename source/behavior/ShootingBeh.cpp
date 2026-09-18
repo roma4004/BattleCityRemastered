@@ -71,7 +71,6 @@ Uuid ShootingBeh::Shot(const std::optional<Uuid> uuid)
 	const ObjRectangle rect{GetBulletStartRect()};
 	if (rect.x < 0.0 || rect.y < 0.0)
 	{
-		//the muzzle would land off the field
 		return {};
 	}
 
