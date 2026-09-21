@@ -2,6 +2,7 @@
 #include "application/GameConfig.h"
 #include "components/BonusSpawner.h"
 #include "components/BulletPool.h"
+#include "components/TankPool.h"
 #include "components/EventSystem.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "components/events/BonusPickupEvents.h"
@@ -25,13 +26,13 @@ class ClientMirrorTest : public testing::Test
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
+	std::shared_ptr<TankPool> _tankPool{nullptr};
 	std::unique_ptr<BonusSpawner> _bonusSpawner{nullptr};
 	GameConfig _gameConfig{};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	std::vector<HealthChangedEvent> _reportedHealth;
 	EventSubscription _spawnQueueSub{};
 	EventSubscription _healthSub{};
-	ObjRectangle _tankRect{.x = 100.0, .y = 100.0, .w = 36.0, .h = 36.0};
 	FPoint _bonusPos{.x = 200.0, .y = 200.0};
 	int _tankHealth{100};
 	int _bonusHeal{50};
@@ -42,19 +43,28 @@ protected:
 		_events = std::make_shared<EventSystem>();
 		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, _allObjects);
 		_bulletPool = std::make_shared<BulletPool>(_events, _allObjects, _gameConfig);
+		_tankPool = std::make_shared<TankPool>(_events, _allObjects, _gameConfig, _bulletPool);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, _allObjects, _gameConfig);
 		_healthSub = _events->AddListener([this](const HealthChangedEvent& event)
 		{
 			_reportedHealth.push_back(event);
 		});
 	}
+
+	std::shared_ptr<Tank> CreateBot(const FPoint pos, const Author author, const unsigned short tier = 1u)
+	{
+		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _gameConfig.tankSize, .h = _gameConfig.tankSize};
+		auto bot{TestUtils::CreateBot(rect, _tankHealth, author, _allObjects, _events, Direction::UP, _tankPool,
+									  _gameConfig, tier)};
+
+		return bot;
+	}
 };
 
 //NOTE: the server sends health as an absolute value - applying the heal here too would land it twice
 TEST_F(ClientMirrorTest, AClientTakesHealthOffTheWireInsteadOfHealingItself)
 {
-	const std::shared_ptr<Tank> enemy{TestUtils::CreateBot(_tankRect, _tankHealth, Author::Enemy1, _allObjects, _events,
-														   Direction::UP, _bulletPool, _gameConfig)};
+	const auto enemy{CreateBot({.x = 100.0, .y = 100.0}, Author::Enemy1)};
 
 	_events->EmitEvent(Key(Author::Enemy1), BonusStarPickupEvent{});
 

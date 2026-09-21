@@ -13,7 +13,7 @@ std::mutex g_writeMutex;
 }// namespace
 
 bool Log::_consoleEnabled{true};
-bool Log::_fileEnabled{false};
+bool Log::_fileEnabled{};
 Log::Level Log::_level{Level::Normal};
 std::string Log::_filename{"game_log.txt"};
 

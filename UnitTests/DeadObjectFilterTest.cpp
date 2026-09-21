@@ -1,7 +1,9 @@
 #include "TestUtils.h"
+#include "components/ObstacleSpawner.h"
 #include "application/GameConfig.h"
 #include "components/BonusSpawner.h"
 #include "components/BulletPool.h"
+#include "components/TankPool.h"
 #include "components/EventSystem.h"
 #include "components/events/InputEvents.h"
 #include "components/events/ObjectLifecycleEvents.h"
@@ -25,7 +27,9 @@ class DeadObjectFilterTest : public testing::Test// NOLINT(clang-diagnostic-padd
 {
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
+	std::unique_ptr<ObstacleSpawner> _obstacleSpawner{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
+	std::shared_ptr<TankPool> _tankPool{nullptr};
 	std::unique_ptr<BonusSpawner> _bonusSpawner{nullptr};
 	std::vector<EventSubscription> _instantSpawnAnimationSubs{};
 	GameConfig _gameConfig{};
@@ -40,13 +44,37 @@ protected:
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
+		_obstacleSpawner = std::make_unique<ObstacleSpawner>(_events, _gameConfig);
 		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, _allObjects);
 		_bulletPool = std::make_shared<BulletPool>(_events, _allObjects, _gameConfig);
+		_tankPool = std::make_shared<TankPool>(_events, _allObjects, _gameConfig, _bulletPool);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, _allObjects, _gameConfig);
 		_instantSpawnAnimationSubs = TestUtils::WireInstantSpawnAnimations(_events);
 		_tankSize = _gameConfig.tankSize;
 
 		_allObjects.reserve(8);
+	}
+
+	std::shared_ptr<Tank> CreatePlayer(const FPoint pos, const Author author, const Direction dir, const int health)
+	{
+		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _gameConfig.tankSize, .h = _gameConfig.tankSize};
+		auto player{TestUtils::CreatePlayer(rect, health, author, _allObjects, _events, dir, _tankPool, _gameConfig)};
+
+		return player;
+	}
+
+	std::shared_ptr<Bullet> CreateBullet(const FPoint pos, const Direction dir, const Author author)
+	{
+		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _calibre.size.x, .h = _calibre.size.y};
+		auto bullet{TestUtils::CreateBullet(rect, 1, _bulletPool, _events, _calibre, dir,
+											author)};
+
+		return bullet;
+	}
+
+	std::shared_ptr<BaseObj> SpawnObstacle(const FPoint pos, const ObstacleType type) const
+	{
+		return TestUtils::SpawnObstacle(_events, _allObjects, pos, type, _gameConfig);
 	}
 };
 
@@ -54,7 +82,7 @@ protected:
 // one per tank that reached it
 TEST_F(DeadObjectFilterTest, BonusIsPickedUpOncePerFrame)
 {
-	int pickups{0};
+	int pickups{};
 	const EventSubscription pickupSub{_events->AddListener([&pickups](const StatisticsBonusPickupEvent&)
 	{
 		++pickups;
@@ -65,15 +93,8 @@ TEST_F(DeadObjectFilterTest, BonusIsPickedUpOncePerFrame)
 	auto* bonus{dynamic_cast<Bonus*>(_allObjects.back().get())};
 	ASSERT_NE(nullptr, bonus);
 
-	const std::shared_ptr<Tank> playerAbove{TestUtils::CreatePlayer(
-			ObjRectangle{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize}, _gameConfig.tankHealth, Author::Player1,
-			_allObjects, _events, Direction::DOWN, _bulletPool, _gameConfig)};
-	_allObjects.emplace_back(playerAbove);
-
-	const std::shared_ptr<Tank> playerBelow{TestUtils::CreatePlayer(
-			ObjRectangle{.x = 0.0, .y = _tankSize * 2.0 + 2.0, .w = _tankSize, .h = _tankSize}, _gameConfig.tankHealth,
-			Author::Player2, _allObjects, _events, Direction::UP, _bulletPool, _gameConfig)};
-	_allObjects.emplace_back(playerBelow);
+	CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN, _gameConfig.tankHealth);
+	CreatePlayer({.x = 0.0, .y = _tankSize * 2.0 + 2.0}, Author::Player2, Direction::UP, _gameConfig.tankHealth);
 
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
@@ -89,23 +110,14 @@ TEST_F(DeadObjectFilterTest, BonusIsPickedUpOncePerFrame)
 // zero instead of going negative
 TEST_F(DeadObjectFilterTest, BrickWallHitByTwoBulletsDiesOnce)
 {
-	int deaths{0};
+	int deaths{};
 	const EventSubscription deathSub{_events->AddListener([&deaths](const BrickWallDiedEvent&) { ++deaths; })};
 
 	const double cell{_gameConfig.gridOffset};
-	auto wall{std::make_shared<BrickWall>(ObjRectangle{.x = 100.0, .y = 100.0, .w = cell, .h = cell}, _events,
-										  _uuid, _gameConfig)};
-	_allObjects.emplace_back(wall);
+	const auto wall{SpawnObstacle(FPoint{.x = 100.0, .y = 100.0}, ObstacleType::Brick)};
 
-	const ObjRectangle fromLeft{.x = 100.0 - _calibre.size.x, .y = 103.0, .w = _calibre.size.x, .h = _calibre.size.y};
-	auto bullet1{TestUtils::CreateBullet(fromLeft, 1, _allObjects, _events, _calibre, Direction::RIGHT, _gameConfig,
-										 Author::Player1)};
-	_allObjects.emplace_back(bullet1);
-
-	const ObjRectangle fromRight{.x = 100.0 + cell, .y = 103.0, .w = _calibre.size.x, .h = _calibre.size.y};
-	auto bullet2{TestUtils::CreateBullet(fromRight, 1, _allObjects, _events, _calibre, Direction::LEFT, _gameConfig,
-										 Author::Player1)};
-	_allObjects.emplace_back(bullet2);
+	CreateBullet({.x = 100.0 - _calibre.size.x, .y = 103.0}, Direction::RIGHT, Author::Player1);
+	CreateBullet({.x = 100.0 + cell, .y = 103.0}, Direction::LEFT, Author::Player1);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -118,23 +130,13 @@ TEST_F(DeadObjectFilterTest, BrickWallHitByTwoBulletsDiesOnce)
 // a corpse and is not counted
 TEST_F(DeadObjectFilterTest, TankKilledThisFrameTakesNoSecondHit)
 {
-	int deaths{0};
+	int deaths{};
 	const EventSubscription deathSub{_events->AddListener([&deaths](const TankDiedEvent&) { ++deaths; })};
 
-	const std::shared_ptr<Tank> player{TestUtils::CreatePlayer(
-			ObjRectangle{.x = 100.0, .y = 100.0, .w = _tankSize, .h = _tankSize}, _tankHealth, Author::Player1,
-			_allObjects, _events, Direction::UP, _bulletPool, _gameConfig)};
-	_allObjects.emplace_back(player);
+	const auto player{CreatePlayer({.x = 100.0, .y = 100.0}, Author::Player1, Direction::UP, _tankHealth)};
 
-	const ObjRectangle fromLeft{.x = 100.0 - _calibre.size.x, .y = 115.0, .w = _calibre.size.x, .h = _calibre.size.y};
-	auto bullet1{TestUtils::CreateBullet(fromLeft, 1, _allObjects, _events, _calibre, Direction::RIGHT, _gameConfig,
-										 Author::Enemy1)};
-	_allObjects.emplace_back(bullet1);
-
-	const ObjRectangle fromRight{.x = 100.0 + _tankSize, .y = 115.0, .w = _calibre.size.x, .h = _calibre.size.y};
-	auto bullet2{TestUtils::CreateBullet(fromRight, 1, _allObjects, _events, _calibre, Direction::LEFT, _gameConfig,
-										 Author::Enemy2)};
-	_allObjects.emplace_back(bullet2);
+	CreateBullet({.x = 100.0 - _calibre.size.x, .y = 115.0}, Direction::RIGHT, Author::Enemy1);
+	CreateBullet({.x = 100.0 + _tankSize, .y = 115.0}, Direction::LEFT, Author::Enemy2);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 

@@ -2,9 +2,9 @@
 
 struct PlayerKeys final
 {
-	bool up{false};
-	bool left{false};
-	bool down{false};
-	bool right{false};
-	bool shot{false};
+	bool up{};
+	bool left{};
+	bool down{};
+	bool right{};
+	bool shot{};
 };

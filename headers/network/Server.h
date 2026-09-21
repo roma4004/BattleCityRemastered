@@ -1,19 +1,25 @@
 #pragma once
 
+#include "DatagramLink.h"
 #include "Endpoints.h"
-#include "enums/DisconnectReason.h"
 #include "ReplicationPublisher.h"
 #include "Session.h"
+#include "WireFrame.h"
 #include "components/EventSystem.h"
+#include "enums/DisconnectReason.h"
 #include "enums/PlayerSlot.h"
+#include <array>
+#include <atomic>
 #include <boost/asio/io_context.hpp>
-#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/ip/udp.hpp>
+#include <boost/asio/steady_timer.hpp>
 #include <cstdint>
 #include <functional>
 #include <memory>
 #include <mutex>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 struct NetworkEndFrameEvent;
@@ -25,7 +31,7 @@ class EventSystem;
 
 namespace network::commands
 {
-using boost::asio::ip::tcp;
+using boost::asio::ip::udp;
 
 class Server final
 {
@@ -39,43 +45,63 @@ public:
 
 	void Shutdown(DisconnectReason reason, const std::function<void()>& onClosed);
 
-	//NOTE: remembered, not asked - a closed acceptor has no local endpoint
-	[[nodiscard]] uint16_t GetBoundPort() const noexcept { return _endpoint.port(); }
+	[[nodiscard]] uint16_t GetBoundPort() const noexcept { return _boundPort; }
 
 	void ProcessNetworkCommands() const;
 
 private:
-	void DoAccept();
+	using Clock = DatagramLink::Clock;
+
+	void Receive();
+	void OnDatagram(std::string_view datagram, Clock::time_point now);
 
 	//NOTE: the seat is whatever FindFreeSlot has left - the order clients arrive in is the order they sit
-	void Seat(tcp::socket socket);
+	void Seat(const udp::endpoint& endpoint, std::uint32_t connectionId, std::string_view hello,
+			  Clock::time_point now);
 
-	void RefuseSeat(tcp::socket socket) const;
+	//NOTE: told why, the client waits for a free match instead of burning its retries
+	void RefuseSeat(const udp::endpoint& endpoint, std::uint32_t connectionId, Clock::time_point now);
 
-	[[nodiscard]] std::vector<std::shared_ptr<Session>> SnapshotSessions() const;
+	void Tick();
+	void ScheduleTick();
+	void Transmit(Session& session, Clock::time_point now);
+	void SendTo(const udp::endpoint& endpoint, const std::vector<std::string>& datagrams);
+	void CloseSocket();
+
+	[[nodiscard]] std::vector<std::shared_ptr<Session>> CopySessions() const;
 
 	//NOTE: called with _sessionsMutex held - the search and the session that takes the seat have to
-	//be one step, or two clients accepted back to back get the same one
+	//be one step, or two clients arriving back to back get the same one
 	[[nodiscard]] std::optional<PlayerSlot> FindFreeSlot() const;
 
 	void OnNetworkEndFrame(const NetworkEndFrameEvent&);
 
-	void SendToAll(const std::shared_ptr<const std::string>& message);
+	//NOTE: nullptr outside a match - a lobby has no field to catch up with
+	[[nodiscard]] std::shared_ptr<const WireFrame> TakeWorldSnapshot() const;
+
 	void CleanupDeadSessions();
-	void CloseAcceptor();
-	void OpenAcceptor();
 	void OnStatusRequested(const ServerStatusRequestedEvent&) const;
 	void OnPlayersRequested(const ServerPlayersRequestedEvent&) const;
 	void OnKickRequested(const ServerKickRequestedEvent& event) const;
 	void OnAcceptingChanged(const ServerAcceptingChangedEvent& event);
 
-	tcp::acceptor _acceptor;
-	tcp::endpoint _endpoint;
+	udp::socket _socket;
+	//NOTE: written by the console on the game thread, read where a hello lands on the network one - UDP has
+	//no acceptor to close, so the socket stays bound and the hello is turned away
+	std::atomic_bool _isAccepting{true};
+	const uint16_t _boundPort;
+	boost::asio::steady_timer _tickTimer;
+	udp::endpoint _sender{};
+	std::array<char, DatagramLink::kMaxDatagramSize> _receiveBuffer{};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	ReplicationPublisher _replicationOut;
 	std::vector<EventSubscription> _subs{};
 
 	std::vector<std::shared_ptr<Session>> _sessions;
 	mutable std::mutex _sessionsMutex;
+
+	//NOTE: set once the goodbyes are out - the socket closes when every one is acked or the linger runs out
+	std::function<void()> _onClosed{};
+	Clock::time_point _closeDeadline{};
 };
 }//namespace network::commands

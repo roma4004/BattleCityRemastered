@@ -2,6 +2,7 @@
 #include "application/GameConfig.h"
 #include "components/BonusSpawner.h"
 #include "components/BulletPool.h"
+#include "components/TankPool.h"
 #include "components/EventSystem.h"
 #include "components/events/SpawnEvents.h"
 #include "components/events/TimingEvents.h"
@@ -27,6 +28,7 @@ class BonusTestDestroy : public testing::Test// NOLINT(clang-diagnostic-padded)
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
+	std::shared_ptr<TankPool> _tankPool{nullptr};
 	std::unique_ptr<BonusSpawner> _bonusSpawner{nullptr};
 	std::vector<EventSubscription> _instantSpawnAnimationSubs{};
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
@@ -51,6 +53,7 @@ protected:
 		_events = std::make_shared<EventSystem>();
 		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, _allObjects);
 		_bulletPool = std::make_shared<BulletPool>(_events, _allObjects, _gameConfig);
+		_tankPool = std::make_shared<TankPool>(_events, _allObjects, _gameConfig, _bulletPool);
 		TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, _gameConfig.gameMode, _respawnManager,
 								 _tankSpawner);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, _allObjects, _gameConfig);
@@ -60,7 +63,7 @@ protected:
 		_obstacleSpawner = std::make_unique<ObstacleSpawner>(_events, _gameConfig);
 		_fortressWallSub = TestUtils::TrackFortressWall(_events, &_fortressWall);
 		_gridSize = _gameConfig.gridOffset;
-		_tankSize = _gridSize * 3.0;
+		_tankSize = _gameConfig.tankSize;
 
 		_allObjects.reserve(4);
 	}
@@ -70,10 +73,9 @@ protected:
 	std::shared_ptr<Tank> CreatePlayer(const FPoint pos, const Author author = Author::Player1,
 									   const Direction dir = Direction::UP)
 	{
-		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _tankSize, .h = _tankSize};
-		auto player{TestUtils::CreatePlayer(rect, _tankHealth, author, _allObjects, _events, dir, _bulletPool,
+		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _gameConfig.tankSize, .h = _gameConfig.tankSize};
+		auto player{TestUtils::CreatePlayer(rect, _tankHealth, author, _allObjects, _events, dir, _tankPool,
 											_gameConfig)};
-		_allObjects.emplace_back(player);
 
 		return player;
 	}
@@ -81,10 +83,9 @@ protected:
 	std::shared_ptr<Tank> CreateBot(const FPoint pos, const Author author, const Direction dir,
 									const unsigned short tier = 1u)
 	{
-		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _tankSize, .h = _tankSize};
-		auto bot{TestUtils::CreateBot(rect, _tankHealth, author, _allObjects, _events, dir, _bulletPool, _gameConfig,
+		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _gameConfig.tankSize, .h = _gameConfig.tankSize};
+		auto bot{TestUtils::CreateBot(rect, _tankHealth, author, _allObjects, _events, dir, _tankPool, _gameConfig,
 									  tier)};
-		_allObjects.emplace_back(bot);
 
 		return bot;
 	}
@@ -92,9 +93,8 @@ protected:
 	std::shared_ptr<Bullet> CreateBullet(const FPoint pos, const Direction dir, const Author author)
 	{
 		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _calibre.size.x, .h = _calibre.size.y};
-		auto bullet{TestUtils::CreateBullet(rect, _bulletHealth, _allObjects, _events, _calibre, dir, _gameConfig,
+		auto bullet{TestUtils::CreateBullet(rect, _bulletHealth, _bulletPool, _events, _calibre, dir,
 											author)};
-		_allObjects.emplace_back(bullet);
 
 		return bullet;
 	}

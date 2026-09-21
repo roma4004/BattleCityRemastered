@@ -39,7 +39,7 @@ UserInput::UserInput(const std::shared_ptr<EventSystem>& events, const WindowCon
 	InitControllers();
 
 	_firstMenuMouseTileDefault = {.x = 175, .y = 135, .w = 200, .h = 30};
-	InitMouseHoverTiles({});
+	InitMouseHoverTiles();
 }
 
 UserInput::~UserInput()
@@ -54,6 +54,7 @@ void UserInput::Subscribe()
 	_subs.push_back(_events->AddListener(this, &UserInput::OnPreTickUpdate));
 	_subs.push_back(_events->AddListener(this, &UserInput::OnMenuShowed));
 	_subs.push_back(_events->AddListener(this, &UserInput::OnMenuPosChanged));
+	_subs.push_back(_events->AddListener(this, &UserInput::OnMenuContentShifted));
 }
 
 void UserInput::OnPauseStatus(const PauseStatusEvent& event) { _isPause = event.isPaused; }
@@ -64,13 +65,14 @@ void UserInput::OnMenuShowed(const MenuShowedEvent& event) { _isMenuDisplayed = 
 
 void UserInput::OnMenuPosChanged(const MenuPosChangedEvent& event)
 {
-	_allTilesRect = {
-			.x = _menuPos.x + _allTilesRectDefault.x,
-			.y = _menuPos.y + _allTilesRectDefault.y,
-			.w = _allTilesRectDefault.w,
-			.h = _allTilesRectDefault.h
-	};
-	InitMouseHoverTiles(event.pos);
+	_menuPos = event.pos;
+	InitMouseHoverTiles();
+}
+
+void UserInput::OnMenuContentShifted(const MenuContentShiftedEvent& event)
+{
+	_menuContentShiftX = event.shiftX;
+	InitMouseHoverTiles();
 }
 
 void UserInput::WindowDragEvents(const SDL_Event& event)
@@ -590,11 +592,11 @@ bool UserInput::IsSameController(const std::shared_ptr<SDL_Gamepad>& controller,
 	return false;
 }
 
-void UserInput::InitMouseHoverTiles(const Point menuPos)
+void UserInput::InitMouseHoverTiles()
 {
 	auto [x, y, w, h] = SDL_Rect{
-			.x = menuPos.x + _firstMenuMouseTileDefault.x,
-			.y = menuPos.y + _firstMenuMouseTileDefault.y,
+			.x = _menuPos.x + _menuContentShiftX + _firstMenuMouseTileDefault.x,
+			.y = _menuPos.y + _firstMenuMouseTileDefault.y,
 			.w = _firstMenuMouseTileDefault.w,
 			.h = _firstMenuMouseTileDefault.h
 	};

@@ -46,9 +46,13 @@ struct RenderMenuTextBlockEvent
 	int lineHeight;
 	TextBlockAlign align{};
 	std::vector<TextBlockLine> lines;
+};
 
-	//NOTE: the renderer keeps the last block to see whether it has to fit the font again
-	[[nodiscard]] bool operator==(const RenderMenuTextBlockEvent& rhs) const noexcept = default;
+//NOTE: how far the renderer moved the menu block to centre it in the panel - whoever lays something out
+//over the menu takes the same number, because nothing outside the renderer can measure the text
+struct MenuContentShiftedEvent
+{
+	int shiftX;
 };
 
 struct RenderMenuLogoEvent

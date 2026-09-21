@@ -18,13 +18,7 @@ Menu::Menu(const std::shared_ptr<EventSystem>& events, const GameConfig& gameCon
 
 void Menu::Subscribe()
 {
-	if (_isMenuDisplayed)
-	{
-		_drawSub = _events->AddListener(this, &Menu::OnDrawUserInterface);
-	}
-
 	_subs.push_back(_events->AddListener(this, &Menu::OnSelectedGameModeChangedTo));
-
 	_subs.push_back(_events->AddListener(this, &Menu::OnMenuShowed));
 }
 
@@ -44,27 +38,21 @@ void Menu::Draw()
 	}
 
 	_events->EmitEvent(RenderMenuBackgroundEvent{.pos = _pos});
-	_events->EmitEvent(RenderMenuLogoEvent{.pos = _pos});
 
 	std::vector<TextBlockLine> lines;
-	DrawMenuText(lines);
+	const Point selectorPos{DrawMenuText(lines)};
 	DrawControlHints(lines);
 
+	//NOTE: the text first - the renderer centres the block in the panel, and everything emitted after it
+	//rides the same shift, so the logo and the icons stay where the layout put them
 	_events->EmitEvent(RenderMenuTextBlockEvent{.menuPos = _pos,
 												.lineHeight = kLineStep,
-												.align = TextBlockAlign::LinePositions,
+												.align = TextBlockAlign::CenteredBlock,
 												.lines = std::move(lines)});
-}
 
-void Menu::DrawMenuLine(std::vector<TextBlockLine>& lines, Point& posText, const bool isSelected,
-						std::string text) const
-{
-	if (isSelected)
-	{
-		_events->EmitEvent(RenderMenuSelectorIconEvent{.pos = Point{.x = posText.x - 35, .y = posText.y - 10}});
-	}
-
-	DrawTextLine(lines, posText, std::move(text));
+	_events->EmitEvent(RenderMenuLogoEvent{.pos = _pos});
+	_events->EmitEvent(RenderMenuSelectorIconEvent{.pos = selectorPos});
+	EmitGamepadHints();
 }
 
 void Menu::DrawTextLine(std::vector<TextBlockLine>& lines, Point& posText, std::string text)
@@ -75,26 +63,42 @@ void Menu::DrawTextLine(std::vector<TextBlockLine>& lines, Point& posText, std::
 }
 
 //NOTE: built whole even while sliding in - a missing line would change the fitted size
-void Menu::DrawMenuText(std::vector<TextBlockLine>& lines) const
+Point Menu::DrawMenuText(std::vector<TextBlockLine>& lines) const
 {
 	Point relativePosText{.x = _pos.x + 180, .y = _pos.y + 145};
+	Point selectorPos{};
 
-	DrawMenuLine(lines, relativePosText, _selectedGameMode == GameMode::OnePlayer, "ONE PLAYER");
-	DrawMenuLine(lines, relativePosText, _selectedGameMode == GameMode::TwoPlayers, "TWO PLAYER");
-	DrawMenuLine(lines, relativePosText, _selectedGameMode == GameMode::CoopWithBot, "COOP WITH BOT");
-	DrawMenuLine(lines, relativePosText, _selectedGameMode == GameMode::PlayAsHost, "PLAY AS HOST");
-	DrawMenuLine(lines, relativePosText, _selectedGameMode == GameMode::PlayAsClient, "PLAY AS CLIENT");
+	auto mode = [&](const GameMode gameMode, std::string text)
+	{
+		if (_selectedGameMode == gameMode)
+		{
+			selectorPos = Point{.x = relativePosText.x - 35, .y = relativePosText.y - 10};
+		}
+
+		DrawTextLine(lines, relativePosText, std::move(text));
+	};
+
+	mode(GameMode::OnePlayer, "ONE PLAYER");
+	mode(GameMode::TwoPlayers, "TWO PLAYER");
+	mode(GameMode::CoopWithBot, "COOP WITH BOT");
+	mode(GameMode::PlayAsHost, "PLAY AS HOST");
+	mode(GameMode::PlayAsClient, "PLAY AS CLIENT");
+
+	return selectorPos;
+}
+
+//NOTE: the gamepad buttons stand in the gaps the hint lines leave for them, so both move as one block
+void Menu::EmitGamepadHints() const
+{
+	const Point relativePos{.x = _pos.x + 100, .y = _pos.y + 280};
+	_events->EmitEvent(RenderMenuXBoxHintEvent{.pos = Point{.x = relativePos.x + 245, .y = relativePos.y}});
+	_events->EmitEvent(RenderMenuPS5HintEvent{
+			.pos = Point{.x = relativePos.x + 280, .y = relativePos.y + kControlsBaseLine}});
 }
 
 void Menu::DrawControlHints(std::vector<TextBlockLine>& lines) const
 {
-	const Point relativePos{.x = _pos.x + 100, .y = _pos.y + 280};
-	constexpr int yBaseLineForControls{150};
-	_events->EmitEvent(RenderMenuXBoxHintEvent{.pos = Point{.x = relativePos.x + 245, .y = relativePos.y}});
-	_events->EmitEvent(RenderMenuPS5HintEvent{
-			.pos = Point{.x = relativePos.x + 280, .y = relativePos.y + yBaseLineForControls}});
-
-	Point posText{.x = _pos.x + 40, .y = _pos.y + yBaseLineForControls + 200};
+	Point posText{.x = _pos.x + 40, .y = _pos.y + kControlsBaseLine + 200};
 	DrawTextLine(lines, posText, "Controls: P1/P2    XBox    PS");
 	DrawTextLine(lines, posText, "Pause       P      View    Create");
 	DrawTextLine(lines, posText, "Menu        M      Menu    Options");

@@ -1,8 +1,10 @@
 #include "TestUtils.h"
+#include "components/BulletPool.h"
 #include "application/GameConfig.h"
 #include "components/EventSystem.h"
 #include "components/events/TimingEvents.h"
 #include "components/GameStatistics.h"
+#include "components/StatisticsData.h"
 #include "entities/pawns/Bullet.h"
 #include "enums/Direction.h"
 #include "gtest/gtest.h"
@@ -14,6 +16,7 @@ class StatisticsTestAdvanced : public testing::Test// NOLINT(clang-diagnostic-pa
 {
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
+	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 	std::shared_ptr<GameStatistics> _statistics{nullptr};
 	GameConfig _gameConfig{};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
@@ -25,10 +28,10 @@ protected:
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
+		_bulletPool = std::make_shared<BulletPool>(_events, _allObjects, _gameConfig);
 		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, _allObjects);
 		_statistics = std::make_shared<GameStatistics>(_events);
-		const double gridSize{_gameConfig.gridOffset};
-		_tankSize = gridSize * 3.0;
+		_tankSize = _gameConfig.tankSize;
 
 		CreateBullet({.x = 0.0, .y = 5.0}, Direction::DOWN, 1u, Author::Player1);
 	}
@@ -43,9 +46,7 @@ protected:
 									.tier = tier,
 									.size{.x = 6.0, .y = 5.0}};
 		const ObjRectangle rectBullet{.x = pos.x, .y = pos.y, .w = calibre.size.x, .h = calibre.size.y};
-		const std::shared_ptr<Bullet> bullet{TestUtils::CreateBullet(rectBullet, _bulletHealth, _allObjects, _events,
-																	 calibre, dir, _gameConfig, author)};
-		_allObjects.emplace_back(bullet);
+		std::ignore = TestUtils::CreateBullet(rectBullet, _bulletHealth, _bulletPool, _events, calibre, dir, author);
 	}
 };
 

@@ -1,7 +1,9 @@
 #include "TestUtils.h"
+#include "components/ObstacleSpawner.h"
 #include "application/GameConfig.h"
 #include "components/BonusSpawner.h"
 #include "components/BulletPool.h"
+#include "components/TankPool.h"
 #include "components/EventSystem.h"
 #include "components/events/TimingEvents.h"
 #include "components/TankSpawner.h"
@@ -28,7 +30,9 @@ class BotsTest : public testing::Test// NOLINT(clang-diagnostic-padded)
 {
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
+	std::unique_ptr<ObstacleSpawner> _obstacleSpawner{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
+	std::shared_ptr<TankPool> _tankPool{nullptr};
 	std::unique_ptr<BonusSpawner> _bonusSpawner{nullptr};
 	std::shared_ptr<GameStateManager> _stateManager{nullptr};
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
@@ -46,18 +50,21 @@ protected:
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
+		_obstacleSpawner = std::make_unique<ObstacleSpawner>(_events, _gameConfig);
 		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, _allObjects);
 		_bulletPool = std::make_shared<BulletPool>(_events, _allObjects, _gameConfig);
+		_tankPool = std::make_shared<TankPool>(_events, _allObjects, _gameConfig, _bulletPool);
 		_stateManager = std::make_shared<GameStateManager>(_events);
 		TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, _gameConfig.gameMode, _respawnManager,
 								 _tankSpawner);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, _allObjects, _gameConfig);
 		_instantSpawnAnimationSubs = TestUtils::WireInstantSpawnAnimations(_events);
 		_gridSize = _gameConfig.gridOffset;
-		_tankSize = _gridSize * 3.0;
+		_tankSize = _gameConfig.tankSize;
 
-		//NOTE: the wall roll is pinned open, or every test that expects a shot at an obstacle would flake
+		//NOTE: both rolls are pinned open, or every test that expects a shot at an obstacle would flake
 		_gameConfig.botShootObstacleChance = 1.0;
+		_gameConfig.botShootFortressChance = 1.0;
 
 		_allObjects.reserve(4u);
 	}
@@ -67,12 +74,40 @@ protected:
 	std::shared_ptr<Tank> CreateBot(const FPoint pos, const Author author, const Direction dir,
 									const unsigned short tier = 1u)
 	{
-		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _tankSize, .h = _tankSize};
-		auto bot{TestUtils::CreateBot(rect, _tankHealth, author, _allObjects, _events, dir, _bulletPool, _gameConfig,
+		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _gameConfig.tankSize, .h = _gameConfig.tankSize};
+		auto bot{TestUtils::CreateBot(rect, _tankHealth, author, _allObjects, _events, dir, _tankPool, _gameConfig,
 									  tier)};
-		_allObjects.emplace_back(bot);
 
 		return bot;
+	}
+
+	std::shared_ptr<Tank> CreatePlayer(const FPoint pos, const Author author, const Direction dir)
+	{
+		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _gameConfig.tankSize, .h = _gameConfig.tankSize};
+		auto player{TestUtils::CreatePlayer(rect, _tankHealth, author, _allObjects, _events, dir, _tankPool,
+											_gameConfig)};
+
+		return player;
+	}
+
+	std::shared_ptr<Bullet> CreateBullet(const FPoint pos, const Direction dir, const Author author,
+										 const BulletCalibre& calibre)
+	{
+		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = calibre.size.x, .h = calibre.size.y};
+		auto bullet{TestUtils::CreateBullet(rect, _tankHealth, _bulletPool, _events, calibre, dir,
+											author)};
+
+		return bullet;
+	}
+
+	void SpawnObstacleArea(const ObjRectangle area, const ObstacleType type) const
+	{
+		TestUtils::SpawnObstacleArea(_events, _allObjects, area, type, _gameConfig);
+	}
+
+	std::shared_ptr<BaseObj> SpawnObstacle(const ObjRectangle rect, const ObstacleType type) const
+	{
+		return TestUtils::SpawnObstacle(_events, _allObjects, rect, type);
 	}
 };
 
@@ -99,9 +134,7 @@ TEST_F(BotsTest, BotsNoChangeDirectionIfPlayerAllySeen)
 {
 	const auto coopBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN)};
 
-	const ObjRectangle playerRect{.x = _tankSize * 3.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	_allObjects.emplace_back(TestUtils::CreatePlayer(playerRect, _tankHealth, Author::Player2, _allObjects, _events,
-													 Direction::DOWN, _bulletPool, _gameConfig));
+	CreatePlayer({.x = _tankSize * 3.0, .y = 0.0}, Author::Player2, Direction::DOWN);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -161,21 +194,13 @@ TEST_F(BotsTest, BotsCantSeeBonusBehindWater)
 {
 	const auto coopBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::RIGHT)};
 
-	_allObjects.emplace_back(
-			std::make_shared<WaterTile>(
-					ObjRectangle{.x = 0.0, .y = _tankSize * 2.0 + 1.0, .w = _tankSize, .h = _tankSize},
-					_events,
-					_uuid,
-					_gameConfig));
+	SpawnObstacle(ObjRectangle{.x = 0.0, .y = _tankSize * 2.0 + 1.0, .w = _tankSize, .h = _tankSize},
+				  ObstacleType::Water);
 
 	_bonusSpawner->SpawnRandomBonus({.x = 0.0, .y = _tankSize * 3.0 + 2.0, .w = _tankSize, .h = _tankSize});
 
-	_allObjects.emplace_back(
-			std::make_shared<WaterTile>(
-					ObjRectangle{.x = 0.0, .y = _tankSize * 4.0 + 3.0, .w = _tankSize, .h = _tankSize},
-					_events,
-					_uuid,
-					_gameConfig));
+	SpawnObstacle(ObjRectangle{.x = 0.0, .y = _tankSize * 4.0 + 3.0, .w = _tankSize, .h = _tankSize},
+				  ObstacleType::Water);
 
 	const auto enemyBot{CreateBot({.x = 0.0, .y = _tankSize * 5.0 + 40.0}, Author::Enemy1, Direction::RIGHT)};
 
@@ -199,21 +224,13 @@ TEST_F(BotsTest, BotsCantSeeBonusBehindBush)
 {
 	const auto coopBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::RIGHT)};
 
-	_allObjects.emplace_back(
-			std::make_shared<BushTile>(
-					ObjRectangle{.x = 0.0, .y = _tankSize * 2.0 + 1.0, .w = _tankSize, .h = _tankSize},
-					_events,
-					_uuid,
-					_gameConfig));
+	SpawnObstacle(ObjRectangle{.x = 0.0, .y = _tankSize * 2.0 + 1.0, .w = _tankSize, .h = _tankSize},
+				  ObstacleType::Bush);
 
 	_bonusSpawner->SpawnRandomBonus({.x = 0.0, .y = _tankSize * 3.0 + 2.0, .w = _tankSize, .h = _tankSize});
 
-	_allObjects.emplace_back(
-			std::make_shared<BushTile>(
-					ObjRectangle{.x = 0.0, .y = _tankSize * 4.0 + 3.0, .w = _tankSize, .h = _tankSize},
-					_events,
-					_uuid,
-					_gameConfig));
+	SpawnObstacle(ObjRectangle{.x = 0.0, .y = _tankSize * 4.0 + 3.0, .w = _tankSize, .h = _tankSize},
+				  ObstacleType::Bush);
 
 	const auto enemyBot{CreateBot({.x = 0.0, .y = _tankSize * 5.0 + 40.0}, Author::Enemy1, Direction::RIGHT)};
 
@@ -237,21 +254,13 @@ TEST_F(BotsTest, BotsCanSeeBonusBehindIce)
 {
 	const auto coopBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::RIGHT)};
 
-	_allObjects.emplace_back(
-			std::make_shared<IceTile>(
-					ObjRectangle{.x = 0.0, .y = _tankSize * 2.0 + 1.0, .w = _tankSize, .h = _tankSize},
-					_events,
-					_uuid,
-					_gameConfig));
+	SpawnObstacle(ObjRectangle{.x = 0.0, .y = _tankSize * 2.0 + 1.0, .w = _tankSize, .h = _tankSize},
+				  ObstacleType::Ice);
 
 	_bonusSpawner->SpawnRandomBonus({.x = 0.0, .y = _tankSize * 3.0 + 2.0, .w = _tankSize, .h = _tankSize});
 
-	_allObjects.emplace_back(
-			std::make_shared<IceTile>(
-					ObjRectangle{.x = 0.0, .y = _tankSize * 4.0 + 3.0, .w = _tankSize, .h = _tankSize},
-					_events,
-					_uuid,
-					_gameConfig));
+	SpawnObstacle(ObjRectangle{.x = 0.0, .y = _tankSize * 4.0 + 3.0, .w = _tankSize, .h = _tankSize},
+				  ObstacleType::Ice);
 
 	const auto enemyBot{CreateBot({.x = 0.0, .y = _tankSize * 5.0 + 40.0}, Author::Enemy1, Direction::RIGHT)};
 
@@ -275,28 +284,16 @@ TEST_F(BotsTest, BotsCanSeeBonusInTheIce)
 {
 	const auto coopBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::RIGHT)};
 
-	_allObjects.emplace_back(
-			std::make_shared<IceTile>(
-					ObjRectangle{.x = 0.0, .y = _tankSize * 2.0 + 1.0, .w = _tankSize, .h = _tankSize},
-					_events,
-					_uuid,
-					_gameConfig));
+	SpawnObstacle(ObjRectangle{.x = 0.0, .y = _tankSize * 2.0 + 1.0, .w = _tankSize, .h = _tankSize},
+				  ObstacleType::Ice);
 
-	_allObjects.emplace_back(
-			std::make_shared<IceTile>(
-					ObjRectangle{.x = 0.0, .y = _tankSize * 3.0 + 1.0, .w = _tankSize, .h = _tankSize},
-					_events,
-					_uuid,
-					_gameConfig));
+	SpawnObstacle(ObjRectangle{.x = 0.0, .y = _tankSize * 3.0 + 1.0, .w = _tankSize, .h = _tankSize},
+				  ObstacleType::Ice);
 
 	_bonusSpawner->SpawnRandomBonus({.x = 0.0, .y = _tankSize * 3.0 + 2.0, .w = _tankSize, .h = _tankSize});
 
-	_allObjects.emplace_back(
-			std::make_shared<IceTile>(
-					ObjRectangle{.x = 0.0, .y = _tankSize * 4.0 + 3.0, .w = _tankSize, .h = _tankSize},
-					_events,
-					_uuid,
-					_gameConfig));
+	SpawnObstacle(ObjRectangle{.x = 0.0, .y = _tankSize * 4.0 + 3.0, .w = _tankSize, .h = _tankSize},
+				  ObstacleType::Ice);
 
 	const auto enemyBot{CreateBot({.x = 0.0, .y = _tankSize * 5.0 + 40.0}, Author::Enemy1, Direction::RIGHT)};
 
@@ -330,12 +327,8 @@ TEST_F(BotsTest, BotShootsAtAnIncomingBullet)
 								.size{.x = bulletWidth, .y = bulletHeight}};
 
 	// head-on: to the right of the bot and flying at it
-	const ObjRectangle bulletRect{.x = _tankSize * 2.0,
-								  .y = (_tankSize - bulletHeight) / 2.0,
-								  .w = bulletWidth,
-								  .h = bulletHeight};
-	_allObjects.emplace_back(TestUtils::CreateBullet(bulletRect, _tankHealth, _allObjects, _events, calibre,
-													 Direction::LEFT, _gameConfig, Author::Enemy1));
+	CreateBullet({.x = _tankSize * 2.0, .y = (_tankSize - bulletHeight) / 2.0}, Direction::LEFT, Author::Enemy1,
+				 calibre);
 
 	const std::size_t worldSizeBeforeShot{_allObjects.size()};
 
@@ -358,12 +351,8 @@ TEST_F(BotsTest, BotAimsAtABulletFlyingAwayJustTheSame)
 								.tier = 1u,
 								.size{.x = bulletWidth, .y = bulletHeight}};
 
-	const ObjRectangle bulletRect{.x = _tankSize * 2.0,
-								  .y = (_tankSize - bulletHeight) / 2.0,
-								  .w = bulletWidth,
-								  .h = bulletHeight};
-	_allObjects.emplace_back(TestUtils::CreateBullet(bulletRect, _tankHealth, _allObjects, _events, calibre,
-													 Direction::RIGHT, _gameConfig, Author::Enemy1));
+	CreateBullet({.x = _tankSize * 2.0, .y = (_tankSize - bulletHeight) / 2.0}, Direction::RIGHT, Author::Enemy1,
+				 calibre);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -411,9 +400,8 @@ TEST_F(BotsTest, BotTurnsWhenItRunsIntoAWall)
 	const auto bot{CreateBot({.x = _tankSize * 2.0, .y = _tankSize * 2.0}, Author::Player1, Direction::RIGHT)};
 
 	// flush against the bot's right side, so the very first step is blocked
-	_allObjects.emplace_back(std::make_shared<SteelWall>(
-			ObjRectangle{.x = _tankSize * 3.0 + 1.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize},
-			_events, _uuid, _gameConfig));
+	SpawnObstacleArea(ObjRectangle{.x = _tankSize * 3.0 + 1.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize},
+					  ObstacleType::Steel);
 
 	ASSERT_EQ(bot->GetDirection(), Direction::RIGHT);
 
@@ -435,7 +423,7 @@ TEST_F(BotsTest, BotHoldsFireWhenTheBlastWouldReachItself)
 										   ObjRectangle{.x = _tankSize, .y = _tankSize * 2.0,
 														.w = _tankSize, .h = _tankSize}})
 	{
-		_allObjects.emplace_back(std::make_shared<BrickWall>(wallRect, _events, _uuid, _gameConfig));
+		SpawnObstacle(wallRect, ObstacleType::Water);
 	}
 
 	const std::size_t before{_allObjects.size()};
@@ -487,12 +475,12 @@ TEST_F(BotsTest, BotHoldsFireAtAWallWhenTheChanceIsZero)
 
 	const auto bot{CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN)};
 
-	_allObjects.emplace_back(std::make_shared<BrickWall>(
-			ObjRectangle{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize}, _events, _uuid, _gameConfig));
+	SpawnObstacleArea(ObjRectangle{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize},
+					  ObstacleType::Brick);
 
 	const std::size_t before{_allObjects.size()};
 
-	for (int frame{0}; frame < 10; ++frame)
+	for (int frame{}; frame < 10; ++frame)
 	{
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 	}
@@ -507,8 +495,8 @@ TEST_F(BotsTest, BotShootsAWallWhenTheChanceIsOne)
 
 	const auto bot{CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN)};
 
-	_allObjects.emplace_back(std::make_shared<BrickWall>(
-			ObjRectangle{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize}, _events, _uuid, _gameConfig));
+	SpawnObstacleArea(ObjRectangle{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize},
+					  ObstacleType::Brick);
 
 	const std::size_t before{_allObjects.size()};
 
@@ -526,9 +514,8 @@ TEST_F(BotsTest, ABlockedBotStillTurnsAwayAtZeroChance)
 	const auto bot{CreateBot({.x = _tankSize * 2.0, .y = _tankSize * 2.0}, Author::Enemy1, Direction::RIGHT)};
 
 	// flush against the bot's right side, destructible, and still not worth a shot from this close
-	_allObjects.emplace_back(std::make_shared<BrickWall>(
-			ObjRectangle{.x = _tankSize * 3.0 + 1.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize},
-			_events, _uuid, _gameConfig));
+	SpawnObstacle(ObjRectangle{.x = _tankSize * 3.0 + 1.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize},
+				  ObstacleType::Brick);
 
 	const std::size_t before{_allObjects.size()};
 
@@ -547,8 +534,7 @@ TEST_F(BotsTest, ARefusedWallIsReconsideredOnceTheCooldownIsUp)
 
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
 
-	_allObjects.emplace_back(std::make_shared<BrickWall>(
-			ObjRectangle{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize}, _events, _uuid, _gameConfig));
+	SpawnObstacle(ObjRectangle{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize}, ObstacleType::Brick);
 
 	const std::size_t before{_allObjects.size()};
 
@@ -569,15 +555,15 @@ TEST_F(BotsTest, AWallRefusedStaysRefusedUntilTheCooldownIsUp)
 
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
 
-	_allObjects.emplace_back(std::make_shared<BrickWall>(
-			ObjRectangle{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize}, _events, _uuid, _gameConfig));
+	SpawnObstacleArea(ObjRectangle{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize},
+					  ObstacleType::Brick);
 
 	const std::size_t before{_allObjects.size()};
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 	_gameConfig.botShootObstacleChance = 1.0;
 
-	for (int frame{0}; frame < 10; ++frame)
+	for (int frame{}; frame < 10; ++frame)
 	{
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 	}

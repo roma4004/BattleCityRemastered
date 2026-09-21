@@ -21,7 +21,7 @@ class io_context;
 namespace network::commands
 {
 //NOTE: the io_context + its thread, shared by ClientNode and ServerNode. Only one thread runs
-//it, which is what makes the strands inside Client/Session enough on their own.
+//it, which is what lets Client and Server touch their sockets and links from handlers without a lock.
 class NetworkNodeBase : public INetworkNode
 {
 public:

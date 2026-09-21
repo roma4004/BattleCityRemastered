@@ -22,6 +22,9 @@ struct SpawnAnimationFinishedEvent;
 struct TankRespawnedEvent;
 struct TankSpawnCompletedEvent;
 struct TankDiedEvent;
+struct TankSnapshot;
+struct WorldSnapshotRequestedEvent;
+struct WorldSnapshotReceivedEvent;
 class Tank;
 class BaseObj;
 class TankPool;
@@ -59,15 +62,23 @@ class TankSpawner final
 	void OnTankRespawned(const TankRespawnedEvent& event);
 	void OnTankSpawnCompleted(const TankSpawnCompletedEvent& event);
 	void OnTankDied(const TankDiedEvent& event);
+	void OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const;
+	void OnWorldSnapshotReceived(const WorldSnapshotReceivedEvent& event);
 
 	void Reset(const GameResetEvent&);
 
 	void OnSpawnDelayFinished(Uuid uuid);
 	void DelayedSpawnWith(const DelayedTankSpawn& params) const;
+	void RestoreTank(const TankSnapshot& tank) const;
 	void CancelDelayedSpawnsOf(Faction faction);
 	void DropDelayedSpawn(Uuid uuid);
 
-	[[nodiscard]] ObjRectangle GetEnemyRandomPosX(TankType type) const;
+	//NOTE: the rolled point first, then the grid outwards from it - obstacles sit on the grid, so a spot
+	//off it that fits covers at least one more cell than the aligned one beside it and finds nothing new
+	[[nodiscard]] std::optional<ObjRectangle> FindSpawnSpot(double minX, double maxX, double y,
+															double preferredX) const;
+
+	[[nodiscard]] std::optional<ObjRectangle> GetEnemyRandomPosX(TankType type) const;
 	[[nodiscard]] bool SpawnEnemy(ObjRectangle rect, Uuid uuid, TankType type, double speed, int health);
 	void SpawnPlayer(ObjRectangle rect, double speed, int health, Uuid uuid, TankType type);
 	void SpawnCoopBot(ObjRectangle rect, double speed, int health, Uuid uuid, TankType type);
@@ -76,7 +87,7 @@ class TankSpawner final
 	[[nodiscard]] std::unique_ptr<IInputProvider> MakeDriver(TankType type) const;
 
 	void RespawnEnemyTanks(TankType type, Uuid uuid, std::optional<ObjRectangle> rect = std::nullopt);
-	[[nodiscard]] ObjRectangle GetPlayerRandomPosX(bool isFirst) const;
+	[[nodiscard]] std::optional<ObjRectangle> GetPlayerRandomPosX(bool isFirst) const;
 	void RespawnPlayerTeam(TankType type, Uuid uuid, std::optional<ObjRectangle> rect = std::nullopt);
 	void RespawnTank(TankType type, Uuid uuid, std::optional<ObjRectangle> rect = std::nullopt);
 

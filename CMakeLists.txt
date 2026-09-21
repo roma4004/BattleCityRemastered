@@ -90,7 +90,7 @@ set(GAME_CORE_SOURCES
         source/entities/pawns/Tank.cpp
         source/network/Client.cpp
         source/network/ClientNode.cpp
-        source/network/FrameChannel.cpp
+        source/network/DatagramLink.cpp
         source/network/NetworkNodeBase.cpp
         source/network/PeerLink.cpp
         source/network/ReplicationApplier.cpp
@@ -121,6 +121,7 @@ set(UNIT_TESTS_SOURCES
         UnitTests/BulletsTestAdvanced.cpp
         UnitTests/BulletsTestBasic.cpp
         UnitTests/ClientHandshakeTest.cpp
+        UnitTests/DatagramLinkTest.cpp
         UnitTests/CommandLineParserTest.cpp
         UnitTests/ConsoleCommandTest.cpp
         UnitTests/ProjectConfigTest.cpp
@@ -133,6 +134,7 @@ set(UNIT_TESTS_SOURCES
         UnitTests/GameStateTest.cpp
         UnitTests/ClientMirrorTest.cpp
         UnitTests/TankHealTest.cpp
+        UnitTests/TankNudgeTest.cpp
         UnitTests/TankPoolTest.cpp
         UnitTests/TankTerrainTest.cpp
         UnitTests/MenuInputTest.cpp
@@ -144,10 +146,12 @@ set(UNIT_TESTS_SOURCES
         UnitTests/ScoreBoardTest.cpp
         UnitTests/StatisticsTestAdvanced.cpp
         UnitTests/SeatAssignmentTest.cpp
+        UnitTests/SessionTest.cpp
         UnitTests/SimulationStepTest.cpp
         UnitTests/StatisticsTestBasic.cpp
         UnitTests/TankSpawnerTest.cpp
         UnitTests/TimeUtilsTest.cpp
+        UnitTests/WorldSnapshotTest.cpp
         UnitTests/TestUtils.cpp
 )
 
@@ -216,6 +220,7 @@ set(GAME_ASSETS
         Resources/Images/Xbox_Buttons/A.png
         Resources/Images/Xbox_Buttons/Y.png
         Resources/Maps/level1.map
+        Resources/Maps/level2.map
         Resources/Sounds/levelStarted.wav
 )
 

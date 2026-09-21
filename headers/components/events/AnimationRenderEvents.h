@@ -87,13 +87,6 @@ struct RenderHealthBarEvent
 	int health;
 };
 
-struct RenderTextEvent
-{
-	Point pos;
-	unsigned int color;
-	std::string text;
-};
-
 struct RenderTextureEvent
 {
 	ObjRectangle textureRect;

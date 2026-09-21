@@ -1,7 +1,9 @@
 #include "TestUtils.h"
+#include "components/ObstacleSpawner.h"
 #include "application/GameConfig.h"
 #include "components/BonusSpawner.h"
 #include "components/BulletPool.h"
+#include "components/TankPool.h"
 #include "components/EventSystem.h"
 #include "components/events/SpawnEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
@@ -28,7 +30,9 @@ class GameStateManagerTest : public testing::Test// NOLINT(clang-diagnostic-padd
 {
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
+	std::unique_ptr<ObstacleSpawner> _obstacleSpawner{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
+	std::shared_ptr<TankPool> _tankPool{nullptr};
 	std::shared_ptr<BonusSpawner> _bonusSpawner{nullptr};
 	std::shared_ptr<GameStateManager> _stateManager{nullptr};
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
@@ -47,9 +51,11 @@ protected:
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
+		_obstacleSpawner = std::make_unique<ObstacleSpawner>(_events, _gameConfig);
 		_gameConfig.gameMode = _gameMode;
 		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, _allObjects);
 		_bulletPool = std::make_shared<BulletPool>(_events, _allObjects, _gameConfig);
+		_tankPool = std::make_shared<TankPool>(_events, _allObjects, _gameConfig, _bulletPool);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, _allObjects, _gameConfig);
 		_stateManager = std::make_shared<GameStateManager>(_events);
 		TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, _gameConfig.gameMode, _respawnManager,
@@ -57,18 +63,40 @@ protected:
 		_events->EmitEvent(GameResetEvent{});
 		_instantSpawnAnimationSubs = TestUtils::WireInstantSpawnAnimations(_events);
 		_gridSize = _gameConfig.gridOffset;
-		_tankSize = _gridSize * 3.0;
+		_tankSize = _gameConfig.tankSize;
 
 		_allObjects.reserve(4u);
 	}
 
 	void TearDown() override {}
+
+	std::shared_ptr<Tank> CreateBot(const FPoint pos, const Author author, const Direction dir)
+	{
+		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _gameConfig.tankSize, .h = _gameConfig.tankSize};
+		auto bot{TestUtils::CreateBot(rect, _tankHealth, author, _allObjects, _events, dir, _tankPool, _gameConfig)};
+
+		return bot;
+	}
+
+	std::shared_ptr<Tank> CreatePlayer(const FPoint pos, const Author author, const Direction dir)
+	{
+		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _gameConfig.tankSize, .h = _gameConfig.tankSize};
+		auto player{TestUtils::CreatePlayer(rect, _tankHealth, author, _allObjects, _events, dir, _tankPool,
+											_gameConfig)};
+
+		return player;
+	}
+
+	std::shared_ptr<BaseObj> SpawnObstacle(const ObjRectangle rect, const ObstacleType type) const
+	{
+		return TestUtils::SpawnObstacle(_events, _allObjects, rect, type);
+	}
 };
 
 // nothing but the plain course of a match: five waves of four enemies each empty the pool of 20
 TEST_F(GameStateManagerTest, PlayerTeamWon)
 {
-	bool isGameWon{false};
+	bool isGameWon{};
 
 	std::vector<std::pair<unsigned short, Uuid>> howManySpawnCounters;
 	howManySpawnCounters.reserve(4u);
@@ -180,7 +208,7 @@ TEST_F(GameStateManagerTest, PlayerTeamWon)
 // leftover enemy
 TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 {
-	bool isGameWon{false};
+	bool isGameWon{};
 
 	std::vector<std::pair<unsigned short, Uuid>> howManySpawnCounters;
 	howManySpawnCounters.reserve(4u);
@@ -250,10 +278,7 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 				}
 			});
 
-	const ObjRectangle rectEnemy{.x = _tankSize * 3.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize};
-	const std::shared_ptr<Tank> enemyBot{TestUtils::CreateBot(rectEnemy, _tankHealth, Author::Enemy1, _allObjects,
-															  _events, Direction::DOWN, _bulletPool, _gameConfig)};
-	_allObjects.emplace_back(enemyBot);
+	const auto enemyBot{CreateBot({.x = _tankSize * 3.0, .y = _tankSize * 3.0}, Author::Enemy1, Direction::DOWN)};
 
 	// Spawn bonus extra life
 	_bonusSpawner->SpawnBonus(
@@ -322,7 +347,7 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 // death that follows ends the match
 TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBase)
 {
-	bool isGameLose{false};
+	bool isGameLose{};
 	auto gameLoseSub{_events->AddListener([&isGameLose](const GameFinishedEvent& event)
 	{
 		isGameLose = event.state == GameState::Over;
@@ -336,7 +361,7 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBase)
 
 	EXPECT_EQ(respawnActual, 3u);
 	_events->EmitEvent(RespawnTanksEvent{});
-	_allObjects.emplace_back(std::make_shared<EagleTile>(ObjRectangle{}, _events, _uuid, _gameConfig));
+	SpawnObstacle(ObjRectangle{}, ObstacleType::Eagle);
 	EXPECT_EQ(respawnActual, 2u);
 
 	EXPECT_FALSE(isGameLose);
@@ -354,7 +379,7 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBase)
 // the base stands - the player simply dies three times
 TEST_F(GameStateManagerTest, PlayerTeamLoseWithThreeDeath)
 {
-	bool isGameLose{false};
+	bool isGameLose{};
 	auto gameLoseSub{_events->AddListener([&isGameLose](const GameFinishedEvent& event)
 	{
 		isGameLose = event.state == GameState::Over;
@@ -387,12 +412,9 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithThreeDeath)
 // the player takes the extra-life tank first, so it takes four deaths instead of three
 TEST_F(GameStateManagerTest, PlayerTeamLoseWithExtraLifeDeath)
 {
-	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	const std::shared_ptr<Tank> player{TestUtils::CreatePlayer(rectPlayer, _tankHealth, Author::Player1, _allObjects,
-															   _events, Direction::UP, _bulletPool, _gameConfig)};
-	_allObjects.emplace_back(player);
+	const auto player{CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::UP)};
 
-	bool isGameLose{false};
+	bool isGameLose{};
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
 
@@ -441,7 +463,7 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithExtraLifeDeath)
 // more death, not a return to three
 TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBaseAndExtraLife)
 {
-	bool isGameLose{false};
+	bool isGameLose{};
 	auto gameLoseSub{_events->AddListener([&isGameLose](const GameFinishedEvent& event)
 	{
 		isGameLose = event.state == GameState::Over;
@@ -476,7 +498,7 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBaseAndExtraLife)
 	EXPECT_EQ(respawnPlayerOneActual, 2u);
 	EXPECT_EQ(respawnPlayerTwoActual, 3u);//game mode one player so second should not respawn
 
-	_allObjects.emplace_back(std::make_shared<EagleTile>(ObjRectangle{}, _events, _uuid, _gameConfig));
+	SpawnObstacle(ObjRectangle{}, ObstacleType::Eagle);
 	_events->EmitEvent(PlayersBaseFinishedEvent{});
 	_allObjects.pop_back();// the base fell
 	EXPECT_EQ(respawnPlayerOneActual, 0u);

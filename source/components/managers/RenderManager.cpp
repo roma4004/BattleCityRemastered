@@ -15,10 +15,38 @@
 #include "utils/Log.h"
 #include <algorithm>
 #include <cmath>
+#include <limits>
+#include <ranges>
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_video.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <string>
+#include <string_view>
+
+namespace
+{
+//NOTE: glyphs are sized in output pixels, so the logical scale is cancelled around the drawing and
+//folded into the position - once around a run of lines, because every change of it breaks the batch
+class ScopedRenderScale final
+{
+public:
+	ScopedRenderScale(SDL_Renderer* const renderer, const float scale)
+		: _renderer{renderer}
+	{
+		SDL_SetRenderScale(_renderer, 1.f / scale, 1.f / scale);
+	}
+
+	~ScopedRenderScale() { SDL_SetRenderScale(_renderer, 1.f, 1.f); }
+
+	ScopedRenderScale(const ScopedRenderScale&) = delete;
+	ScopedRenderScale& operator=(const ScopedRenderScale&) = delete;
+	ScopedRenderScale(ScopedRenderScale&&) = delete;
+	ScopedRenderScale& operator=(ScopedRenderScale&&) = delete;
+
+private:
+	SDL_Renderer* _renderer;
+};
+}
 
 RenderManager::RenderManager(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig,
 							 SDL_Config& sdlConfig)
@@ -40,7 +68,6 @@ void RenderManager::Subscribe()
 	_subs.push_back(_events->AddListener(this, &RenderManager::PresentFrame));
 	_subs.push_back(_events->AddListener(this, &RenderManager::OnGameModeChangedTo));
 	_subs.push_back(_events->AddListener(this, &RenderManager::OnPlayerSlotAssigned));
-	_subs.push_back(_events->AddListener(this, &RenderManager::OnRenderText));
 	_subs.push_back(_events->AddListener(this, &RenderManager::DrawMenuTextBlock));
 
 	_subs.push_back(_events->AddListener(this, &RenderManager::DrawMenuBackground));
@@ -94,11 +121,6 @@ void RenderManager::OnRenderDeviceReset(const RenderDeviceResetEvent&)
 
 	//NOTE: a replaced renderer has no logical size; idempotent on one that survived
 	ApplyLogicalSize();
-}
-
-void RenderManager::OnRenderText(const RenderTextEvent& event) const
-{
-	TextToRender(event.pos, IntToColor(event.color), event.text);
 }
 
 void RenderManager::OnWorldGeometryChanged(const WorldGeometryChangedEvent&)
@@ -169,9 +191,27 @@ void RenderManager::ApplyLogicalSize()
 	SnapWindowToLogicalAspect();
 }
 
+SDL_Rect RenderManager::CenteredInField(const int width, const int height) const
+{
+	const UPoint field{_gameConfig.battlefieldSize};
+
+	return SDL_Rect{.x = (static_cast<int>(field.x) - width) / 2,
+					.y = (static_cast<int>(field.y) - height) / 2,
+					.w = width,
+					.h = height};
+}
+
+SDL_Rect RenderManager::PlateRect(const ObjRectangle& sprite, const double widthShare) const
+{
+	const auto width{static_cast<int>(static_cast<double>(_gameConfig.battlefieldSize.x) * widthShare)};
+	const auto height{static_cast<int>(static_cast<double>(width) * sprite.h / sprite.w)};
+
+	return CenteredInField(width, height);
+}
+
 void RenderManager::DrawPauseText(const RenderPauseTextEvent&) const
 {
-	constexpr SDL_Rect dstRect{.x = 135, .y = 142, .w = 300, .h = 75};
+	const SDL_Rect dstRect{PlateRect(TextureOffset::kPauseText, kPausePlateShare)};
 	constexpr SDL_Rect srcRect{.x = static_cast<int>(TextureOffset::kPauseText.x),
 							   .y = static_cast<int>(TextureOffset::kPauseText.y),
 							   .w = static_cast<int>(TextureOffset::kPauseText.w),
@@ -181,7 +221,7 @@ void RenderManager::DrawPauseText(const RenderPauseTextEvent&) const
 
 void RenderManager::DrawGameOverText(const RenderGameOverTextEvent&) const
 {
-	constexpr SDL_Rect dstRect{.x = 200, .y = 152, .w = 200, .h = 75};
+	const SDL_Rect dstRect{PlateRect(TextureOffset::kGameOverText, kGameOverPlateShare)};
 	constexpr SDL_Rect srcRect{.x = static_cast<int>(TextureOffset::kGameOverText.x),
 							   .y = static_cast<int>(TextureOffset::kGameOverText.y),
 							   .w = static_cast<int>(TextureOffset::kGameOverText.w),
@@ -191,7 +231,7 @@ void RenderManager::DrawGameOverText(const RenderGameOverTextEvent&) const
 
 void RenderManager::DrawGameWonText(const RenderGameWonTextEvent&) const
 {
-	constexpr SDL_Rect dstRect{.x = 250, .y = 152, .w = 120, .h = 85};
+	const SDL_Rect dstRect{PlateRect(TextureOffset::kGameWonText, kGameWonPlateShare)};
 	constexpr SDL_Rect srcRect{.x = static_cast<int>(TextureOffset::kGameWonText.x),
 							   .y = static_cast<int>(TextureOffset::kGameWonText.y),
 							   .w = static_cast<int>(TextureOffset::kGameWonText.w),
@@ -253,11 +293,8 @@ void RenderManager::DrawPlayerOneIcons(const RenderPlayerOneIconEvent& event) co
 	const SDL_Rect rect{.x = posX, .y = 350, .w = kSideBarItemWidth, .h = 70};
 	RenderCopyWithClipping(_sdlConfig.atlasTexture.get(), srcRect, rect);
 
-	constexpr bool isMediumFontSize{true};
-	TextToRender(Point{.x = posX + kSideBarCounterTextPadding, .y = 390},
-				 kSideBarCounterColor,
-				 respawnCount,
-				 isMediumFontSize);
+	DrawCounterAt(TextCache::Slot::PlayerOneLives, Point{.x = posX + kSideBarCounterTextPadding, .y = 390},
+				  kSideBarCounterColor, respawnCount);
 }
 
 void RenderManager::DrawPlayerTwoIcons(const RenderPlayerTwoIconEvent& event) const
@@ -272,11 +309,8 @@ void RenderManager::DrawPlayerTwoIcons(const RenderPlayerTwoIconEvent& event) co
 	const SDL_Rect rect{.x = posX, .y = 420, .w = kSideBarItemWidth, .h = 70};
 	RenderCopyWithClipping(_sdlConfig.atlasTexture.get(), srcRect, rect);
 
-	constexpr bool isMediumFontSize{true};
-	TextToRender(Point{.x = posX + kSideBarCounterTextPadding, .y = 460},
-				 kSideBarCounterColor,
-				 respawnCount,
-				 isMediumFontSize);
+	DrawCounterAt(TextCache::Slot::PlayerTwoLives, Point{.x = posX + kSideBarCounterTextPadding, .y = 460},
+				  kSideBarCounterColor, respawnCount);
 }
 
 void RenderManager::DrawStageNumber(const RenderStageNumberEvent& event) const
@@ -291,11 +325,8 @@ void RenderManager::DrawStageNumber(const RenderStageNumberEvent& event) const
 	const SDL_Rect rect{.x = posX, .y = 490, .w = kSideBarItemWidth, .h = 95};
 	RenderCopyWithClipping(_sdlConfig.atlasTexture.get(), srcRect, rect);
 
-	constexpr bool isMediumFontSize{true};
-	TextToRender(Point{.x = posX + kSideBarCounterTextPadding, .y = 555},
-				 kSideBarCounterColor,
-				 currentStageNumber,
-				 isMediumFontSize);
+	DrawCounterAt(TextCache::Slot::StageNumber, Point{.x = posX + kSideBarCounterTextPadding, .y = 555},
+				  kSideBarCounterColor, currentStageNumber);
 }
 
 unsigned int RenderManager::ColorToInt(const SDL_Color& color)
@@ -319,11 +350,7 @@ unsigned int RenderManager::ComponentsToColor(const Uint8 r, const Uint8 g, cons
 
 void RenderManager::DrawMenuBackground(const RenderMenuBackgroundEvent& event) const
 {
-	const Point pos{event.pos};
-	const SDL_Rect backgroundRect{.x = pos.x + static_cast<int>(_menuParams.padding / 2u),
-								  .y = pos.y + static_cast<int>(_menuParams.padding / 2u),
-								  .w = static_cast<int>(_menuParams.panelSize.x),
-								  .h = static_cast<int>(_menuParams.panelSize.y)};
+	const SDL_Rect backgroundRect{MenuPanelRect(event.pos)};
 	constexpr unsigned int color{0x91808080u};
 	constexpr Uint8 a{(color >> 24u) & 0xFFu};
 	constexpr Uint8 r{(color >> 16u) & 0xFFu};
@@ -335,14 +362,14 @@ void RenderManager::DrawMenuBackground(const RenderMenuBackgroundEvent& event) c
 
 void RenderManager::DrawMenuLogo(const RenderMenuLogoEvent& event) const
 {
-	const Point pos{event.pos};
+	const Point pos{MenuContentPos(event.pos)};
 	const SDL_Rect rect{.x = pos.x + 135, .y = pos.y + 42, .w = 300, .h = 75};
 	RenderCopy(_sdlConfig.logoTexture.get(), rect);
 }
 
 void RenderManager::DrawSelectorIcon(const RenderMenuSelectorIconEvent& event) const
 {
-	const Point pos{event.pos};
+	const Point pos{MenuContentPos(event.pos)};
 	const SDL_Rect rect{.x = pos.x, .y = pos.y, .w = 30, .h = 30};
 	RenderCopy(_sdlConfig.selectorIconTexture.get(), rect);
 }
@@ -362,7 +389,7 @@ void RenderManager::RenderCopy(SDL_Texture* texture, const SDL_Rect dstRect) con
 
 void RenderManager::DrawXBoxHint(const RenderMenuXBoxHintEvent& event) const
 {
-	const Point pos{event.pos};
+	const Point pos{MenuContentPos(event.pos)};
 	RenderCopy(_sdlConfig.xboxTextures[3].get(), {.x = pos.x - 75, .y = pos.y + 93, .w = 30, .h = 30});//View button
 	RenderCopy(_sdlConfig.xboxTextures[2].get(), {.x = pos.x - 75, .y = pos.y + 123, .w = 30, .h = 30});//Menu button
 	RenderCopy(_sdlConfig.xboxTextures[5].get(), {.x = pos.x - 75, .y = pos.y + 153, .w = 30, .h = 30});//Y button
@@ -373,7 +400,7 @@ void RenderManager::DrawXBoxHint(const RenderMenuXBoxHintEvent& event) const
 
 void RenderManager::DrawPS5Hint(const RenderMenuPS5HintEvent& event) const
 {
-	const Point pos{event.pos};
+	const Point pos{MenuContentPos(event.pos)};
 	RenderCopy(_sdlConfig.ps5Textures[0].get(), {.x = pos.x, .y = pos.y - 60, .w = 30, .h = 30});//Create button
 	RenderCopy(_sdlConfig.ps5Textures[4].get(), {.x = pos.x, .y = pos.y - 28, .w = 30, .h = 30});//Options button
 	RenderCopy(_sdlConfig.ps5Textures[5].get(), {.x = pos.x, .y = pos.y + 5, .w = 30, .h = 30});//Triangle button
@@ -382,15 +409,27 @@ void RenderManager::DrawPS5Hint(const RenderMenuPS5HintEvent& event) const
 	RenderCopy(_sdlConfig.ps5Textures[1].get(), {.x = pos.x, .y = pos.y + 63, .w = 30, .h = 30});//Cross button
 }
 
-void RenderManager::TextToRender(const Point& pos, const SDL_Color& color, const int value,
-								 const bool isMediumFontSize = false) const
+
+int RenderManager::BlockStartPointSize() { return SDL_Config::kFontSizePtSmall; }
+
+bool RenderManager::FittedBlock::Matches(const RenderMenuTextBlockEvent& event, const float renderScale) const
 {
-	TextToRender(pos, color, std::to_string(value), isMediumFontSize);
+	//NOTE: y is left out on purpose - the slide walks every line down together, and the fit reads only
+	//what a line says (its text) and where it starts across (its x)
+	auto sameLine = [](const TextBlockLine& fitted, const TextBlockLine& line)
+	{
+		return fitted.pos.x == line.pos.x && fitted.text == line.text;
+	};
+
+	return scale == renderScale
+		   && lineHeight == event.lineHeight
+		   && align == event.align
+		   && std::ranges::equal(lines, event.lines, sameLine);
 }
 
-int RenderManager::BasePointSize(const bool isMediumFontSize)
+Point RenderManager::CenteredIn(const SDL_Rect& box, const TextCache::CachedText& cached)
 {
-	return isMediumFontSize ? SDL_Config::kFontSizePtMedium : SDL_Config::kFontSizePtSmall;
+	return Point{.x = box.x + (box.w - cached.width) / 2, .y = box.y + (box.h - cached.height) / 2};
 }
 
 float RenderManager::CurrentRenderScale() const
@@ -413,16 +452,9 @@ float RenderManager::CurrentRenderScale() const
 	return scale > 0.f ? scale : 1.f;
 }
 
-void RenderManager::TextToRender(const Point pos, const SDL_Color color, const std::string& text,
-								 const bool isMediumFontSize) const
+void RenderManager::DrawTextAt(const Point pos, const SDL_Color color, const std::string_view text,
+							   const int basePointSize, const float scale) const
 {
-	TextToRenderSized(pos, color, text, BasePointSize(isMediumFontSize));
-}
-
-void RenderManager::TextToRenderSized(const Point pos, const SDL_Color color, const std::string& text,
-									  const int basePointSize) const
-{
-	const float scale{CurrentRenderScale()};
 	const TextCache::CachedText* cached{_textCache.Acquire(text, color, basePointSize, scale)};
 	if (cached == nullptr)
 	{
@@ -432,53 +464,124 @@ void RenderManager::TextToRenderSized(const Point pos, const SDL_Color color, co
 	DrawText(*cached, pos.x, pos.y, scale);
 }
 
-void RenderManager::TextToRenderCentered(const SDL_Rect& box, const SDL_Color color, const std::string& text,
-										 const int basePointSize) const
+void RenderManager::DrawTextCentered(const SDL_Rect& box, const SDL_Color color, const std::string_view text,
+									 const int basePointSize, const float scale) const
 {
-	const float scale{CurrentRenderScale()};
 	const TextCache::CachedText* cached{_textCache.Acquire(text, color, basePointSize, scale)};
 	if (cached == nullptr)
 	{
 		return;
 	}
 
-	DrawText(*cached, box.x + (box.w - cached->width) / 2, box.y + (box.h - cached->height) / 2, scale);
+	const Point pos{CenteredIn(box, *cached)};
+
+	DrawText(*cached, pos.x, pos.y, scale);
 }
 
+void RenderManager::DrawCounterAt(const TextCache::Slot slot, const Point pos, const SDL_Color color,
+								  const int value) const
+{
+	const float scale{CurrentRenderScale()};
+	const ScopedRenderScale scaled{_sdlConfig.renderer.get(), scale};
+	const TextCache::CachedText* cached{
+			_textCache.AcquireSlot(slot, std::to_string(value), color, SDL_Config::kFontSizePtMedium, scale)};
+	if (cached == nullptr)
+	{
+		return;
+	}
+
+	DrawText(*cached, pos.x, pos.y, scale);
+}
+
+void RenderManager::DrawCounterCentered(const TextCache::Slot slot, const SDL_Rect& box, const SDL_Color color,
+										const int value) const
+{
+	const float scale{CurrentRenderScale()};
+	const ScopedRenderScale scaled{_sdlConfig.renderer.get(), scale};
+	const TextCache::CachedText* cached{
+			_textCache.AcquireSlot(slot, std::to_string(value), color, SDL_Config::kFontSizePtMedium, scale)};
+	if (cached == nullptr)
+	{
+		return;
+	}
+
+	const Point pos{CenteredIn(box, *cached)};
+
+	DrawText(*cached, pos.x, pos.y, scale);
+}
+
+//NOTE: the panel belongs to the field, not to whoever is showing it - only the slide-in rides menuPos,
+//which is why nothing here reads its x
 SDL_Rect RenderManager::MenuPanelRect(const Point menuPos) const
 {
-	const auto inset{static_cast<int>(_menuParams.padding / 2u)};
-
-	return SDL_Rect{.x = menuPos.x + inset,
-					.y = menuPos.y + inset,
+	return SDL_Rect{.x = static_cast<int>(_menuParams.sideInset),
+					.y = menuPos.y + static_cast<int>(_menuParams.padding / 2u),
 					.w = static_cast<int>(_menuParams.panelSize.x),
 					.h = static_cast<int>(_menuParams.panelSize.y)};
+}
+
+RenderManager::BlockSpan RenderManager::MeasureBlock(const RenderMenuTextBlockEvent& event, const int pointSize,
+													 const float scale) const
+{
+	//NOTE: a block the panel stacks in its middle is measured from zero - its lines carry no position
+	const bool readsLinePositions{event.align != TextBlockAlign::CenteredInPanel};
+
+	BlockSpan span{.left = std::numeric_limits<int>::max()};
+	int right{std::numeric_limits<int>::min()};
+	for (const TextBlockLine& line: event.lines)
+	{
+		//NOTE: one measurement answers both questions the fit asks of a line
+		const Point size{_textCache.MeasureString(line.text, pointSize, scale)};
+		const int lineLeft{readsLinePositions ? line.pos.x : 0};
+
+		span.left = std::min(span.left, lineLeft);
+		span.tallestLine = std::max(span.tallestLine, size.y);
+		right = std::max(right, lineLeft + size.x);
+	}
+
+	span.width = right - span.left;
+
+	return span;
 }
 
 //NOTE: the tightest line decides, the line step caps it
 int RenderManager::FitBlockPointSize(const RenderMenuTextBlockEvent& event, const float scale) const
 {
 	const SDL_Rect panel{MenuPanelRect(event.menuPos)};
-
-	for (int pointSize = BasePointSize(false); pointSize > kBlockMinPointSize; --pointSize)
+	//NOTE: the block is placed by the panel either way, so all it has to do is go in
+	auto goesIn = [this, &event, panel, scale](const int pointSize)
 	{
-		const auto fits = [&](const TextBlockLine& line)
-		{
-			const Point size{_textCache.MeasureString(line.text, pointSize, scale)};
-			const bool fitsWidth{event.align == TextBlockAlign::CenteredInPanel
-										 ? size.x <= panel.w
-										 : line.pos.x + size.x <= panel.x + panel.w};
+		const BlockSpan span{MeasureBlock(event, pointSize, scale)};
 
-			return fitsWidth && size.y <= event.lineHeight;
-		};
+		return span.tallestLine <= event.lineHeight && span.width <= panel.w;
+	};
 
-		if (std::ranges::all_of(event.lines, fits))
-		{
-			return pointSize;
-		}
+	//NOTE: what goes in keeps going in as it shrinks, so the smallest refused size bounds the answer
+	const auto sizes{std::views::iota(kBlockMinPointSize, BlockStartPointSize() + 1)};
+	const auto firstRefused{std::ranges::partition_point(sizes, goesIn)};
+
+	return firstRefused == sizes.begin() ? kBlockMinPointSize : *std::ranges::prev(firstRefused);
+}
+
+//NOTE: the whole block moved by one amount, never a line on its own - the columns of the controls table
+//only stay columns while every line shifts alike
+int RenderManager::MenuBlockShiftX(const RenderMenuTextBlockEvent& event, const int pointSize,
+								   const float scale) const
+{
+	if (event.align != TextBlockAlign::CenteredBlock)
+	{
+		return 0;
 	}
 
-	return kBlockMinPointSize;
+	const SDL_Rect panel{MenuPanelRect(event.menuPos)};
+	const BlockSpan span{MeasureBlock(event, pointSize, scale)};
+
+	return panel.x + (panel.w - span.width) / 2 - span.left;
+}
+
+Point RenderManager::MenuContentPos(const Point pos) const
+{
+	return Point{.x = pos.x + _menuBlockFit.shiftX, .y = pos.y};
 }
 
 void RenderManager::DrawMenuTextBlock(const RenderMenuTextBlockEvent& event) const
@@ -489,10 +592,27 @@ void RenderManager::DrawMenuTextBlock(const RenderMenuTextBlockEvent& event) con
 	}
 
 	const float scale{CurrentRenderScale()};
-	if (event != _menuBlockFit.block || scale != _menuBlockFit.scale)
+	if (!_menuBlockFit.Matches(event, scale))
 	{
-		_menuBlockFit = {.block = event, .scale = scale, .pointSize = FitBlockPointSize(event, scale)};
+		const int pointSize{FitBlockPointSize(event, scale)};
+		const int shiftX{MenuBlockShiftX(event, pointSize, scale)};
+
+		//NOTE: what is drawn and what the mouse hits have to agree, and only this side knows the shift
+		if (shiftX != _menuBlockFit.shiftX)
+		{
+			_events->EmitEvent(MenuContentShiftedEvent{.shiftX = shiftX});
+		}
+
+		_menuBlockFit = {.lines = event.lines,
+						 .lineHeight = event.lineHeight,
+						 .align = event.align,
+						 .scale = scale,
+						 .pointSize = pointSize,
+						 .shiftX = shiftX};
 	}
+
+	//NOTE: one scale for the whole block - the lines draw back to back inside it
+	const ScopedRenderScale scaled{_sdlConfig.renderer.get(), scale};
 
 	if (event.align == TextBlockAlign::CenteredInPanel)
 	{
@@ -503,7 +623,7 @@ void RenderManager::DrawMenuTextBlock(const RenderMenuTextBlockEvent& event) con
 		for (const TextBlockLine& line: event.lines)
 		{
 			const SDL_Rect lineBox{.x = panel.x, .y = lineY, .w = panel.w, .h = event.lineHeight};
-			TextToRenderCentered(lineBox, IntToColor(line.color), line.text, _menuBlockFit.pointSize);
+			DrawTextCentered(lineBox, IntToColor(line.color), line.text, _menuBlockFit.pointSize, scale);
 			lineY += event.lineHeight;
 		}
 
@@ -516,18 +636,14 @@ void RenderManager::DrawMenuTextBlock(const RenderMenuTextBlockEvent& event) con
 	{
 		if (line.pos.y < logicalHeight)
 		{
-			TextToRenderSized(line.pos, IntToColor(line.color), line.text, _menuBlockFit.pointSize);
+			DrawTextAt(MenuContentPos(line.pos), IntToColor(line.color), line.text, _menuBlockFit.pointSize, scale);
 		}
 	}
 }
 
-//NOTE: glyphs are sized in output pixels - the logical scale is cancelled and folded into the position
 void RenderManager::DrawText(const TextCache::CachedText& cached, const int x, const int y, const float scale) const
 {
-	SDL_Renderer* const renderer{_sdlConfig.renderer.get()};
-	SDL_SetRenderScale(renderer, 1.f / scale, 1.f / scale);
 	TTF_DrawRendererText(cached.text.get(), static_cast<float>(x) * scale, static_cast<float>(y) * scale);
-	SDL_SetRenderScale(renderer, 1.f, 1.f);
 }
 
 inline SDL_Rect RenderManager::RectToSdlRect(const ObjRectangle& rect)
@@ -691,7 +807,7 @@ void RenderManager::RenderFPS(const RenderFPSEvent& event) const
 
 	constexpr SDL_Color textColor{.r = 140u, .g = 0u, .b = 255u, .a = 255u};
 	//NOTE: three digits are 72 px in a 71 px column - the pixel over buys reusing the one font opened at startup
-	TextToRenderCentered(_fpsBox, textColor, std::to_string(fps), SDL_Config::kFontSizePtMedium);
+	DrawCounterCentered(TextCache::Slot::Fps, _fpsBox, textColor, static_cast<int>(fps));
 }
 
 void RenderManager::DrawHealthBar(const RenderHealthBarEvent& event) const

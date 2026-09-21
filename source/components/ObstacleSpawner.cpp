@@ -5,7 +5,9 @@
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/GameModeEvents.h"
 #include "components/Map.h"
+#include "components/events/ReplicationEvents.h"
 #include "components/events/SpawnEvents.h"
+#include "components/WorldSnapshot.h"
 #include "entities/obstacles/BrickWall.h"
 #include "entities/obstacles/EagleTile.h"
 #include "entities/obstacles/FortressWalls.h"
@@ -15,6 +17,7 @@
 #include "entities/obstacles/WaterTile.h"
 #include "enums/ObstacleType.h"
 #include "utils/UuidUtils.h"
+#include <algorithm>
 #include <memory>
 
 class BaseObj;
@@ -35,6 +38,7 @@ void ObstacleSpawner::Subscribe()
 	if (_gameConfig.IsClient())
 	{
 		_subs.push_back(_events->AddListener(this, &ObstacleSpawner::OnObstacleSpawned));
+		_subs.push_back(_events->AddListener(this, &ObstacleSpawner::OnWorldSnapshotReceived));
 	}
 }
 
@@ -58,6 +62,14 @@ void ObstacleSpawner::OnObstacleSpawned(const ObstacleSpawnedEvent& event)
 {
 	const double side{_gameConfig.gridOffset * ObstacleCellSpan(event.type)};
 	SpawnObstacle(ObjRectangle{.x = event.pos.x, .y = event.pos.y, .w = side, .h = side}, event.type, event.uuid);
+}
+
+void ObstacleSpawner::OnWorldSnapshotReceived(const WorldSnapshotReceivedEvent& event)
+{
+	std::ranges::for_each(event.snapshot.obstacles, [this](const ObstacleSpawnedEvent& obstacle)
+	{
+		OnObstacleSpawned(obstacle);
+	});
 }
 
 void ObstacleSpawner::SpawnObstacle(const ObjRectangle rect, const ObstacleType type, Uuid uuid)
@@ -152,6 +164,9 @@ void ObstacleSpawner::LoadMap() const
 		const std::string where{error.line != 0u ? " (line " + std::to_string(error.line) + ')' : std::string{}};
 		Log::Error("cannot load map " + error.path.string() + where + ": " + error.reason);
 
+		//NOTE: an empty world is not a playable one - the match is refused rather than started without a map
+		_events->EmitEvent(MapLoadFailedEvent{});
+
 		return;
 	}
 
@@ -160,4 +175,5 @@ void ObstacleSpawner::LoadMap() const
 	_events->EmitEvent(MapLoadedEvent{.cols = map.GetCols(), .rows = map.GetRows()});
 
 	map.CreateObstacles(_gameConfig.gridOffset);
+	map.CreateBonuses(_gameConfig.bonusSize, _gameConfig.gridOffset);
 }

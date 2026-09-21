@@ -2,6 +2,7 @@
 #include "application/GameConfig.h"
 #include "components/BonusSpawner.h"
 #include "components/BulletPool.h"
+#include "components/TankPool.h"
 #include "components/EventSystem.h"
 #include "components/events/BonusPickupEvents.h"
 #include "components/events/InputEvents.h"
@@ -28,6 +29,7 @@ class BonusTestEnemy : public testing::Test// NOLINT(clang-diagnostic-padded)
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
+	std::shared_ptr<TankPool> _tankPool{nullptr};
 	std::unique_ptr<BonusSpawner> _bonusSpawner{nullptr};
 	std::vector<EventSubscription> _instantSpawnAnimationSubs{};
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
@@ -50,6 +52,7 @@ protected:
 		_events = std::make_shared<EventSystem>();
 		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, _allObjects);
 		_bulletPool = std::make_shared<BulletPool>(_events, _allObjects, _gameConfig);
+		_tankPool = std::make_shared<TankPool>(_events, _allObjects, _gameConfig, _bulletPool);
 		TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, _gameConfig.gameMode, _respawnManager,
 								 _tankSpawner);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, _allObjects, _gameConfig);
@@ -59,19 +62,34 @@ protected:
 		_obstacleSpawner = std::make_unique<ObstacleSpawner>(_events, _gameConfig);
 		_fortressWallSub = TestUtils::TrackFortressWall(_events, &_fortressWall);
 		_gridSize = _gameConfig.gridOffset;
-		_tankSize = _gridSize * 3.0;
+		_tankSize = _gameConfig.tankSize;
 	}
 
 	void TearDown() override {}
+
+	std::shared_ptr<Tank> CreateBot(const FPoint pos, const Author author, const Direction dir)
+	{
+		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _gameConfig.tankSize, .h = _gameConfig.tankSize};
+		auto bot{TestUtils::CreateBot(rect, _tankHealth, author, _allObjects, _events, dir, _tankPool, _gameConfig)};
+
+		return bot;
+	}
+
+	std::shared_ptr<Tank> CreatePlayer(const FPoint pos, const Author author, const Direction dir)
+	{
+		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _gameConfig.tankSize, .h = _gameConfig.tankSize};
+		auto player{TestUtils::CreatePlayer(rect, _tankHealth, author, _allObjects, _events, dir, _tankPool,
+											_gameConfig)};
+
+		return player;
+	}
 };
 
 
 // the wall is brick when the enemy takes the shovel
 TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressBricWallkHide)
 {
-	const ObjRectangle rectEnemy{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
-	const std::shared_ptr<Tank> enemyBot{TestUtils::CreateBot(rectEnemy, _tankHealth, Author::Enemy1, _allObjects,
-															  _events, Direction::DOWN, _bulletPool, _gameConfig)};
+	const auto enemyBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN)};
 
 	const ObjRectangle fortressRect{.x = _tankSize + 1.0, .y = 0, .w = _gridSize, .h = _gridSize};
 	_events->EmitEvent(SpawnObstacleEvent{.rect = fortressRect, .type = ObstacleType::Fortress});
@@ -88,15 +106,10 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressBricWallkHide)
 // a player takes a shovel first, so the enemy's finds steel - it goes just the same
 TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressSteelWallHide)
 {
-	const ObjRectangle rectEnemy{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
-	const std::shared_ptr<Tank> enemyBot{TestUtils::CreateBot(rectEnemy, _tankHealth, Author::Enemy1, _allObjects,
-															  _events, Direction::DOWN, _bulletPool, _gameConfig)};
+	const auto enemyBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN)};
 
 	_allObjects.reserve(4);
-	const ObjRectangle rectPlayer{.x = _tankSize * 2.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
-	const std::shared_ptr<Tank> player{TestUtils::CreatePlayer(rectPlayer, _tankHealth, Author::Player1, _allObjects,
-															   _events, Direction::UP, _bulletPool, _gameConfig)};
-	_allObjects.emplace_back(player);
+	CreatePlayer({.x = _tankSize * 2.0, .y = _tankSize * 2.0}, Author::Player1, Direction::UP);
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
 

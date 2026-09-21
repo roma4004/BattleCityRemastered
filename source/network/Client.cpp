@@ -2,9 +2,17 @@
 #include "components/EventSystem.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "enums/ClientSignal.h"
+#include "network/DatagramLink.h"
 #include "network/ReplicationBindings.h"
+#include "network/Serializer.h"
+#include "network/commands/CommandBatch.h"
 #include "utils/Log.h"
+#include "utils/RandUtils.h"
+#include <boost/asio/post.hpp>
+#include <cstdint>
+#include <random>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <utility>
 #include <variant>
@@ -29,22 +37,35 @@ namespace network::commands
 {
 Client::Client(boost::asio::io_context& ioContext, const ServerAddress& address,
 			   const std::shared_ptr<EventSystem>& events)
-	: PeerLink(tcp::socket(boost::asio::make_strand(ioContext)), "Client", events)
-	, _reconnectTimer(_channel->Socket().get_executor())
-	, _endpoint{tcp::endpoint(DialAddress(address.host), address.port)}
+	: PeerLink("Client", events)
+	, _endpoint{DialAddress(address.host), address.port}
+	, _socket{ioContext, _endpoint.protocol()}
+	, _tickTimer{ioContext}
+	, _reconnectTimer{ioContext}
 	, _replicationIn{events, _commandQueue}
 	, _replicationOut{events}
 {
+	boost::system::error_code ec;
+	std::ignore = _socket.set_option(udp::socket::receive_buffer_size{DatagramLink::kSocketBufferSize}, ec);
+	//NOTE: connected, so the socket hands over datagrams from the host alone
+	std::ignore = _socket.connect(_endpoint, ec);
+	if (ec)
+	{
+		Log::Error("Client connect: " + ec.message());
+	}
+
 	BindClientReplication(_replicationOut);
 	Subscribe();
 
+	Receive();
+	ScheduleTick();
 	TryConnect();
 }
 
 void Client::OnCommand(const AnyCommand& command)
 {
-	//NOTE: the goodbye is peeled off rather than left to the applier - it has to be read on this, the
-	//network thread, while everything else is a game fact and belongs on the game one
+	//NOTE: peeled off rather than left to the applier - the goodbye has to be read on the network thread,
+	//while everything else is a game fact and belongs on the game one
 	if (const auto* goodbye{std::get_if<Disconnect>(&command)})
 	{
 		OnDisconnect(*goodbye);
@@ -56,30 +77,150 @@ void Client::OnCommand(const AnyCommand& command)
 
 void Client::TryConnect()
 {
-	auto& socket{_channel->Socket()};
-	_channel->CloseForReconnect();
-	socket.open(_endpoint.protocol());
-	socket.async_connect(_endpoint, [this](const boost::system::error_code& ec)
+	const auto now{Clock::now()};
+	_link.emplace(RandUtils::GetRandNumber(std::uniform_int_distribution<std::uint32_t>{}), now);
+	_attemptStartedAt = now;
+	Transmit(now);
+}
+
+void Client::Receive()
+{
+	_socket.async_receive(boost::asio::buffer(_receiveBuffer),
+						  [this](const boost::system::error_code& ec, const std::size_t size)
+						  {
+							  if (ec == boost::asio::error::operation_aborted || !_socket.is_open())
+							  {
+								  return;
+							  }
+
+							  //NOTE: one datagram's error - Windows refuses on the next receive when
+							  //nobody listens at the far end
+							  if (!ec)
+							  {
+								  OnDatagram(std::string_view{_receiveBuffer.data(), size}, Clock::now());
+							  }
+
+							  Receive();
+						  });
+}
+
+void Client::OnDatagram(const std::string_view datagram, const Clock::time_point now)
+{
+	if (!_link)
+	{
+		return;
+	}
+
+	const auto arrivals{_link->Receive(datagram, now)};
+	if (!arrivals)
+	{
+		return;
+	}
+
+	if (!_isConnected && !_isShuttingDown)
+	{
+		Log::Info("client connected");
+		_reconnectAttempts = 0;
+		_reconnectAbandoned = false;
+		_isConnected = true;
+		_commandQueue.Enqueue([this] { _events->EmitEvent(ClientConnectedToHostEvent{}); });
+	}
+
+	Transmit(now);
+
+	if (!Dispatch(*arrivals))
+	{
+		HandleProtocolError();
+	}
+}
+
+void Client::ScheduleTick()
+{
+	_tickTimer.expires_after(DatagramLink::kPollInterval);
+	_tickTimer.async_wait([this](const boost::system::error_code& ec)
 	{
 		if (!ec)
 		{
-			Log::Info("client connected");
-			_reconnectAttempts = 0;
-			_reconnectAbandoned = false;
-			_isConnected = true;
-			_commandQueue.Enqueue([this] { _events->EmitEvent(ClientConnectedToHostEvent{}); });
-			this->StartReading();
-			_channel->SetWriteEnabled(true);
-		}
-		else
-		{
-			++_reconnectAttempts;
-			Log::Error("Client connect failed (attempt " + std::to_string(_reconnectAttempts) + "/"
-					   + std::to_string(kMaxReconnectAttempts) + "): " + ec.message());
-
-			ScheduleReconnect();
+			Tick();
 		}
 	});
+}
+
+void Client::Tick()
+{
+	if (!_socket.is_open())
+	{
+		return;
+	}
+
+	const auto now{Clock::now()};
+
+	if (_onClosed)
+	{
+		if (now < _closeDeadline && _link && !_link->IsDrained())
+		{
+			Transmit(now);
+			ScheduleTick();
+			return;
+		}
+
+		const auto onClosed{std::move(_onClosed)};
+		_onClosed = nullptr;
+		CloseSocket();
+		onClosed();
+
+		return;
+	}
+
+	if (_link && !_isConnected && now - _attemptStartedAt > kConnectTimeout)
+	{
+		++_reconnectAttempts;
+		Log::Error("Client connect failed (attempt " + std::to_string(_reconnectAttempts) + "/"
+				   + std::to_string(kMaxReconnectAttempts) + "): the host did not answer");
+		_link.reset();
+		ScheduleReconnect();
+	}
+	else if (_link && _isConnected && _link->IsSilent(now))
+	{
+		Log::Error("Client: the host went silent");
+		HandleDisconnect();
+	}
+
+	Transmit(now);
+	ScheduleTick();
+}
+
+void Client::Transmit(const Clock::time_point now)
+{
+	if (!_link)
+	{
+		return;
+	}
+
+	for (const std::string& datagram: _link->TakeDatagrams(now))
+	{
+		boost::system::error_code ec;
+		std::ignore = _socket.send(boost::asio::buffer(datagram), 0, ec);
+		//NOTE: a refusal is nobody listening yet - the connect attempt runs out on its own
+		if (ec && ec != boost::asio::error::connection_refused && ec != boost::asio::error::connection_reset)
+		{
+			Log::Error("Client send: " + ec.message());
+		}
+	}
+}
+
+void Client::CloseSocket()
+{
+	std::ignore = _tickTimer.cancel();
+
+	if (!_socket.is_open())
+	{
+		return;
+	}
+
+	boost::system::error_code ec;
+	std::ignore = _socket.cancel(ec);
+	std::ignore = _socket.close(ec);
 }
 
 void Client::ScheduleReconnect()
@@ -130,23 +271,23 @@ void Client::HandleDisconnect()
 	}
 
 	_isConnected = false;
-	_channel->SetWriteEnabled(false);
+	_link.reset();
+	_commandQueue.Enqueue([this] { _events->EmitEvent(ClientHostLostEvent{}); });
 
 	if (_isLinkUnrecoverable)
 	{
-		_channel->Close();
+		CloseSocket();
 	}
 	else
 	{
-		_channel->CloseForReconnect();
 		_reconnectAttempts = 0;//NOTE: a drop starts a fresh budget, it is not a failed connect attempt
 	}
 
 	ScheduleReconnect();
 }
 
-//NOTE: TCP hands bytes over intact or not at all, so an unreadable frame is a protocol disagreement
-//and the next one fails the same way - the link ends here instead of retrying
+//NOTE: an unreadable message arrived whole and in order, so it is a protocol disagreement - the next one
+//fails the same way, and the link ends here
 void Client::HandleProtocolError()
 {
 	if (_isShuttingDown)
@@ -173,7 +314,7 @@ void Client::Shutdown()
 	_isShuttingDown = true;//NOTE: before cancelling - handlers must not read the cancel as a drop
 
 	std::ignore = _reconnectTimer.cancel();//NOTE: no-throw, so ~Client is safe without a catch-all
-	_channel->Close();
+	CloseSocket();
 }
 
 void Client::Shutdown(const DisconnectReason reason, std::function<void()> onClosed)
@@ -181,10 +322,28 @@ void Client::Shutdown(const DisconnectReason reason, std::function<void()> onClo
 	_isShuttingDown = true;
 	std::ignore = _reconnectTimer.cancel();
 
-	const bool hasLink{_isConnected};
+	const bool hasLink{_isConnected && _link && _socket.is_open()};
 	_isConnected = false;
 
-	CloseWithFarewell(hasLink, reason, std::move(onClosed));
+	if (!hasLink)
+	{
+		CloseSocket();
+		if (onClosed)
+		{
+			onClosed();
+		}
+
+		return;
+	}
+
+	CommandBatch farewell;
+	farewell.commands.emplace_back(Disconnect{.reason = reason});
+	std::ignore = _link->SendReliable(network::Serialize(farewell));
+
+	const auto now{Clock::now()};
+	Transmit(now);
+	_onClosed = std::move(onClosed);
+	_closeDeadline = now + DatagramLink::kFarewellLinger;
 }
 
 void Client::Subscribe()
@@ -198,36 +357,25 @@ void Client::OnSlotAssigned(const PlayerSlotAssignedEvent& event)
 	_inputSubs = BindClientInput(_replicationOut, *_events, event.slot);
 }
 
+//NOTE: nothing is banked without a link - keys pressed while reconnecting would reach the new one as a burst
 void Client::OnNetworkEndFrame(const NetworkEndFrameEvent&)
 {
-	if (auto frame{_replicationOut.TakeFrame()})
+	const auto frame{_replicationOut.TakeFrame()};
+	if (!frame)
 	{
-		_channel->Send(std::move(frame));
+		return;
 	}
-}
 
-void Client::StartReading()
-{
-	//NOTE: weak, not shared - the channel outlives nothing here, but it *stores* these callbacks,
-	//so capturing a shared_ptr would close the loop Client -> channel -> callback -> Client
-	const std::weak_ptr<Client> weakSelf{weak_from_this()};
-	_channel->SetHandlers(
-			[weakSelf](const std::string& frame)
-			{
-				if (const auto self{weakSelf.lock()}; self && !self->DispatchFrame(frame))
-				{
-					self->HandleProtocolError();
-				}
-			},
-			[weakSelf]
-			{
-				if (const auto self{weakSelf.lock()})
-				{
-					self->HandleDisconnect();
-				}
-			});
+	boost::asio::post(_socket.get_executor(), [this, frame]
+	{
+		if (!_isConnected || !_link)
+		{
+			return;
+		}
 
-	_channel->StartReading();
+		std::ignore = _link->SendFrame(*frame);
+		Transmit(Clock::now());
+	});
 }
 
 void Client::OnDisconnect(const Disconnect& command)
@@ -244,6 +392,8 @@ void Client::OnDisconnect(const Disconnect& command)
 	{
 		_events->EmitEvent(ClientInDisconnectEvent{.reason = reason});
 	});
-}
 
+	//NOTE: the goodbye is the end of this link - there is no closing socket to report it a second time
+	HandleDisconnect();
+}
 }//namespace network::commands

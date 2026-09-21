@@ -22,14 +22,14 @@ protected:
 	std::unique_ptr<ScoreBoard> _scoreBoard{nullptr};
 	EventSubscription _showedSub{};
 	GameConfig _gameConfig{};
-	bool _isScoreShowed{false};
+	bool _isScoreShowed{};
 
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
 		_statistics = std::make_unique<GameStatistics>(_events);
 		_stateManager = std::make_unique<GameStateManager>(_events);
-		_scoreBoard = std::make_unique<ScoreBoard>(_events, _gameConfig, *_statistics);
+		_scoreBoard = std::make_unique<ScoreBoard>(_events, *_statistics);
 
 		_showedSub = _events->AddListener([this](const ScoreBoardShowedEvent& event)
 		{

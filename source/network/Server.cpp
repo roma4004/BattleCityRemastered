@@ -2,35 +2,49 @@
 #include "components/EventSystem.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/ServerConsoleEvents.h"
-#include "network/FrameChannel.h"
+#include "components/events/ReplicationEvents.h"
+#include "components/WorldSnapshot.h"
+#include "network/DatagramLink.h"
 #include "network/ReplicationBindings.h"
 #include "network/Serializer.h"
+#include "network/WireFrame.h"
 #include "network/commands/CommandBatch.h"
 #include "network/commands/Disconnect.h"
 #include "enums/DisconnectReason.h"
 #include "enums/PlayerSlot.h"
-#include <memory>
+#include "enums/GameState.h"
 #include "utils/Log.h"
 #include <algorithm>
 #include <chrono>
 #include <boost/asio/strand.hpp>
+#include <boost/asio/post.hpp>
+#include <memory>
 #include <mutex>
 #include <optional>
+#include <ranges>
 #include <string>
+#include <string_view>
+#include <tuple>
+#include <variant>
 #include <vector>
 
 namespace network::commands
 {
 Server::Server(boost::asio::io_context& ioContext, const ServerAddress& address,
 			   const std::shared_ptr<EventSystem>& events)
-	: _acceptor{tcp::acceptor(ioContext,
-							  tcp::endpoint(boost::asio::ip::make_address(address.host), address.port))}
-	, _endpoint{_acceptor.local_endpoint()}
+	: _socket{ioContext, udp::endpoint{boost::asio::ip::make_address(address.host), address.port}}
+	, _boundPort{_socket.local_endpoint().port()}
+	, _tickTimer{ioContext}
 	, _events{events}
 	, _replicationOut{events}
 {
 	BindHostReplication(_replicationOut);
-	DoAccept();
+
+	boost::system::error_code ec;
+	std::ignore = _socket.set_option(udp::socket::receive_buffer_size{DatagramLink::kSocketBufferSize}, ec);
+
+	Receive();
+	ScheduleTick();
 
 	_subs.push_back(_events->AddListener(this, &Server::OnNetworkEndFrame));
 	_subs.push_back(_events->AddListener(this, &Server::OnStatusRequested));
@@ -44,104 +58,225 @@ Server::~Server()
 	Shutdown();
 }
 
-void Server::Shutdown()
-{
-	CloseAcceptor();
-
-	for (const auto& session: SnapshotSessions())
-	{
-		if (session)
-		{
-			session->Shutdown();
-		}
-	}
-}
+void Server::Shutdown() { CloseSocket(); }
 
 void Server::Shutdown(const DisconnectReason reason, const std::function<void()>& onClosed)
 {
-	CloseAcceptor();
-
-	const auto sessions{SnapshotSessions()};
-	//NOTE: counted, not per-session - the caller is told once, after the last goodbye is out
-	const auto pending{std::make_shared<std::size_t>(sessions.size())};
-
-	if (sessions.empty())
+	//NOTE: a finished session has nobody left to hear the goodbye
+	auto sessions{CopySessions()};
+	std::erase_if(sessions, [](const std::shared_ptr<Session>& session) { return session->IsFinished(); });
+	if (sessions.empty() || !_socket.is_open())
 	{
+		CloseSocket();
 		if (onClosed)
 		{
 			onClosed();
 		}
+
 		return;
 	}
 
+	const auto now{Clock::now()};
 	for (const auto& session: sessions)
 	{
-		if (!session)
+		session->Shutdown(reason);
+		Transmit(*session, now);
+	}
+
+	_onClosed = onClosed;
+	_closeDeadline = now + DatagramLink::kFarewellLinger;
+}
+
+void Server::CloseSocket()
+{
+	std::ignore = _tickTimer.cancel();
+
+	if (!_socket.is_open())
+	{
+		return;
+	}
+
+	boost::system::error_code ec;
+	std::ignore = _socket.cancel(ec);
+	std::ignore = _socket.close(ec);
+}
+
+void Server::Receive()
+{
+	_socket.async_receive_from(boost::asio::buffer(_receiveBuffer), _sender,
+							   [this](const boost::system::error_code& ec, const std::size_t size)
+							   {
+								   if (ec == boost::asio::error::operation_aborted || !_socket.is_open())
+								   {
+									   return;
+								   }
+
+								   //NOTE: one datagram's error - Windows reports a peer that went away on
+								   //the next receive, and the socket itself is fine
+								   if (!ec)
+								   {
+									   OnDatagram(std::string_view{_receiveBuffer.data(), size}, Clock::now());
+								   }
+
+								   Receive();
+							   });
+}
+
+void Server::OnDatagram(const std::string_view datagram, const Clock::time_point now)
+{
+	const auto header{DatagramLink::PeekHeader(datagram)};
+	if (!header)
+	{
+		return;
+	}
+
+	const auto sessions{CopySessions()};
+	const auto isSameAddress = [this](const std::shared_ptr<Session>& session)
+	{
+		return session->Endpoint() == _sender;
+	};
+
+	const auto link{std::ranges::find_if(sessions, [&isSameAddress, &header](const std::shared_ptr<Session>& session)
+	{
+		return isSameAddress(session) && session->ConnectionId() == header->connectionId;
+	})};
+
+	if (link != sessions.end())
+	{
+		(*link)->Receive(datagram, now);
+		Transmit(**link, now);
+		return;
+	}
+
+	//NOTE: anything but a hello from an address without a link is left over from a connection that is gone
+	if (!header->isHello || _onClosed)
+	{
+		return;
+	}
+
+	std::ranges::for_each(sessions | std::views::filter(isSameAddress),
+						  [](const std::shared_ptr<Session>& session) { session->Supersede(); });
+
+	Seat(_sender, header->connectionId, datagram, now);
+}
+
+void Server::RefuseSeat(const udp::endpoint& endpoint, const std::uint32_t connectionId, const Clock::time_point now)
+{
+	Log::Info("Server: both seats are taken, the client is told to wait for a free match");
+
+	CommandBatch farewell;
+	farewell.commands.emplace_back(Disconnect{.reason = DisconnectReason::ServerFull});
+
+	//NOTE: no session is kept for it - the client asks again later, and every ask gets the same answer
+	DatagramLink refusal{connectionId, now};
+	std::ignore = refusal.SendReliable(network::Serialize(farewell));
+	SendTo(endpoint, refusal.TakeDatagrams(now));
+}
+
+void Server::Seat(const udp::endpoint& endpoint, const std::uint32_t connectionId, const std::string_view hello,
+				  const Clock::time_point now)
+{
+	//NOTE: a console that stopped taking clients answers like a full server - the dialler waits instead of
+	//burning its retries on silence
+	if (!_isAccepting.load(std::memory_order_acquire))
+	{
+		RefuseSeat(endpoint, connectionId, now);
+		return;
+	}
+
+	std::unique_lock lock{_sessionsMutex};
+	const auto slot{FindFreeSlot()};
+	if (!slot)
+	{
+		lock.unlock();
+		RefuseSeat(endpoint, connectionId, now);
+		return;
+	}
+
+	const auto session{std::make_shared<Session>(endpoint, connectionId, _events, *slot, now)};
+	_sessions.emplace_back(session);
+	lock.unlock();
+
+	session->Start();
+	session->Receive(hello, now);
+	Transmit(*session, now);
+}
+
+void Server::ScheduleTick()
+{
+	_tickTimer.expires_after(DatagramLink::kPollInterval);
+	_tickTimer.async_wait([this](const boost::system::error_code& ec)
+	{
+		if (!ec)
 		{
-			--*pending;
-			continue;
+			Tick();
 		}
+	});
+}
 
-		session->Shutdown(reason, [pending, onClosed]
+void Server::Tick()
+{
+	if (!_socket.is_open())
+	{
+		return;
+	}
+
+	const auto now{Clock::now()};
+	const auto sessions{CopySessions()};
+	for (const auto& session: sessions)
+	{
+		session->LoseIfSilent(now);
+		Transmit(*session, now);
+	}
+
+	const auto isDrained = [](const std::shared_ptr<Session>& session) { return session->IsDrained(); };
+	if (_onClosed && (now >= _closeDeadline || std::ranges::all_of(sessions, isDrained)))
+	{
+		const auto onClosed{std::move(_onClosed)};
+		_onClosed = nullptr;
+		CloseSocket();
+		onClosed();
+
+		return;
+	}
+
+	ScheduleTick();
+}
+
+void Server::Transmit(Session& session, const Clock::time_point now)
+{
+	SendTo(session.Endpoint(), session.TakeDatagrams(now));
+}
+
+void Server::SendTo(const udp::endpoint& endpoint, const std::vector<std::string>& datagrams)
+{
+	for (const std::string& datagram: datagrams)
+	{
+		boost::system::error_code ec;
+		std::ignore = _socket.send_to(boost::asio::buffer(datagram), endpoint, 0, ec);
+		if (ec)
 		{
-			if (--*pending == 0u && onClosed)
-			{
-				onClosed();
-			}
-		});
+			Log::Error("Server send: " + ec.message());
+		}
 	}
-}
-
-void Server::CloseAcceptor()
-{
-	if (!_acceptor.is_open())
-	{
-		return;
-	}
-
-	boost::system::error_code ec;
-	std::ignore = _acceptor.cancel(ec);
-	std::ignore = _acceptor.close(ec);
-}
-
-//NOTE: the port it had - a client dialling the same address finds it again
-void Server::OpenAcceptor()
-{
-	if (_acceptor.is_open())
-	{
-		return;
-	}
-
-	boost::system::error_code ec;
-	if (_acceptor.open(_endpoint.protocol(), ec)
-		|| _acceptor.set_option(tcp::acceptor::reuse_address(true), ec)
-		|| _acceptor.bind(_endpoint, ec)
-		|| _acceptor.listen(boost::asio::socket_base::max_listen_connections, ec))
-	{
-		Log::Error("Server reopening port " + std::to_string(_endpoint.port()) + ": " + ec.message());
-		CloseAcceptor();
-
-		return;
-	}
-
-	DoAccept();
 }
 
 void Server::OnStatusRequested(const ServerStatusRequestedEvent&) const
 {
-	const auto sessions{SnapshotSessions()};
+	const auto sessions{CopySessions()};
 	const auto seated{std::ranges::count_if(sessions, [](const std::shared_ptr<Session>& session)
 	{
-		return session && !session->IsFinished();
+		return !session->IsFinished();
 	})};
 
-	Log::Info("port " + std::to_string(_endpoint.port()) + (_acceptor.is_open() ? " open" : " closed")
-			  + ", seats taken " + std::to_string(seated) + "/2");
+	Log::Info("port " + std::to_string(_boundPort)
+			  + (_isAccepting.load(std::memory_order_acquire) ? " open" : " closed") + ", seats taken "
+			  + std::to_string(seated) + "/2");
 }
 
 void Server::OnPlayersRequested(const ServerPlayersRequestedEvent&) const
 {
-	const auto sessions{SnapshotSessions()};
+	const auto sessions{CopySessions()};
 	if (sessions.empty())
 	{
 		Log::Info("no players");
@@ -152,11 +287,6 @@ void Server::OnPlayersRequested(const ServerPlayersRequestedEvent&) const
 	const auto now{std::chrono::steady_clock::now()};
 	std::ranges::for_each(sessions, [now](const std::shared_ptr<Session>& session)
 	{
-		if (!session)
-		{
-			return;
-		}
-
 		const auto connected{std::chrono::duration_cast<std::chrono::seconds>(now - session->ConnectedAt())};
 		Log::Info(std::string{ToString(session->GetSlot())} + " " + session->Address() + ", connected "
 				  + std::to_string(connected.count()) + "s" + (session->IsFinished() ? ", leaving" : ""));
@@ -165,10 +295,10 @@ void Server::OnPlayersRequested(const ServerPlayersRequestedEvent&) const
 
 void Server::OnKickRequested(const ServerKickRequestedEvent& event) const
 {
-	const auto sessions{SnapshotSessions()};
+	const auto sessions{CopySessions()};
 	const auto kicked{std::ranges::find_if(sessions, [slot = event.slot](const std::shared_ptr<Session>& session)
 	{
-		return session && !session->IsFinished() && session->GetSlot() == slot;
+		return !session->IsFinished() && session->GetSlot() == slot;
 	})};
 
 	if (kicked == sessions.end())
@@ -184,99 +314,66 @@ void Server::OnKickRequested(const ServerKickRequestedEvent& event) const
 
 void Server::OnAcceptingChanged(const ServerAcceptingChangedEvent& event)
 {
-	if (event.isAccepting)
-	{
-		OpenAcceptor();
-	}
-	else
-	{
-		CloseAcceptor();
-	}
+	_isAccepting.store(event.isAccepting, std::memory_order_release);
 
-	Log::Info(_acceptor.is_open() ? "taking new clients" : "not taking new clients");
+	Log::Info(event.isAccepting ? "taking new clients" : "not taking new clients");
 }
 
+//NOTE: a snapshot goes out in place of the frame, never beside it - it already holds everything the frame says
 void Server::OnNetworkEndFrame(const NetworkEndFrameEvent&)
 {
 	CleanupDeadSessions();
 
-	//NOTE: serialised here, on the game thread, exactly as Client does it - FrameChannel::Send only
-	//posts onto the session's strand, so nothing here waits on the socket
-	if (const auto frame{_replicationOut.TakeFrame()})
+	//NOTE: archived here, on the game thread - only the datagrams leave on the io thread
+	const auto frame{_replicationOut.TakeFrame()};
+	std::optional<std::shared_ptr<const WireFrame>> snapshot{};
+
+	for (const auto& session: CopySessions())
 	{
-		SendToAll(frame);
-	}
-}
-
-//NOTE: a bare EOF reads as a dropped link - told why, the client waits instead of burning its retries
-void Server::RefuseSeat(tcp::socket socket) const
-{
-	Log::Info("Server: both seats are taken, the client is told to wait for a free match");
-
-	CommandBatch farewell;
-	farewell.commands.emplace_back(Disconnect{.reason = DisconnectReason::ServerFull});
-
-	//NOTE: the channel keeps itself alive through the write it posted, so this handle may go
-	const auto channel{std::make_shared<network::FrameChannel>(std::move(socket), "Server")};
-	channel->Send(std::make_shared<const std::string>(network::SerializeFrame(farewell)));
-	channel->CloseAfterFlush({});
-}
-
-void Server::Seat(tcp::socket socket)
-{
-	try
-	{
-		boost::system::error_code ec;
-		const auto remote{socket.remote_endpoint(ec)};
-		std::string address{ec ? "unknown" : remote.address().to_string() + ':' + std::to_string(remote.port())};
-
-		std::unique_lock lock(_sessionsMutex);
-		const auto slot{FindFreeSlot()};
-		if (!slot)
+		std::shared_ptr<const WireFrame> outgoing{frame};
+		if (session->IsSnapshotOwed())
 		{
-			lock.unlock();
-			RefuseSeat(std::move(socket));
-			return;
-		}
-
-		const auto session{std::make_shared<Session>(std::move(socket), _events, *slot, std::move(address))};
-		_sessions.emplace_back(session);
-		lock.unlock();
-
-		session->Start();//NOTE: outside the lock - it posts reads and can reach the event bus
-	}
-	catch (const std::exception& e)
-	{
-		Log::Error(std::string("Server new session start: ") + e.what());
-	}
-	catch (...)
-	{
-		Log::Error("Server new session start: unknown exception");
-	}
-}
-
-void Server::DoAccept()
-{
-	const auto executor{boost::asio::make_strand(_acceptor.get_executor())};
-	//NOTE: own strand per socket - serializes that session's handlers against each other
-	_acceptor.async_accept(executor, [this](const boost::system::error_code& ec, tcp::socket socket)
-	{
-		if (ec)
-		{
-			if (ec != boost::asio::error::operation_aborted)
+			if (!snapshot)
 			{
-				Log::Error("Server accept: " + ec.message());
+				snapshot = TakeWorldSnapshot();
 			}
 
-			return;
+			//NOTE: a lobby has no field, and the debt stands until there is one - cleared here it would
+			//leave whoever readied first playing on a field nobody ever sent him
+			if (*snapshot)
+			{
+				session->ClearSnapshotDebt();
+				outgoing = *snapshot;
+			}
 		}
 
-		Seat(std::move(socket));
-		DoAccept();
-	});
+		if (outgoing)
+		{
+			boost::asio::post(_socket.get_executor(), [this, session, outgoing]
+			{
+				session->Send(*outgoing);
+				Transmit(*session, Clock::now());
+			});
+		}
+	}
 }
 
-std::vector<std::shared_ptr<Session>> Server::SnapshotSessions() const
+std::shared_ptr<const WireFrame> Server::TakeWorldSnapshot() const
+{
+	CommandBatch batch;
+	auto& snapshot{std::get<WorldSnapshot>(batch.commands.emplace_back(WorldSnapshot{}))};
+	_events->EmitEvent(WorldSnapshotRequestedEvent{.snapshot = snapshot});
+
+	if (!IsInMatch(snapshot.phase))
+	{
+		return nullptr;
+	}
+
+	return std::make_shared<const WireFrame>(
+			WireFrame{.reliable = network::Serialize(batch), .latest = {}, .isSnapshot = true});
+}
+
+std::vector<std::shared_ptr<Session>> Server::CopySessions() const
 {
 	const std::scoped_lock lock{_sessionsMutex};
 	return _sessions;
@@ -286,9 +383,10 @@ std::optional<PlayerSlot> Server::FindFreeSlot() const
 {
 	for (const PlayerSlot slot: {PlayerSlot::P1, PlayerSlot::P2})
 	{
+		//NOTE: a finished session gives its seat up at once - a client dialling back takes it before the sweep
 		const auto holdsSlot = [slot](const std::shared_ptr<Session>& session)
 		{
-			return session && session->GetSlot() == slot;
+			return !session->IsFinished() && session->GetSlot() == slot;
 		};
 
 		if (!std::ranges::any_of(_sessions, holdsSlot))
@@ -302,39 +400,25 @@ std::optional<PlayerSlot> Server::FindFreeSlot() const
 
 void Server::CleanupDeadSessions()
 {
-	//NOTE: a finished session with commands still queued is not dead yet - its goodbye is unread
-	const auto isDead = [](const std::shared_ptr<Session>& session)
+	//NOTE: a finished session is not dead while its goodbye is unread, or while its own is still in flight -
+	//that datagram leaves on the tick. Silence is the backstop for a peer that stopped acking
+	const auto now{Clock::now()};
+	const auto isDead = [now](const std::shared_ptr<Session>& session)
 	{
-		return !session || (session->IsFinished() && !session->HasPendingCommands());
+		return session->IsFinished() && !session->HasPendingCommands()
+			   && (session->IsDrained() || session->IsSilent(now));
 	};
 
-	//NOTE: ~Session only posts the close onto its strand, so it costs nothing to let it happen here
 	const std::scoped_lock lock{_sessionsMutex};
 	std::erase_if(_sessions, isDead);
 }
 
-void Server::SendToAll(const std::shared_ptr<const std::string>& message)
-{
-	//NOTE: nothing asks whether the link is up - DoWrite posts onto the session strand, and
-	//TryStartWrite decides there, on the thread that owns the socket
-	for (const auto& session: SnapshotSessions())
-	{
-		if (session)
-		{
-			session->DoWrite(message);
-		}
-	}
-}
-
 void Server::ProcessNetworkCommands() const
 {
-	for (const auto& session: SnapshotSessions())
+	//NOTE: drained even when finished - commands already read stay valid, and the last is the goodbye
+	for (const auto& session: CopySessions())
 	{
-		//NOTE: drained even when finished - frames already read stay valid, and the last is the goodbye
-		if (session)
-		{
-			session->ProcessCommandQueue();
-		}
+		session->ProcessCommandQueue();
 	}
 }
 }//namespace network::commands

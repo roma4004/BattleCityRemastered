@@ -1,7 +1,9 @@
 #include "TestUtils.h"
+#include "components/ObstacleSpawner.h"
 #include "application/GameConfig.h"
 #include "application/ProjectConfig.h"
 #include "components/BulletPool.h"
+#include "components/TankPool.h"
 #include "components/EventSystem.h"
 #include "components/TankSpawner.h"
 #include "components/events/AnimationRenderEvents.h"
@@ -34,11 +36,13 @@ class AnimationManagerTest : public testing::Test
 {
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
+	std::unique_ptr<ObstacleSpawner> _obstacleSpawner{nullptr};
 	std::unique_ptr<AnimationManager> _animations{nullptr};
 	ProjectConfig _projectConfig{"", true};
 	GameConfig _gameConfig{};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
+	std::shared_ptr<TankPool> _tankPool{nullptr};
 	std::vector<EventSubscription> _subs{};
 	EventSubscription _spawnQueueSub{};
 
@@ -65,9 +69,11 @@ protected:
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
+		_obstacleSpawner = std::make_unique<ObstacleSpawner>(_events, _gameConfig);
 		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, _allObjects);
 		_allObjects.reserve(8u);
 		_bulletPool = std::make_shared<BulletPool>(_events, _allObjects, _gameConfig);
+		_tankPool = std::make_shared<TankPool>(_events, _allObjects, _gameConfig, _bulletPool);
 		_animations = std::make_unique<AnimationManager>(_events);
 
 		_subs.push_back(_events->AddListener([this](const AnimationCreateBulletExplosionEvent& event)
@@ -111,16 +117,36 @@ protected:
 	{
 		return std::ranges::find(_drawn, type) != _drawn.end();
 	}
+
+	std::shared_ptr<Tank> CreatePlayer(const FPoint pos)
+	{
+		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _gameConfig.tankSize, .h = _gameConfig.tankSize};
+		auto player{TestUtils::CreatePlayer(rect, _health, Author::Player1, _allObjects, _events, Direction::UP,
+											_tankPool, _gameConfig)};
+
+		return player;
+	}
+
+	std::shared_ptr<Bullet> CreateBullet(const FPoint pos)
+	{
+		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _calibre.size.x, .h = _calibre.size.y};
+		auto bullet{TestUtils::CreateBullet(rect, _health, _bulletPool, _events, _calibre, Direction::DOWN,
+											Author::Player1)};
+
+		return bullet;
+	}
+
+	std::shared_ptr<BaseObj> SpawnObstacle(const ObjRectangle rect, const ObstacleType type) const
+	{
+		return TestUtils::SpawnObstacle(_events, _allObjects, rect, type);
+	}
 };
 
 TEST_F(AnimationManagerTest, BulletExplodesWhereItHit)
 {
-	const ObjRectangle bulletRect{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
-	auto bullet{TestUtils::CreateBullet(bulletRect, _health, _allObjects, _events, _calibre, Direction::DOWN,
-										_gameConfig, Author::Player1)};
-	_allObjects.emplace_back(bullet);
-	_allObjects.emplace_back(std::make_shared<BrickWall>(ObjRectangle{.x = 0.0, .y = 8.0, .w = 12.0, .h = 12.0},
-														 _events, _uuid, _gameConfig));
+	const auto bullet{CreateBullet({.x = 0.0, .y = 0.0})};
+	_allObjects.emplace_back(SpawnObstacle(ObjRectangle{.x = 0.0, .y = 8.0, .w = 12.0, .h = 12.0},
+										   ObstacleType::Brick));
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = 1.0 / 60.0});
 
@@ -133,38 +159,31 @@ TEST_F(AnimationManagerTest, ClientBulletExplodesOnDespawn)
 {
 	_gameConfig.gameMode = GameMode::PlayAsClient;
 
-	const ObjRectangle bulletRect{.x = 20.0, .y = 30.0, .w = _calibre.size.x, .h = _calibre.size.y};
-	auto bullet{TestUtils::CreateBullet(bulletRect, _health, _allObjects, _events, _calibre, Direction::DOWN,
-										_gameConfig, Author::Player1)};
-	_allObjects.emplace_back(bullet);
+	const auto bullet{CreateBullet({.x = 20.0, .y = 30.0})};
 
 	_events->EmitEvent(Key(bullet->GetUuid()), DespawnedEvent{.uuid = bullet->GetUuid()});
 
 	ASSERT_TRUE(_bulletExplosion.has_value());
-	EXPECT_EQ(_bulletExplosion->rect.x, bulletRect.x);
-	EXPECT_EQ(_bulletExplosion->rect.y, bulletRect.y);
+	EXPECT_EQ(_bulletExplosion->rect.x, bullet->GetRect().x);
+	EXPECT_EQ(_bulletExplosion->rect.y, bullet->GetRect().y);
 }
 
 TEST_F(AnimationManagerTest, TankExplodesWhereItDied)
 {
-	constexpr ObjRectangle tankRect{.x = 40.0, .y = 50.0, .w = 12.0, .h = 12.0};
-	const auto tank{TestUtils::CreatePlayer(tankRect, _health, Author::Player1, _allObjects, _events, Direction::UP,
-											_bulletPool, _gameConfig)};
+	const auto tank{CreatePlayer({.x = 40.0, .y = 50.0})};
 
 	tank->TakeDamage(static_cast<unsigned int>(tank->GetHealth()), Author::Enemy1);
 
 	ASSERT_TRUE(_tankExplosion.has_value());
 	EXPECT_EQ(_tankExplosion->author, Author::Player1);
-	EXPECT_EQ(_tankExplosion->rect.x, tankRect.x);
-	EXPECT_EQ(_tankExplosion->rect.y, tankRect.y);
+	EXPECT_EQ(_tankExplosion->rect.x, tank->GetRect().x);
+	EXPECT_EQ(_tankExplosion->rect.y, tank->GetRect().y);
 }
 
 TEST_F(AnimationManagerTest, ALiveTankTakenOffTheFieldExplodesNothing)
 {
 	{
-		auto tank{TestUtils::CreatePlayer(ObjRectangle{.x = 0.0, .y = 0.0, .w = 12.0, .h = 12.0}, _health,
-										  Author::Player1, _allObjects, _events, Direction::UP, _bulletPool,
-										  _gameConfig)};
+		auto tank{CreatePlayer({.x = 0.0, .y = 0.0})};
 	}
 
 	EXPECT_FALSE(_tankExplosion.has_value());
@@ -194,8 +213,7 @@ TEST_F(AnimationManagerTest, WaterTileAsksForItsFlowWhenBuilt)
 
 TEST_F(AnimationManagerTest, HelmetPickupTurnsTheShieldOnAndOff)
 {
-	auto tank{TestUtils::CreatePlayer(ObjRectangle{.x = 0.0, .y = 0.0, .w = 12.0, .h = 12.0}, _health, Author::Player1,
-									  _allObjects, _events, Direction::UP, _bulletPool, _gameConfig)};
+	auto tank{CreatePlayer({.x = 0.0, .y = 0.0})};
 
 	_events->EmitEvent(Key(Author::Player1), BonusHelmetStatusChangeEvent{.isActive = true});
 
@@ -378,7 +396,7 @@ TEST_F(AnimationManagerTest, WaterIsPaintedBeforeAWallOfTheSamePhase)
 	})};
 
 	_events->EmitEvent(AnimationCreateWaterEvent{.rect = _rect});
-	_events->EmitEvent(AddToSpawnQueueEvent{.obj = std::make_shared<BrickWall>(_rect, _events, _uuid, _gameConfig)});
+	SpawnObstacle(_rect, ObstacleType::Brick);
 
 	_events->EmitEvent(DrawEvent{});
 

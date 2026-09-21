@@ -7,9 +7,9 @@ struct Timer
 {
 	using milliseconds = std::chrono::milliseconds;
 
-	milliseconds cooldown{0};
+	milliseconds cooldown{};
 	TimeUtils::time_point activateTime{};
-	bool isActive{false};
+	bool isActive{};
 
 	Timer() = default;
 

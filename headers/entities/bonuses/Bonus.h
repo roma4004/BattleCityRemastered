@@ -14,6 +14,7 @@ enum class DespawnReason : char8_t;
 struct BaseObjProperty;
 struct DrawEvent;
 struct DespawnedEvent;
+struct WorldSnapshotRequestedEvent;
 class EventSystem;
 class GameConfig;
 
@@ -34,6 +35,7 @@ private:
 	void Draw() const override;
 	void OnDraw(const DrawEvent&) const;
 	void OnDespawned(const DespawnedEvent& event);
+	void OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const;
 	void Subscribe();
 	void SubscribeAsClient();
 	void Despawn(DespawnReason reason);

@@ -20,11 +20,11 @@ class EventSystem;
 
 struct MenuKeys final
 {
-	bool up{false};
-	bool down{false};
-	bool reset{false};
-	bool menuShow{false};
-	bool pause{false};
+	bool up{};
+	bool down{};
+	bool reset{};
+	bool menuShow{};
+	bool pause{};
 };
 
 class InputProviderForMenu final

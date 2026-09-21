@@ -3,9 +3,12 @@
 #include "application/SdlHandle.h"
 #include "geometry/Point.h"
 #include <SDL3_ttf/SDL_ttf.h>
+#include <array>
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 
 struct SDL_Color;
@@ -21,6 +24,17 @@ using FontHandle = SdlHandle<TTF_Font, TTF_CloseFont>;
 class TextCache final
 {
 public:
+	//NOTE: a counter is a new string every time it changes - a slot rewrites its own layout in place
+	//instead of minting an entry the cache would only have to evict
+	enum class Slot : std::uint8_t
+	{
+		Fps,
+		PlayerOneLives,
+		PlayerTwoLives,
+		StageNumber,
+		Count
+	};
+
 	struct TextDeleter
 	{
 		void operator()(TTF_Text* text) const noexcept;
@@ -43,11 +57,15 @@ public:
 	TextCache& operator=(TextCache&&) = delete;
 
 	//NOTE: the colour is set per call, so one entry serves every colour of the same line
-	[[nodiscard]] const CachedText* Acquire(const std::string& text, const SDL_Color& color, int basePointSize,
+	[[nodiscard]] const CachedText* Acquire(std::string_view text, const SDL_Color& color, int basePointSize,
 											float scale);
+	[[nodiscard]] const CachedText* AcquireSlot(Slot slot, std::string_view text, const SDL_Color& color,
+												int basePointSize, float scale);
 
 	//NOTE: no layout - fitting tries sizes nothing will draw
-	[[nodiscard]] Point MeasureString(const std::string& text, int basePointSize, float scale);
+	[[nodiscard]] Point MeasureString(std::string_view text, int basePointSize, float scale);
+
+	//NOTE: the fonts and the engine go too - only a lost device needs that, a scale change does not
 	void Clear();
 
 private:
@@ -59,9 +77,35 @@ private:
 		bool operator==(const Key&) const = default;
 	};
 
+	//NOTE: what a lookup is built from - the borrowed spelling of a key, so finding a line costs no string
+	struct KeyView
+	{
+		std::string_view text{};
+		int basePointSize{};
+	};
+
 	struct KeyHash
 	{
+		using is_transparent = void;
+
 		[[nodiscard]] size_t operator()(const Key& key) const noexcept;
+		[[nodiscard]] size_t operator()(KeyView key) const noexcept;
+	};
+
+	struct KeyEqual
+	{
+		using is_transparent = void;
+
+		[[nodiscard]] bool operator()(const Key& lhs, const Key& rhs) const noexcept;
+		[[nodiscard]] bool operator()(const Key& lhs, KeyView rhs) const noexcept;
+		[[nodiscard]] bool operator()(KeyView lhs, const Key& rhs) const noexcept;
+	};
+
+	struct SlotEntry
+	{
+		CachedText cached{};
+		std::string text{};
+		int pixelSize{};
 	};
 
 	struct EngineDeleter
@@ -69,19 +113,29 @@ private:
 		void operator()(TTF_TextEngine* engine) const noexcept;
 	};
 
+	[[nodiscard]] static int PixelSize(int basePointSize, float scale);
+	[[nodiscard]] bool IsReady() const;
 	[[nodiscard]] TTF_Font* FontForScale(int basePointSize, float scale);
 	[[nodiscard]] TTF_TextEngine* Engine();
+	[[nodiscard]] CachedText LayOut(std::string_view text, TTF_Font* font, float scale);
+	//NOTE: logical units - the layout itself is in output pixels
+	[[nodiscard]] static Point SizeOfLaidOut(TTF_Text* text, float scale);
+	//NOTE: the layouts alone - the fonts are keyed by final pixel size and the engine belongs to the
+	//renderer, so a scale change leaves both valid
+	void SyncScale(float scale);
 
 	const SDL_Config& _sdlConfig;
 
 	//NOTE: destroyed last - every TTF_Text points at the engine and a font
 	std::unique_ptr<TTF_TextEngine, EngineDeleter> _engine{};
 
-	//NOTE: keyed by final pixel size - a scale change drops these along with the layouts
+	//NOTE: keyed by final pixel size - a scale change only leaves the old sizes unasked for
 	std::unordered_map<int, FontHandle> _fonts{};
 
-	std::unordered_map<Key, CachedText, KeyHash> _entries{};
-	float _scale{0.f};
+	std::unordered_map<Key, CachedText, KeyHash, KeyEqual> _entries{};
+	std::unordered_map<Key, Point, KeyHash, KeyEqual> _measures{};
+	std::array<SlotEntry, static_cast<size_t>(Slot::Count)> _slots{};
+	float _scale{};
 
 	static constexpr size_t kMaxEntries{512};
 };

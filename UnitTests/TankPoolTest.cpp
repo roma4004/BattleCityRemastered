@@ -3,6 +3,7 @@
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
 #include "components/TankPool.h"
+#include "components/events/BonusPickupEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/ReplicationEvents.h"
 #include "components/input/InputProviderForBot.h"
@@ -11,6 +12,7 @@
 #include "enums/Author.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
+#include "enums/TankType.h"
 #include "geometry/ObjRectangle.h"
 #include "utils/Uuid.h"
 #include "utils/UuidUtils.h"
@@ -42,15 +44,16 @@ protected:
 		_tankPool = std::make_unique<TankPool>(_events, _allObjects, _gameConfig, _bulletPool);
 	}
 
-	[[nodiscard]] std::shared_ptr<Tank> SpawnTank(const Uuid uuid)
+	[[nodiscard]] std::shared_ptr<Tank> SpawnTank(const Uuid uuid, const unsigned short tier = 1u)
 	{
 		const double tankSize{_gameConfig.tankSize};
 		const TankResetProperty property{.uuid = uuid,
 										 .rect{.x = 0.0, .y = 0.0, .w = tankSize, .h = tankSize},
 										 .health = _gameConfig.tankHealth,
 										 .speed = _gameConfig.tankSpeed,
-										 .author = Author::Player1,
-										 .dir = Direction::UP};
+										 .type = TankType::PLAYER1,
+										 .dir = Direction::UP,
+										 .tier = tier};
 
 		return _tankPool->SpawnTank(property, std::make_unique<InputProviderForBot>(_allObjects, _gameConfig));
 	}
@@ -94,4 +97,22 @@ TEST_F(TankPoolTest, AReusedTankListensUnderTheModeItSpawnsUnder)
 
 	EXPECT_EQ(mirrored.x, reused->GetPos().x);
 	EXPECT_EQ(mirrored.y, reused->GetPos().y);
+}
+
+// one tank spawned at tier three against one walked up to it with two stars - the tier has to carry the
+// stats that earned it, or a saved match comes back wrong
+TEST_F(TankPoolTest, ATankSpawnedAtATierHasWhatTheStarsWouldHaveGivenIt)
+{
+	const auto upgraded{SpawnTank(UuidUtils::GetRandomUuid())};
+	upgraded->Activate();
+	_events->EmitEvent(Key(Author::Player1), BonusStarPickupEvent{});
+	_events->EmitEvent(Key(Author::Player1), BonusStarPickupEvent{});
+
+	const auto spawned{SpawnTank(UuidUtils::GetRandomUuid(), 3u)};
+
+	EXPECT_EQ(spawned->GetTier(), upgraded->GetTier());
+	EXPECT_DOUBLE_EQ(spawned->GetSpeed(), upgraded->GetSpeed());
+	EXPECT_DOUBLE_EQ(spawned->GetBulletSpeed(), upgraded->GetBulletSpeed());
+	EXPECT_EQ(spawned->GetBulletDamage(), upgraded->GetBulletDamage());
+	EXPECT_DOUBLE_EQ(spawned->GetBulletDamageRadius(), upgraded->GetBulletDamageRadius());
 }

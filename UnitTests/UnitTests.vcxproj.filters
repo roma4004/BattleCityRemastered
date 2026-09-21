@@ -102,6 +102,15 @@
     <ClCompile Include="TimeUtilsTest.cpp">
       <Filter></Filter>
     </ClCompile>
+    <ClCompile Include="WorldSnapshotTest.cpp">
+      <Filter></Filter>
+    </ClCompile>
+    <ClCompile Include="DatagramLinkTest.cpp">
+      <Filter></Filter>
+    </ClCompile>
+    <ClCompile Include="SessionTest.cpp">
+      <Filter></Filter>
+    </ClCompile>
     <ClCompile Include="TestUtils.cpp">
       <Filter></Filter>
     </ClCompile>

@@ -11,12 +11,14 @@ enum class Faction : char8_t;
 enum class ObstacleType : char8_t;
 struct HealthChangedEvent;
 struct DespawnedEvent;
+struct WorldSnapshotRequestedEvent;
 class EventSystem;
 class GameConfig;
 
 class Obstacle : public BaseObj, public IDrawable
 {
 	void OnHealthChanged(const HealthChangedEvent& event);
+	void OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const;
 	void SubscribeAsClient();
 
 protected:

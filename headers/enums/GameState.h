@@ -15,6 +15,13 @@ enum class GameState : char8_t
 	Over
 };
 
+//NOTE: a finished match still holds its field - the scoreboard is drawn over it until the lobby clears it
+[[nodiscard]] constexpr bool IsInMatch(const GameState state) noexcept
+{
+	return state == GameState::Playing || state == GameState::Paused || state == GameState::Won
+		   || state == GameState::Over;
+}
+
 [[nodiscard]] constexpr std::string_view ToString(const GameState state) noexcept
 {
 	switch (state)

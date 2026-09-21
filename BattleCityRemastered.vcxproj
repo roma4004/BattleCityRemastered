@@ -234,6 +234,7 @@ copy /Y "$(RepoRoot)Resources\Images\Xbox_Buttons\View.png" "$(OutDir)Resources\
 copy /Y "$(RepoRoot)Resources\Images\Xbox_Buttons\A.png" "$(OutDir)Resources\Images\Xbox_Buttons\A.png"
 copy /Y "$(RepoRoot)Resources\Images\Xbox_Buttons\Y.png" "$(OutDir)Resources\Images\Xbox_Buttons\Y.png"
 copy /Y "$(RepoRoot)Resources\Maps\level1.map" "$(OutDir)Resources\Maps\level1.map"
+copy /Y "$(RepoRoot)Resources\Maps\level2.map" "$(OutDir)Resources\Maps\level2.map"
 copy /Y "$(RepoRoot)Resources\Sounds\levelStarted.wav" "$(OutDir)Resources\Sounds\levelStarted.wav"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -269,6 +270,7 @@ copy /Y "$(RepoRoot)Resources\Sounds\levelStarted.wav" "$(OutDir)Resources\Sound
     <Content Include="Resources\Images\Xbox_Buttons\View.png" />
     <Content Include="Resources\Images\Xbox_Buttons\Y.png" />
     <Content Include="Resources\Maps\level1.map" />
+    <Content Include="Resources\Maps\level2.map" />
     <Content Include="Resources\Sounds\levelStarted.wav" />
   </ItemGroup>
   <!-- SDL3/ttf/image/mixer references live in GamePlatform.vcxproj, next to the SDL-facing .cpp.

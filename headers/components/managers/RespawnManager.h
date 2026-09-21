@@ -18,6 +18,8 @@ struct PlayersBaseFinishedEvent;
 struct RespawnTanksEvent;
 struct BonusTankAppliedEvent;
 struct TankRespawnedEvent;
+struct WorldSnapshotRequestedEvent;
+struct WorldSnapshotReceivedEvent;
 class EventSystem;
 
 class RespawnManager final
@@ -45,6 +47,8 @@ class RespawnManager final
 	void OnBonusTank(Author author);
 	void OnBonusTankApplied(const BonusTankAppliedEvent& event);
 	void OnTankRespawned(const TankRespawnedEvent& event);
+	void OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const;
+	void OnWorldSnapshotReceived(const WorldSnapshotReceivedEvent& event);
 
 	void Subscribe();
 	void OnGameReset(const GameResetEvent&);

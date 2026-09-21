@@ -1,56 +1,16 @@
 #pragma once
 
 #include "components/EventSystem.h"
+#include "components/StatisticsData.h"
 #include "components/events/StatisticsEvents.h"
 #include <memory>
 #include <vector>
 
 struct GameResetEvent;
 struct TankDiedEvent;
+struct WorldSnapshotRequestedEvent;
+struct WorldSnapshotReceivedEvent;
 class EventSystem;
-
-struct StatisticsData final
-{
-	unsigned short bulletHitByEnemy{};
-	unsigned short bulletHitByPlayerOne{};
-	unsigned short bulletHitByPlayerTwo{};
-
-	unsigned short enemyHitByFriendlyFire{};
-	unsigned short enemyHitByPlayerOne{};
-	unsigned short enemyHitByPlayerTwo{};
-
-	unsigned short playerOneHitFriendlyFire{};
-	unsigned short playerOneHitByEnemyTeam{};
-
-	unsigned short playerTwoHitFriendlyFire{};
-	unsigned short playerTwoHitByEnemyTeam{};
-
-	unsigned short enemyDiedByFriendlyFire{};
-	unsigned short enemyDiedByPlayerOne{};
-	unsigned short enemyDiedByPlayerTwo{};
-
-	unsigned short playerOneDiedByFriendlyFire{};
-	unsigned short playerTwoDiedByFriendlyFire{};
-	unsigned short playerDiedByEnemyTeam{};
-
-	unsigned short brickWallDiedByEnemyTeam{};
-	unsigned short brickWallDiedByPlayerOne{};
-	unsigned short brickWallDiedByPlayerTwo{};
-
-	unsigned short steelWallDiedByEnemyTeam{};
-	unsigned short steelWallDiedByPlayerOne{};
-	unsigned short steelWallDiedByPlayerTwo{};
-
-	unsigned short bonusPickupByEnemyTeam{};
-	unsigned short bonusPickupByPlayerOne{};
-	unsigned short bonusPickupByPlayerTwo{};
-
-	unsigned short bonusDestroyedByEnemyTeam{};
-	unsigned short bonusDestroyedByPlayerOne{};
-	unsigned short bonusDestroyedByPlayerTwo{};
-
-	unsigned short bonusExpired{};
-};
 
 class GameStatistics final
 {
@@ -70,6 +30,9 @@ class GameStatistics final
 	void OnBonusPickup(const StatisticsBonusPickupEvent& event);
 	void OnBonusDestroyed(const StatisticsBonusDestroyedEvent& event);
 	void OnBonusExpired(const StatisticsBonusExpiredEvent&);
+
+	void OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const;
+	void OnWorldSnapshotReceived(const WorldSnapshotReceivedEvent& event);
 
 public:
 	explicit GameStatistics(const std::shared_ptr<EventSystem>& events);

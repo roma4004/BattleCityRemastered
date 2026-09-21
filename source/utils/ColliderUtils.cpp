@@ -6,18 +6,16 @@
 
 bool ColliderUtils::IsCollide(const ObjRectangle& r1, const ObjRectangle& r2) noexcept
 {
-	auto greaterThan = [](const double a, const double b)
-	{
-		constexpr double COLLISION_EPSILON{0.01};
-		return a > b + COLLISION_EPSILON;
-	};
+	//NOTE: a corridor is cut to the tank's own width, so a touch cannot be a collision - driving into one
+	//another is caught by the swept rectangle
+	auto atOrPast = [](const double a, const double b) { return a > b - kTouchTolerance; };
 
-	if (greaterThan(r1.x, r2.x + r2.w) || greaterThan(r2.x, r1.x + r1.w))
+	if (atOrPast(r1.x, r2.x + r2.w) || atOrPast(r2.x, r1.x + r1.w))
 	{
 		return false;
 	}
 
-	if (greaterThan(r1.y, r2.y + r2.h) || greaterThan(r2.y, r1.y + r1.h))
+	if (atOrPast(r1.y, r2.y + r2.h) || atOrPast(r2.y, r1.y + r1.h))
 	{
 		return false;
 	}

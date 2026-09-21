@@ -20,6 +20,12 @@
 #include "PointSerialization.h"
 #include "CommandBatch.h"
 #include "UuidSerialization.h"
+#include "components/StatisticsData.h"
+#include "components/WorldSnapshot.h"
+#include "components/events/CoreLifecycleEvents.h"
+#include "components/events/SpawnEvents.h"
+#include "geometry/ObjRectangle.h"
+#include <ser20/types/array.hpp>
 #include <ser20/types/common.hpp>
 #include <ser20/types/variant.hpp>
 #include <ser20/types/vector.hpp>
@@ -149,6 +155,128 @@ void serialize(Archive& ar, network::commands::TierChange& cmd, const unsigned i
 {
 	ar & cmd.tier;
 	ar & cmd.uuid;
+}
+
+template<class Archive>
+void serialize(Archive& ar, ObjRectangle& rect, const unsigned int /*version*/)
+{
+	ar & rect.x;
+	ar & rect.y;
+	ar & rect.w;
+	ar & rect.h;
+}
+
+template<class Archive>
+void serialize(Archive& ar, ObstacleSpawnedEvent& obstacle, const unsigned int /*version*/)
+{
+	ar & obstacle.pos;
+	ar & obstacle.type;
+	ar & obstacle.uuid;
+}
+
+template<class Archive>
+void serialize(Archive& ar, TankRespawnedEvent& spawn, const unsigned int /*version*/)
+{
+	ar & spawn.type;
+	ar & spawn.uuid;
+	ar & spawn.pos;
+}
+
+template<class Archive>
+void serialize(Archive& ar, BonusSpawnedEvent& bonus, const unsigned int /*version*/)
+{
+	ar & bonus.pos;
+	ar & bonus.type;
+	ar & bonus.uuid;
+	ar & bonus.isSuper;
+}
+
+template<class Archive>
+void serialize(Archive& ar, TankSnapshot& tank, const unsigned int /*version*/)
+{
+	ar & tank.type;
+	ar & tank.uuid;
+	ar & tank.pos;
+	ar & tank.dir;
+	ar & tank.health;
+	ar & tank.tier;
+	ar & tank.isHelmetActive;
+	ar & tank.isShipActive;
+}
+
+template<class Archive>
+void serialize(Archive& ar, BulletSnapshot& bullet, const unsigned int /*version*/)
+{
+	ar & bullet.author;
+	ar & bullet.uuid;
+	ar & bullet.rect;
+	ar & bullet.dir;
+}
+
+template<class Archive>
+void serialize(Archive& ar, StatisticsData& data, const unsigned int /*version*/)
+{
+	ar & data.bulletHitByEnemy;
+	ar & data.bulletHitByPlayerOne;
+	ar & data.bulletHitByPlayerTwo;
+
+	ar & data.enemyHitByFriendlyFire;
+	ar & data.enemyHitByPlayerOne;
+	ar & data.enemyHitByPlayerTwo;
+
+	ar & data.playerOneHitFriendlyFire;
+	ar & data.playerOneHitByEnemyTeam;
+
+	ar & data.playerTwoHitFriendlyFire;
+	ar & data.playerTwoHitByEnemyTeam;
+
+	ar & data.enemyDiedByFriendlyFire;
+	ar & data.enemyDiedByPlayerOne;
+	ar & data.enemyDiedByPlayerTwo;
+
+	ar & data.playerOneDiedByFriendlyFire;
+	ar & data.playerTwoDiedByFriendlyFire;
+	ar & data.playerDiedByEnemyTeam;
+
+	ar & data.brickWallDiedByEnemyTeam;
+	ar & data.brickWallDiedByPlayerOne;
+	ar & data.brickWallDiedByPlayerTwo;
+
+	ar & data.steelWallDiedByEnemyTeam;
+	ar & data.steelWallDiedByPlayerOne;
+	ar & data.steelWallDiedByPlayerTwo;
+
+	ar & data.bonusPickupByEnemyTeam;
+	ar & data.bonusPickupByPlayerOne;
+	ar & data.bonusPickupByPlayerTwo;
+
+	ar & data.bonusDestroyedByEnemyTeam;
+	ar & data.bonusDestroyedByPlayerOne;
+	ar & data.bonusDestroyedByPlayerTwo;
+
+	ar & data.bonusExpired;
+}
+
+template<class Archive>
+void serialize(Archive& ar, MapLoadedEvent& map, const unsigned int /*version*/)
+{
+	ar & map.cols;
+	ar & map.rows;
+}
+
+template<class Archive>
+void serialize(Archive& ar, WorldSnapshot& snapshot, const unsigned int /*version*/)
+{
+	ar & snapshot.map;
+	ar & snapshot.phase;
+	ar & snapshot.obstacles;
+	ar & snapshot.tanks;
+	ar & snapshot.tankSpawns;
+	ar & snapshot.bullets;
+	ar & snapshot.bonuses;
+	ar & snapshot.bonusSpawns;
+	ar & snapshot.respawnCounts;
+	ar & snapshot.statistics;
 }
 
 template<class Archive>

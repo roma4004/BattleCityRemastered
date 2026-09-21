@@ -9,6 +9,7 @@ struct GameModeChangedToEvent;
 struct AddToSpawnQueueEvent;
 struct PostTickUpdateEvent;
 struct GameResetEvent;
+struct WorldSnapshotReceivedEvent;
 class BaseObj;
 class BulletPool;
 class EventSystem;
@@ -45,6 +46,7 @@ class SpawnManager final
 	void OnAddToSpawnQueue(const AddToSpawnQueueEvent& event);
 	void OnPostTickUpdate(const PostTickUpdateEvent&);
 	void OnGameReset(const GameResetEvent&);
+	void OnWorldSnapshotReceived(const WorldSnapshotReceivedEvent& event) const;
 	void FlushSpawnQueue();
 	void DisposeDeadObject();
 

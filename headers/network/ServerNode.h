@@ -20,7 +20,7 @@ public:
 
 	[[nodiscard]] uint16_t GetBoundPort() const;
 
-	//NOTE: no goodbye, the way a crashed host would go - the peer sees a bare EOF and reconnects,
+	//NOTE: no goodbye, the way a crashed host would go - the peer hears nothing more, times out and reconnects,
 	//unlike the destructor's announced leave
 	void Abort();
 

@@ -25,9 +25,35 @@
 
 namespace
 {
-std::atomic_bool isStopRequested{false};
+std::atomic_bool isStopRequested{};
 
 extern "C" void OnStopSignal(int) { isStopRequested.store(true, std::memory_order_relaxed); }
+
+//NOTE: in the game the pause belongs to the menu, and there is no menu here - so a console command and a
+//client's request would reach nothing. Everything downstream waits on PauseStatusEvent, this is what says it
+class PauseSwitch final
+{
+public:
+	explicit PauseSwitch(const std::shared_ptr<EventSystem>& events)
+		: _events{events}
+		, _setPauseSub{events->AddListener(this, &PauseSwitch::OnSetPause)} {}
+
+private:
+	void OnSetPause(const SetPauseEvent& event)
+	{
+		if (_isPaused == event.isPaused)
+		{
+			return;
+		}
+
+		_isPaused = event.isPaused;
+		_events->EmitEvent(PauseStatusEvent{.isPaused = _isPaused});
+	}
+
+	std::shared_ptr<EventSystem> _events;
+	EventSubscription _setPauseSub;
+	bool _isPaused{};
+};
 
 //NOTE: what the console asks for, done on the game thread between frames; a restart goes the way a player's does
 struct ConsoleCommandHandler final
@@ -136,6 +162,7 @@ int main(const int argc, char* argv[])
 	gameConfig.serverAddress.port = launchOptions->serverPort.value_or(gameConfig.serverAddress.port);
 
 	const auto events{std::make_shared<EventSystem>()};
+	PauseSwitch pauseSwitch{events};
 	//NOTE: no presenter here, so its pacing is all that stands between this loop and a busy spin
 	const FramePerSecondManager fpsManager{events, projectConfig, false};
 	Simulation simulation{events, gameConfig};

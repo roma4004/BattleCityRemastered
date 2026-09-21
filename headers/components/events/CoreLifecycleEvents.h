@@ -6,7 +6,10 @@
 #include "enums/PlayerSlot.h"
 #include <cstddef>
 
-struct ServerInClientReadyToStartGameEvent {};
+struct ServerInClientReadyToStartGameEvent
+{
+	PlayerSlot slot;
+};
 
 struct ServerInRestartRequestedEvent {};
 
@@ -14,6 +17,7 @@ struct ServerInRestartRequestedEvent {};
 struct ServerInDisconnectEvent
 {
 	DisconnectReason reason;
+	PlayerSlot slot;
 };
 
 struct ClientInDisconnectEvent
@@ -24,6 +28,9 @@ struct ClientInDisconnectEvent
 struct ClientReconnectAbandonedEvent {};
 
 struct ClientConnectedToHostEvent {};
+
+//NOTE: the link dropped without a goodbye - the client keeps dialling, and its field is stale meanwhile
+struct ClientHostLostEvent {};
 
 struct HostPhaseAnnouncedEvent
 {
@@ -37,7 +44,10 @@ struct PlayerSlotAssignedEvent
 };
 
 //NOTE: the link dropped without a goodbye - an announced leave is ServerInDisconnectEvent
-struct ServerClientLostEvent {};
+struct ServerClientLostEvent
+{
+	PlayerSlot slot;
+};
 
 struct GameStateChangedToEvent
 {
@@ -104,6 +114,10 @@ struct MapLoadedEvent
 	std::size_t cols;
 	std::size_t rows;
 };
+
+//NOTE: the reason is already in the log - this only says the world never got filled, so whoever started
+//the match has to take it back
+struct MapLoadFailedEvent {};
 
 struct WorldGeometryChangedEvent {};
 

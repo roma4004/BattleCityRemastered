@@ -1,29 +1,38 @@
 #include "network/PeerLink.h"
+#include "network/DatagramLink.h"
 #include "network/Serializer.h"
-#include "network/commands/Disconnect.h"
+#include "network/commands/CommandBatch.h"
 #include "utils/Log.h"
+#include <algorithm>
 #include <cstddef>
 #include <string>
 #include <utility>
 
 namespace network::commands
 {
-PeerLink::PeerLink(tcp::socket socket, std::string ownerName, std::shared_ptr<EventSystem> events)
-	: _channel{std::make_shared<network::FrameChannel>(std::move(socket), ownerName)}
-	, _events{std::move(events)}
+PeerLink::PeerLink(std::string ownerName, std::shared_ptr<EventSystem> events)
+	: _events{std::move(events)}
 	, _ownerName{std::move(ownerName)} {}
 
-bool PeerLink::DispatchFrame(const std::string& frame)
+//NOTE: the messages first - a Latest value in the same datagram may belong to an entity one of them spawns
+bool PeerLink::Dispatch(const DatagramLink::Arrivals& arrivals)
 {
-	const auto batch{network::Deserialize(frame)};
+	const auto dispatch = [this](const std::string& message) { return DispatchMessage(message); };
+
+	return std::ranges::all_of(arrivals.messages, dispatch) && std::ranges::all_of(arrivals.latest, dispatch);
+}
+
+bool PeerLink::DispatchMessage(const std::string& message)
+{
+	const auto batch{network::Deserialize(message)};
 	if (!batch)
 	{
 		constexpr std::size_t maxLoggedBytes{200};
 		const std::string rawData{
-				frame.length() < maxLoggedBytes ? frame : frame.substr(0, maxLoggedBytes) + "..."};
+				message.length() < maxLoggedBytes ? message : message.substr(0, maxLoggedBytes) + "..."};
 
 		Log::Error(_ownerName + " deserialization: " + batch.error().reason + ", raw size "
-				   + std::to_string(frame.length()) + ", raw data: " + rawData);
+				   + std::to_string(message.length()) + ", raw data: " + rawData);
 
 		return false;
 	}
@@ -34,31 +43,5 @@ bool PeerLink::DispatchFrame(const std::string& frame)
 	}
 
 	return true;
-}
-
-void PeerLink::SendBatch(const CommandBatch& batch)
-{
-	_channel->Send(std::make_shared<const std::string>(network::SerializeFrame(batch)));
-}
-
-void PeerLink::CloseWithFarewell(const bool hasLink, const DisconnectReason reason, std::function<void()> onClosed)
-{
-	if (!hasLink)
-	{
-		_channel->Close();
-		if (onClosed)
-		{
-			onClosed();
-		}
-
-		return;
-	}
-
-	CommandBatch farewell;
-	farewell.commands.emplace_back(Disconnect{.reason = reason});
-	//NOTE: straight out, not into the per-frame batch - what flushes that stops running at shutdown
-	SendBatch(farewell);
-
-	_channel->CloseAfterFlush(std::move(onClosed));
 }
 }//namespace network::commands

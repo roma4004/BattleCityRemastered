@@ -1,4 +1,5 @@
 #include "TestUtils.h"
+#include "components/ObstacleSpawner.h"
 #include "application/GameConfig.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
@@ -26,6 +27,7 @@ class TankSpawnerTest : public testing::Test
 {
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
+	std::unique_ptr<ObstacleSpawner> _obstacleSpawner{nullptr};
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
 	std::shared_ptr<RespawnManager> _respawnManager{nullptr};
 	std::vector<EventSubscription> _instantSpawnAnimationSubs{};
@@ -36,6 +38,7 @@ protected:
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
+		_obstacleSpawner = std::make_unique<ObstacleSpawner>(_events, _gameConfig);
 		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, _allObjects);
 		_allObjects.reserve(6u);
 		const auto bulletPool{std::make_shared<BulletPool>(_events, _allObjects, _gameConfig)};
@@ -46,6 +49,36 @@ protected:
 	}
 
 	void TearDown() override {}
+
+	// a wall across the whole top row except one opening, laid cell by cell the way a map does it
+	void WallOffTopRow(const double gapFrom, const double gapTo) const
+	{
+		const double cell{_gameConfig.gridOffset};
+		const auto width{static_cast<double>(_gameConfig.battlefieldSize.x)};
+		for (double x{0.0}; x < width; x += cell)
+		{
+			if (x + cell > gapFrom && x < gapTo)
+			{
+				continue;
+			}
+
+			SpawnObstacle(FPoint{.x = x, .y = 0.0}, ObstacleType::Steel);
+		}
+	}
+
+	//NOTE: the top row only - players come up at the bottom whatever happens to the enemies' side
+	[[nodiscard]] std::size_t CountTanksInTopRow() const
+	{
+		return static_cast<std::size_t>(std::ranges::count_if(_allObjects, [](const std::shared_ptr<BaseObj>& obj)
+		{
+			return std::dynamic_pointer_cast<Tank>(obj) != nullptr && obj->GetRect().y == 0.0;
+		}));
+	}
+
+	std::shared_ptr<BaseObj> SpawnObstacle(const FPoint pos, const ObstacleType type) const
+	{
+		return TestUtils::SpawnObstacle(_events, _allObjects, pos, type, _gameConfig);
+	}
 };
 
 TEST_F(TankSpawnerTest, DemoPhaseStart)
@@ -243,4 +276,19 @@ TEST_F(TankSpawnerTest, AServerTakesBothSeatsOffTheWire)
 	_events->EmitEvent(Key(InputChannel::RemoteP1), MoveUpEvent{.isPressed = true});
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = 1.0 / 60.0});
 	EXPECT_NE(startPos, playerOne->GetPos()) << "the first seat never heard the wire";
+}
+
+// the only opening in the top row sits off both the tank and half-tank step - a search by strides alone
+// would miss it and the enemy would never appear
+TEST_F(TankSpawnerTest, AnEnemyFindsAnOpeningThatIsOffTheCoarseSteps)
+{
+	//NOTE: exactly one tank wide, set one cell off the tank-sized stride
+	const double tankSize{_gameConfig.tankSize};
+	const double gapFrom{tankSize * 2.0 + _gameConfig.gridOffset};
+	WallOffTopRow(gapFrom, gapFrom + tankSize);
+
+	const std::size_t before{CountTanksInTopRow()};
+	_events->EmitEvent(RespawnTanksEvent{});
+
+	EXPECT_GT(CountTanksInTopRow(), before) << "no enemy took the one opening there was";
 }

@@ -1,12 +1,8 @@
 #pragma once
 
-#include "FrameChannel.h"
+#include "DatagramLink.h"
 #include "NetworkCommandQueue.h"
 #include "commands/AnyCommand.h"
-#include "commands/CommandBatch.h"
-#include "enums/DisconnectReason.h"
-#include <boost/asio/ip/tcp.hpp>
-#include <functional>
 #include <memory>
 #include <string>
 
@@ -14,8 +10,6 @@ class EventSystem;
 
 namespace network::commands
 {
-using boost::asio::ip::tcp;
-
 class PeerLink
 {
 public:
@@ -31,23 +25,21 @@ public:
 protected:
 	~PeerLink() = default;
 
-	PeerLink(tcp::socket socket, std::string ownerName, std::shared_ptr<EventSystem> events);
+	PeerLink(std::string ownerName, std::shared_ptr<EventSystem> events);
 
 	//NOTE: what this peer makes of a command - Client takes the goodbye off the network thread first,
-	//Session visits straight away. Called from DispatchFrame, so never before the peer is built.
+	//Session visits straight away. Called from Dispatch, so never before the peer is built.
 	virtual void OnCommand(const AnyCommand& command) = 0;
 
-	//NOTE: false only for a frame that will not parse. A command the peer ignores is not a failure -
+	//NOTE: false only for a message that will not parse. A command the peer ignores is not a failure -
 	//both ends share one AnyCommand, and each drops the half addressed to the other.
-	[[nodiscard]] bool DispatchFrame(const std::string& frame);
+	[[nodiscard]] bool Dispatch(const DatagramLink::Arrivals& arrivals);
 
-	void SendBatch(const CommandBatch& batch);
-
-	void CloseWithFarewell(bool hasLink, DisconnectReason reason, std::function<void()> onClosed);
-
-	std::shared_ptr<network::FrameChannel> _channel;
 	std::shared_ptr<EventSystem> _events{nullptr};
 	network::NetworkCommandQueue _commandQueue;
 	std::string _ownerName;
+
+private:
+	[[nodiscard]] bool DispatchMessage(const std::string& message);
 };
 }//namespace network::commands

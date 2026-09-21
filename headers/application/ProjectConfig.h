@@ -78,6 +78,6 @@ private:
 	boost::property_tree::ptree _pTreeIni;
 	std::filesystem::path _filePath;
 	std::optional<ConfigError> _loadError{};
-	bool _skipIniLoad{false};
-	bool _isFreshIni{false};
+	bool _skipIniLoad{};
+	bool _isFreshIni{};
 };

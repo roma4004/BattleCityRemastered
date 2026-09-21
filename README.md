@@ -65,7 +65,7 @@ Already reimplemented (from scratch) features from the original game:
 
 
 NOTE: about the multiplayer game.
-It is two separate processes that let you truly play with full visual replication over TCP/IP.
+It is two separate processes that let you truly play with full visual replication over UDP.
 The game in host\client mode looks the same, but with strict host authority, so the client can only send key input.
   * (run game.exe twice) drag the window, choose "play as host" in one window and "play as client" in the other window
   * The host is auto paused while waiting for the client to join

@@ -8,6 +8,7 @@
 #include "components/events/ReplicationEvents.h"
 #include "components/events/TimingEvents.h"
 #include "components/events/SpawnEvents.h"
+#include "components/WorldSnapshot.h"
 #include "entities/bonuses/Bonus.h"
 #include "enums/BonusType.h"
 #include "utils/RandUtils.h"
@@ -15,6 +16,7 @@
 #include "utils/WorldQuery.h"
 #include <algorithm>
 #include <chrono>
+#include <iterator>
 
 class BaseObj;
 class EventSystem;
@@ -45,6 +47,7 @@ void BonusSpawner::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &BonusSpawner::Reset));
 	_subs.push_back(_events->AddListener(this, &BonusSpawner::OnWorldGeometryChanged));
+	_subs.push_back(_events->AddListener(this, &BonusSpawner::OnSpawnMapBonus));
 
 	//NOTE: the burst is only a picture on the client - what settles is the host's call, so the bonus
 	//waits for BonusSpawnComplete instead of its own clock, and one picked up mid-burst never arrives
@@ -57,6 +60,12 @@ void BonusSpawner::Subscribe()
 	{
 		_subs.push_back(_events->AddListener(this, &BonusSpawner::OnBonusSpawned));
 		_subs.push_back(_events->AddListener(this, &BonusSpawner::OnBonusSpawnCompleted));
+		_subs.push_back(_events->AddListener(this, &BonusSpawner::OnWorldSnapshotReceived));
+	}
+
+	if (_gameConfig.IsHost())
+	{
+		_subs.push_back(_events->AddListener(this, &BonusSpawner::OnWorldSnapshotRequested));
 	}
 }
 
@@ -82,6 +91,35 @@ bool BonusSpawner::MaterializePending(const Uuid uuid)
 	_pendingSpawns.erase(it);
 
 	return true;
+}
+
+void BonusSpawner::OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const
+{
+	std::ranges::transform(_pendingSpawns, std::back_inserter(event.snapshot.bonusSpawns),
+						   [](const PendingSpawn& pending)
+						   {
+							   return BonusSpawnedEvent{.pos = FPoint{.x = pending.rect.x, .y = pending.rect.y},
+														.type = pending.type,
+														.uuid = pending.uuid,
+														.isSuper = pending.isSuper};
+						   });
+}
+
+//NOTE: a settled bonus lands at once, a pending one bursts and waits for the host like any other
+void BonusSpawner::OnWorldSnapshotReceived(const WorldSnapshotReceivedEvent& event)
+{
+	const auto size{static_cast<double>(_gameConfig.bonusSize)};
+	std::ranges::for_each(event.snapshot.bonuses, [this, size](const BonusSpawnedEvent& bonus)
+	{
+		Materialize(PendingSpawn{.rect = ObjRectangle{.x = bonus.pos.x, .y = bonus.pos.y, .w = size, .h = size},
+								 .type = bonus.type,
+								 .uuid = bonus.uuid,
+								 .isSuper = bonus.isSuper});
+	});
+	std::ranges::for_each(event.snapshot.bonusSpawns, [this](const BonusSpawnedEvent& spawn)
+	{
+		OnBonusSpawned(spawn);
+	});
 }
 
 void BonusSpawner::OnWorldGeometryChanged(const WorldGeometryChangedEvent&) { ResetSpawnRanges(); }
@@ -144,11 +182,25 @@ void BonusSpawner::SpawnBonus(const ObjRectangle rect, const BonusType type, Uui
 	_events->EmitEvent(AnimationCreateBonusSpawnEvent{.rect = rect, .uuid = uuid, .isEndless = _gameConfig.IsClient()});
 }
 
+void BonusSpawner::SpawnPermanentBonus(const ObjRectangle rect, const BonusType type)
+{
+	const Uuid uuid{AnnounceSpawn(rect, type, Uuid{}, false)};
+
+	_pendingSpawns.emplace_back(PendingSpawn{.rect = rect, .type = type, .uuid = uuid, .isPermanent = true});
+
+	_events->EmitEvent(AnimationCreateBonusSpawnEvent{.rect = rect, .uuid = uuid, .isEndless = _gameConfig.IsClient()});
+}
+
+void BonusSpawner::OnSpawnMapBonus(const SpawnMapBonusEvent& event)
+{
+	SpawnPermanentBonus(event.rect, event.type);
+}
+
 void BonusSpawner::Materialize(const PendingSpawn& pending) const
 {
 	auto bonus{std::make_shared<Bonus>(pending.rect, _events, pending.uuid, _gameConfig, pending.type,
 									   pending.isSuper)};
-	_events->EmitEvent(BonusCreatedEvent{.bonus = bonus});
+	_events->EmitEvent(BonusCreatedEvent{.bonus = bonus, .isPermanent = pending.isPermanent});
 	_events->EmitEvent(AddToSpawnQueueEvent{.obj = std::move(bonus)});
 }
 

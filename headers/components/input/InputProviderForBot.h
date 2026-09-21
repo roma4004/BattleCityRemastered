@@ -57,8 +57,9 @@ class InputProviderForBot final : public IInputProvider
 															   bool excludeCurrentDirection = false);
 
 	[[nodiscard]] static bool ShouldShootOpponent(const Tank& self, const std::shared_ptr<BaseObj>& obj);
+	[[nodiscard]] static bool IsFortress(const std::shared_ptr<BaseObj>& obj);
 	[[nodiscard]] static bool ShouldShootObstacle(const Tank& self, const std::shared_ptr<BaseObj>& obj);
-	[[nodiscard]] bool RollShootObstacle();
+	[[nodiscard]] bool RollShootObstacle(const std::shared_ptr<BaseObj>& obj);
 
 public:
 	InputProviderForBot(const std::vector<std::shared_ptr<BaseObj>>& allObjects, const GameConfig& gameConfig);

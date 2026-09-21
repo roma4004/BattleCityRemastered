@@ -29,7 +29,7 @@ class Menu final
 	std::unique_ptr<InputProviderForMenu> _input{nullptr};
 
 	GameMode _selectedGameMode{};
-	bool _isMenuDisplayed{false};
+	bool _isMenuDisplayed{};
 
 	void Subscribe();
 
@@ -38,11 +38,15 @@ class Menu final
 	void OnMenuShowed(const MenuShowedEvent& event);
 
 	static constexpr int kLineStep{30};
+	//NOTE: where the controls table starts under the modes - the gamepad columns hang off the same line
+	static constexpr int kControlsBaseLine{150};
 
 	static void DrawTextLine(std::vector<TextBlockLine>& lines, Point& posText, std::string text);
-	void DrawMenuText(std::vector<TextBlockLine>& lines) const;
-	void DrawMenuLine(std::vector<TextBlockLine>& lines, Point& posText, bool isSelected, std::string text) const;
+	//NOTE: hands back where the arrow beside the selected mode goes - the icon is emitted after the block,
+	//because the renderer only knows how far it moved the block once it has it
+	[[nodiscard]] Point DrawMenuText(std::vector<TextBlockLine>& lines) const;
 	void DrawControlHints(std::vector<TextBlockLine>& lines) const;
+	void EmitGamepadHints() const;
 	void DisplayMenu(bool isDisplayed);
 
 	void Draw();

@@ -2,6 +2,8 @@
 #include "components/EventSystem.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/ObjectLifecycleEvents.h"
+#include "components/events/ReplicationEvents.h"
+#include "components/WorldSnapshot.h"
 #include "enums/Author.h"
 
 namespace
@@ -57,6 +59,9 @@ void GameStatistics::Subscribe()
 	_subs.push_back(_events->AddListener(this, &GameStatistics::OnBonusPickup));
 	_subs.push_back(_events->AddListener(this, &GameStatistics::OnBonusDestroyed));
 	_subs.push_back(_events->AddListener(this, &GameStatistics::OnBonusExpired));
+
+	_subs.push_back(_events->AddListener(this, &GameStatistics::OnWorldSnapshotRequested));
+	_subs.push_back(_events->AddListener(this, &GameStatistics::OnWorldSnapshotReceived));
 }
 
 void GameStatistics::OnGameReset(const GameResetEvent&) { Reset(); }
@@ -157,6 +162,16 @@ void GameStatistics::OnBonusDestroyed(const StatisticsBonusDestroyedEvent& event
 void GameStatistics::OnBonusExpired(const StatisticsBonusExpiredEvent&)
 {
 	++_data.bonusExpired;
+}
+
+void GameStatistics::OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const
+{
+	event.snapshot.statistics = _data;
+}
+
+void GameStatistics::OnWorldSnapshotReceived(const WorldSnapshotReceivedEvent& event)
+{
+	_data = event.snapshot.statistics;
 }
 
 void GameStatistics::Reset() { _data = {}; }

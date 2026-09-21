@@ -46,8 +46,14 @@ void BonusManager::OnTickUpdate(const TickUpdateEvent&)
 	ExpireEffects();
 }
 
+//NOTE: a bonus the map laid out gets no clock - it waits there until someone takes it or shoots it
 void BonusManager::OnBonusCreated(const BonusCreatedEvent& event)
 {
+	if (event.isPermanent)
+	{
+		return;
+	}
+
 	_spawnedBonuses.emplace_back(SpawnedBonus{.bonus = event.bonus,
 											  .lifeTime = Timer{_gameConfig.bonusLifeTimeCooldown}});
 }

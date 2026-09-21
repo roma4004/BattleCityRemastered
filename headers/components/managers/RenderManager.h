@@ -2,6 +2,7 @@
 
 #include "geometry/Point.h"
 #include "components/EventSystem.h"
+#include "components/WorldGeometry.h"
 #include "components/events/RenderUIEvents.h"
 #include "components/managers/TextCache.h"
 #include <SDL3/SDL_render.h>
@@ -10,6 +11,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -23,7 +25,6 @@ struct PreTickUpdateEvent;
 struct PresentFrameEvent;
 struct GameModeChangedToEvent;
 struct PlayerSlotAssignedEvent;
-struct RenderTextEvent;
 struct RenderMenuBackgroundEvent;
 struct RenderMenuLogoEvent;
 struct RenderMenuSelectorIconEvent;
@@ -58,26 +59,46 @@ class RenderManager final
 
 	struct MenuParams
 	{
+		//NOTE: whole cells, so the panel's sides land on the outermost brick blocks - the number has to
+		//match the border the .map files leave around the pattern
+		static constexpr size_t kSideInsetCells{5u};
+
 		UPoint panelSize{};
 		size_t padding{};
+		size_t sideInset{};
 
 		void Init(const UPoint windowSize, const size_t sideBarWidth)
 		{
 			padding = 50;
-			panelSize = UPoint{.x = windowSize.x - sideBarWidth - padding * 2,
+			sideInset = static_cast<size_t>(WorldGeometry::kCellSize) * kSideInsetCells;
+			panelSize = UPoint{.x = windowSize.x - sideBarWidth - sideInset * 2,
 							   .y = windowSize.y - padding * 2};
 		}
 	};
 
 	MenuParams _menuParams{};
 
-	//NOTE: kept between frames - the block itself is the key, so there is nothing to hash and
-	//nothing to collide
+	//NOTE: what a block needs across at one point size - where its leftmost line starts, how far the
+	//line reaching furthest gets from there, and the height of the tallest of them
+	struct BlockSpan
+	{
+		int left{};
+		int width{};
+		int tallestLine{};
+	};
+
+	//NOTE: kept between frames - everything the fitted size rests on, and menuPos is not part of it:
+	//the slide reaches the panel only through its y, which neither the width nor the line step reads
 	struct FittedBlock
 	{
-		RenderMenuTextBlockEvent block{};
+		std::vector<TextBlockLine> lines{};
+		int lineHeight{};
+		TextBlockAlign align{};
 		float scale{};
 		int pointSize{};
+		int shiftX{};
+
+		[[nodiscard]] bool Matches(const RenderMenuTextBlockEvent& event, float renderScale) const;
 	};
 
 	mutable FittedBlock _menuBlockFit{};
@@ -139,19 +160,29 @@ class RenderManager final
 	void RenderCopy(SDL_Texture* texture, SDL_Rect dstRect) const;
 	void DrawXBoxHint(const RenderMenuXBoxHintEvent& event) const;
 	void DrawPS5Hint(const RenderMenuPS5HintEvent& event) const;
-	void OnRenderText(const RenderTextEvent& event) const;
 	void DrawMenuTextBlock(const RenderMenuTextBlockEvent& event) const;
 	[[nodiscard]] SDL_Rect MenuPanelRect(Point menuPos) const;
+	//NOTE: the block is never empty here - the draw returns before it reaches this
+	[[nodiscard]] BlockSpan MeasureBlock(const RenderMenuTextBlockEvent& event, int pointSize, float scale) const;
 	[[nodiscard]] int FitBlockPointSize(const RenderMenuTextBlockEvent& event, float scale) const;
+	[[nodiscard]] int MenuBlockShiftX(const RenderMenuTextBlockEvent& event, int pointSize, float scale) const;
+	//NOTE: the menu lays its content out around the text, so the icons and the logo take the shift the
+	//block was last drawn with - the menu emits the block ahead of them for exactly that
+	[[nodiscard]] Point MenuContentPos(Point pos) const;
 	[[nodiscard]] float CurrentRenderScale() const;
-	[[nodiscard]] static int BasePointSize(bool isMediumFontSize);
-	void TextToRender(const Point& pos, const SDL_Color& color, int value, bool isMediumFontSize) const;
-	void TextToRender(Point pos, SDL_Color color, const std::string& text, bool isMediumFontSize = false) const;
-	void TextToRenderSized(Point pos, SDL_Color color, const std::string& text, int basePointSize) const;
+	//NOTE: the largest a menu block ever starts from - fitting only ever shrinks from here
+	[[nodiscard]] static int BlockStartPointSize();
+	void DrawTextAt(Point pos, SDL_Color color, std::string_view text, int basePointSize, float scale) const;
 	//NOTE: keeps the proportions and the given size - a line wider than the box is not shrunk, it runs over
-	void TextToRenderCentered(const SDL_Rect& box, SDL_Color color, const std::string& text,
-							  int basePointSize) const;
+	void DrawTextCentered(const SDL_Rect& box, SDL_Color color, std::string_view text, int basePointSize,
+						  float scale) const;
+	//NOTE: a counter is a new string whenever it changes, so it draws from its own slot in the cache
+	//instead of leaving a dead layout behind every time
+	void DrawCounterAt(TextCache::Slot slot, Point pos, SDL_Color color, int value) const;
+	void DrawCounterCentered(TextCache::Slot slot, const SDL_Rect& box, SDL_Color color, int value) const;
+	//NOTE: the render scale is the caller's - a run of lines sets it once, see ScopedRenderScale
 	void DrawText(const TextCache::CachedText& cached, int x, int y, float scale) const;
+	[[nodiscard]] static Point CenteredIn(const SDL_Rect& box, const TextCache::CachedText& cached);
 
 	void ClearFrame(const PreTickUpdateEvent&) const;
 	void PresentFrame(const PresentFrameEvent&) const;
@@ -168,6 +199,17 @@ class RenderManager final
 
 	void DrawHealthBar(const RenderHealthBarEvent& event) const;
 	void InitMenu(const GameConfig& gameConfig);
+
+	//NOTE: the map decides the field, so a plate is placed against it - fixed numbers were the middle
+	//of the first map and stayed where they were when it grew
+	[[nodiscard]] SDL_Rect CenteredInField(int width, int height) const;
+	//NOTE: the field says how wide the plate is, the sprite says what shape - so a bigger map moves it
+	//and grows it without stretching the picture
+	[[nodiscard]] SDL_Rect PlateRect(const ObjRectangle& sprite, double widthShare) const;
+
+	static constexpr double kPausePlateShare{0.40};
+	static constexpr double kGameOverPlateShare{0.27};
+	static constexpr double kGameWonPlateShare{0.16};
 
 	[[nodiscard]] static SDL_Rect CalcFpsBox(const UPoint& battlefieldSize);
 	[[nodiscard]] int SideBarColumnX() const;

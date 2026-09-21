@@ -13,7 +13,7 @@ struct BaseObjProperty;
 
 class BaseObj : public IObstacle
 {
-	int _health{0};
+	int _health{};
 	CollisionTags _collision;
 
 protected:

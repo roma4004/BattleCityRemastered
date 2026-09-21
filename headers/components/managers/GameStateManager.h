@@ -3,15 +3,19 @@
 #include "components/EventSystem.h"
 #include "enums/GameMode.h"
 #include "enums/GameState.h"
+#include <bitset>
+#include <cstdint>
 #include <memory>
 #include <vector>
 
+enum class PlayerSlot : std::uint8_t;
 struct PauseStatusEvent;
 struct PreDrawUserInterfaceEvent;
 struct GameResetEvent;
 struct GameModeAppliedEvent;
 struct DemoStartedEvent;
 struct GameFinishedEvent;
+struct MapLoadFailedEvent;
 struct ServerInClientReadyToStartGameEvent;
 struct ServerInRestartRequestedEvent;
 struct HostPhaseAnnouncedEvent;
@@ -19,6 +23,8 @@ struct ServerInDisconnectEvent;
 struct ServerClientLostEvent;
 struct ClientInDisconnectEvent;
 struct ClientReconnectAbandonedEvent;
+struct ClientHostLostEvent;
+struct WorldSnapshotRequestedEvent;
 class EventSystem;
 
 class GameStateManager final
@@ -28,8 +34,9 @@ class GameStateManager final
 
 	GameState _state{GameState::Menu};
 	GameMode _gameMode{};
-	unsigned short _peerCount{0u};
-	bool _isDemo{false};
+	//NOTE: seats, not a count - a seat whose client drops before its ready was never taken
+	std::bitset<2> _readySeats{};
+	bool _isDemo{};
 
 	void Subscribe();
 	void SetState(GameState state);
@@ -41,16 +48,20 @@ class GameStateManager final
 	void OnDemoStarted(const DemoStartedEvent&);
 	void OnPauseStatus(const PauseStatusEvent& event);
 	void OnGameFinished(const GameFinishedEvent& event);
-	void OnClientReady(const ServerInClientReadyToStartGameEvent&);
+	void OnMapLoadFailed(const MapLoadFailedEvent&);
+	void OnClientReady(const ServerInClientReadyToStartGameEvent& event);
 	void OnRestartRequested(const ServerInRestartRequestedEvent&);
 	void OnHostPhase(const HostPhaseAnnouncedEvent& event);
-	void OnClientLeft(const ServerInDisconnectEvent&);
-	void OnClientLost(const ServerClientLostEvent&);
+	void OnClientLeft(const ServerInDisconnectEvent& event);
+	void OnClientLost(const ServerClientLostEvent& event);
 	void OnHostLeft(const ClientInDisconnectEvent&);
 	void OnHostUnreachable(const ClientReconnectAbandonedEvent&);
+	void OnHostLost(const ClientHostLostEvent&);
+	void OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const;
 
-	void PeerArrived();
-	void PeerGone();
+	void TakeSeat(PlayerSlot slot);
+	void FreeSeat(PlayerSlot slot);
+	void LoseHost();
 
 	void Draw(const PreDrawUserInterfaceEvent&) const;
 	void Reset(const GameResetEvent&);

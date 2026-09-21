@@ -17,20 +17,56 @@ TextCache::TextCache(const SDL_Config& sdlConfig)
 
 TextCache::~TextCache() = default;
 
-//NOTE: the engine goes too - its atlas belongs to the renderer
 void TextCache::Clear()
 {
 	_entries.clear();
+	_measures.clear();
+	_slots = {};
 	_fonts.clear();
 	_engine.reset();
 }
 
+//NOTE: every layout is laid out in output pixels, so a new scale invalidates the lot of them - and
+//nothing else: reopening the fonts here is what made a window drag pay for the whole cache each frame
+void TextCache::SyncScale(const float scale)
+{
+	if (scale == _scale)
+	{
+		return;
+	}
+
+	_entries.clear();
+	_measures.clear();
+	_scale = scale;
+}
+
 size_t TextCache::KeyHash::operator()(const Key& key) const noexcept
 {
-	size_t hash{std::hash<std::string>{}(key.text)};
+	return (*this)(KeyView{.text = key.text, .basePointSize = key.basePointSize});
+}
+
+size_t TextCache::KeyHash::operator()(const KeyView key) const noexcept
+{
+	size_t hash{std::hash<std::string_view>{}(key.text)};
 	hash ^= static_cast<size_t>(key.basePointSize) + 0x9e3779b9u + (hash << 6u) + (hash >> 2u);
 
 	return hash;
+}
+
+bool TextCache::KeyEqual::operator()(const Key& lhs, const Key& rhs) const noexcept { return lhs == rhs; }
+
+bool TextCache::KeyEqual::operator()(const Key& lhs, const KeyView rhs) const noexcept
+{
+	return lhs.basePointSize == rhs.basePointSize && lhs.text == rhs.text;
+}
+
+bool TextCache::KeyEqual::operator()(const KeyView lhs, const Key& rhs) const noexcept { return (*this)(rhs, lhs); }
+
+bool TextCache::IsReady() const { return _sdlConfig.font && _sdlConfig.renderer; }
+
+int TextCache::PixelSize(const int basePointSize, const float scale)
+{
+	return static_cast<int>(std::lround(static_cast<float>(basePointSize) * scale));
 }
 
 TTF_TextEngine* TextCache::Engine()
@@ -43,30 +79,32 @@ TTF_TextEngine* TextCache::Engine()
 	return _engine.get();
 }
 
+//NOTE: the file is read once, at startup - a size is a copy of that font resized, so fitting a block
+//tries a dozen of them without touching the disk
 TTF_Font* TextCache::FontForScale(const int basePointSize, const float scale)
 {
-	const auto pixelSize{static_cast<int>(std::lround(static_cast<float>(basePointSize) * scale))};
-
-	auto& scaledFont{_fonts[pixelSize]};
-	if (!scaledFont)
+	const int pixelSize{PixelSize(basePointSize, scale)};
+	if (const auto it{_fonts.find(pixelSize)}; it != _fonts.end())
 	{
-		scaledFont = _sdlConfig.OpenFont(pixelSize);
+		return it->second.get();
 	}
 
-	//NOTE: the startup font is a last resort - fixed at its own size, it draws the line at the wrong scale
-	return scaledFont ? scaledFont.get() : _sdlConfig.font.get();
+	FontHandle sized{TTF_CopyFont(_sdlConfig.font.get())};
+	if (!sized || !TTF_SetFontSize(sized.get(), static_cast<float>(pixelSize)))
+	{
+		//NOTE: nothing is stored on failure - an empty handle would retry the copy on every call,
+		//and the startup font draws the line at its own size rather than not at all
+		return _sdlConfig.font.get();
+	}
+
+	return _fonts.insert_or_assign(pixelSize, std::move(sized)).first->second.get();
 }
 
-Point TextCache::MeasureString(const std::string& text, const int basePointSize, const float scale)
+Point TextCache::SizeOfLaidOut(TTF_Text* const text, const float scale)
 {
-	if (!_sdlConfig.font)
-	{
-		return {};
-	}
-
 	int pixelWidth{};
 	int pixelHeight{};
-	if (!TTF_GetStringSize(FontForScale(basePointSize, scale), text.c_str(), text.size(), &pixelWidth, &pixelHeight))
+	if (!TTF_GetTextSize(text, &pixelWidth, &pixelHeight))
 	{
 		return {};
 	}
@@ -75,60 +113,136 @@ Point TextCache::MeasureString(const std::string& text, const int basePointSize,
 				 .y = static_cast<int>(static_cast<float>(pixelHeight) / scale)};
 }
 
-const TextCache::CachedText* TextCache::Acquire(const std::string& text, const SDL_Color& color,
+TextCache::CachedText TextCache::LayOut(const std::string_view text, TTF_Font* const font, const float scale)
+{
+	TTF_TextEngine* const engine{Engine()};
+	if (engine == nullptr)
+	{
+		return {};
+	}
+
+	std::unique_ptr<TTF_Text, TextDeleter> laidOut{TTF_CreateText(engine, font, text.data(), text.size())};
+	if (!laidOut)
+	{
+		return {};
+	}
+
+	const Point size{SizeOfLaidOut(laidOut.get(), scale)};
+
+	return CachedText{.text = std::move(laidOut), .width = size.x, .height = size.y};
+}
+
+Point TextCache::MeasureString(const std::string_view text, const int basePointSize, const float scale)
+{
+	if (!IsReady())
+	{
+		return {};
+	}
+
+	SyncScale(scale);
+
+	if (const auto it{_measures.find(KeyView{.text = text, .basePointSize = basePointSize})}; it != _measures.end())
+	{
+		return it->second;
+	}
+
+	int pixelWidth{};
+	int pixelHeight{};
+	if (!TTF_GetStringSize(FontForScale(basePointSize, scale), text.data(), text.size(), &pixelWidth, &pixelHeight))
+	{
+		return {};
+	}
+
+	const Point size{.x = static_cast<int>(static_cast<float>(pixelWidth) / scale),
+					 .y = static_cast<int>(static_cast<float>(pixelHeight) / scale)};
+
+	return _measures.insert_or_assign(Key{.text = std::string{text}, .basePointSize = basePointSize}, size)
+			.first->second;
+}
+
+const TextCache::CachedText* TextCache::Acquire(const std::string_view text, const SDL_Color& color,
 												const int basePointSize, const float scale)
 {
-	if (!_sdlConfig.font || !_sdlConfig.renderer)
+	if (!IsReady())
 	{
 		return nullptr;
 	}
 
-	if (scale != _scale)
-	{
-		Clear();
-		_scale = scale;
-	}
+	SyncScale(scale);
 
-	const Key key{.text = text, .basePointSize = basePointSize};
-	if (const auto it{_entries.find(key)}; it != _entries.end())
+	if (const auto it{_entries.find(KeyView{.text = text, .basePointSize = basePointSize})}; it != _entries.end())
 	{
 		TTF_SetTextColor(it->second.text.get(), color.r, color.g, color.b, color.a);
 
 		return &it->second;
 	}
 
-	//NOTE: a counter line is a fresh key every tick - dropping all bounds the cache, the few on screen refill
+	//NOTE: dropping the layouts bounds the cache and keeps the fonts they were laid out with - the few
+	//lines on screen refill it, and a counter that fills it belongs in a slot anyway
 	if (_entries.size() >= kMaxEntries)
 	{
-		Clear();
-		_scale = scale;
+		_entries.clear();
+		_measures.clear();
 	}
 
-	TTF_TextEngine* const engine{Engine()};
-	if (engine == nullptr)
+	CachedText entry{LayOut(text, FontForScale(basePointSize, scale), scale)};
+	if (!entry.text)
 	{
 		return nullptr;
 	}
 
-	std::unique_ptr<TTF_Text, TextDeleter> laidOut(
-			TTF_CreateText(engine, FontForScale(basePointSize, scale), text.c_str(), text.size()));
-	if (!laidOut)
+	TTF_SetTextColor(entry.text.get(), color.r, color.g, color.b, color.a);
+
+	return &_entries.insert_or_assign(Key{.text = std::string{text}, .basePointSize = basePointSize},
+									  std::move(entry))
+					 .first->second;
+}
+
+const TextCache::CachedText* TextCache::AcquireSlot(const Slot slot, const std::string_view text,
+													const SDL_Color& color, const int basePointSize,
+													const float scale)
+{
+	if (!IsReady())
 	{
 		return nullptr;
 	}
 
-	TTF_SetTextColor(laidOut.get(), color.r, color.g, color.b, color.a);
+	SyncScale(scale);
 
-	int pixelWidth{};
-	int pixelHeight{};
-	if (!TTF_GetTextSize(laidOut.get(), &pixelWidth, &pixelHeight))
+	SlotEntry& entry{_slots[static_cast<size_t>(slot)]};
+	const int pixelSize{PixelSize(basePointSize, scale)};
+
+	if (!entry.cached.text)
+	{
+		entry.cached = LayOut(text, FontForScale(basePointSize, scale), scale);
+	}
+	else if (entry.pixelSize != pixelSize || entry.text != text)
+	{
+		//NOTE: the layout is rewritten in place - that is what a slot is for, and the font carries the size
+		if (entry.pixelSize != pixelSize
+			&& !TTF_SetTextFont(entry.cached.text.get(), FontForScale(basePointSize, scale)))
+		{
+			return nullptr;
+		}
+
+		if (!TTF_SetTextString(entry.cached.text.get(), text.data(), text.size()))
+		{
+			return nullptr;
+		}
+
+		const Point size{SizeOfLaidOut(entry.cached.text.get(), scale)};
+		entry.cached.width = size.x;
+		entry.cached.height = size.y;
+	}
+
+	if (!entry.cached.text)
 	{
 		return nullptr;
 	}
 
-	CachedText entry{.text = std::move(laidOut),
-					 .width = static_cast<int>(static_cast<float>(pixelWidth) / scale),
-					 .height = static_cast<int>(static_cast<float>(pixelHeight) / scale)};
+	entry.text = text;
+	entry.pixelSize = pixelSize;
+	TTF_SetTextColor(entry.cached.text.get(), color.r, color.g, color.b, color.a);
 
-	return &_entries.insert_or_assign(key, std::move(entry)).first->second;
+	return &entry.cached;
 }

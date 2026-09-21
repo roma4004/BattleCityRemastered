@@ -22,6 +22,8 @@ struct AddToSpawnQueueEvent
 struct BonusCreatedEvent
 {
 	std::weak_ptr<Bonus> bonus;
+	//NOTE: laid out by the map, so no life timer is started for it
+	bool isPermanent{};
 };
 
 struct RespawnTankEvent
@@ -67,6 +69,12 @@ struct SpawnObstacleEvent
 {
 	ObjRectangle rect;
 	ObstacleType type;
+};
+
+struct SpawnMapBonusEvent
+{
+	ObjRectangle rect;
+	BonusType type;
 };
 
 struct BonusReApplyEvent

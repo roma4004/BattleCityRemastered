@@ -11,12 +11,15 @@
 #include "components/events/SpawnEvents.h"
 #include "components/events/TimingEvents.h"
 #include "entities/BaseObj.h"
+#include "enums/ObstacleType.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/PawnProperty.h"
 #include "entities/pawns/Tank.h"
 #include "utils/UuidUtils.h"
 
+class BulletPool;
 class RespawnManager;
+class TankPool;
 class TankSpawner;
 
 class TestUtils
@@ -92,43 +95,61 @@ public:
 	}
 
 	//NOTE: one tank either way - the two helpers differ only in who takes the wheel
+	//NOTE: laid cell by cell, the way a map does it - one stretched obstacle is a shape the game never makes
+	static void SpawnObstacleArea(const std::shared_ptr<EventSystem>& events,
+								  const std::vector<std::shared_ptr<BaseObj>>& allObjects, const ObjRectangle area,
+								  const ObstacleType type, const GameConfig& gameConfig)
+	{
+		const double side{gameConfig.gridOffset * ObstacleCellSpan(type)};
+		for (double y{area.y}; y < area.Bottom(); y += side)
+		{
+			for (double x{area.x}; x < area.Right(); x += side)
+			{
+				std::ignore = SpawnObstacle(events, allObjects, ObjRectangle{.x = x, .y = y, .w = side, .h = side},
+											type);
+			}
+		}
+	}
+
+	//NOTE: the game never builds an obstacle itself - it asks, and ObstacleSpawner builds and activates it.
+	//The rectangle overload is for cases whose geometry is the subject
+	[[nodiscard]] static std::shared_ptr<BaseObj> SpawnObstacle(const std::shared_ptr<EventSystem>& events,
+																const std::vector<std::shared_ptr<BaseObj>>& allObjects,
+																const ObjRectangle rect, const ObstacleType type)
+	{
+		events->EmitEvent(SpawnObstacleEvent{.rect = rect, .type = type});
+
+		return allObjects.empty() ? nullptr : allObjects.back();
+	}
+
+	[[nodiscard]] static std::shared_ptr<BaseObj> SpawnObstacle(const std::shared_ptr<EventSystem>& events,
+																const std::vector<std::shared_ptr<BaseObj>>& allObjects,
+																const FPoint pos, const ObstacleType type,
+																const GameConfig& gameConfig)
+	{
+		const double side{gameConfig.gridOffset * ObstacleCellSpan(type)};
+
+		return SpawnObstacle(events, allObjects, ObjRectangle{.x = pos.x, .y = pos.y, .w = side, .h = side}, type);
+	}
+
+	//NOTE: tanks and bullets come from the pools through the spawn queue - one built by hand checks a path
+	//the game never walks
 	[[nodiscard]] static std::shared_ptr<Tank> CreateBot(
 			ObjRectangle rect, int health, Author author,
 			const std::vector<std::shared_ptr<BaseObj>>& allObjects, const std::shared_ptr<EventSystem>& events,
-			Direction dir, const std::shared_ptr<BulletPool>& bulletPool, const GameConfig& gameConfig,
+			Direction dir, const std::shared_ptr<TankPool>& tankPool, const GameConfig& gameConfig,
 			unsigned short tier = 1u);
 
 	[[nodiscard]] static std::shared_ptr<Tank> CreatePlayer(
 			ObjRectangle rect, int health, Author author,
 			const std::vector<std::shared_ptr<BaseObj>>& allObjects, const std::shared_ptr<EventSystem>& events,
-			Direction dir, const std::shared_ptr<BulletPool>& bulletPool, const GameConfig& gameConfig,
+			Direction dir, const std::shared_ptr<TankPool>& tankPool, const GameConfig& gameConfig,
 			unsigned short tier = 1u);
 
 	[[nodiscard]] static std::shared_ptr<Bullet> CreateBullet(
-			const ObjRectangle rect, const int health,
-			const std::vector<std::shared_ptr<BaseObj>>& allObjects, const std::shared_ptr<EventSystem>& events,
-			const BulletCalibre& calibre, const Direction dir, const GameConfig& gameConfig,
-			const Author author)
-	{
-		const BaseObjProperty baseObjProperty{
-				.rect = rect,
-				.health = health,
-				.uuid = UuidUtils::GetRandomUuid(),
-				.faction = FactionOf(author)};
-		PawnProperty pawnProperty{
-				.baseObjProperty = baseObjProperty,
-				.allObjects = allObjects,
-				.events = events,
-				.tier = calibre.tier,
-				.speed = calibre.speed,
-				.dir = dir,
-				.author = author};
-
-		auto bullet{std::make_shared<Bullet>(std::move(pawnProperty), gameConfig, calibre)};
-		bullet->Activate();
-
-		return bullet;
-	}
+			ObjRectangle rect, int health, const std::shared_ptr<BulletPool>& bulletPool,
+			const std::shared_ptr<EventSystem>& events, const BulletCalibre& calibre, Direction dir,
+			Author author, const Uuid& authorUuid = {});
 };
 
 //NOTE: test-only - an epsilon comparison is not transitive, so it has no business as == on the type itself

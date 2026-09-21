@@ -12,6 +12,7 @@
 
 enum class Faction : char8_t;
 enum class Direction : char8_t;
+enum class TankType : char8_t;
 struct UPoint;
 struct TankResetProperty;
 struct PosChangedEvent;
@@ -27,6 +28,7 @@ struct BonusGrenadePickupEvent;
 struct BonusStarPickupEvent;
 struct BonusCaliberPickupEvent;
 struct BonusShipPickupEvent;
+struct WorldSnapshotRequestedEvent;
 class IInputProvider;
 class MoveLikeTankBeh;
 class IShootable;
@@ -42,6 +44,8 @@ class Tank final : public Pawn
 	//NOTE: the object Pawn::_moveBeh owns, typed - set once in the constructor, never replaced
 	MoveLikeTankBeh* _tankMoveBeh{nullptr};
 	std::unique_ptr<IInputProvider> _inputProvider{nullptr};
+	//NOTE: what the seat was spawned as - a client rebuilding the field needs it, the seat alone cannot tell
+	TankType _type{};
 
 	void EmitMoved() const;
 	void ApplyFreshLoadout();
@@ -58,6 +62,7 @@ class Tank final : public Pawn
 	void OnBonusStarPickup(const BonusStarPickupEvent& event);
 	void OnBonusCaliberPickup(const BonusCaliberPickupEvent& event);
 	void OnBonusShipPickup(const BonusShipPickupEvent& event);
+	void OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const;
 
 	void OnBonusTimer(const BonusTimerStatusChangeEvent& event);
 	void OnBonusHelmet(bool isActive);
@@ -74,10 +79,29 @@ class Tank final : public Pawn
 		std::chrono::milliseconds cooldownCut{};
 	};
 
-	static constexpr unsigned short kMaxTier{3u};
+	//NOTE: star and caliber differ only in how far they carry a tank along the same four tiers
+	static constexpr TierUpgrade kStar{.tiers = 1u,
+									   .speedFactor = 1.10,
+									   .damage = 15,
+									   .radiusFactor = 1.25,
+									   .cooldownCut = std::chrono::milliseconds{150}};
+	static constexpr TierUpgrade kCaliber{.tiers = 3u,
+										  .speedFactor = 1.30,
+										  .damage = 45,
+										  .radiusFactor = 1.75,
+										  .cooldownCut = std::chrono::milliseconds{450}};
+
+	//NOTE: the top tier itself, not the last one that may still be upgraded - three stars reach it
+	static constexpr unsigned short kMaxTier{4u};
 	static constexpr int kUpgradeHeal{50};
 
 	void Upgrade(const TierUpgrade& upgrade);
+
+	//NOTE: the numbers of one upgrade without the heal and without telling the wire - what Reset replays
+	void ApplyTierStep(const TierUpgrade& upgrade);
+
+	//NOTE: a tank spawned at tier N is the tank N-1 stars would have made, stats and all
+	void ApplyTier(unsigned short tier);
 	void OnBonusStar();
 	void OnBonusCaliber();
 	void OnBonusShip();

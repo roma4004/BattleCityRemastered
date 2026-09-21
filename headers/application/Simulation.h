@@ -9,9 +9,11 @@ enum class GameMode : char8_t;
 struct ClientConnectedToHostEvent;
 struct ClientInDisconnectEvent;
 struct ClientReconnectAbandonedEvent;
+struct ClientHostLostEvent;
 struct DeltaTimeEvent;
 struct GameModeChangedToEvent;
 struct GameStateChangedToEvent;
+struct MapLoadFailedEvent;
 struct MatchStartedEvent;
 struct PauseStatusEvent;
 struct PlayerSlotAssignedEvent;
@@ -46,13 +48,13 @@ class Simulation final
 	GameConfig& _gameConfig;
 
 	double _deltaTime{};
-	double _stepAccumulator{0.0};
-	bool _isPaused{false};
+	double _stepAccumulator{};
+	bool _isPaused{};
 	//NOTE: the link and the lobby arrive in either order, so the ready waits for both
-	bool _isLinkUp{false};
+	bool _isLinkUp{};
 	//NOTE: derived from the phase, not latched, so a match starting later in the same frame clears a
 	//lobby entry that no longer applies. Acted on at PostTickUpdate
-	bool _isEnterLobbyPending{false};
+	bool _isEnterLobbyPending{};
 
 	void Subscribe();
 
@@ -62,10 +64,12 @@ class Simulation final
 	void OnGameStateChangedTo(const GameStateChangedToEvent& event);
 	void OnGameModeChangedTo(const GameModeChangedToEvent& event);
 	void OnMatchStarted(const MatchStartedEvent&);
+	void OnMapLoadFailed(const MapLoadFailedEvent&) const;
 	void OnConnectedToHost(const ClientConnectedToHostEvent&);
 	void OnPlayerSlotAssigned(const PlayerSlotAssignedEvent& event);
 	void OnHostLeft(const ClientInDisconnectEvent&);
 	void OnHostUnreachable(const ClientReconnectAbandonedEvent&);
+	void OnHostLost(const ClientHostLostEvent&);
 
 	void EnterLobby();
 	void AnnounceReady() const;

@@ -446,7 +446,7 @@ RendererHandle SDL_Config::InitRender() const
 	//NOTE: SDL3 addresses displays by id, not by index - the ini still holds the 1-based number
 	SDL_Rect bounds{};
 	SDL_Rect usableBounds{};
-	bool hasMonitor{false};
+	bool hasMonitor{};
 	if (int displayCount{}; SDL_DisplayID* displays = SDL_GetDisplays(&displayCount))
 	{
 		hasMonitor = monitorIndex >= 0

@@ -12,6 +12,7 @@ struct LoadMapEvent;
 struct SpawnObstacleEvent;
 struct SpawnFortressWallEvent;
 struct ObstacleSpawnedEvent;
+struct WorldSnapshotReceivedEvent;
 class BaseObj;
 class EventSystem;
 class GameConfig;
@@ -30,6 +31,7 @@ class ObstacleSpawner final
 	void OnSpawnObstacle(const SpawnObstacleEvent& event);
 	void OnSpawnFortressWall(const SpawnFortressWallEvent& event);
 	void OnObstacleSpawned(const ObstacleSpawnedEvent& event);
+	void OnWorldSnapshotReceived(const WorldSnapshotReceivedEvent& event);
 
 	void LoadMap() const;
 	void SpawnObstacle(ObjRectangle rect, ObstacleType type, Uuid uuid = {});

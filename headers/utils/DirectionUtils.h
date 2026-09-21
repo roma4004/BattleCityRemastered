@@ -4,6 +4,7 @@
 #include "geometry/ObjRectangle.h"
 #include "geometry/Point.h"
 #include <algorithm>
+#include <array>
 #include <cmath>
 
 namespace DirectionUtils
@@ -23,6 +24,17 @@ namespace DirectionUtils
 	}
 
 	return FPoint{};
+}
+
+//NOTE: the two ways across the way it is going - where a tank can be nudged without changing its heading
+[[nodiscard]] constexpr std::array<Direction, 2> Laterals(const Direction dir) noexcept
+{
+	if (dir == Direction::UP || dir == Direction::DOWN)
+	{
+		return {Direction::LEFT, Direction::RIGHT};
+	}
+
+	return {Direction::UP, Direction::DOWN};
 }
 
 // the rectangle a step of that length sweeps through, the starting position included

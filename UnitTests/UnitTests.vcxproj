@@ -61,8 +61,9 @@
     <ClCompile Include="BulletsTestAdvanced.cpp" />
     <ClCompile Include="BulletsTestBasic.cpp" />
     <ClCompile Include="ClientHandshakeTest.cpp" />
-    <ClCompile Include="CommandLineParserTest.cpp" />
     <ClCompile Include="ConsoleCommandTest.cpp" />
+    <ClCompile Include="DatagramLinkTest.cpp" />
+    <ClCompile Include="CommandLineParserTest.cpp" />
     <ClCompile Include="CoopBotTest.cpp" />
     <ClCompile Include="DeadObjectFilterTest.cpp" />
     <ClCompile Include="DirectionUtilsTest.cpp" />
@@ -72,6 +73,7 @@
     <ClCompile Include="GameStateTest.cpp" />
     <ClCompile Include="ClientMirrorTest.cpp" />
     <ClCompile Include="TankHealTest.cpp" />
+    <ClCompile Include="TankNudgeTest.cpp" />
     <ClCompile Include="TankPoolTest.cpp" />
     <ClCompile Include="TankTerrainTest.cpp" />
     <ClCompile Include="MenuInputTest.cpp" />
@@ -84,10 +86,12 @@
     <ClCompile Include="ScoreBoardTest.cpp" />
     <ClCompile Include="StatisticsTestAdvanced.cpp" />
     <ClCompile Include="SeatAssignmentTest.cpp" />
+    <ClCompile Include="SessionTest.cpp" />
     <ClCompile Include="SimulationStepTest.cpp" />
     <ClCompile Include="StatisticsTestBasic.cpp" />
     <ClCompile Include="TankSpawnerTest.cpp" />
     <ClCompile Include="TimeUtilsTest.cpp" />
+    <ClCompile Include="WorldSnapshotTest.cpp" />
     <ClCompile Include="TestUtils.cpp" />
     <ClCompile Include="..\ThirdParty\googletest\googletest\src\gtest-all.cc" />
     <ClCompile Include="..\ThirdParty\googletest\googletest\src\gtest_main.cc" />

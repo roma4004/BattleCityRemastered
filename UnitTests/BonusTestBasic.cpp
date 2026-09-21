@@ -2,6 +2,7 @@
 #include "application/GameConfig.h"
 #include "components/BonusSpawner.h"
 #include "components/BulletPool.h"
+#include "components/TankPool.h"
 #include "components/EventSystem.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "components/events/SpawnEvents.h"
@@ -23,6 +24,7 @@
 #include "utils/UuidUtils.h"
 #include "geometry/Point.h"
 #include "gtest/gtest.h"
+#include <chrono>
 #include <memory>
 #include <optional>
 
@@ -31,6 +33,7 @@ class BonusTest : public testing::Test// NOLINT(clang-diagnostic-padded)
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
+	std::shared_ptr<TankPool> _tankPool{nullptr};
 	std::unique_ptr<BonusSpawner> _bonusSpawner{nullptr};
 	std::vector<EventSubscription> _instantSpawnAnimationSubs{};
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
@@ -55,6 +58,7 @@ protected:
 		_events = std::make_shared<EventSystem>();
 		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, _allObjects);
 		_bulletPool = std::make_shared<BulletPool>(_events, _allObjects, _gameConfig);
+		_tankPool = std::make_shared<TankPool>(_events, _allObjects, _gameConfig, _bulletPool);
 		TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, _gameConfig.gameMode, _respawnManager,
 								 _tankSpawner);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, _allObjects, _gameConfig);
@@ -64,7 +68,7 @@ protected:
 		_obstacleSpawner = std::make_unique<ObstacleSpawner>(_events, _gameConfig);
 		_fortressWallSub = TestUtils::TrackFortressWall(_events, &_fortressWall);
 		_gridSize = _gameConfig.gridOffset;
-		_tankSize = _gridSize * 3.0;
+		_tankSize = _gameConfig.tankSize;
 
 		_allObjects.reserve(4);
 	}
@@ -74,10 +78,9 @@ protected:
 	std::shared_ptr<Tank> CreatePlayer(const FPoint pos, const Author author = Author::Player1,
 									   const Direction dir = Direction::UP)
 	{
-		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _tankSize, .h = _tankSize};
-		auto player{TestUtils::CreatePlayer(rect, _tankHealth, author, _allObjects, _events, dir, _bulletPool,
+		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _gameConfig.tankSize, .h = _gameConfig.tankSize};
+		auto player{TestUtils::CreatePlayer(rect, _tankHealth, author, _allObjects, _events, dir, _tankPool,
 											_gameConfig)};
-		_allObjects.emplace_back(player);
 
 		return player;
 	}
@@ -85,10 +88,9 @@ protected:
 	std::shared_ptr<Tank> CreateBot(const FPoint pos, const Author author, const Direction dir,
 									const unsigned short tier = 1u)
 	{
-		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _tankSize, .h = _tankSize};
-		auto bot{TestUtils::CreateBot(rect, _tankHealth, author, _allObjects, _events, dir, _bulletPool, _gameConfig,
+		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _gameConfig.tankSize, .h = _gameConfig.tankSize};
+		auto bot{TestUtils::CreateBot(rect, _tankHealth, author, _allObjects, _events, dir, _tankPool, _gameConfig,
 									  tier)};
-		_allObjects.emplace_back(bot);
 
 		return bot;
 	}
@@ -96,9 +98,8 @@ protected:
 	std::shared_ptr<Bullet> CreateBullet(const FPoint pos, const Direction dir, const Author author)
 	{
 		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _calibre.size.x, .h = _calibre.size.y};
-		auto bullet{TestUtils::CreateBullet(rect, _bulletHealth, _allObjects, _events, _calibre, dir, _gameConfig,
+		auto bullet{TestUtils::CreateBullet(rect, _bulletHealth, _bulletPool, _events, _calibre, dir,
 											author)};
-		_allObjects.emplace_back(bullet);
 
 		return bullet;
 	}
@@ -372,7 +373,8 @@ TEST_F(BonusTest, WaterBlocksTankWithoutShip)
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
 
-	const ObjRectangle waterRect{.x = 0.0, .y = _tankSize + 1.0, .w = _gridSize, .h = _gridSize};
+	//NOTE: as wide as the tank - a narrower one it would simply steer around
+	const ObjRectangle waterRect{.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _gridSize};
 	_events->EmitEvent(SpawnObstacleEvent{.rect = waterRect, .type = ObstacleType::Water});
 
 	constexpr int framesToCrossWater{100};
@@ -445,4 +447,24 @@ TEST_F(BonusTest, DelayedSpawnLandsAfterAnimation)
 
 	ASSERT_EQ(_allObjects.size(), 1u);
 	EXPECT_NE(dynamic_cast<Bonus*>(_allObjects.back().get()), nullptr);
+}
+
+// a bonus the map laid out keeps no clock: with the drop lifetime at nothing, one that fell is swept on
+// the next tick and the placed one is still lying there
+TEST_F(BonusTest, ABonusLaidOutByTheMapNeverExpires)
+{
+	_gameConfig.bonusLifeTimeCooldown = std::chrono::milliseconds{};
+
+	_bonusSpawner->SpawnBonus({.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize}, BonusType::Helmet);
+	const auto dropped{_allObjects.back()};
+
+	_events->EmitEvent(SpawnMapBonusEvent{.rect = {.x = _tankSize * 2.0, .y = 0.0, .w = _tankSize, .h = _tankSize},
+										  .type = BonusType::Star});
+	const auto placed{_allObjects.back()};
+	ASSERT_NE(dropped, placed);
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_FALSE(dropped->GetIsAlive()) << "the dropped one outlived its cooldown";
+	EXPECT_TRUE(placed->GetIsAlive());
 }

@@ -55,7 +55,8 @@ double MoveLikeTankBeh::GetTravelledDistance(const double step, const Direction 
 {
 	const ObjRectangle sweptRect{DirectionUtils::Swept(_rect, step, dir)};
 
-	//NOTE: park a pixel short - IsCollide reads a flush touch as a collision
+	//NOTE: park a pixel short - flush is the knife edge where rounding alone decides which side of the
+	//wall the leading edge is on
 	constexpr double padding{1.0};
 	double travelled{step};
 	outTouched.clear();
@@ -67,14 +68,86 @@ double MoveLikeTankBeh::GetTravelledDistance(const double step, const Direction 
 		}
 
 		outTouched.push_back(object);
-		//NOTE: a negative gap is level with or behind the leading edge - touched, but not in the way
-		if (const double gap{DirectionUtils::GapTo(_rect, object->GetRect(), dir)}; gap >= 0.0)
+		//NOTE: only what is behind the leading edge is out of the way - a tank standing against a wall is
+		//a hair inside it as often as a hair short of it, and a bare sign test lets that hair through
+		if (const double gap{DirectionUtils::GapTo(_rect, object->GetRect(), dir)};
+			gap > -ColliderUtils::kTouchTolerance)
 		{
 			travelled = std::min(travelled, gap - padding);
 		}
 	}
 
 	return travelled;
+}
+
+//NOTE: exactly onto the edge, not a pixel past - a corridor is cut to the tank's own width, so any
+//overshoot lands in the far wall
+double MoveLikeTankBeh::ShiftToClear(const ObjRectangle& rect, const ObjRectangle& blocker, const Direction lateral)
+{
+	switch (lateral)
+	{
+		case Direction::LEFT:
+			return rect.Right() - blocker.x;
+		case Direction::RIGHT:
+			return blocker.Right() - rect.x;
+		case Direction::UP:
+			return rect.Bottom() - blocker.y;
+		case Direction::DOWN:
+			return blocker.Bottom() - rect.y;
+	}
+
+	return 0.0;
+}
+
+bool MoveLikeTankBeh::NudgeIntoGap(const Direction dir, const double step,
+								   const std::vector<std::shared_ptr<BaseObj>>& objects,
+								   const std::vector<std::shared_ptr<BaseObj>>& blockers)
+{
+	//NOTE: half the tank across - less than that inside the opening is not aiming for it, it is missing it
+	const double reach{DirectionUtils::SizeAlong(_rect, DirectionUtils::Laterals(dir).front()) / 2.0};
+
+	for (const Direction lateral: DirectionUtils::Laterals(dir))
+	{
+		double needed{};
+		for (const std::shared_ptr<BaseObj>& blocker: blockers)
+		{
+			needed = std::max(needed, ShiftToClear(_rect, blocker->GetRect(), lateral));
+		}
+
+		//NOTE: the border is not an opening - without this the nudge walks the tank off the field, and
+		//nothing outside it ever blocks the way back
+		if (needed <= 0.0 || needed > reach
+			|| !DirectionUtils::FitsBeforeEdge(_rect, _gameConfig.battlefieldSize, needed, lateral))
+		{
+			continue;
+		}
+
+		//NOTE: the opening has to take the tank whole - clearing this wall into the next one is no help
+		const ObjRectangle aligned{DirectionUtils::Moved(_rect, needed, lateral)};
+		auto blocking = [this, &aligned, step, dir](const std::shared_ptr<BaseObj>& object)
+		{
+			return IsBlocking(object, DirectionUtils::Swept(aligned, step, dir));
+		};
+
+		if (std::ranges::any_of(objects, blocking))
+		{
+			continue;
+		}
+
+		//NOTE: the same ceiling the forward step has, and over the same checked path
+		std::vector<std::shared_ptr<BaseObj>> touched;
+		const double distance{GetTravelledDistance(std::min(step, needed), lateral, objects, touched)};
+		if (distance <= 0.0)
+		{
+			continue;
+		}
+
+		_rect = DirectionUtils::Moved(_rect, distance, lateral);
+
+		return true;
+	}
+
+	return false;
 }
 
 bool MoveLikeTankBeh::Move(const Direction dir, const double deltaTime,
@@ -103,7 +176,7 @@ bool MoveLikeTankBeh::Move(const Direction dir, const double deltaTime,
 
 	if (distance <= 0.0)
 	{
-		return false;
+		return NudgeIntoGap(dir, step, objects, outCollisions);
 	}
 
 	_rect = DirectionUtils::Moved(_rect, distance, dir);
@@ -113,7 +186,7 @@ bool MoveLikeTankBeh::Move(const Direction dir, const double deltaTime,
 
 bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime, const std::vector<std::shared_ptr<BaseObj>>& objects)
 {
-	bool isDrift{false};
+	bool isDrift{};
 	double speed{_speed * deltaTime};
 	for (const Direction dir: {Direction::UP, Direction::LEFT, Direction::DOWN, Direction::RIGHT})
 	{

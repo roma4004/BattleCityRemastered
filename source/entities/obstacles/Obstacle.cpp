@@ -4,6 +4,8 @@
 #include "components/events/AnimationRenderEvents.h"
 #include "components/events/ObjectLifecycleEvents.h"
 #include "components/events/ReplicationEvents.h"
+#include "components/events/SpawnEvents.h"
+#include "components/WorldSnapshot.h"
 #include "entities/BaseObjProperty.h"
 #include "enums/Direction.h"
 #include "enums/ObstacleType.h"
@@ -28,6 +30,11 @@ void Obstacle::Activate()
 	{
 		SubscribeAsClient();
 	}
+
+	if (_gameConfig.IsHost())
+	{
+		_subs.push_back(_events->AddListener(this, &Obstacle::OnWorldSnapshotRequested));
+	}
 }
 
 void Obstacle::Deactivate() { _subs.clear(); }
@@ -45,6 +52,11 @@ void Obstacle::SubscribeAsClient()
 void Obstacle::OnHealthChanged(const HealthChangedEvent& event) { SetHealth(event.health); }
 
 void Obstacle::OnDespawned(const DespawnedEvent&) { SetIsAlive(false); }
+
+void Obstacle::OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const
+{
+	event.snapshot.obstacles.push_back(ObstacleSpawnedEvent{.pos = GetPos(), .type = _obstacleType, .uuid = _uuid});
+}
 
 namespace
 {

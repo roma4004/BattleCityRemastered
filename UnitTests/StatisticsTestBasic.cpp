@@ -1,12 +1,15 @@
 #include "TestUtils.h"
+#include "components/ObstacleSpawner.h"
 #include "application/GameConfig.h"
 #include "components/BonusSpawner.h"
 #include "components/managers/BonusManager.h"
 #include "components/BulletPool.h"
+#include "components/TankPool.h"
 #include "components/EventSystem.h"
 #include "components/events/InputEvents.h"
 #include "components/events/TimingEvents.h"
 #include "components/GameStatistics.h"
+#include "components/StatisticsData.h"
 #include "entities/bonuses/Bonus.h"
 #include "entities/obstacles/BrickWall.h"
 #include "entities/obstacles/SteelWall.h"
@@ -26,8 +29,10 @@ class StatisticsTest : public testing::Test// NOLINT(clang-diagnostic-padded)
 {
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
+	std::unique_ptr<ObstacleSpawner> _obstacleSpawner{nullptr};
 	std::shared_ptr<GameStatistics> _statistics{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
+	std::shared_ptr<TankPool> _tankPool{nullptr};
 	std::shared_ptr<BonusSpawner> _bonusSpawner{nullptr};
 	std::shared_ptr<BonusManager> _bonusManager{nullptr};
 	std::vector<EventSubscription> _instantSpawnAnimationSubs{};
@@ -44,14 +49,15 @@ protected:
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
+		_obstacleSpawner = std::make_unique<ObstacleSpawner>(_events, _gameConfig);
 		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, _allObjects);
 		_bulletPool = std::make_shared<BulletPool>(_events, _allObjects, _gameConfig);
+		_tankPool = std::make_shared<TankPool>(_events, _allObjects, _gameConfig, _bulletPool);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, _allObjects, _gameConfig);
 		_bonusManager = std::make_shared<BonusManager>(_events, _gameConfig);
 		_instantSpawnAnimationSubs = TestUtils::WireInstantSpawnAnimations(_events);
 		_statistics = std::make_shared<GameStatistics>(_events);
-		const double gridSize{_gameConfig.gridOffset};
-		_tankSize = gridSize * 3.0;
+		_tankSize = _gameConfig.tankSize;
 
 		_allObjects.reserve(5);
 	}
@@ -61,10 +67,9 @@ protected:
 	std::shared_ptr<Tank> CreatePlayer(const FPoint pos, const Author author = Author::Player1,
 									   const Direction dir = Direction::UP)
 	{
-		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _tankSize, .h = _tankSize};
-		auto player{TestUtils::CreatePlayer(rect, _tankHealth, author, _allObjects, _events, dir, _bulletPool,
+		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _gameConfig.tankSize, .h = _gameConfig.tankSize};
+		auto player{TestUtils::CreatePlayer(rect, _tankHealth, author, _allObjects, _events, dir, _tankPool,
 											_gameConfig)};
-		_allObjects.emplace_back(player);
 
 		return player;
 	}
@@ -72,10 +77,9 @@ protected:
 	std::shared_ptr<Tank> CreateBot(const FPoint pos, const Author author, const Direction dir,
 									const unsigned short tier = 1u)
 	{
-		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _tankSize, .h = _tankSize};
-		auto bot{TestUtils::CreateBot(rect, _tankHealth, author, _allObjects, _events, dir, _bulletPool, _gameConfig,
+		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _gameConfig.tankSize, .h = _gameConfig.tankSize};
+		auto bot{TestUtils::CreateBot(rect, _tankHealth, author, _allObjects, _events, dir, _tankPool, _gameConfig,
 									  tier)};
-		_allObjects.emplace_back(bot);
 
 		return bot;
 	}
@@ -83,11 +87,20 @@ protected:
 	std::shared_ptr<Bullet> CreateBullet(const FPoint pos, const Direction dir, const Author author)
 	{
 		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _calibre.size.x, .h = _calibre.size.y};
-		auto bullet{TestUtils::CreateBullet(rect, _bulletHealth, _allObjects, _events, _calibre, dir, _gameConfig,
+		auto bullet{TestUtils::CreateBullet(rect, _bulletHealth, _bulletPool, _events, _calibre, dir,
 											author)};
-		_allObjects.emplace_back(bullet);
 
 		return bullet;
+	}
+
+	void SpawnObstacleArea(const ObjRectangle area, const ObstacleType type) const
+	{
+		TestUtils::SpawnObstacleArea(_events, _allObjects, area, type, _gameConfig);
+	}
+
+	std::shared_ptr<BaseObj> SpawnObstacle(const FPoint pos, const ObstacleType type) const
+	{
+		return TestUtils::SpawnObstacle(_events, _allObjects, pos, type, _gameConfig);
 	}
 };
 
@@ -275,12 +288,7 @@ TEST_F(StatisticsTest, BulletHitByPlayerTwo)
 
 TEST_F(StatisticsTest, BrickWallDiedByEnemy)
 {
-	const ObjRectangle brickWallRect{.x = 0.0,
-									 .y = _tankSize + _calibre.size.y + 1,
-									 .w = _calibre.size.x,
-									 .h = _calibre.size.y};
-
-	_allObjects.emplace_back(std::make_shared<BrickWall>(brickWallRect, _events, _uuid, _gameConfig));
+	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _calibre.size.y + 1}, ObstacleType::Brick);
 
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Enemy1);
 
@@ -293,11 +301,7 @@ TEST_F(StatisticsTest, BrickWallDiedByEnemy)
 
 TEST_F(StatisticsTest, BrickWallDiedByPlayerOne)
 {
-	const ObjRectangle brickWallRect{.x = 0.0,
-									 .y = _tankSize + _calibre.size.y + 1,
-									 .w = _calibre.size.x,
-									 .h = _calibre.size.y};
-	_allObjects.emplace_back(std::make_shared<BrickWall>(brickWallRect, _events, _uuid, _gameConfig));
+	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _calibre.size.y + 1}, ObstacleType::Brick);
 
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player1);
 
@@ -310,11 +314,7 @@ TEST_F(StatisticsTest, BrickWallDiedByPlayerOne)
 
 TEST_F(StatisticsTest, BrickDiedByPlayerTwo)
 {
-	const ObjRectangle brickRect{.x = 0.0,
-								 .y = _tankSize + _calibre.size.y + 1,
-								 .w = _calibre.size.x,
-								 .h = _calibre.size.y};
-	_allObjects.emplace_back(std::make_shared<BrickWall>(brickRect, _events, _uuid, _gameConfig));
+	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _calibre.size.y + 1}, ObstacleType::Brick);
 
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player2);
 
@@ -327,11 +327,7 @@ TEST_F(StatisticsTest, BrickDiedByPlayerTwo)
 
 TEST_F(StatisticsTest, SteelWallDiedByEnemy)
 {
-	const ObjRectangle brickWallRect{.x = 0.0,
-									 .y = _tankSize + _calibre.size.y + 1,
-									 .w = _calibre.size.x,
-									 .h = _calibre.size.y};
-	_allObjects.emplace_back(std::make_shared<SteelWall>(brickWallRect, _events, _uuid, _gameConfig));
+	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _calibre.size.y + 1}, ObstacleType::Steel);
 
 	_calibre.tier = 3u;
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Enemy1);
@@ -345,11 +341,7 @@ TEST_F(StatisticsTest, SteelWallDiedByEnemy)
 
 TEST_F(StatisticsTest, SteelWallDiedByPlayerOne)
 {
-	const ObjRectangle brickWallRect{.x = 0.0,
-									 .y = _tankSize + _calibre.size.y + 1,
-									 .w = _calibre.size.x,
-									 .h = _calibre.size.y};
-	_allObjects.emplace_back(std::make_shared<SteelWall>(brickWallRect, _events, _uuid, _gameConfig));
+	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _calibre.size.y + 1}, ObstacleType::Steel);
 
 	_calibre.tier = 3u;
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player1);
@@ -363,11 +355,7 @@ TEST_F(StatisticsTest, SteelWallDiedByPlayerOne)
 
 TEST_F(StatisticsTest, SteelDiedByPlayerTwo)
 {
-	const ObjRectangle brickRect{.x = 0.0,
-								 .y = _tankSize + _calibre.size.y + 1,
-								 .w = _calibre.size.x,
-								 .h = _calibre.size.y};
-	_allObjects.emplace_back(std::make_shared<SteelWall>(brickRect, _events, _uuid, _gameConfig));
+	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _calibre.size.y + 1}, ObstacleType::Steel);
 
 	_calibre.tier = 3u;
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player2);
@@ -569,8 +557,8 @@ TEST_F(StatisticsTest, BonusExpiredCountedWithNoAuthor)
 TEST_F(StatisticsTest, BonusShotIsCountedAndPickupIsNot)
 {
 	const ObjRectangle rectBonus{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
-	auto shot{std::make_shared<Bonus>(rectBonus, _events, _uuid, _gameConfig, BonusType::Helmet, false)};
-	_allObjects.emplace_back(shot);
+	_bonusSpawner->SpawnBonus(rectBonus, BonusType::Helmet);
+	const auto shot{_allObjects.back()};
 
 	shot->TakeDamage(1u, Author::Player1);
 
@@ -578,8 +566,9 @@ TEST_F(StatisticsTest, BonusShotIsCountedAndPickupIsNot)
 	EXPECT_EQ(_statistics->GetData().bonusDestroyedByPlayerOne, 1u);
 	EXPECT_EQ(_statistics->GetData().bonusPickupByPlayerOne, 0u);
 
-	auto taken{std::make_shared<Bonus>(rectBonus, _events, _uuid, _gameConfig, BonusType::Helmet, false)};
-	_allObjects.emplace_back(taken);
+	_bonusSpawner->SpawnBonus(rectBonus, BonusType::Helmet);
+	const auto taken{std::dynamic_pointer_cast<Bonus>(_allObjects.back())};
+	ASSERT_NE(taken, nullptr);
 
 	taken->PickUpBonus(Author::Player1);
 

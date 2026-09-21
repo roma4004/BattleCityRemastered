@@ -7,11 +7,14 @@
 #include "components/events/ReplicationEvents.h"
 #include "components/events/SpawnEvents.h"
 #include "components/events/StatisticsEvents.h"
+#include "components/WorldSnapshot.h"
 #include "enums/Author.h"
 #include "enums/BonusType.h"
+#include "enums/GameState.h"
 #include "enums/InputSignal.h"
 #include "enums/StatisticsType.h"
 #include "utils/Log.h"
+#include <algorithm>
 #include <string>
 #include <variant>
 
@@ -152,6 +155,32 @@ void ReplicationApplier::Emit(const BonusSpawn& command) const
 void ReplicationApplier::Emit(const SlotAssignment& command) const
 {
 	_events->EmitEvent(PlayerSlotAssignedEvent{.slot = command.slot});
+}
+
+//NOTE: the mirror is replaced, not patched - the reset first, then the phase before the field, since
+//entering a match clears it
+void ReplicationApplier::Emit(const WorldSnapshot& command) const
+{
+	const auto isSpawnable = [](const BonusSpawnedEvent& bonus) { return IsSpawnableBonus(bonus.type); };
+	if (!std::ranges::all_of(command.bonuses, isSpawnable) || !std::ranges::all_of(command.bonusSpawns, isSpawnable))
+	{
+		Log::Error("ReplicationApplier: world snapshot carries a bonus that is not spawnable, ignored");
+
+		return;
+	}
+
+	_events->EmitEvent(GameResetEvent{});
+	_events->EmitEvent(HostPhaseAnnouncedEvent{.phase = command.phase});
+
+	//NOTE: the field is sized before anything is put on it; a snapshot taken before the host loaded
+	//a map carries zeros, and no size at all is better than a field of none
+	if (command.map.cols != 0u && command.map.rows != 0u)
+	{
+		_events->EmitEvent(command.map);
+	}
+
+	_events->EmitEvent(WorldSnapshotReceivedEvent{.snapshot = command});
+	_events->EmitEvent(SetPauseEvent{.isPaused = command.phase == GameState::Paused});
 }
 
 void ReplicationApplier::Emit(const BonusStatus& command) const

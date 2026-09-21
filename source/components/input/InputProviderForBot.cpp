@@ -156,12 +156,12 @@ std::shared_ptr<BaseObj> InputProviderForBot::HandleLineOfSight(Tank& self)
 	// 	Shot();
 	// }
 
-	if (nearestSeenObstacle != nullptr)
+	if (nearestSeenObstacle == nullptr)
 	{
-		return nearestSeenObstacle;
+		nearestSeenObstacle = NearestAhead(lineOfSight, dir);
 	}
 
-	return NearestAhead(lineOfSight, dir);
+	return nearestSeenObstacle;
 }
 
 //NOTE: nothing worth turning for, so the bot keeps its heading and takes whatever stands in it - that is
@@ -213,6 +213,11 @@ bool InputProviderForBot::ShouldShootOpponent(const Tank& self, const std::share
 	return false;
 }
 
+bool InputProviderForBot::IsFortress(const std::shared_ptr<BaseObj>& obj)
+{
+	return dynamic_cast<IFortress*>(obj.get()) != nullptr;
+}
+
 //NOTE: a bot in the player team is defending the eagle, so it never fires at the fortress
 bool InputProviderForBot::ShouldShootObstacle(const Tank& self, const std::shared_ptr<BaseObj>& obj)
 {
@@ -227,19 +232,21 @@ bool InputProviderForBot::ShouldShootObstacle(const Tank& self, const std::share
 	}
 
 	//NOTE: the eagle and the walls around it - a player's bot shooting those would lose the match for its own side
-	return self.GetFaction() == Faction::EnemyTeam || dynamic_cast<IFortress*>(obj.get()) == nullptr;
+	return self.GetFaction() == Faction::EnemyTeam || !IsFortress(obj);
 }
 
 //NOTE: asked every frame, so without a cooldown on a refusal any chance fires within a few
 //frames. A successful roll needs none - the reload already paces the next shot
-bool InputProviderForBot::RollShootObstacle()
+bool InputProviderForBot::RollShootObstacle(const std::shared_ptr<BaseObj>& obj)
 {
 	if (!_obstacleShootCooldown.IsCooldownFinish())
 	{
 		return false;
 	}
 
-	if (RandUtils::GetRandNumber(std::uniform_real_distribution{0.0, 1.0}) < _gameConfig.botShootObstacleChance)
+	const double chance{IsFortress(obj) ? _gameConfig.botShootFortressChance
+										  : _gameConfig.botShootObstacleChance};
+	if (RandUtils::GetRandNumber(std::uniform_real_distribution{0.0, 1.0}) < chance)
 	{
 		return true;
 	}
@@ -296,5 +303,5 @@ bool InputProviderForBot::ShouldShoot(Tank& self)
 	}
 
 	//NOTE: a refusal keeps the loaded shot for an opponent, so it is asked only with the gun loaded
-	return self.CanShoot() && ShouldShootObstacle(self, nearestSeenObstacle) && RollShootObstacle();
+	return self.CanShoot() && ShouldShootObstacle(self, nearestSeenObstacle) && RollShootObstacle(nearestSeenObstacle);
 }

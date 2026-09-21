@@ -145,7 +145,7 @@ void BindClientReplication(ReplicationPublisher& out)
 	});
 	out.Bind<PauseRequestedEvent>([](const auto& e)
 	{
-		return KeyStateChange{.action = InputSignal::PauseReleased, .isPressed = e.isPaused};
+		return KeyStateChange{.action = InputSignal::PauseRequest, .isPressed = e.isPaused};
 	});
 }
 

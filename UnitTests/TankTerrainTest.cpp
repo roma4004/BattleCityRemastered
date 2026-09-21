@@ -1,6 +1,8 @@
 #include "TestUtils.h"
+#include "components/ObstacleSpawner.h"
 #include "application/GameConfig.h"
 #include "components/BulletPool.h"
+#include "components/TankPool.h"
 #include "components/EventSystem.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
@@ -19,7 +21,9 @@ class TankTerrainTest : public testing::Test// NOLINT(clang-diagnostic-padded)
 {
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
+	std::unique_ptr<ObstacleSpawner> _obstacleSpawner{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
+	std::shared_ptr<TankPool> _tankPool{nullptr};
 	GameConfig _gameConfig{};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	double _deltaTimeOneFrame{1.0 / 60.0};
@@ -31,9 +35,11 @@ protected:
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
+		_obstacleSpawner = std::make_unique<ObstacleSpawner>(_events, _gameConfig);
 		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, _allObjects);
 		_bulletPool = std::make_shared<BulletPool>(_events, _allObjects, _gameConfig);
-		_tankSize = _gameConfig.gridOffset * 3.0;
+		_tankPool = std::make_shared<TankPool>(_events, _allObjects, _gameConfig, _bulletPool);
+		_tankSize = _gameConfig.tankSize;
 	}
 
 	void TearDown() override {}
@@ -42,7 +48,7 @@ protected:
 	std::shared_ptr<Tank> SpawnPlayerAt(const ObjRectangle rect)
 	{
 		std::shared_ptr<Tank> tank{TestUtils::CreatePlayer(rect, _tankHealth, Author::Player1, _allObjects, _events,
-														   Direction::DOWN, _bulletPool, _gameConfig)};
+														   Direction::DOWN, _tankPool, _gameConfig)};
 		_allObjects.emplace_back(tank);
 
 		return tank;
@@ -55,6 +61,16 @@ protected:
 			_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 		}
 	}
+
+	void SpawnObstacleArea(const ObjRectangle area, const ObstacleType type) const
+	{
+		TestUtils::SpawnObstacleArea(_events, _allObjects, area, type, _gameConfig);
+	}
+
+	std::shared_ptr<BaseObj> SpawnObstacle(const FPoint pos, const ObstacleType type) const
+	{
+		return TestUtils::SpawnObstacle(_events, _allObjects, pos, type, _gameConfig);
+	}
 };
 
 // the control for the two bush cases: on open ground the bar is drawn
@@ -62,7 +78,7 @@ TEST_F(TankTerrainTest, HealthBarIsDrawnOnPlainGround)
 {
 	const std::shared_ptr<Tank> tank{SpawnPlayerAt({.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize})};
 
-	bool isHealthBarDrawn{false};
+	bool isHealthBarDrawn{};
 	auto healthBarSub{_events->AddListener([&isHealthBarDrawn](const RenderHealthBarEvent&)
 	{
 		isHealthBarDrawn = true;
@@ -79,10 +95,9 @@ TEST_F(TankTerrainTest, HealthBarIsDrawnOnPlainGround)
 TEST_F(TankTerrainTest, HealthBarIsHiddenWhileTheTankStandsInABush)
 {
 	SpawnPlayerAt({.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize});
-	_allObjects.emplace_back(std::make_shared<BushTile>(
-			ObjRectangle{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize}, _events, _uuid, _gameConfig));
+	SpawnObstacle(FPoint{.x = 0.0, .y = 0.0}, ObstacleType::Bush);
 
-	bool isHealthBarDrawn{false};
+	bool isHealthBarDrawn{};
 	auto healthBarSub{_events->AddListener([&isHealthBarDrawn](const RenderHealthBarEvent&)
 	{
 		isHealthBarDrawn = true;
@@ -98,10 +113,10 @@ TEST_F(TankTerrainTest, HealthBarIsHiddenWhileTheTankStandsInABush)
 TEST_F(TankTerrainTest, HealthBarComesBackOnceTheBushIsGone)
 {
 	SpawnPlayerAt({.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize});
-	_allObjects.emplace_back(std::make_shared<BushTile>(
-			ObjRectangle{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize}, _events, _uuid, _gameConfig));
+	//NOTE: one cell under the tank is all it takes to stand in a bush, and it is the one popped below
+	SpawnObstacle(FPoint{.x = 0.0, .y = 0.0}, ObstacleType::Bush);
 
-	bool isHealthBarDrawn{false};
+	bool isHealthBarDrawn{};
 	auto healthBarSub{_events->AddListener([&isHealthBarDrawn](const RenderHealthBarEvent&)
 	{
 		isHealthBarDrawn = true;
@@ -141,8 +156,7 @@ TEST_F(TankTerrainTest, TheTankStopsAtOnceOnPlainGround)
 TEST_F(TankTerrainTest, TheTankKeepsSlidingAfterTheKeyIsReleasedOnIce)
 {
 	const std::shared_ptr<Tank> tank{SpawnPlayerAt({.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize})};
-	_allObjects.emplace_back(std::make_shared<IceTile>(
-			ObjRectangle{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize * 8.0}, _events, _uuid, _gameConfig));
+	SpawnObstacleArea(ObjRectangle{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize * 8.0}, ObstacleType::Ice);
 
 	constexpr int framesUnderPower{20};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = true});
@@ -160,8 +174,7 @@ TEST_F(TankTerrainTest, TheTankKeepsSlidingAfterTheKeyIsReleasedOnIce)
 TEST_F(TankTerrainTest, TheTankSlidesDiagonallyWhenTurningWhileDrifting)
 {
 	const std::shared_ptr<Tank> tank{SpawnPlayerAt({.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize})};
-	_allObjects.emplace_back(std::make_shared<IceTile>(
-			ObjRectangle{.x = 0.0, .y = 0.0, .w = _tankSize * 8.0, .h = _tankSize * 8.0}, _events, _uuid, _gameConfig));
+	SpawnObstacleArea(ObjRectangle{.x = 0.0, .y = 0.0, .w = _tankSize * 8.0, .h = _tankSize * 8.0}, ObstacleType::Ice);
 
 	constexpr int framesUnderPower{20};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = true});
@@ -184,8 +197,7 @@ TEST_F(TankTerrainTest, TheTankSlidesDiagonallyWhenTurningWhileDrifting)
 TEST_F(TankTerrainTest, TurningAroundDoesNotStopTheDriftOnIce)
 {
 	const std::shared_ptr<Tank> tank{SpawnPlayerAt({.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize})};
-	_allObjects.emplace_back(std::make_shared<IceTile>(
-			ObjRectangle{.x = 0.0, .y = 0.0, .w = _tankSize * 8.0, .h = _tankSize * 8.0}, _events, _uuid, _gameConfig));
+	SpawnObstacleArea(ObjRectangle{.x = 0.0, .y = 0.0, .w = _tankSize * 8.0, .h = _tankSize * 8.0}, ObstacleType::Ice);
 
 	constexpr int framesUnderPower{20};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = true});

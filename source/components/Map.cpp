@@ -3,6 +3,7 @@
 #include "components/MapLoader.h"
 #include "components/events/SpawnEvents.h"
 #include "geometry/ObjRectangle.h"
+#include "enums/BonusType.h"
 #include "enums/ObstacleType.h"
 
 Map::Map(const std::shared_ptr<EventSystem>& events)
@@ -34,5 +35,24 @@ void Map::CreateObstacles(const double cellSize) const
 
 			_events->EmitEvent(SpawnObstacleEvent{.rect = rect, .type = type});
 		}
+	}
+}
+
+void Map::CreateBonuses(const double bonusSize, const double cellSize) const
+{
+	for (const auto& [col, row, type]: _data.bonuses)
+	{
+		//NOTE: checked here too, not only in the loader - MapData is a plain struct anyone can fill
+		if (!IsSpawnableBonus(type))
+		{
+			continue;
+		}
+
+		const ObjRectangle rect{.x = static_cast<double>(col) * cellSize,
+								.y = static_cast<double>(row) * cellSize,
+								.w = bonusSize,
+								.h = bonusSize};
+
+		_events->EmitEvent(SpawnMapBonusEvent{.rect = rect, .type = type});
 	}
 }

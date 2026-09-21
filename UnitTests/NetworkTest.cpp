@@ -9,27 +9,37 @@
 #include "components/events/ServerConsoleEvents.h"
 #include "components/events/StatisticsEvents.h"
 #include "components/events/TimingEvents.h"
+#include "components/WorldSnapshot.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
 #include "enums/DespawnReason.h"
 #include "enums/DisconnectReason.h"
+#include "enums/GameState.h"
 #include "enums/InputChannel.h"
 #include "enums/ObstacleType.h"
 #include "enums/PlayerSlot.h"
 #include "enums/TankType.h"
 #include "network/ClientNode.h"
-#include "network/MessageFraming.h"
+#include "network/DatagramLink.h"
 #include "network/Serializer.h"
 #include "network/commands/CommandBatch.h"
 #include "network/commands/Disconnect.h"
+#include "network/commands/SlotAssignment.h"
 #include "network/ServerNode.h"
 #include "gtest/gtest.h"
 #include "utils/Uuid.h"
 #include <array>
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/ip/address.hpp>
+#include <boost/asio/ip/udp.hpp>
 #include <chrono>
+#include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <optional>
+#include <string>
 #include <thread>
+#include <variant>
 #include <vector>
 #include "utils/UuidUtils.h"
 #include "TestUtils.h"//NOTE: PrintTo for the Point types
@@ -131,7 +141,7 @@ protected:
 	}
 
 	static constexpr auto kWaitTimeout{5s};
-	//NOTE: short on purpose - the client gives up after ~5s, and a slow re-bind eats that window
+	//NOTE: short on purpose - the client gives up after ~10s, and a slow re-bind eats that window
 	static constexpr auto kRebindTimeout{1500ms};
 };
 
@@ -245,13 +255,18 @@ TEST_F(NetworkTest, PauseRequestFromClientPausesTheServer)
 	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
-	bool serverPauseToggled{false};
+	bool isServerPaused{};
 	auto pauseSub{_serverEvents->AddListener(
-			[&serverPauseToggled](const PauseReleasedEvent&) { serverPauseToggled = true; })};
+			[&isServerPaused](const SetPauseEvent& event) { isServerPaused = event.isPaused; })};
 
 	_clientEvents->EmitEvent(PauseRequestedEvent{.isPaused = true});
 
-	EXPECT_TRUE(PumpUntil([&serverPauseToggled] { return serverPauseToggled; }));
+	EXPECT_TRUE(PumpUntil([&isServerPaused] { return isServerPaused; }));
+
+	//NOTE: the state the client asked for, not a toggle - a second client must not undo the first one's pause
+	_clientEvents->EmitEvent(PauseRequestedEvent{.isPaused = false});
+
+	EXPECT_TRUE(PumpUntil([&isServerPaused] { return !isServerPaused; }));
 }
 
 TEST_F(NetworkTest, BonusSpawnEventReplication)
@@ -316,8 +331,8 @@ TEST_F(NetworkTest, BonusStatusEventReplication)
 	EXPECT_EQ(isActiveOrigin, *received);
 }
 
-//NOTE: the tier travels as a result, on its own command - the client sets it rather than replaying
-//the upgrade formula, exactly as it does with health
+//NOTE: the tier travels as a result, on its own command - the client sets it instead of replaying the
+//upgrade formula, exactly as it does with health
 TEST_F(NetworkTest, TierEventReplication)
 {
 	const auto server{MakeServer()};
@@ -345,7 +360,7 @@ TEST_F(NetworkTest, BonusShipStatusEventReplication)
 
 	constexpr auto authorOrigin{Author::Player1};
 
-	bool received{false};
+	bool received{};
 	auto bonusShipSub{_clientEvents->AddListener(Key(authorOrigin),
 												 [&received](const BonusShipAppliedEvent&) { received = true; })};
 
@@ -458,8 +473,8 @@ TEST_F(NetworkTest, ClientReconnectsAfterEstablishedLinkDrops)
 	const uint16_t port{server->GetBoundPort()};
 	const auto client{MakeClient(port)};
 
-	int readySignals{0};
-	int linksUp{0};
+	int readySignals{};
+	int linksUp{};
 	std::vector<EventSubscription> subs{};
 	subs.push_back(_serverEvents->AddListener(
 			[&readySignals](const ServerInClientReadyToStartGameEvent&) { ++readySignals; }));
@@ -492,16 +507,16 @@ TEST_F(NetworkTest, ClientReconnectsAfterEstablishedLinkDrops)
 			<< "reconnected client never asked the server to start the match again";
 }
 
-//NOTE: the other half of ClientQuitTellsHostWhy, and the case the reconnect test cannot cover -
-//here the server outlives the loss and has to take the next client on the same acceptor
+//NOTE: the other half of ClientQuitTellsHostWhy - here the server outlives the loss and has to take the
+//next client on the same acceptor
 TEST_F(NetworkTest, TheServerLearnsTheClientDroppedWithoutSayingGoodbye)
 {
 	const auto server{MakeServer()};
 	const uint16_t port{server->GetBoundPort()};
 	auto client{MakeClient(port)};
 
-	bool clientLost{false};
-	int readySignals{0};
+	bool clientLost{};
+	int readySignals{};
 	std::optional<DisconnectReason> announced{};
 	std::vector<EventSubscription> subs{};
 	subs.push_back(_serverEvents->AddListener([&clientLost](const ServerClientLostEvent&) { clientLost = true; }));
@@ -537,7 +552,7 @@ TEST_F(NetworkTest, HostShutdownTellsClientWhyAndKeepsTheReconnect)
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
 	std::optional<DisconnectReason> received{};
-	bool gaveUp{false};
+	bool gaveUp{};
 	std::vector<EventSubscription> subs{};
 	subs.push_back(_clientEvents->AddListener(
 			[&received](const ClientInDisconnectEvent& event) { received = event.reason; }));
@@ -566,7 +581,7 @@ TEST_F(NetworkTest, ClientQuitTellsHostWhy)
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
 	std::optional<DisconnectReason> received{};
-	bool clientLost{false};
+	bool clientLost{};
 	std::vector<EventSubscription> subs{};
 	subs.push_back(_serverEvents->AddListener(
 			[&received](const ServerInDisconnectEvent& event) { received = event.reason; }));
@@ -576,7 +591,7 @@ TEST_F(NetworkTest, ClientQuitTellsHostWhy)
 
 	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); })) << "host never got the client's goodbye";
 	EXPECT_EQ(DisconnectReason::PlayerQuit, *received);
-	EXPECT_FALSE(clientLost) << "the EOF behind the goodbye was reported as a second, silent drop";
+	EXPECT_FALSE(clientLost) << "the silence after the goodbye was reported as a second, silent drop";
 }
 
 //TODO: other bonus effect replication test after write this replication
@@ -647,7 +662,7 @@ TEST_F(NetworkTest, ASeatComesBackWhenItsClientSaysGoodbye)
 	ASSERT_TRUE(PumpUntil([&first] { return first.has_value(); })) << "the first client was told no seat";
 	ASSERT_EQ(PlayerSlot::P1, *first);
 
-	bool goodbye{false};
+	bool goodbye{};
 	subs.push_back(_serverEvents->AddListener([&goodbye](const ServerInDisconnectEvent&) { goodbye = true; }));
 
 	client.reset();
@@ -675,9 +690,9 @@ TEST_F(NetworkTest, EachClientPutsOnlyItsOwnSeatOnTheWire)
 			network::ServerAddress{.port = server->GetBoundPort()}, _secondClientEvents)};
 	ASSERT_TRUE(PumpUntil([&secondSeat] { return secondSeat.has_value(); }));
 
-	bool firstSeatMoved{false};
-	bool secondSeatMoved{false};
-	bool strayArrived{false};
+	bool firstSeatMoved{};
+	bool secondSeatMoved{};
+	bool strayArrived{};
 	subs.push_back(_serverEvents->AddListener(Key(InputChannel::RemoteP1),
 											[&firstSeatMoved](const MoveUpEvent& e)
 											{
@@ -701,7 +716,8 @@ TEST_F(NetworkTest, EachClientPutsOnlyItsOwnSeatOnTheWire)
 	EXPECT_FALSE(strayArrived) << "a client sent the keyboard half of a seat it was never given";
 }
 
-//NOTE: a bare EOF reads as a dropped link - an untold third player would burn its retries on a busy host
+//NOTE: an unanswered hello reads as a host that is not there - a third player would burn its retries on
+//one that is merely busy
 TEST_F(NetworkTest, AThirdClientIsToldTheSeatsAreTaken)
 {
 	std::optional<PlayerSlot> firstSeat{};
@@ -728,6 +744,204 @@ TEST_F(NetworkTest, AThirdClientIsToldTheSeatsAreTaken)
 	EXPECT_EQ(*refusal, DisconnectReason::ServerFull);
 }
 
+// A ready landing in a running match is owed the field, and the snapshot goes out in place of that frame -
+// sent beside it, the frame's spawns would land a second time on top
+TEST_F(NetworkTest, AReadyInARunningMatchIsAnsweredWithTheFieldInsteadOfTheFrame)
+{
+	const Uuid standing{UuidUtils::GetRandomUuid()};
+	const Uuid inTheFrame{UuidUtils::GetRandomUuid()};
+	std::optional<std::vector<ObstacleSpawnedEvent>> field{};
+	std::vector<Uuid> spawned{};
+	std::vector<EventSubscription> subs{};
+	subs.push_back(_serverEvents->AddListener([standing](const WorldSnapshotRequestedEvent& event)
+	{
+		event.snapshot.phase = GameState::Playing;
+		event.snapshot.obstacles.push_back(
+				ObstacleSpawnedEvent{.pos = {}, .type = ObstacleType::Steel, .uuid = standing});
+	}));
+	subs.push_back(_serverEvents->AddListener([this, inTheFrame](const ServerInClientReadyToStartGameEvent&)
+	{
+		_serverEvents->EmitEvent(ObstacleSpawnedEvent{.pos = {}, .type = ObstacleType::Brick, .uuid = inTheFrame});
+	}));
+	subs.push_back(_clientEvents->AddListener([&field](const WorldSnapshotReceivedEvent& event)
+	{
+		field = event.snapshot.obstacles;
+	}));
+	subs.push_back(_clientEvents->AddListener([&spawned](const ObstacleSpawnedEvent& event)
+	{
+		spawned.push_back(event.uuid);
+	}));
+	subs.push_back(AnnounceReadyOnConnect());
+
+	const auto server{MakeServer()};
+	const auto client{MakeClient(server->GetBoundPort())};
+
+	ASSERT_TRUE(PumpUntil([&field] { return field.has_value(); })) << "the late joiner never got the field";
+	ASSERT_EQ(field->size(), 1u);
+	EXPECT_EQ(field->front().uuid, standing);
+
+	const Uuid afterwards{UuidUtils::GetRandomUuid()};
+	_serverEvents->EmitEvent(ObstacleSpawnedEvent{.pos = {}, .type = ObstacleType::Brick, .uuid = afterwards});
+	ASSERT_TRUE(PumpUntil([&spawned] { return !spawned.empty(); })) << "frames stopped after the snapshot";
+	EXPECT_EQ(spawned, std::vector{afterwards}) << "the frame the snapshot replaced reached the client as well";
+}
+
+// A lobby has no field to catch up with - the ready is answered by the frames, as it always was
+TEST_F(NetworkTest, AReadyInTheLobbyIsAnsweredWithFramesNotASnapshot)
+{
+	const Uuid inTheFrame{UuidUtils::GetRandomUuid()};
+	bool isSnapshotReceived{};
+	std::optional<Uuid> spawned{};
+	std::vector<EventSubscription> subs{};
+	subs.push_back(_serverEvents->AddListener([](const WorldSnapshotRequestedEvent& event)
+	{
+		event.snapshot.phase = GameState::Lobby;
+	}));
+	subs.push_back(_serverEvents->AddListener([this, inTheFrame](const ServerInClientReadyToStartGameEvent&)
+	{
+		_serverEvents->EmitEvent(ObstacleSpawnedEvent{.pos = {}, .type = ObstacleType::Brick, .uuid = inTheFrame});
+	}));
+	subs.push_back(_clientEvents->AddListener([&isSnapshotReceived](const WorldSnapshotReceivedEvent&)
+	{
+		isSnapshotReceived = true;
+	}));
+	subs.push_back(_clientEvents->AddListener([&spawned](const ObstacleSpawnedEvent& event) { spawned = event.uuid; }));
+	subs.push_back(AnnounceReadyOnConnect());
+
+	const auto server{MakeServer()};
+	const auto client{MakeClient(server->GetBoundPort())};
+
+	ASSERT_TRUE(PumpUntil([&spawned] { return spawned.has_value(); })) << "the frame of the ready never arrived";
+	EXPECT_EQ(*spawned, inTheFrame);
+	EXPECT_FALSE(isSnapshotReceived);
+}
+
+// A lobby ready has no field to catch up with, but the debt it leaves has to outlive the lobby - the
+// first one in is playing on a field nobody would ever send him otherwise
+TEST_F(NetworkTest, AReadyOwedFromTheLobbyIsPaidOnceTheMatchStarts)
+{
+	const Uuid standing{UuidUtils::GetRandomUuid()};
+	const Uuid inTheFrame{UuidUtils::GetRandomUuid()};
+	GameState phase{GameState::Lobby};
+	std::optional<std::vector<ObstacleSpawnedEvent>> field{};
+	std::optional<Uuid> spawned{};
+	std::vector<EventSubscription> subs{};
+	subs.push_back(_serverEvents->AddListener([&phase, standing](const WorldSnapshotRequestedEvent& event)
+	{
+		event.snapshot.phase = phase;
+		event.snapshot.obstacles.push_back(
+				ObstacleSpawnedEvent{.pos = {}, .type = ObstacleType::Steel, .uuid = standing});
+	}));
+	subs.push_back(_serverEvents->AddListener([this, inTheFrame](const ServerInClientReadyToStartGameEvent&)
+	{
+		_serverEvents->EmitEvent(ObstacleSpawnedEvent{.pos = {}, .type = ObstacleType::Brick, .uuid = inTheFrame});
+	}));
+	subs.push_back(_clientEvents->AddListener([&field](const WorldSnapshotReceivedEvent& event)
+	{
+		field = event.snapshot.obstacles;
+	}));
+	subs.push_back(_clientEvents->AddListener([&spawned](const ObstacleSpawnedEvent& event) { spawned = event.uuid; }));
+	subs.push_back(AnnounceReadyOnConnect());
+
+	const auto server{MakeServer()};
+	const auto client{MakeClient(server->GetBoundPort())};
+
+	ASSERT_TRUE(PumpUntil([&spawned] { return spawned.has_value(); })) << "the frame of the ready never arrived";
+	ASSERT_FALSE(field.has_value()) << "the control failed - a lobby has no field to send";
+
+	phase = GameState::Playing;
+
+	EXPECT_TRUE(PumpUntil([&field] { return field.has_value(); })) << "the debt the lobby left was dropped";
+}
+
+// The match goes on without a lost player, so a key it held would keep its tank driving into a wall
+TEST_F(NetworkTest, ALostClientLetsGoOfTheKeysOfItsSeat)
+{
+	std::optional<PlayerSlot> seat{};
+	std::optional<bool> isUpHeld{};
+	bool isClientLost{};
+	std::vector<EventSubscription> subs{};
+	subs.push_back(_clientEvents->AddListener([&seat](const PlayerSlotAssignedEvent& event) { seat = event.slot; }));
+	subs.push_back(_serverEvents->AddListener(Key(InputChannel::RemoteP1),
+											[&isUpHeld](const MoveUpEvent& event) { isUpHeld = event.isPressed; }));
+	subs.push_back(_serverEvents->AddListener([&isClientLost](const ServerClientLostEvent&) { isClientLost = true; }));
+
+	const auto server{MakeServer()};
+	auto client{MakeClient(server->GetBoundPort())};
+	ASSERT_TRUE(PumpUntil([&seat] { return seat.has_value(); }));
+	ASSERT_EQ(*seat, PlayerSlot::P1);
+
+	_clientEvents->EmitEvent(Key(InputChannel::LocalP1), MoveUpEvent{.isPressed = true});
+	ASSERT_TRUE(PumpUntil([&isUpHeld] { return isUpHeld.value_or(false); }));
+
+	client->Abort();
+	client.reset();
+
+	ASSERT_TRUE(PumpUntil([&isClientLost] { return isClientLost; }));
+	EXPECT_FALSE(isUpHeld.value_or(true)) << "the seat's tank still drives on a key nobody holds";
+}
+
+// A client whose link timed out dials again from the same socket before the host noticed - it gets its seat
+// back instead of being told the match is full of the connection it replaced
+TEST_F(NetworkTest, AClientDialingAgainFromTheSameAddressTakesItsSeatBack)
+{
+	std::optional<PlayerSlot> lost{};
+	std::optional<PlayerSlot> secondSeat{};
+	std::vector<EventSubscription> subs{};
+	subs.push_back(_serverEvents->AddListener([&lost](const ServerClientLostEvent& event) { lost = event.slot; }));
+	subs.push_back(_secondClientEvents->AddListener(
+			[&secondSeat](const PlayerSlotAssignedEvent& event) { secondSeat = event.slot; }));
+
+	const auto server{MakeServer()};
+	boost::asio::io_context ioContext;
+	boost::asio::ip::udp::socket socket{ioContext, boost::asio::ip::udp::v4()};
+	socket.connect({boost::asio::ip::make_address("127.0.0.1"), server->GetBoundPort()});
+	socket.non_blocking(true);
+
+	//NOTE: a bare link on one socket - a ClientNode would open a socket of its own for every connection
+	const auto dial = [this, &socket](const std::uint32_t connectionId)
+	{
+		network::DatagramLink link{connectionId, network::DatagramLink::Clock::now()};
+		std::optional<PlayerSlot> seat{};
+		std::ignore = PumpUntil([&link, &socket, &seat]
+		{
+			const auto now{network::DatagramLink::Clock::now()};
+			for (const std::string& datagram: link.TakeDatagrams(now))
+			{
+				socket.send(boost::asio::buffer(datagram));
+			}
+
+			std::array<char, network::DatagramLink::kMaxDatagramSize> buffer{};
+			boost::system::error_code ec;
+			const std::size_t size{socket.receive(boost::asio::buffer(buffer), 0, ec)};
+			const auto arrivals{ec ? std::nullopt : link.Receive(std::string_view{buffer.data(), size}, now)};
+			for (const std::string& message: arrivals ? arrivals->messages : std::vector<std::string>{})
+			{
+				for (const auto& command: network::Deserialize(message)->commands)
+				{
+					if (const auto* assignment{std::get_if<network::commands::SlotAssignment>(&command)})
+					{
+						seat = assignment->slot;
+					}
+				}
+			}
+
+			return seat.has_value();
+		});
+
+		return seat;
+	};
+
+	ASSERT_EQ(dial(1u), PlayerSlot::P1);
+	const auto secondClient{std::make_unique<network::commands::ClientNode>(
+			network::ServerAddress{.port = server->GetBoundPort()}, _secondClientEvents)};
+	ASSERT_TRUE(PumpUntil([&secondSeat] { return secondSeat.has_value(); }));
+
+	EXPECT_EQ(dial(2u), PlayerSlot::P1) << "the new connection was refused a seat its own old one held";
+	ASSERT_TRUE(PumpUntil([&lost] { return lost.has_value(); })) << "the replaced connection was never let go";
+	EXPECT_EQ(*lost, PlayerSlot::P1);
+}
+
 TEST(SerializerTest, UnreadableFrameIsReportedNotSwallowed)
 {
 	const auto batch{network::Deserialize("not an archive at all")};
@@ -741,12 +955,7 @@ TEST(SerializerTest, ABatchSurvivesTheRoundTrip)
 	network::commands::CommandBatch sent;
 	sent.commands.emplace_back(network::commands::Disconnect{.reason = DisconnectReason::GameOver});
 
-	const std::string frame{network::SerializeFrame(sent)};
-	ASSERT_GT(frame.size(), network::kFrameHeaderSize);
-	//NOTE: FrameChannel trusts the length prefix - one disagreeing with the payload cuts every frame after it short
-	EXPECT_EQ(network::DecodeFrameHeader(frame.data()), frame.size() - network::kFrameHeaderSize);
-
-	const auto received{network::Deserialize(frame.substr(network::kFrameHeaderSize))};
+	const auto received{network::Deserialize(network::Serialize(sent))};
 
 	ASSERT_TRUE(received.has_value());
 	const auto& commands{received.value().commands};
@@ -770,7 +979,7 @@ TEST_F(NetworkTest, EveryStatisticsTypeKeepsItsOwnEventAcrossTheWire)
 	std::optional<SteelWallDiedEvent> steelDied{};
 	std::optional<StatisticsBonusPickupEvent> bonusPickup{};
 	std::optional<StatisticsBonusDestroyedEvent> bonusDestroyed{};
-	bool bonusExpired{false};
+	bool bonusExpired{};
 
 	std::vector<EventSubscription> subs{};
 	subs.push_back(_clientEvents->AddListener([&tankHit](const StatisticsTankHitEvent& e) { tankHit = e; }));

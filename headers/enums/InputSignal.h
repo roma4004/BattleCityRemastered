@@ -10,6 +10,6 @@ enum class InputSignal : std::uint8_t
 	MoveLeft,
 	MoveRight,
 	Fire,
-	PauseReleased,
+	PauseRequest,
 	PauseStatus,
 };

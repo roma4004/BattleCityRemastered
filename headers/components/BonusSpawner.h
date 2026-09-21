@@ -16,7 +16,10 @@ struct WorldGeometryChangedEvent;
 struct SpawnAnimationFinishedEvent;
 struct TickUpdateEvent;
 struct BonusSpawnedEvent;
+struct SpawnMapBonusEvent;
 struct BonusSpawnCompletedEvent;
+struct WorldSnapshotRequestedEvent;
+struct WorldSnapshotReceivedEvent;
 class BaseObj;
 class EventSystem;
 class GameConfig;
@@ -31,6 +34,7 @@ class BonusSpawner final
 		BonusType type{};
 		Uuid uuid{};
 		bool isSuper{};
+		bool isPermanent{};
 	};
 
 	std::shared_ptr<EventSystem> _events{nullptr};
@@ -49,10 +53,13 @@ class BonusSpawner final
 	std::vector<EventSubscription> _subs{};
 
 	void Subscribe();
+	void OnSpawnMapBonus(const SpawnMapBonusEvent& event);
 	void OnWorldGeometryChanged(const WorldGeometryChangedEvent&);
 	void OnBonusSpawned(const BonusSpawnedEvent& event);
 	void OnSpawnAnimationFinished(const SpawnAnimationFinishedEvent& event);
 	void OnBonusSpawnCompleted(const BonusSpawnCompletedEvent& event);
+	void OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const;
+	void OnWorldSnapshotReceived(const WorldSnapshotReceivedEvent& event);
 
 	void Update(const TickUpdateEvent&);
 	void Reset(const GameResetEvent&);
@@ -74,6 +81,8 @@ public:
 				 const GameConfig& gameConfig);
 
 	void SpawnRandomBonus(ObjRectangle rect);
+
+	void SpawnPermanentBonus(ObjRectangle rect, BonusType type);
 
 	void SpawnBonus(ObjRectangle rect, BonusType type, Uuid uuid = {}, bool isSuper = false);
 };

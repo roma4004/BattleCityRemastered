@@ -3,6 +3,7 @@
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/GameModeEvents.h"
 #include "components/events/ObjectLifecycleEvents.h"
+#include "components/events/ReplicationEvents.h"
 #include "components/events/SpawnEvents.h"
 #include "components/events/TimingEvents.h"
 #include "components/BonusSpawner.h"
@@ -11,10 +12,15 @@
 #include "components/TankPool.h"
 #include "components/ObstacleSpawner.h"
 #include "components/TankSpawner.h"
+#include "components/WorldSnapshot.h"
 #include "components/managers/FortressManager.h"
 #include "components/managers/RespawnManager.h"
 #include "entities/BaseObj.h"
+#include "entities/pawns/Bullet.h"
+#include "entities/pawns/BulletResetProperty.h"
+#include <algorithm>
 #include <iterator>
+#include <memory>
 
 SpawnManager::SpawnManager(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig)
 	: _events{events}
@@ -35,6 +41,7 @@ void SpawnManager::Subscribe()
 	_subs.push_back(_events->AddListener(this, &SpawnManager::OnAddToSpawnQueue));
 	_subs.push_back(_events->AddListener(this, &SpawnManager::OnPostTickUpdate));
 	_subs.push_back(_events->AddListener(this, &SpawnManager::OnGameReset));
+	_subs.push_back(_events->AddListener(this, &SpawnManager::OnWorldSnapshotReceived));
 }
 
 SpawnManager::~SpawnManager() = default;
@@ -72,6 +79,17 @@ void SpawnManager::OnGameReset(const GameResetEvent&)
 	_allObjects.clear();
 	_allObjects.reserve(1000);
 	_pendingSpawns.clear();
+}
+
+//NOTE: a bullet in flight has no shooter to fire it again - the tank may be gone, or facing elsewhere
+void SpawnManager::OnWorldSnapshotReceived(const WorldSnapshotReceivedEvent& event) const
+{
+	std::ranges::for_each(event.snapshot.bullets, [this](const BulletSnapshot& bullet)
+	{
+		const BulletResetProperty property{
+				.rect = bullet.rect, .dir = bullet.dir, .health = 1, .author = bullet.author};
+		_events->EmitEvent(AddToSpawnQueueEvent{.obj = _bulletPool->SpawnBullet(property, bullet.uuid)});
+	});
 }
 
 void SpawnManager::FlushSpawnQueue()

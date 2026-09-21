@@ -1,7 +1,9 @@
 #include "geometry/Point.h"
 #include "TestUtils.h"
+#include "components/ObstacleSpawner.h"
 #include "application/GameConfig.h"
 #include "components/BulletPool.h"
+#include "components/TankPool.h"
 #include "components/EventSystem.h"
 #include "components/events/TimingEvents.h"
 #include "entities/obstacles/BrickWall.h"
@@ -18,6 +20,8 @@ class BulletTest : public testing::Test// NOLINT(clang-diagnostic-padded)
 {
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
+	std::unique_ptr<ObstacleSpawner> _obstacleSpawner{nullptr};
+	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 	GameConfig _gameConfig{};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	double _deltaTimeOneFrame{1.0 / 60.0};
@@ -30,6 +34,8 @@ protected:
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
+		_obstacleSpawner = std::make_unique<ObstacleSpawner>(_events, _gameConfig);
+		_bulletPool = std::make_shared<BulletPool>(_events, _allObjects, _gameConfig);
 		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, _allObjects);
 		_gridSize = _gameConfig.gridOffset;
 
@@ -41,11 +47,15 @@ protected:
 	std::shared_ptr<Bullet> CreateBullet(const FPoint pos, const Direction dir, const Author author)
 	{
 		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _calibre.size.x, .h = _calibre.size.y};
-		auto bullet{TestUtils::CreateBullet(rect, _bulletHealth, _allObjects, _events, _calibre, dir, _gameConfig,
+		auto bullet{TestUtils::CreateBullet(rect, _bulletHealth, _bulletPool, _events, _calibre, dir,
 											author)};
-		_allObjects.emplace_back(bullet);
 
 		return bullet;
+	}
+
+	std::shared_ptr<BaseObj> SpawnObstacle(const ObjRectangle rect, const ObstacleType type) const
+	{
+		return TestUtils::SpawnObstacle(_events, _allObjects, rect, type);
 	}
 };
 
@@ -156,7 +166,7 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveUp)
 	CreateBullet({.x = 0.0, .y = 7.0}, Direction::UP, Author::Player1);
 
 	const ObjRectangle rect{.x = 0, .y = 0, .w = _gridSize, .h = _gridSize};
-	auto brickWall{std::make_shared<BrickWall>(rect, _events, _uuid, _gameConfig)};
+	auto brickWall{SpawnObstacle(rect, ObstacleType::Brick)};
 	_allObjects.emplace_back(brickWall);
 
 	const int brickWallHealth{brickWall->GetHealth()};
@@ -171,7 +181,7 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveLeft)
 	CreateBullet({.x = 7.0, .y = 0.0}, Direction::LEFT, Author::Player1);
 
 	const ObjRectangle rect{.x = 0, .y = 0, .w = _gridSize, .h = _gridSize};
-	auto brickWall{std::make_shared<BrickWall>(rect, _events, _uuid, _gameConfig)};
+	auto brickWall{SpawnObstacle(rect, ObstacleType::Brick)};
 	_allObjects.emplace_back(brickWall);
 
 	const int brickWallHealth{brickWall->GetHealth()};
@@ -186,7 +196,7 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveDown)
 	CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
 
 	const ObjRectangle rect{.x = 0.0, .y = 6.0, .w = _gridSize, .h = _gridSize};
-	auto brickWall{std::make_shared<BrickWall>(rect, _events, _uuid, _gameConfig)};
+	auto brickWall{SpawnObstacle(rect, ObstacleType::Brick)};
 	_allObjects.emplace_back(brickWall);
 
 	const int brickWallHealth{brickWall->GetHealth()};
@@ -201,7 +211,7 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveRight)
 	CreateBullet({.x = 0.0, .y = 0.0}, Direction::RIGHT, Author::Player1);
 
 	const ObjRectangle rect{.x = 7.0, .y = 0.0, .w = _gridSize, .h = _gridSize};
-	auto brickWall{std::make_shared<BrickWall>(rect, _events, _uuid, _gameConfig)};
+	auto brickWall{SpawnObstacle(rect, ObstacleType::Brick)};
 	_allObjects.emplace_back(brickWall);
 
 	const int brickWallHealth{brickWall->GetHealth()};
@@ -233,14 +243,12 @@ TEST_F(BulletTest, BulletBlowRadiusIsDirectionSymmetric)
 		};
 
 		_allObjects.clear();
-		_allObjects.emplace_back(TestUtils::CreateBullet(place(0.0, bulletLength), _bulletHealth, _allObjects, _events,
-														 _calibre, dir, _gameConfig, Author::Player1));
-		_allObjects.emplace_back(
-				std::make_shared<BrickWall>(place(bulletLength + 1.0, tileSide), _events, _uuid, _gameConfig));
+		std::ignore = TestUtils::CreateBullet(place(0.0, bulletLength), _bulletHealth, _bulletPool, _events, _calibre,
+											  dir, Author::Player1);
+		SpawnObstacle(place(bulletLength + 1.0, tileSide), ObstacleType::Brick);
 
 		// just outside the radius measured from the bullet's leading edge, just inside it from the bullet's centre
-		auto farTile{std::make_shared<BrickWall>(
-				place(bulletLength + 1.0 + _calibre.damageRadius, tileSide), _events, _uuid, _gameConfig)};
+		auto farTile{SpawnObstacle(place(bulletLength + 1.0 + _calibre.damageRadius, tileSide), ObstacleType::Brick)};
 		_allObjects.emplace_back(farTile);
 
 		const int healthBefore{farTile->GetHealth()};
@@ -261,14 +269,14 @@ TEST_F(BulletTest, BulletDamageTank)
 {
 	CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
 
-	const double gridSize{_gameConfig.gridOffset};
-	const double tankSize{gridSize * 3};
 	constexpr unsigned short tankHealth{1u};
-	const auto bulletPool{std::make_shared<BulletPool>(_events, _allObjects, _gameConfig)};
-	const ObjRectangle rectEnemy{.x = 0, .y = _calibre.size.y, .w = tankSize, .h = tankSize};
+	const auto tankPool{std::make_shared<TankPool>(_events, _allObjects, _gameConfig, _bulletPool)};
+	const ObjRectangle rectEnemy{.x = 0.0,
+								 .y = _calibre.size.y,
+								 .w = _gameConfig.tankSize,
+								 .h = _gameConfig.tankSize};
 	const std::shared_ptr<Tank> enemyBot{TestUtils::CreateBot(rectEnemy, tankHealth, Author::Enemy1, _allObjects,
-															  _events, Direction::UP, bulletPool, _gameConfig)};
-	_allObjects.emplace_back(enemyBot);
+															  _events, Direction::UP, tankPool, _gameConfig)};
 
 	EXPECT_EQ(enemyBot->GetHealth(), 1);
 
@@ -296,7 +304,7 @@ TEST_F(BulletTest, BulletCantDamageSteelWall)
 	const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};
 
 	const ObjRectangle rect{.x = 0.0, .y = 6.0, .w = _gridSize, .h = _gridSize};
-	auto steelWall{std::make_shared<SteelWall>(rect, _events, _uuid, _gameConfig)};
+	auto steelWall{SpawnObstacle(rect, ObstacleType::Steel)};
 	_allObjects.emplace_back(steelWall);
 
 	const int bulletHealth{bullet->GetHealth()};
@@ -313,7 +321,7 @@ TEST_F(BulletTest, BulletCantDamageWater)
 	const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};
 
 	const ObjRectangle rect{.x = 0.0, .y = 6.0, .w = _gridSize, .h = _gridSize};
-	auto waterTile{std::make_shared<WaterTile>(rect, _events, _uuid, _gameConfig)};
+	auto waterTile{SpawnObstacle(rect, ObstacleType::Water)};
 	_allObjects.emplace_back(waterTile);
 
 	const int bulletHealth{bullet->GetHealth()};
@@ -346,7 +354,7 @@ TEST_F(BulletTest, BulletHaveSelfDamageWhenHit)
 	const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};
 
 	constexpr ObjRectangle rect{.x = 0.0, .y = 6.0, .w = 36, .h = 36};
-	auto brickWall{std::make_shared<BrickWall>(rect, _events, _uuid, _gameConfig)};
+	auto brickWall{SpawnObstacle(rect, ObstacleType::Brick)};
 	_allObjects.emplace_back(brickWall);
 
 	bullet->SetHealth(1);

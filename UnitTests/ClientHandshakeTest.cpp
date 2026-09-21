@@ -105,3 +105,22 @@ TEST_F(ClientHandshakeTest, ALostLinkStopsTheAnnouncements)
 
 	EXPECT_EQ(Count("ready"), 0);
 }
+
+//NOTE: a host lost without a goodbye leaves the field stale - the client goes back to the lobby and asks
+//again, but only once the link is back
+TEST_F(ClientHandshakeTest, AHostLostWithoutAGoodbyeIsAskedAgainOnceTheLinkIsBack)
+{
+	_simulation.ApplyGameMode(GameMode::PlayAsClient);
+	_events->EmitEvent(ClientConnectedToHostEvent{});
+	Frame();
+	_events->EmitEvent(HostPhaseAnnouncedEvent{.phase = GameState::Playing});
+	Frame();
+	_trace.clear();
+
+	_events->EmitEvent(ClientHostLostEvent{});
+	Frame();
+	_events->EmitEvent(ClientConnectedToHostEvent{});
+	Frame();
+
+	EXPECT_EQ(_trace, (std::vector<std::string>{"reset", "reset", "ready"}));
+}

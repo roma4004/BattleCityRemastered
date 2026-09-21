@@ -1,11 +1,11 @@
 #pragma once
 
+#include "WireFrame.h"
 #include "commands/CommandBatch.h"
 #include "components/EventSystem.h"
 #include <memory>
 #include <mutex>
 #include <source_location>
-#include <string>
 #include <utility>
 #include <vector>
 
@@ -18,8 +18,9 @@ class ReplicationPublisher final
 public:
 	explicit ReplicationPublisher(const std::shared_ptr<EventSystem>& events);
 
-	//NOTE: everything published since the last call as one frame, or nullptr when there was nothing
-	[[nodiscard]] std::shared_ptr<const std::string> TakeFrame();
+	//NOTE: one frame out, or nothing to say. The archive is the same on every node, delivery is not - one
+	//link for a client, every session for a server
+	[[nodiscard]] std::shared_ptr<const WireFrame> TakeFrame();
 
 	void Publish(AnyCommand command);
 

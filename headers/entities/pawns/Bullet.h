@@ -12,6 +12,7 @@ struct BulletResetProperty;
 struct UPoint;
 struct DrawEvent;
 struct DespawnedEvent;
+struct WorldSnapshotRequestedEvent;
 class EventSystem;
 class BulletPool;
 class GameConfig;
@@ -25,6 +26,7 @@ class Bullet final : public Pawn, public IDrawable
 
 	void Reset(const BulletResetProperty& resetProperty);
 	void OnDraw(const DrawEvent&) const;
+	void OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const;
 
 protected:
 	void Subscribe() override;

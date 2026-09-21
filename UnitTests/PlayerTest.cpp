@@ -1,7 +1,9 @@
 #include "TestUtils.h"
+#include "components/ObstacleSpawner.h"
 #include "application/GameConfig.h"
 #include "components/BonusSpawner.h"
 #include "components/BulletPool.h"
+#include "components/TankPool.h"
 #include "components/EventSystem.h"
 #include "components/events/InputEvents.h"
 #include "components/events/TimingEvents.h"
@@ -23,7 +25,9 @@ class PlayerTest : public testing::Test// NOLINT(clang-diagnostic-padded)
 {
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
+	std::unique_ptr<ObstacleSpawner> _obstacleSpawner{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
+	std::shared_ptr<TankPool> _tankPool{nullptr};
 	std::shared_ptr<BonusSpawner> _bonusSpawner{nullptr};
 	std::shared_ptr<GameStateManager> _stateManager{nullptr};
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
@@ -41,15 +45,17 @@ protected:
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
+		_obstacleSpawner = std::make_unique<ObstacleSpawner>(_events, _gameConfig);
 		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, _allObjects);
 		_bulletPool = std::make_shared<BulletPool>(_events, _allObjects, _gameConfig);
+		_tankPool = std::make_shared<TankPool>(_events, _allObjects, _gameConfig, _bulletPool);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, _allObjects, _gameConfig);
 		_stateManager = std::make_shared<GameStateManager>(_events);
 		TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, _gameConfig.gameMode, _respawnManager,
 								 _tankSpawner);
 		_instantSpawnAnimationSubs = TestUtils::WireInstantSpawnAnimations(_events);
 		_gridSize = _gameConfig.gridOffset;
-		_tankSize = _gridSize * 3.0;
+		_tankSize = _gameConfig.tankSize;
 
 		_allObjects.reserve(4u);
 	}
@@ -59,12 +65,21 @@ protected:
 	std::shared_ptr<Tank> CreatePlayer(const FPoint pos, const Author author = Author::Player1,
 									   const Direction dir = Direction::UP)
 	{
-		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _tankSize, .h = _tankSize};
-		auto player{TestUtils::CreatePlayer(rect, _tankHealth, author, _allObjects, _events, dir, _bulletPool,
+		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _gameConfig.tankSize, .h = _gameConfig.tankSize};
+		auto player{TestUtils::CreatePlayer(rect, _tankHealth, author, _allObjects, _events, dir, _tankPool,
 											_gameConfig)};
-		_allObjects.emplace_back(player);
 
 		return player;
+	}
+
+	void SpawnObstacleArea(const ObjRectangle area, const ObstacleType type) const
+	{
+		TestUtils::SpawnObstacleArea(_events, _allObjects, area, type, _gameConfig);
+	}
+
+	std::shared_ptr<BaseObj> SpawnObstacle(const ObjRectangle rect, const ObstacleType type) const
+	{
+		return TestUtils::SpawnObstacle(_events, _allObjects, rect, type);
 	}
 };
 
@@ -402,10 +417,7 @@ TEST_F(PlayerTest, TankCantPassThroughBrickWall)
 {
 	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
 
-	_allObjects.emplace_back(
-			std::make_shared<BrickWall>(
-					ObjRectangle{.x = 0.0, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _events, _uuid,
-					_gameConfig));
+	SpawnObstacle(ObjRectangle{.x = 0.0, .y = _tankSize + 1, .w = _tankSize, .h = _gridSize}, ObstacleType::Brick);
 
 	const FPoint startPos{player->GetPos()};
 
@@ -420,10 +432,7 @@ TEST_F(PlayerTest, TankCantPassThroughSteelWall)
 {
 	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
 
-	_allObjects.emplace_back(
-			std::make_shared<SteelWall>(
-					ObjRectangle{.x = 0.0, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _events, _uuid,
-					_gameConfig));
+	SpawnObstacle(ObjRectangle{.x = 0.0, .y = _tankSize + 1, .w = _tankSize, .h = _gridSize}, ObstacleType::Steel);
 
 	const FPoint startPos{player->GetPos()};
 
@@ -438,10 +447,7 @@ TEST_F(PlayerTest, TankCantPassThroughWater)
 {
 	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
 
-	auto waterTile{std::make_shared<WaterTile>(
-			ObjRectangle{.x = 0.0, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize},
-			_events, _uuid, _gameConfig)};
-	_allObjects.emplace_back(waterTile);
+	SpawnObstacle(ObjRectangle{.x = 0.0, .y = _tankSize + 1, .w = _tankSize, .h = _gridSize}, ObstacleType::Water);
 
 	const FPoint startPos{player->GetPos()};
 
@@ -456,9 +462,7 @@ TEST_F(PlayerTest, TankCantPassThroughfortressWall)
 {
 	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
 
-	auto fortressWall{std::make_shared<FortressBrickWall>(
-			ObjRectangle{.x = 0.0, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _events, _uuid, _gameConfig)};
-	_allObjects.emplace_back(fortressWall);
+	SpawnObstacle(ObjRectangle{.x = 0.0, .y = _tankSize + 1, .w = _tankSize, .h = _gridSize}, ObstacleType::Fortress);
 
 	const FPoint startPos{player->GetPos()};
 
@@ -500,16 +504,14 @@ TEST_F(PlayerTest, PointBlankShotDamagesTheShooter)
 {
 	const auto windowWidth{static_cast<double>(_gameConfig.battlefieldSize.x)};
 	const auto windowHeight{static_cast<double>(_gameConfig.battlefieldSize.y)};
-	const ObjRectangle rectPlayer{.x = windowWidth / 2.0, .y = windowHeight / 2.0, .w = _tankSize, .h = _tankSize};
-	const std::shared_ptr<Tank> player{TestUtils::CreatePlayer(rectPlayer, _tankHealth, Author::Player1, _allObjects,
-															   _events, Direction::LEFT, _bulletPool, _gameConfig)};
-	_allObjects.emplace_back(player);
+	const auto player{CreatePlayer({.x = windowWidth / 2.0, .y = windowHeight / 2.0}, Author::Player1,
+								   Direction::LEFT)};
 
-	const ObjRectangle rectWall{.x = rectPlayer.x - _gridSize - 12.0,
-								.y = rectPlayer.y,
+	const ObjRectangle rectWall{.x = player->GetRect().x - _gridSize - 12.0,
+								.y = player->GetRect().y,
 								.w = _gridSize,
 								.h = _tankSize};
-	_allObjects.emplace_back(std::make_shared<SteelWall>(rectWall, _events, _uuid, _gameConfig));
+	SpawnObstacleArea(rectWall, ObstacleType::Steel);
 
 	const int startHealth{player->GetHealth()};
 

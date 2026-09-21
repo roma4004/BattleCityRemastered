@@ -13,8 +13,8 @@ struct LaunchOptions final
 	//NOTE: no mode given means the demo; the mode still names who fills the seats, the demo is a phase
 	GameMode gameMode{GameMode::CoopWithBot};
 	bool isDemo{true};
-	bool isMuted{false};
-	bool isHelpRequested{false};
+	bool isMuted{};
+	bool isHelpRequested{};
 	std::optional<UPoint> windowPos{};
 	std::optional<UPoint> windowSize{};
 	std::optional<WindowSide> windowSide{};

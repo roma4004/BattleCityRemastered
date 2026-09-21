@@ -5,12 +5,16 @@
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/GameModeEvents.h"
 #include "components/events/ObjectLifecycleEvents.h"
+#include "components/events/ReplicationEvents.h"
+#include "components/WorldSnapshot.h"
 #include "enums/GameMode.h"
 #include "enums/RespawnGroup.h"
 #include "enums/TankType.h"
 #include "utils/UuidUtils.h"
 #include "utils/Uuid.h"
 #include "enums/Faction.h"
+#include <algorithm>
+#include <cstddef>
 #include <memory>
 #include <ranges>
 
@@ -43,6 +47,12 @@ void RespawnManager::Subscribe()
 	{
 		_subs.push_back(_events->AddListener(this, &RespawnManager::OnBonusTankApplied));
 		_subs.push_back(_events->AddListener(this, &RespawnManager::OnTankRespawned));
+		_subs.push_back(_events->AddListener(this, &RespawnManager::OnWorldSnapshotReceived));
+	}
+
+	if (IsHost(_gameMode))
+	{
+		_subs.push_back(_events->AddListener(this, &RespawnManager::OnWorldSnapshotRequested));
 	}
 
 	ResetSpawn();
@@ -168,6 +178,21 @@ void RespawnManager::OnTankRespawned(const TankRespawnedEvent& event)
 		case TankType::COOP1:
 		case TankType::COOP2:
 			break;
+	}
+}
+
+void RespawnManager::OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const
+{
+	std::ranges::copy(_respawnCount, event.snapshot.respawnCounts.begin());
+}
+
+void RespawnManager::OnWorldSnapshotReceived(const WorldSnapshotReceivedEvent& event)
+{
+	for (const RespawnGroup group: {RespawnGroup::ENEMY_ALL, RespawnGroup::PLAYER1, RespawnGroup::PLAYER2})
+	{
+		const auto id{static_cast<std::size_t>(group)};
+		_respawnCount[id] = event.snapshot.respawnCounts[id];
+		_events->EmitEvent(RespawnCountChangedToEvent{.group = group, .respawnCount = _respawnCount[id]});
 	}
 }
 

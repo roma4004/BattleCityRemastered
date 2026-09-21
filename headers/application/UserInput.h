@@ -25,6 +25,7 @@ struct TabReleasedEvent;
 struct PreTickUpdateEvent;
 struct MenuShowedEvent;
 struct MenuPosChangedEvent;
+struct MenuContentShiftedEvent;
 class EventSystem;
 class WindowConfig;
 
@@ -39,13 +40,13 @@ class UserInput final
 	using milliseconds = std::chrono::milliseconds;
 
 	MouseButtons _mouseButtons{};
-	bool _isShutdown{false};
-	bool _isPause{false};
-	bool _isPausedByWindowDrag{false};
-	bool _isWindowDragging{false};
-	bool _isMenuDisplayed{false};
+	bool _isShutdown{};
+	bool _isPause{};
+	bool _isPausedByWindowDrag{};
+	bool _isWindowDragging{};
+	bool _isMenuDisplayed{};
 	GameMode _selectedGameMode{};
-	bool _areControllersSwapped{false};
+	bool _areControllersSwapped{};
 	UPoint _windowSize{};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
@@ -55,10 +56,12 @@ class UserInput final
 	std::unordered_map<SDL_JoystickID, GamepadDirection> _gamepadDirections{};
 	int _gamepadDeadZone;
 	const SDL_Config& _sdlConfig;
-	SDL_Rect _menuPos{};
-	SDL_Rect _allTilesRect;
-	SDL_Rect _allTilesRectDefault;
-	SDL_Rect _firstMenuMouseTileDefault;
+	Point _menuPos{};
+	//NOTE: the renderer centres the menu block in the panel and says by how much - the tiles have to
+	//land on the lines as they were actually drawn
+	int _menuContentShiftX{};
+	SDL_Rect _allTilesRect{};
+	SDL_Rect _firstMenuMouseTileDefault{};
 	std::vector<SubTile> _menuTiles;
 
 	void MouseEvents(const SDL_Event& event);
@@ -84,13 +87,14 @@ class UserInput final
 	void OnPreTickUpdate(const PreTickUpdateEvent&);
 	void OnMenuShowed(const MenuShowedEvent& event);
 	void OnMenuPosChanged(const MenuPosChangedEvent& event);
+	void OnMenuContentShifted(const MenuContentShiftedEvent& event);
 
 	void InitControllers();
 	void ConnectController(const std::shared_ptr<SDL_Gamepad>& newController);
 	[[nodiscard]] PlayerSlot ControllerSlotDefiner(SDL_JoystickID instanceId) const;
 	[[nodiscard]] static bool IsSameController(const std::shared_ptr<SDL_Gamepad>& controller,
 											   SDL_JoystickID instanceId);
-	void InitMouseHoverTiles(Point menuPos);
+	void InitMouseHoverTiles();
 
 public:
 	UserInput(const std::shared_ptr<EventSystem>& events, const WindowConfig& windowConfig,

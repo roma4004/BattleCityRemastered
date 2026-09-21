@@ -8,7 +8,7 @@ enum class Faction : char8_t;
 struct BaseObjProperty
 {
 	ObjRectangle rect{};
-	int health{0};
+	int health{};
 	Uuid uuid{};
 	Faction faction{};
 	bool isAlive{true};

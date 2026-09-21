@@ -23,9 +23,9 @@ class LobbyScreen final
 
 	const GameConfig& _gameConfig;
 
-	bool _isLobby{false};
-	bool _isMenuShown{false};
-	bool _isServerFull{false};
+	bool _isLobby{};
+	bool _isMenuShown{};
+	bool _isServerFull{};
 
 	void Subscribe();
 	void OnGameStateChangedTo(const GameStateChangedToEvent& event);

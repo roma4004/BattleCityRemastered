@@ -5,6 +5,7 @@
 #include "components/events/RenderUIEvents.h"
 #include "gtest/gtest.h"
 #include <memory>
+#include <string>
 #include <vector>
 
 //NOTE: the block is built whole and the renderer clips it, so what the renderer measures to pick
@@ -18,12 +19,24 @@ protected:
 	std::vector<RenderMenuTextBlockEvent> _blocks{};
 	std::vector<EventSubscription> _subs{};
 
+	//NOTE: what the frame emitted, in the order it did
+	std::vector<std::string> _order{};
+
 	void SetUp() override
 	{
 		_subs.push_back(_events->AddListener([this](const RenderMenuTextBlockEvent& event)
 		{
 			_blocks.push_back(event);
+			_order.emplace_back("block");
 		}));
+
+		_subs.push_back(_events->AddListener([this](const RenderMenuLogoEvent&) { _order.emplace_back("logo"); }));
+		_subs.push_back(_events->AddListener([this](const RenderMenuSelectorIconEvent&)
+		{
+			_order.emplace_back("selector");
+		}));
+		_subs.push_back(_events->AddListener([this](const RenderMenuXBoxHintEvent&) { _order.emplace_back("xbox"); }));
+		_subs.push_back(_events->AddListener([this](const RenderMenuPS5HintEvent&) { _order.emplace_back("ps5"); }));
 
 		_menu = std::make_unique<Menu>(_events, _gameConfig);
 		_events->EmitEvent(MenuShowedEvent{.isShown = true});
@@ -38,7 +51,7 @@ constexpr int kFramesToSettleSlideIn{250};
 // bottom of the logical screen
 TEST_F(MenuTextBlockTest, AllLinesFitOnTheClassicScreenOnceSettled)
 {
-	for (int frame{0}; frame < kFramesToSettleSlideIn; ++frame)
+	for (int frame{}; frame < kFramesToSettleSlideIn; ++frame)
 	{
 		_events->EmitEvent(DrawUserInterfaceEvent{});
 	}
@@ -57,10 +70,20 @@ TEST_F(MenuTextBlockTest, TheBlockIsWholeWhileTheMenuIsStillSlidingIn)
 	_events->EmitEvent(DrawUserInterfaceEvent{});
 	const std::size_t whileSliding{_blocks.back().lines.size()};
 
-	for (int frame{0}; frame < kFramesToSettleSlideIn; ++frame)
+	for (int frame{}; frame < kFramesToSettleSlideIn; ++frame)
 	{
 		_events->EmitEvent(DrawUserInterfaceEvent{});
 	}
 
 	EXPECT_EQ(whileSliding, _blocks.back().lines.size()) << "the block changed size under the animation";
+}
+
+// The renderer moves the whole block to sit in the middle of the panel and draws the logo and the icons
+// with that same shift, so the menu has to hand it the text before anything laid out around it.
+TEST_F(MenuTextBlockTest, TheBlockIsEmittedBeforeEverythingLaidOutAroundIt)
+{
+	_events->EmitEvent(DrawUserInterfaceEvent{});
+
+	const std::vector<std::string> expected{"block", "logo", "selector", "xbox", "ps5"};
+	EXPECT_EQ(expected, _order);
 }

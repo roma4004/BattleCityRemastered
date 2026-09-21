@@ -57,10 +57,12 @@ void Simulation::Subscribe()
 	_subs.push_back(_events->AddListener(this, &Simulation::OnGameStateChangedTo));
 	_subs.push_back(_events->AddListener(this, &Simulation::OnGameModeChangedTo));
 	_subs.push_back(_events->AddListener(this, &Simulation::OnMatchStarted));
+	_subs.push_back(_events->AddListener(this, &Simulation::OnMapLoadFailed));
 	_subs.push_back(_events->AddListener(this, &Simulation::OnConnectedToHost));
 	_subs.push_back(_events->AddListener(this, &Simulation::OnPlayerSlotAssigned));
 	_subs.push_back(_events->AddListener(this, &Simulation::OnHostLeft));
 	_subs.push_back(_events->AddListener(this, &Simulation::OnHostUnreachable));
+	_subs.push_back(_events->AddListener(this, &Simulation::OnHostLost));
 }
 
 const GameStatistics& Simulation::Statistics() const { return *_statistics; }
@@ -115,15 +117,19 @@ void Simulation::OnGameModeChangedTo(const GameModeChangedToEvent& event)
 	}
 }
 
-//NOTE: the reset empties the field and the map fills it, in this order
+//NOTE: the reset empties the field, the map fills it. The map goes last so a failed load has the final
+//say - it puts the menu back up, and nothing here paints over that
 void Simulation::OnMatchStarted(const MatchStartedEvent&)
 {
 	_events->EmitEvent(GameResetEvent{});
-	_events->EmitEvent(LoadMapEvent{});
 
 	_events->EmitEvent(ShowMenuEvent{.show = false});
 	_events->EmitEvent(SetPauseEvent{.isPaused = false});
+
+	_events->EmitEvent(LoadMapEvent{});
 }
+
+void Simulation::OnMapLoadFailed(const MapLoadFailedEvent&) const { _events->EmitEvent(ShowMenuEvent{.show = true}); }
 
 void Simulation::OnConnectedToHost(const ClientConnectedToHostEvent&)
 {
@@ -138,6 +144,8 @@ void Simulation::OnPlayerSlotAssigned(const PlayerSlotAssignedEvent& event) { _g
 void Simulation::OnHostLeft(const ClientInDisconnectEvent&) { _isLinkUp = false; }
 
 void Simulation::OnHostUnreachable(const ClientReconnectAbandonedEvent&) { _isLinkUp = false; }
+
+void Simulation::OnHostLost(const ClientHostLostEvent&) { _isLinkUp = false; }
 
 //NOTE: the mode is kept - dropping it tears the link down, and nobody could reconnect
 void Simulation::EnterLobby()

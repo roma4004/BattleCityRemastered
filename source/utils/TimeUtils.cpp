@@ -4,9 +4,9 @@ namespace
 {
 struct GameClock
 {
-	TimeUtils::clock::duration pausedTotal{0};
+	TimeUtils::clock::duration pausedTotal{};
 	TimeUtils::time_point pauseStartedAt{};
-	bool isPaused{false};
+	bool isPaused{};
 };
 
 GameClock gameClock{};

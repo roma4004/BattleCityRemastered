@@ -8,6 +8,7 @@
 #include "components/events/ObjectLifecycleEvents.h"
 #include "components/events/ReplicationEvents.h"
 #include "components/events/StatisticsEvents.h"
+#include "components/WorldSnapshot.h"
 #include "entities/pawns/BulletResetProperty.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/GameMode.h"
@@ -33,9 +34,19 @@ void Bullet::Subscribe()
 	Pawn::Subscribe();
 
 	_subs.push_back(_events->AddListener(this, &Bullet::OnDraw));
+
+	if (_gameConfig.IsHost())
+	{
+		_subs.push_back(_events->AddListener(this, &Bullet::OnWorldSnapshotRequested));
+	}
 }
 
 void Bullet::OnDraw(const DrawEvent&) const { Draw(); }
+
+void Bullet::OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const
+{
+	event.snapshot.bullets.push_back(BulletSnapshot{.author = _author, .uuid = _uuid, .rect = _rect, .dir = _dir});
+}
 
 void Bullet::OnDespawned(const DespawnedEvent& event)
 {
@@ -97,7 +108,7 @@ unsigned int Bullet::GetTier() const noexcept { return _calibre.tier; }
 
 void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 {
-	bool isBulletHitBullet{false};
+	bool isBulletHitBullet{};
 	for (const auto& target: objectList)
 	{
 		if (target == nullptr)

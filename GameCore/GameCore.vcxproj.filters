@@ -246,7 +246,7 @@
     <ClCompile Include="..\source\network\ClientNode.cpp">
       <Filter>source\network</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\network\FrameChannel.cpp">
+    <ClCompile Include="..\source\network\DatagramLink.cpp">
       <Filter>source\network</Filter>
     </ClCompile>
     <ClCompile Include="..\source\network\NetworkNodeBase.cpp">
@@ -455,6 +455,9 @@
     <ClInclude Include="..\headers\components\ScoreBoard.h">
       <Filter>headers\components</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\components\StatisticsData.h">
+      <Filter>headers\components</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\components\TankPool.h">
       <Filter>headers\components</Filter>
     </ClInclude>
@@ -462,6 +465,9 @@
       <Filter>headers\components</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\components\WorldGeometry.h">
+      <Filter>headers\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\WorldSnapshot.h">
       <Filter>headers\components</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\entities\BaseObj.h">
@@ -537,6 +543,9 @@
       <Filter>headers\enums</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\enums\ClientSignal.h">
+      <Filter>headers\enums</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\enums\Delivery.h">
       <Filter>headers\enums</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\enums\DespawnReason.h">
@@ -695,13 +704,10 @@
     <ClInclude Include="..\headers\network\commands\UuidSerialization.h">
       <Filter>headers\network\commands</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\network\DatagramLink.h">
+      <Filter>headers\network</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\network\Endpoints.h">
-      <Filter>headers\network</Filter>
-    </ClInclude>
-    <ClInclude Include="..\headers\network\FrameChannel.h">
-      <Filter>headers\network</Filter>
-    </ClInclude>
-    <ClInclude Include="..\headers\network\MessageFraming.h">
       <Filter>headers\network</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\NetworkNodeBase.h">
@@ -729,6 +735,9 @@
       <Filter>headers\network</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\Session.h">
+      <Filter>headers\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\WireFrame.h">
       <Filter>headers\network</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\utils\ColliderUtils.h">

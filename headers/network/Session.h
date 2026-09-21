@@ -1,52 +1,67 @@
 #pragma once
 
+#include "DatagramLink.h"
 #include "PeerLink.h"
+#include "WireFrame.h"
 #include "enums/DisconnectReason.h"
-#include "enums/InputSignal.h"
 #include "enums/PlayerSlot.h"
 #include <atomic>
+#include <boost/asio/ip/udp.hpp>
 #include <chrono>
-#include <functional>
+#include <cstdint>
 #include <memory>
 #include <string>
-#include <unordered_map>
+#include <string_view>
+#include <vector>
 
 class EventSystem;
 
 namespace network::commands
 {
-using boost::asio::ip::tcp;
+using boost::asio::ip::udp;
 
-//NOTE: the incoming half of the server - one per connected client. Outgoing replication is Server's.
+//NOTE: one client of the server, known by its address. It owns no socket - Server reads and writes for all
+//sessions on its own, on its io thread, and every method below the accessors runs there
 class Session final : public PeerLink, public std::enable_shared_from_this<Session>
 {
 public:
-	Session(tcp::socket sock, const std::shared_ptr<EventSystem>& events, PlayerSlot slot, std::string address);
+	Session(udp::endpoint endpoint, std::uint32_t connectionId, const std::shared_ptr<EventSystem>& events,
+			PlayerSlot slot, DatagramLink::Clock::time_point now);
 
-	~Session();
-
-	//NOTE: the seat is the session's, fixed when the server accepted it - a press off the wire names
+	//NOTE: the seat is the session's, fixed when the server took the client in - a press off the wire names
 	//the key, and the seat says whose it is
 	[[nodiscard]] PlayerSlot GetSlot() const { return _slot; }
-	[[nodiscard]] const std::string& Address() const noexcept { return _address; }
+	[[nodiscard]] std::string Address() const
+	{
+		return _endpoint.address().to_string() + ':' + std::to_string(_endpoint.port());
+	}
 	[[nodiscard]] std::chrono::steady_clock::time_point ConnectedAt() const noexcept { return _connectedAt; }
 
 	//NOTE: the cue to drop this session, and the only field the game thread reads without a lock
 	[[nodiscard]] bool IsFinished() const { return _isFinished.load(std::memory_order_acquire); }
 
-	void Start();
-	//NOTE: shared, not copied - the same frame goes to every session and stays alive while it is written
-	void DoWrite(std::shared_ptr<const std::string> message);
-	void Shutdown();
+	//NOTE: owed on ready and after a dropped backlog - paid with a snapshot in place of the next frame
+	[[nodiscard]] bool IsSnapshotOwed() const { return _isSnapshotOwed.load(std::memory_order_acquire); }
+	void ClearSnapshotDebt() { _isSnapshotOwed.store(false, std::memory_order_release); }
 
-	//NOTE: onClosed fires once the goodbye is written, or turned out undeliverable
-	void Shutdown(DisconnectReason reason, std::function<void()> onClosed);
+	[[nodiscard]] const udp::endpoint& Endpoint() const { return _endpoint; }
+	[[nodiscard]] std::uint32_t ConnectionId() const { return _link.ConnectionId(); }
+	[[nodiscard]] bool IsDrained() const { return _link.IsDrained(); }
+	[[nodiscard]] bool IsSilent(DatagramLink::Clock::time_point now) const { return _link.IsSilent(now); }
+
+	void Start();
+	void Receive(std::string_view datagram, DatagramLink::Clock::time_point now);
+	void Send(const WireFrame& frame);
+	[[nodiscard]] std::vector<std::string> TakeDatagrams(DatagramLink::Clock::time_point now);
+
+	void LoseIfSilent(DatagramLink::Clock::time_point now);
+	//NOTE: the same address dialled again under a new connection - the old one is gone, whatever it said
+	void Supersede();
+	void Shutdown(DisconnectReason reason);
 	//NOTE: told why, so the client does not dial straight back into the seat
 	void Kick();
 
 private:
-	using InputEmitter = std::function<void(EventSystem&, PlayerSlot, bool)>;
-
 	//NOTE: visited straight on the network thread, and each Handle queues its own game-thread work -
 	//the goodbye has a half that must run right here, ahead of the queue
 	void OnCommand(const AnyCommand& command) override;
@@ -72,20 +87,22 @@ private:
 	void Handle(const BonusSpawn&) const {}
 	void Handle(const BonusStatus&) const {}
 	void Handle(const SlotAssignment&) const {}
+	void Handle(const WorldSnapshot&) const {}
 
-	//NOTE: on the channel's strand - the seat is given up here, once, whatever took the link
-	void LoseLink();
+	void Lose();
 
-	//NOTE: raised on our strand after the last Enqueue, so everything this session read is in the
-	//queue by the time cleanup is free to sweep it
+	//NOTE: a key held when the link went stays held on the host - the seat's tank would drive on alone
+	void ReleaseSeatKeys() const;
+
+	//NOTE: raised after the last Enqueue, so everything this session read is queued before cleanup sweeps it
 	void MarkFinished() { _isFinished.store(true, std::memory_order_release); }
 
-	static const std::unordered_map<InputSignal, InputEmitter> kInputEmitters;
-
+	const udp::endpoint _endpoint;
+	DatagramLink _link;
 	const PlayerSlot _slot;
-	const std::string _address;
 	const std::chrono::steady_clock::time_point _connectedAt{std::chrono::steady_clock::now()};
-	bool _isPeerGone{false};
-	std::atomic_bool _isFinished{false};
+	bool _isPeerGone{};
+	std::atomic_bool _isFinished{};
+	std::atomic_bool _isSnapshotOwed{};
 };
 }//namespace network::commands

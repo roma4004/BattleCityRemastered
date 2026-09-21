@@ -1,6 +1,7 @@
 #include "TestUtils.h"
 #include "application/GameConfig.h"
 #include "components/BulletPool.h"
+#include "components/TankPool.h"
 #include "components/EventSystem.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
@@ -24,6 +25,7 @@ class BulletPoolTest : public testing::Test// NOLINT(clang-diagnostic-padded)
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
+	std::shared_ptr<TankPool> _tankPool{nullptr};
 	GameConfig _gameConfig{};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	double _deltaTimeOneFrame{1.0 / 60.0};
@@ -38,10 +40,20 @@ protected:
 		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, _allObjects);
 		//NOTE: the pool before the sweep on purpose - reclaiming on PostTickUpdate it would run first and get caught
 		_bulletPool = std::make_shared<BulletPool>(_events, _allObjects, _gameConfig);
+		_tankPool = std::make_shared<TankPool>(_events, _allObjects, _gameConfig, _bulletPool);
 		_disposalSub = TestUtils::WireWorldDisposal(_events, _allObjects);
 		_tankSize = _gameConfig.tankSize;
 
 		_allObjects.reserve(64u);
+	}
+
+	std::shared_ptr<Tank> CreatePlayer(const FPoint pos, const Direction dir)
+	{
+		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _gameConfig.tankSize, .h = _gameConfig.tankSize};
+		auto player{TestUtils::CreatePlayer(rect, _tankHealth, Author::Player1, _allObjects, _events, dir,
+											_tankPool, _gameConfig)};
+
+		return player;
 	}
 };
 
@@ -85,7 +97,7 @@ TEST_F(BulletPoolTest, SpentBulletsAreHandedOutAgain)
 // reclaimed bullet is off the bus, not merely invisible
 TEST_F(BulletPoolTest, ReturnedBulletLeavesTheBus)
 {
-	int bulletDraws{0};
+	int bulletDraws{};
 	const EventSubscription drawSub{_events->AddListener([&bulletDraws](const DrawObjEvent& event)
 	{
 		if (event.texture == TextureType::Bullet)
@@ -94,10 +106,7 @@ TEST_F(BulletPoolTest, ReturnedBulletLeavesTheBus)
 		}
 	})};
 
-	const std::shared_ptr<Tank> player{TestUtils::CreatePlayer(
-			ObjRectangle{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize}, _tankHealth, Author::Player1, _allObjects,
-			_events, Direction::DOWN, _bulletPool, _gameConfig)};
-	_allObjects.emplace_back(player);
+	CreatePlayer({.x = 0.0, .y = 0.0}, Direction::DOWN);
 
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = isPressed});

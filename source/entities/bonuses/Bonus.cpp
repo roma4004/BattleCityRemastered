@@ -4,8 +4,11 @@
 #include "components/events/AnimationRenderEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/ObjectLifecycleEvents.h"
+#include "components/events/ReplicationEvents.h"
+#include "components/events/SpawnEvents.h"
 #include "components/events/StatisticsEvents.h"
 #include "components/events/BonusPickupEvents.h"
+#include "components/WorldSnapshot.h"
 #include "entities/BaseObjProperty.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
@@ -151,6 +154,11 @@ void Bonus::Subscribe()
 	{
 		SubscribeAsClient();
 	}
+
+	if (_gameConfig.IsHost())
+	{
+		_subs.push_back(_events->AddListener(this, &Bonus::OnWorldSnapshotRequested));
+	}
 }
 
 void Bonus::OnDraw(const DrawEvent&) const { Draw(); }
@@ -161,6 +169,12 @@ void Bonus::SubscribeAsClient()
 }
 
 void Bonus::OnDespawned(const DespawnedEvent&) { SetIsAlive(false); }
+
+void Bonus::OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const
+{
+	event.snapshot.bonuses.push_back(
+			BonusSpawnedEvent{.pos = GetPos(), .type = _bonusType, .uuid = _uuid, .isSuper = _isSuper});
+}
 
 namespace
 {

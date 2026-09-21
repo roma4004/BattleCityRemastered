@@ -17,6 +17,6 @@ public:
 	UPoint size{};
 	UPoint pos{};
 	WindowSide side{WindowSide::Center};
-	bool hasExplicitPos{false};//NOTE: explicit pos wins over monitor centering
-	bool hasExplicitSize{false};
+	bool hasExplicitPos{};//NOTE: explicit pos wins over monitor centering
+	bool hasExplicitSize{};
 };

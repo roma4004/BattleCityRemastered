@@ -1,10 +1,13 @@
 #include "network/ReplicationPublisher.h"
-#include "network/MessageFraming.h"
 #include "network/Serializer.h"
+#include "network/WireFrame.h"
+#include "utils/Uuid.h"
+#include <algorithm>
 #include <memory>
 #include <mutex>
-#include <string>
+#include <optional>
 #include <utility>
+#include <variant>
 
 namespace network::commands
 {
@@ -17,7 +20,7 @@ void ReplicationPublisher::Publish(const AnyCommand command)
 	_batch.commands.emplace_back(command);
 }
 
-std::shared_ptr<const std::string> ReplicationPublisher::TakeFrame()
+std::shared_ptr<const WireFrame> ReplicationPublisher::TakeFrame()
 {
 	CommandBatch batch;
 	{
@@ -30,7 +33,39 @@ std::shared_ptr<const std::string> ReplicationPublisher::TakeFrame()
 		return nullptr;
 	}
 
-	return std::make_shared<const std::string>(network::SerializeFrame(batch));
+	const auto frame{std::make_shared<WireFrame>()};
+	CommandBatch reliable;
+	std::ranges::for_each(batch.commands, [&frame, &reliable](AnyCommand& command)
+	{
+		const auto latestKey{std::visit([]<class CommandT>(const CommandT& alternative) -> std::optional<Uuid>
+		{
+			if constexpr (LatestCommand<CommandT>)
+			{
+				return alternative.uuid;
+			}
+			else
+			{
+				return std::nullopt;
+			}
+		}, command)};
+
+		if (!latestKey)
+		{
+			reliable.commands.push_back(std::move(command));
+			return;
+		}
+
+		CommandBatch single;
+		single.commands.push_back(std::move(command));
+		frame->latest.emplace_back(*latestKey, network::Serialize(single));
+	});
+
+	if (!reliable.commands.empty())
+	{
+		frame->reliable = network::Serialize(reliable);
+	}
+
+	return frame;
 }
 
 }//namespace network::commands

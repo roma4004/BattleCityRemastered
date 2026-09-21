@@ -47,10 +47,13 @@ public:
 	std::chrono::milliseconds enemySpawnCooldown{std::chrono::seconds{5}};
 	std::chrono::milliseconds bonusLifeTimeCooldown{std::chrono::seconds{15}};
 	double gridOffset{WorldGeometry::kCellSize};
-	double tankSize{gridOffset * 3.0};
+	double tankSize{gridOffset * static_cast<double>(WorldGeometry::kTankCellSpan)};
 	double tankSpeed{142.0};
 	int bonusSize{static_cast<int>(tankSize)};
 	double botShootObstacleChance{0.35};
+	//NOTE: the base ends the match, and a bot drives past it far less often than past a wall -
+	//so it is rolled for on its own, higher chance
+	double botShootFortressChance{0.5};
 	std::chrono::milliseconds botObstacleShootCooldown{std::chrono::seconds{1}};
-	bool isMuted{false};
+	bool isMuted{};
 };

@@ -15,7 +15,7 @@ protected:
 	std::unique_ptr<InputProviderForMenu> _menuInput{nullptr};
 	GameConfig _gameConfig{};
 	EventSubscription _statusSub{};
-	bool _isPaused{false};
+	bool _isPaused{};
 
 	void SetUp() override
 	{

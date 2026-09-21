@@ -1,11 +1,10 @@
 #include "components/ScoreBoard.h"
-#include "application/GameConfig.h"
 #include "components/EventSystem.h"
 #include "components/GameStatistics.h"
+#include "components/StatisticsData.h"
 #include "components/events/SpawnEvents.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
-#include "components/events/InputEvents.h"
 #include "components/events/RenderUIEvents.h"
 #include "enums/GameState.h"
 #include "enums/RespawnGroup.h"
@@ -17,6 +16,8 @@
 #include <span>
 #include <sstream>
 #include <string_view>
+#include <utility>
+#include <vector>
 
 namespace
 {
@@ -29,6 +30,8 @@ inline constexpr std::size_t kMaxColumns{3};
 //NOTE: in characters - the header row lines up with the counters by using the same width
 inline constexpr int kLabelWidth{22};
 inline constexpr int kColumnWidth{4};
+
+inline constexpr int kRowStep{20};
 
 struct StatRow final
 {
@@ -78,30 +81,32 @@ constexpr std::array kStatRows{
 							&StatisticsData::bonusDestroyedByEnemyTeam}},
 		StatRow{.label = "BONUS EXPIRED", .columns = {&StatisticsData::bonusExpired}},
 };
+
+void AddRow(std::vector<TextBlockLine>& lines, const Point pos, const unsigned int color,
+			const std::string_view text, const std::span<const unsigned short> values)
+{
+	std::ostringstream textStream;
+	textStream << std::left << std::setw(kLabelWidth) << text;
+	for (const unsigned short value: values)
+	{
+		textStream << std::setw(kColumnWidth) << value;
+	}
+
+	lines.push_back(TextBlockLine{.pos = pos, .color = color, .text = textStream.str()});
+}
 }//namespace
 
-ScoreBoard::ScoreBoard(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig,
-					   const GameStatistics& statistics)
-	: _pos{.x = 25, .y = 25}
-	, _events{events}
+ScoreBoard::ScoreBoard(const std::shared_ptr<EventSystem>& events, const GameStatistics& statistics)
+	: _events{events}
 	, _statistics{statistics}
 {
 	Subscribe();
-
-	_windowHeight = static_cast<int>(gameConfig.LogicalSize().y);
 }
 
 void ScoreBoard::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &ScoreBoard::OnRespawnCountChangedTo));
-
-	if (_isScoreBoardDisplayed)
-	{
-		_drawSub = _events->AddListener(this, &ScoreBoard::OnDrawUserInterface);
-	}
-
 	_subs.push_back(_events->AddListener(this, &ScoreBoard::OnMenuShowed));
-	_subs.push_back(_events->AddListener(this, &ScoreBoard::OnPauseStatus));
 	_subs.push_back(_events->AddListener(this, &ScoreBoard::OnGameStateChangedTo));
 }
 
@@ -113,7 +118,7 @@ void ScoreBoard::OnRespawnCountChangedTo(const RespawnCountChangedToEvent& event
 			_enemyRespawnCount = event.respawnCount;
 			return;
 		case RespawnGroup::PLAYER1:
-			_playerOneRepawnCount = event.respawnCount;
+			_playerOneRespawnCount = event.respawnCount;
 			return;
 		case RespawnGroup::PLAYER2:
 			_playerTwoRespawnCount = event.respawnCount;
@@ -129,11 +134,6 @@ void ScoreBoard::OnMenuShowed(const MenuShowedEvent& event)
 	{
 		DisplayScore(false);
 	}
-}
-
-void ScoreBoard::OnPauseStatus(const PauseStatusEvent& /*event*/)
-{
-	/*DisplayScore(isPause);*/
 }
 
 //NOTE: driven by the phase, which a client gets over the wire - it never runs the win check itself
@@ -157,19 +157,21 @@ void ScoreBoard::Draw() const
 	RenderStatistics();
 }
 
+//NOTE: one block, not a line at a time - the renderer sizes and centres the table as a whole, which is
+//what keeps its columns columns
 void ScoreBoard::RenderStatistics() const
 {
-	const Point pos{.x = _pos.x + 180, .y = _pos.y + 120};
+	//NOTE: the board's own top left - the captions and the table hang off it, nothing off the menu's anchor
+	const Point origin{.x = _pos.x + 50, .y = _pos.y + 200};
 	constexpr unsigned int color{0xff00ffffu};
 
-	_events->EmitEvent(
-			RenderTextEvent{.pos = Point{.x = pos.x - 60, .y = pos.y + 80},
-							.color = color,
-							.text = "PRESS M TO SHOW MENU"});
-	_events->EmitEvent(
-			RenderTextEvent{.pos = Point{.x = pos.x - 20, .y = pos.y + 120},
-							.color = color,
-							.text = "GAME STATISTICS:"});
+	std::vector<TextBlockLine> lines;
+	lines.push_back(TextBlockLine{.pos = Point{.x = origin.x + 70, .y = origin.y},
+								  .color = color,
+								  .text = "PRESS M TO SHOW MENU"});
+	lines.push_back(TextBlockLine{.pos = Point{.x = origin.x + 110, .y = origin.y + 40},
+								  .color = color,
+								  .text = "GAME STATISTICS:"});
 
 	std::ostringstream header;
 	header << std::left;
@@ -178,21 +180,21 @@ void ScoreBoard::RenderStatistics() const
 		header << std::setw(kColumnWidth) << column;
 	}
 
-	_events->EmitEvent(RenderTextEvent{.pos = {.x = pos.x + 180, .y = pos.y + 140},
-									   .color = color,
-									   .text = header.str()});
+	//NOTE: over the counters, a label's width to the right of where the rows start
+	lines.push_back(TextBlockLine{.pos = Point{.x = origin.x + 310, .y = origin.y + 60},
+								  .color = color,
+								  .text = header.str()});
 
-	constexpr int rowStep{20};
-	int y{pos.y + 160};
+	int y{origin.y + 80};
 
 	//NOTE: the respawn counts are the scoreboard's own, not the statistics block's
-	RenderRow({.x = pos.x - 130, .y = y}, color, "RESPAWN REMAIN",
-			  std::array{_playerOneRepawnCount, _playerTwoRespawnCount, _enemyRespawnCount});
+	AddRow(lines, {.x = origin.x, .y = y}, color, "RESPAWN REMAIN",
+		   std::array{_playerOneRespawnCount, _playerTwoRespawnCount, _enemyRespawnCount});
 
 	const StatisticsData& data{_statistics.GetData()};
 	for (const auto& [label, columns]: kStatRows)
 	{
-		y += rowStep;
+		y += kRowStep;
 
 		//NOTE: a row fills its columns from the left, so the unset ones are the tail
 		const auto filled{static_cast<std::size_t>(std::ranges::count_if(columns, [](const StatField field)
@@ -204,21 +206,13 @@ void ScoreBoard::RenderStatistics() const
 		std::ranges::transform(columns | std::views::take(filled), values.begin(),
 							   [&data](const StatField field) { return data.*field; });
 
-		RenderRow({.x = pos.x - 130, .y = y}, color, label, std::span{values}.first(filled));
-	}
-}
-
-void ScoreBoard::RenderRow(const Point pos, const unsigned int color, const std::string_view text,
-						   const std::span<const unsigned short> values) const
-{
-	std::ostringstream textStream;
-	textStream << std::left << std::setw(kLabelWidth) << text;
-	for (const unsigned short value: values)
-	{
-		textStream << std::setw(kColumnWidth) << value;
+		AddRow(lines, {.x = origin.x, .y = y}, color, label, std::span{values}.first(filled));
 	}
 
-	_events->EmitEvent(RenderTextEvent{.pos = pos, .color = color, .text = textStream.str()});
+	_events->EmitEvent(RenderMenuTextBlockEvent{.menuPos = _pos,
+												.lineHeight = kRowStep,
+												.align = TextBlockAlign::CenteredBlock,
+												.lines = std::move(lines)});
 }
 
 void ScoreBoard::DisplayScore(const bool isDisplayed)
