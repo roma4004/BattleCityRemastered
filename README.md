@@ -71,10 +71,16 @@ The game in host\client mode looks the same, but with strict host authority, so 
   * The host is auto paused while waiting for the client to join
   * Replicating all visual events (move, shot, died, spawn, statistics, animation)
   * Logic is computed on the host, which accepts client inputs and partially mirrors the result back to the client to create the visual consequence
-Hint: `scripts/` starts the game from a console, without an IDE (optional argument - path to the exe):
-  * `run-server-and-clients.bat`/`.sh` - the dedicated server, then two client windows side by side
-  * `run-server-and-clients-skipintro.*` - same, but both windows skip the intro autoplay
-  * `run-host-and-client.*` - the menu path: the host window starts its own server, then a second window connects
+Hint: `scripts/cmake/` and `scripts/sln/` start the game from a console, without an IDE - one folder
+per build tree, the same three scripts in each, so a clone built only through the solution is covered
+as well (an optional argument names another exe):
+  * `run-multiplayer.bat`/`.sh` - two windows, the first brings its own server up and plays on it
+  * `run-multiplayer-dedicated.*` - a server process of its own, so a window can leave and come back
+  * `run-multiplayer-dedicated-mute.*` - the same, with both windows muted
+
+Both IDEs read their run configurations from the repo: CLion takes the CMake ones from
+`.idea/runConfigurations`, Rider the solution ones from `.idea/.idea.BattleCityRemastered/.idea/runConfigurations`,
+each with a server, two client windows and a compound that starts all three.
 
 Used technologies:
 * C++20,

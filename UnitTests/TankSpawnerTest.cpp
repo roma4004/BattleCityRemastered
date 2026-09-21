@@ -66,6 +66,17 @@ protected:
 		}
 	}
 
+	// the same row planted instead of walled - a tank drives over bush, so it may also be born on it
+	void PlantTopRow(const ObstacleType type) const
+	{
+		const double cell{_gameConfig.gridOffset};
+		const auto width{static_cast<double>(_gameConfig.battlefieldSize.x)};
+		for (double x{0.0}; x < width; x += cell)
+		{
+			SpawnObstacle(FPoint{.x = x, .y = 0.0}, type);
+		}
+	}
+
 	//NOTE: the top row only - players come up at the bottom whatever happens to the enemies' side
 	[[nodiscard]] std::size_t CountTanksInTopRow() const
 	{
@@ -279,6 +290,39 @@ TEST_F(TankSpawnerTest, AServerTakesBothSeatsOffTheWire)
 }
 
 // the only opening in the top row sits off both the tank and half-tank step - a search by strides alone
+// a strip full of bush is passable ground, so it must not read as a sealed edge
+TEST_F(TankSpawnerTest, AnEnemySpawnsOnBush)
+{
+	PlantTopRow(ObstacleType::Bush);
+
+	const std::size_t before{CountTanksInTopRow()};
+	_events->EmitEvent(RespawnTanksEvent{});
+
+	EXPECT_GT(CountTanksInTopRow(), before) << "bush was read as a wall";
+}
+
+// ice is the same kind of ground, and the spawner treats it the same
+TEST_F(TankSpawnerTest, AnEnemySpawnsOnIce)
+{
+	PlantTopRow(ObstacleType::Ice);
+
+	const std::size_t before{CountTanksInTopRow()};
+	_events->EmitEvent(RespawnTanksEvent{});
+
+	EXPECT_GT(CountTanksInTopRow(), before) << "ice was read as a wall";
+}
+
+// water is not - a fresh tank has no ship bonus and could never drive off it
+TEST_F(TankSpawnerTest, NoEnemySpawnsOnWater)
+{
+	PlantTopRow(ObstacleType::Water);
+
+	const std::size_t before{CountTanksInTopRow()};
+	_events->EmitEvent(RespawnTanksEvent{});
+
+	EXPECT_EQ(CountTanksInTopRow(), before) << "a tank was put down on water";
+}
+
 // would miss it and the enemy would never appear
 TEST_F(TankSpawnerTest, AnEnemyFindsAnOpeningThatIsOffTheCoarseSteps)
 {

@@ -104,11 +104,11 @@ void Simulation::OnGameModeChangedTo(const GameModeChangedToEvent& event)
 	}
 	else if (IsClient(event.mode))
 	{
-		//NOTE: a port nobody named is a free one, which only a server can use - a client has nothing to dial
+		//NOTE: a port nobody named is a free one, which only a server can use - a client has nothing to
+		//dial yet. The game watches for a server to publish one and comes back here with it
 		if (_gameConfig.serverAddress.port == network::kAnyFreePort)
 		{
-			Log::Error("no server port to join: pass --port=N, or let the game bring its own server up"
-					   " with --server");
+			Log::Info("no server port to join yet - waiting for one next to the game, or pass --port=N");
 
 			return;
 		}

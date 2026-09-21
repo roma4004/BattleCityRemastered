@@ -99,11 +99,6 @@ unsigned int Bullet::GetDamage() const noexcept { return _calibre.damage; }
 
 double Bullet::GetDamageRadius() const noexcept { return _calibre.damageRadius; }
 
-void Bullet::EmitDamageStatistics(const Author author)
-{
-	_events->EmitEvent(StatisticsBulletHitEvent{.author = author});
-}
-
 unsigned int Bullet::GetTier() const noexcept { return _calibre.tier; }
 
 void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
@@ -126,18 +121,31 @@ void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 		if (target->GetIsDestructible() || _calibre.tier > 2u)
 		{
 			target->TakeDamage(_calibre.damage, _author);
-			if (const auto* otherBullet{dynamic_cast<Bullet*>(baseObj)})
-			{
-				isBulletHitBullet = true;
-				//NOTE: in case another bullet hits this bullet, we take damage from another bullet and send statistics
-				TakeDamage(otherBullet->GetDamage(), otherBullet->GetAuthor());
-			}
 		}
+
+		const auto* otherBullet{dynamic_cast<Bullet*>(baseObj)};
+		if (otherBullet == nullptr)
+		{
+			continue;
+		}
+
+		isBulletHitBullet = true;
+		//NOTE: this one was shot down just as much as it shot the other down - a hit each
+		_events->EmitEvent(StatisticsBulletHitEvent{.author = otherBullet->GetAuthor()});
+		TakeDamage(otherBullet->GetDamage(), otherBullet->GetAuthor());
+	}
+
+	//NOTE: the counter is about bullets meeting bullets - a wall, a tank and the edge of the field are
+	//counted by rows of their own, and were only ever recorded here because self-damage went out as a hit
+	if (isBulletHitBullet)
+	{
+		_events->EmitEvent(StatisticsBulletHitEvent{.author = _author});
 	}
 
 	if (isBulletHitBullet == false)
 	{
-		//NOTE: BaseObj's skips Pawn's HealthChangedEvent; the statistics still go out through the override
+		//NOTE: burns itself out where it stopped; BaseObj's skips Pawn's HealthChangedEvent, and nobody
+		//shot it down, so no hit goes out with it
 		BaseObj::TakeDamage(_calibre.damage, _author);
 	}
 

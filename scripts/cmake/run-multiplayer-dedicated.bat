@@ -1,15 +1,25 @@
 @echo off
-rem Dedicated server first, then two client windows side by side. Optional arg: path to the game exe.
+rem A server process of its own, then two client windows - it outlives them, so a window can leave
+rem and come back. run-multiplayer.bat is the shorter path when that does not matter.
+rem Runs build/cmake/Debug-MinGW; an argument names another exe.
 setlocal
 rem BC_ADDRESS moves the server off 127.0.0.1. BC_PORT pins the port (set BC_PORT=1234); left alone, the
 rem server takes any free one and writes it to server-port.txt, which is where the windows read it from
 if not defined BC_ADDRESS set "BC_ADDRESS=127.0.0.1"
 if not defined BC_PORT set "BC_PORT=0"
 set "GAME_EXE=%~1"
-if "%GAME_EXE%"=="" set "GAME_EXE=%~dp0..\build\cmake\Debug-MinGW\BattleCityRemastered.exe"
+if "%GAME_EXE%"=="" set "GAME_EXE=%~dp0..\..\build\cmake\Debug-MinGW\BattleCityRemastered.exe"
 rem /D - assets are copied next to the exe, so the cwd must be its folder
 for %%I in ("%GAME_EXE%") do (set "GAME_EXE=%%~fI" & set "GAME_DIR=%%~dpI")
+if not exist "%GAME_EXE%" (
+	echo "%GAME_EXE%" does not exist - build it first 1>&2
+	exit /b 1
+)
 
+if not exist "%GAME_DIR%BattleCityServer.exe" (
+	echo BattleCityServer.exe is not next to the game - build that target as well 1>&2
+	exit /b 1
+)
 del "%GAME_DIR%server-port.txt" >nul 2>&1
 rem /MIN - the console shows nothing the log file does not, and unminimised it covers both windows
 start "BattleCity server" /MIN /D "%GAME_DIR%" "%GAME_DIR%BattleCityServer.exe" --address=%BC_ADDRESS% --port=%BC_PORT% --port-file=server-port.txt

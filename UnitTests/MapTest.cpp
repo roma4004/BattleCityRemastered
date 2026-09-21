@@ -208,6 +208,15 @@ TEST_F(MapLoaderTest, ASecondEagleIsRefused)
 	EXPECT_FALSE(ValidateGrid(grid).has_value());
 }
 
+// bush is ground a tank drives over, so a row of it along the edge is not a wall
+TEST_F(MapLoaderTest, ABushEdgeStillLeavesRoomToSpawn)
+{
+	std::string grid{kPlayableGrid};
+	grid.replace(0u, kRowStride - 1u, std::string(kRowStride - 1u, '6'));
+
+	EXPECT_TRUE(ValidateGrid(grid).has_value());
+}
+
 // a walled-off edge leaves the spawner waiting for a spot that never comes
 TEST_F(MapLoaderTest, ASealedTopEdgeLeavesNowhereToSpawn)
 {

@@ -163,7 +163,8 @@ std::optional<ObjRectangle> TankSpawner::FindSpawnSpot(const double minX, const 
 	const double tankSize{_gameConfig.tankSize};
 	auto isFree = [this, y, tankSize](const double x)
 	{
-		return WorldQuery::IsSpotFree(_allObjects, ObjRectangle{.x = x, .y = y, .w = tankSize, .h = tankSize});
+		return WorldQuery::IsSpotFreeOfBlockers(_allObjects,
+											   ObjRectangle{.x = x, .y = y, .w = tankSize, .h = tankSize});
 	};
 
 	const std::vector<double> candidates{SpawnCandidates(minX, maxX, preferredX, _gameConfig.gridOffset)};

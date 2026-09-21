@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="multiplayer" folderName="BattleCity (cmake)" type="CompoundRunConfigurationType">
+    <toRun name="host window (left)" targetId="CMakeBuildProfile:Debug-MinGW" type="CMakeRunConfiguration" />
+    <toRun name="client window (right)" targetId="CMakeBuildProfile:Debug-MinGW" type="CMakeRunConfiguration" />
+    <method v="2" />
+  </configuration>
+</component>

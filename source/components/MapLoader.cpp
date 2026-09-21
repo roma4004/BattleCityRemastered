@@ -49,8 +49,8 @@ constexpr char kFirstSymbol{'0'};
 	}
 }
 
-//NOTE: every obstacle, bush and ice included - that is what WorldQuery counts, and a rule reading the grid
-//more leniently would pass a map the spawner then refuses to place anything on
+//NOTE: only what stops a tank - bush and ice are ground it drives over and spawns on, so counting them
+//would refuse a perfectly playable map. WorldQuery draws the same line, and the two have to agree
 [[nodiscard]] std::vector<bool> BlockedCells(const MapData& map)
 {
 	std::vector<bool> blocked(map.cols * map.rows, false);
@@ -59,7 +59,7 @@ constexpr char kFirstSymbol{'0'};
 															  std::views::iota(std::size_t{}, map.cols)))
 	{
 		const ObstacleType type{map.At(col, row)};
-		if (!IsSpawnableObstacle(type))
+		if (!IsSpawnableObstacle(type) || IsDrivableObstacle(type))
 		{
 			continue;
 		}

@@ -7,8 +7,23 @@
 # Project dependencies 
 libraries
 
-# JetBrains IDE files
-.idea
+# JetBrains IDE files: per-machine state, except the run configurations opened up below
+.idea/*
+
+# CMake ones, read by CLion
+!.idea/runConfigurations/
+
+# solution ones, read by Rider - a folder has to be opened and its contents closed again at every
+# level, because git cannot re-include a file through an ignored folder
+!.idea/.idea.BattleCityRemastered/
+.idea/.idea.BattleCityRemastered/*
+!.idea/.idea.BattleCityRemastered/.idea/
+.idea/.idea.BattleCityRemastered/.idea/*
+!.idea/.idea.BattleCityRemastered/.idea/runConfigurations/
+
+# .run/ is read by both IDEs, and a CMake configuration cannot run in Rider - hence the two folders above
+.run/
+
 *.sln.DotSettings.user
 
 # Visual Studio files

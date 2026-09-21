@@ -1,0 +1,47 @@
+<component name="ProjectRunConfigurationManager">
+  <!-- port 0 takes any free one, port-file publishes it for the windows to read; 1234 pins it -->
+  <configuration default="false" name="dedicated server" folderName="BattleCity (sln)" type="CppProject" factoryName="C++ Project" singleton="true">
+    <configuration_1 setup="1">
+      <option name="CONFIGURATION" value="Debug" />
+      <option name="PLATFORM" value="x64" />
+      <option name="CURRENT_LAUNCH_PROFILE" value="Local" />
+      <option name="EXE_PATH" value="$(LocalDebuggerCommand)" />
+      <option name="PROGRAM_PARAMETERS" value="--address=127.0.0.1 --port=0 --port-file=server-port.txt" />
+      <option name="WORKING_DIRECTORY" value="$(LocalDebuggerWorkingDirectory)" />
+      <option name="PASS_PARENT_ENVS" value="1" />
+      <option name="USE_EXTERNAL_CONSOLE" value="1" />
+      <option name="TERMINAL_INTERACTION_BEHAVIOR" value="AUTO_DETECT" />
+      <option name="PROJECT_FILE_PATH" value="$PROJECT_DIR$/BattleCityServer/BattleCityServer.vcxproj" />
+    </configuration_1>
+    <configuration_2 setup="1">
+      <option name="CONFIGURATION" value="Debug-ASan" />
+      <option name="PLATFORM" value="x64" />
+      <option name="CURRENT_LAUNCH_PROFILE" value="Local" />
+      <option name="EXE_PATH" value="$(LocalDebuggerCommand)" />
+      <option name="PROGRAM_PARAMETERS" value="--address=127.0.0.1 --port=0 --port-file=server-port.txt" />
+      <option name="WORKING_DIRECTORY" value="$(LocalDebuggerWorkingDirectory)" />
+      <option name="PASS_PARENT_ENVS" value="1" />
+      <option name="USE_EXTERNAL_CONSOLE" value="1" />
+      <option name="TERMINAL_INTERACTION_BEHAVIOR" value="AUTO_DETECT" />
+      <option name="PROJECT_FILE_PATH" value="$PROJECT_DIR$/BattleCityServer/BattleCityServer.vcxproj" />
+    </configuration_2>
+    <configuration_3 setup="1">
+      <option name="CONFIGURATION" value="Release" />
+      <option name="PLATFORM" value="x64" />
+      <option name="CURRENT_LAUNCH_PROFILE" value="Local" />
+      <option name="EXE_PATH" value="$(LocalDebuggerCommand)" />
+      <option name="PROGRAM_PARAMETERS" value="--address=127.0.0.1 --port=0 --port-file=server-port.txt" />
+      <option name="WORKING_DIRECTORY" value="$(LocalDebuggerWorkingDirectory)" />
+      <option name="PASS_PARENT_ENVS" value="1" />
+      <option name="USE_EXTERNAL_CONSOLE" value="1" />
+      <option name="TERMINAL_INTERACTION_BEHAVIOR" value="AUTO_DETECT" />
+      <option name="PROJECT_FILE_PATH" value="$PROJECT_DIR$/BattleCityServer/BattleCityServer.vcxproj" />
+    </configuration_3>
+    <option name="DEFAULT_PROJECT_PATH" value="$PROJECT_DIR$/BattleCityServer/BattleCityServer.vcxproj" />
+    <option name="PROJECT_FILE_PATH" value="$PROJECT_DIR$/BattleCityServer/BattleCityServer.vcxproj" />
+    <option name="AUTO_SELECT_PRIORITY" value="0" />
+    <method v="2">
+      <option name="Build" />
+    </method>
+  </configuration>
+</component>

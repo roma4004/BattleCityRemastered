@@ -147,6 +147,7 @@ void BonusSpawner::Update(const TickUpdateEvent&)
 		const auto x{static_cast<double>(RandUtils::GetRandNumber(_distSpawnPosX))};
 		const auto y{static_cast<double>(RandUtils::GetRandNumber(_distSpawnPosY))};
 		const ObjRectangle rect{.x = x, .y = y, .w = size, .h = size};
+		//NOTE: stricter than a tank spawn on purpose - a bonus dropped into a bush is one nobody can see
 		if (WorldQuery::IsSpotFree(_allObjects, rect))
 		{
 			SpawnRandomBonus(rect);

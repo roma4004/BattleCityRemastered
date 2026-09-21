@@ -30,7 +30,6 @@ class Bullet final : public Pawn, public IDrawable
 
 protected:
 	void Subscribe() override;
-	void EmitDamageStatistics(Author author) override;
 	void OnDespawned(const DespawnedEvent& event) override;
 	void Draw() const override;
 	void TickUpdate(double deltaTime) override;

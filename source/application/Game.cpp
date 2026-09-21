@@ -20,10 +20,20 @@
 #include "components/managers/RenderManager.h"
 #include "components/managers/TextureManager.h"
 #include "enums/GameMode.h"
+#include "network/Endpoints.h"
+#include <chrono>
 #include <cstdint>
 #include <exception>
 #include <memory>
 #include <optional>
+#include <string>
+
+namespace
+{
+//NOTE: a lobby screen away from being a user action, so it is polled rather than watched - slow enough
+//to cost nothing, quick enough that the second window joins as soon as the first one is up
+constexpr auto kPublishedPortPollStep{std::chrono::milliseconds{250}};
+}//namespace
 
 Game::Game(GameConfig& gameConfig, const ProjectConfig& projectConfig, const WindowConfig& windowConfig,
 		   SDL_Config& sdlConfig, const LaunchOptions& launchOptions)
@@ -39,6 +49,7 @@ Game::Game(GameConfig& gameConfig, const ProjectConfig& projectConfig, const Win
 	, _rightSideBar{std::make_unique<RightSideBar>(_events, gameConfig)}
 	, _gameConfig{gameConfig}
 	, _selectedGameMode{GameMode::OnePlayer}
+	, _isPortNamedByArguments{gameConfig.serverAddress.port != network::kAnyFreePort}
 {
 	Subscribe();
 
@@ -59,6 +70,7 @@ void Game::Subscribe()
 	_subs.push_back(_events->AddListener(this, &Game::NextGameMode));
 	_subs.push_back(_events->AddListener(this, &Game::OnApplyGameMode));
 	_subs.push_back(_events->AddListener(this, &Game::OnSelectedGameModeChangedTo));
+	_subs.push_back(_events->AddListener(this, &Game::OnConnectedToHost));
 }
 
 void Game::OnApplyGameMode(const ApplyGameModeEvent&) { EnterGameMode(_selectedGameMode); }
@@ -81,6 +93,7 @@ void Game::EnterGameMode(const GameMode mode)
 	if (mode != GameMode::PlayAsHost)
 	{
 		_serverProcess.reset();
+		WatchPublishedPort(mode);
 		_simulation->ApplyGameMode(mode);
 
 		return;
@@ -102,9 +115,68 @@ void Game::EnterGameMode(const GameMode mode)
 
 	//NOTE: with --port=auto the child picked its own, so this is the first moment the game knows where to dial
 	_gameConfig.serverAddress.port = *port;
+	_isDialingPublishedPort = false;
 
 	_simulation->ApplyGameMode(GameMode::PlayAsClient);
 }
+
+void Game::WatchPublishedPort(const GameMode mode)
+{
+	_isDialingPublishedPort = mode == GameMode::PlayAsClient && !_isPortNamedByArguments;
+	if (!_isDialingPublishedPort)
+	{
+		return;
+	}
+
+	//NOTE: whatever number is left over belongs to a server we just shut down or to the last run - the
+	//published file is the only one worth dialling, even when it says the same thing again
+	_gameConfig.serverAddress.port = network::kAnyFreePort;
+	_nextPortPoll = std::chrono::steady_clock::time_point{};
+
+	TryAdoptPublishedPort();
+}
+
+void Game::PollPublishedPort()
+{
+	if (!_isDialingPublishedPort)
+	{
+		return;
+	}
+
+	const auto now{std::chrono::steady_clock::now()};
+	if (now < _nextPortPoll)
+	{
+		return;
+	}
+
+	_nextPortPoll = now + kPublishedPortPollStep;
+
+	if (!TryAdoptPublishedPort())
+	{
+		return;
+	}
+
+	Log::Info("joining the server published next to the game, port "
+			  + std::to_string(_gameConfig.serverAddress.port));
+
+	_simulation->ApplyGameMode(GameMode::PlayAsClient);
+}
+
+bool Game::TryAdoptPublishedPort()
+{
+	const std::optional<std::uint16_t> port{ServerProcess::PublishedPort()};
+	if (!port || *port == _gameConfig.serverAddress.port)
+	{
+		return false;
+	}
+
+	_gameConfig.serverAddress.port = *port;
+
+	return true;
+}
+
+//NOTE: the number held now is the one that answered, so there is nothing left to watch for
+void Game::OnConnectedToHost(const ClientConnectedToHostEvent&) { _isDialingPublishedPort = false; }
 
 void Game::OnSelectedGameModeChangedTo(const SelectedGameModeChangedToEvent& event) { _selectedGameMode = event.mode; }
 
@@ -144,6 +216,8 @@ void Game::Run()
 	{
 		while (!_userInput->IsShutdown())
 		{
+			PollPublishedPort();
+
 			_simulation->Tick();
 
 			_events->EmitEvent(PreDrawEvent{});

@@ -286,6 +286,40 @@ TEST_F(StatisticsTest, BulletHitByPlayerTwo)
 	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerTwo, 1u);
 }
 
+// the counter is about bullets meeting bullets - a wall the shot destroys has a row of its own
+TEST_F(StatisticsTest, BulletIntoBrickWallIsNotABulletHit)
+{
+	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _calibre.size.y + 1}, ObstacleType::Brick);
+	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player1);
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerOne, 0u);
+	EXPECT_EQ(_statistics->GetData().brickWallDiedByPlayerOne, 1u);
+}
+
+// a shot the wall swallows whole is nobody's hit either
+TEST_F(StatisticsTest, BulletIntoSteelWallIsNotABulletHit)
+{
+	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _calibre.size.y + 1}, ObstacleType::Steel);
+	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player1);
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerOne, 0u);
+	EXPECT_EQ(_statistics->GetData().steelWallDiedByPlayerOne, 0u);
+}
+
+// and the shot that flies off the field is not one either - that was the bug
+TEST_F(StatisticsTest, BulletIntoFieldEdgeIsNotABulletHit)
+{
+	CreateBullet({.x = 0.0, .y = 0.0}, Direction::UP, Author::Player1);
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerOne, 0u);
+}
+
 TEST_F(StatisticsTest, BrickWallDiedByEnemy)
 {
 	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _calibre.size.y + 1}, ObstacleType::Brick);
