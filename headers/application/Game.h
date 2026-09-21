@@ -1,6 +1,7 @@
 #pragma once
 
 #include "components/EventSystem.h"
+#include <chrono>
 #include <memory>
 #include <vector>
 
@@ -8,6 +9,7 @@ enum class GameMode : char8_t;
 struct LaunchOptions;
 struct SDL_Config;
 struct ApplyGameModeEvent;
+struct ClientConnectedToHostEvent;
 struct NextGameModeEvent;
 struct PreviousGameModeEvent;
 struct SelectedGameModeChangedToEvent;
@@ -50,8 +52,16 @@ private:
 	void NextGameMode(const NextGameModeEvent&);
 	void OnApplyGameMode(const ApplyGameModeEvent&);
 	void OnSelectedGameModeChangedTo(const SelectedGameModeChangedToEvent& event);
+	void OnConnectedToHost(const ClientConnectedToHostEvent&);
 
 	void EnterGameMode(GameMode mode);
+
+	//NOTE: a client nobody gave a port to has one place to look - the file a dedicated server writes next
+	//to the exe. It is watched rather than read once, so the two windows may be started in either order
+	void WatchPublishedPort(GameMode mode);
+	void PollPublishedPort();
+	//NOTE: the answer matters only to the poll - the first reading is taken for its side effect
+	bool TryAdoptPublishedPort();
 
 	std::shared_ptr<EventSystem> _events{nullptr};
 
@@ -71,4 +81,9 @@ private:
 	GameConfig& _gameConfig;
 
 	GameMode _selectedGameMode{};
+
+	//NOTE: a port that came in on the command line beats anything published - it is the one the user named
+	bool _isPortNamedByArguments{};
+	bool _isDialingPublishedPort{};
+	std::chrono::steady_clock::time_point _nextPortPoll{};
 };

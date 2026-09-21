@@ -1,0 +1,8 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="multiplayer dedicated" type="CompoundRunConfigurationType">
+    <toRun name="dedicated server" type="CppProject" />
+    <toRun name="client window (left)" type="CppProject" />
+    <toRun name="client window (right)" type="CppProject" />
+    <method v="2" />
+  </configuration>
+</component>

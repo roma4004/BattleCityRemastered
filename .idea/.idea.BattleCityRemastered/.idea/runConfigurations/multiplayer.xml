@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="multiplayer" type="CompoundRunConfigurationType">
+    <toRun name="host window (left)" type="CppProject" />
+    <toRun name="client window (right)" type="CppProject" />
+    <method v="2" />
+  </configuration>
+</component>

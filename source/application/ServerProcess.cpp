@@ -92,6 +92,15 @@ std::optional<std::uint16_t> WaitForPort(const std::filesystem::path& portFile, 
 
 	return std::filesystem::path(self).replace_filename(kServerExeName);
 }
+
+//NOTE: next to our own exe, never the working directory - the child is started there and writes the
+//name relative to it, and a debugger starts the game from wherever it likes
+[[nodiscard]] std::filesystem::path PortFilePath()
+{
+	const std::filesystem::path exe{ServerExePath()};
+
+	return exe.empty() ? std::filesystem::path{} : exe.parent_path() / kPortFileName;
+}
 }//namespace
 
 struct ServerProcess::Process
@@ -141,7 +150,7 @@ std::optional<std::uint16_t> ServerProcess::Start(const network::ServerAddress& 
 	}
 
 	//NOTE: gone before the child starts, so what turns up later is this run's port and not the last one's
-	const std::filesystem::path portFile{exe.parent_path() / kPortFileName};
+	const std::filesystem::path portFile{PortFilePath()};
 	std::filesystem::remove(portFile, ec);
 
 	auto process{std::make_unique<Process>()};
@@ -213,6 +222,11 @@ std::optional<std::uint16_t> ServerProcess::Start(const network::ServerAddress& 
 	Log::Info("ServerProcess: started BattleCityServer on port " + std::to_string(*_boundPort));
 
 	return _boundPort;
+}
+
+std::optional<std::uint16_t> ServerProcess::PublishedPort()
+{
+	return ReadPortFile(PortFilePath());
 }
 
 bool ServerProcess::IsRunning() const
