@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DatagramLink.h"
+#include "DiscoveryBeacon.h"
 #include "Endpoints.h"
 #include "ReplicationPublisher.h"
 #include "Session.h"
@@ -74,6 +75,9 @@ private:
 	//be one step, or two clients arriving back to back get the same one
 	[[nodiscard]] std::optional<PlayerSlot> FindFreeSlot() const;
 
+	//NOTE: what the beacon answers with, so it is taken under the mutex like any other read of the seats
+	[[nodiscard]] std::uint8_t CountFreeSlots() const;
+
 	void OnNetworkEndFrame(const NetworkEndFrameEvent&);
 
 	//NOTE: nullptr outside a match - a lobby has no field to catch up with
@@ -90,6 +94,8 @@ private:
 	//no acceptor to close, so the socket stays bound and the hello is turned away
 	std::atomic_bool _isAccepting{true};
 	const uint16_t _boundPort;
+	//NOTE: after _boundPort - it answers with that number, so it may not be built before there is one
+	DiscoveryBeacon _beacon;
 	boost::asio::steady_timer _tickTimer;
 	udp::endpoint _sender{};
 	std::array<char, DatagramLink::kMaxDatagramSize> _receiveBuffer{};

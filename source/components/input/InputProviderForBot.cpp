@@ -3,20 +3,24 @@
 #include "components/LineOfSight.h"
 #include "entities/BaseObj.h"
 #include "entities/obstacles/IFortress.h"
+#include "entities/pawns/Bullet.h"
 #include "entities/pawns/Tank.h"
 #include "enums/Direction.h"
 #include "enums/Faction.h"
 #include "geometry/ObjRectangle.h"
 #include "geometry/Point.h"
 #include "interfaces/IPickupableBonus.h"
+#include "utils/ColliderUtils.h"
 #include "utils/DirectionUtils.h"
+#include "utils/ObjectUtils.h"
 #include "utils/RandUtils.h"
+#include <algorithm>
 #include <chrono>
+#include <optional>
 #include <random>
 
 using namespace std::chrono_literals;
 
-//TODO: if enemy see bullets they should try or prioritize move aside
 InputProviderForBot::InputProviderForBot(const std::vector<std::shared_ptr<BaseObj>>& allObjects,
 										 const GameConfig& gameConfig)
 	: _allObjects{allObjects}
@@ -46,6 +50,101 @@ bool InputProviderForBot::IsBonus(const std::shared_ptr<BaseObj>& obstacle)
 	}
 
 	return false;
+}
+
+const Bullet* InputProviderForBot::AsBullet(const std::shared_ptr<BaseObj>& obstacle)
+{
+	return dynamic_cast<Bullet*>(obstacle.get());
+}
+
+//NOTE: the lane a bullet travels, not the distance to it - a shot two rows over is somebody else's
+InputProviderForBot::BulletThreat InputProviderForBot::FindBulletThreat(const Tank& self) const
+{
+	const ObjRectangle selfRect{self.GetRect()};
+
+	BulletThreat nearest{};
+	for (const std::shared_ptr<BaseObj>& object: _allObjects)
+	{
+		if (!ObjectUtils::IsAlive(object) || IsAlly(self, object))
+		{
+			continue;
+		}
+
+		const Bullet* bullet{AsBullet(object)};
+		if (bullet == nullptr)
+		{
+			continue;
+		}
+
+		//NOTE: where it is going has to end on us - one flying away or crossing another row is not ours
+		//to answer. A negative gap means it is already level with us, and the sweep below would read
+		//backwards from there, so it is turned away first
+		const Direction flying{bullet->GetDirection()};
+		const double gap{DirectionUtils::GapTo(object->GetRect(), selfRect, flying)};
+		const double reach{gap + DirectionUtils::SizeAlong(selfRect, flying)};
+		if (gap < 0.0
+			|| !ColliderUtils::IsCollide(DirectionUtils::Swept(object->GetRect(), reach, flying), selfRect))
+		{
+			continue;
+		}
+
+		const double speed{bullet->GetFlightSpeed()};
+		const double timeToImpact{speed > 0.0 ? gap / speed : 0.0};
+		if (nearest.bullet && nearest.timeToImpact <= timeToImpact)
+		{
+			continue;
+		}
+
+		nearest = BulletThreat{.bullet = object,
+							   .timeToImpact = timeToImpact,
+							   .flying = flying,
+							   .isHeadOn = flying == DirectionUtils::Opposite(self.GetDirection())};
+	}
+
+	return nearest;
+}
+
+//NOTE: both ways across, measured to whatever stops us first - the wall of the field counts, a bot
+//pressed into it has nowhere to go and should try the other side
+std::optional<Direction> InputProviderForBot::SideWithMoreRoom(const Tank& self, const Direction threatDir,
+																	   const double deltaTime) const
+{
+	const std::vector<Direction> freePath{self.GetFreePathSides(deltaTime, std::nullopt)};
+	const ObjRectangle selfRect{self.GetRect()};
+
+	std::optional<Direction> best{};
+	double bestRoom{};
+	for (const Direction side: DirectionUtils::Laterals(threatDir))
+	{
+		if (std::ranges::find(freePath, side) == freePath.end())
+		{
+			continue;
+		}
+
+		double room{DirectionUtils::GapToEdge(selfRect, _gameConfig.battlefieldSize, side)};
+		for (const std::shared_ptr<BaseObj>& object: _allObjects)
+		{
+			if (!ObjectUtils::IsAlive(object) || object->GetIsPassable() || object.get() == &self)
+			{
+				continue;
+			}
+
+			if (const double gap{DirectionUtils::GapTo(selfRect, object->GetRect(), side)};
+				gap >= 0.0 && ColliderUtils::IsCollide(DirectionUtils::Swept(selfRect, gap, side),
+													   object->GetRect()))
+			{
+				room = std::min(room, gap);
+			}
+		}
+
+		if (!best || room > bestRoom)
+		{
+			best = side;
+			bestRoom = room;
+		}
+	}
+
+	return best;
 }
 
 bool InputProviderForBot::ChangeDirIfSeenBonus(Tank& self, const Direction dir,
@@ -90,8 +189,10 @@ bool InputProviderForBot::ChangeDirIfSeenOpponent(Tank& self, const Direction di
 		return false;
 	}
 
+	//NOTE: a bullet is no longer a reason to turn the hull - it carries its shooter's faction, so it used
+	//to read as a tank, and the bot drove at the shot instead of answering it. FindBulletThreat does that
 	if (const auto& nearestSeenObstacle{sideObstacle.front()};
-		IsOpponent(self, nearestSeenObstacle))
+		IsOpponent(self, nearestSeenObstacle) && AsBullet(nearestSeenObstacle) == nullptr)
 	{
 		if (dir == self.GetDirection())
 		{
@@ -149,12 +250,6 @@ std::shared_ptr<BaseObj> InputProviderForBot::HandleLineOfSight(Tank& self)
 	{
 		nearestSeenObstacle = Lookup(self, lineOfSight, dir, &InputProviderForBot::ChangeDirIfSeenBonus);
 	}
-
-	// TODO: write logic if seen bullet flying toward(head-on) to this tank, need shoot to intercept
-	// if (isBullet(nearestSeenObstacle) && isOpposite(bullet->GetDirection))
-	// {
-	// 	Shot();
-	// }
 
 	if (nearestSeenObstacle == nullptr)
 	{
@@ -256,8 +351,32 @@ bool InputProviderForBot::RollShootObstacle(const std::shared_ptr<BaseObj>& obj)
 	return false;
 }
 
+//NOTE: the first of the two calls Tank::TickUpdate makes, so the threat found here is the one ShouldShoot
+//answers a moment later - intercepting and stepping aside are the two halves of one decision
 std::optional<Direction> InputProviderForBot::ChooseDirection(Tank& self, const double deltaTime)
 {
+	_threat = FindBulletThreat(self);
+
+	//NOTE: the hull is not turned towards the bullet - if it is already head-on there is a shot to take,
+	//and if it is not, turning to face it would only drive the bot into it
+	if (const bool canIntercept{_threat.isHeadOn && self.CanShoot()
+								&& _threat.timeToImpact > kInterceptWindowSeconds};
+		_threat.bullet && !canIntercept)
+	{
+		if (const std::optional<Direction> aside{SideWithMoreRoom(self, _threat.flying, deltaTime)})
+		{
+			//NOTE: the random turn is pushed back, the way the bonus branch does it - without this the
+			//timer fires on the next frame and undoes the dodge
+			_randomChangeDirTimer.Reset(RandUtils::GetRandDuration(kMinTurnDelay, kMaxTurnDelay));
+
+			//NOTE: we just turned across the shot, so "head-on" described where we used to look - ShouldShoot
+			//would fire the intercept sideways on a reading that is one turn out of date
+			_threat.isHeadOn = false;
+
+			return aside;
+		}
+	}
+
 	if (_randomChangeDirTimer.isActive && _randomChangeDirTimer.IsCooldownFinish())
 	{
 		_randomChangeDirTimer.isActive = false;
@@ -285,6 +404,13 @@ std::optional<Direction> InputProviderForBot::ReviseWhenMoveBlocked(Tank& self, 
 
 bool InputProviderForBot::ShouldShoot(Tank& self)
 {
+	//NOTE: the answer to a bullet already on our line, decided with the dodge in ChooseDirection - it
+	//comes first because nothing else matters while a shot is on its way here
+	if (_threat.isHeadOn && _threat.timeToImpact > kInterceptWindowSeconds)
+	{
+		return true;
+	}
+
 	const std::shared_ptr<BaseObj> nearestSeenObstacle{HandleLineOfSight(self)};
 	if (nearestSeenObstacle == nullptr)
 	{

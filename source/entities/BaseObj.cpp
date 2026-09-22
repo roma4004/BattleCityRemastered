@@ -58,9 +58,9 @@ int BaseObj::GetHealth() const { return _health; }
 //NOTE: never kills - the host decides a death in TakeDamage, the client hears of it from DespawnedEvent
 void BaseObj::SetHealth(const int health) { _health = health; }
 
-void BaseObj::SetIsAlive(const bool isAlive) { _isAlive = isAlive; }
+void BaseObj::SetIsAlive(const bool isAlive) noexcept { _isAlive = isAlive; }
 
-bool BaseObj::GetIsAlive() const { return _isAlive; }
+bool BaseObj::GetIsAlive() const noexcept { return _isAlive; }
 
 void BaseObj::EmitDamageStatistics(Author) {}
 
@@ -85,10 +85,10 @@ void BaseObj::TakeDamage(const unsigned int damage, const Author author)
 	}
 }
 
-bool BaseObj::GetIsPassable() const { return _collision.passable; }
+bool BaseObj::GetIsPassable() const noexcept { return _collision.passable; }
 
-bool BaseObj::GetIsDestructible() const { return _collision.destructible; }
+bool BaseObj::GetIsDestructible() const noexcept { return _collision.destructible; }
 
-bool BaseObj::GetIsPenetrable() const { return _collision.penetrable; }
+bool BaseObj::GetIsPenetrable() const noexcept { return _collision.penetrable; }
 
 Terrain BaseObj::GetTerrain() const noexcept { return _collision.terrain; }

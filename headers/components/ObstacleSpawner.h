@@ -19,9 +19,6 @@ class GameConfig;
 
 class ObstacleSpawner final
 {
-	//TODO: to the level select, once there is more than one map
-	static constexpr auto kMapPath{"Resources/Maps/level1.map"};
-
 	std::shared_ptr<EventSystem> _events{nullptr};
 	const GameConfig& _gameConfig;
 	std::vector<EventSubscription> _subs{};

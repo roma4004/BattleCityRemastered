@@ -99,6 +99,8 @@ unsigned int Bullet::GetDamage() const noexcept { return _calibre.damage; }
 
 double Bullet::GetDamageRadius() const noexcept { return _calibre.damageRadius; }
 
+double Bullet::GetFlightSpeed() const noexcept { return _calibre.speed; }
+
 unsigned int Bullet::GetTier() const noexcept { return _calibre.tier; }
 
 void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)

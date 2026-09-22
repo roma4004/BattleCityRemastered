@@ -34,6 +34,8 @@ Server::Server(boost::asio::io_context& ioContext, const ServerAddress& address,
 			   const std::shared_ptr<EventSystem>& events)
 	: _socket{ioContext, udp::endpoint{boost::asio::ip::make_address(address.host), address.port}}
 	, _boundPort{_socket.local_endpoint().port()}
+	, _beacon{ioContext, boost::asio::ip::make_address(address.host), _boundPort,
+			  [this] { return CountFreeSlots(); }}
 	, _tickTimer{ioContext}
 	, _events{events}
 	, _replicationOut{events}
@@ -87,8 +89,28 @@ void Server::Shutdown(const DisconnectReason reason, const std::function<void()>
 	_closeDeadline = now + DatagramLink::kFarewellLinger;
 }
 
+std::uint8_t Server::CountFreeSlots() const
+{
+	const std::lock_guard lock{_sessionsMutex};
+
+	std::uint8_t free{};
+	for (const PlayerSlot slot: {PlayerSlot::P1, PlayerSlot::P2})
+	{
+		const auto holdsSlot = [slot](const std::shared_ptr<Session>& session)
+		{
+			return !session->IsFinished() && session->GetSlot() == slot;
+		};
+
+		free += static_cast<std::uint8_t>(!std::ranges::any_of(_sessions, holdsSlot));
+	}
+
+	return free;
+}
+
 void Server::CloseSocket()
 {
+	_beacon.Shutdown();
+
 	std::ignore = _tickTimer.cancel();
 
 	if (!_socket.is_open())

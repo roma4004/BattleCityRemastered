@@ -108,7 +108,7 @@ void Simulation::OnGameModeChangedTo(const GameModeChangedToEvent& event)
 		//dial yet. The game watches for a server to publish one and comes back here with it
 		if (_gameConfig.serverAddress.port == network::kAnyFreePort)
 		{
-			Log::Info("no server port to join yet - waiting for one next to the game, or pass --port=N");
+			Log::Info("no server port to join yet - asking for one on the network, or pass --port=N");
 
 			return;
 		}

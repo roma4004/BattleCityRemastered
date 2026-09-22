@@ -157,7 +157,7 @@ void ObstacleSpawner::SpawnFortressWall(const ObjRectangle rect, const ObstacleT
 void ObstacleSpawner::LoadMap() const
 {
 	Map map{_events};
-	if (const auto loaded{map.LoadFromFile(kMapPath)};
+	if (const auto loaded{map.LoadFromFile(_gameConfig.mapPath)};
 		!loaded)
 	{
 		const MapError& error{loaded.error()};

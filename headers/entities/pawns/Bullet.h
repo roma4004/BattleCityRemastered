@@ -46,6 +46,10 @@ public:
 
 	[[nodiscard]] double GetDamageRadius() const noexcept;
 
+	//NOTE: how fast it flies, which is the calibre's and not Pawn::GetSpeed - a bullet never moves by
+	//the pawn speed, MoveLikeBulletBeh steps it by this one
+	[[nodiscard]] double GetFlightSpeed() const noexcept;
+
 	[[nodiscard]] Uuid GetUuid() const override;
 
 	[[nodiscard]] unsigned int GetTier() const noexcept;

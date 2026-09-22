@@ -105,19 +105,31 @@ protected:
 		TestUtils::SpawnObstacleArea(_events, _allObjects, area, type, _gameConfig);
 	}
 
+	//NOTE: a shot of the bot's own make - what matters here is that it flies at the game's speed, so the
+	//time left to answer it is the game's too
+	[[nodiscard]] static BulletCalibre IncomingCalibre(const Tank& tank)
+	{
+		return BulletCalibre{.speed = tank.GetBulletSpeed(),
+							 .damage = 1u,
+							 .damageRadius = tank.GetBulletDamageRadius(),
+							 .tier = 1u,
+							 .size{.x = tank.GetBulletWidth(), .y = tank.GetBulletHeight()}};
+	}
+
 	std::shared_ptr<BaseObj> SpawnObstacle(const ObjRectangle rect, const ObstacleType type) const
 	{
 		return TestUtils::SpawnObstacle(_events, _allObjects, rect, type);
 	}
 };
 
+// The one that decides first turns onto its opponent. The second decides after that shot exists, and a
+// bullet on its way outranks the tank that sent it - so it answers the shot, not the shooter
 TEST_F(BotsTest, BotsChangeDirectionIfOpponentSeen)
 {
 	const auto coopBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN)};
 	const auto enemyBot{CreateBot({.x = _tankSize * 3.0, .y = 0.0}, Author::Enemy1, Direction::DOWN)};
 
 	const Direction startDirCoop{coopBot->GetDirection()};
-	const Direction startDirEnemy{enemyBot->GetDirection()};
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -125,9 +137,9 @@ TEST_F(BotsTest, BotsChangeDirectionIfOpponentSeen)
 	const Direction endDirEnemy{enemyBot->GetDirection()};
 
 	EXPECT_NE(startDirCoop, endDirCoop);
-	EXPECT_NE(startDirEnemy, endDirEnemy);
 	EXPECT_EQ(endDirCoop, Direction::RIGHT);
-	EXPECT_EQ(endDirEnemy, Direction::LEFT);
+	// the shot travels along the row, so off its lane is up or down, and the top edge leaves only down
+	EXPECT_EQ(endDirEnemy, Direction::DOWN);
 }
 
 TEST_F(BotsTest, BotsNoChangeDirectionIfPlayerAllySeen)
@@ -313,50 +325,111 @@ TEST_F(BotsTest, BotsCanSeeBonusInTheIce)
 	EXPECT_EQ(endDirEnemy, Direction::UP);
 }
 
-// A bullet carries its shooter's faction, so a bot sees it as an opponent and fires
-TEST_F(BotsTest, BotShootsAtAnIncomingBullet)
+// A shot already on our line is answered with a shot, and the hull is left where it was - turning to
+// face a bullet is driving at it, which is what the old behaviour did
+TEST_F(BotsTest, BotShootsDownAnIncomingBulletWithoutTurning)
 {
-	const auto coopBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN)};
+	const auto coopBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::RIGHT)};
 
-	const double bulletWidth{coopBot->GetBulletWidth()};
 	const double bulletHeight{coopBot->GetBulletHeight()};
-	const BulletCalibre calibre{.speed = 300.0,
-								.damage = 1u,
-								.damageRadius = 12.0,
-								.tier = 1u,
-								.size{.x = bulletWidth, .y = bulletHeight}};
 
-	// head-on: to the right of the bot and flying at it
-	CreateBullet({.x = _tankSize * 2.0, .y = (_tankSize - bulletHeight) / 2.0}, Direction::LEFT, Author::Enemy1,
-				 calibre);
+	// head-on: to the right of the bot, flying at it, and far enough that a shot still meets it
+	CreateBullet({.x = _tankSize * 4.0, .y = (_tankSize - bulletHeight) / 2.0}, Direction::LEFT, Author::Enemy1,
+				 IncomingCalibre(*coopBot));
 
 	const std::size_t worldSizeBeforeShot{_allObjects.size()};
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(coopBot->GetDirection(), Direction::RIGHT);
-	EXPECT_GT(_allObjects.size(), worldSizeBeforeShot);
+	EXPECT_EQ(coopBot->GetDirection(), Direction::RIGHT) << "the hull turned towards the bullet";
+	EXPECT_GT(_allObjects.size(), worldSizeBeforeShot) << "nothing was fired at it";
 }
 
-// The same turn on a bullet flying away - nothing asks where it is headed
-TEST_F(BotsTest, BotAimsAtABulletFlyingAwayJustTheSame)
+// Where it is headed is the whole question now: one flying away is somebody else's problem
+TEST_F(BotsTest, BotIgnoresABulletFlyingAway)
 {
-	const auto coopBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN)};
+	//NOTE: facing along the bullet's own axis on purpose - a dodge would go across it, so taking this
+	//shot for a threat shows up as a turn and cannot hide behind the heading the bot already had
+	const auto coopBot{CreateBot({.x = 0.0, .y = _tankSize * 3.0}, Author::Player1, Direction::RIGHT)};
 
-	const double bulletWidth{coopBot->GetBulletWidth()};
 	const double bulletHeight{coopBot->GetBulletHeight()};
-	const BulletCalibre calibre{.speed = 300.0,
-								.damage = 1u,
-								.damageRadius = 12.0,
-								.tier = 1u,
-								.size{.x = bulletWidth, .y = bulletHeight}};
-
-	CreateBullet({.x = _tankSize * 2.0, .y = (_tankSize - bulletHeight) / 2.0}, Direction::RIGHT, Author::Enemy1,
-				 calibre);
+	CreateBullet({.x = _tankSize * 2.0, .y = _tankSize * 3.0 + (_tankSize - bulletHeight) / 2.0},
+				 Direction::RIGHT, Author::Enemy1, IncomingCalibre(*coopBot));
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(coopBot->GetDirection(), Direction::RIGHT);
+	EXPECT_EQ(coopBot->GetDirection(), Direction::RIGHT) << "a bullet leaving was taken for a threat";
+}
+
+// A shot that was never going to reach us: same direction, a row over. Nothing to answer, so nothing
+// changes - a bot that dodged every bullet on the field would never drive anywhere
+TEST_F(BotsTest, BotIgnoresABulletInAnotherLane)
+{
+	const auto coopBot{CreateBot({.x = 0.0, .y = _tankSize * 3.0}, Author::Player1, Direction::DOWN)};
+
+	const double bulletHeight{coopBot->GetBulletHeight()};
+	// two tanks higher up: flying left, past the bot rather than into it
+	CreateBullet({.x = _tankSize * 4.0, .y = _tankSize + (_tankSize - bulletHeight) / 2.0}, Direction::LEFT,
+				 Author::Enemy1, IncomingCalibre(*coopBot));
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_EQ(coopBot->GetDirection(), Direction::DOWN) << "a bullet in another row was dodged";
+}
+
+// Crossing our lane rather than coming down it: there is nothing to shoot at, so the answer is to get
+// off the line, and off it means across the bullet's path and not across our own heading
+TEST_F(BotsTest, BotStepsOutOfTheLaneOfACrossingBullet)
+{
+	const auto coopBot{CreateBot({.x = 0.0, .y = _tankSize * 3.0}, Author::Player1, Direction::DOWN)};
+
+	const double bulletHeight{coopBot->GetBulletHeight()};
+	// to the right of the bot and flying left, so it arrives across the way the bot is looking
+	CreateBullet({.x = _tankSize * 4.0, .y = _tankSize * 3.0 + (_tankSize - bulletHeight) / 2.0},
+				 Direction::LEFT, Author::Enemy1, IncomingCalibre(*coopBot));
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	const Direction dodged{coopBot->GetDirection()};
+
+	EXPECT_TRUE(dodged == Direction::UP || dodged == Direction::DOWN)
+			<< "the dodge went along the bullet's lane instead of out of it";
+}
+
+// Of the two ways out, the one with room: a wall right above leaves only downwards
+TEST_F(BotsTest, BotDodgesTowardsTheSideWithMoreRoom)
+{
+	const auto coopBot{CreateBot({.x = _tankSize * 4.0, .y = _tankSize * 3.0}, Author::Player1, Direction::DOWN)};
+
+	SpawnObstacleArea(ObjRectangle{.x = _tankSize * 4.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize},
+					  ObstacleType::Steel);
+
+	const double bulletHeight{coopBot->GetBulletHeight()};
+	CreateBullet({.x = _tankSize * 8.0, .y = _tankSize * 3.0 + (_tankSize - bulletHeight) / 2.0},
+				 Direction::LEFT, Author::Enemy1, IncomingCalibre(*coopBot));
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_EQ(coopBot->GetDirection(), Direction::DOWN) << "it dodged into the wall above";
+}
+
+// Head-on, but there is no time left for two bullets to meet - so the answer stops being a shot
+TEST_F(BotsTest, ABulletTooCloseIsDodgedRatherThanShot)
+{
+	const auto coopBot{CreateBot({.x = 0.0, .y = _tankSize * 3.0}, Author::Player1, Direction::RIGHT)};
+
+	const double bulletHeight{coopBot->GetBulletHeight()};
+	CreateBullet({.x = _tankSize + 1.0, .y = _tankSize * 3.0 + (_tankSize - bulletHeight) / 2.0},
+				 Direction::LEFT, Author::Enemy1, IncomingCalibre(*coopBot));
+
+	const std::size_t worldSizeBeforeShot{_allObjects.size()};
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	const Direction dodged{coopBot->GetDirection()};
+
+	EXPECT_TRUE(dodged == Direction::UP || dodged == Direction::DOWN) << "it stood and fired point blank";
+	EXPECT_EQ(_allObjects.size(), worldSizeBeforeShot) << "a shot went out with no time to arrive";
 }
 
 // The cooldown gate lives in Tank::TickUpdate, not in ShouldShoot - one shot per cooldown, no matter
@@ -376,21 +449,22 @@ TEST_F(BotsTest, BotDoesNotShootTwiceWithinOneCooldown)
 	EXPECT_EQ(_allObjects.size(), afterFirstShot);
 }
 
-// The cooldown suppresses aiming, not only firing: ChangeDirIfSeenOpponent bails on !CanShoot(), so a
-// reloading bot ignores a target that appears on another side
-TEST_F(BotsTest, ReloadingBotDoesNotTurnToANewOpponent)
+// The cooldown suppresses aiming, not only firing: ChangeDirIfSeenOpponent bails on !CanShoot(). With a
+// shot on its way back the reloading bot has one answer left, and it is to leave the line
+TEST_F(BotsTest, AReloadingBotStepsAsideFromTheShotComingBack)
 {
-	const auto bot{CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::RIGHT)};
-	CreateBot({.x = _tankSize * 3.0, .y = 0.0}, Author::Enemy1, Direction::LEFT);
+	const auto bot{CreateBot({.x = 0.0, .y = _tankSize * 3.0}, Author::Player1, Direction::RIGHT)};
+	CreateBot({.x = _tankSize * 3.0, .y = _tankSize * 3.0}, Author::Enemy1, Direction::LEFT);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-	ASSERT_EQ(bot->GetDirection(), Direction::RIGHT);
-
-	CreateBot({.x = 0.0, .y = _tankSize * 3.0}, Author::Enemy2, Direction::UP);
+	ASSERT_EQ(bot->GetDirection(), Direction::RIGHT) << "the first frame is the exchange of shots";
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(bot->GetDirection(), Direction::RIGHT);
+	const Direction dodged{bot->GetDirection()};
+
+	EXPECT_TRUE(dodged == Direction::UP || dodged == Direction::DOWN)
+			<< "a reloading bot stood in the lane of the answer";
 }
 
 // Nose to the wall: the move fails and steel cannot be shot, so the only way out is to turn. The gap

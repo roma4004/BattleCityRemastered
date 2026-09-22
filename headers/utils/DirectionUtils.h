@@ -26,6 +26,23 @@ namespace DirectionUtils
 	return FPoint{};
 }
 
+[[nodiscard]] constexpr Direction Opposite(const Direction dir) noexcept
+{
+	switch (dir)
+	{
+		case Direction::UP:
+			return Direction::DOWN;
+		case Direction::LEFT:
+			return Direction::RIGHT;
+		case Direction::DOWN:
+			return Direction::UP;
+		case Direction::RIGHT:
+			return Direction::LEFT;
+	}
+
+	return dir;
+}
+
 //NOTE: the two ways across the way it is going - where a tank can be nudged without changing its heading
 [[nodiscard]] constexpr std::array<Direction, 2> Laterals(const Direction dir) noexcept
 {

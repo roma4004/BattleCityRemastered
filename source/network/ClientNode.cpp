@@ -29,7 +29,7 @@ void ClientNode::ProcessNetworkCommands()
 	}
 }
 
-bool ClientNode::IsConnected() const { return _client && _client->IsConnected(); }
+bool ClientNode::IsConnected() const noexcept { return _client && _client->IsConnected(); }
 
 void ClientNode::Abort()
 {

@@ -22,7 +22,7 @@ ServerNode::~ServerNode()
 
 void ServerNode::ProcessNetworkCommands() { _server->ProcessNetworkCommands(); }
 
-uint16_t ServerNode::GetBoundPort() const { return _server->GetBoundPort(); }
+uint16_t ServerNode::GetBoundPort() const noexcept { return _server->GetBoundPort(); }
 
 void ServerNode::Abort()
 {

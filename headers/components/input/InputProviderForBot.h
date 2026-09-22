@@ -11,10 +11,25 @@ enum class Direction : char8_t;
 class BaseObj;
 class GameConfig;
 class LineOfSight;
+class Bullet;
 class Tank;
 
 class InputProviderForBot final : public IInputProvider
 {
+	//NOTE: an incoming shot, and how long there is to answer it - the whole of the bot's reaction to a
+	//bullet rests on these two numbers, so they are found once a frame and read by both halves
+	struct BulletThreat final
+	{
+		std::shared_ptr<BaseObj> bullet{nullptr};
+		//NOTE: seconds until it reaches us at its own speed, not a distance - a higher tier flies faster,
+		//and the cell size is not a constant of the game either
+		double timeToImpact{};
+		//NOTE: where it is going, which is the axis a dodge has to leave
+		Direction flying{};
+		//NOTE: it is coming straight at us, rather than crossing the lane we happen to stand in
+		bool isHeadOn{};
+	};
+
 	const std::vector<std::shared_ptr<BaseObj>>& _allObjects;
 	const GameConfig& _gameConfig;
 
@@ -29,9 +44,27 @@ class InputProviderForBot final : public IInputProvider
 	//NOTE: started by a refusal to fire at a wall, and the refusal stands while it ticks
 	Timer _obstacleShootCooldown{};
 
+	//NOTE: found in ChooseDirection and read again in ShouldShoot, which Tank::TickUpdate calls in that
+	//order - shooting the bullet down and stepping out of its way are one decision, so they are made once
+	BulletThreat _threat{};
+
+	//NOTE: below this there is no time for a bullet of ours to meet one of theirs, so the answer is to
+	//move instead. A shot leaves the barrel on the next frame at the earliest, and the two close at the
+	//sum of their speeds
+	static constexpr double kInterceptWindowSeconds{0.12};
+
 	[[nodiscard]] static bool IsOpponent(const Tank& self, const std::shared_ptr<BaseObj>& obstacle);
 	[[nodiscard]] static bool IsAlly(const Tank& self, const std::shared_ptr<BaseObj>& obstacle);
 	[[nodiscard]] static bool IsBonus(const std::shared_ptr<BaseObj>& obstacle);
+	[[nodiscard]] static const Bullet* AsBullet(const std::shared_ptr<BaseObj>& obstacle);
+
+	[[nodiscard]] BulletThreat FindBulletThreat(const Tank& self) const;
+
+	//NOTE: across the bullet's path, not across our own heading - stepping along the lane it travels is
+	//driving into it. Of the two ways out, the one with more room: a dodge into a wall one cell away is
+	//standing still with extra steps
+	[[nodiscard]] std::optional<Direction> SideWithMoreRoom(const Tank& self, Direction threatDir,
+															double deltaTime) const;
 
 	[[nodiscard]] bool ChangeDirIfSeenBonus(Tank& self, Direction dir,
 											const std::vector<std::shared_ptr<BaseObj>>& sideObstacle);

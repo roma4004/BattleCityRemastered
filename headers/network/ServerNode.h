@@ -18,7 +18,7 @@ public:
 
 	void ProcessNetworkCommands() override;
 
-	[[nodiscard]] uint16_t GetBoundPort() const;
+	[[nodiscard]] uint16_t GetBoundPort() const noexcept;
 
 	//NOTE: no goodbye, the way a crashed host would go - the peer hears nothing more, times out and reconnects,
 	//unlike the destructor's announced leave

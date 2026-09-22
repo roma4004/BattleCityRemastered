@@ -44,6 +44,11 @@ std::vector<std::string_view> Words(const std::string_view line)
 std::unexpected<std::string> Rejected(std::string reason) { return std::unexpected{std::move(reason)}; }
 }//namespace
 
+std::string MapPathForName(const std::string_view name)
+{
+	return "Resources/Maps/" + std::string{name} + ".map";
+}
+
 std::expected<ConsoleCommand, std::string> ParseConsoleCommand(const std::string_view line)
 {
 	const std::vector<std::string_view> words{Words(line)};
@@ -68,6 +73,19 @@ std::expected<ConsoleCommand, std::string> ParseConsoleCommand(const std::string
 		}
 
 		return Rejected("expected /kick p1 or /kick p2");
+	}
+
+	if (name == "/map")
+	{
+		//NOTE: a name, not a path - a slash or a suffix here would let the console reach outside the maps
+		//folder, and the answer to "which levels are there" is the folder listing, not a typed path
+		if (!argument || argument->empty()
+			|| argument->find_first_of("/\\.") != std::string_view::npos)
+		{
+			return Rejected("expected /map NAME, where NAME is a file in Resources/Maps without .map");
+		}
+
+		return MapCommand{.name = std::string{*argument}};
 	}
 
 	if (name == "/log")

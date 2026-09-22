@@ -30,7 +30,7 @@ public:
 
 	//NOTE: the seat is the session's, fixed when the server took the client in - a press off the wire names
 	//the key, and the seat says whose it is
-	[[nodiscard]] PlayerSlot GetSlot() const { return _slot; }
+	[[nodiscard]] PlayerSlot GetSlot() const noexcept { return _slot; }
 	[[nodiscard]] std::string Address() const
 	{
 		return _endpoint.address().to_string() + ':' + std::to_string(_endpoint.port());
@@ -38,7 +38,7 @@ public:
 	[[nodiscard]] std::chrono::steady_clock::time_point ConnectedAt() const noexcept { return _connectedAt; }
 
 	//NOTE: the cue to drop this session, and the only field the game thread reads without a lock
-	[[nodiscard]] bool IsFinished() const { return _isFinished.load(std::memory_order_acquire); }
+	[[nodiscard]] bool IsFinished() const noexcept { return _isFinished.load(std::memory_order_acquire); }
 
 	//NOTE: owed on ready and after a dropped backlog - paid with a snapshot in place of the next frame
 	[[nodiscard]] bool IsSnapshotOwed() const { return _isSnapshotOwed.load(std::memory_order_acquire); }
