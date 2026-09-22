@@ -28,6 +28,11 @@ class TextureManager;
 class UserInput;
 class WindowConfig;
 
+namespace network
+{
+class DiscoveryProbe;
+}
+
 //NOTE: the screen half - a Simulation plus everything that shows it; BattleCityServer skips it
 class Game final
 {
@@ -86,4 +91,6 @@ private:
 	bool _isPortNamedByArguments{};
 	bool _isDialingPublishedPort{};
 	std::chrono::steady_clock::time_point _nextPortPoll{};
+	//NOTE: built only while there is a port to look for, and dropped with the mode that wanted it
+	std::unique_ptr<network::DiscoveryProbe> _portProbe{nullptr};
 };

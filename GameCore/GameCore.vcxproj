@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <!-- Game logic, no SDL: every game source except main.cpp (the exe's own entry point in BattleCityRemastered.vcxproj) and the SDL-facing files in GamePlatform\GamePlatform.vcxproj. Compiled once, consumed by GamePlatform and UnitTests\UnitTests.vcxproj via ProjectReference. Keeping SDL out of here is what stops UnitTests from building SDL3/freetype at all - the SDL3 include paths and ProjectReferences deliberately live in GamePlatform only, so an SDL include added here simply fails to resolve. Mirrors CMake's GameCore STATIC library. -->
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
@@ -212,6 +212,8 @@
     <ClCompile Include="..\source\network\Client.cpp" />
     <ClCompile Include="..\source\network\ClientNode.cpp" />
     <ClCompile Include="..\source\network\DatagramLink.cpp" />
+    <ClCompile Include="..\source\network\DiscoveryBeacon.cpp" />
+    <ClCompile Include="..\source\network\DiscoveryProbe.cpp" />
     <ClCompile Include="..\source\network\NetworkNodeBase.cpp" />
     <ClCompile Include="..\source\network\PeerLink.cpp" />
     <ClCompile Include="..\source\network\ReplicationApplier.cpp" />
@@ -345,6 +347,9 @@
     <ClInclude Include="..\headers\network\ClientNode.h" />
     <ClInclude Include="..\headers\network\Endpoints.h" />
     <ClInclude Include="..\headers\network\DatagramLink.h" />
+    <ClInclude Include="..\headers\network\Discovery.h" />
+    <ClInclude Include="..\headers\network\DiscoveryBeacon.h" />
+    <ClInclude Include="..\headers\network\DiscoveryProbe.h" />
     <ClInclude Include="..\headers\network\NetworkNodeBase.h" />
     <ClInclude Include="..\headers\network\PeerLink.h" />
     <ClInclude Include="..\headers\network\commands\AnyCommand.h" />

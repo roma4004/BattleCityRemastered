@@ -38,7 +38,7 @@ public:
 
 	~Client();
 
-	[[nodiscard]] bool IsConnected() const { return _isConnected; }
+	[[nodiscard]] bool IsConnected() const noexcept { return _isConnected; }
 
 	void Shutdown();
 

@@ -9,6 +9,7 @@
 #include "components/events/InputEvents.h"
 #include "components/events/ServerConsoleEvents.h"
 #include "components/managers/FramePerSecondManager.h"
+#include "components/MapLoader.h"
 #include "enums/GameMode.h"
 #include "enums/GameState.h"
 #include "utils/Log.h"
@@ -17,11 +18,14 @@
 #include <chrono>
 #include <csignal>
 #include <cstdint>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <memory>
 #include <string>
+#include <system_error>
 #include <variant>
+#include <vector>
 
 namespace
 {
@@ -55,11 +59,43 @@ private:
 	bool _isPaused{};
 };
 
+
+//NOTE: said only when a name did not work out - a listing nobody asked for is noise, and one that comes
+//with the complaint is the answer to the question the complaint raises
+std::string KnownMaps()
+{
+	std::vector<std::string> names;
+	std::error_code ec;
+	for (const auto& entry: std::filesystem::directory_iterator{"Resources/Maps", ec})
+	{
+		if (entry.path().extension() == ".map")
+		{
+			names.push_back(entry.path().stem().string());
+		}
+	}
+
+	//NOTE: one named result and one object returned - two returns of different ones is what -Wnrvo is about
+	std::string listed{};
+	if (!names.empty())
+	{
+		std::ranges::sort(names);
+
+		listed = ". known maps: ";
+		for (const std::string& name: names)
+		{
+			listed += name + (&name == &names.back() ? "" : ", ");
+		}
+	}
+
+	return listed;
+}
+
 //NOTE: what the console asks for, done on the game thread between frames; a restart goes the way a player's does
 struct ConsoleCommandHandler final
 {
 	EventSystem& events;
-	const GameConfig& gameConfig;
+	//NOTE: not const any more - /map is the one command that writes the world it describes
+	GameConfig& gameConfig;
 	const FramePerSecondManager& fpsManager;
 	std::chrono::steady_clock::time_point startedAt;
 
@@ -78,6 +114,35 @@ struct ConsoleCommandHandler final
 	}
 
 	void operator()(const LogLevelCommand& command) const { Log::SetLevel(command.level); }
+
+	//NOTE: the map is checked before anything is torn down - a name that does not load leaves the match
+	//running on the one it already has, and the console says why
+	void operator()(const MapCommand& command) const
+	{
+		const std::string path{MapPathForName(command.name)};
+		const auto loaded{MapLoader::LoadFromFile(path)};
+		if (!loaded)
+		{
+			const MapError& error{loaded.error()};
+			const std::string where{error.line != 0u ? " (line " + std::to_string(error.line) + ')'
+													 : std::string{}};
+			Log::Error("cannot load map " + path + where + ": " + error.reason + KnownMaps());
+
+			return;
+		}
+
+		if (const auto playable{MapLoader::Validate(*loaded, path)};
+			!playable)
+		{
+			Log::Error("map " + path + " cannot be played: " + playable.error().reason);
+
+			return;
+		}
+
+		gameConfig.mapPath = path;
+		Log::Info("next match runs on " + path);
+		events.EmitEvent(ServerInRestartRequestedEvent{});
+	}
 
 	void operator()(const AcceptClientsCommand& command) const
 	{

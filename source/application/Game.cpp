@@ -20,6 +20,7 @@
 #include "components/managers/RenderManager.h"
 #include "components/managers/TextureManager.h"
 #include "enums/GameMode.h"
+#include "network/DiscoveryProbe.h"
 #include "network/Endpoints.h"
 #include <chrono>
 #include <cstdint>
@@ -128,10 +129,11 @@ void Game::WatchPublishedPort(const GameMode mode)
 		return;
 	}
 
-	//NOTE: whatever number is left over belongs to a server we just shut down or to the last run - the
-	//published file is the only one worth dialling, even when it says the same thing again
+	//NOTE: whatever number is left over belongs to a server we just shut down or to the last run - only
+	//what a server says now is worth dialling, even when it says the same thing again
 	_gameConfig.serverAddress.port = network::kAnyFreePort;
 	_nextPortPoll = std::chrono::steady_clock::time_point{};
+	_portProbe = std::make_unique<network::DiscoveryProbe>(_gameConfig.serverAddress.host);
 
 	TryAdoptPublishedPort();
 }
@@ -164,7 +166,22 @@ void Game::PollPublishedPort()
 
 bool Game::TryAdoptPublishedPort()
 {
-	const std::optional<std::uint16_t> port{ServerProcess::PublishedPort()};
+	//NOTE: the beacon first - it answers over the network, so it works for a server on another machine,
+	//while the file rides on both copies sitting in the same folder
+	std::optional<std::uint16_t> port{};
+	if (_portProbe)
+	{
+		if (const auto reply{_portProbe->Poll()})
+		{
+			port = reply->gamePort;
+		}
+	}
+
+	if (!port)
+	{
+		port = ServerProcess::PublishedPort();
+	}
+
 	if (!port || *port == _gameConfig.serverAddress.port)
 	{
 		return false;

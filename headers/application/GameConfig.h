@@ -7,6 +7,7 @@
 #include <chrono>
 #include <cstddef>
 #include <optional>
+#include <string>
 
 struct LaunchOptions;
 
@@ -55,5 +56,8 @@ public:
 	//so it is rolled for on its own, higher chance
 	double botShootFortressChance{0.5};
 	std::chrono::milliseconds botObstacleShootCooldown{std::chrono::seconds{1}};
+	//NOTE: the level the next match loads - the console picks it, and a client never reads a map at
+	//all, so the change rides along with the restart that follows it
+	std::string mapPath{"Resources/Maps/level1.map"};
 	bool isMuted{};
 };

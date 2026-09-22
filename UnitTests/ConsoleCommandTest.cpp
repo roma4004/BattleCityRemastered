@@ -4,6 +4,7 @@
 #include "gtest/gtest.h"
 #include <algorithm>
 #include <array>
+#include <string>
 #include <variant>
 
 // a command that takes no argument
@@ -57,4 +58,29 @@ TEST(ConsoleCommandTest, AMistypedLineIsRefusedWithAReason)
 		ASSERT_FALSE(command.has_value()) << line;
 		EXPECT_FALSE(command.error().empty()) << line;
 	});
+}
+
+// the console names a level, not a file - the path is built for it
+TEST(ConsoleCommandTest, MapNamesTheLevel)
+{
+	const auto command{ParseConsoleCommand("/map level2")};
+
+	ASSERT_TRUE(command.has_value()) << command.error();
+	EXPECT_EQ(std::get<MapCommand>(*command).name, "level2");
+	EXPECT_EQ(MapPathForName("level2"), "Resources/Maps/level2.map");
+}
+
+// a name is a name: a path would let the console reach outside the maps folder
+TEST(ConsoleCommandTest, MapRefusesAPathOrASuffix)
+{
+	EXPECT_FALSE(ParseConsoleCommand("/map ../secrets/level1").has_value());
+	EXPECT_FALSE(ParseConsoleCommand("/map level2.map").has_value());
+	EXPECT_FALSE(ParseConsoleCommand(R"(/map maps\level2)").has_value());
+}
+
+TEST(ConsoleCommandTest, MapWithoutANameIsRefused)
+{
+	const auto command{ParseConsoleCommand("/map")};
+
+	EXPECT_FALSE(command.has_value());
 }

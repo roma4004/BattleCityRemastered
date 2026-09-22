@@ -91,6 +91,8 @@ set(GAME_CORE_SOURCES
         source/network/Client.cpp
         source/network/ClientNode.cpp
         source/network/DatagramLink.cpp
+        source/network/DiscoveryBeacon.cpp
+        source/network/DiscoveryProbe.cpp
         source/network/NetworkNodeBase.cpp
         source/network/PeerLink.cpp
         source/network/ReplicationApplier.cpp
@@ -122,6 +124,7 @@ set(UNIT_TESTS_SOURCES
         UnitTests/BulletsTestBasic.cpp
         UnitTests/ClientHandshakeTest.cpp
         UnitTests/DatagramLinkTest.cpp
+        UnitTests/DiscoveryTest.cpp
         UnitTests/CommandLineParserTest.cpp
         UnitTests/ConsoleCommandTest.cpp
         UnitTests/ProjectConfigTest.cpp

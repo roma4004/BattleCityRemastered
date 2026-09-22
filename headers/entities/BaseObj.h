@@ -62,16 +62,16 @@ public:
 	[[nodiscard]] virtual int GetHealth() const;
 	virtual void SetHealth(int health);
 
-	[[nodiscard]] bool GetIsAlive() const override;
-	void SetIsAlive(bool isAlive) override;
+	[[nodiscard]] bool GetIsAlive() const noexcept override;
+	void SetIsAlive(bool isAlive) noexcept override;
 
 	virtual void TakeDamage(unsigned int damage, Author author);
 
-	[[nodiscard]] bool GetIsPassable() const override;
+	[[nodiscard]] bool GetIsPassable() const noexcept override;
 
-	[[nodiscard]] bool GetIsDestructible() const override;
+	[[nodiscard]] bool GetIsDestructible() const noexcept override;
 
-	[[nodiscard]] bool GetIsPenetrable() const override;
+	[[nodiscard]] bool GetIsPenetrable() const noexcept override;
 
 	[[nodiscard]] Terrain GetTerrain() const noexcept;
 
