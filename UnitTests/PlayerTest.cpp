@@ -21,6 +21,7 @@
 #include "gtest/gtest.h"
 #include <memory>
 
+// the player seat end to end: a key is pressed on the P1 channel, one tick runs, and the tank is asked where it stands
 class PlayerTest : public testing::Test// NOLINT(clang-diagnostic-padded)
 {
 protected:
@@ -83,6 +84,7 @@ protected:
 	}
 };
 
+// room above, so the press carries the tank up and leaves the other axis alone
 TEST_F(PlayerTest, TankMoveInSideScreenUp)
 {
 	const auto windowHeight{static_cast<double>(_gameConfig.battlefieldSize.y)};
@@ -100,6 +102,7 @@ TEST_F(PlayerTest, TankMoveInSideScreenUp)
 	EXPECT_GT(startPos.y, endPos.y);
 }
 
+// the same step to the left, from the far side of the field
 TEST_F(PlayerTest, TankMoveInSideScreenLeft)
 {
 	const auto windowWidth{static_cast<double>(_gameConfig.battlefieldSize.x)};
@@ -117,6 +120,7 @@ TEST_F(PlayerTest, TankMoveInSideScreenLeft)
 	EXPECT_GT(startPos.x, endPos.x);
 }
 
+// and down
 TEST_F(PlayerTest, TankMoveInSideScreenDown)
 {
 	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
@@ -133,6 +137,7 @@ TEST_F(PlayerTest, TankMoveInSideScreenDown)
 	EXPECT_LT(startPos.y, endPos.y);
 }
 
+// and right - four directions, one rule
 TEST_F(PlayerTest, TankMoveInSideScreenRight)
 {
 	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
@@ -149,6 +154,7 @@ TEST_F(PlayerTest, TankMoveInSideScreenRight)
 	EXPECT_LT(startPos.x, endPos.x);
 }
 
+// standing on the top edge: the press turns the hull and the tank stays put
 TEST_F(PlayerTest, TankMoveOutSideScreenUp)
 {
 	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
@@ -162,6 +168,7 @@ TEST_F(PlayerTest, TankMoveOutSideScreenUp)
 	EXPECT_EQ(startPos, player->GetPos());
 }
 
+// the same against the left edge
 TEST_F(PlayerTest, TankMoveOutSideScreenLeft)
 {
 	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
@@ -175,6 +182,7 @@ TEST_F(PlayerTest, TankMoveOutSideScreenLeft)
 	EXPECT_EQ(startPos, player->GetPos());
 }
 
+// against the bottom one
 TEST_F(PlayerTest, TankMoveOutSideScreenDown)
 {
 	const auto windowWidth{static_cast<double>(_gameConfig.battlefieldSize.x)};
@@ -190,6 +198,7 @@ TEST_F(PlayerTest, TankMoveOutSideScreenDown)
 	EXPECT_EQ(startPos, player->GetPos());
 }
 
+// and against the right - the field ends the drive in every direction
 TEST_F(PlayerTest, TankMoveOutSideScreenRight)
 {
 	const auto windowWidth{static_cast<double>(_gameConfig.battlefieldSize.x)};
@@ -205,6 +214,7 @@ TEST_F(PlayerTest, TankMoveOutSideScreenRight)
 	EXPECT_EQ(startPos, player->GetPos());
 }
 
+// a placement bypassing the keys, the way a respawn or the wire puts a tank down
 TEST_F(PlayerTest, TankSetPos)
 {
 	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
@@ -216,6 +226,7 @@ TEST_F(PlayerTest, TankSetPos)
 	EXPECT_EQ(player->GetPos(), (FPoint{.x = windowWidth, .y = windowHeight}));
 }
 
+// and the same for the direction it faces
 TEST_F(PlayerTest, TankSetDirection)
 {
 	const auto player{CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::LEFT)};
@@ -228,6 +239,7 @@ TEST_F(PlayerTest, TankSetDirection)
 	EXPECT_EQ(Direction::RIGHT, player->GetDirection());
 }
 
+// firing is not driving: the shot leaves and the tank stays where it stood
 TEST_F(PlayerTest, TankDontMoveWhenShotUp)
 {
 	const auto windowWidth{static_cast<double>(_gameConfig.battlefieldSize.x)};
@@ -243,6 +255,7 @@ TEST_F(PlayerTest, TankDontMoveWhenShotUp)
 	EXPECT_EQ(startPos, player->GetPos());
 }
 
+// the same facing left
 TEST_F(PlayerTest, TankDontMoveWhenShotLeft)
 {
 	const auto windowWidth{static_cast<double>(_gameConfig.battlefieldSize.x)};
@@ -259,6 +272,7 @@ TEST_F(PlayerTest, TankDontMoveWhenShotLeft)
 	EXPECT_EQ(startPos, player->GetPos());
 }
 
+// down
 TEST_F(PlayerTest, TankDontMoveWhenShotDown)
 {
 	const auto windowWidth{static_cast<double>(_gameConfig.battlefieldSize.x)};
@@ -275,6 +289,7 @@ TEST_F(PlayerTest, TankDontMoveWhenShotDown)
 	EXPECT_EQ(startPos, player->GetPos());
 }
 
+// and right
 TEST_F(PlayerTest, TankDontMoveWhenShotRight)
 {
 	const auto windowWidth{static_cast<double>(_gameConfig.battlefieldSize.x)};
@@ -291,6 +306,7 @@ TEST_F(PlayerTest, TankDontMoveWhenShotRight)
 	EXPECT_EQ(startPos, player->GetPos());
 }
 
+// with the muzzle pointed into the field the shot is born and the world grows by one
 TEST_F(PlayerTest, TankShotInSideScreenDown)
 {
 	CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
@@ -304,6 +320,7 @@ TEST_F(PlayerTest, TankShotInSideScreenDown)
 	EXPECT_LT(size, _allObjects.size());
 }
 
+// the same facing right
 TEST_F(PlayerTest, TankShotInSideScreenRight)
 {
 	CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::RIGHT);
@@ -318,6 +335,7 @@ TEST_F(PlayerTest, TankShotInSideScreenRight)
 	EXPECT_LT(size, _allObjects.size());
 }
 
+// up
 TEST_F(PlayerTest, TankShotInSideScreenUp)
 {
 	const auto windowWidth{static_cast<double>(_gameConfig.battlefieldSize.x)};
@@ -334,6 +352,7 @@ TEST_F(PlayerTest, TankShotInSideScreenUp)
 	EXPECT_LT(size, _allObjects.size());
 }
 
+// and left
 TEST_F(PlayerTest, TankShotInSideScreenLeft)
 {
 	const auto windowWidth{static_cast<double>(_gameConfig.battlefieldSize.x)};
@@ -350,6 +369,7 @@ TEST_F(PlayerTest, TankShotInSideScreenLeft)
 	EXPECT_LT(size, _allObjects.size());
 }
 
+// in each corner, facing out: there is no room for the bullet, so nothing is spawned
 TEST_F(PlayerTest, TankShotOutSideScreen)
 {
 	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
@@ -396,6 +416,7 @@ TEST_F(PlayerTest, TankShotOutSideScreen)
 	}
 }
 
+// two seats driving into each other - neither is pushed, both stay where they were
 TEST_F(PlayerTest, TankCantPassThroughTank)
 {
 	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
@@ -413,6 +434,7 @@ TEST_F(PlayerTest, TankCantPassThroughTank)
 	EXPECT_EQ(player2StartPos, player2->GetPos());
 }
 
+// a brick wall stops the drive as well
 TEST_F(PlayerTest, TankCantPassThroughBrickWall)
 {
 	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
@@ -428,6 +450,7 @@ TEST_F(PlayerTest, TankCantPassThroughBrickWall)
 	EXPECT_EQ(startPos, player->GetPos());
 }
 
+// so does steel
 TEST_F(PlayerTest, TankCantPassThroughSteelWall)
 {
 	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
@@ -443,6 +466,7 @@ TEST_F(PlayerTest, TankCantPassThroughSteelWall)
 	EXPECT_EQ(startPos, player->GetPos());
 }
 
+// and water, which a bullet flies over but a tank cannot ford
 TEST_F(PlayerTest, TankCantPassThroughWater)
 {
 	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
@@ -458,6 +482,7 @@ TEST_F(PlayerTest, TankCantPassThroughWater)
 	EXPECT_EQ(startPos, player->GetPos());
 }
 
+// and the eagle's own wall
 TEST_F(PlayerTest, TankCantPassThroughfortressWall)
 {
 	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
@@ -473,6 +498,7 @@ TEST_F(PlayerTest, TankCantPassThroughfortressWall)
 	EXPECT_EQ(startPos, player->GetPos());
 }
 
+// firing while driving forward: the bullet outruns the hull instead of blowing up on it
 TEST_F(PlayerTest, ShotWhileMovingDoesNotBlowUpOnOwnTank)
 {
 	const auto windowWidth{static_cast<double>(_gameConfig.battlefieldSize.x)};
@@ -500,6 +526,7 @@ TEST_F(PlayerTest, ShotWhileMovingDoesNotBlowUpOnOwnTank)
 	EXPECT_EQ(player->GetHealth(), startHealth) << "tank damaged by its own bullet";
 }
 
+// a wall a muzzle's length away, on the other hand, puts the blast back onto the shooter
 TEST_F(PlayerTest, PointBlankShotDamagesTheShooter)
 {
 	const auto windowWidth{static_cast<double>(_gameConfig.battlefieldSize.x)};

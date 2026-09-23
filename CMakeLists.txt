@@ -52,10 +52,12 @@ set(GAME_CORE_SOURCES
         source/components/BulletPool.cpp
         source/components/EventSystem.cpp
         source/components/GameStatistics.cpp
+        source/components/LevelRotation.cpp
         source/components/LineOfSight.cpp
         source/components/Map.cpp
         source/components/MapLoader.cpp
         source/components/WorldGeometry.cpp
+        source/components/UiLayout.cpp
         source/components/Menu.cpp
         source/components/ObstacleSpawner.cpp
         source/components/RightSideBar.cpp
@@ -104,6 +106,7 @@ set(GAME_CORE_SOURCES
         source/network/Serializer.cpp
         source/utils/ColliderUtils.cpp
         source/utils/Log.cpp
+        source/utils/MathUtils.cpp
         source/utils/ObjectUtils.cpp
         source/utils/TimeUtils.cpp
         source/utils/Timer.cpp
@@ -118,6 +121,7 @@ set(UNIT_TESTS_SOURCES
         UnitTests/BonusTestEnemy.cpp
         UnitTests/BotsTest.cpp
         UnitTests/BulletPoolTest.cpp
+        UnitTests/LevelProgressionTest.cpp
         UnitTests/MapTest.cpp
         UnitTests/MatchStartTest.cpp
         UnitTests/BulletsTestAdvanced.cpp
@@ -139,10 +143,11 @@ set(UNIT_TESTS_SOURCES
         UnitTests/TankHealTest.cpp
         UnitTests/TankNudgeTest.cpp
         UnitTests/TankPoolTest.cpp
+        UnitTests/TankShoveTest.cpp
         UnitTests/TankTerrainTest.cpp
         UnitTests/MenuInputTest.cpp
-        UnitTests/MenuTextBlockTest.cpp
         UnitTests/NetworkTest.cpp
+        UnitTests/NextLevelFlowTest.cpp
         UnitTests/PauseSyncTest.cpp
         UnitTests/PlayerTest.cpp
         UnitTests/RespawnManagerTest.cpp

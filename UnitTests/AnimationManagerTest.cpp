@@ -32,6 +32,7 @@
 #include <string_view>
 #include <vector>
 
+// what the manager is asked to play and when: an event goes in, frames are advanced by hand, bursts are read
 class AnimationManagerTest : public testing::Test
 {
 protected:
@@ -142,6 +143,7 @@ protected:
 	}
 };
 
+// a bullet dying on a target leaves its blast at the point of impact
 TEST_F(AnimationManagerTest, BulletExplodesWhereItHit)
 {
 	const auto bullet{CreateBullet({.x = 0.0, .y = 0.0})};
@@ -168,6 +170,7 @@ TEST_F(AnimationManagerTest, ClientBulletExplodesOnDespawn)
 	EXPECT_EQ(_bulletExplosion->rect.y, bullet->GetRect().y);
 }
 
+// a tank that died explodes where it stood
 TEST_F(AnimationManagerTest, TankExplodesWhereItDied)
 {
 	const auto tank{CreatePlayer({.x = 40.0, .y = 50.0})};
@@ -180,6 +183,7 @@ TEST_F(AnimationManagerTest, TankExplodesWhereItDied)
 	EXPECT_EQ(_tankExplosion->rect.y, tank->GetRect().y);
 }
 
+// one taken off the field alive does not - a reset is not a death
 TEST_F(AnimationManagerTest, ALiveTankTakenOffTheFieldExplodesNothing)
 {
 	{
@@ -189,6 +193,7 @@ TEST_F(AnimationManagerTest, ALiveTankTakenOffTheFieldExplodesNothing)
 	EXPECT_FALSE(_tankExplosion.has_value());
 }
 
+// a spawned tank asks for its own flash
 TEST_F(AnimationManagerTest, SpawnedTankAsksForItsSpawnBurst)
 {
 	std::shared_ptr<RespawnManager> respawnManager{nullptr};
@@ -201,6 +206,7 @@ TEST_F(AnimationManagerTest, SpawnedTankAsksForItsSpawnBurst)
 	EXPECT_NE(_tankSpawn->uuid, Uuid{});
 }
 
+// and a water tile for its flow as soon as it is built
 TEST_F(AnimationManagerTest, WaterTileAsksForItsFlowWhenBuilt)
 {
 	constexpr ObjRectangle waterRect{.x = 24.0, .y = 36.0, .w = 12.0, .h = 12.0};
@@ -211,6 +217,7 @@ TEST_F(AnimationManagerTest, WaterTileAsksForItsFlowWhenBuilt)
 	EXPECT_EQ(_water->rect.y, waterRect.y);
 }
 
+// the shield follows the effect: on with the pickup, off when it runs out
 TEST_F(AnimationManagerTest, HelmetPickupTurnsTheShieldOnAndOff)
 {
 	auto tank{CreatePlayer({.x = 0.0, .y = 0.0})};
@@ -228,6 +235,7 @@ TEST_F(AnimationManagerTest, HelmetPickupTurnsTheShieldOnAndOff)
 
 // --- the clock: water never ends, so it is always there to be asked its frame
 
+// frames move on with the clock while the match runs
 TEST_F(AnimationManagerTest, FrameAdvancesWhileRunning)
 {
 	_events->EmitEvent(AnimationCreateWaterEvent{.rect = _rect});
@@ -242,6 +250,7 @@ TEST_F(AnimationManagerTest, FrameAdvancesWhileRunning)
 	EXPECT_NE(*_frame, startFrame);
 }
 
+// stand still under a pause
 TEST_F(AnimationManagerTest, FrameStandsStillWhilePaused)
 {
 	_events->EmitEvent(AnimationCreateWaterEvent{.rect = _rect});
@@ -258,6 +267,7 @@ TEST_F(AnimationManagerTest, FrameStandsStillWhilePaused)
 	EXPECT_EQ(*_frame, startFrame);
 }
 
+// and pick up again afterwards, rather than catching up on what was missed
 TEST_F(AnimationManagerTest, FrameResumesAfterUnpause)
 {
 	_events->EmitEvent(AnimationCreateWaterEvent{.rect = _rect});
@@ -278,6 +288,7 @@ TEST_F(AnimationManagerTest, FrameResumesAfterUnpause)
 
 // --- the spawn burst doubles as the countdown, so its last frame is what lands the tank
 
+// a burst that plays to the end names the object it belonged to
 TEST_F(AnimationManagerTest, ABurstLeftAloneReportsItsOwner)
 {
 	_events->EmitEvent(AnimationCreateTankSpawnEvent{.rect = _rect, .uuid = _burstUuid});
@@ -288,6 +299,7 @@ TEST_F(AnimationManagerTest, ABurstLeftAloneReportsItsOwner)
 	EXPECT_EQ(*_finished, _burstUuid);
 }
 
+// a cancelled one says nothing at all
 TEST_F(AnimationManagerTest, ACancelledBurstNeverReports)
 {
 	_events->EmitEvent(AnimationCreateTankSpawnEvent{.rect = _rect, .uuid = _burstUuid});
@@ -299,6 +311,7 @@ TEST_F(AnimationManagerTest, ACancelledBurstNeverReports)
 	EXPECT_FALSE(_finished.has_value());
 }
 
+// and the cancel takes only that burst, not everything the owner has running
 TEST_F(AnimationManagerTest, ACancelLeavesTheOwnersOtherAnimations)
 {
 	_events->EmitEvent(AnimationCreateBonusSpawnEvent{.rect = _rect, .uuid = _burstUuid});
@@ -328,6 +341,7 @@ TEST_F(AnimationManagerTest, AnEndlessTankBurstPlaysUntilTheTankLands)
 	EXPECT_FALSE(WasDrawn(AnimationType::Tank_Spawn));
 }
 
+// the same for a bonus
 TEST_F(AnimationManagerTest, AnEndlessBonusBurstPlaysUntilTheBonusLands)
 {
 	_events->EmitEvent(AnimationCreateBonusSpawnEvent{.rect = _rect, .uuid = _burstUuid, .isEndless = true});
@@ -361,6 +375,7 @@ TEST_F(AnimationManagerTest, AnEndlessBurstInAReusedSlotStaysEndless)
 
 // --- the phase is the layer, and inside one phase the paint order is subscription order
 
+// an explosion is painted after the world
 TEST_F(AnimationManagerTest, AnExplosionIsDrawnInThePostDrawPhase)
 {
 	_events->EmitEvent(AnimationCreateBulletExplosionEvent{.rect = _rect});

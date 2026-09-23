@@ -9,7 +9,7 @@
 #include "entities/obstacles/FortressWalls.h"
 #include "enums/DespawnReason.h"
 #include "enums/ObstacleType.h"
-#include "utils/ColliderUtils.h"
+#include "utils/MathUtils.h"
 #include "utils/WorldQuery.h"
 #include "enums/Faction.h"
 #include <algorithm>
@@ -18,7 +18,7 @@ namespace
 {
 [[nodiscard]] bool IsSameSpot(const ObjRectangle& lhs, const ObjRectangle& rhs)
 {
-	return ColliderUtils::AreEqualAbsolute(lhs.x, rhs.x) && ColliderUtils::AreEqualAbsolute(lhs.y, rhs.y);
+	return MathUtils::AreEqualAbsolute(lhs.x, rhs.x) && MathUtils::AreEqualAbsolute(lhs.y, rhs.y);
 }
 }// namespace
 

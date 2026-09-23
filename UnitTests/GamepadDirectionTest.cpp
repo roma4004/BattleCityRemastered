@@ -16,6 +16,7 @@ protected:
 	GamepadDirection _direction{kDeadZone};
 };
 
+// a stick resting inside the dead zone holds no direction at all
 TEST_F(GamepadDirectionTest, AStickInsideTheDeadZoneHoldsNothing)
 {
 	_direction.MoveStickX(-kDeadZone);

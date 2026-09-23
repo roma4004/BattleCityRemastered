@@ -48,6 +48,10 @@ public:
 	[[nodiscard]]
 	bool Move(Direction dir, double deltaTime, const std::vector<std::shared_ptr<BaseObj>>& objects,
 			  std::vector<std::shared_ptr<BaseObj>>& outCollisions) override;
+	//NOTE: what stands in the way of this step - the caller decides whether any of it can be moved out
+	//of the way, this only measures
+	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>> BlockersAhead(
+			Direction dir, double step, const std::vector<std::shared_ptr<BaseObj>>& objects) const;
 	[[nodiscard]] bool ApplyMoveVelocity(double deltaTime, const std::vector<std::shared_ptr<BaseObj>>& objects);
 	void ResetVelocity();
 	[[nodiscard]] std::vector<Direction> GetFreePathSides(

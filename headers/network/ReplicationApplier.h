@@ -8,8 +8,7 @@ class EventSystem;
 
 namespace network::commands
 {
-//NOTE: the mirror of ReplicationPublisher - that one packs a local event into a command, this one
-//unpacks the command back into the same local event
+//NOTE: the mirror of ReplicationPublisher: it packs a local event into a command, this unpacks it back again
 class ReplicationApplier final
 {
 public:

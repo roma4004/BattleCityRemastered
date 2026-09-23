@@ -27,6 +27,7 @@ void GameStateManager::Subscribe()
 
 	_subs.push_back(_events->AddListener(this, &GameStateManager::OnClientReady));
 	_subs.push_back(_events->AddListener(this, &GameStateManager::OnRestartRequested));
+	_subs.push_back(_events->AddListener(this, &GameStateManager::OnMatchRestartRequested));
 	_subs.push_back(_events->AddListener(this, &GameStateManager::OnHostPhase));
 	_subs.push_back(_events->AddListener(this, &GameStateManager::OnClientLeft));
 	_subs.push_back(_events->AddListener(this, &GameStateManager::OnClientLost));
@@ -151,6 +152,14 @@ void GameStateManager::LoseHost()
 }
 
 void GameStateManager::OnClientReady(const ServerInClientReadyToStartGameEvent& event) { TakeSeat(event.slot); }
+
+//NOTE: announced rather than set - a local match is already Playing, and SetState would see no change
+//and leave the finished board on the screen
+void GameStateManager::OnMatchRestartRequested(const MatchRestartRequestedEvent&)
+{
+	_state = IdleStateForMode();
+	AnnouncePhase();
+}
 
 void GameStateManager::OnRestartRequested(const ServerInRestartRequestedEvent&)
 {

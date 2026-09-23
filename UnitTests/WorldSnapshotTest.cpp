@@ -169,6 +169,7 @@ protected:
 	}
 };
 
+// the snapshot carries the phase, so a client joining mid-match lands in the one being played
 TEST_F(WorldSnapshotTest, ThePhaseComesFromTheHost)
 {
 	Replicate();
@@ -189,6 +190,7 @@ TEST_F(WorldSnapshotTest, TheFieldsSizeComesFromTheHost)
 	EXPECT_EQ(_clientConfig.battlefieldSize, _hostConfig.battlefieldSize);
 }
 
+// what the host has already lost is not in the snapshot, so the client does not build it
 TEST_F(WorldSnapshotTest, AWallDestroyedOnTheHostIsNotRebuiltOnTheClient)
 {
 	const double cell{_hostConfig.gridOffset};
@@ -210,6 +212,7 @@ TEST_F(WorldSnapshotTest, AWallDestroyedOnTheHostIsNotRebuiltOnTheClient)
 	EXPECT_FALSE(steel->GetIsDestructible());
 }
 
+// a tank arrives whole: where it stands, where it faces, its health, its tier and its shield
 TEST_F(WorldSnapshotTest, ALandedTankKeepsItsPositionDirectionHealthTierAndHelmet)
 {
 	Land(TankType::PLAYER1);
@@ -243,6 +246,7 @@ TEST_F(WorldSnapshotTest, AHelmetThatRanOutOnTheHostIsOffOnTheClient)
 	EXPECT_FALSE(_clientHelmets.at(Author::Enemy2));
 }
 
+// one still in its spawn flash on the host keeps flashing until the host reports it landed
 TEST_F(WorldSnapshotTest, ATankStillBurstingOnTheHostLandsOnlyWhenTheHostSaysSo)
 {
 	const Uuid bursting{_hostTankSpawns.at(TankType::PLAYER2)};
@@ -274,6 +278,7 @@ TEST_F(WorldSnapshotTest, ABulletInFlightIsRebuiltWhereItIsNowhereNearItsShooter
 	EXPECT_EQ(client->GetAuthor(), Author::Enemy3);
 }
 
+// the same for a bonus: the settled one is placed, the pending one waits
 TEST_F(WorldSnapshotTest, ASettledBonusLandsAndAPendingOneWaitsForTheHost)
 {
 	const double size{static_cast<double>(_hostConfig.bonusSize)};
@@ -309,6 +314,7 @@ TEST_F(WorldSnapshotTest, TheScoreAndTheLivesAreTakenOverAsTheyStand)
 	EXPECT_EQ(_clientLives, _hostLives);
 }
 
+// a second snapshot replaces the field rather than laying another one over it
 TEST_F(WorldSnapshotTest, ASnapshotReplacesTheFieldTheClientHadInsteadOfAddingToIt)
 {
 	_clientEvents->EmitEvent(

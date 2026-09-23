@@ -204,8 +204,7 @@ TEST_F(GameStateManagerTest, PlayerTeamWon)
 
 }
 
-// an enemy takes the extra-life tank first, so the pool holds 21 and the win waits for that one
-// leftover enemy
+// an enemy takes the extra-life tank first, so the pool holds 21 and the win waits for that leftover enemy
 TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 {
 	bool isGameWon{};

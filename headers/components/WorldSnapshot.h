@@ -40,8 +40,7 @@ struct WorldSnapshot final
 {
 	static constexpr Delivery kDelivery{Delivery::Reliable};
 
-	//NOTE: first, and applied first - a client never reads the map, and everything else here is
-	//placed on the field this sizes
+	//NOTE: applied first - a client never reads a map, and everything else here lands on the field this sizes
 	MapLoadedEvent map{};
 	GameState phase{};
 	std::vector<ObstacleSpawnedEvent> obstacles{};

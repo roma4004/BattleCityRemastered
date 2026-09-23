@@ -18,6 +18,7 @@ struct GameFinishedEvent;
 struct MapLoadFailedEvent;
 struct ServerInClientReadyToStartGameEvent;
 struct ServerInRestartRequestedEvent;
+struct MatchRestartRequestedEvent;
 struct HostPhaseAnnouncedEvent;
 struct ServerInDisconnectEvent;
 struct ServerClientLostEvent;
@@ -51,6 +52,7 @@ class GameStateManager final
 	void OnMapLoadFailed(const MapLoadFailedEvent&);
 	void OnClientReady(const ServerInClientReadyToStartGameEvent& event);
 	void OnRestartRequested(const ServerInRestartRequestedEvent&);
+	void OnMatchRestartRequested(const MatchRestartRequestedEvent&);
 	void OnHostPhase(const HostPhaseAnnouncedEvent& event);
 	void OnClientLeft(const ServerInDisconnectEvent& event);
 	void OnClientLost(const ServerClientLostEvent& event);

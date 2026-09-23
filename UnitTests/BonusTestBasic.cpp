@@ -28,6 +28,7 @@
 #include <memory>
 #include <optional>
 
+// each case is a pair: a bonus dropped a step in front of a tank, and the same bonus left out of reach
 class BonusTest : public testing::Test// NOLINT(clang-diagnostic-padded)
 {
 protected:
@@ -105,6 +106,7 @@ protected:
 	}
 };
 
+// driving onto the bonus takes it off the field
 TEST_F(BonusTest, BonusPickUp)
 {
 	CreatePlayer({.x = 0.0, .y = 0.0});
@@ -127,6 +129,7 @@ TEST_F(BonusTest, BonusPickUp)
 	}
 }
 
+// driving away from it leaves it lying there
 TEST_F(BonusTest, BonusNotPickUp)
 {
 	CreatePlayer({.x = 0.0, .y = 0.0});
@@ -150,6 +153,7 @@ TEST_F(BonusTest, BonusNotPickUp)
 	}
 }
 
+// the timer freezes the enemy team where it stands
 TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 {
 	CreatePlayer({.x = 0.0, .y = 0.0});
@@ -169,6 +173,7 @@ TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 	EXPECT_EQ(enemyPos, enemyBot->GetPos());
 }
 
+// and leaves it driving while nobody has picked it up
 TEST_F(BonusTest, TimerNotPickUpEnemyCanMove)
 {
 	CreatePlayer({.x = 0.0, .y = 0.0});
@@ -186,6 +191,7 @@ TEST_F(BonusTest, TimerNotPickUpEnemyCanMove)
 	EXPECT_NE(enemyPos, enemyBot->GetPos());
 }
 
+// the helmet turns the next bullet away
 TEST_F(BonusTest, HelmetPickUpAndBulletCantDamageTank)
 {
 	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
@@ -204,6 +210,7 @@ TEST_F(BonusTest, HelmetPickUpAndBulletCantDamageTank)
 	EXPECT_EQ(playerHealth, player->GetHealth());
 }
 
+// and the same bullet goes through without it
 TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 {
 	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
@@ -222,6 +229,7 @@ TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 	EXPECT_NE(playerHealth, player->GetHealth());
 }
 
+// the grenade empties the health of every enemy on the field
 TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 {
 	CreatePlayer({.x = 0.0, .y = 0.0});
@@ -239,6 +247,7 @@ TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 	EXPECT_EQ(enemyBot->GetHealth(), 0);
 }
 
+// and leaves it full while it lies untouched
 TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 {
 	CreatePlayer({.x = 0.0, .y = 0.0});
@@ -256,6 +265,7 @@ TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 	EXPECT_EQ(enemyBot->GetHealth(), 100);
 }
 
+// the tank bonus is a life, so the respawn count of the seat grows
 TEST_F(BonusTest, TankPickUpExtraLife)
 {
 	unsigned short respawnActual{3u};
@@ -278,6 +288,7 @@ TEST_F(BonusTest, TankPickUpExtraLife)
 
 }
 
+// and stays as it was when the tank drives the other way
 TEST_F(BonusTest, TankNotPickUpTierTheSame)
 {
 	unsigned short respawnActual{3u};
@@ -300,6 +311,7 @@ TEST_F(BonusTest, TankNotPickUpTierTheSame)
 
 }
 
+// a star is one tier
 TEST_F(BonusTest, StarPickUpTierIncrease)
 {
 	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
@@ -315,6 +327,7 @@ TEST_F(BonusTest, StarPickUpTierIncrease)
 	EXPECT_EQ(player->GetTier(), 2u);
 }
 
+// and none at all until it is taken
 TEST_F(BonusTest, StarNotPickUpTierTheSame)
 {
 	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
@@ -330,6 +343,7 @@ TEST_F(BonusTest, StarNotPickUpTierTheSame)
 	EXPECT_EQ(player->GetTier(), 1u);
 }
 
+// the shovel turns the eagle's brick wall into steel
 TEST_F(BonusTest, ShovelPickUpByPlayerThenFortressWallTurnIntoSteelWall)
 {
 	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
@@ -367,6 +381,7 @@ TEST_F(BonusTest, ShovelNotPickUpByFortressWallTheSame)
 	EXPECT_NE(dynamic_cast<FortressBrickWall*>(_fortressWall.get()), nullptr);
 }
 
+// the control for the ship: water stops a tank that has none
 TEST_F(BonusTest, WaterBlocksTankWithoutShip)
 {
 	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
@@ -386,6 +401,7 @@ TEST_F(BonusTest, WaterBlocksTankWithoutShip)
 	EXPECT_LE(player->GetBottomSide(), waterRect.y);
 }
 
+// and lets the same tank across once the ship is taken
 TEST_F(BonusTest, ShipPickUpCanCrossWater)
 {
 	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
@@ -410,6 +426,7 @@ TEST_F(BonusTest, ShipPickUpCanCrossWater)
 	EXPECT_GT(player->GetY(), waterRect.y + waterRect.h);
 }
 
+// the super star is worth two tiers in one pickup
 TEST_F(BonusTest, SuperStarPickUpTierIncreaseTwice)
 {
 	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
@@ -427,6 +444,7 @@ TEST_F(BonusTest, SuperStarPickUpTierIncreaseTwice)
 	EXPECT_EQ(player->GetTier(), 3u);
 }
 
+// a dropped bonus waits out its burst: the world stays empty until the animation reports the end
 TEST_F(BonusTest, DelayedSpawnLandsAfterAnimation)
 {
 	std::optional<AnimationCreateBonusSpawnEvent> burst{};

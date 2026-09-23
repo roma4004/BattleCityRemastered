@@ -106,8 +106,7 @@ void SpawnManager::DisposeDeadObject()
 		return obj == nullptr || obj->GetIsAlive() == false;
 	};
 
-	//NOTE: leaving the world is its own step - a pooled bullet outlives this and must not keep
-	//listening while it waits in the free list
+	//NOTE: leaving the world is its own step - a pooled bullet outlives it and must not listen from the free list
 	for (const std::shared_ptr<BaseObj>& obj: _allObjects)
 	{
 		if (obj != nullptr && obj->GetIsAlive() == false)

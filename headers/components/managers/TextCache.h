@@ -24,8 +24,7 @@ using FontHandle = SdlHandle<TTF_Font, TTF_CloseFont>;
 class TextCache final
 {
 public:
-	//NOTE: a counter is a new string every time it changes - a slot rewrites its own layout in place
-	//instead of minting an entry the cache would only have to evict
+	//NOTE: a counter is a new string every time - a slot rewrites its layout instead of minting one to evict
 	enum class Slot : std::uint8_t
 	{
 		Fps,

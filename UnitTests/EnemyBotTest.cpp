@@ -22,6 +22,7 @@
 #include "gtest/gtest.h"
 #include <memory>
 
+// what a bot decides to shoot at: a target is put in its line of sight, one tick runs, and a new object means it fired
 class EnemyBotTest : public testing::Test// NOLINT(clang-diagnostic-padded)
 {
 protected:
@@ -98,6 +99,7 @@ protected:
 	}
 };
 
+// a bot of the player faction is a target as well, and both of them fire on the same tick
 TEST_F(EnemyBotTest, EnemyShootToCoop)
 {
 	CreateBot({.x = 0.0, .y = _tankSize * 3.0}, Author::Player1, Direction::UP);
@@ -113,6 +115,7 @@ TEST_F(EnemyBotTest, EnemyShootToCoop)
 	EXPECT_EQ(sizeAfter, sizeBefore + 2u);
 }
 
+// the plain case: a player down the line and a shot on its way
 TEST_F(EnemyBotTest, EnemyShootToPlayer1)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
@@ -128,6 +131,7 @@ TEST_F(EnemyBotTest, EnemyShootToPlayer1)
 	EXPECT_EQ(sizeAfter, sizeBefore + 1u);
 }
 
+// the other seat is just as good a target
 TEST_F(EnemyBotTest, EnemyShootToPlayer2)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
@@ -143,6 +147,7 @@ TEST_F(EnemyBotTest, EnemyShootToPlayer2)
 	EXPECT_EQ(sizeAfter, sizeBefore + 1u);
 }
 
+// a player almost touching it: too close to fire, the blast would take the shooter too
 TEST_F(EnemyBotTest, EnemyNoShootToPlayer1IfTooClose)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
@@ -158,6 +163,7 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayer1IfTooClose)
 	EXPECT_EQ(sizeAfter, sizeBefore + 1u);
 }
 
+// the same distance rule from the other seat
 TEST_F(EnemyBotTest, EnemyNoShootToPlayer2IfTooClose)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
@@ -173,6 +179,7 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayer2IfTooClose)
 	EXPECT_EQ(sizeAfter, sizeBefore + 1u);
 }
 
+// a bot of its own faction is no target at all
 TEST_F(EnemyBotTest, EnemyNoShootToAllied)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
@@ -186,6 +193,7 @@ TEST_F(EnemyBotTest, EnemyNoShootToAllied)
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
 
+// and stays none up close
 TEST_F(EnemyBotTest, EnemyNoShootToAlliedIfTooClose)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::UP);
@@ -199,6 +207,7 @@ TEST_F(EnemyBotTest, EnemyNoShootToAlliedIfTooClose)
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
 
+// a wall in the way is fired at once the obstacle roll comes up
 TEST_F(EnemyBotTest, EnemyShootToBrick)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
@@ -213,6 +222,7 @@ TEST_F(EnemyBotTest, EnemyShootToBrick)
 	EXPECT_LT(sizeBefore, _allObjects.size());
 }
 
+// the same wall a muzzle away is left alone
 TEST_F(EnemyBotTest, EnemyTooCloseToShootTheBrick)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
@@ -243,6 +253,7 @@ TEST_F(EnemyBotTest, EnemyShootToSteel)
 	EXPECT_LT(sizeBefore, _allObjects.size());
 }
 
+// and is left alone by a tier that cannot
 TEST_F(EnemyBotTest, EnemyNoShootToSteelIfTierTooLow)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
@@ -257,6 +268,7 @@ TEST_F(EnemyBotTest, EnemyNoShootToSteelIfTierTooLow)
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
 
+// the base is fired at with both rolls open
 TEST_F(EnemyBotTest, EnemyShootToEagle)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
@@ -287,6 +299,7 @@ TEST_F(EnemyBotTest, EnemyShootsTheEagleWithTheWallChanceAtZero)
 	EXPECT_LT(sizeBefore, _allObjects.size());
 }
 
+// shutting the base roll is what holds the fire
 TEST_F(EnemyBotTest, EnemyHoldsFireAtTheEagleWhenItsOwnChanceIsZero)
 {
 	_gameConfig.botShootFortressChance = 0.0;
@@ -302,6 +315,7 @@ TEST_F(EnemyBotTest, EnemyHoldsFireAtTheEagleWhenItsOwnChanceIsZero)
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
 
+// the wall around the eagle goes with the obstacle roll, like any other wall
 TEST_F(EnemyBotTest, EnemyShootToFortress)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
@@ -316,6 +330,7 @@ TEST_F(EnemyBotTest, EnemyShootToFortress)
 	EXPECT_LT(sizeBefore, _allObjects.size());
 }
 
+// water is shot at too - the bullet flies over it, but the bot does not know that yet
 TEST_F(EnemyBotTest, EnemyShootToWater)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
@@ -330,6 +345,7 @@ TEST_F(EnemyBotTest, EnemyShootToWater)
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
 
+// and so is a bush
 TEST_F(EnemyBotTest, EnemyShootToBush)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
@@ -344,6 +360,7 @@ TEST_F(EnemyBotTest, EnemyShootToBush)
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
 
+// and ice
 TEST_F(EnemyBotTest, EnemyShootToIce)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
@@ -358,6 +375,7 @@ TEST_F(EnemyBotTest, EnemyShootToIce)
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
 
+// a player on the far bank is in sight, because a bullet crosses water
 TEST_F(EnemyBotTest, EnemyShootToPlayerBehindWater)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
@@ -395,6 +413,7 @@ TEST_F(EnemyBotTest, EnemyShootToPlayerInTheWater)
 	EXPECT_EQ(sizeAfter, sizeBefore + 1u);
 }
 
+// ice hides nobody either
 TEST_F(EnemyBotTest, EnemyShootToPlayerBehindIce)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
@@ -413,6 +432,7 @@ TEST_F(EnemyBotTest, EnemyShootToPlayerBehindIce)
 	EXPECT_EQ(sizeAfter, sizeBefore + 1u);
 }
 
+// nor does standing on it
 TEST_F(EnemyBotTest, EnemyShootToPlayerInTheIce)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
@@ -431,6 +451,7 @@ TEST_F(EnemyBotTest, EnemyShootToPlayerInTheIce)
 	EXPECT_EQ(sizeAfter, sizeBefore + 1u);
 }
 
+// a brick wall between them breaks the line of sight
 TEST_F(EnemyBotTest, EnemyNoShootToPlayerBehindBrickWall)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::RIGHT);
@@ -449,6 +470,7 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayerBehindBrickWall)
 	EXPECT_EQ(sizeAfter, sizeBefore);
 }
 
+// so does steel
 TEST_F(EnemyBotTest, EnemyNoShootToPlayerBehindSteelWall)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::RIGHT);
@@ -467,6 +489,7 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayerBehindSteelWall)
 	EXPECT_EQ(sizeAfter, sizeBefore);
 }
 
+// and the fortress wall
 TEST_F(EnemyBotTest, EnemyNoShootToPlayerBehindFortressWall)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::RIGHT);
@@ -485,6 +508,7 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayerBehindFortressWall)
 	EXPECT_EQ(sizeAfter, sizeBefore);
 }
 
+// a bush is not solid, but it hides what is behind it
 TEST_F(EnemyBotTest, EnemyNoShootToPlayerBehindBush)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
@@ -503,6 +527,7 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayerBehindBush)
 	EXPECT_EQ(sizeAfter, sizeBefore);
 }
 
+// and hides a player standing inside it just as well
 TEST_F(EnemyBotTest, EnemyNoShootToPlayerInTheBush)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);

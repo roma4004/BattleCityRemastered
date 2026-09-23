@@ -25,6 +25,7 @@
 #include "interfaces/IMoveBeh.h"
 #include "interfaces/IPickupableBonus.h"
 #include "utils/ColliderUtils.h"
+#include "utils/DirectionUtils.h"
 #include "enums/Faction.h"
 #include <chrono>
 #include <ranges>
@@ -134,7 +135,8 @@ void Tank::Subscribe()
 
 	SubscribeBonus();
 
-	if (_gameConfig.IsHost())
+	//NOTE: whoever decides, not only a host - a local match answers the same question when a level ends
+	if (_gameConfig.IsAuthority())
 	{
 		_subs.push_back(_events->AddListener(this, &Tank::OnWorldSnapshotRequested));
 	}
@@ -229,6 +231,97 @@ void Tank::EmitMoved() const
 	}
 }
 
+//NOTE: half of the step, and that is the whole cost of pushing - what we shove the tank ahead by is the
+//room our own move is then clamped to, so a tank with a tank on its nose travels half as far
+constexpr double kShoveShare{0.5};
+
+//NOTE: a chain longer than the tanks in a match cannot happen, and a cycle in it must not hang the frame
+constexpr int kMaxShoveChain{8};
+
+double Tank::ShoveDistance(const Direction dir, const double wanted, const int depth) const
+{
+	if (depth > kMaxShoveChain
+		|| !DirectionUtils::FitsBeforeEdge(GetRect(), _gameConfig.battlefieldSize, wanted, dir))
+	{
+		return 0.0;
+	}
+
+	double allowed{wanted};
+	for (const std::shared_ptr<BaseObj>& blocker: _tankMoveBeh->BlockersAhead(dir, wanted, _allObjects))
+	{
+		const auto peer{std::dynamic_pointer_cast<Tank>(blocker)};
+		if (peer == nullptr || peer->GetDirection() == DirectionUtils::Opposite(dir))
+		{
+			return 0.0;
+		}
+
+		allowed = std::min(allowed, peer->ShoveDistance(dir, wanted, depth + 1));
+	}
+
+	return allowed;
+}
+
+void Tank::ShoveBy(const double distance, const Direction dir, std::vector<const Tank*>& alreadyMoved)
+{
+	if (std::ranges::find(alreadyMoved, this) != alreadyMoved.end())
+	{
+		return;
+	}
+
+	alreadyMoved.push_back(this);
+
+	for (const std::shared_ptr<BaseObj>& blocker: _tankMoveBeh->BlockersAhead(dir, distance, _allObjects))
+	{
+		if (const auto peer{std::dynamic_pointer_cast<Tank>(blocker)})
+		{
+			peer->ShoveBy(distance, dir, alreadyMoved);
+		}
+	}
+
+	//NOTE: the rect by hand, not Move - on ice Move would feed the momentum of a step this tank never took
+	const ObjRectangle moved{DirectionUtils::Moved(GetRect(), distance, dir)};
+	SetPos(FPoint{.x = moved.x, .y = moved.y});
+	EmitMoved();
+}
+
+//NOTE: the whole chain moves by one distance or none of it moves - a tank that cannot give way is a wall
+//again, and so is one driving at us
+void Tank::ShoveAhead(const Direction dir, const double step)
+{
+	const std::vector<std::shared_ptr<BaseObj>> blockers{_tankMoveBeh->BlockersAhead(dir, step, _allObjects)};
+	if (blockers.empty())
+	{
+		return;
+	}
+
+	const double wanted{step * kShoveShare};
+	double allowed{wanted};
+	std::vector<std::shared_ptr<Tank>> pushed{};
+	for (const std::shared_ptr<BaseObj>& blocker: blockers)
+	{
+		const auto peer{std::dynamic_pointer_cast<Tank>(blocker)};
+		if (peer == nullptr || peer->GetDirection() == DirectionUtils::Opposite(dir))
+		{
+			return;
+		}
+
+		allowed = std::min(allowed, peer->ShoveDistance(dir, wanted, 1));
+		pushed.push_back(peer);
+	}
+
+	if (allowed <= 0.0)
+	{
+		return;
+	}
+
+	//NOTE: shared across the whole push, so the far end of the chain moves by one distance and no more
+	std::vector<const Tank*> alreadyMoved{};
+	std::ranges::for_each(pushed, [allowed, dir, &alreadyMoved](const std::shared_ptr<Tank>& peer)
+	{
+		peer->ShoveBy(allowed, dir, alreadyMoved);
+	});
+}
+
 //NOTE: the same loop whoever drives - the driver only answers where to go and whether to fire
 void Tank::TickUpdate(const double deltaTime)
 {
@@ -245,6 +338,7 @@ void Tank::TickUpdate(const double deltaTime)
 	if (chosen)
 	{
 		SetDirection(*chosen);
+		ShoveAhead(*chosen, _speed * deltaTime);
 		isMove = _moveBeh->Move(*chosen, deltaTime, _allObjects, outCollisions);
 	}
 

@@ -8,6 +8,7 @@
 
 struct RespawnCountChangedToEvent;
 struct DrawUserInterfaceEvent;
+struct EnterEvent;
 struct MenuShowedEvent;
 struct GameStateChangedToEvent;
 class EventSystem;
@@ -25,6 +26,10 @@ class ScoreBoard final
 
 	bool _isScoreBoardDisplayed{};
 	bool _isDemo{};
+	//NOTE: only a won map offers the next one - a lost one is replayed from the menu
+	bool _isWon{};
+	// Held only while the offer is on screen, so Enter means the next level and nothing else
+	EventSubscription _enterSub{};
 
 	unsigned short _enemyRespawnCount{20u};
 	unsigned short _playerOneRespawnCount{3u};
@@ -36,6 +41,7 @@ class ScoreBoard final
 	void OnDrawUserInterface(const DrawUserInterfaceEvent&) const;
 	void OnMenuShowed(const MenuShowedEvent& event);
 	void OnGameStateChangedTo(const GameStateChangedToEvent& event);
+	void OnEnter(const EnterEvent& event);
 
 	void RenderStatistics() const;
 

@@ -57,6 +57,21 @@ const Bullet* InputProviderForBot::AsBullet(const std::shared_ptr<BaseObj>& obst
 	return dynamic_cast<Bullet*>(obstacle.get());
 }
 
+bool InputProviderForBot::IsShotStoppedOnTheWay(const ObjRectangle& corridor, const BaseObj& bullet,
+												const Tank& self) const
+{
+	//NOTE: another bullet in the lane is not a wall - the two may cross before either arrives, and
+	//counting it would leave the bot standing in the answer to its own shot
+	const auto stopsIt = [&corridor, &bullet, &self](const std::shared_ptr<BaseObj>& object)
+	{
+		return ObjectUtils::IsAlive(object) && object.get() != &bullet && object.get() != &self
+			   && AsBullet(object) == nullptr && !object->GetIsPenetrable()
+			   && ColliderUtils::IsCollide(corridor, object->GetRect());
+	};
+
+	return std::ranges::any_of(_allObjects, stopsIt);
+}
+
 //NOTE: the lane a bullet travels, not the distance to it - a shot two rows over is somebody else's
 InputProviderForBot::BulletThreat InputProviderForBot::FindBulletThreat(const Tank& self) const
 {
@@ -82,8 +97,15 @@ InputProviderForBot::BulletThreat InputProviderForBot::FindBulletThreat(const Ta
 		const Direction flying{bullet->GetDirection()};
 		const double gap{DirectionUtils::GapTo(object->GetRect(), selfRect, flying)};
 		const double reach{gap + DirectionUtils::SizeAlong(selfRect, flying)};
-		if (gap < 0.0
-			|| !ColliderUtils::IsCollide(DirectionUtils::Swept(object->GetRect(), reach, flying), selfRect))
+		const ObjRectangle corridor{DirectionUtils::Swept(object->GetRect(), reach, flying)};
+		if (gap < 0.0 || !ColliderUtils::IsCollide(corridor, selfRect))
+		{
+			continue;
+		}
+
+		//NOTE: asked after the lane matches and not before - it walks the world, and most bullets are
+		//already somebody else's by then
+		if (IsShotStoppedOnTheWay(corridor, *object, self))
 		{
 			continue;
 		}
@@ -359,9 +381,19 @@ std::optional<Direction> InputProviderForBot::ChooseDirection(Tank& self, const 
 
 	//NOTE: the hull is not turned towards the bullet - if it is already head-on there is a shot to take,
 	//and if it is not, turning to face it would only drive the bot into it
-	if (const bool canIntercept{_threat.isHeadOn && self.CanShoot()
-								&& _threat.timeToImpact > kInterceptWindowSeconds};
-		_threat.bullet && !canIntercept)
+	const bool canIntercept{_threat.isHeadOn && self.CanShoot()
+							&& _threat.timeToImpact > kInterceptWindowSeconds};
+
+	//NOTE: the shot is taken along the hull as it stands, so the hull is held for it - a random turn
+	//landing on this very frame would fire the intercept sideways and leave the bullet coming
+	if (_threat.bullet && canIntercept)
+	{
+		_randomChangeDirTimer.Reset(RandUtils::GetRandDuration(kMinTurnDelay, kMaxTurnDelay));
+
+		return self.GetDirection();
+	}
+
+	if (_threat.bullet)
 	{
 		if (const std::optional<Direction> aside{SideWithMoreRoom(self, _threat.flying, deltaTime)})
 		{
@@ -386,6 +418,9 @@ std::optional<Direction> InputProviderForBot::ChooseDirection(Tank& self, const 
 	{
 		if (const std::optional<Direction> picked{PickRandomDirection(self, deltaTime)})
 		{
+			//NOTE: same reading going stale as in the dodge - the hull no longer looks where the threat says
+			_threat.isHeadOn = false;
+
 			return picked;
 		}
 	}
@@ -399,7 +434,14 @@ std::optional<Direction> InputProviderForBot::ReviseWhenMoveBlocked(Tank& self, 
 {
 	constexpr bool excludeCurrentDirection{true};
 
-	return PickRandomDirection(self, deltaTime, excludeCurrentDirection);
+	const std::optional<Direction> revised{PickRandomDirection(self, deltaTime, excludeCurrentDirection)};
+	if (revised)
+	{
+		//NOTE: the hull turned off the line it was on, and ShouldShoot runs after this in the same tick
+		_threat.isHeadOn = false;
+	}
+
+	return revised;
 }
 
 bool InputProviderForBot::ShouldShoot(Tank& self)

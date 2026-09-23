@@ -24,8 +24,7 @@ struct PauseStatusEvent;
 struct TabReleasedEvent;
 struct PreTickUpdateEvent;
 struct MenuShowedEvent;
-struct MenuPosChangedEvent;
-struct MenuContentShiftedEvent;
+struct MenuTilesPlacedEvent;
 class EventSystem;
 class WindowConfig;
 
@@ -45,6 +44,9 @@ class UserInput final
 	bool _isPausedByWindowDrag{};
 	bool _isWindowDragging{};
 	bool _isMenuDisplayed{};
+	//NOTE: a release is only the other half of a press that landed on a menu item - loose ones reach
+	//whoever else listens for Enter, and the won scoreboard would take a click meant for the window
+	bool _isMenuPressHeld{};
 	GameMode _selectedGameMode{};
 	bool _areControllersSwapped{};
 	UPoint _windowSize{};
@@ -56,12 +58,8 @@ class UserInput final
 	std::unordered_map<SDL_JoystickID, GamepadDirection> _gamepadDirections{};
 	int _gamepadDeadZone;
 	const SDL_Config& _sdlConfig;
-	Point _menuPos{};
-	//NOTE: the renderer centres the menu block in the panel and says by how much - the tiles have to
-	//land on the lines as they were actually drawn
-	int _menuContentShiftX{};
+	//NOTE: the rows as the renderer drew them - nothing here works them out, a click just lands on them
 	SDL_Rect _allTilesRect{};
-	SDL_Rect _firstMenuMouseTileDefault{};
 	std::vector<SubTile> _menuTiles;
 
 	void MouseEvents(const SDL_Event& event);
@@ -86,15 +84,13 @@ class UserInput final
 	void SwapControllers(const TabReleasedEvent&);
 	void OnPreTickUpdate(const PreTickUpdateEvent&);
 	void OnMenuShowed(const MenuShowedEvent& event);
-	void OnMenuPosChanged(const MenuPosChangedEvent& event);
-	void OnMenuContentShifted(const MenuContentShiftedEvent& event);
 
 	void InitControllers();
 	void ConnectController(const std::shared_ptr<SDL_Gamepad>& newController);
 	[[nodiscard]] PlayerSlot ControllerSlotDefiner(SDL_JoystickID instanceId) const;
 	[[nodiscard]] static bool IsSameController(const std::shared_ptr<SDL_Gamepad>& controller,
 											   SDL_JoystickID instanceId);
-	void InitMouseHoverTiles();
+	void OnMenuTilesPlaced(const MenuTilesPlacedEvent& event);
 
 public:
 	UserInput(const std::shared_ptr<EventSystem>& events, const WindowConfig& windowConfig,

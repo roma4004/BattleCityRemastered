@@ -20,8 +20,7 @@ class PooledSlots final
 	}
 
 public:
-	//NOTE: nullptr means the free list is empty and the caller builds one - the pool cannot, it does
-	//not know how any particular object is constructed
+	//NOTE: nullptr means the free list is empty - the pool cannot build one, it knows no type's constructor
 	[[nodiscard]] std::shared_ptr<T> TakeFree()
 	{
 		std::shared_ptr<T> obj{nullptr};

@@ -174,6 +174,9 @@ void Session::Handle(const SignalEvent& command)
 			case ClientSignal::RestartMatch:
 				_events->EmitEvent(ServerInRestartRequestedEvent{});
 				break;
+			case ClientSignal::NextLevel:
+				_events->EmitEvent(NextLevelRequestedEvent{});
+				break;
 		}
 	});
 }

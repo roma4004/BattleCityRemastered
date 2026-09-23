@@ -51,7 +51,7 @@ class RespawnManager final
 	void OnWorldSnapshotReceived(const WorldSnapshotReceivedEvent& event);
 
 	void Subscribe();
-	void OnGameReset(const GameResetEvent&);
+	void OnGameReset(const GameResetEvent& event);
 	void OnBonusTankPickup(const BonusTankPickupEvent& event);
 	void OnPlayersBaseFinished(const PlayersBaseFinishedEvent&);
 	void OnRespawnTanks(const RespawnTanksEvent& event);
@@ -59,8 +59,8 @@ class RespawnManager final
 	void SetEnemyNeedRespawn();
 	void SetPlayerNeedRespawn();
 
-	void ResetRespawnStat();
-	void ResetSpawn();
+	void ResetRespawnStat(bool keepsPlayerLives);
+	void ResetSpawn(bool keepsPlayerLives = false);
 
 	void ChangeRespawnCount(int delta, RespawnGroup type);
 	void TriggerLastPlayersLife();

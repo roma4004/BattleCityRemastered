@@ -58,7 +58,8 @@ void RespawnManager::Subscribe()
 	ResetSpawn();
 }
 
-void RespawnManager::OnGameReset(const GameResetEvent&) { ResetSpawn(); }
+//NOTE: a level change keeps the lives the players have left - the enemy count is the new map's own
+void RespawnManager::OnGameReset(const GameResetEvent& event) { ResetSpawn(event.keepsPlayerProgress); }
 
 void RespawnManager::OnBonusTankPickup(const BonusTankPickupEvent& event) { OnBonusTank(event.author); }
 
@@ -76,11 +77,14 @@ void RespawnManager::SetEnemyNeedRespawn()
 	}
 }
 
-void RespawnManager::ResetRespawnStat()
+void RespawnManager::ResetRespawnStat(const bool keepsPlayerLives)
 {
 	_respawnCount[static_cast<int>(RespawnGroup::ENEMY_ALL)] = 20u;
-	_respawnCount[static_cast<int>(RespawnGroup::PLAYER1)] = 3u;
-	_respawnCount[static_cast<int>(RespawnGroup::PLAYER2)] = 3u;
+	if (!keepsPlayerLives)
+	{
+		_respawnCount[static_cast<int>(RespawnGroup::PLAYER1)] = 3u;
+		_respawnCount[static_cast<int>(RespawnGroup::PLAYER2)] = 3u;
+	}
 
 	for (auto& [uuid, tankType, respawnGroup, isAvailable]: _slots)
 	{
@@ -93,11 +97,19 @@ void RespawnManager::ResetRespawnStat()
 	_playersDeathCount = 0u;
 }
 
-void RespawnManager::ResetSpawn()
+void RespawnManager::ResetSpawn(const bool keepsPlayerLives)
 {
-	ResetRespawnStat();
+	ResetRespawnStat(keepsPlayerLives);
 	SetPlayerNeedRespawn();
 	SetEnemyNeedRespawn();
+
+	//NOTE: said out loud on every reset - the counters on screen are told what the numbers are, and a
+	//level change is the one reset that does not put them back where they started
+	for (const RespawnGroup group: {RespawnGroup::ENEMY_ALL, RespawnGroup::PLAYER1, RespawnGroup::PLAYER2})
+	{
+		_events->EmitEvent(RespawnCountChangedToEvent{.group = group,
+													   .respawnCount = _respawnCount[static_cast<size_t>(group)]});
+	}
 }
 
 void RespawnManager::SetPlayerNeedRespawn()

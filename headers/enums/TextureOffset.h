@@ -4,8 +4,7 @@
 
 struct TextureOffset
 {
-	// NOTE: the sheet is a 16x16 grid holding 13x13 tanks, off-centre by a pixel - without the offset
-	// they flicker when rotated
+	//NOTE: a 16x16 grid holding 13x13 tanks, off-centre by a pixel - without the offset they flicker when rotated
 
 	// Tanks
 	static constexpr ObjRectangle kEnemy{.x = 129, .y = 1, .w = 13, .h = 13};

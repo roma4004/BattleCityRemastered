@@ -58,9 +58,22 @@ struct MatchStartedEvent {};
 
 //NOTE: named GameResetEvent because <windows.h>, pulled in through SDL, declares a function literally
 //called `ResetEvent` - a same-named struct in the global namespace collides with it
-struct GameResetEvent {};
+struct GameResetEvent
+{
+	//NOTE: a level change goes the way a restart does, and this is what tells the two apart - the players
+	//keep the lives and the tier they earned, the enemies and the statistics start over
+	bool keepsPlayerProgress{};
+};
 
 struct LoadMapEvent {};
+
+//NOTE: asked for by whoever shows the scoreboard, answered by the authority - a client sends it on
+//the wire instead, or the two machines would walk off onto different maps
+struct NextLevelRequestedEvent {};
+
+//NOTE: the local twin of ServerInRestartRequestedEvent - the seats are already taken, so the match
+//starts over where it stands instead of asking anyone to be ready again
+struct MatchRestartRequestedEvent {};
 
 struct ClientOutReadyToPlayEvent {};
 

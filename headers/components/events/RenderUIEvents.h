@@ -1,6 +1,7 @@
 #pragma once
 
 #include "enums/TextBlockAlign.h"
+#include "components/UiTable.h"
 #include "geometry/Point.h"
 #include <string>
 #include <vector>
@@ -18,11 +19,6 @@ struct ShowMenuEvent
 struct ScoreBoardShowedEvent
 {
 	bool isDisplayed;
-};
-
-struct MenuPosChangedEvent
-{
-	Point pos;
 };
 
 struct RenderMenuBackgroundEvent
@@ -48,31 +44,23 @@ struct RenderMenuTextBlockEvent
 	std::vector<TextBlockLine> lines;
 };
 
-//NOTE: how far the renderer moved the menu block to centre it in the panel - whoever lays something out
-//over the menu takes the same number, because nothing outside the renderer can measure the text
-struct MenuContentShiftedEvent
+//NOTE: the whole menu in one ask - what travels is the rows themselves, because the panel they stand in,
+//and with it every pixel, belongs to the renderer
+struct RenderMenuEvent
 {
-	int shiftX;
+	Point menuPos{};
+	int selectedRow{};
+	UiTable modes{};
+	UiTable controls{};
 };
 
-struct RenderMenuLogoEvent
+//NOTE: where the clickable menu items ended up - the mouse has to hit them where they were drawn, and
+//the point size that decided it is the renderer's own answer
+struct MenuTilesPlacedEvent
 {
-	Point pos;
-};
-
-struct RenderMenuSelectorIconEvent
-{
-	Point pos;
-};
-
-struct RenderMenuXBoxHintEvent
-{
-	Point pos;
-};
-
-struct RenderMenuPS5HintEvent
-{
-	Point pos;
+	//NOTE: the top left of each tile, in the order the modes stand in
+	std::vector<Point> tiles{};
+	Point tileSize{};
 };
 
 

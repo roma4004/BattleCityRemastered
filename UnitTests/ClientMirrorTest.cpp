@@ -118,6 +118,7 @@ TEST_F(ClientMirrorTest, ABonusRetiredDuringItsBurstNeverLands)
 	EXPECT_TRUE(_allObjects.empty());
 }
 
+// two bonuses bursting at once: the host's word lands one of them and leaves the other waiting
 TEST_F(ClientMirrorTest, CompletingOneBonusLeavesTheOtherPending)
 {
 	const Uuid settled{UuidUtils::GetRandomUuid()};

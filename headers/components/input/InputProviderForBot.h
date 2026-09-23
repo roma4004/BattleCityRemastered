@@ -8,6 +8,7 @@
 #include <vector>
 
 enum class Direction : char8_t;
+struct ObjRectangle;
 class BaseObj;
 class GameConfig;
 class LineOfSight;
@@ -59,6 +60,9 @@ class InputProviderForBot final : public IInputProvider
 	[[nodiscard]] static const Bullet* AsBullet(const std::shared_ptr<BaseObj>& obstacle);
 
 	[[nodiscard]] BulletThreat FindBulletThreat(const Tank& self) const;
+	//NOTE: what the bullet would hit before it reaches us - a shot behind steel is the steel's business
+	[[nodiscard]] bool IsShotStoppedOnTheWay(const ObjRectangle& corridor, const BaseObj& bullet,
+											 const Tank& self) const;
 
 	//NOTE: across the bullet's path, not across our own heading - stepping along the lane it travels is
 	//driving into it. Of the two ways out, the one with more room: a dodge into a wall one cell away is

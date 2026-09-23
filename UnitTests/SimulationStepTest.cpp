@@ -38,8 +38,7 @@ protected:
 	static constexpr double kStep{1.0 / 60.0};
 };
 
-// a frame worth exactly one step: the world advances once, and by the fixed step rather than by the
-// frame's own length
+// a frame worth exactly one step: the world advances once, by the fixed step and not by the frame's length
 TEST_F(SimulationStepTest, AFrameOfOneStepAdvancesTheWorldOnce)
 {
 	Frame(kStep);

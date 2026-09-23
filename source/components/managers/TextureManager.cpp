@@ -4,7 +4,7 @@
 #include "enums/TextureType.h"
 #include "components/EventSystem.h"
 #include "components/events/AnimationRenderEvents.h"
-#include "utils/ColliderUtils.h"
+#include "utils/MathUtils.h"
 #include "utils/Log.h"
 
 namespace
@@ -136,10 +136,10 @@ void TextureManager::Draw(const DrawObjEvent& event) const
 	const ObjRectangle destRect{rect};
 	const ObjRectangle textureRect{GetTextureRect(texture)};
 	if (constexpr ObjRectangle defaultSdlRect{};
-		ColliderUtils::AreEqualAbsolute(textureRect.x, defaultSdlRect.x)
-		&& ColliderUtils::AreEqualAbsolute(textureRect.y, defaultSdlRect.y)
-		&& ColliderUtils::AreEqualAbsolute(textureRect.w, defaultSdlRect.w)
-		&& ColliderUtils::AreEqualAbsolute(textureRect.h, defaultSdlRect.h))
+		MathUtils::AreEqualAbsolute(textureRect.x, defaultSdlRect.x)
+		&& MathUtils::AreEqualAbsolute(textureRect.y, defaultSdlRect.y)
+		&& MathUtils::AreEqualAbsolute(textureRect.w, defaultSdlRect.w)
+		&& MathUtils::AreEqualAbsolute(textureRect.h, defaultSdlRect.h))
 	{
 		_events->EmitEvent(RenderColorTextureEvent{.rect = rect});
 	}
@@ -188,10 +188,10 @@ void TextureManager::DrawAnimation(const DrawAnimationEvent& event) const
 	auto [textureRect, step] = GetAnimFrames(type, author, rect, destRect);
 	textureRect.x += static_cast<double>(frame * scale * step);
 	if (constexpr ObjRectangle defaultSdlRect{};
-		ColliderUtils::AreEqualAbsolute(textureRect.x, defaultSdlRect.x)
-		&& ColliderUtils::AreEqualAbsolute(textureRect.y, defaultSdlRect.y)
-		&& ColliderUtils::AreEqualAbsolute(textureRect.w, defaultSdlRect.w)
-		&& ColliderUtils::AreEqualAbsolute(textureRect.h, defaultSdlRect.h))
+		MathUtils::AreEqualAbsolute(textureRect.x, defaultSdlRect.x)
+		&& MathUtils::AreEqualAbsolute(textureRect.y, defaultSdlRect.y)
+		&& MathUtils::AreEqualAbsolute(textureRect.w, defaultSdlRect.w)
+		&& MathUtils::AreEqualAbsolute(textureRect.h, defaultSdlRect.h))
 	{
 		_events->EmitEvent(RenderColorTextureEvent{.rect = rect});
 	}

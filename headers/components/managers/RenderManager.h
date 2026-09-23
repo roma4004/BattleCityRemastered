@@ -4,6 +4,7 @@
 #include "components/EventSystem.h"
 #include "components/WorldGeometry.h"
 #include "components/events/RenderUIEvents.h"
+#include "components/UiLayout.h"
 #include "components/managers/TextCache.h"
 #include <SDL3/SDL_render.h>
 #include <cstddef>
@@ -26,10 +27,7 @@ struct PresentFrameEvent;
 struct GameModeChangedToEvent;
 struct PlayerSlotAssignedEvent;
 struct RenderMenuBackgroundEvent;
-struct RenderMenuLogoEvent;
-struct RenderMenuSelectorIconEvent;
-struct RenderMenuXBoxHintEvent;
-struct RenderMenuPS5HintEvent;
+struct RenderMenuEvent;
 struct RenderPauseTextEvent;
 struct RenderGameOverTextEvent;
 struct RenderGameWonTextEvent;
@@ -71,8 +69,9 @@ class RenderManager final
 		{
 			padding = 50;
 			sideInset = static_cast<size_t>(WorldGeometry::kCellSize) * kSideInsetCells;
+			//NOTE: as far off the bottom edge as off the sides - the panel reads as one frame
 			panelSize = UPoint{.x = windowSize.x - sideBarWidth - sideInset * 2,
-							   .y = windowSize.y - padding * 2};
+							   .y = windowSize.y - padding - sideInset};
 		}
 	};
 
@@ -105,6 +104,24 @@ class RenderManager final
 
 	//NOTE: fitting only ever shrinks - every panel screen starts from the same size
 	static constexpr int kBlockMinPointSize{8};
+
+	//NOTE: the menu's own places inside the panel - the tables stand where the hand-placed lines used to
+	static constexpr int kMenuLogoTop{17};
+	static constexpr int kMenuLogoWidth{300};
+	static constexpr int kMenuLogoHeight{75};
+	static constexpr int kMenuModesTop{120};
+	//NOTE: the controls hang off the bottom of the panel, so the room under them stays the same
+	static constexpr int kMenuControlsBottomGap{25};
+	static constexpr int kMenuRowHeight{30};
+	static constexpr int kMenuIconSize{30};
+	//NOTE: room for the arrow to the left of the mode it points at, and the slack a click still lands in
+	static constexpr int kMenuSelectorGap{35};
+	static constexpr int kMenuRowPadding{5};
+
+	//NOTE: kept between frames - the fit rests on the scale alone, the menu's words never change
+	mutable int _menuPointSize{};
+	mutable float _menuScale{};
+	mutable std::vector<Point> _menuTilePlaces{};
 
 	SDL_Rect _fpsBox{};
 	std::unordered_map<unsigned int, std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)>> _colorTextureCache;
@@ -154,12 +171,19 @@ class RenderManager final
 	void SetRenderDrawColor(unsigned int color, Uint8 transparency = 255) const;
 
 	void DrawMenuBackground(const RenderMenuBackgroundEvent& event) const;
-	void DrawMenuLogo(const RenderMenuLogoEvent& event) const;
-	void DrawSelectorIcon(const RenderMenuSelectorIconEvent& event) const;
 	void RenderCopyWithClipping(SDL_Texture* texture, SDL_Rect srcRect, SDL_Rect dstRect) const;
 	void RenderCopy(SDL_Texture* texture, SDL_Rect dstRect) const;
-	void DrawXBoxHint(const RenderMenuXBoxHintEvent& event) const;
-	void DrawPS5Hint(const RenderMenuPS5HintEvent& event) const;
+	void DrawMenu(const RenderMenuEvent& event) const;
+	//NOTE: the picture a cell asks for - which texture stands behind it is nothing the menu knows
+	[[nodiscard]] SDL_Texture* IconTexture(UiIcon icon) const;
+	//NOTE: what a table needs to become places: a word is as wide as the font makes it, a picture is a square
+	[[nodiscard]] UiLayout::Measure CellMeasurer(int pointSize, float scale) const;
+	[[nodiscard]] int FitMenuPointSize(const RenderMenuEvent& event, const SDL_Rect& panel, float scale) const;
+	[[nodiscard]] UiLayout::Placement PlaceCentered(const UiTable& table, const SDL_Rect& panel, int top,
+													const UiLayout::Measure& measure) const;
+	void DrawTablePictures(const UiTable& table, const UiLayout::Placement& placement) const;
+	void DrawTableText(const UiTable& table, const UiLayout::Placement& placement, float scale) const;
+	void AnnounceMenuTiles(const UiLayout::Placement& modes) const;
 	void DrawMenuTextBlock(const RenderMenuTextBlockEvent& event) const;
 	[[nodiscard]] SDL_Rect MenuPanelRect(Point menuPos) const;
 	//NOTE: the block is never empty here - the draw returns before it reaches this
@@ -176,8 +200,7 @@ class RenderManager final
 	//NOTE: keeps the proportions and the given size - a line wider than the box is not shrunk, it runs over
 	void DrawTextCentered(const SDL_Rect& box, SDL_Color color, std::string_view text, int basePointSize,
 						  float scale) const;
-	//NOTE: a counter is a new string whenever it changes, so it draws from its own slot in the cache
-	//instead of leaving a dead layout behind every time
+	//NOTE: a counter is a new string every time, so it draws from its own slot instead of leaving dead layouts
 	void DrawCounterAt(TextCache::Slot slot, Point pos, SDL_Color color, int value) const;
 	void DrawCounterCentered(TextCache::Slot slot, const SDL_Rect& box, SDL_Color color, int value) const;
 	//NOTE: the render scale is the caller's - a run of lines sets it once, see ScopedRenderScale

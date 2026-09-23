@@ -144,6 +144,9 @@
     <ClCompile Include="..\source\components\input\InputProviderForPlayer.cpp">
       <Filter>source\components\input</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\components\LevelRotation.cpp">
+      <Filter>source\components</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\components\LineOfSight.cpp">
       <Filter>source\components</Filter>
     </ClCompile>
@@ -199,6 +202,9 @@
       <Filter>source\components</Filter>
     </ClCompile>
     <ClCompile Include="..\source\components\TankSpawner.cpp">
+      <Filter>source\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\components\UiLayout.cpp">
       <Filter>source\components</Filter>
     </ClCompile>
     <ClCompile Include="..\source\components\WorldGeometry.cpp">
@@ -286,6 +292,9 @@
       <Filter>source\utils</Filter>
     </ClCompile>
     <ClCompile Include="..\source\utils\Log.cpp">
+      <Filter>source\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\utils\MathUtils.cpp">
       <Filter>source\utils</Filter>
     </ClCompile>
     <ClCompile Include="..\source\utils\ObjectUtils.cpp">
@@ -404,6 +413,9 @@
     <ClInclude Include="..\headers\components\input\PlayerKeys.h">
       <Filter>headers\components\input</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\components\LevelRotation.h">
+      <Filter>headers\components</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\components\LineOfSight.h">
       <Filter>headers\components</Filter>
     </ClInclude>
@@ -468,6 +480,12 @@
       <Filter>headers\components</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\components\TankSpawner.h">
+      <Filter>headers\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\UiLayout.h">
+      <Filter>headers\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\UiTable.h">
       <Filter>headers\components</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\components\WorldGeometry.h">
@@ -600,6 +618,9 @@
       <Filter>headers\enums</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\enums\TextureOffset.h">
+      <Filter>headers\enums</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\enums\UiIcon.h">
       <Filter>headers\enums</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\enums\WindowSide.h">
@@ -765,6 +786,9 @@
       <Filter>headers\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\utils\Log.h">
+      <Filter>headers\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\utils\MathUtils.h">
       <Filter>headers\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\utils\ObjectUtils.h">

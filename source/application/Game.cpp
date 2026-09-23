@@ -126,6 +126,9 @@ void Game::WatchPublishedPort(const GameMode mode)
 	_isDialingPublishedPort = mode == GameMode::PlayAsClient && !_isPortNamedByArguments;
 	if (!_isDialingPublishedPort)
 	{
+		//NOTE: dropped with the mode that wanted it - its socket and thread have nobody to ask any more
+		_portProbe.reset();
+
 		return;
 	}
 
@@ -193,7 +196,12 @@ bool Game::TryAdoptPublishedPort()
 }
 
 //NOTE: the number held now is the one that answered, so there is nothing left to watch for
-void Game::OnConnectedToHost(const ClientConnectedToHostEvent&) { _isDialingPublishedPort = false; }
+//NOTE: the port it was asking about is answered for good once the link is up
+void Game::OnConnectedToHost(const ClientConnectedToHostEvent&)
+{
+	_isDialingPublishedPort = false;
+	_portProbe.reset();
+}
 
 void Game::OnSelectedGameModeChangedTo(const SelectedGameModeChangedToEvent& event) { _selectedGameMode = event.mode; }
 

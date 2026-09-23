@@ -9,8 +9,7 @@
 
 namespace
 {
-//NOTE: passable terrain and nothing else - a bullet is passable too, and putting a tank down on one
-//would be a free hit
+//NOTE: passable terrain and nothing else - a bullet is passable too, and spawning on one is a free hit
 [[nodiscard]] bool IsDrivableGround(const BaseObj& object)
 {
 	return object.GetIsPassable() && object.GetTerrain() != Terrain::None;

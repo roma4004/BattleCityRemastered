@@ -74,8 +74,7 @@ void LineOfSight::CheckLineOfSight(const bool isWaterSkip, const std::vector<std
 		const ObjRectangle& downSideRect{_lineOfSightBoundaries[static_cast<size_t>(Direction::DOWN)]};
 		const ObjRectangle& rightSightRect{_lineOfSightBoundaries[static_cast<size_t>(Direction::RIGHT)]};
 
-		// NOTE: tank can't pass water (until pickup BonusShip), so we skip water when find opponent to shoot,
-		// but for searching for bonuses, we should not skip, to avoid trying to move through water.
+		//NOTE: water stops a tank but not a bullet - skipped while looking for a target, kept while looking for a bonus
 		const bool isWater{object->GetTerrain() == Terrain::Water};
 		const bool isBush{object->GetTerrain() == Terrain::Bush};
 		const bool isPenetrable{object->GetIsPenetrable()};
