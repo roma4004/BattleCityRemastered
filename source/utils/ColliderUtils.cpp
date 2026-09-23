@@ -30,8 +30,3 @@ bool ColliderUtils::IsCollide(const Circle& circle, const ObjRectangle& rect) no
 
 	return (deltaX * deltaX + deltaY * deltaY) < (circle.radius * circle.radius);
 }
-
-bool ColliderUtils::AreEqualAbsolute(const double a, const double b, const double epsilon) noexcept
-{
-	return std::fabs(a - b) <= epsilon;
-}

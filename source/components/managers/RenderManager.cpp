@@ -1,4 +1,8 @@
 #include "components/managers/RenderManager.h"
+#include "components/UiLayout.h"
+#include "components/UiTable.h"
+#include "enums/UiIcon.h"
+#include "utils/MathUtils.h"
 #include "geometry/Point.h"
 #include "application/GameConfig.h"
 #include "application/SDL_Config.h"
@@ -71,10 +75,7 @@ void RenderManager::Subscribe()
 	_subs.push_back(_events->AddListener(this, &RenderManager::DrawMenuTextBlock));
 
 	_subs.push_back(_events->AddListener(this, &RenderManager::DrawMenuBackground));
-	_subs.push_back(_events->AddListener(this, &RenderManager::DrawMenuLogo));
-	_subs.push_back(_events->AddListener(this, &RenderManager::DrawSelectorIcon));
-	_subs.push_back(_events->AddListener(this, &RenderManager::DrawXBoxHint));
-	_subs.push_back(_events->AddListener(this, &RenderManager::DrawPS5Hint));
+	_subs.push_back(_events->AddListener(this, &RenderManager::DrawMenu));
 
 	_subs.push_back(_events->AddListener(this, &RenderManager::DrawPauseText));
 	_subs.push_back(_events->AddListener(this, &RenderManager::DrawGameOverText));
@@ -360,18 +361,177 @@ void RenderManager::DrawMenuBackground(const RenderMenuBackgroundEvent& event) c
 	FillRect(backgroundRect);
 }
 
-void RenderManager::DrawMenuLogo(const RenderMenuLogoEvent& event) const
+SDL_Texture* RenderManager::IconTexture(const UiIcon icon) const
 {
-	const Point pos{MenuContentPos(event.pos)};
-	const SDL_Rect rect{.x = pos.x + 135, .y = pos.y + 42, .w = 300, .h = 75};
-	RenderCopy(_sdlConfig.logoTexture.get(), rect);
+	switch (icon)
+	{
+		case UiIcon::Selector:
+			return _sdlConfig.selectorIconTexture.get();
+		case UiIcon::XBoxHome:
+			return _sdlConfig.xboxTextures[1].get();
+		case UiIcon::XBoxView:
+			return _sdlConfig.xboxTextures[3].get();
+		case UiIcon::XBoxMenu:
+			return _sdlConfig.xboxTextures[2].get();
+		case UiIcon::XBoxY:
+			return _sdlConfig.xboxTextures[5].get();
+		case UiIcon::XBoxDpad:
+			return _sdlConfig.xboxTextures[0].get();
+		case UiIcon::XBoxA:
+			return _sdlConfig.xboxTextures[4].get();
+		case UiIcon::PS5Home:
+			return _sdlConfig.ps5Textures[3].get();
+		case UiIcon::PS5Create:
+			return _sdlConfig.ps5Textures[0].get();
+		case UiIcon::PS5Options:
+			return _sdlConfig.ps5Textures[4].get();
+		case UiIcon::PS5Triangle:
+			return _sdlConfig.ps5Textures[5].get();
+		case UiIcon::PS5Dpad:
+			return _sdlConfig.ps5Textures[2].get();
+		case UiIcon::PS5Cross:
+			return _sdlConfig.ps5Textures[1].get();
+		default:
+			return nullptr;
+	}
 }
 
-void RenderManager::DrawSelectorIcon(const RenderMenuSelectorIconEvent& event) const
+UiLayout::Measure RenderManager::CellMeasurer(const int pointSize, const float scale) const
 {
-	const Point pos{MenuContentPos(event.pos)};
-	const SDL_Rect rect{.x = pos.x, .y = pos.y, .w = 30, .h = 30};
-	RenderCopy(_sdlConfig.selectorIconTexture.get(), rect);
+	return [this, pointSize, scale](const UiCell& cell)
+	{
+		if (cell.icon != UiIcon::None)
+		{
+			return Point{.x = kMenuIconSize, .y = kMenuIconSize};
+		}
+
+		return _textCache.MeasureString(cell.text, pointSize, scale);
+	};
+}
+
+//NOTE: one size for both tables - a menu whose halves shrank apart would read as two screens
+int RenderManager::FitMenuPointSize(const RenderMenuEvent& event, const SDL_Rect& panel, const float scale) const
+{
+	auto goesIn = [this, &event, &panel, scale](const int pointSize)
+	{
+		const UiLayout::Measure measure{CellMeasurer(pointSize, scale)};
+		const UiLayout::Placement modes{UiLayout::Place(event.modes, Point{}, kMenuRowHeight, measure)};
+		const UiLayout::Placement controls{UiLayout::Place(event.controls, Point{}, kMenuRowHeight, measure)};
+		const auto isLowEnough = [](const UiLayout::PlacedCell& cell) { return cell.size.y <= kMenuRowHeight; };
+
+		return std::max(modes.size.x, controls.size.x) <= panel.w
+			   && std::ranges::all_of(controls.cells, isLowEnough);
+	};
+
+	//NOTE: what goes in keeps going in as it shrinks, so the smallest refused size bounds the answer
+	const auto sizes{std::views::iota(kBlockMinPointSize, BlockStartPointSize() + 1)};
+	const auto firstRefused{std::ranges::partition_point(sizes, goesIn)};
+
+	return firstRefused == sizes.begin() ? kBlockMinPointSize : *std::ranges::prev(firstRefused);
+}
+
+//NOTE: measured once to learn how wide it came out, then placed where that width sits in the middle
+UiLayout::Placement RenderManager::PlaceCentered(const UiTable& table, const SDL_Rect& panel, const int top,
+												 const UiLayout::Measure& measure) const
+{
+	const UiLayout::Placement measured{UiLayout::Place(table, Point{}, kMenuRowHeight, measure)};
+	const Point origin{.x = panel.x + (panel.w - measured.size.x) / 2, .y = panel.y + top};
+
+	return UiLayout::Place(table, origin, kMenuRowHeight, measure);
+}
+
+void RenderManager::DrawTablePictures(const UiTable& table, const UiLayout::Placement& placement) const
+{
+	for (const UiLayout::PlacedCell& placed: placement.cells)
+	{
+		const UiCell& cell{table.rows[static_cast<std::size_t>(placed.row)]
+								   .cells[static_cast<std::size_t>(placed.column)]};
+		if (cell.icon == UiIcon::None)
+		{
+			continue;
+		}
+
+		RenderCopy(IconTexture(cell.icon),
+				   {.x = placed.pos.x, .y = placed.pos.y, .w = placed.size.x, .h = placed.size.y});
+	}
+}
+
+void RenderManager::DrawTableText(const UiTable& table, const UiLayout::Placement& placement,
+								  const float scale) const
+{
+	for (const UiLayout::PlacedCell& placed: placement.cells)
+	{
+		const UiCell& cell{table.rows[static_cast<std::size_t>(placed.row)]
+								   .cells[static_cast<std::size_t>(placed.column)]};
+		if (cell.icon != UiIcon::None || cell.text.empty())
+		{
+			continue;
+		}
+
+		DrawTextAt(placed.pos, IntToColor(cell.color), cell.text, _menuPointSize, scale);
+	}
+}
+
+//NOTE: sent on, not kept - only this side knows where the rows ended up once the size was fitted
+void RenderManager::AnnounceMenuTiles(const UiLayout::Placement& modes) const
+{
+	std::vector<Point> tiles{};
+	tiles.reserve(modes.rows.size());
+	for (const Point& row: modes.rows)
+	{
+		tiles.push_back(Point{.x = row.x - kMenuRowPadding, .y = row.y});
+	}
+
+	if (tiles == _menuTilePlaces)
+	{
+		return;
+	}
+
+	_menuTilePlaces = tiles;
+	_events->EmitEvent(MenuTilesPlacedEvent{.tiles = std::move(tiles),
+										 .tileSize = {.x = modes.size.x + kMenuRowPadding * 2,
+													 .y = kMenuRowHeight}});
+}
+
+void RenderManager::DrawMenu(const RenderMenuEvent& event) const
+{
+	const SDL_Rect panel{MenuPanelRect(event.menuPos)};
+	const float scale{CurrentRenderScale()};
+	if (!MathUtils::AreEqualAbsolute(scale, _menuScale))
+	{
+		_menuScale = scale;
+		_menuPointSize = FitMenuPointSize(event, panel, scale);
+	}
+
+	const UiLayout::Measure measure{CellMeasurer(_menuPointSize, scale)};
+	const UiLayout::Placement modes{PlaceCentered(event.modes, panel, kMenuModesTop, measure)};
+	const int controlsHeight{static_cast<int>(event.controls.rows.size()) * kMenuRowHeight};
+	const int controlsTop{panel.h - kMenuControlsBottomGap - controlsHeight};
+	const UiLayout::Placement controls{PlaceCentered(event.controls, panel, controlsTop, measure)};
+
+	RenderCopy(_sdlConfig.logoTexture.get(), {.x = panel.x + (panel.w - kMenuLogoWidth) / 2,
+											  .y = panel.y + kMenuLogoTop,
+											  .w = kMenuLogoWidth,
+											  .h = kMenuLogoHeight});
+
+	const auto selected{static_cast<std::size_t>(event.selectedRow)};
+	if (selected < modes.rows.size())
+	{
+		RenderCopy(IconTexture(UiIcon::Selector),
+				   {.x = modes.rows[selected].x - kMenuSelectorGap,
+					.y = modes.rows[selected].y + (kMenuRowHeight - kMenuIconSize) / 2,
+					.w = kMenuIconSize,
+					.h = kMenuIconSize});
+	}
+
+	DrawTablePictures(event.controls, controls);
+
+	//NOTE: one scale for all the words at once - the pictures are drawn in logical pixels above
+	const ScopedRenderScale scaled{_sdlConfig.renderer.get(), scale};
+	DrawTableText(event.modes, modes, scale);
+	DrawTableText(event.controls, controls, scale);
+
+	AnnounceMenuTiles(modes);
 }
 
 void RenderManager::RenderCopyWithClipping(SDL_Texture* texture, const SDL_Rect srcRect, const SDL_Rect dstRect) const
@@ -387,28 +547,6 @@ void RenderManager::RenderCopy(SDL_Texture* texture, const SDL_Rect dstRect) con
 	SDL_RenderTexture(_sdlConfig.renderer.get(), texture, nullptr, &dst);
 }
 
-void RenderManager::DrawXBoxHint(const RenderMenuXBoxHintEvent& event) const
-{
-	const Point pos{MenuContentPos(event.pos)};
-	RenderCopy(_sdlConfig.xboxTextures[3].get(), {.x = pos.x - 75, .y = pos.y + 93, .w = 30, .h = 30});//View button
-	RenderCopy(_sdlConfig.xboxTextures[2].get(), {.x = pos.x - 75, .y = pos.y + 123, .w = 30, .h = 30});//Menu button
-	RenderCopy(_sdlConfig.xboxTextures[5].get(), {.x = pos.x - 75, .y = pos.y + 153, .w = 30, .h = 30});//Y button
-	RenderCopy(_sdlConfig.xboxTextures[0].get(), {.x = pos.x - 75, .y = pos.y + 183, .w = 30, .h = 30});//Dpad button
-	RenderCopy(_sdlConfig.xboxTextures[1].get(), {.x = pos.x - 75, .y = pos.y + 63, .w = 30, .h = 30});//Home button
-	RenderCopy(_sdlConfig.xboxTextures[4].get(), {.x = pos.x - 75, .y = pos.y + 213, .w = 30, .h = 30});//A button
-}
-
-void RenderManager::DrawPS5Hint(const RenderMenuPS5HintEvent& event) const
-{
-	const Point pos{MenuContentPos(event.pos)};
-	RenderCopy(_sdlConfig.ps5Textures[0].get(), {.x = pos.x, .y = pos.y - 60, .w = 30, .h = 30});//Create button
-	RenderCopy(_sdlConfig.ps5Textures[4].get(), {.x = pos.x, .y = pos.y - 28, .w = 30, .h = 30});//Options button
-	RenderCopy(_sdlConfig.ps5Textures[5].get(), {.x = pos.x, .y = pos.y + 5, .w = 30, .h = 30});//Triangle button
-	RenderCopy(_sdlConfig.ps5Textures[2].get(), {.x = pos.x, .y = pos.y + 33, .w = 30, .h = 30});//Dpad button
-	RenderCopy(_sdlConfig.ps5Textures[3].get(), {.x = pos.x, .y = pos.y - 90, .w = 30, .h = 30});//Home button
-	RenderCopy(_sdlConfig.ps5Textures[1].get(), {.x = pos.x, .y = pos.y + 63, .w = 30, .h = 30});//Cross button
-}
-
 
 int RenderManager::BlockStartPointSize() { return SDL_Config::kFontSizePtSmall; }
 
@@ -421,7 +559,7 @@ bool RenderManager::FittedBlock::Matches(const RenderMenuTextBlockEvent& event, 
 		return fitted.pos.x == line.pos.x && fitted.text == line.text;
 	};
 
-	return scale == renderScale
+	return MathUtils::AreEqualAbsolute(scale, renderScale)
 		   && lineHeight == event.lineHeight
 		   && align == event.align
 		   && std::ranges::equal(lines, event.lines, sameLine);
@@ -596,12 +734,6 @@ void RenderManager::DrawMenuTextBlock(const RenderMenuTextBlockEvent& event) con
 	{
 		const int pointSize{FitBlockPointSize(event, scale)};
 		const int shiftX{MenuBlockShiftX(event, pointSize, scale)};
-
-		//NOTE: what is drawn and what the mouse hits have to agree, and only this side knows the shift
-		if (shiftX != _menuBlockFit.shiftX)
-		{
-			_events->EmitEvent(MenuContentShiftedEvent{.shiftX = shiftX});
-		}
 
 		_menuBlockFit = {.lines = event.lines,
 						 .lineHeight = event.lineHeight,

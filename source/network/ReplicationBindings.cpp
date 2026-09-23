@@ -143,6 +143,10 @@ void BindClientReplication(ReplicationPublisher& out)
 	{
 		return SignalEvent{.signal = ClientSignal::RestartMatch};
 	});
+	out.Bind<NextLevelRequestedEvent>([](const auto&)
+	{
+		return SignalEvent{.signal = ClientSignal::NextLevel};
+	});
 	out.Bind<PauseRequestedEvent>([](const auto& e)
 	{
 		return KeyStateChange{.action = InputSignal::PauseRequest, .isPressed = e.isPaused};

@@ -78,6 +78,7 @@ TEST(ConsoleCommandTest, MapRefusesAPathOrASuffix)
 	EXPECT_FALSE(ParseConsoleCommand(R"(/map maps\level2)").has_value());
 }
 
+// the command carries the level to load, so a bare /map is an error rather than a reload
 TEST(ConsoleCommandTest, MapWithoutANameIsRefused)
 {
 	const auto command{ParseConsoleCommand("/map")};

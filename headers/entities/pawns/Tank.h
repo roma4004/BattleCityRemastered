@@ -48,6 +48,10 @@ class Tank final : public Pawn
 	TankType _type{};
 
 	void EmitMoved() const;
+
+	//NOTE: a tank ahead gives way instead of standing like a wall - it is shoved along our own heading
+	//before we move, and what is left of the room is all our own step gets, so pushing is the slower way
+	void ShoveAhead(Direction dir, double step);
 	void ApplyFreshLoadout();
 
 	void SubscribeAsClient() override;
@@ -144,6 +148,15 @@ public:
 	void Reset(const TankResetProperty& resetProperty, std::unique_ptr<IInputProvider> driver);
 
 	[[nodiscard]] unsigned int GetTier() const noexcept;
+
+	//NOTE: how far this tank gives way, the ones behind it counted in - a wall, the edge of the field or
+	//a tank driving the other way ends the chain, and then the whole of it stands
+	[[nodiscard]] double ShoveDistance(Direction dir, double wanted, int depth) const;
+
+	//NOTE: moves this tank and whatever it is pushing, and says so - a shoved tank does not move in its
+	//own TickUpdate, so nothing else would tell the client or the animation where it went
+	//NOTE: the chain is a graph, not a line - two tanks can both lean on a third, and it gives way once
+	void ShoveBy(double distance, Direction dir, std::vector<const Tank*>& alreadyMoved);
 
 	//NOTE: what the driver needs of the tank it drives
 	[[nodiscard]] bool CanShoot() const noexcept;

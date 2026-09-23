@@ -11,6 +11,7 @@
 #include "gtest/gtest.h"
 #include <memory>
 
+// who is owed a respawn and how many lives are left: a death is announced and the counter of that seat is read
 class RespawnManagerTest : public testing::Test
 {
 protected:
@@ -37,6 +38,7 @@ protected:
 	void TearDown() override {}
 };
 
+// a dead bot takes one off the enemy team's count
 TEST_F(RespawnManagerTest, EnemyDiedRespawnCount)
 {
 	constexpr unsigned short respawnOriginal{20u};
@@ -59,6 +61,7 @@ TEST_F(RespawnManagerTest, EnemyDiedRespawnCount)
 
 }
 
+// a dead player one off its own
 TEST_F(RespawnManagerTest, PlayerOneDiedRespawnCount)
 {
 	constexpr unsigned short respawnOriginal{3u};
@@ -81,6 +84,7 @@ TEST_F(RespawnManagerTest, PlayerOneDiedRespawnCount)
 
 }
 
+// and player two off the second seat's
 TEST_F(RespawnManagerTest, PlayerTwoDiedRespawnCount)
 {
 	constexpr unsigned short respawnOriginal{3u};
@@ -103,6 +107,7 @@ TEST_F(RespawnManagerTest, PlayerTwoDiedRespawnCount)
 
 }
 
+// spending the last enemy life empties the count
 TEST_F(RespawnManagerTest, EnemyRunOutRespawnPoints)
 {
 	constexpr unsigned short respawnOriginal{20u};
@@ -128,6 +133,7 @@ TEST_F(RespawnManagerTest, EnemyRunOutRespawnPoints)
 
 }
 
+// the same for player one
 TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPoints)
 {
 	constexpr unsigned short respawnOriginal{3u};
@@ -153,6 +159,7 @@ TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPoints)
 
 }
 
+// and for player two
 TEST_F(RespawnManagerTest, PlayerTwoRunOutRespawnPoints)
 {
 	constexpr unsigned short respawnOriginal{3u};
@@ -178,6 +185,7 @@ TEST_F(RespawnManagerTest, PlayerTwoRunOutRespawnPoints)
 
 }
 
+// dying again past that leaves the count at nothing rather than wrapping around
 TEST_F(RespawnManagerTest, EnemyRunOutRespawnPointsAndTryMore)
 {
 	constexpr unsigned short respawnOriginal{21u};
@@ -206,6 +214,7 @@ TEST_F(RespawnManagerTest, EnemyRunOutRespawnPointsAndTryMore)
 
 }
 
+// the same for the first seat
 TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPointsAndTryMore)
 {
 	constexpr unsigned short respawnOriginal{4u};
@@ -234,6 +243,7 @@ TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPointsAndTryMore)
 
 }
 
+// and for the second
 TEST_F(RespawnManagerTest, PlayerTwoRunOutRespawnPointsAndTryMore)
 {
 	constexpr unsigned short respawnOriginal{4u};

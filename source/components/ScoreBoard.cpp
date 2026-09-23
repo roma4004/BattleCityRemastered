@@ -5,6 +5,7 @@
 #include "components/events/SpawnEvents.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
+#include "components/events/InputEvents.h"
 #include "components/events/RenderUIEvents.h"
 #include "enums/GameState.h"
 #include "enums/RespawnGroup.h"
@@ -141,10 +142,13 @@ void ScoreBoard::OnGameStateChangedTo(const GameStateChangedToEvent& event)
 {
 	if (event.state == GameState::Won || event.state == GameState::Over)
 	{
+		_isWon = event.state == GameState::Won;
 		DisplayScore(!_isDemo);
 
 		return;
 	}
+
+	_isWon = false;
 
 	_isDemo = event.state == GameState::Demo;
 
@@ -168,7 +172,7 @@ void ScoreBoard::RenderStatistics() const
 	std::vector<TextBlockLine> lines;
 	lines.push_back(TextBlockLine{.pos = Point{.x = origin.x + 70, .y = origin.y},
 								  .color = color,
-								  .text = "PRESS M TO SHOW MENU"});
+								  .text = _isWon ? "PRESS ENTER FOR NEXT LEVEL, M FOR MENU" : "PRESS M TO SHOW MENU"});
 	lines.push_back(TextBlockLine{.pos = Point{.x = origin.x + 110, .y = origin.y + 40},
 								  .color = color,
 								  .text = "GAME STATISTICS:"});
@@ -233,5 +237,21 @@ void ScoreBoard::DisplayScore(const bool isDisplayed)
 		_drawSub = EventSubscription{};
 	}
 
+	_enterSub = _isScoreBoardDisplayed && _isWon ? _events->AddListener(this, &ScoreBoard::OnEnter)
+												 : EventSubscription{};
+
 	_events->EmitEvent(ScoreBoardShowedEvent{.isDisplayed = isDisplayed});
+}
+
+//NOTE: on the release, and the offer is taken down with it - a held key would ask for a level per frame,
+//and the press that started the match would count as an answer to the board it put up
+void ScoreBoard::OnEnter(const EnterEvent& event)
+{
+	if (event.isPressed)
+	{
+		return;
+	}
+
+	_enterSub = EventSubscription{};
+	_events->EmitEvent(NextLevelRequestedEvent{});
 }

@@ -56,6 +56,7 @@ protected:
 	}
 };
 
+// steel gives to a tier 2 shot, which the basic suite only sees bounce off
 TEST_F(BulletTestAdvanced, BulletTier2CanDestroySteelWall)
 {
 	const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};
@@ -94,6 +95,7 @@ TEST_F(BulletTestAdvanced, BlastSparesTheWallBehindAtThirtyFps)
 	EXPECT_EQ(farWallHealth, farWall->GetHealth());
 }
 
+// a shorter frame is a shorter step, and the blast must not reach past the wall it hit
 TEST_F(BulletTestAdvanced, BlastSparesTheWallBehindAtHundredFortyFourFps)
 {
 	CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
@@ -134,6 +136,7 @@ TEST_F(BulletTestAdvanced, BushBurnsInABlastFromTierThree)
 	EXPECT_FALSE(bush->GetIsAlive());
 }
 
+// a bush is burnt out only by a tier 3 blast, and survives anything under it
 TEST_F(BulletTestAdvanced, BushSurvivesABlastBelowTierThree)
 {
 	_calibre.tier = 2u;

@@ -11,6 +11,8 @@
 #include <cstddef>
 #include <memory>
 #include <optional>
+#include <tuple>
+#include <vector>
 
 MoveLikeTankBeh::MoveLikeTankBeh(ObjRectangle& rect, double& speed, Uuid& uuid, BonusEffectProperty& effects,
 								 const GameConfig& gameConfig)
@@ -150,6 +152,15 @@ bool MoveLikeTankBeh::NudgeIntoGap(const Direction dir, const double step,
 	return false;
 }
 
+std::vector<std::shared_ptr<BaseObj>> MoveLikeTankBeh::BlockersAhead(
+		const Direction dir, const double step, const std::vector<std::shared_ptr<BaseObj>>& objects) const
+{
+	std::vector<std::shared_ptr<BaseObj>> blockers{};
+	std::ignore = GetTravelledDistance(step, dir, objects, blockers);
+
+	return blockers;
+}
+
 bool MoveLikeTankBeh::Move(const Direction dir, const double deltaTime,
 						   const std::vector<std::shared_ptr<BaseObj>>& objects,
 						   std::vector<std::shared_ptr<BaseObj>>& outCollisions)
@@ -196,9 +207,10 @@ bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime, const std::vecto
 			continue;
 		}
 
-		if (velocity > DirectionUtils::SizeAlong(_rect, dir) / _driftMultiplicator)//enabling drift with delay
+		//NOTE: past this much momentum the tank is sliding, and driving into the slide is slower than steering out
+		if (velocity > DirectionUtils::SizeAlong(_rect, dir) / _driftMultiplicator)
 		{
-			speed /= _driftMultiplicator;//slow down if push the gas in drift
+			speed /= _driftMultiplicator;
 		}
 
 		if (IsCanMove(deltaTime, dir, objects)

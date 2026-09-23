@@ -1,6 +1,7 @@
 #pragma once
 
 #include "components/EventSystem.h"
+#include "components/LevelRotation.h"
 #include <cstdint>
 #include <memory>
 #include <vector>
@@ -15,6 +16,7 @@ struct GameModeChangedToEvent;
 struct GameStateChangedToEvent;
 struct MapLoadFailedEvent;
 struct MatchStartedEvent;
+struct NextLevelRequestedEvent;
 struct PauseStatusEvent;
 struct PlayerSlotAssignedEvent;
 struct PostTickUpdateEvent;
@@ -55,6 +57,14 @@ class Simulation final
 	//NOTE: derived from the phase, not latched, so a match starting later in the same frame clears a
 	//lobby entry that no longer applies. Acted on at PostTickUpdate
 	bool _isEnterLobbyPending{};
+	//NOTE: set when the map was advanced and read by the reset that starts the match - the two are a
+	//phase change apart, and on a server several ready signals apart
+	bool _isNextLevel{};
+	//NOTE: the ask is answered a step later - every listener of it reads the field that is still standing,
+	//and the reset that tears the field down must not run inside their dispatch
+	bool _isNextLevelPending{};
+
+	LevelRotation _levels{};
 
 	void Subscribe();
 
@@ -64,6 +74,7 @@ class Simulation final
 	void OnGameStateChangedTo(const GameStateChangedToEvent& event);
 	void OnGameModeChangedTo(const GameModeChangedToEvent& event);
 	void OnMatchStarted(const MatchStartedEvent&);
+	void OnNextLevelRequested(const NextLevelRequestedEvent&);
 	void OnMapLoadFailed(const MapLoadFailedEvent&) const;
 	void OnConnectedToHost(const ClientConnectedToHostEvent&);
 	void OnPlayerSlotAssigned(const PlayerSlotAssignedEvent& event);
@@ -72,6 +83,7 @@ class Simulation final
 	void OnHostLost(const ClientHostLostEvent&);
 
 	void EnterLobby();
+	void StartNextLevel();
 	void AnnounceReady() const;
 
 public:

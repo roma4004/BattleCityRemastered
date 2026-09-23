@@ -44,6 +44,7 @@ TEST(DiscoveryFormatTest, AProbeIsNotAReply)
 	EXPECT_FALSE(network::discovery::Parse(network::discovery::kProbe).has_value());
 }
 
+// a reply one byte short is not read as a shorter one
 TEST(DiscoveryFormatTest, ATruncatedReplyIsRefused)
 {
 	const auto bytes{network::discovery::Pack(network::discovery::Reply{})};
@@ -51,6 +52,7 @@ TEST(DiscoveryFormatTest, ATruncatedReplyIsRefused)
 	EXPECT_FALSE(network::discovery::Parse(std::string_view{bytes.data(), bytes.size() - 1u}).has_value());
 }
 
+// and neither is a datagram that was never ours
 TEST(DiscoveryFormatTest, SomeoneElsesDatagramIsRefused)
 {
 	EXPECT_FALSE(network::discovery::Parse("hello there").has_value());
@@ -82,6 +84,7 @@ protected:
 	boost::asio::io_context _ioContext{};
 };
 
+// a probe asking the well-known port is answered with the port the match runs on and the seats still free
 TEST_F(DiscoveryBeaconTest, ABeaconAnswersWithTheGamePortAndItsFreeSeats)
 {
 	constexpr std::uint16_t gamePort{54321u};

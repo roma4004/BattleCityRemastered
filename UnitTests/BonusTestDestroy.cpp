@@ -23,6 +23,7 @@
 #include "gtest/gtest.h"
 #include <memory>
 
+// the other half of the bonus pair: a bonus shot instead of picked up gives its effect to nobody
 class BonusTestDestroy : public testing::Test// NOLINT(clang-diagnostic-padded)
 {
 protected:
@@ -100,6 +101,7 @@ protected:
 	}
 };
 
+// a shot bonus leaves the field
 TEST_F(BonusTestDestroy, BonusDestroy)
 {
 	CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Enemy1);
@@ -120,6 +122,7 @@ TEST_F(BonusTestDestroy, BonusDestroy)
 	EXPECT_TRUE(false);
 }
 
+// a shot that misses leaves it lying there
 TEST_F(BonusTestDestroy, BonusNotDestroy)
 {
 	CreateBullet({.x = 0.0, .y = 0.0}, Direction::RIGHT, Author::Enemy1);
@@ -140,6 +143,7 @@ TEST_F(BonusTestDestroy, BonusNotDestroy)
 	EXPECT_TRUE(false);
 }
 
+// a shot timer freezes nobody
 TEST_F(BonusTestDestroy, TimerDestroyByPlayerAndEnemyStillMove)
 {
 	CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
@@ -157,6 +161,7 @@ TEST_F(BonusTestDestroy, TimerDestroyByPlayerAndEnemyStillMove)
 	EXPECT_NE(enemyPos, enemyBot->GetPos());
 }
 
+// a shot helmet shields nobody
 TEST_F(BonusTestDestroy, HelmetDestroyAndBulletStillCanDamageTank)
 {
 	const auto player{CreatePlayer({.x = _tankSize + 1.0, .y = 0.0}, Author::Player2)};
@@ -176,6 +181,7 @@ TEST_F(BonusTestDestroy, HelmetDestroyAndBulletStillCanDamageTank)
 }
 
 
+// a shot grenade leaves the enemy team at full health
 TEST_F(BonusTestDestroy, GrenadeDestroyEnemyHealthFull)
 {
 	CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
@@ -191,6 +197,7 @@ TEST_F(BonusTestDestroy, GrenadeDestroyEnemyHealthFull)
 	EXPECT_EQ(enemyBot->GetHealth(), 100);
 }
 
+// a shot tank bonus hands out no life
 TEST_F(BonusTestDestroy, TankDestroyNoExtraLife)
 {
 	unsigned short respawnActual{3u};
@@ -211,6 +218,7 @@ TEST_F(BonusTestDestroy, TankDestroyNoExtraLife)
 
 }
 
+// a shot star raises no tier
 TEST_F(BonusTestDestroy, StarDestroyTierRemainTheSame)
 {
 	const auto player{CreatePlayer({.x = 0.0, .y = _tankSize * 3.0}, Author::Player2)};
@@ -225,6 +233,7 @@ TEST_F(BonusTestDestroy, StarDestroyTierRemainTheSame)
 	EXPECT_EQ(player->GetTier(), 1u);
 }
 
+// and a shot shovel leaves the eagle's wall brick
 TEST_F(BonusTestDestroy, ShovelNotPickUpByPlayerThenfortressWallRemainTheSame)
 {
 	CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);

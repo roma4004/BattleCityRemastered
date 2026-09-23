@@ -73,6 +73,7 @@ void TankSpawner::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &TankSpawner::Reset));
 	_subs.push_back(_events->AddListener(this, &TankSpawner::OnRespawnTank));
+	_subs.push_back(_events->AddListener(this, &TankSpawner::OnNextLevelRequested));
 	//NOTE: a tank is the host's call - the client's burst never finishes and waits for TankSpawnComplete
 	if (IsAuthority(_gameMode))
 	{
@@ -149,12 +150,72 @@ void TankSpawner::OnWorldSnapshotReceived(const WorldSnapshotReceivedEvent& even
 	});
 }
 
-void TankSpawner::Reset(const GameResetEvent&)
+void TankSpawner::Reset(const GameResetEvent& event)
 {
 	_enemySpawnTimer.cooldown = _gameConfig.enemySpawnCooldown;
 	_enemySpawnTimer.isActive = false;
 	_enemySpawnTimer.activateTime = TimeUtils::Now() - _enemySpawnTimer.cooldown;
 	_delayedSpawns.clear();
+
+	if (!event.keepsPlayerProgress)
+	{
+		_nextLevelLoadouts.clear();
+	}
+}
+
+//NOTE: asked of the field while it still stands - the reset that empties it comes a phase later, and
+//on a server several ready signals later
+void TankSpawner::OnNextLevelRequested(const NextLevelRequestedEvent&)
+{
+	if (IsClient(_gameMode))
+	{
+		return;
+	}
+
+	WorldSnapshot field{};
+	_events->EmitEvent(WorldSnapshotRequestedEvent{.snapshot = field});
+
+	_nextLevelLoadouts.clear();
+	for (const TankSnapshot& tank: field.tanks)
+	{
+		if (tank.type == TankType::PLAYER1 || tank.type == TankType::PLAYER2)
+		{
+			_nextLevelLoadouts.push_back(NextLevelLoadout{.type = tank.type,
+											   .tier = tank.tier,
+											   .isShipActive = tank.isShipActive});
+		}
+	}
+}
+
+unsigned short TankSpawner::LoadoutTierOf(const TankType type) const
+{
+	const auto found{std::ranges::find(_nextLevelLoadouts, type, &NextLevelLoadout::type)};
+
+	return found == _nextLevelLoadouts.end() ? 1u : found->tier;
+}
+
+//NOTE: the tier rides in with the reset property, the ship is a pickup nobody picked up - and the
+//client hears neither, so the host says both out loud once the tank is there
+void TankSpawner::SpendLoadout(const Uuid uuid, const TankType type)
+{
+	const auto found{std::ranges::find(_nextLevelLoadouts, type, &NextLevelLoadout::type)};
+	if (found == _nextLevelLoadouts.end())
+	{
+		return;
+	}
+
+	const NextLevelLoadout carried{*found};
+	_nextLevelLoadouts.erase(found);
+
+	if (carried.isShipActive)
+	{
+		_events->EmitEvent(Key(SeatOf(type)), BonusShipPickupEvent{});
+	}
+
+	if (IsHost(_gameMode) && carried.tier > 1u)
+	{
+		_events->EmitEvent(Key(uuid), TierChangedEvent{.tier = carried.tier, .uuid = uuid});
+	}
 }
 
 std::optional<ObjRectangle> TankSpawner::FindSpawnSpot(const double minX, const double maxX, const double y,
@@ -370,7 +431,8 @@ void TankSpawner::DelayedSpawnStart(const ObjRectangle rect, const int health, c
 											  .type = type,
 											  .rect = rect,
 											  .health = health,
-											  .speed = speed});
+											  .speed = speed,
+											  .tier = LoadoutTierOf(type)});
 
 	_events->EmitEvent(TankSpawnEvent{.uuid = uuid});
 
@@ -422,14 +484,15 @@ void TankSpawner::CancelDelayedSpawnsOf(const Faction faction)
 	}
 }
 
-void TankSpawner::DelayedSpawnWith(const DelayedTankSpawn& params) const
+void TankSpawner::DelayedSpawnWith(const DelayedTankSpawn& params)
 {
 	const TankResetProperty resetProperty{.uuid = params.uuid,
 										  .rect = params.rect,
 										  .health = params.health,
 										  .speed = params.speed,
 										  .type = params.type,
-										  .dir = Direction::UP};
+										  .dir = Direction::UP,
+										  .tier = params.tier};
 
 	if (const std::shared_ptr<BaseObj> tank{
 			_tankPool->SpawnTank(resetProperty, MakeDriver(params.type))})
@@ -445,11 +508,12 @@ void TankSpawner::DelayedSpawnWith(const DelayedTankSpawn& params) const
 		}
 
 		_events->EmitEvent(BonusReApplyEvent{.uuid = params.uuid, .author = SeatOf(params.type)});
+		SpendLoadout(params.uuid, params.type);
 	}
 }
 
 //NOTE: a tank already on the host's field lands at once - its burst is long over there
-void TankSpawner::RestoreTank(const TankSnapshot& tank) const
+void TankSpawner::RestoreTank(const TankSnapshot& tank)
 {
 	const double tankSize{_gameConfig.tankSize};
 	const ObjRectangle rect{.x = tank.pos.x, .y = tank.pos.y, .w = tankSize, .h = tankSize};

@@ -7,4 +7,5 @@ enum class ClientSignal : std::uint8_t
 {
 	ReadyToPlay,
 	RestartMatch,
+	NextLevel,
 };

@@ -2,10 +2,9 @@
 
 #include "geometry/Point.h"
 #include "components/EventSystem.h"
-#include "components/events/RenderUIEvents.h"
+#include "components/UiTable.h"
 #include "components/input/InputProviderForMenu.h"
 #include <memory>
-#include <string>
 #include <vector>
 
 enum class GameMode : char8_t;
@@ -37,16 +36,10 @@ class Menu final
 	void OnSelectedGameModeChangedTo(const SelectedGameModeChangedToEvent& event);
 	void OnMenuShowed(const MenuShowedEvent& event);
 
-	static constexpr int kLineStep{30};
-	//NOTE: where the controls table starts under the modes - the gamepad columns hang off the same line
-	static constexpr int kControlsBaseLine{150};
-
-	static void DrawTextLine(std::vector<TextBlockLine>& lines, Point& posText, std::string text);
-	//NOTE: hands back where the arrow beside the selected mode goes - the icon is emitted after the block,
-	//because the renderer only knows how far it moved the block once it has it
-	[[nodiscard]] Point DrawMenuText(std::vector<TextBlockLine>& lines) const;
-	void DrawControlHints(std::vector<TextBlockLine>& lines) const;
-	void EmitGamepadHints() const;
+	[[nodiscard]] static UiTable ModesTable();
+	//NOTE: an action, the keys that do it, and for each pad its button as a picture and by name
+	[[nodiscard]] static UiTable ControlsTable();
+	[[nodiscard]] int SelectedRow() const;
 	void DisplayMenu(bool isDisplayed);
 
 	void Draw();

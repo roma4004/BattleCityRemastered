@@ -63,6 +63,7 @@ protected:
 	}
 };
 
+// a grid fed straight to Parse, with no file on disk: the cells and the size come back as written
 TEST_F(MapLoaderTest, ReadsTheGridAndItsSize)
 {
 	const auto map{MapLoader::Parse(kTinyMap)};
@@ -73,6 +74,7 @@ TEST_F(MapLoaderTest, ReadsTheGridAndItsSize)
 	EXPECT_EQ(map->cells.size(), 12u);
 }
 
+// the digits mean what the legend in the file's own header says they mean
 TEST_F(MapLoaderTest, DigitsFollowTheLegendOrder)
 {
 	const auto map{MapLoader::Parse(kTinyMap)};
@@ -88,6 +90,7 @@ TEST_F(MapLoaderTest, DigitsFollowTheLegendOrder)
 	EXPECT_EQ(map->At(3u, 1u), ObstacleType::Ice);
 }
 
+// a carriage return at the end of a row is not a cell
 TEST_F(MapLoaderTest, CrLfDoesNotBecomeAnExtraCell)
 {
 	const auto map{MapLoader::Parse("0123\r\n4567\r\n")};
@@ -97,6 +100,7 @@ TEST_F(MapLoaderTest, CrLfDoesNotBecomeAnExtraCell)
 	EXPECT_EQ(map->rows, 2u);
 }
 
+// a row of the wrong length is refused, and the error names the line
 TEST_F(MapLoaderTest, RaggedRowIsRejectedWithItsLineNumber)
 {
 	const auto map{MapLoader::Parse("# legend\n0000\n000\n")};
@@ -128,6 +132,7 @@ TEST_F(MapLoaderTest, ALetterOutsideTheBonusLegendIsRejected)
 	EXPECT_EQ(map.error().line, 2u);
 }
 
+// so is any other symbol
 TEST_F(MapLoaderTest, SymbolOutsideTheLegendIsRejected)
 {
 	const auto map{MapLoader::Parse("0000\n00x0\n")};
@@ -136,6 +141,7 @@ TEST_F(MapLoaderTest, SymbolOutsideTheLegendIsRejected)
 	EXPECT_EQ(map.error().line, 2u);
 }
 
+// and a digit past the last obstacle - the enum is the gate for what comes from outside
 TEST_F(MapLoaderTest, DigitPastTheLastObstacleIsRejected)
 {
 	//NOTE: '8' is one past Ice - a plain range check on the digit would have let it through as a cast
@@ -144,6 +150,7 @@ TEST_F(MapLoaderTest, DigitPastTheLastObstacleIsRejected)
 	ASSERT_FALSE(map.has_value());
 }
 
+// a file of comments alone holds no grid
 TEST_F(MapLoaderTest, CommentsOnlyIsNotAMap)
 {
 	const auto map{MapLoader::Parse("# just a legend\n#\n")};
@@ -152,6 +159,7 @@ TEST_F(MapLoaderTest, CommentsOnlyIsNotAMap)
 	EXPECT_EQ(map.error().line, 0u);
 }
 
+// and a missing file is an error rather than an empty field
 TEST_F(MapLoaderTest, MissingFileIsAnErrorNotAnEmptyMap)
 {
 	const auto map{MapLoader::LoadFromFile("Resources/Maps/there-is-no-such-level.map")};
@@ -226,6 +234,7 @@ TEST_F(MapLoaderTest, ASealedTopEdgeLeavesNowhereToSpawn)
 	EXPECT_FALSE(ValidateGrid(grid).has_value());
 }
 
+// and a walled bottom one leaves the players nowhere
 TEST_F(MapLoaderTest, ASealedBottomEdgeLeavesNowhereToSpawn)
 {
 	std::string grid{kPlayableGrid};
@@ -260,6 +269,7 @@ TEST_F(MapLoaderTest, TheEaglesOwnBodyIsNotFreeGround)
 	EXPECT_FALSE(ValidateGrid(grid).has_value()) << "the cells the eagle covers were read as free";
 }
 
+// the classic grid gives the field the game has always had
 TEST(WorldGeometryTest, ClassicMapKeepsTheClassicField)
 {
 	const UPoint battlefieldSize{WorldGeometry::ForMap(52u, 50u)};
@@ -268,6 +278,7 @@ TEST(WorldGeometryTest, ClassicMapKeepsTheClassicField)
 	EXPECT_EQ(battlefieldSize.y, 600u);
 }
 
+// a wider map widens the world - the cell stays the size it is
 TEST(WorldGeometryTest, WideMapWidensTheWorldInsteadOfShrinkingTheCell)
 {
 	const UPoint battlefieldSize{WorldGeometry::ForMap(80u, 50u)};
@@ -276,6 +287,7 @@ TEST(WorldGeometryTest, WideMapWidensTheWorldInsteadOfShrinkingTheCell)
 	EXPECT_EQ(battlefieldSize.y, 600u);
 }
 
+// and a taller one makes it taller
 TEST(WorldGeometryTest, TallMapMakesTheWorldTaller)
 {
 	const UPoint battlefieldSize{WorldGeometry::ForMap(52u, 100u)};
@@ -284,6 +296,7 @@ TEST(WorldGeometryTest, TallMapMakesTheWorldTaller)
 	EXPECT_EQ(battlefieldSize.y, 1200u);
 }
 
+// a map of no cells gives no world at all
 TEST(WorldGeometryTest, EmptyMapProducesNoWorld)
 {
 	const UPoint battlefieldSize{WorldGeometry::ForMap(0u, 0u)};
@@ -292,6 +305,7 @@ TEST(WorldGeometryTest, EmptyMapProducesNoWorld)
 	EXPECT_EQ(battlefieldSize.y, 0u);
 }
 
+// what the renderer is given is the field plus the side bar
 TEST(WorldGeometryTest, LogicalSizeIsTheFieldPlusTheBar)
 {
 	GameConfig gameConfig{};

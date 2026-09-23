@@ -1,3 +1,4 @@
+#include "utils/MathUtils.h"
 #include "application/Simulation.h"
 #include "utils/Log.h"
 #include "application/GameConfig.h"
@@ -29,8 +30,7 @@ constexpr double kFixedStep{1.0 / 60.0};
 
 constexpr double kStepSnapTolerance{kFixedStep / 20.0};
 
-//NOTE: every step is a full frame of movement and shooting - a slow stretch must not come back
-//as a burst of them
+//NOTE: every step is a full frame of movement and shooting - a slow stretch must not come back as a burst
 constexpr double kMaxCatchUpSteps{4.0};
 }//namespace
 
@@ -57,6 +57,7 @@ void Simulation::Subscribe()
 	_subs.push_back(_events->AddListener(this, &Simulation::OnGameStateChangedTo));
 	_subs.push_back(_events->AddListener(this, &Simulation::OnGameModeChangedTo));
 	_subs.push_back(_events->AddListener(this, &Simulation::OnMatchStarted));
+	_subs.push_back(_events->AddListener(this, &Simulation::OnNextLevelRequested));
 	_subs.push_back(_events->AddListener(this, &Simulation::OnMapLoadFailed));
 	_subs.push_back(_events->AddListener(this, &Simulation::OnConnectedToHost));
 	_subs.push_back(_events->AddListener(this, &Simulation::OnPlayerSlotAssigned));
@@ -77,6 +78,12 @@ void Simulation::OnPostTickUpdate(const PostTickUpdateEvent&)
 	{
 		_isEnterLobbyPending = false;
 		EnterLobby();
+	}
+
+	if (_isNextLevelPending)
+	{
+		_isNextLevelPending = false;
+		StartNextLevel();
 	}
 }
 
@@ -121,12 +128,46 @@ void Simulation::OnGameModeChangedTo(const GameModeChangedToEvent& event)
 //say - it puts the menu back up, and nothing here paints over that
 void Simulation::OnMatchStarted(const MatchStartedEvent&)
 {
-	_events->EmitEvent(GameResetEvent{});
+	_events->EmitEvent(GameResetEvent{.keepsPlayerProgress = _isNextLevel});
+	_isNextLevel = false;
 
 	_events->EmitEvent(ShowMenuEvent{.show = false});
 	_events->EmitEvent(SetPauseEvent{.isPaused = false});
 
 	_events->EmitEvent(LoadMapEvent{});
+}
+
+//NOTE: a client only asks - the binding puts this on the wire, and the answer comes back as the phase
+//the authority announces, so both machines leave on the same map
+void Simulation::OnNextLevelRequested(const NextLevelRequestedEvent&)
+{
+	if (IsClient(_gameConfig.gameMode))
+	{
+		return;
+	}
+
+	_isNextLevelPending = true;
+}
+
+//NOTE: the map is named before the match is torn down, the way the console does it - the reset that
+//follows carries the level flag, so the players keep what they earned on the one they just won
+void Simulation::StartNextLevel()
+{
+	_gameConfig.mapPath = _levels.PathAfter(_gameConfig.mapPath);
+	_isNextLevel = true;
+
+	Log::Info("next level runs on " + _gameConfig.mapPath);
+
+	if (IsHost(_gameConfig.gameMode))
+	{
+		_events->EmitEvent(ServerInRestartRequestedEvent{});
+
+		return;
+	}
+
+	//NOTE: the phase is asked to start over, and the reset comes with the match that follows - two resets
+	//in one dispatch would have the second one load the map the first then throws away
+	_events->EmitEvent(MatchRestartRequestedEvent{});
 }
 
 void Simulation::OnMapLoadFailed(const MapLoadFailedEvent&) const { _events->EmitEvent(ShowMenuEvent{.show = true}); }
@@ -150,7 +191,9 @@ void Simulation::OnHostLost(const ClientHostLostEvent&) { _isLinkUp = false; }
 //NOTE: the mode is kept - dropping it tears the link down, and nobody could reconnect
 void Simulation::EnterLobby()
 {
-	_events->EmitEvent(GameResetEvent{});
+	//NOTE: carries the level flag too - on a host the lobby stands between the won board and the next
+	//map, and a plain reset here would take the tier and the lives the players just earned
+	_events->EmitEvent(GameResetEvent{.keepsPlayerProgress = _isNextLevel});
 	_events->EmitEvent(ShowMenuEvent{.show = false});
 
 	if (_isLinkUp)
@@ -207,7 +250,7 @@ void Simulation::Tick()
 		_events->EmitEvent(RespawnTanksEvent{});//NOTE: on the wall clock, so once a frame
 
 		const double elapsed{
-				std::abs(_deltaTime - kFixedStep) < kStepSnapTolerance ? kFixedStep : _deltaTime};
+				MathUtils::AreEqualAbsolute(_deltaTime, kFixedStep, kStepSnapTolerance) ? kFixedStep : _deltaTime};
 		_stepAccumulator = std::min(_stepAccumulator + elapsed, kFixedStep * kMaxCatchUpSteps);
 
 		while (_stepAccumulator >= kFixedStep)

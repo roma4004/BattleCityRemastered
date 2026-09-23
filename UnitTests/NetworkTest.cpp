@@ -46,6 +46,7 @@
 
 using namespace std::chrono_literals;
 
+// a real server and client over loopback: the host emits a local event and the client is asked if it arrived
 class NetworkTest : public testing::Test
 {
 protected:
@@ -146,6 +147,7 @@ protected:
 };
 
 
+// a tank's position crosses the wire and arrives keyed on the same uuid
 TEST_F(NetworkTest, PosEventReplication)
 {
 	const auto server{MakeServer()};
@@ -168,6 +170,7 @@ TEST_F(NetworkTest, PosEventReplication)
 	EXPECT_EQ(directionOrigin, event.dir);
 }
 
+// so does a shot, with the direction it was fired in
 TEST_F(NetworkTest, ShotEventReplication)
 {
 	const auto server{MakeServer()};
@@ -189,6 +192,7 @@ TEST_F(NetworkTest, ShotEventReplication)
 	EXPECT_EQ(_uuid, event.bulletUuid);
 }
 
+// and a health change
 TEST_F(NetworkTest, HealthEventReplication)
 {
 	const auto server{MakeServer()};
@@ -233,6 +237,7 @@ TEST_F(NetworkTest, DespawnEventReplication)
 	EXPECT_EQ(DespawnReason::PickedUp, received[1].reason);
 }
 
+// a counter event the host raised reaches the client's own statistics
 TEST_F(NetworkTest, StatisticsEventReplication)
 {
 	const auto server{MakeServer()};
@@ -249,6 +254,7 @@ TEST_F(NetworkTest, StatisticsEventReplication)
 	EXPECT_EQ(Author::Enemy1, received.value().author);
 }
 
+// one of the four things a client may ask for: the pause travels the other way and stops the host
 TEST_F(NetworkTest, PauseRequestFromClientPausesTheServer)
 {
 	const auto server{MakeServer()};
@@ -269,6 +275,7 @@ TEST_F(NetworkTest, PauseRequestFromClientPausesTheServer)
 	EXPECT_TRUE(PumpUntil([&isServerPaused] { return !isServerPaused; }));
 }
 
+// a bonus appearing on the host appears on the client with its place and kind
 TEST_F(NetworkTest, BonusSpawnEventReplication)
 {
 	const auto server{MakeServer()};
@@ -309,6 +316,7 @@ TEST_F(NetworkTest, BonusSpawnCompleteEventReplication)
 	EXPECT_EQ(_uuid, *received);
 }
 
+// an effect switching on for a seat arrives keyed on that seat
 TEST_F(NetworkTest, BonusStatusEventReplication)
 {
 	const auto server{MakeServer()};
@@ -369,6 +377,7 @@ TEST_F(NetworkTest, BonusShipStatusEventReplication)
 	EXPECT_TRUE(PumpUntil([&received] { return received; }));
 }
 
+// one obstacle placed by the host is placed on the client too
 TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 {
 	const auto server{MakeServer()};
@@ -430,6 +439,7 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 	}
 }
 
+// every tank type respawns on the client where the host put it
 TEST_F(NetworkTest, RespawnTankEventReplication)
 {
 	const auto server{MakeServer()};
@@ -543,6 +553,7 @@ TEST_F(NetworkTest, TheServerLearnsTheClientDroppedWithoutSayingGoodbye)
 			<< "host never got a ready from the client that replaced the lost one";
 }
 
+// a host that shuts down says why, and the client keeps trying to come back
 TEST_F(NetworkTest, HostShutdownTellsClientWhyAndKeepsTheReconnect)
 {
 	auto server{MakeServer()};
@@ -573,6 +584,7 @@ TEST_F(NetworkTest, HostShutdownTellsClientWhyAndKeepsTheReconnect)
 	EXPECT_FALSE(gaveUp) << "client gave up on a host that was restarting the same mode";
 }
 
+// a client that quits says why as well, so the seat is freed rather than timed out
 TEST_F(NetworkTest, ClientQuitTellsHostWhy)
 {
 	const auto server{MakeServer()};
@@ -674,6 +686,7 @@ TEST_F(NetworkTest, ASeatComesBackWhenItsClientSaysGoodbye)
 	EXPECT_EQ(PlayerSlot::P1, *second) << "the seat of a client that quit is still held by its session";
 }
 
+// two clients on one machine: each tags its presses with its own seat, so neither drives the other's tank
 TEST_F(NetworkTest, EachClientPutsOnlyItsOwnSeatOnTheWire)
 {
 	std::optional<PlayerSlot> firstSeat{};
@@ -942,6 +955,7 @@ TEST_F(NetworkTest, AClientDialingAgainFromTheSameAddressTakesItsSeatBack)
 	EXPECT_EQ(*lost, PlayerSlot::P1);
 }
 
+// a frame that is not an archive comes back as an error with a reason, not as an empty batch
 TEST(SerializerTest, UnreadableFrameIsReportedNotSwallowed)
 {
 	const auto batch{network::Deserialize("not an archive at all")};
@@ -950,6 +964,7 @@ TEST(SerializerTest, UnreadableFrameIsReportedNotSwallowed)
 	EXPECT_FALSE(batch.error().reason.empty());
 }
 
+// and a batch written and read back holds the same command with the same fields
 TEST(SerializerTest, ABatchSurvivesTheRoundTrip)
 {
 	network::commands::CommandBatch sent;
@@ -1040,6 +1055,7 @@ TEST_F(NetworkTest, AKickedClientIsToldWhyAndDoesNotDialBack)
 	EXPECT_EQ(*reason, DisconnectReason::Kicked);
 }
 
+// a closed server turns a hello away and seats it only once it opens again
 TEST_F(NetworkTest, AClosedServerSeatsNoClientUntilItOpens)
 {
 	const auto server{MakeServer()};
@@ -1050,4 +1066,25 @@ TEST_F(NetworkTest, AClosedServerSeatsNoClientUntilItOpens)
 
 	_serverEvents->EmitEvent(ServerAcceptingChangedEvent{.isAccepting = true});
 	EXPECT_TRUE(PumpUntil([&client] { return client->IsConnected(); })) << "the reopened server never seated it";
+}
+
+// a hello the server turns away is no connection - the client must not report a seat it never got
+TEST_F(NetworkTest, ATurnedAwayHelloIsNoConnection)
+{
+	const auto server{MakeServer()};
+	_serverEvents->EmitEvent(ServerAcceptingChangedEvent{.isAccepting = false});
+
+	int linksUp{};
+	std::optional<DisconnectReason> refusal{};
+	std::vector<EventSubscription> subs{};
+	subs.push_back(_clientEvents->AddListener([&linksUp](const ClientConnectedToHostEvent&) { ++linksUp; }));
+	subs.push_back(_clientEvents->AddListener(
+			[&refusal](const ClientInDisconnectEvent& event) { refusal = event.reason; }));
+
+	const auto client{MakeClient(server->GetBoundPort())};
+
+	ASSERT_TRUE(PumpUntil([&refusal] { return refusal.has_value(); })) << "the closed server never turned it away";
+	EXPECT_EQ(DisconnectReason::ServerFull, *refusal);
+	EXPECT_EQ(0, linksUp) << "a turned-away client told its own side the link was up";
+	EXPECT_FALSE(client->IsConnected()) << "a turned-away client counts itself seated";
 }

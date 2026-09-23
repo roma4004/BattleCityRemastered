@@ -1,10 +1,30 @@
 #include "components/Menu.h"
 #include "application/GameConfig.h"
 #include "components/EventSystem.h"
+#include "components/UiTable.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/GameModeEvents.h"
 #include "components/events/RenderUIEvents.h"
 #include "enums/GameMode.h"
+#include "enums/UiIcon.h"
+#include <algorithm>
+#include <array>
+#include <iterator>
+#include <string>
+#include <utility>
+
+namespace
+{
+constexpr unsigned int kTextColor{0xffffffffu};
+
+//NOTE: the order the modes stand in - the row a click lands on is looked up here
+constexpr std::array kModes{GameMode::OnePlayer, GameMode::TwoPlayers, GameMode::CoopWithBot,
+							GameMode::PlayAsHost, GameMode::PlayAsClient};
+
+UiCell Text(std::string text) { return UiCell{.text = std::move(text), .color = kTextColor}; }
+
+UiCell Picture(const UiIcon icon) { return UiCell{.icon = icon, .color = kTextColor}; }
+}//namespace
 
 Menu::Menu(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig)
 	: _pos{.x = 25, .y = 0}
@@ -34,77 +54,45 @@ void Menu::Draw()
 		_yOffsetStart -= 3;
 		constexpr int padding{25};
 		_pos.y = padding + _yOffsetStart;
-		_events->EmitEvent(MenuPosChangedEvent{.pos = _pos});
 	}
 
 	_events->EmitEvent(RenderMenuBackgroundEvent{.pos = _pos});
-
-	std::vector<TextBlockLine> lines;
-	const Point selectorPos{DrawMenuText(lines)};
-	DrawControlHints(lines);
-
-	//NOTE: the text first - the renderer centres the block in the panel, and everything emitted after it
-	//rides the same shift, so the logo and the icons stay where the layout put them
-	_events->EmitEvent(RenderMenuTextBlockEvent{.menuPos = _pos,
-												.lineHeight = kLineStep,
-												.align = TextBlockAlign::CenteredBlock,
-												.lines = std::move(lines)});
-
-	_events->EmitEvent(RenderMenuLogoEvent{.pos = _pos});
-	_events->EmitEvent(RenderMenuSelectorIconEvent{.pos = selectorPos});
-	EmitGamepadHints();
+	_events->EmitEvent(RenderMenuEvent{.menuPos = _pos,
+									   .selectedRow = SelectedRow(),
+									   .modes = ModesTable(),
+									   .controls = ControlsTable()});
 }
 
-void Menu::DrawTextLine(std::vector<TextBlockLine>& lines, Point& posText, std::string text)
+UiTable Menu::ModesTable()
 {
-	constexpr unsigned int color{0xffffffffu};
-	lines.push_back(TextBlockLine{.pos = posText, .color = color, .text = std::move(text)});
-	posText.y += kLineStep;
+	return UiTable{.rows = {UiRow{.cells = {Text("ONE PLAYER")}},
+							UiRow{.cells = {Text("TWO PLAYER")}},
+							UiRow{.cells = {Text("COOP WITH BOT")}},
+							UiRow{.cells = {Text("PLAY AS HOST")}},
+							UiRow{.cells = {Text("PLAY AS CLIENT")}}}};
 }
 
-//NOTE: built whole even while sliding in - a missing line would change the fitted size
-Point Menu::DrawMenuText(std::vector<TextBlockLine>& lines) const
+UiTable Menu::ControlsTable()
 {
-	Point relativePosText{.x = _pos.x + 180, .y = _pos.y + 145};
-	Point selectorPos{};
-
-	auto mode = [&](const GameMode gameMode, std::string text)
-	{
-		if (_selectedGameMode == gameMode)
-		{
-			selectorPos = Point{.x = relativePosText.x - 35, .y = relativePosText.y - 10};
-		}
-
-		DrawTextLine(lines, relativePosText, std::move(text));
-	};
-
-	mode(GameMode::OnePlayer, "ONE PLAYER");
-	mode(GameMode::TwoPlayers, "TWO PLAYER");
-	mode(GameMode::CoopWithBot, "COOP WITH BOT");
-	mode(GameMode::PlayAsHost, "PLAY AS HOST");
-	mode(GameMode::PlayAsClient, "PLAY AS CLIENT");
-
-	return selectorPos;
+	return UiTable{.rows = {UiRow{.cells = {Text("Controls:"), Text("P1/P2"), Picture(UiIcon::XBoxHome),
+											Text("XBox"), Picture(UiIcon::PS5Home), Text("PS")}},
+							UiRow{.cells = {Text("Pause"), Text("P"), Picture(UiIcon::XBoxView), Text("View"),
+											Picture(UiIcon::PS5Create), Text("Create")}},
+							UiRow{.cells = {Text("Menu"), Text("M"), Picture(UiIcon::XBoxMenu), Text("Menu"),
+											Picture(UiIcon::PS5Options), Text("Options")}},
+							UiRow{.cells = {Text("Swap"), Text("TAB"), Picture(UiIcon::XBoxY), Text("Y"),
+											Picture(UiIcon::PS5Triangle), Text("Triangle")}},
+							UiRow{.cells = {Text("Move"), Text("Arrows/WASD"), Picture(UiIcon::XBoxDpad),
+											Text("D-pad"), Picture(UiIcon::PS5Dpad), Text("D-pad")}},
+							UiRow{.cells = {Text("Fire"), Text("Space/LCtrl"), Picture(UiIcon::XBoxA), Text("A"),
+											Picture(UiIcon::PS5Cross), Text("Cross")}}}};
 }
 
-//NOTE: the gamepad buttons stand in the gaps the hint lines leave for them, so both move as one block
-void Menu::EmitGamepadHints() const
+int Menu::SelectedRow() const
 {
-	const Point relativePos{.x = _pos.x + 100, .y = _pos.y + 280};
-	_events->EmitEvent(RenderMenuXBoxHintEvent{.pos = Point{.x = relativePos.x + 245, .y = relativePos.y}});
-	_events->EmitEvent(RenderMenuPS5HintEvent{
-			.pos = Point{.x = relativePos.x + 280, .y = relativePos.y + kControlsBaseLine}});
-}
+	const auto mode{std::ranges::find(kModes, _selectedGameMode)};
 
-void Menu::DrawControlHints(std::vector<TextBlockLine>& lines) const
-{
-	Point posText{.x = _pos.x + 40, .y = _pos.y + kControlsBaseLine + 200};
-	DrawTextLine(lines, posText, "Controls: P1/P2    XBox    PS");
-	DrawTextLine(lines, posText, "Pause       P      View    Create");
-	DrawTextLine(lines, posText, "Menu        M      Menu    Options");
-	DrawTextLine(lines, posText, "Swap       TAB     Y       Triangle");
-	DrawTextLine(lines, posText, "Move Arrows/WASD   D-pad   D-pad");
-	DrawTextLine(lines, posText, "Fire Space/LCtrl   A       Cross");
+	return mode == kModes.end() ? 0 : static_cast<int>(std::distance(kModes.begin(), mode));
 }
 
 void Menu::DisplayMenu(const bool isDisplayed)

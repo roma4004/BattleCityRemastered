@@ -142,6 +142,7 @@ TEST_F(BotsTest, BotsChangeDirectionIfOpponentSeen)
 	EXPECT_EQ(endDirEnemy, Direction::DOWN);
 }
 
+// an ally in sight is no reason to turn the hull
 TEST_F(BotsTest, BotsNoChangeDirectionIfPlayerAllySeen)
 {
 	const auto coopBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN)};
@@ -153,6 +154,7 @@ TEST_F(BotsTest, BotsNoChangeDirectionIfPlayerAllySeen)
 	EXPECT_EQ(coopBot->GetDirection(), Direction::DOWN);
 }
 
+// nor is an allied bot
 TEST_F(BotsTest, BotsNoChangeDirectionIfBotAllySeen)
 {
 	const auto coopBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN)};
@@ -178,6 +180,7 @@ TEST_F(BotsTest, BotsNoChangeDirectionIfOpponentTooClose)
 	EXPECT_EQ(enemyBot->GetDirection(), Direction::DOWN);
 }
 
+// a bonus in sight, on the other hand, turns the bot towards it
 TEST_F(BotsTest, BotsChangeDirectionIfBonusSeenAndNoOneShoot)
 {
 	const auto coopBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN)};
@@ -202,6 +205,7 @@ TEST_F(BotsTest, BotsChangeDirectionIfBonusSeenAndNoOneShoot)
 	EXPECT_EQ(endDirEnemy, Direction::LEFT);
 }
 
+// water is driven around, so a bonus behind it is not worth turning for
 TEST_F(BotsTest, BotsCantSeeBonusBehindWater)
 {
 	const auto coopBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::RIGHT)};
@@ -232,6 +236,7 @@ TEST_F(BotsTest, BotsCantSeeBonusBehindWater)
 	EXPECT_EQ(endDirEnemy, Direction::RIGHT);
 }
 
+// a bush hides one outright
 TEST_F(BotsTest, BotsCantSeeBonusBehindBush)
 {
 	const auto coopBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::RIGHT)};
@@ -262,6 +267,7 @@ TEST_F(BotsTest, BotsCantSeeBonusBehindBush)
 	EXPECT_EQ(endDirEnemy, Direction::RIGHT);
 }
 
+// ice hides nothing and is driven over
 TEST_F(BotsTest, BotsCanSeeBonusBehindIce)
 {
 	const auto coopBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::RIGHT)};
@@ -292,6 +298,7 @@ TEST_F(BotsTest, BotsCanSeeBonusBehindIce)
 	EXPECT_EQ(endDirEnemy, Direction::UP);
 }
 
+// and a bonus lying on the ice is reached the same way
 TEST_F(BotsTest, BotsCanSeeBonusInTheIce)
 {
 	const auto coopBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::RIGHT)};
@@ -563,6 +570,7 @@ TEST_F(BotsTest, BotHoldsFireAtAWallWhenTheChanceIsZero)
 	ASSERT_EQ(bot->GetDirection(), Direction::DOWN) << "the control failed - the bot looked away from the wall";
 }
 
+// with the obstacle roll pinned open the wall ahead is fired at every time
 TEST_F(BotsTest, BotShootsAWallWhenTheChanceIsOne)
 {
 	_gameConfig.botShootObstacleChance = 1.0;

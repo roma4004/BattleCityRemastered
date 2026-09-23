@@ -77,6 +77,7 @@ TEST_F(ClientHandshakeTest, TheLinkArrivingWithTheLobbyStillAnnouncesOnce)
 	EXPECT_EQ(Count("ready"), 1);
 }
 
+// a connected client hearing the lobby readies again, so a restarted match does not wait for it forever
 TEST_F(ClientHandshakeTest, TheServersLobbyMakesAConnectedClientReportAgain)
 {
 	_simulation.ApplyGameMode(GameMode::PlayAsClient);

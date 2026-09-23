@@ -75,6 +75,7 @@ TEST_F(CommandLineParserTest, NoArgumentsGivesDemoPhase)
 	EXPECT_FALSE(options.windowSide.has_value());
 }
 
+// the mode is an option of its own, not a bare word
 TEST_F(CommandLineParserTest, GameModeIsGivenByItsOwnOption)
 {
 	EXPECT_EQ(Parse({"--server"}).gameMode, GameMode::PlayAsHost);
@@ -90,6 +91,7 @@ TEST_F(CommandLineParserTest, AnOptionNameIsMatchedWhole)
 	}
 }
 
+// help answers to both the long and the short spelling
 TEST_F(CommandLineParserTest, HelpIsAskedForByEitherForm)
 {
 	EXPECT_TRUE(Parse({"--help"}).isHelpRequested);
@@ -106,6 +108,7 @@ TEST_F(CommandLineParserTest, MuteCombinesWithGameMode)
 	EXPECT_TRUE(options.isMuted);
 }
 
+// the window place and size are read as points
 TEST_F(CommandLineParserTest, WindowPosAndSizeAreParsed)
 {
 	const auto options{Parse({"--pos=10,20", "--size=1024,768"})};
@@ -154,6 +157,7 @@ TEST_F(CommandLineParserTest, ZeroWindowSizeIsRejected)
 	}
 }
 
+// parsing stops at the first bad option, so what follows is not read
 TEST_F(CommandLineParserTest, ArgumentsAfterABadOneAreNotParsed)
 {
 	EXPECT_EQ(ParseError({"--server", "--size=800x600", "--mute"}).value_or(ArgError{}).arg, "--size=800x600");
@@ -219,6 +223,7 @@ TEST_F(CommandLineParserTest, TheSideDoesNotDependOnTheWindowSize)
 	EXPECT_EQ(SideOf({"--server", "--size=1024,768"}), SideOf({"--server"}));
 }
 
+// a side that is neither server nor client is refused
 TEST_F(CommandLineParserTest, MalformedSideIsRejected)
 {
 	for (const char* arg: {"--side=middle", "--side=", "--side=LEFT"})
@@ -310,6 +315,7 @@ TEST_F(CommandLineParserTest, AMalformedAddressIsRejected)
 	std::ranges::for_each(kMalformed, [](const char* arg) { EXPECT_TRUE(ParseError({arg}).has_value()) << arg; });
 }
 
+// and so is a port that is not a number
 TEST_F(CommandLineParserTest, AMalformedPortIsRejected)
 {
 	constexpr std::array kMalformed{"--port=70000", "--port=12a", "--port=-1", "--port=any", "--port="};
@@ -317,6 +323,7 @@ TEST_F(CommandLineParserTest, AMalformedPortIsRejected)
 	std::ranges::for_each(kMalformed, [](const char* arg) { EXPECT_TRUE(ParseError({arg}).has_value()) << arg; });
 }
 
+// what was parsed has to arrive in the config the game actually dials from
 TEST_F(CommandLineParserTest, TheAddressReachesTheGameConfig)
 {
 	GameConfig gameConfig{};
@@ -366,6 +373,7 @@ TEST(ServerCommandLineTest, AFreePortIsAskedForByWordOrByZero)
 	EXPECT_EQ(ParseServerRaw({"--port=0"}).value_or(LaunchOptions{}).serverPort, 0u);
 }
 
+// help answers to both the long and the short spelling
 TEST(ServerCommandLineTest, HelpIsAskedForByEitherForm)
 {
 	EXPECT_TRUE(ParseServerRaw({"--help"}).value_or(LaunchOptions{}).isHelpRequested);
@@ -383,6 +391,7 @@ TEST(ServerCommandLineTest, AGameOptionIsRefused)
 	});
 }
 
+// the dedicated server refuses the same malformed address the game does
 TEST(ServerCommandLineTest, AMalformedAddressIsRejectedHereToo)
 {
 	EXPECT_FALSE(ParseServerRaw({"--address=localhost"}).has_value());

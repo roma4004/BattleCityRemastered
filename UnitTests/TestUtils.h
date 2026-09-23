@@ -1,4 +1,5 @@
 #pragma once
+#include "utils/MathUtils.h"
 #include "geometry/Point.h"
 #include <algorithm>
 #include <cmath>
@@ -94,7 +95,6 @@ public:
 		});
 	}
 
-	//NOTE: one tank either way - the two helpers differ only in who takes the wheel
 	//NOTE: laid cell by cell, the way a map does it - one stretched obstacle is a shape the game never makes
 	static void SpawnObstacleArea(const std::shared_ptr<EventSystem>& events,
 								  const std::vector<std::shared_ptr<BaseObj>>& allObjects, const ObjRectangle area,
@@ -133,7 +133,7 @@ public:
 	}
 
 	//NOTE: tanks and bullets come from the pools through the spawn queue - one built by hand checks a path
-	//the game never walks
+	//the game never walks. One tank either way: the two helpers differ only in who takes the wheel
 	[[nodiscard]] static std::shared_ptr<Tank> CreateBot(
 			ObjRectangle rect, int health, Author author,
 			const std::vector<std::shared_ptr<BaseObj>>& allObjects, const std::shared_ptr<EventSystem>& events,
@@ -156,7 +156,7 @@ public:
 [[nodiscard]] inline bool operator==(const FPoint& lhs, const FPoint& rhs) noexcept
 {
 	static constexpr double epsilon{1e-4};
-	return std::abs(lhs.x - rhs.x) < epsilon && std::abs(lhs.y - rhs.y) < epsilon;
+	return MathUtils::AreEqualAbsolute(lhs.x, rhs.x, epsilon) && MathUtils::AreEqualAbsolute(lhs.y, rhs.y, epsilon);
 }
 
 //NOTE: gtest finds these by ADL, so a test printing a point includes this header; Point.h stays free of <ostream>

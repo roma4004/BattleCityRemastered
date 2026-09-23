@@ -25,6 +25,8 @@
 
 using namespace std::chrono_literals;
 
+// the shape of every case: a target, a bullet a step short of it, one tick, and the counter that pair owns
+// tanks hold a single point of health here, so the hit that lands is also the kill
 class StatisticsTest : public testing::Test// NOLINT(clang-diagnostic-padded)
 {
 protected:
@@ -104,6 +106,7 @@ protected:
 	}
 };
 
+// an enemy shot reaches player one - the hit goes to the enemy-team bucket
 TEST_F(StatisticsTest, PlayerOneHitByEnemy)
 {
 	CreatePlayer({.x = 0.0, .y = 0.0});
@@ -116,6 +119,7 @@ TEST_F(StatisticsTest, PlayerOneHitByEnemy)
 	EXPECT_EQ(_statistics->GetData().playerOneHitByEnemyTeam, 1u);
 }
 
+// the same shot fired by the other seat is friendly fire and counted apart
 TEST_F(StatisticsTest, PlayerOneHitByFriend)
 {
 	CreatePlayer({.x = 0.0, .y = 0.0});
@@ -128,6 +132,7 @@ TEST_F(StatisticsTest, PlayerOneHitByFriend)
 	EXPECT_EQ(_statistics->GetData().playerOneHitFriendlyFire, 1u);
 }
 
+// the second seat keeps its own counters, so the enemy shot is repeated into it
 TEST_F(StatisticsTest, PlayerTwoHitByEnemy)
 {
 	CreatePlayer({.x = _tankSize + 1.0, .y = 0.0}, Author::Player2);
@@ -140,6 +145,7 @@ TEST_F(StatisticsTest, PlayerTwoHitByEnemy)
 	EXPECT_EQ(_statistics->GetData().playerTwoHitByEnemyTeam, 1u);
 }
 
+// and player one shooting player two is friendly fire on that seat
 TEST_F(StatisticsTest, PlayerTwoHitByFriend)
 {
 	CreatePlayer({.x = _tankSize + 1.0, .y = 0.0}, Author::Player2);
@@ -152,6 +158,7 @@ TEST_F(StatisticsTest, PlayerTwoHitByFriend)
 	EXPECT_EQ(_statistics->GetData().playerTwoHitFriendlyFire, 1u);
 }
 
+// the same shot read as a death: friendly fire kills are per seat
 TEST_F(StatisticsTest, PlayerOneDiedByFriend)
 {
 	CreatePlayer({.x = 0.0, .y = 0.0});
@@ -164,6 +171,7 @@ TEST_F(StatisticsTest, PlayerOneDiedByFriend)
 	EXPECT_EQ(_statistics->GetData().playerOneDiedByFriendlyFire, 1u);
 }
 
+// a player killed by the enemy team goes into one shared counter, whichever seat fell
 TEST_F(StatisticsTest, PlayerTwoDiedByEnemy)
 {
 	CreatePlayer({.x = _tankSize + 1.0, .y = 0.0}, Author::Player2);
@@ -176,6 +184,7 @@ TEST_F(StatisticsTest, PlayerTwoDiedByEnemy)
 	EXPECT_EQ(_statistics->GetData().playerDiedByEnemyTeam, 1u);
 }
 
+// the other seat, to show the shared counter takes both
 TEST_F(StatisticsTest, PlayerOneDiedByEnemy)
 {
 	CreatePlayer({.x = 0.0, .y = 0.0});
@@ -188,6 +197,7 @@ TEST_F(StatisticsTest, PlayerOneDiedByEnemy)
 	EXPECT_EQ(_statistics->GetData().playerDiedByEnemyTeam, 1u);
 }
 
+// a death by friendly fire, on the other hand, keeps the seat it happened to
 TEST_F(StatisticsTest, PlayerTwoDiedByFriend)
 {
 	CreatePlayer({.x = _tankSize + 1.0, .y = 0.0}, Author::Player2);
@@ -200,6 +210,7 @@ TEST_F(StatisticsTest, PlayerTwoDiedByFriend)
 	EXPECT_EQ(_statistics->GetData().playerTwoDiedByFriendlyFire, 1u);
 }
 
+// a bot shot by a bot - the enemy team counts its own friendly fire too
 TEST_F(StatisticsTest, EnemyHitByFriend)
 {
 	CreateBot({.x = _tankSize * 2.0 + 2.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
@@ -212,6 +223,7 @@ TEST_F(StatisticsTest, EnemyHitByFriend)
 	EXPECT_EQ(_statistics->GetData().enemyHitByFriendlyFire, 1u);
 }
 
+// a bot hit by player one
 TEST_F(StatisticsTest, EnemyHitByPlayerOne)
 {
 	CreateBot({.x = _tankSize * 2.0 + 2.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
@@ -224,6 +236,7 @@ TEST_F(StatisticsTest, EnemyHitByPlayerOne)
 	EXPECT_EQ(_statistics->GetData().enemyHitByPlayerOne, 1u);
 }
 
+// and by player two - the seats never share a bucket
 TEST_F(StatisticsTest, EnemyHitByPlayerTwo)
 {
 	CreateBot({.x = _tankSize * 2.0 + 2.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
@@ -236,6 +249,7 @@ TEST_F(StatisticsTest, EnemyHitByPlayerTwo)
 	EXPECT_EQ(_statistics->GetData().enemyHitByPlayerTwo, 1u);
 }
 
+// the same three shots read as kills, because a tank dies from the hit it takes
 TEST_F(StatisticsTest, EnemyDiedByFriend)
 {
 	CreateBot({.x = _tankSize * 2.0 + 2.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
@@ -248,6 +262,7 @@ TEST_F(StatisticsTest, EnemyDiedByFriend)
 	EXPECT_EQ(_statistics->GetData().enemyDiedByFriendlyFire, 1u);
 }
 
+// a bot killed by player one
 TEST_F(StatisticsTest, EnemyDiedByPlayerOne)
 {
 	CreateBot({.x = _tankSize * 2.0 + 2.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
@@ -260,6 +275,7 @@ TEST_F(StatisticsTest, EnemyDiedByPlayerOne)
 	EXPECT_EQ(_statistics->GetData().enemyDiedByPlayerOne, 1u);
 }
 
+// and by player two
 TEST_F(StatisticsTest, EnemyDiedByPlayerTwo)
 {
 	CreateBot({.x = _tankSize * 2.0 + 2.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
@@ -272,6 +288,7 @@ TEST_F(StatisticsTest, EnemyDiedByPlayerTwo)
 	EXPECT_EQ(_statistics->GetData().enemyDiedByPlayerTwo, 1u);
 }
 
+// two shots meeting head-on: both authors are credited, each in their own counter
 TEST_F(StatisticsTest, BulletHitByPlayerTwo)
 {
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player1);
@@ -320,6 +337,7 @@ TEST_F(StatisticsTest, BulletIntoFieldEdgeIsNotABulletHit)
 	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerOne, 0u);
 }
 
+// a brick blown out by the enemy team
 TEST_F(StatisticsTest, BrickWallDiedByEnemy)
 {
 	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _calibre.size.y + 1}, ObstacleType::Brick);
@@ -333,6 +351,7 @@ TEST_F(StatisticsTest, BrickWallDiedByEnemy)
 	EXPECT_EQ(_statistics->GetData().brickWallDiedByEnemyTeam, 1u);
 }
 
+// the same brick by player one
 TEST_F(StatisticsTest, BrickWallDiedByPlayerOne)
 {
 	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _calibre.size.y + 1}, ObstacleType::Brick);
@@ -346,6 +365,7 @@ TEST_F(StatisticsTest, BrickWallDiedByPlayerOne)
 	EXPECT_EQ(_statistics->GetData().brickWallDiedByPlayerOne, 1u);
 }
 
+// and by player two
 TEST_F(StatisticsTest, BrickDiedByPlayerTwo)
 {
 	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _calibre.size.y + 1}, ObstacleType::Brick);
@@ -359,6 +379,7 @@ TEST_F(StatisticsTest, BrickDiedByPlayerTwo)
 	EXPECT_EQ(_statistics->GetData().brickWallDiedByPlayerTwo, 1u);
 }
 
+// steel gives only to a tier 3 shot, so the calibre is raised before firing
 TEST_F(StatisticsTest, SteelWallDiedByEnemy)
 {
 	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _calibre.size.y + 1}, ObstacleType::Steel);
@@ -373,6 +394,7 @@ TEST_F(StatisticsTest, SteelWallDiedByEnemy)
 	EXPECT_EQ(_statistics->GetData().steelWallDiedByEnemyTeam, 1u);
 }
 
+// the same tier 3 shot from player one
 TEST_F(StatisticsTest, SteelWallDiedByPlayerOne)
 {
 	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _calibre.size.y + 1}, ObstacleType::Steel);
@@ -387,6 +409,7 @@ TEST_F(StatisticsTest, SteelWallDiedByPlayerOne)
 	EXPECT_EQ(_statistics->GetData().steelWallDiedByPlayerOne, 1u);
 }
 
+// and from player two
 TEST_F(StatisticsTest, SteelDiedByPlayerTwo)
 {
 	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _calibre.size.y + 1}, ObstacleType::Steel);
@@ -401,6 +424,7 @@ TEST_F(StatisticsTest, SteelDiedByPlayerTwo)
 	EXPECT_EQ(_statistics->GetData().steelWallDiedByPlayerTwo, 1u);
 }
 
+// two enemy shots cancelling each other land in one bucket, so it reads two
 TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByEnemy)
 {
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Enemy1);
@@ -413,6 +437,7 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByEnemy)
 	EXPECT_EQ(_statistics->GetData().bulletHitByEnemy, 2u);
 }
 
+// the same meeting between the seats gives each of them one
 TEST_F(StatisticsTest, BulletHitBulletPlayerOneAndByPlayerTwo)
 {
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player1);
@@ -427,6 +452,7 @@ TEST_F(StatisticsTest, BulletHitBulletPlayerOneAndByPlayerTwo)
 	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerTwo, 1u);
 }
 
+// a mixed meeting credits both sides at once
 TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerOne)
 {
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player1);
@@ -441,6 +467,7 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerOne)
 	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerOne, 1u);
 }
 
+// the same across the other seat
 TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerTwo)
 {
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player2);
@@ -455,6 +482,7 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerTwo)
 	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerTwo, 1u);
 }
 
+// two bonuses dropped in front of a bot, one of them under it - only that one is taken
 TEST_F(StatisticsTest, BonusPickUpByEnemyCount)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
@@ -473,6 +501,7 @@ TEST_F(StatisticsTest, BonusPickUpByEnemyCount)
 	EXPECT_EQ(_statistics->GetData().bonusPickupByPlayerTwo, 0u);
 }
 
+// the same pair placed out of reach: standing still picks nothing up
 TEST_F(StatisticsTest, BonusNotPickUpByEnemyNotCount)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
@@ -491,6 +520,7 @@ TEST_F(StatisticsTest, BonusNotPickUpByEnemyNotCount)
 	EXPECT_EQ(_statistics->GetData().bonusPickupByPlayerTwo, 0u);
 }
 
+// player one is driven down onto the bonus and the pickup is credited to that seat alone
 TEST_F(StatisticsTest, BonusPickUpByPlayerOneCount)
 {
 	CreatePlayer({.x = 0.0, .y = 0.0});
@@ -510,6 +540,7 @@ TEST_F(StatisticsTest, BonusPickUpByPlayerOneCount)
 	EXPECT_EQ(_statistics->GetData().bonusPickupByPlayerTwo, 0u);
 }
 
+// driven the other way instead - the bonus stays where it is
 TEST_F(StatisticsTest, BonusNotPickUpByPlayerOneNotCount)
 {
 	CreatePlayer({.x = 0.0, .y = 0.0});
@@ -529,6 +560,7 @@ TEST_F(StatisticsTest, BonusNotPickUpByPlayerOneNotCount)
 	EXPECT_EQ(_statistics->GetData().bonusPickupByPlayerTwo, 0u);
 }
 
+// the second seat does the same, with its own keys and its own counter
 TEST_F(StatisticsTest, BonusPickUpByPlayerTwoCount)
 {
 	CreatePlayer({.x = _tankSize + 1.0, .y = 0.0}, Author::Player2);
@@ -548,6 +580,7 @@ TEST_F(StatisticsTest, BonusPickUpByPlayerTwoCount)
 	EXPECT_EQ(_statistics->GetData().bonusPickupByPlayerTwo, 1u);
 }
 
+// and drives away from it just as fruitlessly
 TEST_F(StatisticsTest, BonusNotPickUpByPlayerTwoNotCount)
 {
 	CreatePlayer({.x = _tankSize + 1.0, .y = 0.0}, Author::Player2);
@@ -567,6 +600,7 @@ TEST_F(StatisticsTest, BonusNotPickUpByPlayerTwoNotCount)
 	EXPECT_EQ(_statistics->GetData().bonusPickupByPlayerTwo, 0u);
 }
 
+// a bonus nobody touched: the lifetime runs out and the expiry is counted with no author
 TEST_F(StatisticsTest, BonusExpiredCountedWithNoAuthor)
 {
 	//NOTE: how long a bonus lives is the spawner's, so the test shortens it instead of building one by hand
@@ -588,6 +622,7 @@ TEST_F(StatisticsTest, BonusExpiredCountedWithNoAuthor)
 	EXPECT_EQ(_statistics->GetData().bonusExpired, 1u);
 }
 
+// shot and picked up are two different buckets, so one bonus is destroyed and the next one taken
 TEST_F(StatisticsTest, BonusShotIsCountedAndPickupIsNot)
 {
 	const ObjRectangle rectBonus{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};

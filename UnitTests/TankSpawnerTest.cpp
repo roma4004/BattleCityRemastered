@@ -1,3 +1,4 @@
+#include "utils/MathUtils.h"
 #include "TestUtils.h"
 #include "components/ObstacleSpawner.h"
 #include "application/GameConfig.h"
@@ -82,7 +83,7 @@ protected:
 	{
 		return static_cast<std::size_t>(std::ranges::count_if(_allObjects, [](const std::shared_ptr<BaseObj>& obj)
 		{
-			return std::dynamic_pointer_cast<Tank>(obj) != nullptr && obj->GetRect().y == 0.0;
+			return std::dynamic_pointer_cast<Tank>(obj) != nullptr && MathUtils::AreEqualAbsolute(obj->GetRect().y, 0.0);
 		}));
 	}
 
@@ -92,6 +93,7 @@ protected:
 	}
 };
 
+// in the demo nobody sits down, so every seat goes to a bot and the field fills up
 TEST_F(TankSpawnerTest, DemoPhaseStart)
 {
 	_gameConfig.gameState = GameState::Demo;
@@ -102,6 +104,7 @@ TEST_F(TankSpawnerTest, DemoPhaseStart)
 	EXPECT_EQ(_allObjects.size(), 6u);
 }
 
+// one seat taken and four bots
 TEST_F(TankSpawnerTest, OnePlayersGameModeStart)
 {
 	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
@@ -110,6 +113,7 @@ TEST_F(TankSpawnerTest, OnePlayersGameModeStart)
 	EXPECT_EQ(_allObjects.size(), 5u);
 }
 
+// both seats taken
 TEST_F(TankSpawnerTest, TwoPlayersGameModeStart)
 {
 	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::TwoPlayers, _respawnManager, _tankSpawner);
@@ -118,6 +122,7 @@ TEST_F(TankSpawnerTest, TwoPlayersGameModeStart)
 	EXPECT_EQ(_allObjects.size(), 6u);
 }
 
+// one player and a bot on its side
 TEST_F(TankSpawnerTest, CoopWithBotGameModeStart)
 {
 	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::CoopWithBot, _respawnManager, _tankSpawner);
@@ -126,6 +131,7 @@ TEST_F(TankSpawnerTest, CoopWithBotGameModeStart)
 	EXPECT_EQ(_allObjects.size(), 6u);
 }
 
+// and a network match seats the same six
 TEST_F(TankSpawnerTest, PlayAsHostGameModeStart)
 {
 	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
@@ -198,6 +204,7 @@ TEST_F(TankSpawnerTest, GrenadeCancelsEnemiesStillSpawning)
 	}
 }
 
+// a host runs its own clock, so its spawn burst is the counted-down one
 TEST_F(TankSpawnerTest, AServerBurstCountsTheSpawnDown)
 {
 	std::vector<AnimationCreateTankSpawnEvent> bursts{};
@@ -270,6 +277,7 @@ TEST_F(TankSpawnerTest, AClientSpawnsOnTheLatestRectAfterACancel)
 	EXPECT_EQ(_allObjects.front()->GetRect().x, currentPos.x);
 }
 
+// the machine running the server has no seat of its own - its keyboard drives nothing
 TEST_F(TankSpawnerTest, AServerTakesBothSeatsOffTheWire)
 {
 	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
@@ -289,7 +297,6 @@ TEST_F(TankSpawnerTest, AServerTakesBothSeatsOffTheWire)
 	EXPECT_NE(startPos, playerOne->GetPos()) << "the first seat never heard the wire";
 }
 
-// the only opening in the top row sits off both the tank and half-tank step - a search by strides alone
 // a strip full of bush is passable ground, so it must not read as a sealed edge
 TEST_F(TankSpawnerTest, AnEnemySpawnsOnBush)
 {
@@ -323,7 +330,8 @@ TEST_F(TankSpawnerTest, NoEnemySpawnsOnWater)
 	EXPECT_EQ(CountTanksInTopRow(), before) << "a tank was put down on water";
 }
 
-// would miss it and the enemy would never appear
+// the one opening in the top row sits off both the tank and the half-tank stride, which a search by
+// strides alone would miss
 TEST_F(TankSpawnerTest, AnEnemyFindsAnOpeningThatIsOffTheCoarseSteps)
 {
 	//NOTE: exactly one tank wide, set one cell off the tank-sized stride

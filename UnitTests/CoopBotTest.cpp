@@ -22,6 +22,7 @@
 #include "gtest/gtest.h"
 #include <memory>
 
+// the same line-of-sight questions as the enemy bot, asked of one fighting on the players' side
 class CoopBotTest : public testing::Test// NOLINT(clang-diagnostic-padded)
 {
 protected:
@@ -97,6 +98,7 @@ protected:
 	}
 };
 
+// a bonus off the line it drives is no reason to turn
 TEST_F(CoopBotTest, CoopNoChangeDirIfBonusOutsideLineOfSight)
 {
 	const auto coopBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN)};
@@ -112,6 +114,7 @@ TEST_F(CoopBotTest, CoopNoChangeDirIfBonusOutsideLineOfSight)
 	EXPECT_EQ(startDirCoop, endDirCoop);
 }
 
+// an enemy down the line is shot at
 TEST_F(CoopBotTest, CoopShootToEnemy)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
@@ -127,6 +130,7 @@ TEST_F(CoopBotTest, CoopShootToEnemy)
 	EXPECT_EQ(sizeAfter, sizeBefore + 2u);
 }
 
+// another coop bot is not
 TEST_F(CoopBotTest, CoopNoShootToCoop)
 {
 	const auto coopBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN)};
@@ -140,6 +144,7 @@ TEST_F(CoopBotTest, CoopNoShootToCoop)
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
 
+// and neither is the player it fights for
 TEST_F(CoopBotTest, CoopNoShootToPlayer1)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
@@ -153,6 +158,7 @@ TEST_F(CoopBotTest, CoopNoShootToPlayer1)
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
 
+// a brick in the way is fired at once the roll comes up
 TEST_F(CoopBotTest, CoopShootToBrick)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
@@ -167,6 +173,7 @@ TEST_F(CoopBotTest, CoopShootToBrick)
 	EXPECT_LT(sizeBefore, _allObjects.size());
 }
 
+// and left alone from a muzzle away
 TEST_F(CoopBotTest, CoopTooCloseToShootTheBrick)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
@@ -197,6 +204,7 @@ TEST_F(CoopBotTest, CoopShootToSteel)
 	EXPECT_LT(sizeBefore, _allObjects.size());
 }
 
+// and not to one that does not
 TEST_F(CoopBotTest, CoopNoShootToSteelIfTierTooLow)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
@@ -211,6 +219,7 @@ TEST_F(CoopBotTest, CoopNoShootToSteelIfTierTooLow)
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
 
+// the base is its own to defend, so it holds fire
 TEST_F(CoopBotTest, CoopNoShootToEagle)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
@@ -224,6 +233,7 @@ TEST_F(CoopBotTest, CoopNoShootToEagle)
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
 
+// and leaves the wall around it standing
 TEST_F(CoopBotTest, CoopNoShootToFortress)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
@@ -238,6 +248,7 @@ TEST_F(CoopBotTest, CoopNoShootToFortress)
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
 
+// water is not shot at
 TEST_F(CoopBotTest, CoopNoShootToWater)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
@@ -252,6 +263,7 @@ TEST_F(CoopBotTest, CoopNoShootToWater)
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
 
+// nor a bush
 TEST_F(CoopBotTest, CoopNoShootToBush)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
@@ -266,6 +278,7 @@ TEST_F(CoopBotTest, CoopNoShootToBush)
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
 
+// nor ice - none of them is in anyone's way
 TEST_F(CoopBotTest, CoopNoShootToIce)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);

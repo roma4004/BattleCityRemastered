@@ -17,6 +17,7 @@ enum class GameMode : char8_t;
 struct PawnProperty;
 struct BonusEffectProperty;
 struct GameResetEvent;
+struct NextLevelRequestedEvent;
 struct RespawnTankEvent;
 struct SpawnAnimationFinishedEvent;
 struct TankRespawnedEvent;
@@ -44,6 +45,16 @@ class TankSpawner final
 		ObjRectangle rect;
 		int health;
 		double speed;
+		unsigned short tier{1u};
+	};
+
+	//NOTE: what a player takes to the next level, read while the field it was won on still stands and
+	//spent on its first spawn there - dying inside a level costs the tier as it always did
+	struct NextLevelLoadout
+	{
+		TankType type{};
+		unsigned short tier{1u};
+		bool isShipActive{};
 	};
 
 	const std::vector<std::shared_ptr<BaseObj>>& _allObjects;
@@ -55,9 +66,11 @@ class TankSpawner final
 	GameMode _gameMode{};
 	const GameConfig& _gameConfig;
 	std::vector<DelayedTankSpawn> _delayedSpawns{};
+	std::vector<NextLevelLoadout> _nextLevelLoadouts{};
 
 	void Subscribe();
 	void OnRespawnTank(const RespawnTankEvent& event);
+	void OnNextLevelRequested(const NextLevelRequestedEvent&);
 	void OnSpawnAnimationFinished(const SpawnAnimationFinishedEvent& event);
 	void OnTankRespawned(const TankRespawnedEvent& event);
 	void OnTankSpawnCompleted(const TankSpawnCompletedEvent& event);
@@ -65,11 +78,14 @@ class TankSpawner final
 	void OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const;
 	void OnWorldSnapshotReceived(const WorldSnapshotReceivedEvent& event);
 
-	void Reset(const GameResetEvent&);
+	void Reset(const GameResetEvent& event);
+
+	[[nodiscard]] unsigned short LoadoutTierOf(TankType type) const;
+	void SpendLoadout(Uuid uuid, TankType type);
 
 	void OnSpawnDelayFinished(Uuid uuid);
-	void DelayedSpawnWith(const DelayedTankSpawn& params) const;
-	void RestoreTank(const TankSnapshot& tank) const;
+	void DelayedSpawnWith(const DelayedTankSpawn& params);
+	void RestoreTank(const TankSnapshot& tank);
 	void CancelDelayedSpawnsOf(Faction faction);
 	void DropDelayedSpawn(Uuid uuid);
 

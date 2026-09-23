@@ -19,6 +19,7 @@ protected:
 	network::WireFrame _frame{.reliable = "frame", .latest = {}, .isSnapshot = false};
 };
 
+// a client whose backlog was given up on has missed part of the field, so it is owed the whole of it
 TEST_F(SessionTest, AClientThatStopsAckingIsOwedASnapshotOnceItsBacklogIsDropped)
 {
 	for (std::size_t i = 0u; i < network::DatagramLink::kMaxBacklog; ++i)

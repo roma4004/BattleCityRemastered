@@ -9,6 +9,7 @@
 #include "components/events/InputEvents.h"
 #include "components/events/ServerConsoleEvents.h"
 #include "components/managers/FramePerSecondManager.h"
+#include "components/LevelRotation.h"
 #include "components/MapLoader.h"
 #include "enums/GameMode.h"
 #include "enums/GameState.h"
@@ -18,7 +19,6 @@
 #include <chrono>
 #include <csignal>
 #include <cstdint>
-#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -64,21 +64,12 @@ private:
 //with the complaint is the answer to the question the complaint raises
 std::string KnownMaps()
 {
-	std::vector<std::string> names;
-	std::error_code ec;
-	for (const auto& entry: std::filesystem::directory_iterator{"Resources/Maps", ec})
-	{
-		if (entry.path().extension() == ".map")
-		{
-			names.push_back(entry.path().stem().string());
-		}
-	}
+	const std::vector<std::string> names{LevelRotation{}.Names()};
 
 	//NOTE: one named result and one object returned - two returns of different ones is what -Wnrvo is about
 	std::string listed{};
 	if (!names.empty())
 	{
-		std::ranges::sort(names);
 
 		listed = ". known maps: ";
 		for (const std::string& name: names)

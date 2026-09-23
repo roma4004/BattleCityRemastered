@@ -117,21 +117,28 @@ void Client::OnDatagram(const std::string_view datagram, const Clock::time_point
 		return;
 	}
 
-	if (!_isConnected && !_isShuttingDown)
-	{
-		Log::Info("client connected");
-		_reconnectAttempts = 0;
-		_reconnectAbandoned = false;
-		_isConnected = true;
-		_commandQueue.Enqueue([this] { _events->EmitEvent(ClientConnectedToHostEvent{}); });
-	}
+	const bool isFirstAnswer{!_isConnected && !_isShuttingDown};
 
 	Transmit(now);
 
 	if (!Dispatch(*arrivals))
 	{
 		HandleProtocolError();
+		return;
 	}
+
+	//NOTE: announced after the batch, not before - a refusal rides in the very datagram that answers the
+	//hello, and the link is gone by now, so a turned-away client never reports a seat it did not get
+	if (!isFirstAnswer || !_link || _isShuttingDown)
+	{
+		return;
+	}
+
+	Log::Info("client connected");
+	_reconnectAttempts = 0;
+	_reconnectAbandoned = false;
+	_isConnected = true;
+	_commandQueue.Enqueue([this] { _events->EmitEvent(ClientConnectedToHostEvent{}); });
 }
 
 void Client::ScheduleTick()

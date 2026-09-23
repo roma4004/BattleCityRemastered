@@ -73,8 +73,7 @@ void GameStatistics::OnBulletHit(const StatisticsBulletHitEvent& event)
 						  .byPlayerTwo = _data.bulletHitByPlayerTwo});
 }
 
-//NOTE: friendly fire is one bucket, whichever player pulled the trigger - hence the same
-//counter in two positions
+//NOTE: friendly fire is one bucket, whichever player pulled the trigger - hence one counter in two positions
 void GameStatistics::OnTankHit(const StatisticsTankHitEvent& event)
 {
 	switch (event.who)

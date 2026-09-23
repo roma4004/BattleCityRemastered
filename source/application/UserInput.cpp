@@ -12,6 +12,8 @@
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_gamepad.h>
 #include <algorithm>
+#include <array>
+#include <cstddef>
 #include "utils/Log.h"
 
 namespace
@@ -37,9 +39,6 @@ UserInput::UserInput(const std::shared_ptr<EventSystem>& events, const WindowCon
 	Subscribe();
 
 	InitControllers();
-
-	_firstMenuMouseTileDefault = {.x = 175, .y = 135, .w = 200, .h = 30};
-	InitMouseHoverTiles();
 }
 
 UserInput::~UserInput()
@@ -53,8 +52,7 @@ void UserInput::Subscribe()
 	_subs.push_back(_events->AddListener(this, &UserInput::SwapControllers));
 	_subs.push_back(_events->AddListener(this, &UserInput::OnPreTickUpdate));
 	_subs.push_back(_events->AddListener(this, &UserInput::OnMenuShowed));
-	_subs.push_back(_events->AddListener(this, &UserInput::OnMenuPosChanged));
-	_subs.push_back(_events->AddListener(this, &UserInput::OnMenuContentShifted));
+	_subs.push_back(_events->AddListener(this, &UserInput::OnMenuTilesPlaced));
 }
 
 void UserInput::OnPauseStatus(const PauseStatusEvent& event) { _isPause = event.isPaused; }
@@ -63,16 +61,27 @@ void UserInput::OnPreTickUpdate(const PreTickUpdateEvent&) { Update(); }
 
 void UserInput::OnMenuShowed(const MenuShowedEvent& event) { _isMenuDisplayed = event.isShown; }
 
-void UserInput::OnMenuPosChanged(const MenuPosChangedEvent& event)
+void UserInput::OnMenuTilesPlaced(const MenuTilesPlacedEvent& event)
 {
-	_menuPos = event.pos;
-	InitMouseHoverTiles();
-}
+	static constexpr std::array kModes{GameMode::OnePlayer, GameMode::TwoPlayers, GameMode::CoopWithBot,
+									   GameMode::PlayAsHost, GameMode::PlayAsClient};
 
-void UserInput::OnMenuContentShifted(const MenuContentShiftedEvent& event)
-{
-	_menuContentShiftX = event.shiftX;
-	InitMouseHoverTiles();
+	_menuTiles.clear();
+	for (std::size_t row{}; row < event.tiles.size() && row < kModes.size(); ++row)
+	{
+		_menuTiles.push_back(SubTile{.rect = {.x = event.tiles[row].x,
+											  .y = event.tiles[row].y,
+											  .w = event.tileSize.x,
+											  .h = event.tileSize.y},
+									 .gameMode = kModes[row]});
+	}
+
+	_allTilesRect = _menuTiles.empty()
+							? SDL_Rect{}
+							: SDL_Rect{.x = _menuTiles.front().rect.x,
+									   .y = _menuTiles.front().rect.y,
+									   .w = event.tileSize.x,
+									   .h = event.tileSize.y * static_cast<int>(_menuTiles.size())};
 }
 
 void UserInput::WindowDragEvents(const SDL_Event& event)
@@ -159,6 +168,7 @@ void UserInput::MouseEvents(const SDL_Event& event)
 		const SDL_Point mouse{ToLogical(event.button.x, event.button.y)};
 		if (_isMenuDisplayed && SDL_PointInRect(&mouse, &_allTilesRect))
 		{
+			_isMenuPressHeld = true;
 			_events->EmitEvent(EnterEvent{.isPressed = true});
 		}
 
@@ -168,7 +178,11 @@ void UserInput::MouseEvents(const SDL_Event& event)
 	if (event.type == SDL_EVENT_MOUSE_BUTTON_UP && event.button.button == SDL_BUTTON_LEFT)
 	{
 		_mouseButtons.MouseLeftButton = false;
-		_events->EmitEvent(EnterEvent{.isPressed = false});
+		if (_isMenuPressHeld)
+		{
+			_isMenuPressHeld = false;
+			_events->EmitEvent(EnterEvent{.isPressed = false});
+		}
 
 		return;
 	}
@@ -284,20 +298,18 @@ void UserInput::GamepadKeyPressRelease(const SDL_Event& event, const bool& isPre
 			case SDL_GAMEPAD_BUTTON_SOUTH:
 				_events->EmitEvent(Key(LocalInput(controllerSlot)), FireEvent{.isPressed = isPressed});
 				break;
+			//NOTE: B, X and Y go out as GamepadButtonEvent, which nothing consumes yet - Y also swaps the seats
 			case SDL_GAMEPAD_BUTTON_EAST:
-				//NOTE: no listener consumes this yet
 				_events->EmitEvent(GamepadButtonEvent{.controllerSlot = controllerSlot,
 													  .button = GamepadButton::B,
 													  .isPressed = isPressed});
 				break;
 			case SDL_GAMEPAD_BUTTON_WEST:
-				//NOTE: no listener consumes this yet
 				_events->EmitEvent(GamepadButtonEvent{.controllerSlot = controllerSlot,
 													  .button = GamepadButton::X,
 													  .isPressed = isPressed});
 				break;
 			case SDL_GAMEPAD_BUTTON_NORTH:
-				//NOTE: no listener consumes this yet
 				_events->EmitEvent(GamepadButtonEvent{.controllerSlot = controllerSlot,
 													  .button = GamepadButton::Y,
 													  .isPressed = isPressed});
@@ -592,22 +604,3 @@ bool UserInput::IsSameController(const std::shared_ptr<SDL_Gamepad>& controller,
 	return false;
 }
 
-void UserInput::InitMouseHoverTiles()
-{
-	auto [x, y, w, h] = SDL_Rect{
-			.x = _menuPos.x + _menuContentShiftX + _firstMenuMouseTileDefault.x,
-			.y = _menuPos.y + _firstMenuMouseTileDefault.y,
-			.w = _firstMenuMouseTileDefault.w,
-			.h = _firstMenuMouseTileDefault.h
-	};
-
-	_allTilesRect = {.x = x, .y = y, .w = w, .h = h * 5};
-
-	_menuTiles = {
-			{.rect = {.x = x, .y = y + h * 0, .w = w, .h = h}, .gameMode = GameMode::OnePlayer},
-			{.rect = {.x = x, .y = y + h * 1, .w = w, .h = h}, .gameMode = GameMode::TwoPlayers},
-			{.rect = {.x = x, .y = y + h * 2, .w = w, .h = h}, .gameMode = GameMode::CoopWithBot},
-			{.rect = {.x = x, .y = y + h * 3, .w = w, .h = h}, .gameMode = GameMode::PlayAsHost},
-			{.rect = {.x = x, .y = y + h * 4, .w = w, .h = h}, .gameMode = GameMode::PlayAsClient}
-	};
-}

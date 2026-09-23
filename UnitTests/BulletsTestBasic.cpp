@@ -16,6 +16,7 @@
 #include "gtest/gtest.h"
 #include <memory>
 
+// a bullet and whatever it flies into, both placed by hand: one tick moves the shot, then health or position is read
 class BulletTest : public testing::Test// NOLINT(clang-diagnostic-padded)
 {
 protected:
@@ -59,6 +60,7 @@ protected:
 	}
 };
 
+// a placement bypassing flight, the way the pool hands a bullet out
 TEST_F(BulletTest, BulletSetPos)
 {
 	const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};
@@ -70,6 +72,7 @@ TEST_F(BulletTest, BulletSetPos)
 	EXPECT_EQ(bullet->GetPos(), (FPoint{.x = windowWidth, .y = windowHeight}));
 }
 
+// and the same for the way it faces
 TEST_F(BulletTest, BulletSetDirection)
 {
 	const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};
@@ -82,6 +85,7 @@ TEST_F(BulletTest, BulletSetDirection)
 	EXPECT_EQ(Direction::UP, bullet->GetDirection());
 }
 
+// all four directions with room ahead: the shot advances along its axis and holds the other one
 TEST_F(BulletTest, BulletMoveInsideScreen)
 {
 	const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};
@@ -125,6 +129,7 @@ TEST_F(BulletTest, BulletMoveInsideScreen)
 	}
 }
 
+// the same four against the edge of the field, where the shot dies instead of flying on
 TEST_F(BulletTest, BulletMoveOutSideScreen)
 {
 	const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};
@@ -161,6 +166,7 @@ TEST_F(BulletTest, BulletMoveOutSideScreen)
 	}
 }
 
+// a brick in the way takes the damage of a shot from below
 TEST_F(BulletTest, BulletDamageBrickWhenMoveUp)
 {
 	CreateBullet({.x = 0.0, .y = 7.0}, Direction::UP, Author::Player1);
@@ -176,6 +182,7 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveUp)
 	EXPECT_GT(brickWallHealth, brickWall->GetHealth());
 }
 
+// and from the right
 TEST_F(BulletTest, BulletDamageBrickWhenMoveLeft)
 {
 	CreateBullet({.x = 7.0, .y = 0.0}, Direction::LEFT, Author::Player1);
@@ -191,6 +198,7 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveLeft)
 	EXPECT_GT(brickWallHealth, brickWall->GetHealth());
 }
 
+// from above
 TEST_F(BulletTest, BulletDamageBrickWhenMoveDown)
 {
 	CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
@@ -206,6 +214,7 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveDown)
 	EXPECT_GT(brickWallHealth, brickWall->GetHealth());
 }
 
+// and from the left
 TEST_F(BulletTest, BulletDamageBrickWhenMoveRight)
 {
 	CreateBullet({.x = 0.0, .y = 0.0}, Direction::RIGHT, Author::Player1);
@@ -221,6 +230,7 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveRight)
 	EXPECT_GT(brickWallHealth, brickWall->GetHealth());
 }
 
+// the same tile at the edge of the blast, shot from each of the four sides - one radius, not four
 TEST_F(BulletTest, BulletBlowRadiusIsDirectionSymmetric)
 {
 	constexpr double mirrorAxis{200.0};
@@ -265,6 +275,7 @@ TEST_F(BulletTest, BulletBlowRadiusIsDirectionSymmetric)
 	EXPECT_EQ(damageShotRight, farTileDamage(Direction::UP));
 }
 
+// a tank takes the hit like any other target
 TEST_F(BulletTest, BulletDamageTank)
 {
 	CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
@@ -285,6 +296,7 @@ TEST_F(BulletTest, BulletDamageTank)
 	EXPECT_EQ(enemyBot->GetHealth(), 0);
 }
 
+// two shots meeting kill each other
 TEST_F(BulletTest, BulletToBulletDamageEachOther)
 {
 	const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};
@@ -299,6 +311,7 @@ TEST_F(BulletTest, BulletToBulletDamageEachOther)
 	EXPECT_GT(bullet2Health, bullet2->GetHealth());
 }
 
+// steel swallows a tier 1 shot whole
 TEST_F(BulletTest, BulletCantDamageSteelWall)
 {
 	const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};
@@ -316,6 +329,7 @@ TEST_F(BulletTest, BulletCantDamageSteelWall)
 	EXPECT_EQ(steelWallHealth, steelWall->GetHealth());
 }
 
+// and water is flown over rather than hit
 TEST_F(BulletTest, BulletCantDamageWater)
 {
 	const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};
@@ -333,6 +347,7 @@ TEST_F(BulletTest, BulletCantDamageWater)
 	EXPECT_EQ(waterTileHealth, waterTile->GetHealth());
 }
 
+// the eagle's wall, on the other hand, breaks like brick
 TEST_F(BulletTest, BulletDamagefortressWall)
 {
 	CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
@@ -349,6 +364,7 @@ TEST_F(BulletTest, BulletDamagefortressWall)
 	EXPECT_FALSE(fortressWall->GetIsAlive());
 }
 
+// the shot spends itself on what it hits, so it dies with the wall
 TEST_F(BulletTest, BulletHaveSelfDamageWhenHit)
 {
 	const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};

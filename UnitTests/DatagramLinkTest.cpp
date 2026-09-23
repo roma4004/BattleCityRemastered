@@ -37,6 +37,7 @@ protected:
 	}
 };
 
+// the plain case - what was put in comes out on the other side
 TEST_F(DatagramLinkTest, AMessageArrivesWhole)
 {
 	ASSERT_TRUE(_host.SendReliable("hello"));
@@ -46,6 +47,7 @@ TEST_F(DatagramLinkTest, AMessageArrivesWhole)
 	EXPECT_EQ(_messages, std::vector<std::string>{"hello"});
 }
 
+// the same datagram handed over twice is delivered once
 TEST_F(DatagramLinkTest, ADuplicatedDatagramDeliversOnce)
 {
 	ASSERT_TRUE(_host.SendReliable("hello"));
@@ -57,6 +59,7 @@ TEST_F(DatagramLinkTest, ADuplicatedDatagramDeliversOnce)
 	EXPECT_EQ(_messages, std::vector<std::string>{"hello"});
 }
 
+// a lost one waits out the timeout before it is repeated, not the next tick
 TEST_F(DatagramLinkTest, ALostDatagramIsSentAgainOnlyOnceTheRetransmitTimeoutPasses)
 {
 	ASSERT_TRUE(_host.SendReliable("hello"));
@@ -72,6 +75,7 @@ TEST_F(DatagramLinkTest, ALostDatagramIsSentAgainOnlyOnceTheRetransmitTimeoutPas
 	EXPECT_EQ(_messages, std::vector<std::string>{"hello"});
 }
 
+// and an acknowledged one is never repeated at all
 TEST_F(DatagramLinkTest, AnAcknowledgedMessageIsNotSentAgain)
 {
 	ASSERT_TRUE(_host.SendReliable("hello"));
@@ -85,6 +89,7 @@ TEST_F(DatagramLinkTest, AnAcknowledgedMessageIsNotSentAgain)
 	EXPECT_TRUE(_host.IsDrained());
 }
 
+// datagrams arriving out of order are handed up in the order they were sent
 TEST_F(DatagramLinkTest, ReorderedDatagramsDeliverInTheOrderSent)
 {
 	ASSERT_TRUE(_host.SendReliable("first"));
@@ -99,6 +104,7 @@ TEST_F(DatagramLinkTest, ReorderedDatagramsDeliverInTheOrderSent)
 	EXPECT_EQ(_messages, (std::vector<std::string>{"first", "second"}));
 }
 
+// a message too big for one datagram travels in pieces and arrives whole
 TEST_F(DatagramLinkTest, AMessageLargerThanADatagramIsSplitAndPutBackTogether)
 {
 	std::string snapshot(5000u, '\0');
@@ -119,6 +125,7 @@ TEST_F(DatagramLinkTest, AMessageLargerThanADatagramIsSplitAndPutBackTogether)
 	EXPECT_EQ(_messages.front(), snapshot);
 }
 
+// of several values of one entity only the newest leaves
 TEST_F(DatagramLinkTest, OnlyTheNewestValueOfAnEntityGoesOut)
 {
 	_host.SendLatest(_tank, "old");
@@ -129,6 +136,7 @@ TEST_F(DatagramLinkTest, OnlyTheNewestValueOfAnEntityGoesOut)
 	EXPECT_EQ(_latest, std::vector<std::string>{"new"});
 }
 
+// and one arriving after a newer one is dropped on the far side
 TEST_F(DatagramLinkTest, AnOutdatedValueArrivingLateIsDropped)
 {
 	_host.SendLatest(_tank, "old");
@@ -154,6 +162,7 @@ TEST_F(DatagramLinkTest, ALostValueIsSentAgainWhileItIsStillTheNewest)
 	EXPECT_EQ(_latest, std::vector<std::string>{"stopped"});
 }
 
+// and dropped instead once something has
 TEST_F(DatagramLinkTest, ALostValueAlreadyReplacedIsNeverSentAgain)
 {
 	_host.SendLatest(_tank, "old");
@@ -221,6 +230,7 @@ TEST_F(DatagramLinkTest, AValueArrivingAheadOfItsSnapshotIsHandedOverRightAfterI
 	EXPECT_FALSE(_client.IsAwaitingSnapshot());
 }
 
+// a snapshot carries the field, so the values it already contains are dropped
 TEST_F(DatagramLinkTest, ASnapshotRetiresTheValuesItAlreadyHolds)
 {
 	_host.SendLatest(_tank, "unacked");
@@ -237,6 +247,7 @@ TEST_F(DatagramLinkTest, ASnapshotRetiresTheValuesItAlreadyHolds)
 	EXPECT_TRUE(_latest.empty()) << "a value the snapshot already holds is still being resent";
 }
 
+// and a value waiting for a snapshot that never arrived is handed over with the next one
 TEST_F(DatagramLinkTest, AValueWaitingForASnapshotThatNeverCameGoesWithTheNextOne)
 {
 	ASSERT_TRUE(_host.SendSnapshot("snapshot that is dropped"));
@@ -260,6 +271,7 @@ TEST_F(DatagramLinkTest, AValueWaitingForASnapshotThatNeverCameGoesWithTheNextOn
 	EXPECT_FALSE(_client.IsAwaitingSnapshot());
 }
 
+// the timeout is measured, not fixed - a slow round trip stretches it
 TEST_F(DatagramLinkTest, TheRetransmitTimeoutFollowsTheMeasuredRoundTrip)
 {
 	ASSERT_EQ(_host.RetransmitTimeout(), 200ms);
@@ -293,6 +305,7 @@ TEST_F(DatagramLinkTest, ABacklogPastTheLimitIsDroppedAndThePeerSkipsToTheNextMe
 	EXPECT_EQ(_messages, std::vector<std::string>{"snapshot"});
 }
 
+// a peer with nothing to say still sends heartbeats, so silence means a real loss
 TEST_F(DatagramLinkTest, AQuietPeerKeptAliveByHeartbeatsIsNotSilent)
 {
 	for (auto elapsed{0ms}; elapsed < 3s; elapsed += 100ms)
@@ -307,6 +320,7 @@ TEST_F(DatagramLinkTest, AQuietPeerKeptAliveByHeartbeatsIsNotSilent)
 	EXPECT_TRUE(_client.IsSilent(_now));
 }
 
+// and a datagram from another connection is ignored instead of being read as ours
 TEST_F(DatagramLinkTest, ADatagramOfAnotherConnectionIsIgnored)
 {
 	network::DatagramLink stranger{8u, _now};

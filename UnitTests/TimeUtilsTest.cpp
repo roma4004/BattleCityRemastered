@@ -46,8 +46,7 @@ TEST_F(TimeUtilsTest, SetPausedIsIdempotent)
 	EXPECT_GE(TimeUtils::Now(), resumed);
 }
 
-// start a 100ms cooldown, spend 250ms paused: it is still not finished, and only 120ms of running
-// time finishes it
+// start a 100ms cooldown and spend 250ms paused: it is unfinished, and only 120ms of running time finishes it
 TEST_F(TimeUtilsTest, CooldownSkipsThePause)
 {
 	const Timer timer{100ms};

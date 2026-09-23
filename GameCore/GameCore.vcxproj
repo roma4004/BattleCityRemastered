@@ -177,6 +177,8 @@
     <ClCompile Include="..\source\components\input\InputProviderForBot.cpp" />
     <ClCompile Include="..\source\components\input\InputProviderForPlayer.cpp" />
     <ClCompile Include="..\source\components\input\GamepadDirection.cpp" />
+    <ClCompile Include="..\source\components\LevelRotation.cpp" />
+    <ClCompile Include="..\source\components\UiLayout.cpp" />
     <ClCompile Include="..\source\components\LineOfSight.cpp" />
     <ClCompile Include="..\source\components\managers\AnimationManager.cpp" />
     <ClCompile Include="..\source\components\managers\BonusManager.cpp" />
@@ -225,6 +227,7 @@
     <ClCompile Include="..\source\network\Serializer.cpp" />
     <ClCompile Include="..\source\utils\ColliderUtils.cpp" />
     <ClCompile Include="..\source\utils\Log.cpp" />
+    <ClCompile Include="..\source\utils\MathUtils.cpp" />
     <ClCompile Include="..\source\utils\ObjectUtils.cpp" />
     <ClCompile Include="..\source\utils\Timer.cpp" />
     <ClCompile Include="..\source\utils\TimeUtils.cpp" />
@@ -267,6 +270,9 @@
     <ClInclude Include="..\headers\components\input\GamepadDirection.h" />
     <ClInclude Include="..\headers\components\input\MouseButton.h" />
     <ClInclude Include="..\headers\components\input\PlayerKeys.h" />
+    <ClInclude Include="..\headers\components\LevelRotation.h" />
+    <ClInclude Include="..\headers\components\UiLayout.h" />
+    <ClInclude Include="..\headers\components\UiTable.h" />
     <ClInclude Include="..\headers\components\LineOfSight.h" />
     <ClInclude Include="..\headers\components\managers\AnimationManager.h" />
     <ClInclude Include="..\headers\components\managers\BonusManager.h" />
@@ -333,6 +339,7 @@
     <ClInclude Include="..\headers\enums\TankType.h" />
     <ClInclude Include="..\headers\enums\Terrain.h" />
     <ClInclude Include="..\headers\enums\TextBlockAlign.h" />
+    <ClInclude Include="..\headers\enums\UiIcon.h" />
     <ClInclude Include="..\headers\enums\TextureOffset.h" />
     <ClInclude Include="..\headers\enums\WindowSide.h" />
     <ClInclude Include="..\headers\interfaces\IDrawable.h" />
@@ -386,6 +393,7 @@
     <ClInclude Include="..\headers\utils\ColliderUtils.h" />
     <ClInclude Include="..\headers\utils\DirectionUtils.h" />
     <ClInclude Include="..\headers\utils\Log.h" />
+    <ClInclude Include="..\headers\utils\MathUtils.h" />
     <ClInclude Include="..\headers\utils\ObjectUtils.h" />
     <ClInclude Include="..\headers\utils\PixelUtils.h" />
     <ClInclude Include="..\headers\utils\RandUtils.h" />

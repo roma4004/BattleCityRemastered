@@ -11,6 +11,8 @@
 #include <memory>
 #include <vector>
 
+// the phase machine alone: a mode is applied, events are fed in, and the phase, the announcements or the
+// match starts are read back
 class GameStateTest : public testing::Test
 {
 protected:
@@ -37,6 +39,7 @@ protected:
 	}
 };
 
+// a local mode has both seats filled from the start, so the match begins on the spot
 TEST_F(GameStateTest, LocalGameStartsPlayingWithNoOneToWaitFor)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::OnePlayer});
@@ -45,6 +48,7 @@ TEST_F(GameStateTest, LocalGameStartsPlayingWithNoOneToWaitFor)
 	EXPECT_EQ(std::vector{GameState::Playing}, _announced);
 }
 
+// a network mode has nobody in its seats yet and waits
 TEST_F(GameStateTest, NetworkGameStartsInTheLobby)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
@@ -52,6 +56,7 @@ TEST_F(GameStateTest, NetworkGameStartsInTheLobby)
 	EXPECT_EQ(GameState::Lobby, _stateManager->GetState());
 }
 
+// one ready seat is not enough for the server - the second one starts the match
 TEST_F(GameStateTest, TheServerLeavesTheLobbyOnceBothSeatsAreReady)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
@@ -99,6 +104,7 @@ TEST_F(GameStateTest, ALostSeatLeavesTheMatchToThePlayerWhoStayed)
 	EXPECT_EQ(_matchStarts, 0) << "the returning player restarted the match of the one who stayed";
 }
 
+// a quit and a lost link, in both orders: whichever empties the last seat ends the match
 TEST_F(GameStateTest, EveryKindOfLeaveEmptyingTheLastSeatGoesBackToTheLobby)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
@@ -119,6 +125,7 @@ TEST_F(GameStateTest, EveryKindOfLeaveEmptyingTheLastSeatGoesBackToTheLobby)
 	EXPECT_EQ(GameState::Lobby, _stateManager->GetState());
 }
 
+// and on a client, every way of losing the host does the same
 TEST_F(GameStateTest, EveryKindOfHostLossSendsAClientBackToTheLobby)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsClient});
@@ -139,6 +146,7 @@ TEST_F(GameStateTest, EveryKindOfHostLossSendsAClientBackToTheLobby)
 	EXPECT_EQ(GameState::Lobby, _stateManager->GetState());
 }
 
+// a client that gave up reconnecting dials again and waits for the phase once more
 TEST_F(GameStateTest, ReconnectingAfterALossStartsTheMatchAgain)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsClient});
@@ -155,6 +163,7 @@ TEST_F(GameStateTest, ReconnectingAfterALossStartsTheMatchAgain)
 	EXPECT_EQ(std::vector{GameState::Playing}, _announced);
 }
 
+// a network event reaching a local match is ignored - there is no lobby to go back to
 TEST_F(GameStateTest, ALocalGameNeverEntersTheLobby)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::OnePlayer});
@@ -163,6 +172,7 @@ TEST_F(GameStateTest, ALocalGameNeverEntersTheLobby)
 	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
 }
 
+// pausing and resuming a running match
 TEST_F(GameStateTest, PauseOnlyTogglesWhileTheMatchRuns)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::OnePlayer});
@@ -174,6 +184,7 @@ TEST_F(GameStateTest, PauseOnlyTogglesWhileTheMatchRuns)
 	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
 }
 
+// the same key in the lobby changes nothing
 TEST_F(GameStateTest, PausingInTheLobbyKeepsTheLobby)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
@@ -183,6 +194,7 @@ TEST_F(GameStateTest, PausingInTheLobbyKeepsTheLobby)
 	EXPECT_EQ(GameState::Lobby, _stateManager->GetState());
 }
 
+// a result stands until the field is cleared, and a pause key does not clear it
 TEST_F(GameStateTest, WinAndLossSurviveUntilTheFieldIsCleared)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::OnePlayer});
@@ -225,6 +237,7 @@ TEST_F(GameStateTest, RestartingTheSameModeAnnouncesThePhaseAgain)
 	EXPECT_EQ(std::vector{GameState::Playing}, _announced);
 }
 
+// applying the mode again drops the ready seats and puts the server back in the lobby
 TEST_F(GameStateTest, LeavingANetworkGameForgetsThePeers)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
@@ -237,6 +250,7 @@ TEST_F(GameStateTest, LeavingANetworkGameForgetsThePeers)
 	EXPECT_EQ(GameState::Lobby, _stateManager->GetState()) << "a new match kept the peers of the old one";
 }
 
+// leaving a pause announces the phase, but it is the same match
 TEST_F(GameStateTest, ResumingFromAPauseStartsNoMatch)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::OnePlayer});
@@ -251,6 +265,7 @@ TEST_F(GameStateTest, ResumingFromAPauseStartsNoMatch)
 	EXPECT_EQ(_matchStarts, 0);
 }
 
+// a local mode is one announcement and one match start
 TEST_F(GameStateTest, ApplyingALocalModeStartsAMatch)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::OnePlayer});
@@ -260,6 +275,7 @@ TEST_F(GameStateTest, ApplyingALocalModeStartsAMatch)
 	EXPECT_EQ(_matchStarts, 1);
 }
 
+// on a server it is the seat that fills last that starts it
 TEST_F(GameStateTest, TheLastPeerToJoinStartsTheMatch)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
@@ -312,6 +328,7 @@ TEST_F(GameStateTest, AClientStartsTheMatchOnlyWhenTheServerAnnouncesIt)
 	EXPECT_EQ(_matchStarts, 1);
 }
 
+// a restart empties both seats, so one ready player waits again
 TEST_F(GameStateTest, ARestartPutsTheServerBackToWaitingForBothSeats)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
@@ -341,6 +358,7 @@ TEST_F(GameStateTest, ARestartAnnouncesTheLobbyItIsAlreadyIn)
 	EXPECT_EQ(std::vector{GameState::Lobby}, _announced);
 }
 
+// entering the lobby starts nothing by itself
 TEST_F(GameStateTest, WaitingInTheLobbyStartsNoMatch)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
