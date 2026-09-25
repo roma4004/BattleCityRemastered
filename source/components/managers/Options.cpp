@@ -1,5 +1,6 @@
 ﻿#include "components/Options.h"
 #include "components/EventSystem.h"
+#include "components/input/InputProviderForMenu.h"
 
 /* 
  * План меню опций:
@@ -15,14 +16,19 @@
  */
 
 Options::Options(UPoint windowSize, const std::shared_ptr<EventSystem>& events) 
-: _events{events}
-, _name{std::string("Options")}
-{
-	Subscribe();
+	: _pos{.x = 25, .y = 0}
+	, _windowHeight{static_cast<int>(windowSize.y)}
+	, _yOffsetStart{static_cast<int>(windowSize.y)}
+	, _name{std::string("Options")}
+	, _selectedGameMode{GameMode::EndIterator}
+	, _events{events}
+	, _input{std::make_unique<InputProviderForMenu>(events)}
+		{
+			Subscribe();
 
-	std::shared_ptr<EventSystem> _events{nullptr};
-	_windowHeight = static_cast<int>(windowSize.y);
-}
+			//std::shared_ptr<EventSystem> _events{nullptr};
+			_windowHeight = static_cast<int>(windowSize.y);
+		}
 
 Options::~Options()
 {
@@ -31,7 +37,7 @@ Options::~Options()
 
 void Options::Subscribe()
 {
-	
+	_events->AddListener("DrawOptions", _name, [this](){ this->Draw(); });
 }
 
 void Options::Unsubscribe() const { _events->RemoveAllListeners(_name); }
@@ -60,12 +66,12 @@ void Options::DrawTextLine(Point& posText, std::string text) const
 void Options::Draw()
 {
 	// first time animation, slow scrolling from bottom corner to vertical center
-	if (constexpr int yOffsetEnd = 0; _yOffsetStart > yOffsetEnd)
+	/*if (constexpr int yOffsetEnd = 0; _yOffsetStart > yOffsetEnd)
 	{
 		_yOffsetStart -= 3;
 		_pos.y = _padding + _yOffsetStart;
 		_events->EmitEvent("MenuPosChanged", _pos);
-	}
+	}*/
 
 	_events->EmitEvent("RenderMenuBackground", _pos);
 }
