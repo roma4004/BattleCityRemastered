@@ -51,12 +51,6 @@ struct FireEvent
 	bool isPressed;
 };
 
-//TODO: nothing in the codebase listens to this - wire it up or drop it
-struct ResetKeyEvent
-{
-	bool isPressed;
-};
-
 struct EnterEvent
 {
 	bool isPressed;

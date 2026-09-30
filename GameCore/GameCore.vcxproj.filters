@@ -117,9 +117,6 @@
     <ClCompile Include="..\source\behavior\ShootingBeh.cpp">
       <Filter>source\behavior</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\components\AnimatedObjects.cpp">
-      <Filter>source\components</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\components\BonusSpawner.cpp">
       <Filter>source\components</Filter>
     </ClCompile>
@@ -506,7 +503,7 @@
     <ClInclude Include="..\headers\entities\bonuses\Bonus.h">
       <Filter>headers\entities\bonuses</Filter>
     </ClInclude>
-    <ClInclude Include="..\headers\entities\BulletCalibre.h">
+    <ClInclude Include="..\headers\entities\BulletCaliber.h">
       <Filter>headers\entities</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\entities\obstacles\BrickWall.h">
@@ -555,6 +552,9 @@
       <Filter>headers\entities\pawns</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\entities\Tags.h">
+      <Filter>headers\entities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\entities\TankModelSpec.h">
       <Filter>headers\entities</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\enums\AnimationType.h">
@@ -606,6 +606,9 @@
       <Filter>headers\enums</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\enums\StatisticsType.h">
+      <Filter>headers\enums</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\enums\TankModel.h">
       <Filter>headers\enums</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\enums\TankType.h">
@@ -723,6 +726,9 @@
       <Filter>headers\network\commands</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\commands\TankSpawnComplete.h">
+      <Filter>headers\network\commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\commands\TankSpawnMoved.h">
       <Filter>headers\network\commands</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\commands\TierChange.h">

@@ -24,7 +24,7 @@ protected:
 	GameConfig _gameConfig{};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	double _deltaTimeOneFrame{1.0 / 60.0};
-	BulletCalibre _calibre{.speed = 300.0, .damage = 1u, .damageRadius = 12.0, .tier = 3u, .size{.x = 6.0, .y = 5.0}};
+	BulletCaliber _caliber{.speed = 300.0, .damage = 1u, .damageRadius = 12.0, .tier = 3u, .size{.x = 6.0, .y = 5.0}};
 	Uuid _uuid{};
 	double _gridSize{1};
 	unsigned short _bulletHealth{1};
@@ -45,9 +45,9 @@ protected:
 
 	std::shared_ptr<Bullet> CreateBullet(const FPoint pos, const Direction dir, const Author author)
 	{
-		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _calibre.size.x, .h = _calibre.size.y};
+		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _caliber.size.x, .h = _caliber.size.y};
 
-		return TestUtils::CreateBullet(rect, _bulletHealth, _bulletPool, _events, _calibre, dir, author);
+		return TestUtils::CreateBullet(rect, _bulletHealth, _bulletPool, _events, _caliber, dir, author);
 	}
 
 	std::shared_ptr<BaseObj> SpawnObstacle(const ObjRectangle rect, const ObstacleType type) const
@@ -61,7 +61,7 @@ TEST_F(BulletTestAdvanced, BulletTier2CanDestroySteelWall)
 {
 	const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};
 
-	const ObjRectangle wallRect{.x = 0.0, .y = _calibre.size.y + 1, .w = _gridSize, .h = _gridSize};
+	const ObjRectangle wallRect{.x = 0.0, .y = _caliber.size.y + 1, .w = _gridSize, .h = _gridSize};
 	const auto steelWall{SpawnObstacle(wallRect, ObstacleType::Steel)};
 
 	steelWall->SetHealth(1);
@@ -73,7 +73,7 @@ TEST_F(BulletTestAdvanced, BulletTier2CanDestroySteelWall)
 	EXPECT_EQ(steelWall->GetHealth(), 0);
 }
 
-// The blast is centred where the bullet stopped, so a shot digs the same depth at any frame rate:
+// The blast is centered where the bullet stopped, so a shot digs the same depth at any frame rate:
 // the wall behind the one that was hit stays out of reach at 30 and at 144 frames per second alike
 TEST_F(BulletTestAdvanced, BlastSparesTheWallBehindAtThirtyFps)
 {
@@ -139,7 +139,7 @@ TEST_F(BulletTestAdvanced, BushBurnsInABlastFromTierThree)
 // a bush is burnt out only by a tier 3 blast, and survives anything under it
 TEST_F(BulletTestAdvanced, BushSurvivesABlastBelowTierThree)
 {
-	_calibre.tier = 2u;
+	_caliber.tier = 2u;
 
 	CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
 

@@ -135,7 +135,7 @@ TEST_F(CoopBotTest, CoopNoShootToCoop)
 {
 	const auto coopBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN)};
 
-	CreateBot({.x = 0.0, .y = _tankSize * 2.0}, Author::Player2, Direction::UP);
+	CreateBot({.x = 0.0, .y = _tankSize * 3.0}, Author::Player2, Direction::UP);
 
 	const size_t sizeBefore{_allObjects.size()};
 
@@ -149,7 +149,7 @@ TEST_F(CoopBotTest, CoopNoShootToPlayer1)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
 
-	CreatePlayer({.x = 0.0, .y = _tankSize * 2.0}, Author::Player1, Direction::UP);
+	CreatePlayer({.x = 0.0, .y = _tankSize * 3.0}, Author::Player1, Direction::UP);
 
 	const size_t sizeBefore{_allObjects.size()};
 
@@ -163,7 +163,7 @@ TEST_F(CoopBotTest, CoopShootToBrick)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
 
-	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize};
 	SpawnObstacleArea(rect, ObstacleType::Brick);
 
 	const size_t sizeBefore{_allObjects.size()};
@@ -188,13 +188,12 @@ TEST_F(CoopBotTest, CoopTooCloseToShootTheBrick)
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
 
-//NOTE: farther than the other cases - a tier-three blast on a wall one tank away would catch the shooter,
-//and the bot holds its fire
+//NOTE: a cell farther than the other cases - a tier-three blast is wider, and the bot holds fire inside it
 TEST_F(CoopBotTest, CoopShootToSteel)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN, 3u);
 
-	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0 + _gridSize, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 3.0 + _gridSize, .w = _tankSize, .h = _tankSize};
 	SpawnObstacleArea(rect, ObstacleType::Steel);
 
 	const size_t sizeBefore{_allObjects.size()};
@@ -209,7 +208,7 @@ TEST_F(CoopBotTest, CoopNoShootToSteelIfTierTooLow)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
 
-	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize};
 	SpawnObstacleArea(rect, ObstacleType::Steel);
 
 	const size_t sizeBefore{_allObjects.size()};
@@ -224,7 +223,7 @@ TEST_F(CoopBotTest, CoopNoShootToEagle)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
 
-	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize * 2.0}, ObstacleType::Eagle);
+	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize * 3.0}, ObstacleType::Eagle);
 
 	const size_t sizeBefore{_allObjects.size()};
 
@@ -238,7 +237,7 @@ TEST_F(CoopBotTest, CoopNoShootToFortress)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
 
-	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize};
 	_allObjects.emplace_back(std::make_shared<FortressBrickWall>(rect, _events, _uuid, _gameConfig));
 
 	const size_t sizeBefore{_allObjects.size()};
@@ -253,7 +252,7 @@ TEST_F(CoopBotTest, CoopNoShootToWater)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
 
-	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize};
 	SpawnObstacleArea(rect, ObstacleType::Water);
 
 	const size_t sizeBefore{_allObjects.size()};
@@ -268,7 +267,7 @@ TEST_F(CoopBotTest, CoopNoShootToBush)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
 
-	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize};
 	SpawnObstacleArea(rect, ObstacleType::Bush);
 
 	const size_t sizeBefore{_allObjects.size()};
@@ -283,7 +282,7 @@ TEST_F(CoopBotTest, CoopNoShootToIce)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
 
-	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize};
 	SpawnObstacleArea(rect, ObstacleType::Ice);
 
 	const size_t sizeBefore{_allObjects.size()};

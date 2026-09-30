@@ -56,13 +56,13 @@ namespace
 }
 
 [[nodiscard]] TankResetProperty MakeResetProperty(const ObjRectangle rect, const int health, const TankType type,
-												  const Direction dir, const double speed, const unsigned short tier)
+												  const Direction dir, const unsigned short tier, const TankModel model)
 {
 	return TankResetProperty{.uuid = UuidUtils::GetRandomUuid(),
 							 .rect = rect,
 							 .health = health,
-							 .speed = speed,
 							 .type = type,
+							 .model = model,
 							 .dir = dir,
 							 .tier = tier};
 }
@@ -72,9 +72,9 @@ std::shared_ptr<Tank> TestUtils::CreateBot(
 		const ObjRectangle rect, const int health, const Author author,
 		const std::vector<std::shared_ptr<BaseObj>>& allObjects, const std::shared_ptr<EventSystem>& events,
 		const Direction dir, const std::shared_ptr<TankPool>& tankPool, const GameConfig& gameConfig,
-		const unsigned short tier)
+		const unsigned short tier, const TankModel model)
 {
-	auto tank{tankPool->SpawnTank(MakeResetProperty(rect, health, BotTypeOf(author), dir, gameConfig.tankSpeed, tier),
+	auto tank{tankPool->SpawnTank(MakeResetProperty(rect, health, BotTypeOf(author), dir, tier, model),
 								  std::make_unique<InputProviderForBot>(allObjects, gameConfig))};
 	events->EmitEvent(AddToSpawnQueueEvent{.obj = tank});
 
@@ -84,13 +84,13 @@ std::shared_ptr<Tank> TestUtils::CreateBot(
 std::shared_ptr<Tank> TestUtils::CreatePlayer(
 		const ObjRectangle rect, const int health, const Author author,
 		const std::vector<std::shared_ptr<BaseObj>>&, const std::shared_ptr<EventSystem>& events,
-		const Direction dir, const std::shared_ptr<TankPool>& tankPool, const GameConfig& gameConfig,
-		const unsigned short tier)
+		const Direction dir, const std::shared_ptr<TankPool>& tankPool, const GameConfig&,
+		const unsigned short tier, const TankModel model)
 {
 	const TankType type{author == Author::Player2 ? TankType::PLAYER2 : TankType::PLAYER1};
 	const InputChannel channel{author == Author::Player1 ? InputChannel::LocalP1 : InputChannel::LocalP2};
 
-	auto tank{tankPool->SpawnTank(MakeResetProperty(rect, health, type, dir, gameConfig.tankSpeed, tier),
+	auto tank{tankPool->SpawnTank(MakeResetProperty(rect, health, type, dir, tier, model),
 								  std::make_unique<InputProviderForPlayer>(events, channel))};
 	events->EmitEvent(AddToSpawnQueueEvent{.obj = tank});
 
@@ -100,7 +100,7 @@ std::shared_ptr<Tank> TestUtils::CreatePlayer(
 std::shared_ptr<Bullet> TestUtils::CreateBullet(const ObjRectangle rect, const int health,
 												const std::shared_ptr<BulletPool>& bulletPool,
 												const std::shared_ptr<EventSystem>& events,
-												const BulletCalibre& calibre, const Direction dir,
+												const BulletCaliber& caliber, const Direction dir,
 												const Author author, const Uuid& authorUuid)
 {
 	const BulletResetProperty property{.rect = rect,
@@ -108,7 +108,7 @@ std::shared_ptr<Bullet> TestUtils::CreateBullet(const ObjRectangle rect, const i
 									   .health = health,
 									   .author = author,
 									   .authorUuid = authorUuid,
-									   .calibre = calibre};
+									   .caliber = caliber};
 
 	auto bullet{bulletPool->SpawnBullet(property)};
 	events->EmitEvent(AddToSpawnQueueEvent{.obj = bullet});

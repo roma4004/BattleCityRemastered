@@ -2,7 +2,7 @@
 
 #include "geometry/Point.h"
 
-struct BulletCalibre
+struct BulletCaliber
 {
 	double speed{};
 	unsigned int damage{};

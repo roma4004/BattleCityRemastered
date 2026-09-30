@@ -1,19 +1,19 @@
 #pragma once
 
 #include "enums/Direction.h"
+#include "enums/TankModel.h"
 #include "enums/TankType.h"
 #include "geometry/ObjRectangle.h"
 #include "utils/Uuid.h"
 
-//NOTE: what a pooled tank takes on for its next life - seat and faction follow from the type, the tier is
-//given, since a saved match puts a tank back as it was and not as it started
+//NOTE: a pooled tank's next life - seat, speed and gun follow from type, model and tier; a saved match gives the tier
 struct TankResetProperty final
 {
 	Uuid uuid{};
 	ObjRectangle rect{};
 	int health{};
-	double speed{};
 	TankType type{};
+	TankModel model{};
 	Direction dir{};
 	unsigned short tier{1u};
 };

@@ -196,7 +196,6 @@ bool Game::TryAdoptPublishedPort()
 }
 
 //NOTE: the number held now is the one that answered, so there is nothing left to watch for
-//NOTE: the port it was asking about is answered for good once the link is up
 void Game::OnConnectedToHost(const ClientConnectedToHostEvent&)
 {
 	_isDialingPublishedPort = false;
@@ -230,8 +229,6 @@ void Game::NextGameMode(const NextGameModeEvent&)
 
 	_events->EmitEvent(SelectedGameModeChangedToEvent{.mode = _selectedGameMode});
 }
-
-//TODO: push other tank mechanic like velosity with ice effect
 
 //TODO: recheck rule of 3/5 for all classes
 

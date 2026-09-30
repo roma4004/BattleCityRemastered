@@ -9,6 +9,7 @@
 #include "components/events/ObjectLifecycleEvents.h"
 #include "components/events/ReplicationEvents.h"
 #include "components/events/SpawnEvents.h"
+#include "entities/pawns/Bullet.h"
 #include "entities/pawns/Tank.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
@@ -17,6 +18,7 @@
 #include "geometry/ObjRectangle.h"
 #include "utils/UuidUtils.h"
 #include "gtest/gtest.h"
+#include <algorithm>
 #include <memory>
 #include <optional>
 #include <vector>
@@ -129,4 +131,24 @@ TEST_F(ClientMirrorTest, CompletingOneBonusLeavesTheOtherPending)
 	_events->EmitEvent(BonusSpawnCompletedEvent{.uuid = settled});
 
 	EXPECT_EQ(_allObjects.size(), 1u);
+}
+
+TEST_F(ClientMirrorTest, AMirroredShotKeepsTheDamageTheHostRolled)
+{
+	CreateBot({.x = 100.0, .y = 100.0}, Author::Enemy1);
+	constexpr unsigned int hostRolled{7u};
+
+	_events->EmitEvent(Key(Author::Enemy1), TankShotEvent{.who = Author::Enemy1,
+														  .dir = Direction::UP,
+														  .bulletUuid = UuidUtils::GetRandomUuid(),
+														  .damage = hostRolled});
+
+	const auto isBullet = [](const std::shared_ptr<BaseObj>& object)
+	{
+		return std::dynamic_pointer_cast<Bullet>(object) != nullptr;
+	};
+	const auto shell{std::ranges::find_if(_allObjects, isBullet)};
+	ASSERT_NE(shell, _allObjects.end());
+
+	EXPECT_EQ(std::dynamic_pointer_cast<Bullet>(*shell)->GetDamage(), hostRolled);
 }

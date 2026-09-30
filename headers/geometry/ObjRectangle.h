@@ -4,6 +4,13 @@
 
 struct ObjRectangle final
 {
+	//NOTE: where the rect starts and ends on one axis
+	struct Span final
+	{
+		double from{};
+		double to{};
+	};
+
 	double x{}, y{}, w{}, h{};
 
 	[[nodiscard]] constexpr double Area() const noexcept;
@@ -15,6 +22,8 @@ struct ObjRectangle final
 	[[nodiscard]] constexpr FPoint Center() const noexcept;
 
 	[[nodiscard]] constexpr ObjRectangle GetScaledBy(double scale) const noexcept;
+
+	[[nodiscard]] constexpr Span SpanOn(bool isXAxis) const noexcept;
 };
 
 constexpr double ObjRectangle::Area() const noexcept { return w * h; }
@@ -24,6 +33,11 @@ constexpr double ObjRectangle::Right() const noexcept { return x + w; }
 constexpr double ObjRectangle::Bottom() const noexcept { return y + h; }
 
 constexpr FPoint ObjRectangle::Center() const noexcept { return FPoint{.x = x + w / 2.0, .y = y + h / 2.0}; }
+
+constexpr ObjRectangle::Span ObjRectangle::SpanOn(const bool isXAxis) const noexcept
+{
+	return isXAxis ? Span{.from = x, .to = Right()} : Span{.from = y, .to = Bottom()};
+}
 
 constexpr ObjRectangle ObjRectangle::GetScaledBy(const double scale) const noexcept
 {

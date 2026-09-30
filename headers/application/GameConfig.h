@@ -51,6 +51,10 @@ public:
 	double tankSize{gridOffset * static_cast<double>(WorldGeometry::kTankCellSpan)};
 	double tankSpeed{142.0};
 	int bonusSize{static_cast<int>(tankSize)};
+	//NOTE: how far a shot may fall either side of the model damage; zero makes every shot identical
+	unsigned int bulletDamageSpread{3u};
+	//NOTE: a share of the notice bands in InputProviderForBot - zero makes a bot see everything at once
+	double botNoticeDelayFactor{1.0};
 	double botShootObstacleChance{0.35};
 	//NOTE: the base ends the match, and a bot drives past it far less often than past a wall -
 	//so it is rolled for on its own, higher chance

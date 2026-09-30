@@ -7,8 +7,9 @@
 #include "utils/ColliderUtils.h"
 #include "utils/ObjectUtils.h"
 #include <algorithm>
+#include <array>
 
-//Used for checking line of sight for bullets, so range is bullet width and height 
+//Used for checking line of sight for bullets, so range is bullet width and height
 LineOfSight::LineOfSight(const ObjRectangle tankRect, const FPoint bulletSize,
 						 const std::vector<std::shared_ptr<BaseObj>>& objects, const GameConfig& gameConfig,
 						 const bool isWaterSkip)
@@ -20,29 +21,34 @@ LineOfSight::LineOfSight(const ObjRectangle tankRect, const FPoint bulletSize,
 	const FPoint tankDownCenter{.x = tankRect.x + tankHalf.x, .y = tankRect.y + tankRect.h};
 	const FPoint tankRightCenter{.x = tankRect.x + tankRect.w, .y = tankRect.y + tankHalf.y};
 
-	const FPoint bulletHalfSize{.x = bulletSize.x / 2.0, .y = bulletSize.y / 2.0};
+	//NOTE: the caliber is across and along the flight, not screen x and y - a corridor is as wide as the shell across
+	const auto [shellAcross, shellAlong]{bulletSize};
 
-	const FPoint bulletSpawnPosUp{.x = tankUpCenter.x - bulletHalfSize.x, .y = tankUpCenter.y - bulletSize.y - 1.0};
-	const FPoint bulletSpawnPosLeft{.x = tankLeftCenter.x - bulletSize.x - 1.0,
-									.y = tankLeftCenter.y - bulletHalfSize.y};
-	const FPoint bulletSpawnPosDown{.x = tankDownCenter.x - bulletHalfSize.x, .y = tankDownCenter.y + 1.0};
-	const FPoint bulletSpawnPosRight{.x = tankRightCenter.x + 1.0, .y = tankRightCenter.y - bulletHalfSize.y};
+	const FPoint bulletSpawnPosUp{.x = tankUpCenter.x - shellAcross / 2.0,
+								  .y = tankUpCenter.y - shellAlong - 1.0};
+	const FPoint bulletSpawnPosLeft{.x = tankLeftCenter.x - shellAlong - 1.0,
+									.y = tankLeftCenter.y - shellAcross / 2.0};
+	const FPoint bulletSpawnPosDown{.x = tankDownCenter.x - shellAcross / 2.0, .y = tankDownCenter.y + 1.0};
+	const FPoint bulletSpawnPosRight{.x = tankRightCenter.x + 1.0, .y = tankRightCenter.y - shellAcross / 2.0};
 
 	const double sightSizeUp{std::max(0.0, tankRect.y - 1.0)};
 	const double sightSizeLeft{std::max(0.0, tankRect.x - 1.0)};
 	const double sightSizeDown{static_cast<double>(gameConfig.battlefieldSize.y) - bulletSpawnPosDown.y};
 	const double sightSizeRight{static_cast<double>(gameConfig.battlefieldSize.x) - bulletSpawnPosRight.x};
 
-	_lineOfSightBoundaries = std::vector<ObjRectangle>{/*up, left, down, right*/
-			{.x = bulletSpawnPosUp.x, .y = 0.0, .w = bulletSize.x, .h = sightSizeUp},
-			{.x = 0.0, .y = bulletSpawnPosLeft.y, .w = sightSizeLeft, .h = bulletSize.y},
-			{.x = bulletSpawnPosDown.x, .y = bulletSpawnPosDown.y, .w = bulletSize.x, .h = sightSizeDown},
-			{.x = bulletSpawnPosRight.x, .y = bulletSpawnPosRight.y, .w = sightSizeRight, .h = bulletSize.y}};
+	_lineOfSightBoundaries = std::array{
+			ObjRectangle{.x = bulletSpawnPosUp.x, .y = 0.0, .w = shellAcross, .h = sightSizeUp},
+			ObjRectangle{.x = 0.0, .y = bulletSpawnPosLeft.y, .w = sightSizeLeft, .h = shellAcross},
+			ObjRectangle{.x = bulletSpawnPosDown.x, .y = bulletSpawnPosDown.y, .w = shellAcross, .h = sightSizeDown},
+			ObjRectangle{.x = bulletSpawnPosRight.x,
+						 .y = bulletSpawnPosRight.y,
+						 .w = sightSizeRight,
+						 .h = shellAcross}};
 
 	CheckLineOfSight(isWaterSkip, objects);
 }
 
-//Used for checking can tank reach the bonus, so range is tank width and height 
+//Used for checking can tank reach the bonus, so range is tank width and height
 LineOfSight::LineOfSight(const ObjRectangle tankRect, const std::vector<std::shared_ptr<BaseObj>>& objects,
 						 const GameConfig& gameConfig, const bool isWaterSkip)
 {
@@ -51,28 +57,25 @@ LineOfSight::LineOfSight(const ObjRectangle tankRect, const std::vector<std::sha
 	const double sightSizeDown{static_cast<double>(gameConfig.battlefieldSize.y) - tankRect.y - tankRect.h - 1};
 	const double sightSizeRight{static_cast<double>(gameConfig.battlefieldSize.x) - tankRect.x - tankRect.w - 1};
 
-	_lineOfSightBoundaries = std::vector<ObjRectangle>{/*up, left, down, right*/
-			{.x = tankRect.x, .y = 0.0, .w = tankRect.w, .h = sightSizeUp},
-			{.x = 0.0, .y = tankRect.y, .w = sightSizeLeft, .h = tankRect.h},
-			{.x = tankRect.x, .y = tankRect.y + tankRect.h + 1, .w = tankRect.w, .h = sightSizeDown},
-			{.x = tankRect.x + tankRect.w + 1, .y = tankRect.y, .w = sightSizeRight, .h = tankRect.h}};
+	_lineOfSightBoundaries = std::array{
+			ObjRectangle{.x = tankRect.x, .y = 0.0, .w = tankRect.w, .h = sightSizeUp},
+			ObjRectangle{.x = 0.0, .y = tankRect.y, .w = sightSizeLeft, .h = tankRect.h},
+			ObjRectangle{.x = tankRect.x, .y = tankRect.y + tankRect.h + 1, .w = tankRect.w, .h = sightSizeDown},
+			ObjRectangle{.x = tankRect.x + tankRect.w + 1, .y = tankRect.y, .w = sightSizeRight, .h = tankRect.h}};
 
 	CheckLineOfSight(isWaterSkip, objects);
 }
 
 void LineOfSight::CheckLineOfSight(const bool isWaterSkip, const std::vector<std::shared_ptr<BaseObj>>& objects)
 {
+	const auto& [upSideRect, leftSightRect, downSideRect, rightSightRect]{_lineOfSightBoundaries};
+
 	for (const std::shared_ptr<BaseObj>& object: objects)
 	{
 		if (!ObjectUtils::IsAlive(object))
 		{
 			continue;
 		}
-
-		const ObjRectangle& upSideRect{_lineOfSightBoundaries[static_cast<size_t>(Direction::UP)]};
-		const ObjRectangle& leftSightRect{_lineOfSightBoundaries[static_cast<size_t>(Direction::LEFT)]};
-		const ObjRectangle& downSideRect{_lineOfSightBoundaries[static_cast<size_t>(Direction::DOWN)]};
-		const ObjRectangle& rightSightRect{_lineOfSightBoundaries[static_cast<size_t>(Direction::RIGHT)]};
 
 		//NOTE: water stops a tank but not a bullet - skipped while looking for a target, kept while looking for a bonus
 		const bool isWater{object->GetTerrain() == Terrain::Water};

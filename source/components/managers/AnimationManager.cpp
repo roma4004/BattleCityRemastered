@@ -38,6 +38,7 @@ void AnimationManager::Subscribe()
 	_subs.push_back(_events->AddListener(this, &AnimationManager::OnCreateTankSpawn));
 	_subs.push_back(_events->AddListener(this, &AnimationManager::OnCreateBonusSpawn));
 	_subs.push_back(_events->AddListener(this, &AnimationManager::OnCancelTankSpawn));
+	_subs.push_back(_events->AddListener(this, &AnimationManager::OnMoveTankSpawn));
 	_subs.push_back(_events->AddListener(this, &AnimationManager::OnTankSpawnCompleted));
 	_subs.push_back(_events->AddListener(this, &AnimationManager::OnBonusSpawnCompleted));
 	_subs.push_back(_events->AddListener(this, &AnimationManager::OnCreateTankExplosion));
@@ -64,14 +65,21 @@ void AnimationManager::OnPostTickUpdate(const PostTickUpdateEvent&)
 	//NOTE: water never ends, so it has nothing to report
 	std::ranges::for_each(_autoAnimatedWaterObjects, [](AnimatedObject& object) { UpdateFrame(object); });
 
+	//NOTE: only a spawn burst has an owner, the uuid waiting for it; UpdateFrame reports the end once
+	std::vector<Uuid> finished{};
 	for (AnimatedObject& object: _autoAnimatedObjects)
 	{
-		//NOTE: only a spawn burst has an owner, the uuid waiting for it; UpdateFrame reports the end once
 		if (const bool isFinished{UpdateFrame(object)};
 			isFinished && object.owner != Uuid{})
 		{
-			_events->EmitEvent(SpawnAnimationFinishedEvent{.uuid = object.owner});
+			finished.push_back(object.owner);
 		}
+	}
+
+	//NOTE: after the sweep - a listener may start another burst, and the container must not grow mid-loop
+	for (const Uuid owner: finished)
+	{
+		_events->EmitEvent(SpawnAnimationFinishedEvent{.uuid = owner});
 	}
 }
 
@@ -98,18 +106,30 @@ void AnimationManager::OnPostDraw(const PostDrawEvent&) const
 
 void AnimationManager::OnCreateTankSpawn(const AnimationCreateTankSpawnEvent& event)
 {
-	CreateAnimation(AnimationType::Tank_Spawn, event.rect, Author::None, event.uuid, event.isEndless);
+	CreateAnimation(AnimationType::Tank_Spawn, event.rect, Author::None,
+					{.owner = event.uuid, .isEndless = event.isEndless});
 }
 
 void AnimationManager::OnCreateBonusSpawn(const AnimationCreateBonusSpawnEvent& event)
 {
-	CreateAnimation(AnimationType::Bonus_Spawn, event.rect, Author::None, event.uuid, event.isEndless);
+	CreateAnimation(AnimationType::Bonus_Spawn, event.rect, Author::None,
+					{.owner = event.uuid, .isEndless = event.isEndless});
 }
 
 //NOTE: disposed is enough - UpdateFrame skips it, so it never reaches the frame that reports
 void AnimationManager::OnCancelTankSpawn(const AnimationCancelTankSpawnEvent& event)
 {
 	Cancel(AnimationType::Tank_Spawn, event.uuid);
+}
+
+void AnimationManager::OnMoveTankSpawn(const AnimationMoveTankSpawnEvent& event)
+{
+	auto matching{_autoAnimatedObjects | std::views::filter([&event](const AnimatedObject& object)
+	{
+		return object.type == AnimationType::Tank_Spawn && object.owner == event.uuid && !object.markToDispose;
+	})};
+
+	std::ranges::for_each(matching, [&event](AnimatedObject& object) { object.rect = event.rect; });
 }
 
 //NOTE: a client's burst is endless and ends only here; the host's has already ended by the time it lands
@@ -125,7 +145,7 @@ void AnimationManager::OnBonusSpawnCompleted(const BonusSpawnCompletedEvent& eve
 
 void AnimationManager::OnCreateTankMove(const AnimationCreateTankMoveEvent& event)
 {
-	CreateAnimation(AnimationType::Tank_Move, event.rect, event.author);
+	CreateAnimation(AnimationType::Tank_Move, event.rect, event.author, {.model = event.model, .tier = event.tier});
 	OnHelmetEffect(event.author, true);
 }
 
@@ -160,6 +180,7 @@ void AnimationManager::OnUpdateTankMove(const AnimationTankUpdateEvent& event)
 	it->rect.x = event.pos.x;
 	it->rect.y = event.pos.y;
 	it->dir = event.dir;
+	it->tier = event.tier;
 
 	UpdateFrame(*it);
 	UpdateHelmetEffect(author, event.pos);
@@ -185,30 +206,22 @@ void AnimationManager::DrawObject(const AnimatedObject& object) const
 							   .frame = object.currentFrameIndex,
 							   .scale = object.scale,
 							   .type = object.type,
-							   .author = object.author});
+							   .author = object.author,
+							   .model = object.model,
+							   .tier = object.tier});
 }
 
-void AnimationManager::Create(const Author author, const ObjRectangle rect, const AnimationType type,
-							  const int size, const int scale, const int speed, const int passes, const Uuid owner)
+void AnimationManager::Place(const AnimatedObject& animation)
 {
-	auto& target{ContainerOf(type)};
+	auto& target{ContainerOf(animation.type)};
+	if (auto* reusable{FindReusable(target, animation.type)})
+	{
+		*reusable = animation;
 
-	if (auto* reusable{FindReusable(target, type)})
-	{
-		reusable->rect = rect;
-		reusable->dir = {};
-		reusable->currentFrameIndex = 0;
-		reusable->ticksSinceLastFrame = 0;
-		reusable->passes = passes;
-		reusable->passesDone = 0;
-		reusable->owner = owner;
-		reusable->author = author;
-		reusable->markToDispose = false;
+		return;
 	}
-	else
-	{
-		target.emplace_back(author, rect, type, size, scale, speed, passes, owner);
-	}
+
+	target.push_back(animation);
 }
 
 std::vector<AnimatedObject>& AnimationManager::ContainerOf(const AnimationType type)
@@ -252,7 +265,7 @@ constexpr AnimationManager::AnimationPreset AnimationManager::GetPreset(const An
 }
 
 void AnimationManager::CreateAnimation(const AnimationType type, const ObjRectangle rect, const Author author,
-									   const Uuid owner, const bool isEndless)
+									   const AnimationExtras& extras)
 {
 	if (type == AnimationType::Tank_Explosion)
 	{
@@ -260,7 +273,16 @@ void AnimationManager::CreateAnimation(const AnimationType type, const ObjRectan
 	}
 
 	const auto& [size, scale, speed, passes] = GetPreset(type);
-	Create(author, rect, type, size, scale, speed, isEndless ? kEndlessAnimation : passes, owner);
+	Place(AnimatedObject{.rect = rect,
+						 .size = size,
+						 .speed = speed,
+						 .passes = extras.isEndless ? kEndlessAnimation : passes,
+						 .owner = extras.owner,
+						 .type = type,
+						 .scale = scale,
+						 .author = author,
+						 .model = extras.model,
+						 .tier = extras.tier});
 }
 
 bool AnimationManager::UpdateFrame(AnimatedObject& object)

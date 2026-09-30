@@ -41,7 +41,7 @@ protected:
 	GameConfig _gameConfig{};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	double _deltaTimeOneFrame{1.0 / 60.0};
-	BulletCalibre _calibre{.speed = 300.0, .damage = 1u, .damageRadius = 12.0, .tier = 1u, .size{.x = 6.0, .y = 5.0}};
+	BulletCaliber _caliber{.speed = 300.0, .damage = 1u, .damageRadius = 12.0, .tier = 1u, .size{.x = 6.0, .y = 5.0}};
 	double _tankSize{};
 	Uuid _uuid{};
 	unsigned short _tankHealth{1u};
@@ -88,8 +88,8 @@ protected:
 
 	std::shared_ptr<Bullet> CreateBullet(const FPoint pos, const Direction dir, const Author author)
 	{
-		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _calibre.size.x, .h = _calibre.size.y};
-		auto bullet{TestUtils::CreateBullet(rect, _bulletHealth, _bulletPool, _events, _calibre, dir,
+		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _caliber.size.x, .h = _caliber.size.y};
+		auto bullet{TestUtils::CreateBullet(rect, _bulletHealth, _bulletPool, _events, _caliber, dir,
 											author)};
 
 		return bullet;
@@ -188,7 +188,7 @@ TEST_F(StatisticsTest, PlayerTwoDiedByEnemy)
 TEST_F(StatisticsTest, PlayerOneDiedByEnemy)
 {
 	CreatePlayer({.x = 0.0, .y = 0.0});
-	CreateBullet({.x = _calibre.size.x, .y = _tankSize}, Direction::UP, Author::Enemy1);
+	CreateBullet({.x = _caliber.size.x, .y = _tankSize}, Direction::UP, Author::Enemy1);
 
 	EXPECT_EQ(_statistics->GetData().playerDiedByEnemyTeam, 0u);
 
@@ -292,7 +292,7 @@ TEST_F(StatisticsTest, EnemyDiedByPlayerTwo)
 TEST_F(StatisticsTest, BulletHitByPlayerTwo)
 {
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player1);
-	CreateBullet({.x = 0.0, .y = _tankSize + _calibre.size.y + 1.0}, Direction::UP, Author::Player2);
+	CreateBullet({.x = 0.0, .y = _tankSize + _caliber.size.y + 1.0}, Direction::UP, Author::Player2);
 
 	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerOne, 0u);
 	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerTwo, 0u);
@@ -306,7 +306,7 @@ TEST_F(StatisticsTest, BulletHitByPlayerTwo)
 // the counter is about bullets meeting bullets - a wall the shot destroys has a row of its own
 TEST_F(StatisticsTest, BulletIntoBrickWallIsNotABulletHit)
 {
-	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _calibre.size.y + 1}, ObstacleType::Brick);
+	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _caliber.size.y + 1}, ObstacleType::Brick);
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player1);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
@@ -318,7 +318,7 @@ TEST_F(StatisticsTest, BulletIntoBrickWallIsNotABulletHit)
 // a shot the wall swallows whole is nobody's hit either
 TEST_F(StatisticsTest, BulletIntoSteelWallIsNotABulletHit)
 {
-	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _calibre.size.y + 1}, ObstacleType::Steel);
+	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _caliber.size.y + 1}, ObstacleType::Steel);
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player1);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
@@ -340,7 +340,7 @@ TEST_F(StatisticsTest, BulletIntoFieldEdgeIsNotABulletHit)
 // a brick blown out by the enemy team
 TEST_F(StatisticsTest, BrickWallDiedByEnemy)
 {
-	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _calibre.size.y + 1}, ObstacleType::Brick);
+	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _caliber.size.y + 1}, ObstacleType::Brick);
 
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Enemy1);
 
@@ -354,7 +354,7 @@ TEST_F(StatisticsTest, BrickWallDiedByEnemy)
 // the same brick by player one
 TEST_F(StatisticsTest, BrickWallDiedByPlayerOne)
 {
-	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _calibre.size.y + 1}, ObstacleType::Brick);
+	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _caliber.size.y + 1}, ObstacleType::Brick);
 
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player1);
 
@@ -368,7 +368,7 @@ TEST_F(StatisticsTest, BrickWallDiedByPlayerOne)
 // and by player two
 TEST_F(StatisticsTest, BrickDiedByPlayerTwo)
 {
-	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _calibre.size.y + 1}, ObstacleType::Brick);
+	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _caliber.size.y + 1}, ObstacleType::Brick);
 
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player2);
 
@@ -379,12 +379,12 @@ TEST_F(StatisticsTest, BrickDiedByPlayerTwo)
 	EXPECT_EQ(_statistics->GetData().brickWallDiedByPlayerTwo, 1u);
 }
 
-// steel gives only to a tier 3 shot, so the calibre is raised before firing
+// steel gives only to a tier 3 shot, so the caliber is raised before firing
 TEST_F(StatisticsTest, SteelWallDiedByEnemy)
 {
-	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _calibre.size.y + 1}, ObstacleType::Steel);
+	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _caliber.size.y + 1}, ObstacleType::Steel);
 
-	_calibre.tier = 3u;
+	_caliber.tier = 3u;
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Enemy1);
 
 	EXPECT_EQ(_statistics->GetData().steelWallDiedByEnemyTeam, 0u);
@@ -397,9 +397,9 @@ TEST_F(StatisticsTest, SteelWallDiedByEnemy)
 // the same tier 3 shot from player one
 TEST_F(StatisticsTest, SteelWallDiedByPlayerOne)
 {
-	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _calibre.size.y + 1}, ObstacleType::Steel);
+	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _caliber.size.y + 1}, ObstacleType::Steel);
 
-	_calibre.tier = 3u;
+	_caliber.tier = 3u;
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player1);
 
 	EXPECT_EQ(_statistics->GetData().steelWallDiedByPlayerOne, 0u);
@@ -412,9 +412,9 @@ TEST_F(StatisticsTest, SteelWallDiedByPlayerOne)
 // and from player two
 TEST_F(StatisticsTest, SteelDiedByPlayerTwo)
 {
-	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _calibre.size.y + 1}, ObstacleType::Steel);
+	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _caliber.size.y + 1}, ObstacleType::Steel);
 
-	_calibre.tier = 3u;
+	_caliber.tier = 3u;
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player2);
 
 	EXPECT_EQ(_statistics->GetData().steelWallDiedByPlayerTwo, 0u);
@@ -428,7 +428,7 @@ TEST_F(StatisticsTest, SteelDiedByPlayerTwo)
 TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByEnemy)
 {
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Enemy1);
-	CreateBullet({.x = 0.0, .y = _tankSize + _calibre.size.y + 1.0}, Direction::UP, Author::Enemy2);
+	CreateBullet({.x = 0.0, .y = _tankSize + _caliber.size.y + 1.0}, Direction::UP, Author::Enemy2);
 
 	EXPECT_EQ(_statistics->GetData().bulletHitByEnemy, 0u);
 
@@ -441,7 +441,7 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByEnemy)
 TEST_F(StatisticsTest, BulletHitBulletPlayerOneAndByPlayerTwo)
 {
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player1);
-	CreateBullet({.x = 0.0, .y = _tankSize + _calibre.size.y + 1.0}, Direction::UP, Author::Player2);
+	CreateBullet({.x = 0.0, .y = _tankSize + _caliber.size.y + 1.0}, Direction::UP, Author::Player2);
 
 	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerOne, 0u);
 	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerTwo, 0u);
@@ -456,7 +456,7 @@ TEST_F(StatisticsTest, BulletHitBulletPlayerOneAndByPlayerTwo)
 TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerOne)
 {
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player1);
-	CreateBullet({.x = 0.0, .y = _tankSize + _calibre.size.y + 1.0}, Direction::UP, Author::Enemy1);
+	CreateBullet({.x = 0.0, .y = _tankSize + _caliber.size.y + 1.0}, Direction::UP, Author::Enemy1);
 
 	EXPECT_EQ(_statistics->GetData().bulletHitByEnemy, 0u);
 	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerOne, 0u);
@@ -471,7 +471,7 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerOne)
 TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerTwo)
 {
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player2);
-	CreateBullet({.x = 0.0, .y = _tankSize + _calibre.size.y + 1.0}, Direction::UP, Author::Enemy1);
+	CreateBullet({.x = 0.0, .y = _tankSize + _caliber.size.y + 1.0}, Direction::UP, Author::Enemy1);
 
 	EXPECT_EQ(_statistics->GetData().bulletHitByEnemy, 0u);
 	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerTwo, 0u);

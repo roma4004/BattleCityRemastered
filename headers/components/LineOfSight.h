@@ -2,6 +2,7 @@
 
 #include "geometry/ObjRectangle.h"//NOTE: complete type needed - a std::vector<ObjRectangle> member is instantiated below
 
+#include <array>
 #include <memory>
 #include <vector>
 
@@ -13,7 +14,8 @@ class GameConfig;
 
 class LineOfSight final
 {
-	std::vector<ObjRectangle> _lineOfSightBoundaries{};
+	//NOTE: up, left, down, right - the order Direction lists them, so a side indexes straight into it
+	std::array<ObjRectangle, 4> _lineOfSightBoundaries{};
 
 	std::vector<std::shared_ptr<BaseObj>> _upSideObstacles{};
 	std::vector<std::shared_ptr<BaseObj>> _leftSideObstacles{};

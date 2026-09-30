@@ -2,6 +2,7 @@
 
 #include "../entities/BaseObj.h"
 #include "enums/Author.h"
+#include "enums/TankModel.h"
 #include "utils/Uuid.h"
 
 enum class Direction : char8_t;
@@ -26,7 +27,7 @@ public:
 	bool markToDispose{};
 	int scale{};
 	Author author{};
-
-	AnimatedObject(Author objAuthor, ObjRectangle objRect, AnimationType objType, int frameLimit,
-				   int objScale, int animationSpeed, int passCount = 1, Uuid objOwner = {});
+	//NOTE: read by the tank animations alone - the others are drawn from the type and ignore it
+	TankModel model{};
+	unsigned short tier{1u};
 };

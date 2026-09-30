@@ -34,7 +34,7 @@ protected:
 	std::vector<EventSubscription> _instantSpawnAnimationSubs{};
 	GameConfig _gameConfig{};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
-	BulletCalibre _calibre{.speed = 300.0, .damage = 1u, .damageRadius = 12.0, .tier = 1u, .size{.x = 6.0, .y = 5.0}};
+	BulletCaliber _caliber{.speed = 300.0, .damage = 1u, .damageRadius = 12.0, .tier = 1u, .size{.x = 6.0, .y = 5.0}};
 	Uuid _uuid{};
 	double _tankSize{};
 	double _deltaTimeOneFrame{1.0 / 60.0};
@@ -65,8 +65,8 @@ protected:
 
 	std::shared_ptr<Bullet> CreateBullet(const FPoint pos, const Direction dir, const Author author)
 	{
-		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _calibre.size.x, .h = _calibre.size.y};
-		auto bullet{TestUtils::CreateBullet(rect, 1, _bulletPool, _events, _calibre, dir,
+		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _caliber.size.x, .h = _caliber.size.y};
+		auto bullet{TestUtils::CreateBullet(rect, 1, _bulletPool, _events, _caliber, dir,
 											author)};
 
 		return bullet;
@@ -116,7 +116,7 @@ TEST_F(DeadObjectFilterTest, BrickWallHitByTwoBulletsDiesOnce)
 	const double cell{_gameConfig.gridOffset};
 	const auto wall{SpawnObstacle(FPoint{.x = 100.0, .y = 100.0}, ObstacleType::Brick)};
 
-	CreateBullet({.x = 100.0 - _calibre.size.x, .y = 103.0}, Direction::RIGHT, Author::Player1);
+	CreateBullet({.x = 100.0 - _caliber.size.x, .y = 103.0}, Direction::RIGHT, Author::Player1);
 	CreateBullet({.x = 100.0 + cell, .y = 103.0}, Direction::LEFT, Author::Player1);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
@@ -135,7 +135,7 @@ TEST_F(DeadObjectFilterTest, TankKilledThisFrameTakesNoSecondHit)
 
 	const auto player{CreatePlayer({.x = 100.0, .y = 100.0}, Author::Player1, Direction::UP, _tankHealth)};
 
-	CreateBullet({.x = 100.0 - _calibre.size.x, .y = 115.0}, Direction::RIGHT, Author::Enemy1);
+	CreateBullet({.x = 100.0 - _caliber.size.x, .y = 115.0}, Direction::RIGHT, Author::Enemy1);
 	CreateBullet({.x = 100.0 + _tankSize, .y = 115.0}, Direction::LEFT, Author::Enemy2);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});

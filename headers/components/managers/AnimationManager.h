@@ -4,6 +4,7 @@
 #include "components/AnimatedObjects.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "enums/AnimationType.h"
+#include "enums/TankModel.h"
 #include "utils/Uuid.h"
 #include <memory>
 #include <vector>
@@ -18,6 +19,7 @@ struct DrawEvent;
 struct PostDrawEvent;
 struct AnimationCreateBonusSpawnEvent;
 struct AnimationCancelTankSpawnEvent;
+struct AnimationMoveTankSpawnEvent;
 struct TankSpawnCompletedEvent;
 struct BonusSpawnCompletedEvent;
 struct AnimationCreateTankMoveEvent;
@@ -26,6 +28,15 @@ struct AnimationCreateBulletExplosionEvent;
 struct AnimationCreateWaterEvent;
 struct AnimationTankUpdateEvent;
 struct AnimationBonusHelmetChangeEvent;
+
+//NOTE: what only some animations carry - the uuid a burst reports to, a client's endless burst, a tank's look
+struct AnimationExtras final
+{
+	Uuid owner{};
+	bool isEndless{};
+	TankModel model{};
+	unsigned short tier{1u};
+};
 
 class AnimationManager final
 {
@@ -43,6 +54,7 @@ private:
 	void OnCreateTankSpawn(const AnimationCreateTankSpawnEvent& event);
 	void OnCreateBonusSpawn(const AnimationCreateBonusSpawnEvent& event);
 	void OnCancelTankSpawn(const AnimationCancelTankSpawnEvent& event);
+	void OnMoveTankSpawn(const AnimationMoveTankSpawnEvent& event);
 	void OnTankSpawnCompleted(const TankSpawnCompletedEvent& event);
 	void OnBonusSpawnCompleted(const BonusSpawnCompletedEvent& event);
 	void OnCreateTankMove(const AnimationCreateTankMoveEvent& event);
@@ -55,10 +67,9 @@ private:
 	void Reset();
 	void DrawObject(const AnimatedObject& object) const;
 
-	void Create(Author author, ObjRectangle rect, AnimationType type, int size, int scale,
-				int speed, int passes, Uuid owner);
+	void Place(const AnimatedObject& animation);
 	[[nodiscard]] std::vector<AnimatedObject>& ContainerOf(AnimationType type);
-	void CreateAnimation(AnimationType type, ObjRectangle rect, Author author, Uuid owner = {}, bool isEndless = false);
+	void CreateAnimation(AnimationType type, ObjRectangle rect, Author author, const AnimationExtras& extras = {});
 
 	static bool UpdateFrame(AnimatedObject& object);
 	void OnHelmetEffect(Author author, bool isEnable);

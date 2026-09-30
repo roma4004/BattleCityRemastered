@@ -16,6 +16,7 @@
 #include "StatisticsChange.h"
 #include "TankShot.h"
 #include "TankSpawnComplete.h"
+#include "TankSpawnMoved.h"
 #include "TierChange.h"
 #include "components/WorldSnapshot.h"
 #include "enums/Delivery.h"
@@ -30,7 +31,8 @@ namespace network::commands
 using AnyCommand = std::variant<
 	BonusSpawn, BonusStatus, Despawn, GameStateChange, HealthChange,
 	KeyStateChange, ObstacleSpawn, PositionChange, RespawnTank, SignalEvent, StatisticsChange, TankShot,
-	TankSpawnComplete, Disconnect, BonusSpawnComplete, TierChange, SlotAssignment, WorldSnapshot>;
+	TankSpawnComplete, Disconnect, BonusSpawnComplete, TierChange, SlotAssignment, WorldSnapshot,
+	TankSpawnMoved>;
 
 //NOTE: a Latest command is replaced per entity on its way out, so it has to say which entity that is
 template<class CommandT>

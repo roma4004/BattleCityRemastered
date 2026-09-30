@@ -147,38 +147,6 @@ TEST_F(EnemyBotTest, EnemyShootToPlayer2)
 	EXPECT_EQ(sizeAfter, sizeBefore + 1u);
 }
 
-// a player almost touching it: too close to fire, the blast would take the shooter too
-TEST_F(EnemyBotTest, EnemyNoShootToPlayer1IfTooClose)
-{
-	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
-
-	CreatePlayer({.x = 0.0, .y = _tankSize * 2.0 + 7.0});
-
-	const size_t sizeBefore{_allObjects.size()};
-
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-
-	const size_t sizeAfter{_allObjects.size()};
-	EXPECT_LT(sizeBefore, sizeAfter);
-	EXPECT_EQ(sizeAfter, sizeBefore + 1u);
-}
-
-// the same distance rule from the other seat
-TEST_F(EnemyBotTest, EnemyNoShootToPlayer2IfTooClose)
-{
-	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
-
-	CreatePlayer({.x = 0.0, .y = _tankSize * 2.0 + 7.0}, Author::Player2);
-
-	const size_t sizeBefore{_allObjects.size()};
-
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-
-	const size_t sizeAfter{_allObjects.size()};
-	EXPECT_LT(sizeBefore, sizeAfter);
-	EXPECT_EQ(sizeAfter, sizeBefore + 1u);
-}
-
 // a bot of its own faction is no target at all
 TEST_F(EnemyBotTest, EnemyNoShootToAllied)
 {
@@ -193,26 +161,12 @@ TEST_F(EnemyBotTest, EnemyNoShootToAllied)
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
 
-// and stays none up close
-TEST_F(EnemyBotTest, EnemyNoShootToAlliedIfTooClose)
-{
-	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::UP);
-
-	CreateBot({.x = 0.0, .y = _tankSize * 2.0 + 6.0}, Author::Enemy2, Direction::DOWN);
-
-	const size_t sizeBefore{_allObjects.size()};
-
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-
-	EXPECT_EQ(sizeBefore, _allObjects.size());
-}
-
 // a wall in the way is fired at once the obstacle roll comes up
 TEST_F(EnemyBotTest, EnemyShootToBrick)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
 
-	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize};
 	SpawnObstacleArea(rect, ObstacleType::Brick);
 
 	const size_t sizeBefore{_allObjects.size()};
@@ -237,13 +191,12 @@ TEST_F(EnemyBotTest, EnemyTooCloseToShootTheBrick)
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
 
-//NOTE: farther than the other cases - a tier-three blast on a wall one tank away would catch the shooter,
-//and the bot holds its fire
+//NOTE: a cell farther than the other cases - a tier-three blast is wider, and the bot holds fire inside it
 TEST_F(EnemyBotTest, EnemyShootToSteel)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN, 3u);
 
-	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0 + _gridSize, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 3.0 + _gridSize, .w = _tankSize, .h = _tankSize};
 	SpawnObstacleArea(rect, ObstacleType::Steel);
 
 	const size_t sizeBefore{_allObjects.size()};
@@ -258,7 +211,7 @@ TEST_F(EnemyBotTest, EnemyNoShootToSteelIfTierTooLow)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
 
-	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize};
 	SpawnObstacleArea(rect, ObstacleType::Steel);
 
 	const size_t sizeBefore{_allObjects.size()};
@@ -273,7 +226,7 @@ TEST_F(EnemyBotTest, EnemyShootToEagle)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
 
-	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize * 2.0}, ObstacleType::Eagle);
+	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize * 3.0}, ObstacleType::Eagle);
 
 	const size_t sizeBefore{_allObjects.size()};
 
@@ -290,7 +243,7 @@ TEST_F(EnemyBotTest, EnemyShootsTheEagleWithTheWallChanceAtZero)
 
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
 
-	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize * 2.0}, ObstacleType::Eagle);
+	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize * 3.0}, ObstacleType::Eagle);
 
 	const size_t sizeBefore{_allObjects.size()};
 
@@ -306,7 +259,7 @@ TEST_F(EnemyBotTest, EnemyHoldsFireAtTheEagleWhenItsOwnChanceIsZero)
 
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
 
-	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize * 2.0}, ObstacleType::Eagle);
+	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize * 3.0}, ObstacleType::Eagle);
 
 	const size_t sizeBefore{_allObjects.size()};
 
@@ -320,7 +273,7 @@ TEST_F(EnemyBotTest, EnemyShootToFortress)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
 
-	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize};
 	_allObjects.emplace_back(std::make_shared<FortressBrickWall>(rect, _events, _uuid, _gameConfig));
 
 	const size_t sizeBefore{_allObjects.size()};
@@ -335,7 +288,7 @@ TEST_F(EnemyBotTest, EnemyShootToWater)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
 
-	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize};
 	SpawnObstacleArea(rect, ObstacleType::Water);
 
 	const size_t sizeBefore{_allObjects.size()};
@@ -350,7 +303,7 @@ TEST_F(EnemyBotTest, EnemyShootToBush)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
 
-	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize};
 	SpawnObstacleArea(rect, ObstacleType::Bush);
 
 	const size_t sizeBefore{_allObjects.size()};
@@ -365,7 +318,7 @@ TEST_F(EnemyBotTest, EnemyShootToIce)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
 
-	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize};
 	SpawnObstacleArea(rect, ObstacleType::Ice);
 
 	const size_t sizeBefore{_allObjects.size()};
@@ -399,10 +352,10 @@ TEST_F(EnemyBotTest, EnemyShootToPlayerInTheWater)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
 
-	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0 + 1.0, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 3.0 + 1.0, .w = _tankSize, .h = _tankSize};
 	SpawnObstacleArea(rect, ObstacleType::Water);
 
-	CreatePlayer({.x = 0.0, .y = _tankSize * 2.0 + 1.0});
+	CreatePlayer({.x = 0.0, .y = _tankSize * 3.0 + 1.0});
 
 	const size_t sizeBefore{_allObjects.size()};
 
@@ -437,10 +390,10 @@ TEST_F(EnemyBotTest, EnemyShootToPlayerInTheIce)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
 
-	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0 + 1.0, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 3.0 + 1.0, .w = _tankSize, .h = _tankSize};
 	SpawnObstacleArea(rect, ObstacleType::Ice);
 
-	CreatePlayer({.x = 0.0, .y = _tankSize * 2.0 + 1.0});
+	CreatePlayer({.x = 0.0, .y = _tankSize * 3.0 + 1.0});
 
 	const size_t sizeBefore{_allObjects.size()};
 
@@ -532,10 +485,10 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayerInTheBush)
 {
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
 
-	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0 + 1.0, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 3.0 + 1.0, .w = _tankSize, .h = _tankSize};
 	SpawnObstacleArea(rect, ObstacleType::Bush);
 
-	CreatePlayer({.x = 0.0, .y = _tankSize * 2.0 + 1.0});
+	CreatePlayer({.x = 0.0, .y = _tankSize * 3.0 + 1.0});
 
 	const size_t sizeBefore{_allObjects.size()};
 

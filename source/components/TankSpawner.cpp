@@ -11,8 +11,10 @@
 #include "components/input/InputProviderForPlayer.h"
 #include "components/events/SpawnEvents.h"
 #include "components/events/AnimationRenderEvents.h"
+#include "components/events/TimingEvents.h"
 #include "components/WorldGeometry.h"
 #include "components/WorldSnapshot.h"
+#include "entities/TankModelSpec.h"
 #include "entities/pawns/Tank.h"
 #include "entities/pawns/TankResetProperty.h"
 #include "enums/Direction.h"
@@ -22,18 +24,24 @@
 #include "enums/PlayerSlot.h"
 #include "enums/TankType.h"
 #include "enums/Faction.h"
+#include "utils/ColliderUtils.h"
+#include "utils/DirectionUtils.h"
 #include "utils/Log.h"
+#include "utils/MathUtils.h"
+#include "utils/ObjectUtils.h"
 #include "utils/RandUtils.h"
 #include "utils/TimeUtils.h"
 #include "utils/Uuid.h"
 #include "utils/UuidUtils.h"
 #include "utils/WorldQuery.h"
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <iterator>
 #include <memory>
 #include <optional>
 #include <ranges>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -54,6 +62,20 @@ namespace
 	std::ranges::sort(candidates, {}, [preferredX](const double x) { return std::abs(x - preferredX); });
 
 	return candidates;
+}
+
+[[nodiscard]] bool IsInsideField(const ObjRectangle& rect, const UPoint battlefieldSize)
+{
+	return rect.x >= 0.0 && rect.y >= 0.0 && rect.Right() <= static_cast<double>(battlefieldSize.x)
+		   && rect.Bottom() <= static_cast<double>(battlefieldSize.y);
+}
+
+//NOTE: an even roll over the enemy models - which ones a stage sends, and when, the map does not describe yet
+[[nodiscard]] TankModel RollEnemyModel()
+{
+	const std::uniform_int_distribution distModel{kFirstTankModelId, kLastEnemyModelId};
+
+	return static_cast<TankModel>(RandUtils::GetRandNumber(distModel));
 }
 }// namespace
 
@@ -78,12 +100,14 @@ void TankSpawner::Subscribe()
 	if (IsAuthority(_gameMode))
 	{
 		_subs.push_back(_events->AddListener(this, &TankSpawner::OnSpawnAnimationFinished));
+		_subs.push_back(_events->AddListener(this, &TankSpawner::OnPostTickUpdate));
 	}
 
 	if (IsClient(_gameMode))
 	{
 		_subs.push_back(_events->AddListener(this, &TankSpawner::OnTankRespawned));
 		_subs.push_back(_events->AddListener(this, &TankSpawner::OnTankSpawnCompleted));
+		_subs.push_back(_events->AddListener(this, &TankSpawner::OnTankSpawnMoved));
 		_subs.push_back(_events->AddListener(this, &TankSpawner::OnTankDied));
 		_subs.push_back(_events->AddListener(this, &TankSpawner::OnWorldSnapshotReceived));
 	}
@@ -111,6 +135,20 @@ void TankSpawner::OnRespawnTank(const RespawnTankEvent& event) { RespawnTank(eve
 
 void TankSpawner::OnSpawnAnimationFinished(const SpawnAnimationFinishedEvent& event)
 {
+	const auto it{std::ranges::find(_delayedSpawns, event.uuid, &DelayedTankSpawn::uuid)};
+	if (it == _delayedSpawns.end())
+	{
+		return;
+	}
+
+	//NOTE: nothing held the square during the burst, and two tanks in one are wedged for good - one more pass
+	if (const ObjRectangle spot{it->rect}; !WorldQuery::IsSpotFreeOfBlockers(_allObjects, spot))
+	{
+		_events->EmitEvent(AnimationCreateTankSpawnEvent{.rect = spot, .uuid = event.uuid});
+
+		return;
+	}
+
 	OnSpawnDelayFinished(event.uuid);
 }
 
@@ -118,12 +156,113 @@ void TankSpawner::OnTankRespawned(const TankRespawnedEvent& event)
 {
 	const double tankSize{_gameConfig.tankSize};
 	OnClientRespawn(event.type, event.uuid,
-					ObjRectangle{.x = event.pos.x, .y = event.pos.y, .w = tankSize, .h = tankSize});
+					ObjRectangle{.x = event.pos.x, .y = event.pos.y, .w = tankSize, .h = tankSize}, event.model);
 }
 
 void TankSpawner::OnTankSpawnCompleted(const TankSpawnCompletedEvent& event)
 {
 	OnSpawnDelayFinished(event.uuid);
+}
+
+//NOTE: the client shoves nothing itself - it draws the square the host says its burst stands on
+void TankSpawner::OnTankSpawnMoved(const TankSpawnMovedEvent& event)
+{
+	const auto it{std::ranges::find(_delayedSpawns, event.uuid, &DelayedTankSpawn::uuid)};
+	if (it == _delayedSpawns.end())
+	{
+		return;
+	}
+
+	MoveSpawnSquare(*it, ObjRectangle{.x = event.pos.x, .y = event.pos.y, .w = it->rect.w, .h = it->rect.h});
+}
+
+//NOTE: after everything has moved - the square is shoved by where the hulls ended up this frame
+void TankSpawner::OnPostTickUpdate(const PostTickUpdateEvent&)
+{
+	std::ranges::for_each(_delayedSpawns, [this](DelayedTankSpawn& spawn) { NudgeSpawnSquare(spawn); });
+}
+
+void TankSpawner::NudgeSpawnSquare(DelayedTankSpawn& spawn)
+{
+	if (IsSpawnSpotFree(spawn.home, spawn.uuid))
+	{
+		MoveSpawnSquare(spawn, spawn.home);
+
+		return;
+	}
+
+	const std::shared_ptr<Tank> pusher{TankStandingIn(spawn.rect)};
+	if (pusher == nullptr)
+	{
+		return;
+	}
+
+	if (const std::optional<ObjRectangle> aside{RoomOutOfTheWay(spawn, *pusher)})
+	{
+		MoveSpawnSquare(spawn, *aside);
+	}
+}
+
+void TankSpawner::MoveSpawnSquare(DelayedTankSpawn& spawn, const ObjRectangle& to)
+{
+	if (MathUtils::AreEqualAbsolute(spawn.rect.x, to.x) && MathUtils::AreEqualAbsolute(spawn.rect.y, to.y))
+	{
+		return;
+	}
+
+	spawn.rect = to;
+	_events->EmitEvent(AnimationMoveTankSpawnEvent{.rect = to, .uuid = spawn.uuid});
+
+	if (IsHost(_gameMode))
+	{
+		_events->EmitEvent(TankSpawnMovedEvent{.uuid = spawn.uuid, .pos = FPoint{.x = to.x, .y = to.y}});
+	}
+}
+
+//NOTE: only a hull shoves - a wall grown on the square or a shell crossing it is waited out
+std::shared_ptr<Tank> TankSpawner::TankStandingIn(const ObjRectangle& rect) const
+{
+	const auto isTankThere = [&rect](const std::shared_ptr<BaseObj>& object)
+	{
+		return ObjectUtils::IsAlive(object) && ColliderUtils::IsCollide(rect, object->GetRect())
+			   && std::dynamic_pointer_cast<Tank>(object) != nullptr;
+	};
+	const auto found{std::ranges::find_if(_allObjects, isTankThere)};
+
+	return found == _allObjects.end() ? nullptr : std::static_pointer_cast<Tank>(*found);
+}
+
+std::optional<ObjRectangle> TankSpawner::RoomOutOfTheWay(const DelayedTankSpawn& spawn, const Tank& pusher) const
+{
+	const ObjRectangle hull{pusher.GetRect()};
+	const auto clearOf = [&spawn, &hull](const Direction dir)
+	{
+		const auto [dx, dy]{DirectionUtils::Unit(dir)};
+		ObjRectangle out{spawn.rect};
+		if (dx != 0.0)
+		{
+			out.x = dx > 0.0 ? hull.Right() : hull.x - out.w;
+		}
+		else
+		{
+			out.y = dy > 0.0 ? hull.Bottom() : hull.y - out.h;
+		}
+
+		return out;
+	};
+
+	const Direction driving{pusher.GetDirection()};
+	const auto [oneSide, otherSide]{DirectionUtils::Laterals(driving)};
+	const std::array squares{clearOf(driving), clearOf(oneSide), clearOf(otherSide),
+							 clearOf(DirectionUtils::Opposite(driving))};
+
+	const auto isRoom = [this, &spawn](const ObjRectangle& square)
+	{
+		return IsInsideField(square, _gameConfig.battlefieldSize) && IsSpawnSpotFree(square, spawn.uuid);
+	};
+	const auto found{std::ranges::find_if(squares, isRoom)};
+
+	return found == squares.end() ? std::nullopt : std::optional{*found};
 }
 
 void TankSpawner::OnTankDied(const TankDiedEvent& event) { DropDelayedSpawn(event.uuid); }
@@ -134,6 +273,7 @@ void TankSpawner::OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& ev
 						   [](const DelayedTankSpawn& spawn)
 						   {
 							   return TankRespawnedEvent{.type = spawn.type,
+														 .model = spawn.model,
 														 .uuid = spawn.uuid,
 														 .pos = FPoint{.x = spawn.rect.x, .y = spawn.rect.y}};
 						   });
@@ -218,14 +358,23 @@ void TankSpawner::SpendLoadout(const Uuid uuid, const TankType type)
 	}
 }
 
+bool TankSpawner::IsSpawnSpotFree(const ObjRectangle& rect, const Uuid ignoredSpawn) const
+{
+	const auto isBurstThere = [&rect, ignoredSpawn](const DelayedTankSpawn& pending)
+	{
+		return pending.uuid != ignoredSpawn && ColliderUtils::IsCollide(rect, pending.rect);
+	};
+
+	return WorldQuery::IsSpotFreeOfBlockers(_allObjects, rect) && std::ranges::none_of(_delayedSpawns, isBurstThere);
+}
+
 std::optional<ObjRectangle> TankSpawner::FindSpawnSpot(const double minX, const double maxX, const double y,
 													   const double preferredX) const
 {
 	const double tankSize{_gameConfig.tankSize};
 	auto isFree = [this, y, tankSize](const double x)
 	{
-		return WorldQuery::IsSpotFreeOfBlockers(_allObjects,
-											   ObjRectangle{.x = x, .y = y, .w = tankSize, .h = tankSize});
+		return IsSpawnSpotFree(ObjRectangle{.x = x, .y = y, .w = tankSize, .h = tankSize});
 	};
 
 	const std::vector<double> candidates{SpawnCandidates(minX, maxX, preferredX, _gameConfig.gridOffset)};
@@ -246,60 +395,50 @@ std::optional<ObjRectangle> TankSpawner::GetEnemyRandomPosX(const TankType type)
 	}
 
 	const double tankSize{_gameConfig.tankSize};
-	const double battleFieldSizeX{static_cast<double>(_gameConfig.battlefieldSize.x) - tankSize};
-	const double quartFieldSizeX{battleFieldSizeX / 4.0};
+	const auto battleFieldSizeX{static_cast<double>(_gameConfig.battlefieldSize.x)};
+	const double quarterWidth{battleFieldSizeX / 4.0};
+	const double lastX{battleFieldSizeX - tankSize};
 
-	//NOTE: a quarter per seat, so the four of them come in spread across the front
+	//NOTE: the whole hull inside a seat's quarter, so no two seats overlap; too narrow a field falls back to the front
 	const auto quarter{static_cast<double>(type)};
-	const double minX{quarter * quartFieldSizeX};
-	const double maxX{minX + quartFieldSizeX};
+	const double minX{quarter * quarterWidth};
+	const double maxX{std::max(minX, minX + quarterWidth - tankSize)};
 
 	const std::uniform_real_distribution<double> distRandX{minX, maxX};
 	const double randomX{RandUtils::GetRandNumber(distRandX)};
 
 	//NOTE: the whole front only once its own quarter is full - no tank at all is worse than one out of place
 	return FindSpawnSpot(minX, maxX, 0.0, randomX)
-		   .or_else([this, battleFieldSizeX, randomX] { return FindSpawnSpot(0.0, battleFieldSizeX, 0.0, randomX); });
+		   .or_else([this, lastX, randomX] { return FindSpawnSpot(0.0, lastX, 0.0, randomX); });
 }
 
-bool TankSpawner::SpawnEnemy(const ObjRectangle rect, const Uuid uuid, const TankType type, const double speed,
-							 const int health)
+bool TankSpawner::SpawnEnemy(const ObjRectangle rect, const Uuid uuid, const TankType type, const TankModel model)
 {
 	const std::string name{"Enemy" + std::to_string(static_cast<int>(type) + 1)};
 	constexpr auto faction{Faction::EnemyTeam};
 
-	Log::Info("spawn " + name + " (" + std::string{ToString(faction)} + ") uuid " + UuidUtils::GetStringUuid(uuid));
+	Log::Info("spawn " + name + " (" + std::string{ToString(faction)} + ") " + std::string{ToString(model)}
+			  + " uuid " + UuidUtils::GetStringUuid(uuid));
 
-	DelayedSpawnStart(rect, health, speed, uuid, type);
+	DelayedSpawnStart(rect, uuid, type, model);
 
 	return true;
 }
 
-void TankSpawner::SpawnPlayer(const ObjRectangle rect, const double speed, const int health, const Uuid uuid,
-							  const TankType type)
+//NOTE: a bot in a player's seat is still the player's tank - the seat says who drives, the model what it is worth
+void TankSpawner::SpawnPlayer(const ObjRectangle rect, const Uuid uuid, const TankType type,
+							  const std::string_view name)
 {
-	const bool isFirst{type == TankType::PLAYER1};
-	const std::string name{isFirst ? "Player1" : "Player2"};
 	constexpr auto faction{Faction::PlayerTeam};
 
-	Log::Info("spawn " + name + " (" + std::string{ToString(faction)} + ") uuid " + UuidUtils::GetStringUuid(uuid));
+	Log::Info("spawn " + std::string{name} + " (" + std::string{ToString(faction)} + ") uuid "
+			  + UuidUtils::GetStringUuid(uuid));
 
-	DelayedSpawnStart(rect, health, speed, uuid, type);
+	DelayedSpawnStart(rect, uuid, type, TankModel::Player);
 }
 
-void TankSpawner::SpawnCoopBot(const ObjRectangle rect, const double speed, const int health, const Uuid uuid,
-							   const TankType type)
-{
-	const std::string name{(type == TankType::COOP1 ? "CoopBot1" : "CoopBot2")};
-	constexpr auto faction{Faction::PlayerTeam};
-
-	Log::Info("spawn " + name + " (" + std::string{ToString(faction)} + ") uuid " + UuidUtils::GetStringUuid(uuid));
-
-	DelayedSpawnStart(rect, health, speed, uuid, type);
-}
-
-void TankSpawner::RespawnEnemyTanks(const TankType type, const Uuid uuid,
-									const std::optional<ObjRectangle> rect)
+void TankSpawner::RespawnEnemyTanks(const TankType type, const Uuid uuid, const std::optional<ObjRectangle> rect,
+									const std::optional<TankModel> model)
 {
 	const std::optional<ObjRectangle> spawnRect{rect.has_value() ? rect : GetEnemyRandomPosX(type)};
 	if (!spawnRect)
@@ -307,10 +446,12 @@ void TankSpawner::RespawnEnemyTanks(const TankType type, const Uuid uuid,
 		return;
 	}
 
-	const bool isSuccessSpawn{SpawnEnemy(*spawnRect, uuid, type, _gameConfig.tankSpeed, _gameConfig.tankHealth)};
+	const TankModel spawnModel{model.has_value() ? *model : RollEnemyModel()};
+	const bool isSuccessSpawn{SpawnEnemy(*spawnRect, uuid, type, spawnModel)};
 	if (isSuccessSpawn && IsHost(_gameMode))
 	{
 		_events->EmitEvent(TankRespawnedEvent{.type = type,
+											  .model = spawnModel,
 											  .uuid = uuid,
 											  .pos = FPoint{.x = spawnRect->x, .y = spawnRect->y}});
 	}
@@ -358,22 +499,23 @@ void TankSpawner::RespawnPlayerTeam(const TankType type, const Uuid uuid,
 			|| IsNetworkGame(_gameMode)
 			|| (_gameMode == GameMode::CoopWithBot && isFirst)))
 	{
-		SpawnPlayer(*spawnRect, _gameConfig.tankSpeed, _gameConfig.tankHealth, uuid, type);
+		SpawnPlayer(*spawnRect, uuid, type, isFirst ? "Player1" : "Player2");
 		if (IsHost(_gameMode))
 		{
 			_events->EmitEvent(TankRespawnedEvent{.type = type,
+												  .model = TankModel::Player,
 												  .uuid = uuid,
 												  .pos = FPoint{.x = spawnRect->x, .y = spawnRect->y}});
 		}
 	}
 	else if (UsesCoopBots(_gameMode))
 	{
-		SpawnCoopBot(*spawnRect, _gameConfig.tankSpeed, _gameConfig.tankHealth, uuid,
-					 isFirst ? TankType::COOP1 : TankType::COOP2);
+		SpawnPlayer(*spawnRect, uuid, isFirst ? TankType::COOP1 : TankType::COOP2, isFirst ? "CoopBot1" : "CoopBot2");
 	}
 }
 
-void TankSpawner::RespawnTank(const TankType type, const Uuid uuid, const std::optional<ObjRectangle> rect)
+void TankSpawner::RespawnTank(const TankType type, const Uuid uuid, const std::optional<ObjRectangle> rect,
+							  const std::optional<TankModel> model)
 {
 	switch (type)
 	{
@@ -385,12 +527,12 @@ void TankSpawner::RespawnTank(const TankType type, const Uuid uuid, const std::o
 			if (const bool isNetworkMirrored{rect.has_value()};// server already decided when to spawn this tank
 				isNetworkMirrored)
 			{
-				RespawnEnemyTanks(type, uuid, rect);
+				RespawnEnemyTanks(type, uuid, rect, model);
 			}
 			else if (_enemySpawnTimer.IsCooldownFinish())
 			{
 				_enemySpawnTimer.Reset();
-				RespawnEnemyTanks(type, uuid, rect);
+				RespawnEnemyTanks(type, uuid, rect, model);
 			}
 			break;
 		}
@@ -404,9 +546,10 @@ void TankSpawner::RespawnTank(const TankType type, const Uuid uuid, const std::o
 }
 
 //TODO: maybe we don't need spawn on client at all and just move the textures and animation?
-void TankSpawner::OnClientRespawn(const TankType type, const Uuid uuid, const ObjRectangle rect)
+void TankSpawner::OnClientRespawn(const TankType type, const Uuid uuid, const ObjRectangle rect,
+								  const TankModel model)
 {
-	RespawnTank(type, uuid, rect);
+	RespawnTank(type, uuid, rect, model);
 }
 
 std::unique_ptr<IInputProvider> TankSpawner::MakeDriver(const TankType type) const
@@ -424,14 +567,15 @@ std::unique_ptr<IInputProvider> TankSpawner::MakeDriver(const TankType type) con
 	return std::make_unique<InputProviderForPlayer>(_events, channel);
 }
 
-void TankSpawner::DelayedSpawnStart(const ObjRectangle rect, const int health, const double speed, const Uuid uuid,
-									const TankType type)
+void TankSpawner::DelayedSpawnStart(const ObjRectangle rect, const Uuid uuid, const TankType type,
+									const TankModel model)
 {
 	_delayedSpawns.push_back(DelayedTankSpawn{.uuid = uuid,
 											  .type = type,
+											  .model = model,
 											  .rect = rect,
-											  .health = health,
-											  .speed = speed,
+											  .home = rect,
+											  .health = HealthOf(model, _gameConfig.tankHealth),
 											  .tier = LoadoutTierOf(type)});
 
 	_events->EmitEvent(TankSpawnEvent{.uuid = uuid});
@@ -462,8 +606,10 @@ void TankSpawner::OnSpawnDelayFinished(const Uuid uuid)
 		return;
 	}
 
-	DelayedSpawnWith(*it);
+	const DelayedTankSpawn spawn{*it};
 	_delayedSpawns.erase(it);
+
+	DelayedSpawnWith(spawn);
 }
 
 void TankSpawner::CancelDelayedSpawnsOf(const Faction faction)
@@ -489,8 +635,8 @@ void TankSpawner::DelayedSpawnWith(const DelayedTankSpawn& params)
 	const TankResetProperty resetProperty{.uuid = params.uuid,
 										  .rect = params.rect,
 										  .health = params.health,
-										  .speed = params.speed,
 										  .type = params.type,
+										  .model = params.model,
 										  .dir = Direction::UP,
 										  .tier = params.tier};
 
@@ -498,7 +644,10 @@ void TankSpawner::DelayedSpawnWith(const DelayedTankSpawn& params)
 			_tankPool->SpawnTank(resetProperty, MakeDriver(params.type))})
 	{
 		_events->EmitEvent(AddToSpawnQueueEvent{.obj = tank});
-		_events->EmitEvent(AnimationCreateTankMoveEvent{.rect = params.rect, .author = SeatOf(params.type)});
+		_events->EmitEvent(AnimationCreateTankMoveEvent{.rect = params.rect,
+														.author = SeatOf(params.type),
+														.model = params.model,
+														.tier = params.tier});
 
 		//NOTE: ahead of the effects - their status travels as its own command, and the client has to
 		//have built the tank before one arrives for it
@@ -519,9 +668,9 @@ void TankSpawner::RestoreTank(const TankSnapshot& tank)
 	const ObjRectangle rect{.x = tank.pos.x, .y = tank.pos.y, .w = tankSize, .h = tankSize};
 	DelayedSpawnWith(DelayedTankSpawn{.uuid = tank.uuid,
 									  .type = tank.type,
+									  .model = tank.model,
 									  .rect = rect,
-									  .health = tank.health,
-									  .speed = _gameConfig.tankSpeed});
+									  .health = tank.health});
 
 	const Author seat{SeatOf(tank.type)};
 	_events->EmitEvent(Key(tank.uuid), PosChangedEvent{.pos = tank.pos, .dir = tank.dir, .uuid = tank.uuid});

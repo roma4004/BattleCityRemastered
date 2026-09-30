@@ -4,8 +4,10 @@
 #include "enums/TextureType.h"
 #include "components/EventSystem.h"
 #include "components/events/AnimationRenderEvents.h"
+#include "entities/TankModelSpec.h"
 #include "utils/MathUtils.h"
 #include "utils/Log.h"
+#include <optional>
 
 namespace
 {
@@ -71,7 +73,7 @@ ObjRectangle TextureManager::GetTextureRect(const TextureType texture)
 	return ObjRectangle{};
 }
 
-ObjRectangle TextureManager::GetTankTextureRect(const Author author)
+std::optional<ObjRectangle> TextureManager::QuarterOf(const Author author)
 {
 	switch (author)
 	{
@@ -89,16 +91,30 @@ ObjRectangle TextureManager::GetTankTextureRect(const Author author)
 			break;
 	}
 
-	return ObjRectangle{};
+	return std::nullopt;
+}
+
+//NOTE: the seat picks the color quarter, SpriteRowOf the row in it - player tiers first, then enemy models
+ObjRectangle TextureManager::GetTankTextureRect(const Author author, const TankModel model,
+												const unsigned short tier)
+{
+	const double rowOffset{SpriteRowOf(model, tier) * kAtlasCellSize};
+	const auto shiftedDown = [rowOffset](const ObjRectangle& quarter)
+	{
+		return ObjRectangle{.x = quarter.x, .y = quarter.y + rowOffset, .w = quarter.w, .h = quarter.h};
+	};
+
+	return QuarterOf(author).transform(shiftedDown).value_or(ObjRectangle{});
 }
 
 TextureManager::AtlasFrames TextureManager::GetAnimFrames(const AnimationType type, const Author author,
+														  const TankModel model, const unsigned short tier,
 														  const ObjRectangle rect, ObjRectangle& destRect) const
 {
 	switch (type)
 	{
 		case AnimationType::Tank_Move:
-			return AtlasFrames{.first = GetTankTextureRect(author)};
+			return AtlasFrames{.first = GetTankTextureRect(author, model, tier)};
 		case AnimationType::Water_Flow:
 			//NOTE: the water frames sit to the left of the offset, so they are walked backwards
 			return AtlasFrames{.first = TextureOffset::kWater, .step = -1};
@@ -183,9 +199,9 @@ void TextureManager::DrawRim(const ObjRectangle& textureRect, const ObjRectangle
 
 void TextureManager::DrawAnimation(const DrawAnimationEvent& event) const
 {
-	const auto& [rect, dir, frame, scale, type, author] = event;
+	const auto& [rect, dir, frame, scale, type, author, model, tier] = event;
 	ObjRectangle destRect{rect};
-	auto [textureRect, step] = GetAnimFrames(type, author, rect, destRect);
+	auto [textureRect, step] = GetAnimFrames(type, author, model, tier, rect, destRect);
 	textureRect.x += static_cast<double>(frame * scale * step);
 	if (constexpr ObjRectangle defaultSdlRect{};
 		MathUtils::AreEqualAbsolute(textureRect.x, defaultSdlRect.x)

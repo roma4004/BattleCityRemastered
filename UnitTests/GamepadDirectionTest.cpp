@@ -8,7 +8,7 @@
 class GamepadDirectionTest : public testing::Test
 {
 protected:
-	//NOTE: the stick rests near the centre and never exactly on it, so anything inside the dead zone is not
+	//NOTE: the stick rests near the center and never exactly on it, so anything inside the dead zone is not
 	//a press; the tilt is well past it
 	static constexpr int kDeadZone{8000};
 	static constexpr int kTilt{20000};

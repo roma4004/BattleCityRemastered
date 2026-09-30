@@ -1,19 +1,16 @@
 #pragma once
 
-#include "geometry/Point.h"
 #include "enums/Delivery.h"
-#include "enums/TankModel.h"
-#include "enums/TankType.h"
+#include "geometry/Point.h"
 #include "utils/Uuid.h"
 
 namespace network::commands
 {
-struct RespawnTank final
+//NOTE: reliable, unlike positions - the client lands the tank on the last square, so no shove may be dropped
+struct TankSpawnMoved final
 {
 	static constexpr Delivery kDelivery{Delivery::Reliable};
 
-	TankType tankType{};
-	TankModel model{};
 	Uuid uuid{};
 	FPoint pos{};
 };

@@ -50,7 +50,6 @@ protected:
 		const TankResetProperty property{.uuid = uuid,
 										 .rect{.x = 0.0, .y = 0.0, .w = tankSize, .h = tankSize},
 										 .health = _gameConfig.tankHealth,
-										 .speed = _gameConfig.tankSpeed,
 										 .type = TankType::PLAYER1,
 										 .dir = Direction::UP,
 										 .tier = tier};

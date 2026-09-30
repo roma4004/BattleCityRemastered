@@ -8,7 +8,7 @@
 #include <variant>
 
 // a command that takes no argument
-TEST(ConsoleCommandTest, ABareCommandIsRecognised)
+TEST(ConsoleCommandTest, ABareCommandIsRecognized)
 {
 	const auto command{ParseConsoleCommand("/restart")};
 

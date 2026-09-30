@@ -1,6 +1,6 @@
 #pragma once
 
-#include "entities/BulletCalibre.h"
+#include "entities/BulletCaliber.h"
 #include "interfaces/IMoveBeh.h"
 #include "utils/Uuid.h"
 #include <memory>
@@ -17,7 +17,7 @@ class MoveLikeBulletBeh final : public IMoveBeh
 	const Uuid& _authorUuid;
 	ObjRectangle& _rect;
 	const GameConfig& _gameConfig;
-	const BulletCalibre& _calibre;
+	const BulletCaliber& _caliber;
 
 	[[nodiscard]] bool IsSelfOrAuthor(const BaseObj& object) const;
 	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>> GetCircleCollisionObjects(
@@ -32,7 +32,7 @@ class MoveLikeBulletBeh final : public IMoveBeh
 
 public:
 	MoveLikeBulletBeh(ObjRectangle& rect, Uuid& uuid, const Uuid& authorUuid, const GameConfig& gameConfig,
-					  const BulletCalibre& calibre);
+					  const BulletCaliber& caliber);
 
 	~MoveLikeBulletBeh() override = default;
 

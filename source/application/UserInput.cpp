@@ -257,9 +257,6 @@ void UserInput::KeyboardKeyPressRelease(const SDL_Event& event, const bool& isPr
 				_events->EmitEvent(PauseReleasedEvent{});
 			}
 			break;
-		case SDLK_R:
-			_events->EmitEvent(ResetKeyEvent{.isPressed = isPressed});
-			break;
 		case SDLK_TAB:
 			if (isPressed == false)
 			{

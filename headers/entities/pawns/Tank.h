@@ -2,7 +2,7 @@
 
 #include "../BonusEffectProperty.h"
 #include "Pawn.h"
-#include "entities/BulletCalibre.h"
+#include "entities/BulletCaliber.h"
 #include "utils/Timer.h"
 #include <chrono>
 #include <memory>
@@ -12,6 +12,7 @@
 
 enum class Faction : char8_t;
 enum class Direction : char8_t;
+enum class TankModel : char8_t;
 enum class TankType : char8_t;
 struct UPoint;
 struct TankResetProperty;
@@ -46,6 +47,10 @@ class Tank final : public Pawn
 	std::unique_ptr<IInputProvider> _inputProvider{nullptr};
 	//NOTE: what the seat was spawned as - a client rebuilding the field needs it, the seat alone cannot tell
 	TankType _type{};
+	//NOTE: which tank it is, apart from who drives it - its numbers and its atlas row
+	TankModel _model{};
+	//NOTE: where the driver asked to go on the last tick, empty when it asked for nothing at all
+	std::optional<Direction> _drivingTo{};
 
 	void EmitMoved() const;
 
@@ -73,45 +78,44 @@ class Tank final : public Pawn
 
 	void OnBonusGrenade(const BonusGrenadePickupEvent& event);
 
-	//NOTE: star and caliber are the same upgrade with different numbers
-	struct TierUpgrade
+	//NOTE: shares of the model's own base - a flat +15 damage was a scout's whole shell and a fifth of a heavy's
+	struct TierGrowth final
 	{
-		unsigned short tiers{};
-		double speedFactor{};
-		unsigned int damage{};
-		double radiusFactor{};
-		std::chrono::milliseconds cooldownCut{};
+		double speedShare{};
+		double damageShare{};
+		double blastShare{};
+		double reloadShare{};
 	};
 
+	//NOTE: the numbers the player's tank used to gain per star, read back as shares of its own base
+	static constexpr TierGrowth kTierStep{.speedShare = 0.10,
+										  .damageShare = 1.0,
+										  .blastShare = 0.25,
+										  .reloadShare = 0.30};
+
 	//NOTE: star and caliber differ only in how far they carry a tank along the same four tiers
-	static constexpr TierUpgrade kStar{.tiers = 1u,
-									   .speedFactor = 1.10,
-									   .damage = 15,
-									   .radiusFactor = 1.25,
-									   .cooldownCut = std::chrono::milliseconds{150}};
-	static constexpr TierUpgrade kCaliber{.tiers = 3u,
-										  .speedFactor = 1.30,
-										  .damage = 45,
-										  .radiusFactor = 1.75,
-										  .cooldownCut = std::chrono::milliseconds{450}};
+	static constexpr unsigned short kStarTiers{1u};
+	static constexpr unsigned short kCaliberTiers{3u};
 
 	//NOTE: the top tier itself, not the last one that may still be upgraded - three stars reach it
+	static constexpr unsigned short kMinTier{1u};
 	static constexpr unsigned short kMaxTier{4u};
-	static constexpr int kUpgradeHeal{50};
+	//NOTE: healed by the pickup, as a share of the health the model was built with - half of it, as before
+	static constexpr double kUpgradeHealShare{0.5};
 
-	void Upgrade(const TierUpgrade& upgrade);
+	void Upgrade(unsigned short tiers);
 
-	//NOTE: the numbers of one upgrade without the heal and without telling the wire - what Reset replays
-	void ApplyTierStep(const TierUpgrade& upgrade);
+	//NOTE: the model's own numbers, before a single tier has been earned
+	[[nodiscard]] BulletCaliber BaseCaliber() const;
 
-	//NOTE: a tank spawned at tier N is the tank N-1 stars would have made, stats and all
+	//NOTE: tier N is what N-1 stars make, counted off the base - so spawning at a tier and earning it cannot drift
 	void ApplyTier(unsigned short tier);
 	void OnBonusStar();
 	void OnBonusCaliber();
 	void OnBonusShip();
 
 protected:
-	BulletCalibre _calibre{};
+	BulletCaliber _caliber{};
 	Timer _shootTimer{};
 
 	void EmitDamageStatistics(Author author) override;
@@ -123,7 +127,7 @@ protected:
 
 	BonusEffectProperty _effects{};
 
-	void Shot(std::optional<Uuid> withUuid = std::nullopt);
+	void Shot(std::optional<Uuid> withUuid = std::nullopt, std::optional<unsigned int> withDamage = std::nullopt);
 
 	void HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const;
 	void OnPosChanged(const PosChangedEvent& event) override;
@@ -148,10 +152,13 @@ public:
 	void Reset(const TankResetProperty& resetProperty, std::unique_ptr<IInputProvider> driver);
 
 	[[nodiscard]] unsigned int GetTier() const noexcept;
+	[[nodiscard]] TankModel GetModel() const noexcept;
 
 	//NOTE: how far this tank gives way, the ones behind it counted in - a wall, the edge of the field or
 	//a tank driving the other way ends the chain, and then the whole of it stands
 	[[nodiscard]] double ShoveDistance(Direction dir, double wanted, int depth) const;
+	//NOTE: leaning in, not just facing - a parked tank gives way, one pressing towards us holds the chain
+	[[nodiscard]] bool IsDrivingAgainst(Direction dir) const;
 
 	//NOTE: moves this tank and whatever it is pushing, and says so - a shoved tank does not move in its
 	//own TickUpdate, so nothing else would tell the client or the animation where it went
