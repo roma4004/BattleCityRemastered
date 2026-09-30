@@ -161,8 +161,7 @@ void ScoreBoard::Draw() const
 	RenderStatistics();
 }
 
-//NOTE: one block, not a line at a time - the renderer sizes and centres the table as a whole, which is
-//what keeps its columns columns
+//NOTE: one block, not line by line - the renderer sizes and centers the table whole, so its columns stay aligned
 void ScoreBoard::RenderStatistics() const
 {
 	//NOTE: the board's own top left - the captions and the table hang off it, nothing off the menu's anchor

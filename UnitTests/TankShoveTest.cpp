@@ -76,6 +76,15 @@ protected:
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 	}
 
+	//NOTE: two frames - on the first one neither tank has read what the other was asked to do yet
+	void DriveTowardsEachOther() const
+	{
+		_events->EmitEvent(Key(InputChannel::LocalP1), MoveRightEvent{.isPressed = true});
+		_events->EmitEvent(Key(InputChannel::LocalP2), MoveLeftEvent{.isPressed = true});
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	}
+
 	[[nodiscard]] double StepOfOneFrame() const { return _gameConfig.tankSpeed * _deltaTimeOneFrame; }
 };
 
@@ -100,13 +109,27 @@ TEST_F(TankShoveTest, AHeadOnMeetingHoldsBothTanks)
 {
 	const auto pusher{CreatePlayer({.x = 0.0, .y = _tankSize * 2.0}, Author::Player1, Direction::RIGHT)};
 	const auto pushed{CreatePlayer({.x = _tankSize, .y = _tankSize * 2.0}, Author::Player2, Direction::LEFT)};
+
+	DriveTowardsEachOther();
 	const FPoint pusherPos{pusher->GetPos()};
 	const FPoint pushedPos{pushed->GetPos()};
 
-	DriveP1Right();
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(pushed->GetPos(), pushedPos);
 	EXPECT_EQ(pusher->GetPos(), pusherPos);
+}
+
+// facing is not leaning: a tank standing still gives way whichever way its barrel happens to point
+TEST_F(TankShoveTest, ATankMerelyLookingAtUsIsStillPushed)
+{
+	const auto pusher{CreatePlayer({.x = 0.0, .y = _tankSize * 2.0}, Author::Player1, Direction::RIGHT)};
+	const auto pushed{CreatePlayer({.x = _tankSize, .y = _tankSize * 2.0}, Author::Player2, Direction::LEFT)};
+	const double pushedX{pushed->GetPos().x};
+
+	DriveP1Right();
+
+	EXPECT_GT(pushed->GetPos().x, pushedX) << "a parked tank held the shove by looking our way";
 }
 
 // with its back to a wall the tank ahead has nowhere to give way to, and then it is a wall itself

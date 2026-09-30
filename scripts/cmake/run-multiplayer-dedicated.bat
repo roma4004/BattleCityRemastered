@@ -21,7 +21,7 @@ if not exist "%GAME_DIR%BattleCityServer.exe" (
 	exit /b 1
 )
 del "%GAME_DIR%server-port.txt" >nul 2>&1
-rem /MIN - the console shows nothing the log file does not, and unminimised it covers both windows
+rem /MIN - the console shows nothing the log file does not, and unminimized it covers both windows
 start "BattleCity server" /MIN /D "%GAME_DIR%" "%GAME_DIR%BattleCityServer.exe" --address=%BC_ADDRESS% --port=%BC_PORT% --port-file=server-port.txt
 rem seats go out in connection order, so the listener has to be up before the first window asks - and
 rem with a free port the number itself is only known once it is

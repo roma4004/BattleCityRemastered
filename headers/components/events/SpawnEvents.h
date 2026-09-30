@@ -6,6 +6,7 @@
 #include "enums/BonusType.h"
 #include "enums/ObstacleType.h"
 #include "enums/RespawnGroup.h"
+#include "enums/TankModel.h"
 #include "enums/TankType.h"
 #include "utils/Uuid.h"
 #include <chrono>
@@ -41,6 +42,8 @@ struct RespawnCountChangedToEvent
 struct TankRespawnedEvent
 {
 	TankType type;
+	//NOTE: rolled by the authority alone - a client that rolled its own would mirror a different tank
+	TankModel model;
 	Uuid uuid;
 	FPoint pos;
 };

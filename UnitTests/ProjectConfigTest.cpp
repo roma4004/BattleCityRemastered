@@ -12,7 +12,7 @@
 
 namespace
 {
-//NOTE: what happens to the file is the behaviour under test, so these cases need a real one on disk
+//NOTE: what happens to the file is the behavior under test, so these cases need a real one on disk
 class TempIni final
 {
 	std::filesystem::path _path;
@@ -79,7 +79,7 @@ TEST(ProjectConfigTest, UnparseableFileIsReportedAndLeftUntouched)
 	EXPECT_EQ(ini.Read(), broken);
 }
 
-//NOTE: a fresh ini has no saved position to restore, so the window is centred on the monitor
+//NOTE: a fresh ini has no saved position to restore, so the window is centered on the monitor
 TEST(ProjectConfigTest, MissingAndUnparseableFilesBothCountAsFresh)
 {
 	const TempIni missing{"battlecity_fresh_missing.ini"};
@@ -89,7 +89,7 @@ TEST(ProjectConfigTest, MissingAndUnparseableFilesBothCountAsFresh)
 	EXPECT_TRUE(ProjectConfig{broken.Path()}.IsFreshIni());
 }
 
-// an ini with a saved position: not fresh, so the window is put back where it was instead of centred
+// an ini with a saved position: not fresh, so the window is put back where it was instead of centered
 TEST(ProjectConfigTest, AReadableFileIsNotFreshAndCenteringIsOptIn)
 {
 	const TempIni ini{"battlecity_saved.ini", "[Window]\nposX=340\nposY=180\n"};

@@ -13,7 +13,8 @@
 #include "components/events/ReplicationEvents.h"
 #include "components/events/StatisticsEvents.h"
 #include "components/WorldSnapshot.h"
-#include "entities/BulletCalibre.h"
+#include "entities/BulletCaliber.h"
+#include "entities/TankModelSpec.h"
 #include "entities/pawns/PawnProperty.h"
 #include "entities/pawns/TankResetProperty.h"
 #include "geometry/Point.h"
@@ -26,6 +27,7 @@
 #include "interfaces/IPickupableBonus.h"
 #include "utils/ColliderUtils.h"
 #include "utils/DirectionUtils.h"
+#include "utils/MathUtils.h"
 #include "enums/Faction.h"
 #include <chrono>
 #include <ranges>
@@ -34,9 +36,8 @@ using namespace std::chrono_literals;
 
 namespace
 {
-//NOTE: a tank fires at the rate of the seat it drives, and the seat is already in its faction
-constexpr auto kEnemySeatCooldown{1000ms};
-constexpr auto kPlayerSeatCooldown{500ms};
+//NOTE: the player's gun, and every other model is this one times its own share
+constexpr auto kBaseReload{500ms};
 }//namespace
 
 Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool,
@@ -48,11 +49,9 @@ Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletP
 	_tankMoveBeh = moveBeh.get();
 	_moveBeh = std::move(moveBeh);
 	ApplyFreshLoadout();
-	//NOTE: the loadout is the first tier's, so a tank built above it takes the steps up to its own
-	const unsigned short tier{_tier};
-	_tier = 1u;
-	ApplyTier(tier);
-	_shootingBeh = std::make_shared<ShootingBeh>(_rect, _dir, _uuid, _author, bulletPool, _calibre, _events,
+	//NOTE: the loadout is the first tier's, so a tank built above it is grown to its own
+	ApplyTier(_tier);
+	_shootingBeh = std::make_shared<ShootingBeh>(_rect, _dir, _uuid, _author, bulletPool, _caliber, _events,
 												 _gameConfig);
 }
 
@@ -68,18 +67,28 @@ void Tank::Deactivate()
 	Pawn::Deactivate();
 }
 
+BulletCaliber Tank::BaseCaliber() const
+{
+	constexpr FPoint baseShell{.x = 9.0, .y = 9.0};
+	constexpr double baseBulletSpeed{300.0};
+	constexpr unsigned int baseDamage{15};
+	const FPoint shell{ShellSizeOf(_model, baseShell)};
+
+	return BulletCaliber{.speed = baseBulletSpeed * SpecOf(_model).bulletSpeedFactor,
+						 .damage = DamageOf(_model, baseDamage),
+						 .damageRadius = BlastOf(_model, WorldGeometry::BlastRadiusFor(_gameConfig.tankSize,
+																					   shell.y)),
+						 .tier = _tier,
+						 .size = shell};
+}
+
 //NOTE: the tier is not touched here - a fresh tank gets it from its property, a reused one from Reset
 void Tank::ApplyFreshLoadout()
 {
-	constexpr FPoint bulletSize{.x = 9.0, .y = 9.0};
-	_calibre = BulletCalibre{.speed = 300.0,
-							 .damage = 15,
-							 .damageRadius = WorldGeometry::BlastRadiusFor(_gameConfig.tankSize, bulletSize.y),
-							 .tier = _tier,
-							 .size = bulletSize};
+	_caliber = BaseCaliber();
 	_effects = BonusEffectProperty{};
 	_shootTimer = Timer{};
-	_shootTimer.cooldown = _faction == Faction::EnemyTeam ? kEnemySeatCooldown : kPlayerSeatCooldown;
+	_shootTimer.cooldown = ReloadOf(_model, kBaseReload);
 }
 
 void Tank::Reset(const TankResetProperty& resetProperty, std::unique_ptr<IInputProvider> driver)
@@ -88,9 +97,9 @@ void Tank::Reset(const TankResetProperty& resetProperty, std::unique_ptr<IInputP
 	_rect = resetProperty.rect;
 	SetHealth(resetProperty.health);
 	_dir = resetProperty.dir;
-	_speed = resetProperty.speed;
 
 	_type = resetProperty.type;
+	_model = resetProperty.model;
 	_author = SeatOf(_type);
 	_faction = FactionOf(_author);
 	_tier = 1u;
@@ -163,7 +172,7 @@ void Tank::SubscribeAsClient()
 void Tank::OnTankShot(const TankShotEvent& event)
 {
 	SetDirection(event.dir);
-	Shot(event.bulletUuid);
+	Shot(event.bulletUuid, event.damage);
 }
 
 void Tank::OnBonusHelmetApplied(const BonusHelmetAppliedEvent& event) { OnBonusHelmet(event.isActive); }
@@ -193,6 +202,7 @@ void Tank::OnBonusShipPickup(const BonusShipPickupEvent&) { OnBonusShip(); }
 void Tank::OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const
 {
 	event.snapshot.tanks.push_back(TankSnapshot{.type = _type,
+												.model = _model,
 												.uuid = _uuid,
 												.pos = GetPos(),
 												.dir = _dir,
@@ -212,6 +222,8 @@ void Tank::TakeDamage(const unsigned int damage, const Author author)
 
 unsigned int Tank::GetTier() const noexcept { return _tier; }
 
+TankModel Tank::GetModel() const noexcept { return _model; }
+
 bool Tank::CanShoot() const noexcept { return !_shootTimer.isActive; }
 
 std::vector<Direction> Tank::GetFreePathSides(const double deltaTime,
@@ -223,7 +235,7 @@ std::vector<Direction> Tank::GetFreePathSides(const double deltaTime,
 void Tank::EmitMoved() const
 {
 	const FPoint pos{GetPos()};
-	_events->EmitEvent(AnimationTankUpdateEvent{.author = _author, .pos = pos, .dir = _dir});
+	_events->EmitEvent(AnimationTankUpdateEvent{.author = _author, .pos = pos, .dir = _dir, .tier = _tier});
 
 	if (_gameConfig.IsHost())
 	{
@@ -238,6 +250,11 @@ constexpr double kShoveShare{0.5};
 //NOTE: a chain longer than the tanks in a match cannot happen, and a cycle in it must not hang the frame
 constexpr int kMaxShoveChain{8};
 
+bool Tank::IsDrivingAgainst(const Direction dir) const
+{
+	return _drivingTo == DirectionUtils::Opposite(dir);
+}
+
 double Tank::ShoveDistance(const Direction dir, const double wanted, const int depth) const
 {
 	if (depth > kMaxShoveChain
@@ -250,7 +267,7 @@ double Tank::ShoveDistance(const Direction dir, const double wanted, const int d
 	for (const std::shared_ptr<BaseObj>& blocker: _tankMoveBeh->BlockersAhead(dir, wanted, _allObjects))
 	{
 		const auto peer{std::dynamic_pointer_cast<Tank>(blocker)};
-		if (peer == nullptr || peer->GetDirection() == DirectionUtils::Opposite(dir))
+		if (peer == nullptr || peer->IsDrivingAgainst(dir))
 		{
 			return 0.0;
 		}
@@ -300,7 +317,7 @@ void Tank::ShoveAhead(const Direction dir, const double step)
 	for (const std::shared_ptr<BaseObj>& blocker: blockers)
 	{
 		const auto peer{std::dynamic_pointer_cast<Tank>(blocker)};
-		if (peer == nullptr || peer->GetDirection() == DirectionUtils::Opposite(dir))
+		if (peer == nullptr || peer->IsDrivingAgainst(dir))
 		{
 			return;
 		}
@@ -334,6 +351,7 @@ void Tank::TickUpdate(const double deltaTime)
 	const Direction oldDir{_dir};
 
 	const std::optional<Direction> chosen{_inputProvider->ChooseDirection(*this, deltaTime)};
+	_drivingTo = chosen;
 	bool isMove{};
 	if (chosen)
 	{
@@ -384,37 +402,40 @@ void Tank::TickUpdate(const double deltaTime)
 	}
 }
 
-void Tank::Shot(const std::optional<Uuid> withUuid)
+void Tank::Shot(const std::optional<Uuid> withUuid, const std::optional<unsigned int> withDamage)
 {
-	const Uuid bulletUuid{_shootingBeh->Shot(withUuid)};
+	const ShotResult shot{_shootingBeh->Shot(withUuid, withDamage)};
 
 	if (_gameConfig.IsHost())
 	{
-		_events->EmitEvent(TankShotEvent{.who = _author, .dir = GetDirection(), .bulletUuid = bulletUuid});
+		_events->EmitEvent(TankShotEvent{.who = _author,
+										 .dir = GetDirection(),
+										 .bulletUuid = shot.uuid,
+										 .damage = shot.damage});
 	}
 
 	_shootTimer.Reset();
 }
 
-double Tank::GetBulletWidth() const noexcept { return _calibre.size.x; }
+double Tank::GetBulletWidth() const noexcept { return _caliber.size.x; }
 
-void Tank::SetBulletWidth(const double bulletWidth) { _calibre.size.x = bulletWidth; }
+void Tank::SetBulletWidth(const double bulletWidth) { _caliber.size.x = bulletWidth; }
 
-double Tank::GetBulletHeight() const noexcept { return _calibre.size.y; }
+double Tank::GetBulletHeight() const noexcept { return _caliber.size.y; }
 
-void Tank::SetBulletHeight(const double bulletHeight) { _calibre.size.y = bulletHeight; }
+void Tank::SetBulletHeight(const double bulletHeight) { _caliber.size.y = bulletHeight; }
 
-double Tank::GetBulletSpeed() const noexcept { return _calibre.speed; }
+double Tank::GetBulletSpeed() const noexcept { return _caliber.speed; }
 
-void Tank::SetBulletSpeed(const double bulletSpeed) { _calibre.speed = bulletSpeed; }
+void Tank::SetBulletSpeed(const double bulletSpeed) { _caliber.speed = bulletSpeed; }
 
-unsigned int Tank::GetBulletDamage() const noexcept { return _calibre.damage; }
+unsigned int Tank::GetBulletDamage() const noexcept { return _caliber.damage; }
 
-void Tank::SetBulletDamage(const unsigned int bulletDamage) { _calibre.damage = bulletDamage; }
+void Tank::SetBulletDamage(const unsigned int bulletDamage) { _caliber.damage = bulletDamage; }
 
-double Tank::GetBulletDamageRadius() const noexcept { return _calibre.damageRadius; }
+double Tank::GetBulletDamageRadius() const noexcept { return _caliber.damageRadius; }
 
-void Tank::SetBulletDamageRadius(const double bulletDamageRadius) { _calibre.damageRadius = bulletDamageRadius; }
+void Tank::SetBulletDamageRadius(const double bulletDamageRadius) { _caliber.damageRadius = bulletDamageRadius; }
 
 void Tank::OnBonusTimer(const BonusTimerStatusChangeEvent& event)
 {
@@ -448,36 +469,33 @@ void Tank::OnBonusGrenade(const BonusGrenadePickupEvent&)
 	}
 }
 
-void Tank::ApplyTierStep(const TierUpgrade& upgrade)
-{
-	_tier = std::min(static_cast<unsigned short>(_tier + upgrade.tiers), kMaxTier);
-
-	_speed *= upgrade.speedFactor;
-	_calibre.speed *= upgrade.speedFactor;
-	_calibre.damage += upgrade.damage;
-	_calibre.damageRadius *= upgrade.radiusFactor;
-	_calibre.tier = _tier;
-	_shootTimer.cooldown -= upgrade.cooldownCut;
-}
-
 void Tank::ApplyTier(const unsigned short tier)
 {
-	for (unsigned short step{1u}; step < tier; ++step)
-	{
-		ApplyTierStep(kStar);
-	}
+	_tier = std::clamp(tier, kMinTier, kMaxTier);
+
+	const auto steps{static_cast<double>(_tier - kMinTier)};
+	const double faster{1.0 + kTierStep.speedShare * steps};
+	const BulletCaliber base{BaseCaliber()};
+
+	_speed = SpeedOf(_model, _gameConfig.tankSpeed) * faster;
+	_caliber.speed = base.speed * faster;
+	_caliber.damage = MathUtils::RoundTo<unsigned int>(base.damage * (1.0 + kTierStep.damageShare * steps));
+	_caliber.damageRadius = base.damageRadius * (1.0 + kTierStep.blastShare * steps);
+	_caliber.tier = _tier;
+	_shootTimer.cooldown = std::chrono::round<std::chrono::milliseconds>(
+			ReloadOf(_model, kBaseReload) * (1.0 - kTierStep.reloadShare * steps));
 }
 
-void Tank::Upgrade(const TierUpgrade& upgrade)
+void Tank::Upgrade(const unsigned short tiers)
 {
-	Heal(kUpgradeHeal);
+	Heal(MathUtils::RoundTo<int>(HealthOf(_model, _gameConfig.tankHealth) * kUpgradeHealShare));
 
 	if (_tier >= kMaxTier)
 	{
 		return;
 	}
 
-	ApplyTierStep(upgrade);
+	ApplyTier(static_cast<unsigned short>(_tier + tiers));
 
 	if (_gameConfig.IsHost())
 	{
@@ -485,9 +503,9 @@ void Tank::Upgrade(const TierUpgrade& upgrade)
 	}
 }
 
-void Tank::OnBonusStar() { Upgrade(kStar); }
+void Tank::OnBonusStar() { Upgrade(kStarTiers); }
 
-void Tank::OnBonusCaliber() { Upgrade(kCaliber); }
+void Tank::OnBonusCaliber() { Upgrade(kCaliberTiers); }
 
 void Tank::OnBonusShip()
 {
@@ -542,7 +560,10 @@ void Tank::OnPosChanged(const PosChangedEvent& event)
 	_effects.isTouchTheBushes = IsTouchBush();
 
 	//NOTE: the client's only move, so the track animation has to advance from here
-	_events->EmitEvent(AnimationTankUpdateEvent{.author = _author, .pos = event.pos, .dir = event.dir});
+	_events->EmitEvent(AnimationTankUpdateEvent{.author = _author,
+												.pos = event.pos,
+												.dir = event.dir,
+												.tier = _tier});
 }
 
 bool Tank::IsTouchBush() const

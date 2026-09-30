@@ -41,7 +41,10 @@ void ReplicationApplier::Emit(const PositionChange& command) const
 void ReplicationApplier::Emit(const TankShot& command) const
 {
 	const Author who{SeatFromWire(command.who)};
-	_events->EmitEvent(Key(who), TankShotEvent{.who = who, .dir = command.dir, .bulletUuid = command.uuid});
+	_events->EmitEvent(Key(who), TankShotEvent{.who = who,
+											   .dir = command.dir,
+											   .bulletUuid = command.uuid,
+											   .damage = command.damage});
 }
 
 void ReplicationApplier::Emit(const HealthChange& command) const
@@ -64,7 +67,10 @@ void ReplicationApplier::Emit(const Despawn& command) const
 
 void ReplicationApplier::Emit(const RespawnTank& command) const
 {
-	_events->EmitEvent(TankRespawnedEvent{.type = command.tankType, .uuid = command.uuid, .pos = command.pos});
+	_events->EmitEvent(TankRespawnedEvent{.type = command.tankType,
+										  .model = command.model,
+										  .uuid = command.uuid,
+										  .pos = command.pos});
 }
 
 void ReplicationApplier::Emit(const ObstacleSpawn& command) const
@@ -75,6 +81,11 @@ void ReplicationApplier::Emit(const ObstacleSpawn& command) const
 void ReplicationApplier::Emit(const TankSpawnComplete& command) const
 {
 	_events->EmitEvent(TankSpawnCompletedEvent{.uuid = command.uuid});
+}
+
+void ReplicationApplier::Emit(const TankSpawnMoved& command) const
+{
+	_events->EmitEvent(TankSpawnMovedEvent{.uuid = command.uuid, .pos = command.pos});
 }
 
 void ReplicationApplier::Emit(const BonusSpawnComplete& command) const

@@ -7,6 +7,7 @@
 #include "enums/Delivery.h"
 #include "enums/Direction.h"
 #include "enums/GameState.h"
+#include "enums/TankModel.h"
 #include "enums/TankType.h"
 #include "geometry/ObjRectangle.h"
 #include "geometry/Point.h"
@@ -17,6 +18,7 @@
 struct TankSnapshot final
 {
 	TankType type{};
+	TankModel model{};
 	Uuid uuid{};
 	FPoint pos{};
 	Direction dir{};

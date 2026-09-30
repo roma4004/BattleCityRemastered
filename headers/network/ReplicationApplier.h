@@ -29,6 +29,7 @@ private:
 	void Emit(const RespawnTank& command) const;
 	void Emit(const ObstacleSpawn& command) const;
 	void Emit(const TankSpawnComplete& command) const;
+	void Emit(const TankSpawnMoved& command) const;
 	void Emit(const BonusSpawnComplete& command) const;
 	void Emit(const GameStateChange& command) const;
 	void Emit(const KeyStateChange& command) const;

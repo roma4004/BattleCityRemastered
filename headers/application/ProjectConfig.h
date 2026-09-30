@@ -40,7 +40,7 @@ public:
 	[[nodiscard]] bool IsVsyncOn() const { return VSyncMode() != 0; }
 	[[nodiscard]] int MonitorNumber() const { return Get<int>("Window.MonitorNumber", 1); }
 	[[nodiscard]] bool IsCenterOnStart() const { return Get<bool>("Window.centerOnStart", false); }
-	//NOTE: out of 32767 - a worn stick rests further from the centre
+	//NOTE: out of 32767 - a worn stick rests further from the center
 	[[nodiscard]] int GamepadDeadZone() const { return Get<int>("Gamepad.deadZone", 8000); }
 	[[nodiscard]] bool IsFreshIni() const noexcept { return _isFreshIni; }
 

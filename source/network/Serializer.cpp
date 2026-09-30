@@ -25,6 +25,7 @@ constexpr const char* NameOf(const commands::BonusStatus&) { return "BonusStatus
 constexpr const char* NameOf(const commands::RespawnTank&) { return "RespawnTank"; }
 constexpr const char* NameOf(const commands::ObstacleSpawn&) { return "ObstacleSpawn"; }
 constexpr const char* NameOf(const commands::TankSpawnComplete&) { return "TankSpawnComplete"; }
+constexpr const char* NameOf(const commands::TankSpawnMoved&) { return "TankSpawnMoved"; }
 constexpr const char* NameOf(const commands::BonusSpawnComplete&) { return "BonusSpawnComplete"; }
 constexpr const char* NameOf(const commands::SignalEvent&) { return "SignalEvent"; }
 constexpr const char* NameOf(const commands::SlotAssignment&) { return "SlotAssignment"; }

@@ -26,7 +26,7 @@ protected:
 	GameConfig _gameConfig{};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	double _deltaTimeOneFrame{1.0 / 60.0};
-	BulletCalibre _calibre{.speed = 300.0, .damage = 1u, .damageRadius = 12.0, .tier = 1u, .size{.x = 6.0, .y = 5.0}};
+	BulletCaliber _caliber{.speed = 300.0, .damage = 1u, .damageRadius = 12.0, .tier = 1u, .size{.x = 6.0, .y = 5.0}};
 	Uuid _uuid{};
 	double _gridSize{1};
 	unsigned short _bulletHealth{1u};
@@ -47,8 +47,8 @@ protected:
 
 	std::shared_ptr<Bullet> CreateBullet(const FPoint pos, const Direction dir, const Author author)
 	{
-		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _calibre.size.x, .h = _calibre.size.y};
-		auto bullet{TestUtils::CreateBullet(rect, _bulletHealth, _bulletPool, _events, _calibre, dir,
+		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _caliber.size.x, .h = _caliber.size.y};
+		auto bullet{TestUtils::CreateBullet(rect, _bulletHealth, _bulletPool, _events, _caliber, dir,
 											author)};
 
 		return bullet;
@@ -110,7 +110,7 @@ TEST_F(BulletTest, BulletMoveInsideScreen)
 	const auto windowWidth{static_cast<double>(_gameConfig.battlefieldSize.x)};
 	const auto windowHeight{static_cast<double>(_gameConfig.battlefieldSize.y)};
 
-	bullet->SetPos({.x = windowWidth - _calibre.size.x, .y = windowHeight - _calibre.size.y});
+	bullet->SetPos({.x = windowWidth - _caliber.size.x, .y = windowHeight - _caliber.size.y});
 	{
 		bullet->SetDirection(Direction::UP);
 		const FPoint bulletStartPos{bullet->GetPos()};
@@ -137,7 +137,7 @@ TEST_F(BulletTest, BulletMoveOutSideScreen)
 	const auto windowWidth{static_cast<double>(_gameConfig.battlefieldSize.x)};
 	const auto windowHeight{static_cast<double>(_gameConfig.battlefieldSize.y)};
 
-	bullet->SetPos({.x = windowWidth - _calibre.size.x, .y = windowHeight - _calibre.size.y});
+	bullet->SetPos({.x = windowWidth - _caliber.size.x, .y = windowHeight - _caliber.size.y});
 	{
 		bullet->SetDirection(Direction::DOWN);
 		const FPoint bulletStartPos{bullet->GetPos()};
@@ -240,7 +240,7 @@ TEST_F(BulletTest, BulletBlowRadiusIsDirectionSymmetric)
 	{
 		const bool isHorizontal{dir == Direction::LEFT || dir == Direction::RIGHT};
 		const bool isMirrored{dir == Direction::LEFT || dir == Direction::UP};
-		const double bulletLength{isHorizontal ? _calibre.size.x : _calibre.size.y};
+		const double bulletLength{isHorizontal ? _caliber.size.x : _caliber.size.y};
 
 		// offset and length are measured along the shot axis, starting at the bullet's back edge
 		auto place = [&](const double offset, const double length)
@@ -253,12 +253,12 @@ TEST_F(BulletTest, BulletBlowRadiusIsDirectionSymmetric)
 		};
 
 		_allObjects.clear();
-		std::ignore = TestUtils::CreateBullet(place(0.0, bulletLength), _bulletHealth, _bulletPool, _events, _calibre,
+		std::ignore = TestUtils::CreateBullet(place(0.0, bulletLength), _bulletHealth, _bulletPool, _events, _caliber,
 											  dir, Author::Player1);
 		SpawnObstacle(place(bulletLength + 1.0, tileSide), ObstacleType::Brick);
 
-		// just outside the radius measured from the bullet's leading edge, just inside it from the bullet's centre
-		auto farTile{SpawnObstacle(place(bulletLength + 1.0 + _calibre.damageRadius, tileSide), ObstacleType::Brick)};
+		// just outside the radius measured from the bullet's leading edge, just inside it from the bullet's center
+		auto farTile{SpawnObstacle(place(bulletLength + 1.0 + _caliber.damageRadius, tileSide), ObstacleType::Brick)};
 		_allObjects.emplace_back(farTile);
 
 		const int healthBefore{farTile->GetHealth()};
@@ -283,7 +283,7 @@ TEST_F(BulletTest, BulletDamageTank)
 	constexpr unsigned short tankHealth{1u};
 	const auto tankPool{std::make_shared<TankPool>(_events, _allObjects, _gameConfig, _bulletPool)};
 	const ObjRectangle rectEnemy{.x = 0.0,
-								 .y = _calibre.size.y,
+								 .y = _caliber.size.y,
 								 .w = _gameConfig.tankSize,
 								 .h = _gameConfig.tankSize};
 	const std::shared_ptr<Tank> enemyBot{TestUtils::CreateBot(rectEnemy, tankHealth, Author::Enemy1, _allObjects,
@@ -300,7 +300,7 @@ TEST_F(BulletTest, BulletDamageTank)
 TEST_F(BulletTest, BulletToBulletDamageEachOther)
 {
 	const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};
-	const auto bullet2{CreateBullet({.x = 0, .y = _calibre.size.y + 1}, Direction::UP, Author::Player2)};
+	const auto bullet2{CreateBullet({.x = 0, .y = _caliber.size.y + 1}, Direction::UP, Author::Player2)};
 
 	const int bulletHealth{bullet->GetHealth()};
 	const int bullet2Health{bullet2->GetHealth()};

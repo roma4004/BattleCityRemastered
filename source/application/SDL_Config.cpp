@@ -96,7 +96,7 @@ std::expected<void, InitError> SDL_Config::InitVideo()
 
 	SDL_SetRenderDrawBlendMode(renderer.get(), SDL_BLENDMODE_BLEND);
 
-	//NOTE: SDL3 defaults to linear filtering, which blurs pixel art and bleeds neighbouring atlas cells
+	//NOTE: SDL3 defaults to linear filtering, which blurs pixel art and bleeds neighboring atlas cells
 	SDL_SetDefaultTextureScaleMode(renderer.get(), SDL_SCALEMODE_NEAREST);
 
 	if (const auto vsync{SetVSync(projectConfig.VSyncMode())};
@@ -263,7 +263,7 @@ std::expected<void, InitError> SDL_Config::LoadPadHints(const std::span<const ch
 	return {};
 }
 
-//NOTE: not LoadTexturePair - the atlas needs its colour key punched into the surface in between
+//NOTE: not LoadTexturePair - the atlas needs its color key punched into the surface in between
 std::expected<void, InitError> SDL_Config::LoadAtlas()
 {
 	const std::filesystem::path path{projectConfig.ResourcePath("Images.SpriteSheet")};
@@ -431,7 +431,7 @@ WindowHandle SDL_Config::InitWindow() const
 						  static_cast<int>(std::lround(static_cast<double>(windowConfig.size.y) * factor)));
 	}
 
-	//NOTE: SDL3 dropped the position from SDL_CreateWindow - it opens centred and is moved afterwards
+	//NOTE: SDL3 dropped the position from SDL_CreateWindow - it opens centered and is moved afterwards
 	SDL_SetWindowPosition(window.get(),
 						  static_cast<int>(windowConfig.pos.x),
 						  static_cast<int>(windowConfig.pos.y));
@@ -480,8 +480,8 @@ RendererHandle SDL_Config::InitRender() const
 
 		const Point screenCenter{.x = bounds.x + bounds.w / 2,
 								 .y = bounds.y + bounds.h / 2};
-		const Point centred{.x = screenCenter.x - windowWidth / 2 + halfWindowApart,
-							.y = screenCenter.y - windowHeight / 2 - bordersSize.y};
+		const Point centered{.x = screenCenter.x - windowWidth / 2 + halfWindowApart,
+							 .y = screenCenter.y - windowHeight / 2 - bordersSize.y};
 
 		//NOTE: the pair must stay on this display: clamped, not shrunk - they overlap rather than leave the screen
 		const int minX{usableBounds.x};
@@ -489,7 +489,7 @@ RendererHandle SDL_Config::InitRender() const
 		const int maxX{std::max(minX, usableBounds.x + usableBounds.w - windowWidth)};
 		const int maxY{std::max(minY, usableBounds.y + usableBounds.h - windowHeight)};
 
-		SDL_SetWindowPosition(sdlWindowRaw, std::clamp(centred.x, minX, maxX), std::clamp(centred.y, minY, maxY));
+		SDL_SetWindowPosition(sdlWindowRaw, std::clamp(centered.x, minX, maxX), std::clamp(centered.y, minY, maxY));
 	}
 
 	//NOTE: vsync is not a creation flag - InitVideo applies it through SetVSync

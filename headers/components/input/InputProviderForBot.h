@@ -2,9 +2,12 @@
 
 #include "interfaces/IInputProvider.h"
 #include "utils/Timer.h"
+#include "utils/Uuid.h"
+#include <array>
 #include <chrono>
 #include <memory>
 #include <optional>
+#include <utility>
 #include <vector>
 
 enum class Direction : char8_t;
@@ -17,13 +20,11 @@ class Tank;
 
 class InputProviderForBot final : public IInputProvider
 {
-	//NOTE: an incoming shot, and how long there is to answer it - the whole of the bot's reaction to a
-	//bullet rests on these two numbers, so they are found once a frame and read by both halves
+	//NOTE: found once a frame and read by both halves - the dodge and the intercept are one decision
 	struct BulletThreat final
 	{
 		std::shared_ptr<BaseObj> bullet{nullptr};
-		//NOTE: seconds until it reaches us at its own speed, not a distance - a higher tier flies faster,
-		//and the cell size is not a constant of the game either
+		//NOTE: seconds, not a distance - a higher tier's shell flies faster
 		double timeToImpact{};
 		//NOTE: where it is going, which is the axis a dodge has to leave
 		Direction flying{};
@@ -37,21 +38,53 @@ class InputProviderForBot final : public IInputProvider
 	//NOTE: milliseconds, not seconds - the roll lands in the unit of its bounds
 	static constexpr std::chrono::milliseconds kMinTurnDelay{std::chrono::seconds{1}};
 	static constexpr std::chrono::milliseconds kMaxTurnDelay{std::chrono::seconds{5}};
+	//NOTE: the least time between two turns of the same hull - it paces the bot that keeps hitting things
+	static constexpr std::chrono::milliseconds kTurnFloor{300};
 	Timer _randomChangeDirTimer{};
+	Timer _turnFloor{};
 
-	//NOTE: the drivable pass, built at most once per HandleLineOfSight and shared by all four sides
+	//NOTE: how long an opponent stands in the sights before the bot acts - read by the side it stands on
+	struct NoticeBand
+	{
+		std::chrono::milliseconds from{};
+		std::chrono::milliseconds to{};
+	};
+
+	static constexpr std::array kNoticeLadder{NoticeBand{.from = std::chrono::milliseconds{500},
+														.to = std::chrono::seconds{1}},
+											  NoticeBand{.from = std::chrono::seconds{1},
+														 .to = std::chrono::seconds{2}},
+											  NoticeBand{.from = std::chrono::seconds{2},
+														 .to = std::chrono::seconds{5}},
+											  NoticeBand{.from = std::chrono::seconds{5},
+														 .to = std::chrono::seconds{10}}};
+	static constexpr std::size_t kNoticeAheadRung{1u};
+	static constexpr std::size_t kNoticeFlankRung{2u};
+	static constexpr std::size_t kNoticeBehindRung{3u};
+
+	//NOTE: one per side of the world, not per side of the hull - a turn must not restart the delay
+	struct SideNotice
+	{
+		Uuid target{};
+		Timer delay{};
+		//NOTE: under fire the wait re-rolls a rung faster - a shot at a back is noticed, driving behind it is not
+		bool isUnderFire{};
+	};
+
+	std::array<SideNotice, 4u> _notices{};
+
+	//NOTE: the drivable pass, built at most once per TurnOntoNearestSeen and shared by all four sides
 	std::unique_ptr<LineOfSight> _driveLineOfSight{};
 
 	//NOTE: started by a refusal to fire at a wall, and the refusal stands while it ticks
 	Timer _obstacleShootCooldown{};
 
-	//NOTE: found in ChooseDirection and read again in ShouldShoot, which Tank::TickUpdate calls in that
-	//order - shooting the bullet down and stepping out of its way are one decision, so they are made once
+	//NOTE: found in ChooseDirection and read again in ShouldShoot, which run in that order
 	BulletThreat _threat{};
+	//NOTE: the hull is held for the shot - answered anew every tick, a target that drove off frees it
+	bool _isLinedUpForShot{};
 
-	//NOTE: below this there is no time for a bullet of ours to meet one of theirs, so the answer is to
-	//move instead. A shot leaves the barrel on the next frame at the earliest, and the two close at the
-	//sum of their speeds
+	//NOTE: below this our shell cannot meet theirs in time - they close at the sum of speeds, ours a frame late
 	static constexpr double kInterceptWindowSeconds{0.12};
 
 	[[nodiscard]] static bool IsOpponent(const Tank& self, const std::shared_ptr<BaseObj>& obstacle);
@@ -60,15 +93,14 @@ class InputProviderForBot final : public IInputProvider
 	[[nodiscard]] static const Bullet* AsBullet(const std::shared_ptr<BaseObj>& obstacle);
 
 	[[nodiscard]] BulletThreat FindBulletThreat(const Tank& self) const;
+	[[nodiscard]] bool CanIntercept() const;
 	//NOTE: what the bullet would hit before it reaches us - a shot behind steel is the steel's business
 	[[nodiscard]] bool IsShotStoppedOnTheWay(const ObjRectangle& corridor, const BaseObj& bullet,
 											 const Tank& self) const;
 
-	//NOTE: across the bullet's path, not across our own heading - stepping along the lane it travels is
-	//driving into it. Of the two ways out, the one with more room: a dodge into a wall one cell away is
-	//standing still with extra steps
-	[[nodiscard]] std::optional<Direction> SideWithMoreRoom(const Tank& self, Direction threatDir,
-															double deltaTime) const;
+	//NOTE: across the bullet's path, and only to a side the whole hull can clear - else it shakes in a narrow passage
+	[[nodiscard]] std::optional<Direction> SideOutOfLane(const Tank& self, const BulletThreat& threat,
+														 double deltaTime) const;
 
 	[[nodiscard]] bool ChangeDirIfSeenBonus(Tank& self, Direction dir,
 											const std::vector<std::shared_ptr<BaseObj>>& sideObstacle);
@@ -83,20 +115,28 @@ class InputProviderForBot final : public IInputProvider
 
 	//NOTE: a bot must not fire into something closer than its own blast, or the shot takes it too
 	[[nodiscard]] static bool IsClearToFire(const Tank& self, Direction dir, const BaseObj& target);
+	[[nodiscard]] bool IsCenteredOn(const Tank& self, Direction dir, const BaseObj& target) const;
+	//NOTE: arms the delay on the first sighting of that target and answers whether it has run out
+	[[nodiscard]] bool HasNoticed(const Tank& self, Direction side, const BaseObj& target);
+	[[nodiscard]] static NoticeBand NoticeBandFor(Direction heading, Direction side, bool isUnderFire);
 
 	[[nodiscard]] bool CanDriveToBonus(const Tank& self, Direction dir);
 
 	[[nodiscard]] static std::shared_ptr<BaseObj> NearestAhead(LineOfSight& lineOfSight, Direction dir);
 
-	[[nodiscard]] std::shared_ptr<BaseObj> HandleLineOfSight(Tank& self);
+	[[nodiscard]] std::shared_ptr<BaseObj> TurnOntoNearestSeen(Tank& self);
 
+	//NOTE: after a turn of our own - else the random one fires on the next frame and undoes it
+	void PostponeRandomTurn();
 	[[nodiscard]] std::optional<Direction> PickRandomDirection(const Tank& self, double deltaTime,
 															   bool excludeCurrentDirection = false);
 
-	[[nodiscard]] static bool ShouldShootOpponent(const Tank& self, const std::shared_ptr<BaseObj>& obj);
+	[[nodiscard]] bool ShouldShootOpponent(const Tank& self, const std::shared_ptr<BaseObj>& obj);
 	[[nodiscard]] static bool IsFortress(const std::shared_ptr<BaseObj>& obj);
 	[[nodiscard]] static bool ShouldShootObstacle(const Tank& self, const std::shared_ptr<BaseObj>& obj);
 	[[nodiscard]] bool RollShootObstacle(const std::shared_ptr<BaseObj>& obj);
+	//NOTE: what the hull is held for - a wall waits, and a shell coming at us is the intercept's business
+	[[nodiscard]] static bool IsOpponentTankInSights(const Tank& self, const std::shared_ptr<BaseObj>& target);
 
 public:
 	InputProviderForBot(const std::vector<std::shared_ptr<BaseObj>>& allObjects, const GameConfig& gameConfig);

@@ -14,5 +14,6 @@ struct TankShot final
 	Author who{};
 	Direction dir{};
 	Uuid uuid{};
+	unsigned int damage{};
 };
 }//namespace network::commands

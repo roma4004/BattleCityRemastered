@@ -55,7 +55,7 @@ public:
 	TextCache(TextCache&&) = delete;
 	TextCache& operator=(TextCache&&) = delete;
 
-	//NOTE: the colour is set per call, so one entry serves every colour of the same line
+	//NOTE: the color is set per call, so one entry serves every color of the same line
 	[[nodiscard]] const CachedText* Acquire(std::string_view text, const SDL_Color& color, int basePointSize,
 											float scale);
 	[[nodiscard]] const CachedText* AcquireSlot(Slot slot, std::string_view text, const SDL_Color& color,

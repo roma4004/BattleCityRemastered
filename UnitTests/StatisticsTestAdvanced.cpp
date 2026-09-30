@@ -40,13 +40,13 @@ protected:
 
 	void CreateBullet(const FPoint pos, const Direction dir, const unsigned short tier, const Author author)
 	{
-		const BulletCalibre calibre{.speed = 300.0,
+		const BulletCaliber caliber{.speed = 300.0,
 									.damage = 1u,
 									.damageRadius = 12.0,
 									.tier = tier,
 									.size{.x = 6.0, .y = 5.0}};
-		const ObjRectangle rectBullet{.x = pos.x, .y = pos.y, .w = calibre.size.x, .h = calibre.size.y};
-		std::ignore = TestUtils::CreateBullet(rectBullet, _bulletHealth, _bulletPool, _events, calibre, dir, author);
+		const ObjRectangle rectBullet{.x = pos.x, .y = pos.y, .w = caliber.size.x, .h = caliber.size.y};
+		std::ignore = TestUtils::CreateBullet(rectBullet, _bulletHealth, _bulletPool, _events, caliber, dir, author);
 	}
 };
 

@@ -47,7 +47,6 @@ set(GAME_CORE_SOURCES
         source/behavior/MoveLikeBulletBeh.cpp
         source/behavior/MoveLikeTankBeh.cpp
         source/behavior/ShootingBeh.cpp
-        source/components/AnimatedObjects.cpp
         source/components/BonusSpawner.cpp
         source/components/BulletPool.cpp
         source/components/EventSystem.cpp
@@ -143,6 +142,7 @@ set(UNIT_TESTS_SOURCES
         UnitTests/TankHealTest.cpp
         UnitTests/TankNudgeTest.cpp
         UnitTests/TankPoolTest.cpp
+        UnitTests/TankModelTest.cpp
         UnitTests/TankShoveTest.cpp
         UnitTests/TankTerrainTest.cpp
         UnitTests/MenuInputTest.cpp

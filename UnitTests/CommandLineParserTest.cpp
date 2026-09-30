@@ -190,7 +190,6 @@ TEST_F(CommandLineParserTest, ApplyLeavesConfigAloneWithoutArguments)
 }
 
 //NOTE: pos/size override this session only - they must not reach the ini tree, which is what SaveIni writes.
-//Guards the planned "save window last position" TODO in GameConfig.cpp from persisting them by accident.
 TEST_F(CommandLineParserTest, ApplyDoesNotWriteBackToTheIni)
 {
 	_windowConfig.Apply(Parse({"--pos=10,20", "--size=1024,768"}));

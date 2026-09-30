@@ -19,6 +19,8 @@ struct TankShotEvent
 	Author who{};
 	Direction dir;
 	Uuid bulletUuid;
+	//NOTE: the authority's roll, carried so the mirrored shell is the same shell and not a second opinion
+	unsigned int damage{};
 };
 
 struct HealthChangedEvent
@@ -37,6 +39,13 @@ struct TierChangedEvent
 struct TankSpawnCompletedEvent
 {
 	Uuid uuid;
+};
+
+//NOTE: where the burst stands now - the client mirrors the host's square, it shoves nothing itself
+struct TankSpawnMovedEvent
+{
+	Uuid uuid;
+	FPoint pos{};
 };
 
 //NOTE: the host sends it only for a bonus that really settled - one picked up mid-burst gets none

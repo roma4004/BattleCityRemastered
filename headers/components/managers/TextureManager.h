@@ -4,11 +4,13 @@
 #include "enums/Author.h"
 #include "geometry/ObjRectangle.h"
 #include <memory>
+#include <optional>
 #include <vector>
 
 enum class AnimationType : char8_t;
 enum class TextureType : char8_t;
 enum class Direction : char8_t;
+enum class TankModel : char8_t;
 struct DrawObjEvent;
 struct DrawAnimationEvent;
 class BaseObj;
@@ -33,10 +35,11 @@ class TextureManager final
 		int step{1};
 	};
 
-	[[nodiscard]] AtlasFrames GetAnimFrames(AnimationType type, Author author, ObjRectangle rect,
-											ObjRectangle& destRect) const;
+	[[nodiscard]] AtlasFrames GetAnimFrames(AnimationType type, Author author, TankModel model,
+											unsigned short tier, ObjRectangle rect, ObjRectangle& destRect) const;
 	[[nodiscard]] static ObjRectangle GetTextureRect(TextureType texture);
-	[[nodiscard]] static ObjRectangle GetTankTextureRect(Author author);
+	[[nodiscard]] static std::optional<ObjRectangle> QuarterOf(Author author);
+	[[nodiscard]] static ObjRectangle GetTankTextureRect(Author author, TankModel model, unsigned short tier);
 
 public:
 	explicit TextureManager(const std::shared_ptr<EventSystem>& events);

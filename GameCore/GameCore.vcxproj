@@ -168,7 +168,6 @@
     <ClCompile Include="..\source\behavior\MoveLikeBulletBeh.cpp" />
     <ClCompile Include="..\source\behavior\MoveLikeTankBeh.cpp" />
     <ClCompile Include="..\source\behavior\ShootingBeh.cpp" />
-    <ClCompile Include="..\source\components\AnimatedObjects.cpp" />
     <ClCompile Include="..\source\components\BonusSpawner.cpp" />
     <ClCompile Include="..\source\components\BulletPool.cpp" />
     <ClCompile Include="..\source\components\EventSystem.cpp" />
@@ -300,7 +299,8 @@
     <ClInclude Include="..\headers\entities\BaseObjProperty.h" />
     <ClInclude Include="..\headers\entities\BonusEffectProperty.h" />
     <ClInclude Include="..\headers\entities\bonuses\Bonus.h" />
-    <ClInclude Include="..\headers\entities\BulletCalibre.h" />
+    <ClInclude Include="..\headers\entities\BulletCaliber.h" />
+    <ClInclude Include="..\headers\entities\TankModelSpec.h" />
     <ClInclude Include="..\headers\geometry\ObjRectangle.h" />
     <ClInclude Include="..\headers\entities\obstacles\BrickWall.h" />
     <ClInclude Include="..\headers\entities\obstacles\BushTile.h" />
@@ -336,6 +336,7 @@
     <ClInclude Include="..\headers\enums\ObstacleType.h" />
     <ClInclude Include="..\headers\enums\RespawnGroup.h" />
     <ClInclude Include="..\headers\enums\StatisticsType.h" />
+    <ClInclude Include="..\headers\enums\TankModel.h" />
     <ClInclude Include="..\headers\enums\TankType.h" />
     <ClInclude Include="..\headers\enums\Terrain.h" />
     <ClInclude Include="..\headers\enums\TextBlockAlign.h" />
@@ -378,6 +379,7 @@
     <ClInclude Include="..\headers\network\commands\StatisticsChange.h" />
     <ClInclude Include="..\headers\network\commands\TankShot.h" />
     <ClInclude Include="..\headers\network\commands\TankSpawnComplete.h" />
+    <ClInclude Include="..\headers\network\commands\TankSpawnMoved.h" />
     <ClInclude Include="..\headers\network\commands\TierChange.h" />
     <ClInclude Include="..\headers\network\commands\PointSerialization.h" />
     <ClInclude Include="..\headers\network\commands\UuidSerialization.h" />

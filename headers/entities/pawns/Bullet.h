@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Pawn.h"
-#include "entities/BulletCalibre.h"
+#include "entities/BulletCaliber.h"
 #include "interfaces/IDrawable.h"
 #include "utils/Uuid.h"
 #include <memory>
@@ -22,7 +22,7 @@ class Bullet final : public Pawn, public IDrawable
 	friend BulletPool;
 
 	Uuid _authorUuid{};
-	BulletCalibre _calibre{};
+	BulletCaliber _caliber{};
 
 	void Reset(const BulletResetProperty& resetProperty);
 	void OnDraw(const DrawEvent&) const;
@@ -38,7 +38,7 @@ public:
 	static constexpr CollisionTags kCollision{tags::Passable{}, tags::Destructible{}, tags::Impenetrable{},
 											  tags::NoTerrain{}};
 
-	Bullet(PawnProperty pawnProperty, const GameConfig& gameConfig, const BulletCalibre& calibre = {});
+	Bullet(PawnProperty pawnProperty, const GameConfig& gameConfig, const BulletCaliber& caliber = {});
 
 	~Bullet() override;
 
@@ -46,7 +46,7 @@ public:
 
 	[[nodiscard]] double GetDamageRadius() const noexcept;
 
-	//NOTE: the calibre's speed and not Pawn::GetSpeed - MoveLikeBulletBeh steps the bullet by this one
+	//NOTE: the caliber's speed and not Pawn::GetSpeed - MoveLikeBulletBeh steps the bullet by this one
 	[[nodiscard]] double GetFlightSpeed() const noexcept;
 
 	[[nodiscard]] Uuid GetUuid() const override;

@@ -14,7 +14,7 @@
 #include "entities/obstacles/IceTile.h"
 #include "entities/obstacles/SteelWall.h"
 #include "entities/obstacles/WaterTile.h"
-#include "entities/BulletCalibre.h"
+#include "entities/BulletCaliber.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/Tank.h"
 #include "enums/Direction.h"
@@ -65,6 +65,8 @@ protected:
 		//NOTE: both rolls are pinned open, or every test that expects a shot at an obstacle would flake
 		_gameConfig.botShootObstacleChance = 1.0;
 		_gameConfig.botShootFortressChance = 1.0;
+		//NOTE: and the bot sees at once - these tests read single frames, and noticing takes seconds of play
+		_gameConfig.botNoticeDelayFactor = 0.0;
 
 		_allObjects.reserve(4u);
 	}
@@ -91,10 +93,10 @@ protected:
 	}
 
 	std::shared_ptr<Bullet> CreateBullet(const FPoint pos, const Direction dir, const Author author,
-										 const BulletCalibre& calibre)
+										 const BulletCaliber& caliber)
 	{
-		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = calibre.size.x, .h = calibre.size.y};
-		auto bullet{TestUtils::CreateBullet(rect, _tankHealth, _bulletPool, _events, calibre, dir,
+		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = caliber.size.x, .h = caliber.size.y};
+		auto bullet{TestUtils::CreateBullet(rect, _tankHealth, _bulletPool, _events, caliber, dir,
 											author)};
 
 		return bullet;
@@ -107,9 +109,9 @@ protected:
 
 	//NOTE: a shot of the bot's own make - what matters here is that it flies at the game's speed, so the
 	//time left to answer it is the game's too
-	[[nodiscard]] static BulletCalibre IncomingCalibre(const Tank& tank)
+	[[nodiscard]] static BulletCaliber IncomingCaliber(const Tank& tank)
 	{
-		return BulletCalibre{.speed = tank.GetBulletSpeed(),
+		return BulletCaliber{.speed = tank.GetBulletSpeed(),
 							 .damage = 1u,
 							 .damageRadius = tank.GetBulletDamageRadius(),
 							 .tier = 1u,
@@ -203,6 +205,35 @@ TEST_F(BotsTest, BotsChangeDirectionIfBonusSeenAndNoOneShoot)
 	EXPECT_NE(startDirEnemy, endDirEnemy);
 	EXPECT_EQ(endDirCoop, Direction::RIGHT);
 	EXPECT_EQ(endDirEnemy, Direction::LEFT);
+}
+
+// but not while an opponent it can shoot stands in the sights - the bonus keeps, the shot does not
+TEST_F(BotsTest, ABonusAtTheSideDoesNotTurnABotOffAnOpponentItCanShoot)
+{
+	const auto coopBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN)};
+
+	CreateBot({.x = 0.0, .y = _tankSize * 3.0}, Author::Enemy1, Direction::DOWN);
+
+	_bonusSpawner->SpawnRandomBonus({.x = _tankSize + 21.0, .y = 0.0, .w = _tankSize, .h = _tankSize});
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_EQ(coopBot->GetDirection(), Direction::DOWN) << "it turned off a loaded shot for the bonus";
+}
+
+// and once the shot is away the bonus is the thing to do with the reload
+TEST_F(BotsTest, AReloadingBotGoesForTheBonusItPassedUp)
+{
+	const auto coopBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN)};
+
+	CreateBot({.x = 0.0, .y = _tankSize * 3.0}, Author::Enemy1, Direction::DOWN);
+
+	_bonusSpawner->SpawnRandomBonus({.x = _tankSize + 21.0, .y = 0.0, .w = _tankSize, .h = _tankSize});
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_EQ(coopBot->GetDirection(), Direction::RIGHT) << "the gun is on cooldown and the bonus still waits";
 }
 
 // water is driven around, so a bonus behind it is not worth turning for
@@ -333,7 +364,7 @@ TEST_F(BotsTest, BotsCanSeeBonusInTheIce)
 }
 
 // A shot already on our line is answered with a shot, and the hull is left where it was - turning to
-// face a bullet is driving at it, which is what the old behaviour did
+// face a bullet is driving at it, which is what the old behavior did
 TEST_F(BotsTest, BotShootsDownAnIncomingBulletWithoutTurning)
 {
 	const auto coopBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::RIGHT)};
@@ -342,7 +373,7 @@ TEST_F(BotsTest, BotShootsDownAnIncomingBulletWithoutTurning)
 
 	// head-on: to the right of the bot, flying at it, and far enough that a shot still meets it
 	CreateBullet({.x = _tankSize * 4.0, .y = (_tankSize - bulletHeight) / 2.0}, Direction::LEFT, Author::Enemy1,
-				 IncomingCalibre(*coopBot));
+				 IncomingCaliber(*coopBot));
 
 	const std::size_t worldSizeBeforeShot{_allObjects.size()};
 
@@ -361,7 +392,7 @@ TEST_F(BotsTest, BotIgnoresABulletFlyingAway)
 
 	const double bulletHeight{coopBot->GetBulletHeight()};
 	CreateBullet({.x = _tankSize * 2.0, .y = _tankSize * 3.0 + (_tankSize - bulletHeight) / 2.0},
-				 Direction::RIGHT, Author::Enemy1, IncomingCalibre(*coopBot));
+				 Direction::RIGHT, Author::Enemy1, IncomingCaliber(*coopBot));
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -377,7 +408,7 @@ TEST_F(BotsTest, BotIgnoresABulletInAnotherLane)
 	const double bulletHeight{coopBot->GetBulletHeight()};
 	// two tanks higher up: flying left, past the bot rather than into it
 	CreateBullet({.x = _tankSize * 4.0, .y = _tankSize + (_tankSize - bulletHeight) / 2.0}, Direction::LEFT,
-				 Author::Enemy1, IncomingCalibre(*coopBot));
+				 Author::Enemy1, IncomingCaliber(*coopBot));
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -393,7 +424,7 @@ TEST_F(BotsTest, BotStepsOutOfTheLaneOfACrossingBullet)
 	const double bulletHeight{coopBot->GetBulletHeight()};
 	// to the right of the bot and flying left, so it arrives across the way the bot is looking
 	CreateBullet({.x = _tankSize * 4.0, .y = _tankSize * 3.0 + (_tankSize - bulletHeight) / 2.0},
-				 Direction::LEFT, Author::Enemy1, IncomingCalibre(*coopBot));
+				 Direction::LEFT, Author::Enemy1, IncomingCaliber(*coopBot));
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -413,7 +444,7 @@ TEST_F(BotsTest, BotDodgesTowardsTheSideWithMoreRoom)
 
 	const double bulletHeight{coopBot->GetBulletHeight()};
 	CreateBullet({.x = _tankSize * 8.0, .y = _tankSize * 3.0 + (_tankSize - bulletHeight) / 2.0},
-				 Direction::LEFT, Author::Enemy1, IncomingCalibre(*coopBot));
+				 Direction::LEFT, Author::Enemy1, IncomingCaliber(*coopBot));
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -427,7 +458,7 @@ TEST_F(BotsTest, ABulletTooCloseIsDodgedRatherThanShot)
 
 	const double bulletHeight{coopBot->GetBulletHeight()};
 	CreateBullet({.x = _tankSize + 1.0, .y = _tankSize * 3.0 + (_tankSize - bulletHeight) / 2.0},
-				 Direction::LEFT, Author::Enemy1, IncomingCalibre(*coopBot));
+				 Direction::LEFT, Author::Enemy1, IncomingCaliber(*coopBot));
 
 	const std::size_t worldSizeBeforeShot{_allObjects.size()};
 
@@ -489,6 +520,56 @@ TEST_F(BotsTest, BotTurnsWhenItRunsIntoAWall)
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_NE(bot->GetDirection(), Direction::RIGHT);
+}
+
+// A dodge has to end outside the lane, and this narrow a passage has no room for it - so the hull stays put
+TEST_F(BotsTest, BotDoesNotDodgeWhereThereIsNoRoomToLeaveTheLane)
+{
+	const double gap{_gridSize / 2.0};
+	const double laneY{_gridSize * 5.0 + gap};
+	const auto bot{CreateBot({.x = _tankSize * 3.0, .y = laneY}, Author::Enemy1, Direction::RIGHT)};
+
+	SpawnObstacleArea(ObjRectangle{.x = 0.0, .y = _gridSize * 4.0, .w = _tankSize * 8.0, .h = _gridSize},
+					  ObstacleType::Steel);
+	SpawnObstacleArea(ObjRectangle{.x = 0.0, .y = laneY + _tankSize + gap, .w = _tankSize * 8.0, .h = _gridSize},
+					  ObstacleType::Steel);
+
+	// close enough that there is no time to shoot it down either, or the intercept would hold the hull
+	const double bulletHeight{bot->GetBulletHeight()};
+	CreateBullet({.x = _tankSize * 4.0 + _gridSize * 2.0, .y = laneY + (_tankSize - bulletHeight) / 2.0},
+				 Direction::LEFT, Author::Player1, IncomingCaliber(*bot));
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_EQ(bot->GetDirection(), Direction::RIGHT) << "it turned into a gap it cannot leave the lane by";
+}
+
+// Water stops a tank, not a bullet: the bot holds a shot across it and turns away once the sights are empty
+TEST_F(BotsTest, BotTurnsAwayOnceTheTargetItLinedUpOnIsGone)
+{
+	//NOTE: an off-center opponent is an obstacle, and a roll firing at it would free the hull - not what is read here
+	_gameConfig.botShootObstacleChance = 0.0;
+
+	const auto bot{CreateBot({.x = _tankSize * 3.0, .y = _tankSize * 4.0}, Author::Enemy1, Direction::RIGHT)};
+
+	// flush above the bot, and skipped by the sights the way a bullet skips it
+	SpawnObstacleArea(ObjRectangle{.x = _tankSize * 3.0, .y = _tankSize * 4.0 - _gridSize, .w = _tankSize,
+								   .h = _gridSize}, ObstacleType::Water);
+
+	// off center by a cell, so the bot lines up on it without ever taking the shot
+	const auto target{CreatePlayer({.x = _tankSize * 3.0 + _gridSize, .y = _tankSize}, Author::Player1,
+								   Direction::DOWN)};
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	ASSERT_EQ(bot->GetDirection(), Direction::UP) << "it never lined up on the tank across the water";
+
+	target->SetIsAlive(false);
+
+	//NOTE: two ticks - the sights are read at the end of one, so the hull is freed on the next
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_NE(bot->GetDirection(), Direction::UP) << "it kept the heading of a tank that is no longer there";
 }
 
 // A bot must not fire into something closer than its own blast radius. Walled in on all four sides,
@@ -556,7 +637,7 @@ TEST_F(BotsTest, BotHoldsFireAtAWallWhenTheChanceIsZero)
 
 	const auto bot{CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN)};
 
-	SpawnObstacleArea(ObjRectangle{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize},
+	SpawnObstacleArea(ObjRectangle{.x = 0.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize},
 					  ObstacleType::Brick);
 
 	const std::size_t before{_allObjects.size()};
@@ -577,7 +658,7 @@ TEST_F(BotsTest, BotShootsAWallWhenTheChanceIsOne)
 
 	const auto bot{CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN)};
 
-	SpawnObstacleArea(ObjRectangle{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize},
+	SpawnObstacleArea(ObjRectangle{.x = 0.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize},
 					  ObstacleType::Brick);
 
 	const std::size_t before{_allObjects.size()};
@@ -616,7 +697,7 @@ TEST_F(BotsTest, ARefusedWallIsReconsideredOnceTheCooldownIsUp)
 
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
 
-	SpawnObstacle(ObjRectangle{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize}, ObstacleType::Brick);
+	SpawnObstacle(ObjRectangle{.x = 0.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize}, ObstacleType::Brick);
 
 	const std::size_t before{_allObjects.size()};
 
@@ -637,7 +718,7 @@ TEST_F(BotsTest, AWallRefusedStaysRefusedUntilTheCooldownIsUp)
 
 	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
 
-	SpawnObstacleArea(ObjRectangle{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize},
+	SpawnObstacleArea(ObjRectangle{.x = 0.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize},
 					  ObstacleType::Brick);
 
 	const std::size_t before{_allObjects.size()};

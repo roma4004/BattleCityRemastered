@@ -12,17 +12,17 @@
 #include <ranges>
 
 MoveLikeBulletBeh::MoveLikeBulletBeh(ObjRectangle& rect, Uuid& uuid, const Uuid& authorUuid,
-									 const GameConfig& gameConfig, const BulletCalibre& calibre)
+									 const GameConfig& gameConfig, const BulletCaliber& caliber)
 	: _uuid{uuid}
 	, _authorUuid{authorUuid}
 	, _rect{rect}
 	, _gameConfig{gameConfig}
-	, _calibre{calibre} {}
+	, _caliber{caliber} {}
 
 double MoveLikeBulletBeh::GetTravelledDistance(const double deltaTime, const Direction dir,
 											   const std::vector<std::shared_ptr<BaseObj>>& objects) const
 {
-	const double step{_calibre.speed * deltaTime};
+	const double step{_caliber.speed * deltaTime};
 	const ObjRectangle nextPosRect{DirectionUtils::Swept(_rect, step, dir)};
 
 	double travelled{std::min(step, DirectionUtils::GapToEdge(_rect, _gameConfig.battlefieldSize, dir))};
@@ -57,7 +57,7 @@ bool MoveLikeBulletBeh::IsSelfOrAuthor(const BaseObj& object) const
 bool MoveLikeBulletBeh::IsCanMove(const double deltaTime, const Direction dir,
 								  const std::vector<std::shared_ptr<BaseObj>>& objects) const
 {
-	const ObjRectangle nextPosRect{DirectionUtils::Swept(_rect, _calibre.speed * deltaTime, dir)};
+	const ObjRectangle nextPosRect{DirectionUtils::Swept(_rect, _caliber.speed * deltaTime, dir)};
 
 	return std::ranges::none_of(objects, [this, nextPosRect](const std::shared_ptr<BaseObj>& object)
 	{
@@ -72,7 +72,7 @@ bool MoveLikeBulletBeh::Move(const Direction dir, const double deltaTime,
 							 const std::vector<std::shared_ptr<BaseObj>>& objects,
 							 std::vector<std::shared_ptr<BaseObj>>& outCollisions)
 {
-	const double speed{_calibre.speed * deltaTime};
+	const double speed{_caliber.speed * deltaTime};
 	if (speed <= DirectionUtils::GapToEdge(_rect, _gameConfig.battlefieldSize, dir)
 		&& IsCanMove(deltaTime, dir, objects))
 	{
@@ -90,7 +90,7 @@ bool MoveLikeBulletBeh::Move(const Direction dir, const double deltaTime,
 std::vector<std::shared_ptr<BaseObj>> MoveLikeBulletBeh::GetCircleCollisionObjects(
 		const FPoint blowCenter, const std::vector<std::shared_ptr<BaseObj>>& objects) const
 {
-	const Circle circle{.center = blowCenter, .radius = _calibre.damageRadius};
+	const Circle circle{.center = blowCenter, .radius = _caliber.damageRadius};
 
 	auto collisions{objects | std::views::filter([this, &circle](const std::shared_ptr<BaseObj>& obj)
 	{

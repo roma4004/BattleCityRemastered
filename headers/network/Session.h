@@ -81,6 +81,7 @@ private:
 	void Handle(const RespawnTank&) const {}
 	void Handle(const ObstacleSpawn&) const {}
 	void Handle(const TankSpawnComplete&) const {}
+	void Handle(const TankSpawnMoved&) const {}
 	void Handle(const BonusSpawnComplete&) const {}
 	void Handle(const GameStateChange&) const {}
 	void Handle(const StatisticsChange&) const {}

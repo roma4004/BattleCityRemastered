@@ -464,7 +464,10 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 
 	for (const auto tankType: tankTypes)
 	{
-		_serverEvents->EmitEvent(TankRespawnedEvent{.type = tankType, .uuid = _uuid, .pos = posOrigin});
+		_serverEvents->EmitEvent(TankRespawnedEvent{.type = tankType,
+													.model = TankModel::Basic,
+													.uuid = _uuid,
+													.pos = posOrigin});
 	}
 
 	ASSERT_TRUE(PumpUntil([&received] { return received.size() == expectedCount; }));

@@ -100,7 +100,7 @@ void RenderManager::Subscribe()
 	_subs.push_back(_events->AddListener(this, &RenderManager::OnRenderDeviceReset));
 }
 
-//NOTE: the 1x1 colour texture is the only render target here
+//NOTE: the 1x1 color texture is the only render target here
 void RenderManager::OnRenderTargetsReset(const RenderTargetsResetEvent&)
 {
 	CreateColorTexture(kGrayColor);

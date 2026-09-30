@@ -5,7 +5,7 @@
 #include <gtest/gtest.h>
 
 // every case here works one 20x20 rectangle standing at 100,100 and asks what a step of 5 does to it -
-// where it lands, what it sweeps, how far it is from a neighbour or from the edge of a 500x400 field
+// where it lands, what it sweeps, how far it is from a neighbor or from the edge of a 500x400 field
 class DirectionUtilsTest : public testing::Test
 {
 protected:
@@ -67,7 +67,7 @@ TEST_F(DirectionUtilsTest, MovedPointFollowsTheSameTable)
 	EXPECT_DOUBLE_EQ(DirectionUtils::Moved(center, 3.0, Direction::RIGHT).x, 13.0);
 }
 
-// put a neighbour above, below, left and right and ask for the gap towards it: measured from the
+// put a neighbor above, below, left and right and ask for the gap towards it: measured from the
 // edge that leads the movement, so a 20 gap up and a 40 gap down for the same spacing
 TEST_F(DirectionUtilsTest, GapToMeasuresFromTheLeadingEdge)
 {
@@ -129,4 +129,36 @@ TEST_F(DirectionUtilsTest, SizeAlongPicksTheAxisOfMovement)
 	EXPECT_DOUBLE_EQ(DirectionUtils::SizeAlong(wide, Direction::DOWN), 10.0);
 	EXPECT_DOUBLE_EQ(DirectionUtils::SizeAlong(wide, Direction::LEFT), 40.0);
 	EXPECT_DOUBLE_EQ(DirectionUtils::SizeAlong(wide, Direction::RIGHT), 40.0);
+}
+
+// up goes with down and left with right, whichever way along the axis
+TEST_F(DirectionUtilsTest, IsSameAxisPairsOppositesAndSplitsLaterals)
+{
+	EXPECT_TRUE(DirectionUtils::IsSameAxis(Direction::UP, Direction::DOWN));
+	EXPECT_TRUE(DirectionUtils::IsSameAxis(Direction::LEFT, Direction::RIGHT));
+	EXPECT_FALSE(DirectionUtils::IsSameAxis(Direction::UP, Direction::LEFT));
+	EXPECT_FALSE(DirectionUtils::IsSameAxis(Direction::DOWN, Direction::RIGHT));
+}
+
+// a neighbor above overlaps across a vertical heading, not a horizontal one; one only touching edges overlaps neither
+TEST_F(DirectionUtilsTest, OverlapsAcrossAsksOnlyTheAxisAcrossTheHeading)
+{
+	constexpr ObjRectangle above{.x = 110.0, .y = 50.0, .w = 20.0, .h = 20.0};
+	constexpr ObjRectangle touching{.x = 120.0, .y = 50.0, .w = 20.0, .h = 20.0};
+
+	EXPECT_TRUE(DirectionUtils::OverlapsAcross(kRect, above, Direction::UP));
+	EXPECT_FALSE(DirectionUtils::OverlapsAcross(kRect, above, Direction::LEFT));
+	EXPECT_FALSE(DirectionUtils::OverlapsAcross(kRect, touching, Direction::UP));
+}
+
+// a lane off center under the rect, so each way out has its own length - far edge to far edge
+TEST_F(DirectionUtilsTest, DistanceOutOfLaneRunsFarEdgeToFarEdge)
+{
+	constexpr ObjRectangle column{.x = 102.0, .y = 0.0, .w = 8.0, .h = 400.0};
+	constexpr ObjRectangle row{.x = 0.0, .y = 104.0, .w = 500.0, .h = 8.0};
+
+	EXPECT_DOUBLE_EQ(DirectionUtils::DistanceOutOfLane(kRect, column, Direction::LEFT), 18.0);
+	EXPECT_DOUBLE_EQ(DirectionUtils::DistanceOutOfLane(kRect, column, Direction::RIGHT), 10.0);
+	EXPECT_DOUBLE_EQ(DirectionUtils::DistanceOutOfLane(kRect, row, Direction::UP), 16.0);
+	EXPECT_DOUBLE_EQ(DirectionUtils::DistanceOutOfLane(kRect, row, Direction::DOWN), 12.0);
 }

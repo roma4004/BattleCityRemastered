@@ -57,7 +57,7 @@ protected:
 	std::vector<AnimationType> _drawn{};
 	std::optional<Uuid> _finished{};
 
-	BulletCalibre _calibre{.speed = 300.0, .damage = 1u, .damageRadius = 12.0, .tier = 1u, .size{.x = 6.0, .y = 5.0}};
+	BulletCaliber _caliber{.speed = 300.0, .damage = 1u, .damageRadius = 12.0, .tier = 1u, .size{.x = 6.0, .y = 5.0}};
 	Uuid _uuid{};
 	//NOTE: a burst reports only when it has an owner, and a nil uuid is how the manager spells "none"
 	Uuid _burstUuid{UuidUtils::GetRandomUuid()};
@@ -130,8 +130,8 @@ protected:
 
 	std::shared_ptr<Bullet> CreateBullet(const FPoint pos)
 	{
-		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _calibre.size.x, .h = _calibre.size.y};
-		auto bullet{TestUtils::CreateBullet(rect, _health, _bulletPool, _events, _calibre, Direction::DOWN,
+		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _caliber.size.x, .h = _caliber.size.y};
+		auto bullet{TestUtils::CreateBullet(rect, _health, _bulletPool, _events, _caliber, Direction::DOWN,
 											Author::Player1)};
 
 		return bullet;

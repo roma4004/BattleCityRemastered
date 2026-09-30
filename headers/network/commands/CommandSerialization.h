@@ -16,6 +16,7 @@
 #include "StatisticsChange.h"
 #include "TankShot.h"
 #include "TankSpawnComplete.h"
+#include "TankSpawnMoved.h"
 #include "TierChange.h"
 #include "PointSerialization.h"
 #include "CommandBatch.h"
@@ -105,6 +106,7 @@ template<class Archive>
 void serialize(Archive& ar, network::commands::RespawnTank& cmd, const unsigned int /*version*/)
 {
 	ar & cmd.tankType;
+	ar & cmd.model;
 	ar & cmd.uuid;
 	ar & cmd.pos;
 }
@@ -136,12 +138,20 @@ void serialize(Archive& ar, network::commands::TankShot& cmd, const unsigned int
 	ar & cmd.who;
 	ar & cmd.dir;
 	ar & cmd.uuid;
+	ar & cmd.damage;
 }
 
 template<class Archive>
 void serialize(Archive& ar, network::commands::TankSpawnComplete& cmd, const unsigned int /*version*/)
 {
 	ar & cmd.uuid;
+}
+
+template<class Archive>
+void serialize(Archive& ar, network::commands::TankSpawnMoved& cmd, const unsigned int /*version*/)
+{
+	ar & cmd.uuid;
+	ar & cmd.pos;
 }
 
 template<class Archive>
@@ -178,6 +188,7 @@ template<class Archive>
 void serialize(Archive& ar, TankRespawnedEvent& spawn, const unsigned int /*version*/)
 {
 	ar & spawn.type;
+	ar & spawn.model;
 	ar & spawn.uuid;
 	ar & spawn.pos;
 }
@@ -195,6 +206,7 @@ template<class Archive>
 void serialize(Archive& ar, TankSnapshot& tank, const unsigned int /*version*/)
 {
 	ar & tank.type;
+	ar & tank.model;
 	ar & tank.uuid;
 	ar & tank.pos;
 	ar & tank.dir;

@@ -13,6 +13,7 @@
 #include "components/events/TimingEvents.h"
 #include "entities/BaseObj.h"
 #include "enums/ObstacleType.h"
+#include "enums/TankModel.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/PawnProperty.h"
 #include "entities/pawns/Tank.h"
@@ -138,17 +139,17 @@ public:
 			ObjRectangle rect, int health, Author author,
 			const std::vector<std::shared_ptr<BaseObj>>& allObjects, const std::shared_ptr<EventSystem>& events,
 			Direction dir, const std::shared_ptr<TankPool>& tankPool, const GameConfig& gameConfig,
-			unsigned short tier = 1u);
+			unsigned short tier = 1u, TankModel model = TankModel::Basic);
 
 	[[nodiscard]] static std::shared_ptr<Tank> CreatePlayer(
 			ObjRectangle rect, int health, Author author,
 			const std::vector<std::shared_ptr<BaseObj>>& allObjects, const std::shared_ptr<EventSystem>& events,
 			Direction dir, const std::shared_ptr<TankPool>& tankPool, const GameConfig& gameConfig,
-			unsigned short tier = 1u);
+			unsigned short tier = 1u, TankModel model = TankModel::Player);
 
 	[[nodiscard]] static std::shared_ptr<Bullet> CreateBullet(
 			ObjRectangle rect, int health, const std::shared_ptr<BulletPool>& bulletPool,
-			const std::shared_ptr<EventSystem>& events, const BulletCalibre& calibre, Direction dir,
+			const std::shared_ptr<EventSystem>& events, const BulletCaliber& caliber, Direction dir,
 			Author author, const Uuid& authorUuid = {});
 };
 

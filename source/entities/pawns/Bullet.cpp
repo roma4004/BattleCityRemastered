@@ -17,11 +17,11 @@
 #include "interfaces/IMoveBeh.h"
 #include "utils/UuidUtils.h"
 
-Bullet::Bullet(PawnProperty pawnProperty, const GameConfig& gameConfig, const BulletCalibre& calibre)
+Bullet::Bullet(PawnProperty pawnProperty, const GameConfig& gameConfig, const BulletCaliber& caliber)
 	: Pawn{std::move(pawnProperty), gameConfig, kCollision}
-	, _calibre{calibre}
+	, _caliber{caliber}
 {
-	_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _uuid, _authorUuid, _gameConfig, _calibre);
+	_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _uuid, _authorUuid, _gameConfig, _caliber);
 }
 
 Bullet::~Bullet()
@@ -74,7 +74,7 @@ void Bullet::Reset(const BulletResetProperty& resetProperty)
 	_author = resetProperty.author;
 	_authorUuid = resetProperty.authorUuid;
 	_faction = FactionOf(_author);
-	_calibre = resetProperty.calibre;
+	_caliber = resetProperty.caliber;
 
 	_isAlive = true;
 }
@@ -95,13 +95,13 @@ void Bullet::TickUpdate(const double deltaTime)
 	}
 }
 
-unsigned int Bullet::GetDamage() const noexcept { return _calibre.damage; }
+unsigned int Bullet::GetDamage() const noexcept { return _caliber.damage; }
 
-double Bullet::GetDamageRadius() const noexcept { return _calibre.damageRadius; }
+double Bullet::GetDamageRadius() const noexcept { return _caliber.damageRadius; }
 
-double Bullet::GetFlightSpeed() const noexcept { return _calibre.speed; }
+double Bullet::GetFlightSpeed() const noexcept { return _caliber.speed; }
 
-unsigned int Bullet::GetTier() const noexcept { return _calibre.tier; }
+unsigned int Bullet::GetTier() const noexcept { return _caliber.tier; }
 
 void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 {
@@ -120,9 +120,9 @@ void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 			continue;
 		}
 
-		if (target->GetIsDestructible() || _calibre.tier > 2u)
+		if (target->GetIsDestructible() || _caliber.tier > 2u)
 		{
-			target->TakeDamage(_calibre.damage, _author);
+			target->TakeDamage(_caliber.damage, _author);
 		}
 
 		const auto* otherBullet{dynamic_cast<Bullet*>(baseObj)};
@@ -148,7 +148,7 @@ void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 	{
 		//NOTE: burns itself out where it stopped; BaseObj's skips Pawn's HealthChangedEvent, and nobody
 		//shot it down, so no hit goes out with it
-		BaseObj::TakeDamage(_calibre.damage, _author);
+		BaseObj::TakeDamage(_caliber.damage, _author);
 	}
 
 	_events->EmitEvent(AnimationCreateBulletExplosionEvent{.rect = _rect});

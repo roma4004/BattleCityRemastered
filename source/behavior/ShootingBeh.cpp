@@ -6,24 +6,27 @@
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
 #include "components/events/SpawnEvents.h"
-#include "entities/BulletCalibre.h"
+#include "entities/BulletCaliber.h"
+#include "utils/DirectionUtils.h"
+#include "utils/RandUtils.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/BulletResetProperty.h"
 #include "entities/pawns/Tank.h"
 #include "enums/Direction.h"
 #include <memory>
 #include <optional>
+#include <random>
 
 ShootingBeh::ShootingBeh(ObjRectangle& rect, Direction& dir, Uuid& uuid, Author& author,
 						 const std::shared_ptr<BulletPool>& bulletPool,
-						 BulletCalibre& calibre, const std::shared_ptr<EventSystem>& events,
+						 BulletCaliber& caliber, const std::shared_ptr<EventSystem>& events,
 						 const GameConfig& gameConfig)
 	: _uuid{uuid}
 	, _rect{rect}
 	, _direction{dir}
 	, _gameConfig{gameConfig}
 	, _author{author}
-	, _calibre{calibre}
+	, _caliber{caliber}
 	, _bulletPool{bulletPool}
 	, _events{events} {}
 
@@ -36,8 +39,8 @@ ObjRectangle ShootingBeh::GetBulletStartRect() const
 	const double tankBottomY{_rect.Bottom()};
 	const FPoint tankCenter{.x = tankPos.x + tankHalf.x, .y = tankPos.y + tankHalf.y};
 
-	const double bulletWidth{_calibre.size.x};
-	const double bulletHeight{_calibre.size.y};
+	//NOTE: the caliber describes the shell flying upwards, so a sideways shot wears the same box turned
+	const auto [bulletWidth, bulletHeight]{DirectionUtils::SizeFacing(_caliber.size, _direction)};
 	const FPoint bulletHalf{.x = bulletWidth / 2.0, .y = bulletHeight / 2.0};
 	ObjRectangle bulletRect{.x = -1, .y = -1, .w = bulletWidth, .h = bulletHeight};
 
@@ -66,22 +69,44 @@ ObjRectangle ShootingBeh::GetBulletStartRect() const
 	return bulletRect;
 }
 
-Uuid ShootingBeh::Shot(const std::optional<Uuid> uuid)
+//NOTE: rolled per shot and by the authority alone - a client is handed the number with the shot
+BulletCaliber ShootingBeh::CaliberOfShot(const std::optional<unsigned int> damage) const
+{
+	BulletCaliber shot{_caliber};
+	if (damage)
+	{
+		shot.damage = *damage;
+
+		return shot;
+	}
+
+	if (const unsigned int spread{_gameConfig.bulletDamageSpread};
+		spread != 0u && !_gameConfig.IsClient())
+	{
+		const unsigned int lowest{_caliber.damage > spread ? _caliber.damage - spread : 1u};
+		shot.damage = RandUtils::GetRandNumber(std::uniform_int_distribution{lowest, _caliber.damage + spread});
+	}
+
+	return shot;
+}
+
+ShotResult ShootingBeh::Shot(const std::optional<Uuid> uuid, const std::optional<unsigned int> damage)
 {
 	const ObjRectangle rect{GetBulletStartRect()};
 	if (rect.x < 0.0 || rect.y < 0.0)
 	{
-		return {};
+		return ShotResult{};
 	}
 
-	//TODO: refactor to network event ShotBullet{rect, bulletResetProperty, uuid}
+	const BulletCaliber caliber{CaliberOfShot(damage)};
+
 	const BulletResetProperty bulletResetProperty{
 			.rect = rect,
 			.dir = _direction,
 			.health = 1,
 			.author = _author,
 			.authorUuid = _uuid,
-			.calibre = _calibre,
+			.caliber = caliber,
 	};
 
 	const std::shared_ptr<Bullet> bullet{_bulletPool->SpawnBullet(bulletResetProperty, uuid)};
@@ -90,5 +115,5 @@ Uuid ShootingBeh::Shot(const std::optional<Uuid> uuid)
 
 	_events->EmitEvent(AddToSpawnQueueEvent{.obj = bullet});
 
-	return bullet->GetUuid();
+	return ShotResult{.uuid = bullet->GetUuid(), .damage = caliber.damage};
 }

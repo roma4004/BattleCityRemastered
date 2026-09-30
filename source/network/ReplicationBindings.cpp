@@ -105,7 +105,10 @@ void BindHostReplication(ReplicationPublisher& out)
 	{
 		return PositionChange{.pos = e.pos, .dir = e.dir, .uuid = e.uuid};
 	});
-	out.Bind<TankShotEvent>([](const auto& e) { return TankShot{.who = e.who, .dir = e.dir, .uuid = e.bulletUuid}; });
+	out.Bind<TankShotEvent>([](const auto& e)
+	{
+		return TankShot{.who = e.who, .dir = e.dir, .uuid = e.bulletUuid, .damage = e.damage};
+	});
 	out.Bind<HealthChangedEvent>([](const auto& e)
 	{
 		return HealthChange{.health = e.health, .uuid = e.uuid};
@@ -116,13 +119,17 @@ void BindHostReplication(ReplicationPublisher& out)
 	});
 	out.Bind<TankRespawnedEvent>([](const auto& e)
 	{
-		return RespawnTank{.tankType = e.type, .uuid = e.uuid, .pos = e.pos};
+		return RespawnTank{.tankType = e.type, .model = e.model, .uuid = e.uuid, .pos = e.pos};
 	});
 	out.Bind<ObstacleSpawnedEvent>([](const auto& e)
 	{
 		return ObstacleSpawn{.pos = e.pos, .obstacleType = e.type, .uuid = e.uuid};
 	});
 	out.Bind<TankSpawnCompletedEvent>([](const auto& e) { return TankSpawnComplete{.uuid = e.uuid}; });
+	out.Bind<TankSpawnMovedEvent>([](const auto& e)
+	{
+		return TankSpawnMoved{.uuid = e.uuid, .pos = e.pos};
+	});
 	out.Bind<BonusSpawnCompletedEvent>([](const auto& e) { return BonusSpawnComplete{.uuid = e.uuid}; });
 	out.Bind<TierChangedEvent>([](const auto& e)
 	{

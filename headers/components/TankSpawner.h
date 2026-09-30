@@ -9,19 +9,23 @@
 #include <optional>
 #include <random>
 #include <string>
+#include <string_view>
 #include <vector>
 
 enum class Faction : char8_t;
+enum class TankModel : char8_t;
 enum class TankType : char8_t;
 enum class GameMode : char8_t;
 struct PawnProperty;
 struct BonusEffectProperty;
 struct GameResetEvent;
 struct NextLevelRequestedEvent;
+struct PostTickUpdateEvent;
 struct RespawnTankEvent;
 struct SpawnAnimationFinishedEvent;
 struct TankRespawnedEvent;
 struct TankSpawnCompletedEvent;
+struct TankSpawnMovedEvent;
 struct TankDiedEvent;
 struct TankSnapshot;
 struct WorldSnapshotRequestedEvent;
@@ -42,9 +46,11 @@ class TankSpawner final
 	{
 		Uuid uuid;
 		TankType type;
+		TankModel model{};
 		ObjRectangle rect;
+		//NOTE: the square it was rolled for - the burst goes back to it the moment it is free again
+		ObjRectangle home{};
 		int health;
-		double speed;
 		unsigned short tier{1u};
 	};
 
@@ -74,6 +80,8 @@ class TankSpawner final
 	void OnSpawnAnimationFinished(const SpawnAnimationFinishedEvent& event);
 	void OnTankRespawned(const TankRespawnedEvent& event);
 	void OnTankSpawnCompleted(const TankSpawnCompletedEvent& event);
+	void OnTankSpawnMoved(const TankSpawnMovedEvent& event);
+	void OnPostTickUpdate(const PostTickUpdateEvent&);
 	void OnTankDied(const TankDiedEvent& event);
 	void OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const;
 	void OnWorldSnapshotReceived(const WorldSnapshotReceivedEvent& event);
@@ -84,6 +92,17 @@ class TankSpawner final
 	void SpendLoadout(Uuid uuid, TankType type);
 
 	void OnSpawnDelayFinished(Uuid uuid);
+
+	//NOTE: a burst puts nothing in the world, so the bursts are asked too; the ignored uuid is the asker's own
+	[[nodiscard]] bool IsSpawnSpotFree(const ObjRectangle& rect, Uuid ignoredSpawn = {}) const;
+
+	//NOTE: a tank driving into a burst shoves its square aside until home is free - the landing square may move
+	void NudgeSpawnSquare(DelayedTankSpawn& spawn);
+	void MoveSpawnSquare(DelayedTankSpawn& spawn, const ObjRectangle& to);
+	[[nodiscard]] std::shared_ptr<Tank> TankStandingIn(const ObjRectangle& rect) const;
+	//NOTE: the way the hull drives first, so the square reads as pushed along and not as jumped
+	[[nodiscard]] std::optional<ObjRectangle> RoomOutOfTheWay(const DelayedTankSpawn& spawn,
+															  const Tank& pusher) const;
 	void DelayedSpawnWith(const DelayedTankSpawn& params);
 	void RestoreTank(const TankSnapshot& tank);
 	void CancelDelayedSpawnsOf(Faction faction);
@@ -95,19 +114,21 @@ class TankSpawner final
 															double preferredX) const;
 
 	[[nodiscard]] std::optional<ObjRectangle> GetEnemyRandomPosX(TankType type) const;
-	[[nodiscard]] bool SpawnEnemy(ObjRectangle rect, Uuid uuid, TankType type, double speed, int health);
-	void SpawnPlayer(ObjRectangle rect, double speed, int health, Uuid uuid, TankType type);
-	void SpawnCoopBot(ObjRectangle rect, double speed, int health, Uuid uuid, TankType type);
+	[[nodiscard]] bool SpawnEnemy(ObjRectangle rect, Uuid uuid, TankType type, TankModel model);
+	void SpawnPlayer(ObjRectangle rect, Uuid uuid, TankType type, std::string_view name);
 
-	void DelayedSpawnStart(ObjRectangle rect, int health, double speed, Uuid uuid, TankType type);
+	void DelayedSpawnStart(ObjRectangle rect, Uuid uuid, TankType type, TankModel model);
 	[[nodiscard]] std::unique_ptr<IInputProvider> MakeDriver(TankType type) const;
 
-	void RespawnEnemyTanks(TankType type, Uuid uuid, std::optional<ObjRectangle> rect = std::nullopt);
+	//NOTE: an empty model is one to roll - it arrives filled only where the authority already chose it
+	void RespawnEnemyTanks(TankType type, Uuid uuid, std::optional<ObjRectangle> rect = std::nullopt,
+						   std::optional<TankModel> model = std::nullopt);
 	[[nodiscard]] std::optional<ObjRectangle> GetPlayerRandomPosX(bool isFirst) const;
 	void RespawnPlayerTeam(TankType type, Uuid uuid, std::optional<ObjRectangle> rect = std::nullopt);
-	void RespawnTank(TankType type, Uuid uuid, std::optional<ObjRectangle> rect = std::nullopt);
+	void RespawnTank(TankType type, Uuid uuid, std::optional<ObjRectangle> rect = std::nullopt,
+					 std::optional<TankModel> model = std::nullopt);
 
-	void OnClientRespawn(TankType type, Uuid uuid, ObjRectangle rect);
+	void OnClientRespawn(TankType type, Uuid uuid, ObjRectangle rect, TankModel model);
 
 public:
 	TankSpawner(const GameConfig& gameConfig, const std::vector<std::shared_ptr<BaseObj>>& allObjects,

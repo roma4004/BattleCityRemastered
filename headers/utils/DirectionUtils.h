@@ -43,10 +43,20 @@ namespace DirectionUtils
 	return dir;
 }
 
+[[nodiscard]] constexpr bool IsVertical(const Direction dir) noexcept
+{
+	return dir == Direction::UP || dir == Direction::DOWN;
+}
+
+[[nodiscard]] constexpr bool IsSameAxis(const Direction one, const Direction other) noexcept
+{
+	return IsVertical(one) == IsVertical(other);
+}
+
 //NOTE: the two ways across the way it is going - where a tank can be nudged without changing its heading
 [[nodiscard]] constexpr std::array<Direction, 2> Laterals(const Direction dir) noexcept
 {
-	if (dir == Direction::UP || dir == Direction::DOWN)
+	if (IsVertical(dir))
 	{
 		return {Direction::LEFT, Direction::RIGHT};
 	}
@@ -82,7 +92,13 @@ namespace DirectionUtils
 
 [[nodiscard]] constexpr double SizeAlong(const ObjRectangle& rect, const Direction dir) noexcept
 {
-	return dir == Direction::UP || dir == Direction::DOWN ? rect.h : rect.w;
+	return IsVertical(dir) ? rect.h : rect.w;
+}
+
+//NOTE: a shell is described flying up - x across the flight, y along it - so its world box depends on the heading
+[[nodiscard]] constexpr FPoint SizeFacing(const FPoint acrossAlong, const Direction dir) noexcept
+{
+	return IsVertical(dir) ? acrossAlong : FPoint{.x = acrossAlong.y, .y = acrossAlong.x};
 }
 
 // free space ahead of the leading edge - negative once the target is already behind it
@@ -121,5 +137,27 @@ namespace DirectionUtils
 	const double gap{GapToEdge(rect, battlefieldSize, dir)};
 
 	return dx + dy < 0.0 ? distance <= gap : distance < gap;
+}
+
+//NOTE: on the axis across the heading only - how far ahead or behind the other one stands is not asked
+[[nodiscard]] constexpr bool OverlapsAcross(const ObjRectangle& rect, const ObjRectangle& other,
+										   const Direction dir) noexcept
+{
+	const bool isAcrossX{IsVertical(dir)};
+	const auto [ourFrom, ourTo]{rect.SpanOn(isAcrossX)};
+	const auto [itsFrom, itsTo]{other.SpanOn(isAcrossX)};
+
+	return ourFrom < itsTo && itsFrom < ourTo;
+}
+
+//NOTE: how far the rect has to move towards the side to leave the lane entirely - far edge to far edge
+[[nodiscard]] constexpr double DistanceOutOfLane(const ObjRectangle& rect, const ObjRectangle& lane,
+												 const Direction side) noexcept
+{
+	const bool isXAxis{!IsVertical(side)};
+	const auto [rectFrom, rectTo]{rect.SpanOn(isXAxis)};
+	const auto [laneFrom, laneTo]{lane.SpanOn(isXAxis)};
+
+	return side == Direction::LEFT || side == Direction::UP ? rectTo - laneFrom : laneTo - rectFrom;
 }
 }// namespace DirectionUtils
