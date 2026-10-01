@@ -103,7 +103,7 @@ ShotResult ShootingBeh::Shot(const std::optional<Uuid> uuid, const std::optional
 	const BulletResetProperty bulletResetProperty{
 			.rect = rect,
 			.dir = _direction,
-			.health = 1,
+			.health = static_cast<int>(_caliber.damage),
 			.author = _author,
 			.authorUuid = _uuid,
 			.caliber = caliber,

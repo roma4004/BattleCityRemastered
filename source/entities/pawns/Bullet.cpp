@@ -149,7 +149,7 @@ void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 	{
 		//NOTE: burns itself out where it stopped; BaseObj's skips Pawn's HealthChangedEvent, and nobody
 		//shot it down, so no hit goes out with it
-		BaseObj::TakeDamage(_caliber.damage, _author);
+		BaseObj::TakeDamage(static_cast<unsigned int>(GetHealth()), _author);
 	}
 
 	_events->EmitEvent(AnimationCreateBulletExplosionEvent{.rect = _rect});

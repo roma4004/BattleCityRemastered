@@ -311,6 +311,37 @@ TEST_F(BulletTest, BulletToBulletDamageEachOther)
 	EXPECT_GT(bullet2Health, bullet2->GetHealth());
 }
 
+// the heavier shot takes the lighter one's damage and keeps the rest of its health
+TEST_F(BulletTest, HeavierBulletOutlivesTheMeeting)
+{
+	constexpr int heavyHealth{2};
+	const ObjRectangle heavyRect{.x = 0.0, .y = 0.0, .w = _caliber.size.x, .h = _caliber.size.y};
+	const auto heavy{TestUtils::CreateBullet(heavyRect, heavyHealth, _bulletPool, _events, _caliber, Direction::DOWN,
+											 Author::Player1)};
+	const auto light{CreateBullet({.x = 0.0, .y = _caliber.size.y + 1}, Direction::UP, Author::Player2)};
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_FALSE(light->GetIsAlive());
+	EXPECT_EQ(heavyHealth - static_cast<int>(_caliber.damage), heavy->GetHealth());
+}
+
+// and flies on through where the lighter one was
+TEST_F(BulletTest, SurvivingBulletFliesOn)
+{
+	const ObjRectangle heavyRect{.x = 0.0, .y = 0.0, .w = _caliber.size.x, .h = _caliber.size.y};
+	const auto heavy{TestUtils::CreateBullet(heavyRect, 2, _bulletPool, _events, _caliber, Direction::DOWN,
+											 Author::Player1)};
+	CreateBullet({.x = 0.0, .y = _caliber.size.y + 1}, Direction::UP, Author::Player2);
+
+	const FPoint heavyStartPos{heavy->GetPos()};
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_LT(heavyStartPos.y, heavy->GetPos().y);
+}
+
 // steel swallows a tier 1 shot whole
 TEST_F(BulletTest, BulletCantDamageSteelWall)
 {
