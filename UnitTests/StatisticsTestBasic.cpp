@@ -306,7 +306,8 @@ TEST_F(StatisticsTest, BulletHitByPlayerTwo)
 // the counter is about bullets meeting bullets - a wall the shot destroys has a row of its own
 TEST_F(StatisticsTest, BulletIntoBrickWallIsNotABulletHit)
 {
-	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _caliber.size.y + 1}, ObstacleType::Brick);
+	const auto wall{SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _caliber.size.y + 1}, ObstacleType::Brick)};
+	_caliber.damage = static_cast<unsigned int>(wall->GetHealth());
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player1);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
@@ -340,7 +341,8 @@ TEST_F(StatisticsTest, BulletIntoFieldEdgeIsNotABulletHit)
 // a brick blown out by the enemy team
 TEST_F(StatisticsTest, BrickWallDiedByEnemy)
 {
-	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _caliber.size.y + 1}, ObstacleType::Brick);
+	const auto wall{SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _caliber.size.y + 1}, ObstacleType::Brick)};
+	_caliber.damage = static_cast<unsigned int>(wall->GetHealth());
 
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Enemy1);
 
@@ -354,7 +356,8 @@ TEST_F(StatisticsTest, BrickWallDiedByEnemy)
 // the same brick by player one
 TEST_F(StatisticsTest, BrickWallDiedByPlayerOne)
 {
-	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _caliber.size.y + 1}, ObstacleType::Brick);
+	const auto wall{SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _caliber.size.y + 1}, ObstacleType::Brick)};
+	_caliber.damage = static_cast<unsigned int>(wall->GetHealth());
 
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player1);
 
@@ -368,7 +371,8 @@ TEST_F(StatisticsTest, BrickWallDiedByPlayerOne)
 // and by player two
 TEST_F(StatisticsTest, BrickDiedByPlayerTwo)
 {
-	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _caliber.size.y + 1}, ObstacleType::Brick);
+	const auto wall{SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _caliber.size.y + 1}, ObstacleType::Brick)};
+	_caliber.damage = static_cast<unsigned int>(wall->GetHealth());
 
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player2);
 
@@ -382,7 +386,8 @@ TEST_F(StatisticsTest, BrickDiedByPlayerTwo)
 // steel gives only to a tier 3 shot, so the caliber is raised before firing
 TEST_F(StatisticsTest, SteelWallDiedByEnemy)
 {
-	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _caliber.size.y + 1}, ObstacleType::Steel);
+	const auto wall{SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _caliber.size.y + 1}, ObstacleType::Steel)};
+	_caliber.damage = static_cast<unsigned int>(wall->GetHealth());
 
 	_caliber.tier = 3u;
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Enemy1);
@@ -397,7 +402,8 @@ TEST_F(StatisticsTest, SteelWallDiedByEnemy)
 // the same tier 3 shot from player one
 TEST_F(StatisticsTest, SteelWallDiedByPlayerOne)
 {
-	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _caliber.size.y + 1}, ObstacleType::Steel);
+	const auto wall{SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _caliber.size.y + 1}, ObstacleType::Steel)};
+	_caliber.damage = static_cast<unsigned int>(wall->GetHealth());
 
 	_caliber.tier = 3u;
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player1);
@@ -412,7 +418,8 @@ TEST_F(StatisticsTest, SteelWallDiedByPlayerOne)
 // and from player two
 TEST_F(StatisticsTest, SteelDiedByPlayerTwo)
 {
-	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _caliber.size.y + 1}, ObstacleType::Steel);
+	const auto wall{SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _caliber.size.y + 1}, ObstacleType::Steel)};
+	_caliber.damage = static_cast<unsigned int>(wall->GetHealth());
 
 	_caliber.tier = 3u;
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player2);

@@ -1,6 +1,8 @@
 #include "utils/ObjectUtils.h"
 #include "entities/BaseObj.h"
+#include "entities/obstacles/BrickWall.h"
 #include "entities/obstacles/IFortress.h"
+#include "entities/obstacles/SteelWall.h"
 #include "entities/pawns/Bullet.h"
 #include "enums/Faction.h"
 #include "interfaces/IPickupableBonus.h"
@@ -33,4 +35,9 @@ const Bullet* ObjectUtils::AsBullet(const std::shared_ptr<BaseObj>& object)
 bool ObjectUtils::IsFortress(const std::shared_ptr<BaseObj>& object)
 {
 	return dynamic_cast<IFortress*>(object.get()) != nullptr;
+}
+
+bool ObjectUtils::IsWall(const std::shared_ptr<BaseObj>& object)
+{
+	return dynamic_cast<BrickWall*>(object.get()) != nullptr || dynamic_cast<SteelWall*>(object.get()) != nullptr;
 }

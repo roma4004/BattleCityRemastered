@@ -29,6 +29,7 @@
 #include "utils/DirectionUtils.h"
 #include "utils/MathUtils.h"
 #include "enums/Faction.h"
+#include <algorithm>
 #include <chrono>
 #include <ranges>
 
@@ -497,8 +498,6 @@ void Tank::ApplyTier(const unsigned short tier)
 
 void Tank::Upgrade(const unsigned short tiers)
 {
-	Heal(MathUtils::RoundTo<int>(HealthOf(_model, _gameConfig.tankHealth) * kUpgradeHealShare));
-
 	if (_tier >= kMaxTier)
 	{
 		return;
@@ -554,12 +553,16 @@ void Tank::OnDespawned(const DespawnedEvent& event)
 	_events->EmitEvent(AnimationCreateTankExplosionEvent{.rect = _rect, .author = _author});
 }
 
-void Tank::HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const
+void Tank::HandleBonusPickUp(const std::shared_ptr<BaseObj>& object)
 {
-	if (auto* bonus{dynamic_cast<IPickupableBonus*>(object.get())})
+	auto* bonus{dynamic_cast<IPickupableBonus*>(object.get())};
+	if (bonus == nullptr || !object->GetIsAlive())
 	{
-		bonus->PickUpBonus(_author);
+		return;
 	}
+
+	bonus->PickUpBonus(_author);
+	Heal(kPickupHeal);
 }
 
 void Tank::OnPosChanged(const PosChangedEvent& event)

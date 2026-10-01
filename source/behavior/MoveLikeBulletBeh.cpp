@@ -29,8 +29,7 @@ double MoveLikeBulletBeh::GetTravelledDistance(const double deltaTime, const Dir
 
 	for (const std::shared_ptr<BaseObj>& object: objects)
 	{
-		if (!ObjectUtils::IsAlive(object) || IsSelfOrAuthor(*object) || object->GetIsPenetrable()
-			|| !ColliderUtils::IsCollide(nextPosRect, object->GetRect()))
+		if (!IsInTheWay(object, nextPosRect))
 		{
 			continue;
 		}
@@ -54,6 +53,14 @@ bool MoveLikeBulletBeh::IsSelfOrAuthor(const BaseObj& object) const
 	return objectUuid == _uuid || (_authorUuid != Uuid{} && objectUuid == _authorUuid);
 }
 
+bool MoveLikeBulletBeh::IsInTheWay(const std::shared_ptr<BaseObj>& object, const ObjRectangle& nextPosRect) const
+{
+	return ObjectUtils::IsAlive(object)
+		   && !IsSelfOrAuthor(*object)
+		   && ColliderUtils::IsCollide(nextPosRect, object->GetRect())
+		   && !object->GetIsPenetrable();
+}
+
 bool MoveLikeBulletBeh::IsCanMove(const double deltaTime, const Direction dir,
 								  const std::vector<std::shared_ptr<BaseObj>>& objects) const
 {
@@ -61,10 +68,7 @@ bool MoveLikeBulletBeh::IsCanMove(const double deltaTime, const Direction dir,
 
 	return std::ranges::none_of(objects, [this, nextPosRect](const std::shared_ptr<BaseObj>& object)
 	{
-		return ObjectUtils::IsAlive(object)
-			   && !IsSelfOrAuthor(*object)
-			   && ColliderUtils::IsCollide(nextPosRect, object->GetRect())
-			   && !object->GetIsPenetrable();
+		return IsInTheWay(object, nextPosRect);
 	});
 }
 
@@ -85,6 +89,20 @@ bool MoveLikeBulletBeh::Move(const Direction dir, const double deltaTime,
 	outCollisions = GetCircleCollisionObjects(GetBlowCenter(deltaTime, dir, objects), objects);
 
 	return false;
+}
+
+std::vector<std::shared_ptr<BaseObj>> MoveLikeBulletBeh::GetContacts(
+		const Direction dir, const double deltaTime, const std::vector<std::shared_ptr<BaseObj>>& objects) const
+{
+	const ObjRectangle nextPosRect{DirectionUtils::Swept(_rect, _caliber.speed * deltaTime, dir)};
+	const double travelled{GetTravelledDistance(deltaTime, dir, objects)};
+
+	auto contacts{objects | std::views::filter([this, &nextPosRect, travelled, dir](const std::shared_ptr<BaseObj>& obj)
+	{
+		return IsInTheWay(obj, nextPosRect) && DirectionUtils::GapTo(_rect, obj->GetRect(), dir) <= travelled;
+	})};
+
+	return std::vector<std::shared_ptr<BaseObj>>{contacts.begin(), contacts.end()};
 }
 
 std::vector<std::shared_ptr<BaseObj>> MoveLikeBulletBeh::GetCircleCollisionObjects(

@@ -7,6 +7,7 @@
 #include "enums/Delivery.h"
 #include "enums/Direction.h"
 #include "enums/GameState.h"
+#include "enums/ObstacleType.h"
 #include "enums/TankModel.h"
 #include "enums/TankType.h"
 #include "geometry/ObjRectangle.h"
@@ -28,6 +29,14 @@ struct TankSnapshot final
 	bool isShipActive{};
 };
 
+struct ObstacleSnapshot final
+{
+	FPoint pos{};
+	ObstacleType type{};
+	Uuid uuid{};
+	int health{};
+};
+
 struct BulletSnapshot final
 {
 	Author author{};
@@ -45,7 +54,7 @@ struct WorldSnapshot final
 	//NOTE: applied first - a client never reads a map, and everything else here lands on the field this sizes
 	MapLoadedEvent map{};
 	GameState phase{};
-	std::vector<ObstacleSpawnedEvent> obstacles{};
+	std::vector<ObstacleSnapshot> obstacles{};
 	std::vector<TankSnapshot> tanks{};
 	std::vector<TankRespawnedEvent> tankSpawns{};
 	std::vector<BulletSnapshot> bullets{};

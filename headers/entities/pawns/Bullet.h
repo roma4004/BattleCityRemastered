@@ -14,6 +14,7 @@ struct DrawEvent;
 struct DespawnedEvent;
 struct WorldSnapshotRequestedEvent;
 class EventSystem;
+class MoveLikeBulletBeh;
 class BulletPool;
 class GameConfig;
 
@@ -23,10 +24,15 @@ class Bullet final : public Pawn, public IDrawable
 
 	Uuid _authorUuid{};
 	BulletCaliber _caliber{};
+	MoveLikeBulletBeh* _bulletMoveBeh{nullptr};
 
 	void Reset(const BulletResetProperty& resetProperty);
 	void OnDraw(const DrawEvent&) const;
 	void OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const;
+	[[nodiscard]] bool CanBreak(const BaseObj& target) const noexcept;
+	[[nodiscard]] bool SinkIntoWall(double deltaTime, const std::vector<std::shared_ptr<BaseObj>>& blast);
+	//NOTE: whether it met another shell - one that did is spent by the meeting, not burnt out by itself
+	[[nodiscard]] bool Blast(const std::vector<std::shared_ptr<BaseObj>>& objectList);
 
 protected:
 	void Subscribe() override;

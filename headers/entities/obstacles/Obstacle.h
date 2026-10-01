@@ -22,6 +22,9 @@ class Obstacle : public BaseObj, public IDrawable
 	void SubscribeAsClient();
 
 protected:
+	//NOTE: a quarter of brick or steel - what a shell pays to sink one layer deeper
+	static constexpr int kWallHealth{10};
+
 	//NOTE: empty, not pure - WaterTile draws nothing of its own and has nothing to add here
 	virtual void Subscribe();
 	virtual void OnDespawned(const DespawnedEvent& event);

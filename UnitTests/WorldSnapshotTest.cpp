@@ -215,7 +215,7 @@ TEST_F(WorldSnapshotTest, AWallDestroyedOnTheHostIsNotRebuiltOnTheClient)
 											  .type = ObstacleType::Steel});
 	const std::shared_ptr<BaseObj> shot{_hostObjects.at(_hostObjects.size() - 2u)};
 	const std::shared_ptr<BaseObj> standing{_hostObjects.back()};
-	shot->TakeDamage(1u, Author::Player1);
+	shot->TakeDamage(static_cast<unsigned int>(shot->GetHealth()), Author::Player1);
 	_serverEvents->EmitEvent(PostTickUpdateEvent{});
 
 	Replicate();
@@ -225,6 +225,22 @@ TEST_F(WorldSnapshotTest, AWallDestroyedOnTheHostIsNotRebuiltOnTheClient)
 	ASSERT_NE(steel, nullptr);
 	EXPECT_EQ(steel->GetPos(), standing->GetPos());
 	EXPECT_FALSE(steel->GetIsDestructible());
+}
+
+// a wounded obstacle arrives as wounded as it stands on the host - the eagle's bar reads the same number
+TEST_F(WorldSnapshotTest, AWoundedObstacleArrivesWounded)
+{
+	const double cell{_hostConfig.gridOffset};
+	_serverEvents->EmitEvent(SpawnObstacleEvent{.rect = {.x = 0.0, .y = 300.0, .w = cell, .h = cell},
+											  .type = ObstacleType::Eagle});
+	const std::shared_ptr<BaseObj> eagle{_hostObjects.back()};
+	eagle->TakeDamage(1u, Author::Enemy1);
+
+	Replicate();
+
+	const auto client{ClientObject(eagle->GetUuid())};
+	ASSERT_NE(client, nullptr);
+	EXPECT_EQ(eagle->GetHealth(), client->GetHealth());
 }
 
 // a tank arrives whole: where it stands, where it faces, its health, its tier and its shield

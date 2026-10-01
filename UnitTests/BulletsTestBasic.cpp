@@ -5,6 +5,7 @@
 #include "components/BulletPool.h"
 #include "components/TankPool.h"
 #include "components/EventSystem.h"
+#include "components/events/CoreLifecycleEvents.h"
 #include "components/events/TimingEvents.h"
 #include "entities/obstacles/BrickWall.h"
 #include "entities/obstacles/FortressWalls.h"
@@ -340,6 +341,76 @@ TEST_F(BulletTest, SurvivingBulletFliesOn)
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_LT(heavyStartPos.y, heavy->GetPos().y);
+}
+
+// a shot with health to spare pays for the brick it breaks and keeps going
+TEST_F(BulletTest, BulletSinksIntoABrickItCanPayFor)
+{
+	const auto brickWall{SpawnObstacle({.x = 0.0, .y = 6.0, .w = _gridSize, .h = _gridSize}, ObstacleType::Brick)};
+	const int brickWallHealth{brickWall->GetHealth()};
+	_caliber.damage = static_cast<unsigned int>(brickWallHealth);
+	const ObjRectangle bulletRect{.x = 0.0, .y = 0.0, .w = _caliber.size.x, .h = _caliber.size.y};
+	const auto bullet{TestUtils::CreateBullet(bulletRect, brickWallHealth + 1, _bulletPool, _events, _caliber,
+											  Direction::DOWN, Author::Player1)};
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_FALSE(brickWall->GetIsAlive());
+	EXPECT_TRUE(bullet->GetIsAlive());
+	EXPECT_EQ(1, bullet->GetHealth());
+}
+
+// steel below the third tier is not sunk into, whatever the shot has to spare
+TEST_F(BulletTest, BulletBelowTierThreeDetonatesAgainstSteel)
+{
+	const auto steelWall{SpawnObstacle({.x = 0.0, .y = 6.0, .w = _gridSize, .h = _gridSize}, ObstacleType::Steel)};
+	const int steelWallHealth{steelWall->GetHealth()};
+	const ObjRectangle bulletRect{.x = 0.0, .y = 0.0, .w = _caliber.size.x, .h = _caliber.size.y};
+	const auto bullet{TestUtils::CreateBullet(bulletRect, steelWallHealth + 1, _bulletPool, _events, _caliber,
+											  Direction::DOWN, Author::Player1)};
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_FALSE(bullet->GetIsAlive());
+	EXPECT_EQ(steelWallHealth, steelWall->GetHealth());
+}
+
+// from the third tier on steel is paid for like brick
+TEST_F(BulletTest, TierThreeBulletSinksIntoSteel)
+{
+	const auto steelWall{SpawnObstacle({.x = 0.0, .y = 6.0, .w = _gridSize, .h = _gridSize}, ObstacleType::Steel)};
+	const int steelWallHealth{steelWall->GetHealth()};
+	_caliber.tier = 3u;
+	_caliber.damage = static_cast<unsigned int>(steelWallHealth);
+	const ObjRectangle bulletRect{.x = 0.0, .y = 0.0, .w = _caliber.size.x, .h = _caliber.size.y};
+	const auto bullet{TestUtils::CreateBullet(bulletRect, steelWallHealth + 1, _bulletPool, _events, _caliber,
+											  Direction::DOWN, Author::Player1)};
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_FALSE(steelWall->GetIsAlive());
+	EXPECT_TRUE(bullet->GetIsAlive());
+}
+
+// the eagle outlives a shot - the base falls only when its health is gone
+TEST_F(BulletTest, EagleFallsOnlyWhenItsHealthIsGone)
+{
+	bool isBaseFinished{};
+	const EventSubscription baseSub{_events->AddListener([&isBaseFinished](const PlayersBaseFinishedEvent&)
+	{
+		isBaseFinished = true;
+	})};
+	const auto eagle{SpawnObstacle({.x = 0.0, .y = 6.0, .w = _gridSize, .h = _gridSize}, ObstacleType::Eagle)};
+	CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Enemy1);
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	ASSERT_TRUE(eagle->GetIsAlive());
+	EXPECT_FALSE(isBaseFinished);
+
+	eagle->TakeDamage(static_cast<unsigned int>(eagle->GetHealth()), Author::Enemy1);
+
+	EXPECT_TRUE(isBaseFinished);
 }
 
 // steel swallows a tier 1 shot whole

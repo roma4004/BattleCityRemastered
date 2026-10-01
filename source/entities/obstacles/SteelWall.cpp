@@ -7,7 +7,7 @@
 
 SteelWall::SteelWall(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const Uuid uuid,
 					 const GameConfig& gameConfig)
-	: Obstacle{rect, 1, events, uuid, gameConfig, ObstacleType::Steel, kCollision}
+	: Obstacle{rect, kWallHealth, events, uuid, gameConfig, ObstacleType::Steel, kCollision}
 {}
 
 void SteelWall::Subscribe()

@@ -8,13 +8,19 @@
 enum class Faction : char8_t;
 struct ObjRectangle;
 struct DrawEvent;
+struct PostDrawEvent;
+struct BonusShovelStatusChangeEvent;
 class GameConfig;
 class EventSystem;
 
 class EagleTile final : public Obstacle, public IFortress
 {
+	static constexpr int kHealth{100};
+
 	void Subscribe() override;
 	void OnDraw(const DrawEvent&) const;
+	void OnPostDraw(const PostDrawEvent&) const;
+	void OnBonusShovel(const BonusShovelStatusChangeEvent& event);
 
 protected:
 	void EmitDeathStatistics(Author author) override;

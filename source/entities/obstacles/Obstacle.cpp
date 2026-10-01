@@ -55,7 +55,8 @@ void Obstacle::OnDespawned(const DespawnedEvent&) { SetIsAlive(false); }
 
 void Obstacle::OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const
 {
-	event.snapshot.obstacles.push_back(ObstacleSpawnedEvent{.pos = GetPos(), .type = _obstacleType, .uuid = _uuid});
+	event.snapshot.obstacles.push_back(
+			ObstacleSnapshot{.pos = GetPos(), .type = _obstacleType, .uuid = _uuid, .health = GetHealth()});
 }
 
 namespace

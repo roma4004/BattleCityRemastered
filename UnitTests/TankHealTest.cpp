@@ -1,29 +1,37 @@
 #include "TestUtils.h"
 #include "application/GameConfig.h"
+#include "components/BonusSpawner.h"
 #include "components/BulletPool.h"
 #include "components/TankPool.h"
 #include "components/EventSystem.h"
-#include "components/events/BonusPickupEvents.h"
+#include "components/events/InputEvents.h"
 #include "components/events/ReplicationEvents.h"
+#include "components/events/TimingEvents.h"
 #include "entities/pawns/Tank.h"
+#include "enums/BonusType.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
+#include "enums/InputChannel.h"
 #include "geometry/ObjRectangle.h"
 #include "gtest/gtest.h"
 #include <memory>
 #include <vector>
 
+// the client never sees a pickup land - it learns of the heal only from the health the host reports
 class TankHealTest : public testing::Test
 {
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 	std::shared_ptr<TankPool> _tankPool{nullptr};
+	std::unique_ptr<BonusSpawner> _bonusSpawner{nullptr};
+	std::vector<EventSubscription> _instantSpawnAnimationSubs{};
 	GameConfig _gameConfig{};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	std::vector<HealthChangedEvent> _reportedHealth;
 	EventSubscription _spawnQueueSub{};
 	EventSubscription _healthSub{};
+	double _deltaTimeOneFrame{1.0 / 60.0};
 	int _tankHealth{100};
 
 	void SetUp() override
@@ -33,42 +41,56 @@ protected:
 		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, _allObjects);
 		_bulletPool = std::make_shared<BulletPool>(_events, _allObjects, _gameConfig);
 		_tankPool = std::make_shared<TankPool>(_events, _allObjects, _gameConfig, _bulletPool);
+		_bonusSpawner = std::make_unique<BonusSpawner>(_events, _allObjects, _gameConfig);
+		_instantSpawnAnimationSubs = TestUtils::WireInstantSpawnAnimations(_events);
 		_healthSub = _events->AddListener([this](const HealthChangedEvent& event)
 		{
 			_reportedHealth.push_back(event);
 		});
 	}
 
-	std::shared_ptr<Tank> CreateBot(const FPoint pos, const Author author, const unsigned short tier = 1u)
+	std::shared_ptr<Tank> CreatePlayer(const unsigned short tier = 1u)
 	{
-		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _gameConfig.tankSize, .h = _gameConfig.tankSize};
-		auto bot{TestUtils::CreateBot(rect, _tankHealth, author, _allObjects, _events, Direction::UP, _tankPool,
-									  _gameConfig, tier)};
+		const ObjRectangle rect{.x = 0.0, .y = 0.0, .w = _gameConfig.tankSize, .h = _gameConfig.tankSize};
+		auto player{TestUtils::CreatePlayer(rect, _tankHealth, Author::Player1, _allObjects, _events, Direction::DOWN,
+											_tankPool, _gameConfig, tier)};
 
-		return bot;
+		return player;
+	}
+
+	void DriveIntoBonus(const BonusType type)
+	{
+		const double tankSize{_gameConfig.tankSize};
+		constexpr bool isPressed{true};
+		_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
+		_bonusSpawner->SpawnBonus({.x = 0.0, .y = tankSize + 1.0, .w = tankSize, .h = tankSize}, type);
+
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 	}
 };
 
-//NOTE: a maxed tank returns early from the star handler, so the heal cannot ride the pickup event
-TEST_F(TankHealTest, AMaxedTankStillReportsTheHealth)
+TEST_F(TankHealTest, APickupHealIsReported)
 {
-	const auto enemy{CreateBot({.x = 100.0, .y = 100.0}, Author::Enemy1, 4u)};
+	const auto player{CreatePlayer()};
+	player->TakeDamage(1u, Author::Enemy1);
+	_reportedHealth.clear();
 
-	_events->EmitEvent(Key(Author::Enemy1), BonusStarPickupEvent{});
+	DriveIntoBonus(BonusType::Helmet);
 
-	EXPECT_GT(enemy->GetHealth(), _tankHealth);
-	ASSERT_EQ(_reportedHealth.size(), 1u);
-	EXPECT_EQ(_reportedHealth.front().health, enemy->GetHealth());
-	EXPECT_EQ(_reportedHealth.front().uuid, enemy->GetUuid());
+	ASSERT_FALSE(_reportedHealth.empty());
+	EXPECT_EQ(_reportedHealth.back().health, player->GetHealth());
+	EXPECT_EQ(_reportedHealth.back().uuid, player->GetUuid());
 }
 
-TEST_F(TankHealTest, AnUpgradingTankReportsTheHealthToo)
+//NOTE: a maxed tank returns early from the star handler - the heal must not hang on the tier going up
+TEST_F(TankHealTest, AMaxedTankStillHealsOnAStar)
 {
-	const auto enemy{CreateBot({.x = 100.0, .y = 100.0}, Author::Enemy2)};
+	const auto player{CreatePlayer(4u)};
+	const int healthBefore{player->GetHealth()};
 
-	_events->EmitEvent(Key(Author::Enemy2), BonusStarPickupEvent{});
+	DriveIntoBonus(BonusType::Star);
 
-	EXPECT_GT(enemy->GetHealth(), _tankHealth);
-	ASSERT_EQ(_reportedHealth.size(), 1u);
-	EXPECT_EQ(_reportedHealth.front().health, enemy->GetHealth());
+	EXPECT_GT(player->GetHealth(), healthBefore);
+	ASSERT_FALSE(_reportedHealth.empty());
+	EXPECT_EQ(_reportedHealth.back().health, player->GetHealth());
 }

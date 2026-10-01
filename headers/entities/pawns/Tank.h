@@ -100,8 +100,8 @@ class Tank final : public Pawn
 	//NOTE: the top tier itself, not the last one that may still be upgraded - three stars reach it
 	static constexpr unsigned short kMinTier{1u};
 	static constexpr unsigned short kMaxTier{4u};
-	//NOTE: healed by the pickup, as a share of the health the model was built with - half of it, as before
-	static constexpr double kUpgradeHealShare{0.5};
+	//NOTE: any bonus heals the tank that picked it up, with no ceiling - the surplus rides on to the next level
+	static constexpr int kPickupHeal{50};
 
 	void Upgrade(unsigned short tiers);
 
@@ -129,7 +129,7 @@ protected:
 
 	void Shot(std::optional<Uuid> withUuid = std::nullopt, std::optional<unsigned int> withDamage = std::nullopt);
 
-	void HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const;
+	void HandleBonusPickUp(const std::shared_ptr<BaseObj>& object);
 	void OnPosChanged(const PosChangedEvent& event) override;
 	[[nodiscard]] bool IsTouchBush() const;
 	[[nodiscard]] bool IsTouchIce() const;

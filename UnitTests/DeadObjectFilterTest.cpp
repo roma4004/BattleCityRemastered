@@ -115,6 +115,7 @@ TEST_F(DeadObjectFilterTest, BrickWallHitByTwoBulletsDiesOnce)
 
 	const double cell{_gameConfig.gridOffset};
 	const auto wall{SpawnObstacle(FPoint{.x = 100.0, .y = 100.0}, ObstacleType::Brick)};
+	_caliber.damage = static_cast<unsigned int>(wall->GetHealth());
 
 	CreateBullet({.x = 100.0 - _caliber.size.x, .y = 103.0}, Direction::RIGHT, Author::Player1);
 	CreateBullet({.x = 100.0 + cell, .y = 103.0}, Direction::LEFT, Author::Player1);

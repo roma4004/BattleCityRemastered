@@ -7,7 +7,7 @@
 
 BrickWall::BrickWall(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const Uuid uuid,
 					 const GameConfig& gameConfig)
-	: Obstacle{rect, 1, events, uuid, gameConfig, ObstacleType::Brick, kCollision}
+	: Obstacle{rect, kWallHealth, events, uuid, gameConfig, ObstacleType::Brick, kCollision}
 {}
 
 void BrickWall::Subscribe()

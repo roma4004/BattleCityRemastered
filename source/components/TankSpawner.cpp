@@ -322,21 +322,22 @@ void TankSpawner::OnNextLevelRequested(const NextLevelRequestedEvent&)
 		{
 			_nextLevelLoadouts.push_back(NextLevelLoadout{.type = tank.type,
 											   .tier = tank.tier,
+											   .health = tank.health,
 											   .isShipActive = tank.isShipActive});
 		}
 	}
 }
 
-unsigned short TankSpawner::LoadoutTierOf(const TankType type) const
+TankSpawner::NextLevelLoadout TankSpawner::LoadoutOf(const TankType type) const
 {
 	const auto found{std::ranges::find(_nextLevelLoadouts, type, &NextLevelLoadout::type)};
 
-	return found == _nextLevelLoadouts.end() ? 1u : found->tier;
+	return found == _nextLevelLoadouts.end() ? NextLevelLoadout{.type = type} : *found;
 }
 
-//NOTE: the tier rides in with the reset property, the ship is a pickup nobody picked up - and the
-//client hears neither, so the host says both out loud once the tank is there
-void TankSpawner::SpendLoadout(const Uuid uuid, const TankType type)
+//NOTE: the tier and the health ride in with the reset property, the ship is a pickup nobody picked up - and
+//the client hears none of it, so the host says it out loud once the tank is there
+void TankSpawner::SpendLoadout(const Uuid uuid, const TankType type, const int health)
 {
 	const auto found{std::ranges::find(_nextLevelLoadouts, type, &NextLevelLoadout::type)};
 	if (found == _nextLevelLoadouts.end())
@@ -355,6 +356,11 @@ void TankSpawner::SpendLoadout(const Uuid uuid, const TankType type)
 	if (IsHost(_gameMode) && carried.tier > 1u)
 	{
 		_events->EmitEvent(Key(uuid), TierChangedEvent{.tier = carried.tier, .uuid = uuid});
+	}
+
+	if (IsHost(_gameMode))
+	{
+		_events->EmitEvent(HealthChangedEvent{.health = health, .uuid = uuid});
 	}
 }
 
@@ -570,13 +576,16 @@ std::unique_ptr<IInputProvider> TankSpawner::MakeDriver(const TankType type) con
 void TankSpawner::DelayedSpawnStart(const ObjRectangle rect, const Uuid uuid, const TankType type,
 									const TankModel model)
 {
+	const NextLevelLoadout loadout{LoadoutOf(type)};
+	//NOTE: a wounded tank starts the level whole, a healed one keeps what it gained above that
+	const int health{std::max(loadout.health, HealthOf(model, _gameConfig.tankHealth))};
 	_delayedSpawns.push_back(DelayedTankSpawn{.uuid = uuid,
 											  .type = type,
 											  .model = model,
 											  .rect = rect,
 											  .home = rect,
-											  .health = HealthOf(model, _gameConfig.tankHealth),
-											  .tier = LoadoutTierOf(type)});
+											  .health = health,
+											  .tier = loadout.tier});
 
 	_events->EmitEvent(TankSpawnEvent{.uuid = uuid});
 
@@ -657,7 +666,7 @@ void TankSpawner::DelayedSpawnWith(const DelayedTankSpawn& params)
 		}
 
 		_events->EmitEvent(BonusReApplyEvent{.uuid = params.uuid, .author = SeatOf(params.type)});
-		SpendLoadout(params.uuid, params.type);
+		SpendLoadout(params.uuid, params.type, params.health);
 	}
 }
 

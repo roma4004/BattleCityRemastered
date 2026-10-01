@@ -5,6 +5,7 @@
 #include "components/TankPool.h"
 #include "components/EventSystem.h"
 #include "components/events/AnimationRenderEvents.h"
+#include "components/events/BonusPickupEvents.h"
 #include "components/events/SpawnEvents.h"
 #include "components/events/InputEvents.h"
 #include "components/events/TimingEvents.h"
@@ -19,6 +20,7 @@
 #include "entities/pawns/Tank.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
+#include "enums/Faction.h"
 #include "enums/ObstacleType.h"
 #include "enums/InputChannel.h"
 #include "utils/UuidUtils.h"
@@ -197,12 +199,13 @@ TEST_F(BonusTest, HelmetPickUpAndBulletCantDamageTank)
 	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
-	const int playerHealth{player->GetHealth()};
 
 	_bonusSpawner->SpawnBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize}, BonusType::Helmet);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
+	//NOTE: taken after the pickup - the pickup heals
+	const int playerHealth{player->GetHealth()};
 	CreateBullet({.x = _tankSize + 1.0, .y = 0.0}, Direction::LEFT, Author::Enemy1);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
@@ -343,6 +346,21 @@ TEST_F(BonusTest, StarNotPickUpTierTheSame)
 	EXPECT_EQ(player->GetTier(), 1u);
 }
 
+// any bonus heals the tank that picked it up, and there is no ceiling - a whole tank grows past its spawn health
+TEST_F(BonusTest, PickUpHealsAWholeTankAboveItsSpawnHealth)
+{
+	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
+	const int spawnHealth{player->GetHealth()};
+	constexpr bool isPressed{true};
+	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
+
+	_bonusSpawner->SpawnBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize}, BonusType::Helmet);
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_GT(player->GetHealth(), spawnHealth);
+}
+
 // the shovel turns the eagle's brick wall into steel
 TEST_F(BonusTest, ShovelPickUpByPlayerThenFortressWallTurnIntoSteelWall)
 {
@@ -360,6 +378,20 @@ TEST_F(BonusTest, ShovelPickUpByPlayerThenFortressWallTurnIntoSteelWall)
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_NE(dynamic_cast<FortressSteelWall*>(_fortressWall.get()), nullptr);
+}
+
+// and heals the eagle at once
+TEST_F(BonusTest, ShovelPickUpByPlayerHealsTheEagle)
+{
+	_events->EmitEvent(SpawnObstacleEvent{.rect = {.x = 0.0, .y = 0.0, .w = _gridSize, .h = _gridSize},
+										  .type = ObstacleType::Eagle});
+	const std::shared_ptr<BaseObj> eagle{_allObjects.back()};
+	const int fullHealth{eagle->GetHealth()};
+	eagle->TakeDamage(1u, Author::Enemy1);
+
+	_events->EmitEvent(BonusShovelPickupEvent{.faction = Faction::PlayerTeam});
+
+	EXPECT_EQ(fullHealth, eagle->GetHealth());
 }
 
 //TODO: add new tests, that count bricks and check that player can pickup bonus and rebuild fortress and skip if space spawn not available

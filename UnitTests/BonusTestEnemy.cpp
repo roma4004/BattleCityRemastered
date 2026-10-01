@@ -137,6 +137,20 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressSteelWallHide)
 }
 
 // NOTE: the enemy shovel ends the player's effect - left running, it swallows the next pickup as an extension
+// the enemy's shovel takes the walls away and leaves the eagle's health alone
+TEST_F(BonusTestEnemy, ShovelPickUpByEnemyLeavesTheEagleWounded)
+{
+	_events->EmitEvent(SpawnObstacleEvent{.rect = {.x = 0.0, .y = 0.0, .w = _gridSize, .h = _gridSize},
+										  .type = ObstacleType::Eagle});
+	const std::shared_ptr<BaseObj> eagle{_allObjects.back()};
+	eagle->TakeDamage(1u, Author::Player1);
+	const int woundedHealth{eagle->GetHealth()};
+
+	_events->EmitEvent(BonusShovelPickupEvent{.faction = Faction::EnemyTeam});
+
+	EXPECT_EQ(woundedHealth, eagle->GetHealth());
+}
+
 TEST_F(BonusTestEnemy, PlayerShovelWorksAgainAfterAnEnemyShovel)
 {
 	const ObjRectangle fortressRect{.x = _tankSize * 3.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize};

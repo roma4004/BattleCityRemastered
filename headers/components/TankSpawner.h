@@ -60,6 +60,7 @@ class TankSpawner final
 	{
 		TankType type{};
 		unsigned short tier{1u};
+		int health{};
 		bool isShipActive{};
 	};
 
@@ -88,8 +89,8 @@ class TankSpawner final
 
 	void Reset(const GameResetEvent& event);
 
-	[[nodiscard]] unsigned short LoadoutTierOf(TankType type) const;
-	void SpendLoadout(Uuid uuid, TankType type);
+	[[nodiscard]] NextLevelLoadout LoadoutOf(TankType type) const;
+	void SpendLoadout(Uuid uuid, TankType type, int health);
 
 	void OnSpawnDelayFinished(Uuid uuid);
 

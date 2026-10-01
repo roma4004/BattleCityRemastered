@@ -7,6 +7,7 @@
 #include "components/TankSpawner.h"
 #include "components/events/BonusPickupEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
+#include "components/events/ReplicationEvents.h"
 #include "components/events/SpawnEvents.h"
 #include "components/managers/RespawnManager.h"
 #include "entities/pawns/Tank.h"
@@ -14,6 +15,7 @@
 #include "enums/GameMode.h"
 #include "enums/RespawnGroup.h"
 #include "gtest/gtest.h"
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <memory>
@@ -198,6 +200,53 @@ TEST_F(LevelProgressionTest, TheLoadoutIsSpentOnTheFirstSpawnOfTheLevel)
 
 	ASSERT_NE(PlayerOne(), nullptr);
 	EXPECT_EQ(PlayerOne()->GetTier(), 1u);
+}
+
+// the health rides along as well - whatever the bonuses healed above the spawn health is kept
+TEST_F(LevelProgressionTest, TheHealthRidesOnToTheNextLevel)
+{
+	const int spawnHealth{PlayerOne()->GetHealth()};
+	PlayerOne()->Heal(1);
+
+	_events->EmitEvent(NextLevelRequestedEvent{});
+	StartMatch(GameResetEvent{.keepsPlayerProgress = true});
+
+	ASSERT_NE(PlayerOne(), nullptr);
+	EXPECT_GT(PlayerOne()->GetHealth(), spawnHealth);
+}
+
+// but never less than that: a wounded tank starts the next level whole
+TEST_F(LevelProgressionTest, AWoundedTankStartsTheNextLevelWhole)
+{
+	const int spawnHealth{PlayerOne()->GetHealth()};
+	PlayerOne()->TakeDamage(1u, Author::Enemy1);
+
+	_events->EmitEvent(NextLevelRequestedEvent{});
+	StartMatch(GameResetEvent{.keepsPlayerProgress = true});
+
+	ASSERT_NE(PlayerOne(), nullptr);
+	EXPECT_EQ(PlayerOne()->GetHealth(), spawnHealth);
+}
+
+// a client builds the tank from its model alone, so the host reports the health the tank brought along
+TEST_F(LevelProgressionTest, TheHostReportsTheCarriedHealth)
+{
+	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
+	StartMatch(GameResetEvent{});
+	PlayerOne()->Heal(1);
+	const int carried{PlayerOne()->GetHealth()};
+	std::vector<HealthChangedEvent> reported;
+	const EventSubscription reportSub{_events->AddListener([&reported](const HealthChangedEvent& event)
+	{
+		reported.push_back(event);
+	})};
+
+	_events->EmitEvent(NextLevelRequestedEvent{});
+	StartMatch(GameResetEvent{.keepsPlayerProgress = true});
+
+	const auto report{std::ranges::find(reported, PlayerOne()->GetUuid(), &HealthChangedEvent::uuid)};
+	ASSERT_NE(report, reported.end());
+	EXPECT_EQ(report->health, carried);
 }
 
 // lives are the other half of what travels: one is spent whenever a tank takes the field, so a level

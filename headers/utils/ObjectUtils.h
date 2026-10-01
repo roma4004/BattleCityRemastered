@@ -16,4 +16,5 @@ public:
 	[[nodiscard]] static bool IsBonus(const std::shared_ptr<BaseObj>& object);
 	[[nodiscard]] static const Bullet* AsBullet(const std::shared_ptr<BaseObj>& object);
 	[[nodiscard]] static bool IsFortress(const std::shared_ptr<BaseObj>& object);
+	[[nodiscard]] static bool IsWall(const std::shared_ptr<BaseObj>& object);
 };

@@ -766,14 +766,14 @@ TEST_F(NetworkTest, AReadyInARunningMatchIsAnsweredWithTheFieldInsteadOfTheFrame
 {
 	const Uuid standing{UuidUtils::GetRandomUuid()};
 	const Uuid inTheFrame{UuidUtils::GetRandomUuid()};
-	std::optional<std::vector<ObstacleSpawnedEvent>> field{};
+	std::optional<std::vector<ObstacleSnapshot>> field{};
 	std::vector<Uuid> spawned{};
 	std::vector<EventSubscription> subs{};
 	subs.push_back(_serverEvents->AddListener([standing](const WorldSnapshotRequestedEvent& event)
 	{
 		event.snapshot.phase = GameState::Playing;
 		event.snapshot.obstacles.push_back(
-				ObstacleSpawnedEvent{.pos = {}, .type = ObstacleType::Steel, .uuid = standing});
+				ObstacleSnapshot{.pos = {}, .type = ObstacleType::Steel, .uuid = standing});
 	}));
 	subs.push_back(_serverEvents->AddListener([this, inTheFrame](const ServerInClientReadyToStartGameEvent&)
 	{
@@ -839,14 +839,14 @@ TEST_F(NetworkTest, AReadyOwedFromTheLobbyIsPaidOnceTheMatchStarts)
 	const Uuid standing{UuidUtils::GetRandomUuid()};
 	const Uuid inTheFrame{UuidUtils::GetRandomUuid()};
 	GameState phase{GameState::Lobby};
-	std::optional<std::vector<ObstacleSpawnedEvent>> field{};
+	std::optional<std::vector<ObstacleSnapshot>> field{};
 	std::optional<Uuid> spawned{};
 	std::vector<EventSubscription> subs{};
 	subs.push_back(_serverEvents->AddListener([&phase, standing](const WorldSnapshotRequestedEvent& event)
 	{
 		event.snapshot.phase = phase;
 		event.snapshot.obstacles.push_back(
-				ObstacleSpawnedEvent{.pos = {}, .type = ObstacleType::Steel, .uuid = standing});
+				ObstacleSnapshot{.pos = {}, .type = ObstacleType::Steel, .uuid = standing});
 	}));
 	subs.push_back(_serverEvents->AddListener([this, inTheFrame](const ServerInClientReadyToStartGameEvent&)
 	{

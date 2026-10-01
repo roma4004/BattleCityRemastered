@@ -66,9 +66,10 @@ void ObstacleSpawner::OnObstacleSpawned(const ObstacleSpawnedEvent& event)
 
 void ObstacleSpawner::OnWorldSnapshotReceived(const WorldSnapshotReceivedEvent& event)
 {
-	std::ranges::for_each(event.snapshot.obstacles, [this](const ObstacleSpawnedEvent& obstacle)
+	std::ranges::for_each(event.snapshot.obstacles, [this](const ObstacleSnapshot& obstacle)
 	{
-		OnObstacleSpawned(obstacle);
+		OnObstacleSpawned(ObstacleSpawnedEvent{.pos = obstacle.pos, .type = obstacle.type, .uuid = obstacle.uuid});
+		_events->EmitEvent(Key(obstacle.uuid), HealthChangedEvent{.health = obstacle.health, .uuid = obstacle.uuid});
 	});
 }
 

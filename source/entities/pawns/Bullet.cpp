@@ -11,18 +11,24 @@
 #include "components/WorldSnapshot.h"
 #include "entities/pawns/BulletResetProperty.h"
 #include "entities/pawns/PawnProperty.h"
+#include "enums/Author.h"
 #include "enums/GameMode.h"
 #include "enums/Terrain.h"
 #include "enums/TextureType.h"
 #include "interfaces/IMoveBeh.h"
 #include "utils/ObjectUtils.h"
 #include "utils/UuidUtils.h"
+#include <algorithm>
+#include <ranges>
+#include <tuple>
 
 Bullet::Bullet(PawnProperty pawnProperty, const GameConfig& gameConfig, const BulletCaliber& caliber)
 	: Pawn{std::move(pawnProperty), gameConfig, kCollision}
 	, _caliber{caliber}
 {
-	_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _uuid, _authorUuid, _gameConfig, _caliber);
+	auto moveBeh{std::make_unique<MoveLikeBulletBeh>(_rect, _uuid, _authorUuid, _gameConfig, _caliber)};
+	_bulletMoveBeh = moveBeh.get();
+	_moveBeh = std::move(moveBeh);
 }
 
 Bullet::~Bullet()
@@ -84,7 +90,7 @@ void Bullet::TickUpdate(const double deltaTime)
 {
 	std::vector<std::shared_ptr<BaseObj>> outCollisions;
 	const bool isMove{_moveBeh->Move(_dir, deltaTime, _allObjects, outCollisions)};
-	if (!isMove)
+	if (!isMove && !SinkIntoWall(deltaTime, outCollisions))
 	{
 		DealDamage(outCollisions);
 		outCollisions.clear();
@@ -104,7 +110,48 @@ double Bullet::GetFlightSpeed() const noexcept { return _caliber.speed; }
 
 unsigned int Bullet::GetTier() const noexcept { return _caliber.tier; }
 
+//NOTE: steel gives way from the third tier on
+bool Bullet::CanBreak(const BaseObj& target) const noexcept { return target.GetIsDestructible() || _caliber.tier > 2u; }
+
+//NOTE: a layer of wall costs the shell its toughest quarter, and a shell that cannot pay detonates against it
+bool Bullet::SinkIntoWall(const double deltaTime, const std::vector<std::shared_ptr<BaseObj>>& blast)
+{
+	const std::vector<std::shared_ptr<BaseObj>> contacts{_bulletMoveBeh->GetContacts(_dir, deltaTime, _allObjects)};
+	const bool isWall{!contacts.empty() && std::ranges::all_of(contacts, [this](const std::shared_ptr<BaseObj>& contact)
+	{
+		return ObjectUtils::IsWall(contact) && CanBreak(*contact);
+	})};
+	if (!isWall)
+	{
+		return false;
+	}
+
+	const int cost{std::ranges::max(contacts | std::views::transform(&BaseObj::GetHealth))};
+	if (GetHealth() <= cost)
+	{
+		return false;
+	}
+
+	TakeDamage(static_cast<unsigned int>(cost), Author::None);
+	//NOTE: the whole blast and not a shell-wide slot - one shot has to leave a hole the shooter fits through
+	std::ignore = Blast(blast);
+
+	return true;
+}
+
 void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
+{
+	if (!Blast(objectList))
+	{
+		//NOTE: burns itself out where it stopped; BaseObj's skips Pawn's HealthChangedEvent, and nobody
+		//shot it down, so no hit goes out with it
+		BaseObj::TakeDamage(static_cast<unsigned int>(GetHealth()), _author);
+	}
+
+	_events->EmitEvent(AnimationCreateBulletExplosionEvent{.rect = _rect});
+}
+
+bool Bullet::Blast(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 {
 	bool isBulletHitBullet{};
 	for (const auto& target: objectList)
@@ -121,7 +168,7 @@ void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 			continue;
 		}
 
-		if (target->GetIsDestructible() || _caliber.tier > 2u)
+		if (CanBreak(*target))
 		{
 			target->TakeDamage(_caliber.damage, _author);
 		}
@@ -145,12 +192,5 @@ void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 		_events->EmitEvent(StatisticsBulletHitEvent{.author = _author});
 	}
 
-	if (isBulletHitBullet == false)
-	{
-		//NOTE: burns itself out where it stopped; BaseObj's skips Pawn's HealthChangedEvent, and nobody
-		//shot it down, so no hit goes out with it
-		BaseObj::TakeDamage(static_cast<unsigned int>(GetHealth()), _author);
-	}
-
-	_events->EmitEvent(AnimationCreateBulletExplosionEvent{.rect = _rect});
+	return isBulletHitBullet;
 }

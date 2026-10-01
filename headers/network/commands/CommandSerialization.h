@@ -177,11 +177,12 @@ void serialize(Archive& ar, ObjRectangle& rect, const unsigned int /*version*/)
 }
 
 template<class Archive>
-void serialize(Archive& ar, ObstacleSpawnedEvent& obstacle, const unsigned int /*version*/)
+void serialize(Archive& ar, ObstacleSnapshot& obstacle, const unsigned int /*version*/)
 {
 	ar & obstacle.pos;
 	ar & obstacle.type;
 	ar & obstacle.uuid;
+	ar & obstacle.health;
 }
 
 template<class Archive>

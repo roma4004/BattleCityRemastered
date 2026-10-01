@@ -33,7 +33,7 @@ struct TankModelSpec final
 		case TankModel::Fast:
 			return TankModelSpec{.spriteRow = 1,
 								 .speedFactor = 1.6,
-								 .healthFactor = 0.4,
+								 .healthFactor = 0.2,
 								 .bulletSpeedFactor = 1.6,
 								 .damageFactor = 1.0 / 3.0,
 								 .blastFactor = 0.8,
@@ -42,13 +42,14 @@ struct TankModelSpec final
 								 .reloadFactor = 3.6};
 		case TankModel::Power:
 			return TankModelSpec{.spriteRow = 2,
+								 .healthFactor = 0.5,
 								 .blastFactor = 1.3,
 								 .shellLengthFactor = 1.2,
 								 .reloadFactor = 2.1};
 		case TankModel::Armor:
 			return TankModelSpec{.spriteRow = 3,
 								 .speedFactor = 0.7,
-								 .healthFactor = 2.0,
+								 .healthFactor = 1.0,
 								 .bulletSpeedFactor = 0.75,
 								 .damageFactor = 4.0 / 3.0,
 								 .blastFactor = 2.0,
@@ -64,7 +65,7 @@ struct TankModelSpec final
 	}
 
 	//NOTE: also what an unknown model is built as - the wire is the only place one can come from
-	return TankModelSpec{.healthFactor = 0.7,
+	return TankModelSpec{.healthFactor = 0.35,
 						 .bulletSpeedFactor = 1.2,
 						 .damageFactor = 2.0 / 3.0,
 						 .reloadFactor = 3.0};
