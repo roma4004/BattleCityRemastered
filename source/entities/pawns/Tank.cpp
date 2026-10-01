@@ -243,7 +243,7 @@ void Tank::EmitMoved() const
 	}
 }
 
-//NOTE: half of the step, and that is the whole cost of pushing - what we shove the tank ahead by is the
+//NOTE: half of the step off ice, and that is the whole cost of pushing - what we shove the tank ahead by is the
 //room our own move is then clamped to, so a tank with a tank on its nose travels half as far
 constexpr double kShoveShare{0.5};
 
@@ -278,7 +278,8 @@ double Tank::ShoveDistance(const Direction dir, const double wanted, const int d
 	return allowed;
 }
 
-void Tank::ShoveBy(const double distance, const Direction dir, std::vector<const Tank*>& alreadyMoved)
+void Tank::ShoveBy(const double distance, const Direction dir, const double velocity,
+				   std::vector<const Tank*>& alreadyMoved)
 {
 	if (std::ranges::find(alreadyMoved, this) != alreadyMoved.end())
 	{
@@ -291,11 +292,18 @@ void Tank::ShoveBy(const double distance, const Direction dir, std::vector<const
 	{
 		if (const auto peer{std::dynamic_pointer_cast<Tank>(blocker)})
 		{
-			peer->ShoveBy(distance, dir, alreadyMoved);
+			peer->ShoveBy(distance, dir, velocity, alreadyMoved);
 		}
 	}
 
-	//NOTE: the rect by hand, not Move - on ice Move would feed the momentum of a step this tank never took
+	if (_effects.isTouchTheIce)
+	{
+		_tankMoveBeh->Carry(dir, distance, velocity);
+		EmitMoved();
+
+		return;
+	}
+
 	const ObjRectangle moved{DirectionUtils::Moved(GetRect(), distance, dir)};
 	SetPos(FPoint{.x = moved.x, .y = moved.y});
 	EmitMoved();
@@ -311,7 +319,7 @@ void Tank::ShoveAhead(const Direction dir, const double step)
 		return;
 	}
 
-	const double wanted{step * kShoveShare};
+	const double wanted{_effects.isTouchTheIce ? step : step * kShoveShare};
 	double allowed{wanted};
 	std::vector<std::shared_ptr<Tank>> pushed{};
 	for (const std::shared_ptr<BaseObj>& blocker: blockers)
@@ -333,9 +341,10 @@ void Tank::ShoveAhead(const Direction dir, const double step)
 
 	//NOTE: shared across the whole push, so the far end of the chain moves by one distance and no more
 	std::vector<const Tank*> alreadyMoved{};
-	std::ranges::for_each(pushed, [allowed, dir, &alreadyMoved](const std::shared_ptr<Tank>& peer)
+	const double velocity{_tankMoveBeh->GetVelocity(dir)};
+	std::ranges::for_each(pushed, [allowed, dir, velocity, &alreadyMoved](const std::shared_ptr<Tank>& peer)
 	{
-		peer->ShoveBy(allowed, dir, alreadyMoved);
+		peer->ShoveBy(allowed, dir, velocity, alreadyMoved);
 	});
 }
 

@@ -11,6 +11,8 @@
 enum class PlayerSlot : std::uint8_t;
 struct PauseStatusEvent;
 struct PreDrawUserInterfaceEvent;
+struct PostDrawUserInterfaceEvent;
+struct ScoreBoardShowedEvent;
 struct GameResetEvent;
 struct GameModeAppliedEvent;
 struct DemoStartedEvent;
@@ -38,6 +40,8 @@ class GameStateManager final
 	//NOTE: seats, not a count - a seat whose client drops before its ready was never taken
 	std::bitset<2> _readySeats{};
 	bool _isDemo{};
+	bool _isPaused{};
+	bool _isScoreBoardShown{};
 
 	void Subscribe();
 	void SetState(GameState state);
@@ -65,7 +69,10 @@ class GameStateManager final
 	void FreeSeat(PlayerSlot slot);
 	void LoseHost();
 
+	void OnScoreBoardShowed(const ScoreBoardShowedEvent& event);
+	[[nodiscard]] bool IsPauseShown() const;
 	void Draw(const PreDrawUserInterfaceEvent&) const;
+	void DrawOverScoreBoard(const PostDrawUserInterfaceEvent&) const;
 	void Reset(const GameResetEvent&);
 
 public:

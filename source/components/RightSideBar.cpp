@@ -38,6 +38,7 @@ void RightSideBar::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &RightSideBar::OnDrawUserInterface));
 	_subs.push_back(_events->AddListener(this, &RightSideBar::OnRespawnCountChangedTo));
+	_subs.push_back(_events->AddListener(this, &RightSideBar::OnMapLoaded));
 }
 
 void RightSideBar::OnDrawUserInterface(const DrawUserInterfaceEvent&) const { Draw(); }
@@ -87,3 +88,5 @@ void RightSideBar::OnRespawnCountChangedTo(const RespawnCountChangedToEvent& eve
 			return;
 	}
 }
+
+void RightSideBar::OnMapLoaded(const MapLoadedEvent& event) { _stageNumber = event.stage; }

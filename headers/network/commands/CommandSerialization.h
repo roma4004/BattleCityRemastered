@@ -274,6 +274,7 @@ void serialize(Archive& ar, MapLoadedEvent& map, const unsigned int /*version*/)
 {
 	ar & map.cols;
 	ar & map.rows;
+	ar & map.stage;
 }
 
 template<class Archive>

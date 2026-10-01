@@ -197,12 +197,15 @@ bool MoveLikeTankBeh::Move(const Direction dir, const double deltaTime,
 
 bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime, const std::vector<std::shared_ptr<BaseObj>>& objects)
 {
+	const std::optional<Direction> carriedTo{_carriedTo};
+	_carriedTo.reset();
+
 	bool isDrift{};
 	double speed{_speed * deltaTime};
 	for (const Direction dir: {Direction::UP, Direction::LEFT, Direction::DOWN, Direction::RIGHT})
 	{
 		double& velocity{_velocity[static_cast<size_t>(dir)]};
-		if (velocity <= speed)
+		if (dir == carriedTo || velocity <= speed)
 		{
 			continue;
 		}
@@ -226,7 +229,22 @@ bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime, const std::vecto
 	return isDrift;
 }
 
-void MoveLikeTankBeh::ResetVelocity() { _velocity.fill(0.0); }
+double MoveLikeTankBeh::GetVelocity(const Direction dir) const { return _velocity[static_cast<size_t>(dir)]; }
+
+void MoveLikeTankBeh::Carry(const Direction dir, const double distance, const double velocity)
+{
+	_rect = DirectionUtils::Moved(_rect, distance, dir);
+
+	double& own{_velocity[static_cast<size_t>(dir)]};
+	own = std::max(own, velocity);
+	_carriedTo = dir;
+}
+
+void MoveLikeTankBeh::ResetVelocity()
+{
+	_velocity.fill(0.0);
+	_carriedTo.reset();
+}
 
 std::vector<Direction> MoveLikeTankBeh::GetFreePathSides(
 		const double deltaTime, const std::optional<Direction> excludeDirection,

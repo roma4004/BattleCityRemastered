@@ -190,6 +190,21 @@ TEST_F(WorldSnapshotTest, TheFieldsSizeComesFromTheHost)
 	EXPECT_EQ(_clientConfig.battlefieldSize, _hostConfig.battlefieldSize);
 }
 
+// nor which stage it is - the client only shows the host's count
+TEST_F(WorldSnapshotTest, TheStageNumberComesFromTheHost)
+{
+	unsigned short clientStage{};
+	_subs.push_back(_clientEvents->AddListener([&clientStage](const MapLoadedEvent& event)
+	{
+		clientStage = event.stage;
+	}));
+	_serverEvents->EmitEvent(MapLoadedEvent{.cols = 61u, .rows = 50u, .stage = 3u});
+
+	Replicate();
+
+	EXPECT_EQ(clientStage, 3u);
+}
+
 // what the host has already lost is not in the snapshot, so the client does not build it
 TEST_F(WorldSnapshotTest, AWallDestroyedOnTheHostIsNotRebuiltOnTheClient)
 {

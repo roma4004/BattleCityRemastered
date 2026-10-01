@@ -128,6 +128,11 @@ void Simulation::OnGameModeChangedTo(const GameModeChangedToEvent& event)
 //say - it puts the menu back up, and nothing here paints over that
 void Simulation::OnMatchStarted(const MatchStartedEvent&)
 {
+	if (!_isNextLevel)
+	{
+		_gameConfig.stageNumber = 1u;
+	}
+
 	_events->EmitEvent(GameResetEvent{.keepsPlayerProgress = _isNextLevel});
 	_isNextLevel = false;
 
@@ -154,6 +159,7 @@ void Simulation::OnNextLevelRequested(const NextLevelRequestedEvent&)
 void Simulation::StartNextLevel()
 {
 	_gameConfig.mapPath = _levels.PathAfter(_gameConfig.mapPath);
+	++_gameConfig.stageNumber;
 	_isNextLevel = true;
 
 	Log::Info("next level runs on " + _gameConfig.mapPath);

@@ -389,9 +389,7 @@ void Client::OnDisconnect(const Disconnect& command)
 {
 	const auto reason{command.reason};
 
-	//NOTE: on the network thread, not in the queued lambda - the EOF arrives well before the game
-	//thread drains the queue, and HandleDisconnect must already know why
-	//NOTE: giving up is what makes a kick stick - dialling back would take the seat again
+	//NOTE: here, not in the queued lambda - HandleDisconnect must know before the queue drains; no redial keeps a kick
 	_isLinkUnrecoverable = reason == DisconnectReason::ProtocolError || reason == DisconnectReason::Kicked;
 	_isWaitingForSeat = reason == DisconnectReason::ServerFull;
 

@@ -184,3 +184,24 @@ TEST_F(TankShoveTest, TheChainStandsWhenItsFarEndCannotMove)
 
 	EXPECT_DOUBLE_EQ(near->ShoveDistance(Direction::RIGHT, wanted, 1), 0.0);
 }
+
+// on ice the shoved tank glides on after the pusher lets go
+TEST_F(TankShoveTest, ATankShovedOnIceSlidesOnAfterThePusherStops)
+{
+	CreatePlayer({.x = 0.0, .y = _tankSize * 2.0}, Author::Player1, Direction::RIGHT);
+	const auto pushed{CreatePlayer({.x = _tankSize, .y = _tankSize * 2.0}, Author::Player2, Direction::UP)};
+	SpawnObstacleArea(ObjRectangle{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize * 8.0, .h = _tankSize},
+					  ObstacleType::Ice);
+
+	constexpr int framesPushing{10};
+	for (int frame{}; frame < framesPushing; ++frame)
+	{
+		DriveP1Right();
+	}
+	_events->EmitEvent(Key(InputChannel::LocalP1), MoveRightEvent{.isPressed = false});
+	const double pushedX{pushed->GetPos().x};
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_GT(pushed->GetPos().x, pushedX) << "the shoved tank stopped dead on ice";
+}

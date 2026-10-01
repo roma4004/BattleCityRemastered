@@ -59,6 +59,17 @@ TEST_F(NextLevelFlowTest, TheWorldIsResetOnceForTheNextLevel)
 	EXPECT_EQ(1, std::ranges::count(_order, "map"));
 }
 
+// a restart is a new run, not one more level of the old one
+TEST_F(NextLevelFlowTest, ARestartStartsOverFromTheFirstStage)
+{
+	WinAndAskForTheNextLevel();
+	ASSERT_EQ(_gameConfig.stageNumber, 2u) << "the control failed - the next level did not count";
+
+	_events->EmitEvent(MatchRestartRequestedEvent{});
+
+	EXPECT_EQ(_gameConfig.stageNumber, 1u);
+}
+
 // the ask is answered a step later, so every listener of it still sees the field it has to read
 TEST_F(NextLevelFlowTest, TheFieldStandsUntilTheFrameEnds)
 {

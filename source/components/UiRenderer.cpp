@@ -69,6 +69,9 @@ constexpr Point kSideBarStageSize{.x = kSideBarItemWidth, .y = 95};
 constexpr double kPausePlateShare{0.40};
 constexpr double kGameOverPlateShare{0.27};
 constexpr double kGameWonPlateShare{0.16};
+//NOTE: a plate's middle, as a share of the field height - the end of a match keeps clear of a pause
+constexpr double kPausePlateMiddle{0.5};
+constexpr double kMatchEndPlateMiddle{0.25};
 
 int PanelRowHeight(const int pointSize) { return pointSize * kPanelRowHeight / kFitStartPointSize; }
 
@@ -280,7 +283,8 @@ void UiRenderer::RenderFPS(const RenderFPSEvent& event) const
 void UiRenderer::DrawPlate(const RenderPlateEvent& event) const
 {
 	const auto [width, height]{Icon(event.plate).size};
-	DrawIcon(event.plate, CenteredInField(width, height));
+	const double middle{event.plate == UiIcon::PlatePause ? kPausePlateMiddle : kMatchEndPlateMiddle};
+	DrawIcon(event.plate, CenteredInField(width, height, middle));
 }
 
 UiRenderer::IconSource UiRenderer::Icon(const UiIcon icon) const
@@ -457,12 +461,12 @@ float UiRenderer::CurrentRenderScale() const
 	return scale > 0.f ? scale : 1.f;
 }
 
-SDL_Rect UiRenderer::CenteredInField(const int width, const int height) const
+SDL_Rect UiRenderer::CenteredInField(const int width, const int height, const double middleShare) const
 {
 	const UPoint field{_gameConfig.battlefieldSize};
 
 	return SDL_Rect{.x = (static_cast<int>(field.x) - width) / 2,
-					.y = (static_cast<int>(field.y) - height) / 2,
+					.y = static_cast<int>(static_cast<double>(field.y) * middleShare) - height / 2,
 					.w = width,
 					.h = height};
 }

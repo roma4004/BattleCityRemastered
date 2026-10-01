@@ -88,7 +88,7 @@ class UiRenderer final
 
 	//NOTE: the map decides the field, so a plate is placed against it - fixed numbers were the middle
 	//of the first map and stayed where they were when it grew
-	[[nodiscard]] SDL_Rect CenteredInField(int width, int height) const;
+	[[nodiscard]] SDL_Rect CenteredInField(int width, int height, double middleShare) const;
 	//NOTE: the field says how wide the plate is, the sprite says what shape - so a bigger map moves it
 	//and grows it without stretching the picture
 	[[nodiscard]] Point PlateSize(const ObjRectangle& sprite, double widthShare) const;

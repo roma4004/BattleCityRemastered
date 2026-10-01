@@ -126,6 +126,7 @@ struct MapLoadedEvent
 {
 	std::size_t cols;
 	std::size_t rows;
+	unsigned short stage{};
 };
 
 //NOTE: the reason is already in the log - this only says the world never got filled, so whoever started

@@ -21,6 +21,7 @@ class MoveLikeTankBeh final : public IMoveBeh
 	//NOTE: indexed by Direction
 	std::array<double, 4> _velocity{};
 	double _driftMultiplicator{1.5};
+	std::optional<Direction> _carriedTo{};
 	const GameConfig& _gameConfig;
 
 	[[nodiscard]] bool IsBlocking(const std::shared_ptr<BaseObj>& object, const ObjRectangle& nextPosRect) const;
@@ -53,6 +54,8 @@ public:
 	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>> BlockersAhead(
 			Direction dir, double step, const std::vector<std::shared_ptr<BaseObj>>& objects) const;
 	[[nodiscard]] bool ApplyMoveVelocity(double deltaTime, const std::vector<std::shared_ptr<BaseObj>>& objects);
+	[[nodiscard]] double GetVelocity(Direction dir) const;
+	void Carry(Direction dir, double distance, double velocity);
 	void ResetVelocity();
 	[[nodiscard]] std::vector<Direction> GetFreePathSides(
 			double deltaTime, std::optional<Direction> excludeDirection,

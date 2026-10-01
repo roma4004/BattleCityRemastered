@@ -22,6 +22,8 @@ void GameStateManager::Subscribe()
 	_subs.push_back(_events->AddListener(this, &GameStateManager::OnDemoStarted));
 	_subs.push_back(_events->AddListener(this, &GameStateManager::OnPauseStatus));
 	_subs.push_back(_events->AddListener(this, &GameStateManager::Draw));
+	_subs.push_back(_events->AddListener(this, &GameStateManager::DrawOverScoreBoard));
+	_subs.push_back(_events->AddListener(this, &GameStateManager::OnScoreBoardShowed));
 	_subs.push_back(_events->AddListener(this, &GameStateManager::Reset));
 	_subs.push_back(_events->AddListener(this, &GameStateManager::OnGameFinished));
 	_subs.push_back(_events->AddListener(this, &GameStateManager::OnMapLoadFailed));
@@ -100,6 +102,8 @@ void GameStateManager::OnDemoStarted(const DemoStartedEvent&)
 
 void GameStateManager::OnPauseStatus(const PauseStatusEvent& event)
 {
+	_isPaused = event.isPaused;
+
 	if (event.isPaused && _state == GameState::Playing)
 	{
 		SetState(GameState::Paused);
@@ -198,10 +202,29 @@ void GameStateManager::OnWorldSnapshotRequested(const WorldSnapshotRequestedEven
 	event.snapshot.phase = _state;
 }
 
+void GameStateManager::OnScoreBoardShowed(const ScoreBoardShowedEvent& event)
+{
+	_isScoreBoardShown = event.isDisplayed;
+}
+
+bool GameStateManager::IsPauseShown() const
+{
+	return _state == GameState::Paused || (_isPaused && (IsInMatch(_state) || _state == GameState::Demo));
+}
+
 //NOTE: the pause only - the end of a match is the scoreboard's, which shows its plate on itself or in the field
 void GameStateManager::Draw(const PreDrawUserInterfaceEvent&) const
 {
-	if (_state == GameState::Paused)
+	if (IsPauseShown() && !_isScoreBoardShown)
+	{
+		_events->EmitEvent(RenderPlateEvent{.plate = UiIcon::PlatePause});
+	}
+}
+
+//NOTE: after the board, not before - its see-through panel would lay the statistics over the plate
+void GameStateManager::DrawOverScoreBoard(const PostDrawUserInterfaceEvent&) const
+{
+	if (IsPauseShown() && _isScoreBoardShown)
 	{
 		_events->EmitEvent(RenderPlateEvent{.plate = UiIcon::PlatePause});
 	}

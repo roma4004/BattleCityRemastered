@@ -63,5 +63,6 @@ public:
 	//NOTE: the level the next match loads - the console picks it, and a client never reads a map at
 	//all, so the change rides along with the restart that follows it
 	std::string mapPath{"Resources/Maps/level1.map"};
+	unsigned short stageNumber{1u};
 	bool isMuted{};
 };

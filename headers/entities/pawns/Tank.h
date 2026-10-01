@@ -55,7 +55,7 @@ class Tank final : public Pawn
 	void EmitMoved() const;
 
 	//NOTE: a tank ahead gives way instead of standing like a wall - it is shoved along our own heading
-	//before we move, and what is left of the room is all our own step gets, so pushing is the slower way
+	//before we move, and what is left of the room is all our own step gets
 	void ShoveAhead(Direction dir, double step);
 	void ApplyFreshLoadout();
 
@@ -160,10 +160,8 @@ public:
 	//NOTE: leaning in, not just facing - a parked tank gives way, one pressing towards us holds the chain
 	[[nodiscard]] bool IsDrivingAgainst(Direction dir) const;
 
-	//NOTE: moves this tank and whatever it is pushing, and says so - a shoved tank does not move in its
-	//own TickUpdate, so nothing else would tell the client or the animation where it went
-	//NOTE: the chain is a graph, not a line - two tanks can both lean on a third, and it gives way once
-	void ShoveBy(double distance, Direction dir, std::vector<const Tank*>& alreadyMoved);
+	//NOTE: two tanks can lean on a third - alreadyMoved makes it give way once
+	void ShoveBy(double distance, Direction dir, double velocity, std::vector<const Tank*>& alreadyMoved);
 
 	//NOTE: what the driver needs of the tank it drives
 	[[nodiscard]] bool CanShoot() const noexcept;

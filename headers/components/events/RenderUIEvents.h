@@ -53,7 +53,7 @@ struct MenuTilesPlacedEvent
 };
 
 
-//NOTE: a plate in the middle of the field - the pause, or the end of a match nobody shows a scoreboard for
+//NOTE: a plate over the field - the pause, or the end of a match nobody shows a scoreboard for
 struct RenderPlateEvent
 {
 	UiIcon plate{};
