@@ -17,6 +17,49 @@
 #include <ranges>
 #include <string>
 
+namespace
+{
+bool UpdateFrame(AnimatedObject& object)
+{
+	if (object.markToDispose || object.speed <= 0)
+	{
+		return false;
+	}
+
+	if (++object.ticksSinceLastFrame % object.speed != 0)
+	{
+		return false;
+	}
+
+	object.ticksSinceLastFrame = 0;
+	if (++object.currentFrameIndex >= object.size)
+	{
+		object.currentFrameIndex = 0;
+
+		if (object.passes != kEndlessAnimation && ++object.passesDone >= object.passes)
+		{
+			object.markToDispose = true;
+
+			return true;
+		}
+	}
+
+	return false;
+}
+
+constexpr auto IsEnabled = [](const AnimatedObject& object) { return !object.markToDispose; };
+
+AnimatedObject* FindReusable(std::vector<AnimatedObject>& container, const AnimationType type)
+{
+	const auto it{std::ranges::find_if(container, [type](const AnimatedObject& object)
+	{
+		return object.type == type && object.markToDispose;
+	})};
+
+	return it != container.end() ? std::to_address(it) : nullptr;
+}
+}//namespace
+
 AnimationManager::AnimationManager(const std::shared_ptr<EventSystem>& events)
 	: _events(events)
 {
@@ -81,11 +124,6 @@ void AnimationManager::OnPostTickUpdate(const PostTickUpdateEvent&)
 	{
 		_events->EmitEvent(SpawnAnimationFinishedEvent{.uuid = owner});
 	}
-}
-
-namespace
-{
-constexpr auto IsEnabled = [](const AnimatedObject& object) { return !object.markToDispose; };
 }
 
 void AnimationManager::OnDraw(const DrawEvent&) const
@@ -285,34 +323,6 @@ void AnimationManager::CreateAnimation(const AnimationType type, const ObjRectan
 						 .tier = extras.tier});
 }
 
-bool AnimationManager::UpdateFrame(AnimatedObject& object)
-{
-	if (object.markToDispose || object.speed <= 0)
-	{
-		return false;
-	}
-
-	if (++object.ticksSinceLastFrame % object.speed != 0)
-	{
-		return false;
-	}
-
-	object.ticksSinceLastFrame = 0;
-	if (++object.currentFrameIndex >= object.size)
-	{
-		object.currentFrameIndex = 0;
-
-		if (object.passes != kEndlessAnimation && ++object.passesDone >= object.passes)
-		{
-			object.markToDispose = true;
-
-			return true;
-		}
-	}
-
-	return false;
-}
-
 void AnimationManager::OnHelmetEffect(const Author author, const bool isEnable)
 {
 	if (!isEnable)
@@ -397,14 +407,4 @@ void AnimationManager::DisableHelmetEffect(const Author author)
 	})};
 
 	std::ranges::for_each(matching, [](AnimatedObject& object) { object.markToDispose = true; });
-}
-
-AnimatedObject* AnimationManager::FindReusable(std::vector<AnimatedObject>& container, const AnimationType type)
-{
-	const auto it{std::ranges::find_if(container, [type](const AnimatedObject& object)
-	{
-		return object.type == type && object.markToDispose;
-	})};
-
-	return it != container.end() ? std::to_address(it) : nullptr;
 }

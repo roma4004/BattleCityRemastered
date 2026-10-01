@@ -32,8 +32,6 @@ class MoveLikeTankBeh final : public IMoveBeh
 											  const std::vector<std::shared_ptr<BaseObj>>& objects,
 											  std::vector<std::shared_ptr<BaseObj>>& outTouched) const;
 
-	[[nodiscard]] static double ShiftToClear(const ObjRectangle& rect, const ObjRectangle& blocker, Direction lateral);
-
 	//NOTE: a wall with an opening beside it - the tank is steered in rather than left standing, but only
 	//when it is already more than half inside
 	[[nodiscard]] bool NudgeIntoGap(Direction dir, double step,

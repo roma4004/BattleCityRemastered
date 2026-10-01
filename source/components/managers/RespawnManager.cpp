@@ -18,6 +18,11 @@
 #include <memory>
 #include <ranges>
 
+namespace
+{
+bool IsEnemyGroup(const RespawnGroup group) noexcept { return group == RespawnGroup::ENEMY_ALL; }
+}//namespace
+
 RespawnManager::RespawnManager(const std::shared_ptr<EventSystem>& events, const GameMode gameMode)
 	: _events{events}
 	, _gameMode{gameMode}
@@ -225,11 +230,6 @@ void RespawnManager::OnTankSpawn(const TankSpawnEvent& event)
 			++_playersSpawnCount;
 		}
 	}
-}
-
-bool RespawnManager::IsEnemyGroup(const RespawnGroup group) noexcept
-{
-	return group == RespawnGroup::ENEMY_ALL;
 }
 
 void RespawnManager::OnEnemyDied(const bool isAvailable)

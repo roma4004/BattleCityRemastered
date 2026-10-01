@@ -91,13 +91,10 @@ private:
 		void operator()(TTF_TextEngine* engine) const noexcept;
 	};
 
-	[[nodiscard]] static int PixelSize(int basePointSize, float scale);
 	[[nodiscard]] bool IsReady() const;
 	[[nodiscard]] TTF_Font* FontForScale(int basePointSize, float scale);
 	[[nodiscard]] TTF_TextEngine* Engine();
 	[[nodiscard]] CachedText LayOut(std::string_view text, TTF_Font* font, float scale);
-	//NOTE: logical units - the layout itself is in output pixels
-	[[nodiscard]] static Point SizeOfLaidOut(TTF_Text* text, float scale);
 	//NOTE: the layouts alone - the fonts are keyed by final pixel size and the engine belongs to the
 	//renderer, so a scale change leaves both valid
 	void SyncScale(float scale);

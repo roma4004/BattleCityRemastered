@@ -82,25 +82,6 @@ double MoveLikeTankBeh::GetTravelledDistance(const double step, const Direction 
 	return travelled;
 }
 
-//NOTE: exactly onto the edge, not a pixel past - a corridor is cut to the tank's own width, so any
-//overshoot lands in the far wall
-double MoveLikeTankBeh::ShiftToClear(const ObjRectangle& rect, const ObjRectangle& blocker, const Direction lateral)
-{
-	switch (lateral)
-	{
-		case Direction::LEFT:
-			return rect.Right() - blocker.x;
-		case Direction::RIGHT:
-			return blocker.Right() - rect.x;
-		case Direction::UP:
-			return rect.Bottom() - blocker.y;
-		case Direction::DOWN:
-			return blocker.Bottom() - rect.y;
-	}
-
-	return 0.0;
-}
-
 bool MoveLikeTankBeh::NudgeIntoGap(const Direction dir, const double step,
 								   const std::vector<std::shared_ptr<BaseObj>>& objects,
 								   const std::vector<std::shared_ptr<BaseObj>>& blockers)
@@ -113,7 +94,8 @@ bool MoveLikeTankBeh::NudgeIntoGap(const Direction dir, const double step,
 		double needed{};
 		for (const std::shared_ptr<BaseObj>& blocker: blockers)
 		{
-			needed = std::max(needed, ShiftToClear(_rect, blocker->GetRect(), lateral));
+			//NOTE: exactly onto the edge - a corridor is cut to the tank's width, an overshoot lands in the far wall
+			needed = std::max(needed, DirectionUtils::DistanceOutOfLane(_rect, blocker->GetRect(), lateral));
 		}
 
 		//NOTE: the border is not an opening - without this the nudge walks the tank off the field, and

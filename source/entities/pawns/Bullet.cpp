@@ -15,6 +15,7 @@
 #include "enums/Terrain.h"
 #include "enums/TextureType.h"
 #include "interfaces/IMoveBeh.h"
+#include "utils/ObjectUtils.h"
 #include "utils/UuidUtils.h"
 
 Bullet::Bullet(PawnProperty pawnProperty, const GameConfig& gameConfig, const BulletCaliber& caliber)
@@ -125,7 +126,7 @@ void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 			target->TakeDamage(_caliber.damage, _author);
 		}
 
-		const auto* otherBullet{dynamic_cast<Bullet*>(baseObj)};
+		const auto* otherBullet{ObjectUtils::AsBullet(target)};
 		if (otherBullet == nullptr)
 		{
 			continue;

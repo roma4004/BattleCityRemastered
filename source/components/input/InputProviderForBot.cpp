@@ -2,14 +2,12 @@
 #include "application/GameConfig.h"
 #include "components/LineOfSight.h"
 #include "entities/BaseObj.h"
-#include "entities/obstacles/IFortress.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/Tank.h"
 #include "enums/Direction.h"
 #include "enums/Faction.h"
 #include "geometry/ObjRectangle.h"
 #include "geometry/Point.h"
-#include "interfaces/IPickupableBonus.h"
 #include "utils/ColliderUtils.h"
 #include "utils/DirectionUtils.h"
 #include "utils/ObjectUtils.h"
@@ -20,6 +18,50 @@
 #include <random>
 
 using namespace std::chrono_literals;
+
+namespace
+{
+//NOTE: a bot must not fire into something closer than its own blast, or the shot takes it too
+bool IsClearToFire(const Tank& self, const Direction dir, const BaseObj& target)
+{
+	const double gap{DirectionUtils::GapTo(self.GetRect(), target.GetRect(), dir)};
+	//NOTE: the hull drives on while the shell flies; timed over the whole gap, the spare covers a frame's step
+	const double drivenDuringFlight{gap * self.GetSpeed() / self.GetBulletSpeed()};
+
+	//NOTE: the shell blows up mid-length, half its height short of the target; height runs along any flight
+	return gap - drivenDuringFlight >= self.GetBulletDamageRadius() + self.GetBulletHeight() / 2.0;
+}
+
+std::shared_ptr<BaseObj> NearestAhead(LineOfSight& lineOfSight, const Direction dir)
+{
+	const std::vector<std::shared_ptr<BaseObj>>& obstacles{lineOfSight.SideObstacles(dir)};
+
+	return obstacles.empty() ? nullptr : obstacles.front();
+}
+
+//NOTE: a bot in the player team is defending the eagle, so it never fires at the fortress
+bool ShouldShootObstacle(const Tank& self, const std::shared_ptr<BaseObj>& obj)
+{
+	if (obj == nullptr || ObjectUtils::IsAlly(self, obj))
+	{
+		return false;
+	}
+
+	if ((!obj->GetIsDestructible() && self.GetTier() <= 2u) || obj->GetIsPenetrable())// skip water, ice, bush
+	{
+		return false;
+	}
+
+	//NOTE: the eagle and the walls around it - a player's bot shooting those would lose the match for its own side
+	return self.GetFaction() == Faction::EnemyTeam || !ObjectUtils::IsFortress(obj);
+}
+
+//NOTE: what the hull is held for - a wall waits, and a shell coming at us is the intercept's business
+bool IsOpponentTankInSights(const Tank& self, const std::shared_ptr<BaseObj>& target)
+{
+	return self.CanShoot() && ObjectUtils::IsOpponent(self, target) && ObjectUtils::AsBullet(target) == nullptr;
+}
+}//namespace
 
 InputProviderForBot::InputProviderForBot(const std::vector<std::shared_ptr<BaseObj>>& allObjects,
 										 const GameConfig& gameConfig)
@@ -32,31 +74,6 @@ InputProviderForBot::InputProviderForBot(const std::vector<std::shared_ptr<BaseO
 
 InputProviderForBot::~InputProviderForBot() = default;
 
-bool InputProviderForBot::IsOpponent(const Tank& self, const std::shared_ptr<BaseObj>& obstacle)
-{
-	return obstacle->GetFaction() != self.GetFaction() && obstacle->GetFaction() != Faction::Neutral;
-}
-
-bool InputProviderForBot::IsAlly(const Tank& self, const std::shared_ptr<BaseObj>& obstacle)
-{
-	return obstacle->GetFaction() == self.GetFaction();
-}
-
-bool InputProviderForBot::IsBonus(const std::shared_ptr<BaseObj>& obstacle)
-{
-	if (dynamic_cast<IPickupableBonus*>(obstacle.get()))
-	{
-		return true;
-	}
-
-	return false;
-}
-
-const Bullet* InputProviderForBot::AsBullet(const std::shared_ptr<BaseObj>& obstacle)
-{
-	return dynamic_cast<Bullet*>(obstacle.get());
-}
-
 bool InputProviderForBot::IsShotStoppedOnTheWay(const ObjRectangle& corridor, const BaseObj& bullet,
 												const Tank& self) const
 {
@@ -64,7 +81,7 @@ bool InputProviderForBot::IsShotStoppedOnTheWay(const ObjRectangle& corridor, co
 	const auto stopsIt = [&corridor, &bullet, &self](const std::shared_ptr<BaseObj>& object)
 	{
 		return ObjectUtils::IsAlive(object) && object.get() != &bullet && object.get() != &self
-			   && AsBullet(object) == nullptr && !object->GetIsPenetrable()
+			   && ObjectUtils::AsBullet(object) == nullptr && !object->GetIsPenetrable()
 			   && ColliderUtils::IsCollide(corridor, object->GetRect());
 	};
 
@@ -79,12 +96,12 @@ InputProviderForBot::BulletThreat InputProviderForBot::FindBulletThreat(const Ta
 	BulletThreat nearest{};
 	for (const std::shared_ptr<BaseObj>& object: _allObjects)
 	{
-		if (!ObjectUtils::IsAlive(object) || IsAlly(self, object))
+		if (!ObjectUtils::IsAlive(object) || ObjectUtils::IsAlly(self, object))
 		{
 			continue;
 		}
 
-		const Bullet* bullet{AsBullet(object)};
+		const Bullet* bullet{ObjectUtils::AsBullet(object)};
 		if (bullet == nullptr)
 		{
 			continue;
@@ -180,7 +197,7 @@ bool InputProviderForBot::ChangeDirIfSeenBonus(Tank& self, const Direction dir,
 		return false;
 	}
 
-	if (!IsBonus(sideObstacle.front()) || !CanDriveToBonus(self, dir))
+	if (!ObjectUtils::IsBonus(sideObstacle.front()) || !CanDriveToBonus(self, dir))
 	{
 		return false;
 	}
@@ -201,7 +218,7 @@ bool InputProviderForBot::CanDriveToBonus(const Tank& self, const Direction dir)
 
 	const std::vector<std::shared_ptr<BaseObj>>& obstacles{_driveLineOfSight->SideObstacles(dir)};
 
-	return !obstacles.empty() && IsBonus(obstacles.front());
+	return !obstacles.empty() && ObjectUtils::IsBonus(obstacles.front());
 }
 
 bool InputProviderForBot::ChangeDirIfSeenOpponent(Tank& self, const Direction dir,
@@ -214,7 +231,7 @@ bool InputProviderForBot::ChangeDirIfSeenOpponent(Tank& self, const Direction di
 
 	//NOTE: a bullet carries its shooter's faction, so it used to read as a tank, and the bot drove at the shot
 	if (const auto& nearestSeenObstacle{sideObstacle.front()};
-		IsOpponent(self, nearestSeenObstacle) && AsBullet(nearestSeenObstacle) == nullptr)
+		ObjectUtils::IsOpponent(self, nearestSeenObstacle) && ObjectUtils::AsBullet(nearestSeenObstacle) == nullptr)
 	{
 		if (dir == self.GetDirection() || !HasNoticed(self, dir, *nearestSeenObstacle))
 		{
@@ -249,16 +266,6 @@ std::shared_ptr<BaseObj> InputProviderForBot::Lookup(Tank& self, LineOfSight& li
 	}
 
 	return {};
-}
-
-bool InputProviderForBot::IsClearToFire(const Tank& self, const Direction dir, const BaseObj& target)
-{
-	const double gap{DirectionUtils::GapTo(self.GetRect(), target.GetRect(), dir)};
-	//NOTE: the hull drives on while the shell flies; timed over the whole gap, the spare covers a frame's step
-	const double drivenDuringFlight{gap * self.GetSpeed() / self.GetBulletSpeed()};
-
-	//NOTE: the shell blows up mid-length, half its height short of the target; height runs along any flight
-	return gap - drivenDuringFlight >= self.GetBulletDamageRadius() + self.GetBulletHeight() / 2.0;
 }
 
 //NOTE: the rung is read off the hull at the moment of the sighting - a shot on its way here moves it one up
@@ -339,13 +346,6 @@ std::shared_ptr<BaseObj> InputProviderForBot::TurnOntoNearestSeen(Tank& self)
 	return seen;
 }
 
-std::shared_ptr<BaseObj> InputProviderForBot::NearestAhead(LineOfSight& lineOfSight, const Direction dir)
-{
-	const std::vector<std::shared_ptr<BaseObj>>& obstacles{lineOfSight.SideObstacles(dir)};
-
-	return obstacles.empty() ? nullptr : obstacles.front();
-}
-
 void InputProviderForBot::PostponeRandomTurn()
 {
 	_randomChangeDirTimer.Reset(RandUtils::GetRandDuration(kMinTurnDelay, kMaxTurnDelay));
@@ -386,13 +386,13 @@ bool InputProviderForBot::ShouldShootOpponent(const Tank& self, const std::share
 		return false;
 	}
 
-	if (IsAlly(self, obj))
+	if (ObjectUtils::IsAlly(self, obj))
 	{
 		return false;
 	}
 
 	//NOTE: asked only with the gun loaded - reloading, its one answer is to leave the line
-	if (IsOpponent(self, obj) && self.CanShoot())
+	if (ObjectUtils::IsOpponent(self, obj) && self.CanShoot())
 	{
 		const Direction heading{self.GetDirection()};
 
@@ -400,28 +400,6 @@ bool InputProviderForBot::ShouldShootOpponent(const Tank& self, const std::share
 	}
 
 	return false;
-}
-
-bool InputProviderForBot::IsFortress(const std::shared_ptr<BaseObj>& obj)
-{
-	return dynamic_cast<IFortress*>(obj.get()) != nullptr;
-}
-
-//NOTE: a bot in the player team is defending the eagle, so it never fires at the fortress
-bool InputProviderForBot::ShouldShootObstacle(const Tank& self, const std::shared_ptr<BaseObj>& obj)
-{
-	if (obj == nullptr || IsAlly(self, obj))
-	{
-		return false;
-	}
-
-	if ((!obj->GetIsDestructible() && self.GetTier() <= 2u) || obj->GetIsPenetrable())// skip water, ice, bush
-	{
-		return false;
-	}
-
-	//NOTE: the eagle and the walls around it - a player's bot shooting those would lose the match for its own side
-	return self.GetFaction() == Faction::EnemyTeam || !IsFortress(obj);
 }
 
 //NOTE: asked every frame, so a refusal needs the cooldown - a success does not, the reload paces it
@@ -432,7 +410,7 @@ bool InputProviderForBot::RollShootObstacle(const std::shared_ptr<BaseObj>& obj)
 		return false;
 	}
 
-	const double chance{IsFortress(obj)
+	const double chance{ObjectUtils::IsFortress(obj)
 							? _gameConfig.botShootFortressChance
 							: _gameConfig.botShootObstacleChance};
 	if (RandUtils::GetRandNumber(std::uniform_real_distribution{0.0, 1.0}) < chance)
@@ -533,11 +511,6 @@ std::optional<Direction> InputProviderForBot::ReviseWhenMoveBlocked(Tank& self, 
 	return revised;
 }
 
-bool InputProviderForBot::IsOpponentTankInSights(const Tank& self, const std::shared_ptr<BaseObj>& target)
-{
-	return self.CanShoot() && IsOpponent(self, target) && AsBullet(target) == nullptr;
-}
-
 bool InputProviderForBot::ShouldShoot(Tank& self)
 {
 	//NOTE: decided with the dodge in ChooseDirection - nothing else matters while a shot is on its way here
@@ -559,7 +532,7 @@ bool InputProviderForBot::ShouldShoot(Tank& self)
 	_isLinedUpForShot = IsOpponentTankInSights(self, target);
 
 	//NOTE: a bonus is driven onto, not shot - going for it is ChooseDirection's business
-	if (IsBonus(target))
+	if (ObjectUtils::IsBonus(target))
 	{
 		return false;
 	}

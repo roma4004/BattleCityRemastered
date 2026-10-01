@@ -26,6 +26,22 @@ namespace
 
 	return count;
 }
+
+bool IsSameController(const std::shared_ptr<SDL_Gamepad>& controller, const SDL_JoystickID instanceId)
+{
+	if (controller == nullptr)
+	{
+		return false;
+	}
+
+	if (SDL_Joystick* joystick{SDL_GetGamepadJoystick(controller.get())};
+		joystick != nullptr)
+	{
+		return SDL_GetJoystickID(joystick) == instanceId;
+	}
+
+	return false;
+}
 }// namespace
 
 UserInput::UserInput(const std::shared_ptr<EventSystem>& events, const WindowConfig& windowConfig,
@@ -585,19 +601,4 @@ void UserInput::InitControllers()
 	SDL_free(joysticks);
 }
 
-bool UserInput::IsSameController(const std::shared_ptr<SDL_Gamepad>& controller, const SDL_JoystickID instanceId)
-{
-	if (controller == nullptr)
-	{
-		return false;
-	}
-
-	if (SDL_Joystick* joystick{SDL_GetGamepadJoystick(controller.get())};
-		joystick != nullptr)
-	{
-		return SDL_GetJoystickID(joystick) == instanceId;
-	}
-
-	return false;
-}
 

@@ -66,7 +66,6 @@ class RespawnManager final
 	void TriggerLastPlayersLife();
 
 	void OnTankSpawn(const TankSpawnEvent& event);
-	[[nodiscard]] static bool IsEnemyGroup(RespawnGroup group) noexcept;
 	void OnEnemyDied(bool isAvailable);
 	void OnPlayerDied(bool isAvailable);
 	void OnTankDied(const TankDiedEvent& event);

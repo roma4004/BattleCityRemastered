@@ -97,7 +97,6 @@ TEST_F(PlayerTest, TankMoveInSideScreenUp)
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	const FPoint endPos{player->GetPos()};
-	EXPECT_NE(startPos.y, endPos.y);
 	EXPECT_EQ(startPos.x, endPos.x);
 	EXPECT_GT(startPos.y, endPos.y);
 }
@@ -115,7 +114,6 @@ TEST_F(PlayerTest, TankMoveInSideScreenLeft)
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	const FPoint endPos{player->GetPos()};
-	EXPECT_NE(startPos.x, endPos.x);
 	EXPECT_EQ(startPos.y, endPos.y);
 	EXPECT_GT(startPos.x, endPos.x);
 }
@@ -132,7 +130,6 @@ TEST_F(PlayerTest, TankMoveInSideScreenDown)
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	const FPoint endPos{player->GetPos()};
-	EXPECT_NE(startPos.y, endPos.y);
 	EXPECT_EQ(startPos.x, endPos.x);
 	EXPECT_LT(startPos.y, endPos.y);
 }
@@ -149,7 +146,6 @@ TEST_F(PlayerTest, TankMoveInSideScreenRight)
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	const FPoint endPos{player->GetPos()};
-	EXPECT_NE(startPos.x, endPos.x);
 	EXPECT_EQ(startPos.y, endPos.y);
 	EXPECT_LT(startPos.x, endPos.x);
 }

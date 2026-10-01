@@ -88,8 +88,6 @@ class UserInput final
 	void InitControllers();
 	void ConnectController(const std::shared_ptr<SDL_Gamepad>& newController);
 	[[nodiscard]] PlayerSlot ControllerSlotDefiner(SDL_JoystickID instanceId) const;
-	[[nodiscard]] static bool IsSameController(const std::shared_ptr<SDL_Gamepad>& controller,
-											   SDL_JoystickID instanceId);
 	void OnMenuTilesPlaced(const MenuTilesPlacedEvent& event);
 
 public:

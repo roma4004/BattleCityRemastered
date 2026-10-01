@@ -71,15 +71,12 @@ private:
 	[[nodiscard]] std::vector<AnimatedObject>& ContainerOf(AnimationType type);
 	void CreateAnimation(AnimationType type, ObjRectangle rect, Author author, const AnimationExtras& extras = {});
 
-	static bool UpdateFrame(AnimatedObject& object);
 	void OnHelmetEffect(Author author, bool isEnable);
 	void UpdateHelmetEffect(Author author, const FPoint& pos);
 
 	void Cancel(AnimationType type, Uuid owner);
 	void DisableTankAnimation(Author author);
 	void DisableHelmetEffect(Author author);
-
-	static AnimatedObject* FindReusable(std::vector<AnimatedObject>& container, AnimationType type);
 
 	struct AnimationPreset
 	{

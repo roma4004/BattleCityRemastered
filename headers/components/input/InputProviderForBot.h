@@ -15,7 +15,6 @@ struct ObjRectangle;
 class BaseObj;
 class GameConfig;
 class LineOfSight;
-class Bullet;
 class Tank;
 
 class InputProviderForBot final : public IInputProvider
@@ -87,11 +86,6 @@ class InputProviderForBot final : public IInputProvider
 	//NOTE: below this our shell cannot meet theirs in time - they close at the sum of speeds, ours a frame late
 	static constexpr double kInterceptWindowSeconds{0.12};
 
-	[[nodiscard]] static bool IsOpponent(const Tank& self, const std::shared_ptr<BaseObj>& obstacle);
-	[[nodiscard]] static bool IsAlly(const Tank& self, const std::shared_ptr<BaseObj>& obstacle);
-	[[nodiscard]] static bool IsBonus(const std::shared_ptr<BaseObj>& obstacle);
-	[[nodiscard]] static const Bullet* AsBullet(const std::shared_ptr<BaseObj>& obstacle);
-
 	[[nodiscard]] BulletThreat FindBulletThreat(const Tank& self) const;
 	[[nodiscard]] bool CanIntercept() const;
 	//NOTE: what the bullet would hit before it reaches us - a shot behind steel is the steel's business
@@ -113,16 +107,12 @@ class InputProviderForBot final : public IInputProvider
 	[[nodiscard]] std::shared_ptr<BaseObj> Lookup(Tank& self, LineOfSight& lineOfSight, Direction& dir,
 												  SightTrigger trigger);
 
-	//NOTE: a bot must not fire into something closer than its own blast, or the shot takes it too
-	[[nodiscard]] static bool IsClearToFire(const Tank& self, Direction dir, const BaseObj& target);
 	[[nodiscard]] bool IsCenteredOn(const Tank& self, Direction dir, const BaseObj& target) const;
 	//NOTE: arms the delay on the first sighting of that target and answers whether it has run out
 	[[nodiscard]] bool HasNoticed(const Tank& self, Direction side, const BaseObj& target);
 	[[nodiscard]] static NoticeBand NoticeBandFor(Direction heading, Direction side, bool isUnderFire);
 
 	[[nodiscard]] bool CanDriveToBonus(const Tank& self, Direction dir);
-
-	[[nodiscard]] static std::shared_ptr<BaseObj> NearestAhead(LineOfSight& lineOfSight, Direction dir);
 
 	[[nodiscard]] std::shared_ptr<BaseObj> TurnOntoNearestSeen(Tank& self);
 
@@ -132,11 +122,7 @@ class InputProviderForBot final : public IInputProvider
 															   bool excludeCurrentDirection = false);
 
 	[[nodiscard]] bool ShouldShootOpponent(const Tank& self, const std::shared_ptr<BaseObj>& obj);
-	[[nodiscard]] static bool IsFortress(const std::shared_ptr<BaseObj>& obj);
-	[[nodiscard]] static bool ShouldShootObstacle(const Tank& self, const std::shared_ptr<BaseObj>& obj);
 	[[nodiscard]] bool RollShootObstacle(const std::shared_ptr<BaseObj>& obj);
-	//NOTE: what the hull is held for - a wall waits, and a shell coming at us is the intercept's business
-	[[nodiscard]] static bool IsOpponentTankInSights(const Tank& self, const std::shared_ptr<BaseObj>& target);
 
 public:
 	InputProviderForBot(const std::vector<std::shared_ptr<BaseObj>>& allObjects, const GameConfig& gameConfig);

@@ -20,6 +20,26 @@
 #include <string>
 #include <utility>
 
+namespace
+{
+std::pair<double, SDL_FlipMode> GetRotateAndAngleAndFlip(const Direction dir)
+{
+	switch (dir)
+	{
+		case Direction::UP:
+			return std::make_pair(0.0, SDL_FLIP_NONE);
+		case Direction::LEFT:
+			return std::make_pair(-90.0, SDL_FLIP_NONE);
+		case Direction::DOWN:
+			return std::make_pair(0.0, SDL_FLIP_VERTICAL);
+		case Direction::RIGHT:
+			return std::make_pair(90.0, SDL_FLIP_NONE);
+	}
+
+	return std::make_pair(0.0, SDL_FLIP_NONE);
+}
+}//namespace
+
 RenderManager::RenderManager(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig,
 							 SDL_Config& sdlConfig)
 	: _events{events}
@@ -214,23 +234,6 @@ void RenderManager::UpdateWindowTitle() const
 	}
 
 	SDL_SetWindowTitle(_sdlConfig.sdlWindow.get(), title.c_str());
-}
-
-std::pair<double, SDL_FlipMode> RenderManager::GetRotateAndAngleAndFlip(const Direction dir)
-{
-	switch (dir)
-	{
-		case Direction::UP:
-			return std::make_pair(0.0, SDL_FLIP_NONE);
-		case Direction::LEFT:
-			return std::make_pair(-90.0, SDL_FLIP_NONE);
-		case Direction::DOWN:
-			return std::make_pair(0.0, SDL_FLIP_VERTICAL);
-		case Direction::RIGHT:
-			return std::make_pair(90.0, SDL_FLIP_NONE);
-	}
-
-	return std::make_pair(0.0, SDL_FLIP_NONE);
 }
 
 void RenderManager::DrawColorTexture(const RenderColorTextureEvent& event)

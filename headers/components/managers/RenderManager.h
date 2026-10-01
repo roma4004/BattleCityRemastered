@@ -6,10 +6,8 @@
 #include <memory>
 #include <optional>
 #include <unordered_map>
-#include <utility>
 #include <vector>
 
-enum class Direction : char8_t;
 enum class GameMode : char8_t;
 enum class PlayerSlot : std::uint8_t;
 struct SDL_Config;
@@ -62,7 +60,6 @@ class RenderManager final
 	void UpdateWindowTitle() const;
 
 	void CreateColorTexture(unsigned int color);
-	[[nodiscard]] static std::pair<double, SDL_FlipMode> GetRotateAndAngleAndFlip(Direction dir);
 	void DrawColorTexture(const RenderColorTextureEvent& event);
 	void DrawTexture(const RenderTextureEvent& event) const;
 

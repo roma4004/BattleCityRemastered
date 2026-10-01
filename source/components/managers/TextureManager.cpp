@@ -16,23 +16,10 @@ constexpr int kBonusSpawnFrames{3};
 //NOTE: the bonus icon is a 15x14 box inside its 16x16 cell, framed by a single atlas pixel
 constexpr double kBonusBoxWidth{15.0};
 constexpr double kBonusBoxHeight{14.0};
-}//namespace
-
-TextureManager::TextureManager(const std::shared_ptr<EventSystem>& events)
-	: _events{events}
-{
-	Subscribe();
-}
-
-void TextureManager::Subscribe()
-{
-	_subs.push_back(_events->AddListener(this, &TextureManager::Draw));
-	_subs.push_back(_events->AddListener(this, &TextureManager::DrawAnimation));
-}
 
 //NOTE: entity sprites only - DrawObjEvent comes from Bullet, Obstacle and Bonus. UI reads
 //TextureOffset directly and never lands here.
-ObjRectangle TextureManager::GetTextureRect(const TextureType texture)
+ObjRectangle GetTextureRect(const TextureType texture)
 {
 	switch (texture)
 	{
@@ -73,7 +60,7 @@ ObjRectangle TextureManager::GetTextureRect(const TextureType texture)
 	return ObjRectangle{};
 }
 
-std::optional<ObjRectangle> TextureManager::QuarterOf(const Author author)
+std::optional<ObjRectangle> QuarterOf(const Author author)
 {
 	switch (author)
 	{
@@ -95,8 +82,7 @@ std::optional<ObjRectangle> TextureManager::QuarterOf(const Author author)
 }
 
 //NOTE: the seat picks the color quarter, SpriteRowOf the row in it - player tiers first, then enemy models
-ObjRectangle TextureManager::GetTankTextureRect(const Author author, const TankModel model,
-												const unsigned short tier)
+ObjRectangle GetTankTextureRect(const Author author, const TankModel model, const unsigned short tier)
 {
 	const double rowOffset{SpriteRowOf(model, tier) * kAtlasCellSize};
 	const auto shiftedDown = [rowOffset](const ObjRectangle& quarter)
@@ -106,10 +92,23 @@ ObjRectangle TextureManager::GetTankTextureRect(const Author author, const TankM
 
 	return QuarterOf(author).transform(shiftedDown).value_or(ObjRectangle{});
 }
+}//namespace
+
+TextureManager::TextureManager(const std::shared_ptr<EventSystem>& events)
+	: _events{events}
+{
+	Subscribe();
+}
+
+void TextureManager::Subscribe()
+{
+	_subs.push_back(_events->AddListener(this, &TextureManager::Draw));
+	_subs.push_back(_events->AddListener(this, &TextureManager::DrawAnimation));
+}
 
 TextureManager::AtlasFrames TextureManager::GetAnimFrames(const AnimationType type, const Author author,
 														  const TankModel model, const unsigned short tier,
-														  const ObjRectangle rect, ObjRectangle& destRect) const
+														  const ObjRectangle rect, ObjRectangle& destRect)
 {
 	switch (type)
 	{

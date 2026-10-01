@@ -30,6 +30,18 @@ constexpr std::array kXBoxKeys{"Images.XBox_D-Pad",
 							   "Images.XBox_View",
 							   "Images.XBox_A",
 							   "Images.XBox_Y"};
+
+std::expected<SurfaceHandle, InitError> LoadSurface(const std::filesystem::path& path)
+{
+	SurfaceHandle surface{IMG_Load(path.string().c_str())};
+	if (surface == nullptr)
+	{
+		return std::unexpected(
+				InitError{.stage = "IMG " + path.string() + " Loading Error", .detail = SDL_GetError()});
+	}
+
+	return surface;
+}
 }// namespace
 
 SDL_Config::SDL_Config(const GameConfig& config, const ProjectConfig& project, const WindowConfig& window)
@@ -194,18 +206,6 @@ std::expected<void, InitError> SDL_Config::InitAudio()
 	}
 
 	return {};
-}
-
-std::expected<SurfaceHandle, InitError> SDL_Config::LoadSurface(const std::filesystem::path& path)
-{
-	SurfaceHandle surface{IMG_Load(path.string().c_str())};
-	if (surface == nullptr)
-	{
-		return std::unexpected(
-				InitError{.stage = "IMG " + path.string() + " Loading Error", .detail = SDL_GetError()});
-	}
-
-	return surface;
 }
 
 std::expected<TextureHandle, InitError> SDL_Config::CreateTexture(

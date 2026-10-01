@@ -5,6 +5,28 @@
 #include <functional>
 #include <utility>
 
+namespace
+{
+int PixelSize(const int basePointSize, const float scale)
+{
+	return static_cast<int>(std::lround(static_cast<float>(basePointSize) * scale));
+}
+
+//NOTE: logical units - the layout itself is in output pixels
+Point SizeOfLaidOut(TTF_Text* const text, const float scale)
+{
+	int pixelWidth{};
+	int pixelHeight{};
+	if (!TTF_GetTextSize(text, &pixelWidth, &pixelHeight))
+	{
+		return {};
+	}
+
+	return Point{.x = static_cast<int>(static_cast<float>(pixelWidth) / scale),
+				 .y = static_cast<int>(static_cast<float>(pixelHeight) / scale)};
+}
+}//namespace
+
 void TextCache::TextDeleter::operator()(TTF_Text* text) const noexcept { TTF_DestroyText(text); }
 
 void TextCache::EngineDeleter::operator()(TTF_TextEngine* engine) const noexcept
@@ -63,11 +85,6 @@ bool TextCache::KeyEqual::operator()(const KeyView lhs, const Key& rhs) const no
 
 bool TextCache::IsReady() const { return _sdlConfig.font && _sdlConfig.renderer; }
 
-int TextCache::PixelSize(const int basePointSize, const float scale)
-{
-	return static_cast<int>(std::lround(static_cast<float>(basePointSize) * scale));
-}
-
 TTF_TextEngine* TextCache::Engine()
 {
 	if (!_engine)
@@ -97,19 +114,6 @@ TTF_Font* TextCache::FontForScale(const int basePointSize, const float scale)
 	}
 
 	return _fonts.insert_or_assign(pixelSize, std::move(sized)).first->second.get();
-}
-
-Point TextCache::SizeOfLaidOut(TTF_Text* const text, const float scale)
-{
-	int pixelWidth{};
-	int pixelHeight{};
-	if (!TTF_GetTextSize(text, &pixelWidth, &pixelHeight))
-	{
-		return {};
-	}
-
-	return Point{.x = static_cast<int>(static_cast<float>(pixelWidth) / scale),
-				 .y = static_cast<int>(static_cast<float>(pixelHeight) / scale)};
 }
 
 TextCache::CachedText TextCache::LayOut(const std::string_view text, TTF_Font* const font, const float scale)

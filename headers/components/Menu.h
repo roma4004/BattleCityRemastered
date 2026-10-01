@@ -1,7 +1,6 @@
 #pragma once
 
 #include "components/EventSystem.h"
-#include "components/UiTable.h"
 #include "components/input/InputProviderForMenu.h"
 #include <memory>
 #include <vector>
@@ -34,10 +33,6 @@ class Menu final
 	void OnSelectedGameModeChangedTo(const SelectedGameModeChangedToEvent& event);
 	void OnMenuShowed(const MenuShowedEvent& event);
 
-	[[nodiscard]] static UiTable TitleTable();
-	[[nodiscard]] static UiTable ModesTable();
-	//NOTE: an action, the keys that do it, and for each pad its button as a picture and by name
-	[[nodiscard]] static UiTable ControlsTable();
 	[[nodiscard]] int SelectedRow() const;
 	void DisplayMenu(bool isDisplayed);
 

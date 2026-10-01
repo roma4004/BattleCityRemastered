@@ -74,8 +74,6 @@ private:
 	[[nodiscard]] std::expected<void, InitError> InitTextures();
 	[[nodiscard]] std::expected<void, InitError> InitAudio();
 
-	[[nodiscard]] static std::expected<SurfaceHandle, InitError> LoadSurface(
-			const std::filesystem::path& path);
 	[[nodiscard]] std::expected<TextureHandle, InitError> CreateTexture(
 			const SurfaceHandle& surface, const std::filesystem::path& path) const;
 	[[nodiscard]] std::expected<void, InitError> LoadTexturePair(std::string_view configKey,
