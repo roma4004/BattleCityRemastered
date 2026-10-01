@@ -16,10 +16,12 @@
 #include "enums/GameMode.h"
 #include "enums/PlayerSlot.h"
 #include "enums/TextureOffset.h"
+#include "geometry/ObjRectangle.h"
 #include "utils/Log.h"
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <optional>
 #include <ranges>
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_video.h>
@@ -87,11 +89,7 @@ void RenderManager::Subscribe()
 	_subs.push_back(_events->AddListener(this, &RenderManager::RenderFPS));
 
 	_subs.push_back(_events->AddListener(this, &RenderManager::DrawHealthBar));
-	_subs.push_back(_events->AddListener(this, &RenderManager::DrawEnemyIconBackground));
-	_subs.push_back(_events->AddListener(this, &RenderManager::DrawEnemyIcons));
-	_subs.push_back(_events->AddListener(this, &RenderManager::DrawPlayerOneIcons));
-	_subs.push_back(_events->AddListener(this, &RenderManager::DrawPlayerTwoIcons));
-	_subs.push_back(_events->AddListener(this, &RenderManager::DrawStageNumber));
+	_subs.push_back(_events->AddListener(this, &RenderManager::DrawSideBar));
 
 	_subs.push_back(_events->AddListener(this, &RenderManager::OnWorldGeometryChanged));
 	_subs.push_back(_events->AddListener(this, &RenderManager::OnWindowSizeChangedTo));
@@ -240,94 +238,26 @@ void RenderManager::DrawGameWonText(const RenderGameWonTextEvent&) const
 	RenderCopyWithClipping(_sdlConfig.atlasTexture.get(), srcRect, dstRect);
 }
 
-void RenderManager::DrawEnemyIconBackground(const RenderEnemyIconBackgroundEvent&) const
+void RenderManager::DrawSideBar(const RenderSideBarEvent& event) const
 {
-	constexpr int backgroundHeight{277};
-	const SDL_Rect dstRect{
-			.x = SideBarColumnX(),
-			.y = kSideBarColumnTop,
-			.w = kSideBarItemWidth,
-			.h = backgroundHeight};
-	constexpr SDL_Rect srcRect{.x = static_cast<int>(TextureOffset::kEnemyIconBackground.x),
-							   .y = static_cast<int>(TextureOffset::kEnemyIconBackground.y),
-							   .w = static_cast<int>(TextureOffset::kEnemyIconBackground.w),
-							   .h = static_cast<int>(TextureOffset::kEnemyIconBackground.h)};
-	RenderCopyWithClipping(_sdlConfig.atlasTexture.get(), srcRect, dstRect);
-}
+	const float scale{CurrentRenderScale()};
+	const UiLayout::Measure measure{CellMeasurer(SDL_Config::kFontSizePtMedium, scale)};
 
-void RenderManager::DrawEnemyIcons(const RenderEnemyIconsEvent& event) const
-{
-	const unsigned short numberOfIcons{event.count};
-	constexpr SDL_Rect srcRect{.x = static_cast<int>(TextureOffset::kEnemyIcon.x),
-							   .y = static_cast<int>(TextureOffset::kEnemyIcon.y),
-							   .w = static_cast<int>(TextureOffset::kEnemyIcon.w),
-							   .h = static_cast<int>(TextureOffset::kEnemyIcon.h)};
+	const SDL_Rect frame{
+			.x = SideBarColumnX(), .y = kSideBarColumnTop, .w = kSideBarItemWidth, .h = kReserveFrameHeight};
+	RenderCopyWithClipping(_sdlConfig.atlasTexture.get(), RectToSdlRect(TextureOffset::kEnemyIconBackground), frame);
 
-	//NOTE: two-wide grid, inset so the icons sit inside their background
-	constexpr int columns{2};
-	constexpr int iconInset{5};
-	constexpr Point imageSize{.x = 30, .y = 25};
-	constexpr Point padding{.x = 1, .y = 2};
-	const Point startPos{.x = SideBarColumnX() + iconInset, .y = 65};
+	const Point reserveAt{.x = frame.x + kReserveInset.x, .y = frame.y + kReserveInset.y};
+	const UiLayout::Placement enemies{
+			UiLayout::Place(event.enemies, reserveAt, kReserveRowHeight, measure, kReserveColumnGap)};
+	const Point countersAt{.x = frame.x, .y = frame.y + frame.h + kReserveGapBelow};
+	const UiLayout::Placement counters{UiLayout::Place(event.counters, countersAt, std::nullopt, measure)};
 
-	for (unsigned short i = 0u; i < numberOfIcons; ++i)
-	{
-		const int row{i / columns};
-		const int col{i % columns};
-		const int posX{startPos.x + col * (imageSize.x + padding.x)};
-		const int posY{startPos.y + row * (imageSize.y + padding.y)};
+	DrawTablePictures(event.enemies, enemies);
+	DrawTablePictures(event.counters, counters);
 
-		const SDL_Rect destRect{.x = posX, .y = posY, .w = imageSize.x, .h = imageSize.y};
-		RenderCopyWithClipping(_sdlConfig.atlasTexture.get(), srcRect, destRect);
-	}
-}
-
-void RenderManager::DrawPlayerOneIcons(const RenderPlayerOneIconEvent& event) const
-{
-	const unsigned short respawnCount{event.respawnCount};
-	constexpr SDL_Rect srcRect{.x = static_cast<int>(TextureOffset::kPlayer1Icon.x),
-							   .y = static_cast<int>(TextureOffset::kPlayer1Icon.y),
-							   .w = static_cast<int>(TextureOffset::kPlayer1Icon.w),
-							   .h = static_cast<int>(TextureOffset::kPlayer1Icon.h)};
-
-	const int posX{SideBarColumnX()};
-	const SDL_Rect rect{.x = posX, .y = 350, .w = kSideBarItemWidth, .h = 70};
-	RenderCopyWithClipping(_sdlConfig.atlasTexture.get(), srcRect, rect);
-
-	DrawCounterAt(TextCache::Slot::PlayerOneLives, Point{.x = posX + kSideBarCounterTextPadding, .y = 390},
-				  kSideBarCounterColor, respawnCount);
-}
-
-void RenderManager::DrawPlayerTwoIcons(const RenderPlayerTwoIconEvent& event) const
-{
-	const unsigned short respawnCount{event.respawnCount};
-	constexpr SDL_Rect srcRect{.x = static_cast<int>(TextureOffset::kPlayer2Icon.x),
-							   .y = static_cast<int>(TextureOffset::kPlayer2Icon.y),
-							   .w = static_cast<int>(TextureOffset::kPlayer2Icon.w),
-							   .h = static_cast<int>(TextureOffset::kPlayer2Icon.h)};
-
-	const int posX{SideBarColumnX()};
-	const SDL_Rect rect{.x = posX, .y = 420, .w = kSideBarItemWidth, .h = 70};
-	RenderCopyWithClipping(_sdlConfig.atlasTexture.get(), srcRect, rect);
-
-	DrawCounterAt(TextCache::Slot::PlayerTwoLives, Point{.x = posX + kSideBarCounterTextPadding, .y = 460},
-				  kSideBarCounterColor, respawnCount);
-}
-
-void RenderManager::DrawStageNumber(const RenderStageNumberEvent& event) const
-{
-	const unsigned short currentStageNumber{event.stageNumber};
-	constexpr SDL_Rect srcRect{.x = static_cast<int>(TextureOffset::kStageNumberFlag.x),
-							   .y = static_cast<int>(TextureOffset::kStageNumberFlag.y),
-							   .w = static_cast<int>(TextureOffset::kStageNumberFlag.w),
-							   .h = static_cast<int>(TextureOffset::kStageNumberFlag.h)};
-
-	const int posX{SideBarColumnX()};
-	const SDL_Rect rect{.x = posX, .y = 490, .w = kSideBarItemWidth, .h = 95};
-	RenderCopyWithClipping(_sdlConfig.atlasTexture.get(), srcRect, rect);
-
-	DrawCounterAt(TextCache::Slot::StageNumber, Point{.x = posX + kSideBarCounterTextPadding, .y = 555},
-				  kSideBarCounterColor, currentStageNumber);
+	const ScopedRenderScale scaled{_sdlConfig.renderer.get(), scale};
+	DrawTableText(event.counters, counters, SDL_Config::kFontSizePtMedium, scale);
 }
 
 unsigned int RenderManager::ColorToInt(const SDL_Color& color)
@@ -361,39 +291,71 @@ void RenderManager::DrawMenuBackground(const RenderMenuBackgroundEvent& event) c
 	FillRect(backgroundRect);
 }
 
-SDL_Texture* RenderManager::IconTexture(const UiIcon icon) const
+RenderManager::IconSource RenderManager::Icon(const UiIcon icon) const
 {
+	constexpr Point menuSquare{.x = kMenuIconSize, .y = kMenuIconSize};
+	SDL_Texture* const atlas{_sdlConfig.atlasTexture.get()};
 	switch (icon)
 	{
-		case UiIcon::Selector:
-			return _sdlConfig.selectorIconTexture.get();
-		case UiIcon::XBoxHome:
-			return _sdlConfig.xboxTextures[1].get();
-		case UiIcon::XBoxView:
-			return _sdlConfig.xboxTextures[3].get();
-		case UiIcon::XBoxMenu:
-			return _sdlConfig.xboxTextures[2].get();
-		case UiIcon::XBoxY:
-			return _sdlConfig.xboxTextures[5].get();
-		case UiIcon::XBoxDpad:
-			return _sdlConfig.xboxTextures[0].get();
-		case UiIcon::XBoxA:
-			return _sdlConfig.xboxTextures[4].get();
-		case UiIcon::PS5Home:
-			return _sdlConfig.ps5Textures[3].get();
-		case UiIcon::PS5Create:
-			return _sdlConfig.ps5Textures[0].get();
-		case UiIcon::PS5Options:
-			return _sdlConfig.ps5Textures[4].get();
-		case UiIcon::PS5Triangle:
-			return _sdlConfig.ps5Textures[5].get();
-		case UiIcon::PS5Dpad:
-			return _sdlConfig.ps5Textures[2].get();
-		case UiIcon::PS5Cross:
-			return _sdlConfig.ps5Textures[1].get();
-		default:
-			return nullptr;
+		case UiIcon::None:
+			break;
+		case UiIcon::MenuSelector:
+			return IconSource{.texture = _sdlConfig.selectorIconTexture.get(), .size = menuSquare};
+		case UiIcon::MenuXBoxHome:
+			return IconSource{.texture = _sdlConfig.xboxTextures[1].get(), .size = menuSquare};
+		case UiIcon::MenuXBoxView:
+			return IconSource{.texture = _sdlConfig.xboxTextures[3].get(), .size = menuSquare};
+		case UiIcon::MenuXBoxMenu:
+			return IconSource{.texture = _sdlConfig.xboxTextures[2].get(), .size = menuSquare};
+		case UiIcon::MenuXBoxY:
+			return IconSource{.texture = _sdlConfig.xboxTextures[5].get(), .size = menuSquare};
+		case UiIcon::MenuXBoxDpad:
+			return IconSource{.texture = _sdlConfig.xboxTextures[0].get(), .size = menuSquare};
+		case UiIcon::MenuXBoxA:
+			return IconSource{.texture = _sdlConfig.xboxTextures[4].get(), .size = menuSquare};
+		case UiIcon::MenuPS5Home:
+			return IconSource{.texture = _sdlConfig.ps5Textures[3].get(), .size = menuSquare};
+		case UiIcon::MenuPS5Create:
+			return IconSource{.texture = _sdlConfig.ps5Textures[0].get(), .size = menuSquare};
+		case UiIcon::MenuPS5Options:
+			return IconSource{.texture = _sdlConfig.ps5Textures[4].get(), .size = menuSquare};
+		case UiIcon::MenuPS5Triangle:
+			return IconSource{.texture = _sdlConfig.ps5Textures[5].get(), .size = menuSquare};
+		case UiIcon::MenuPS5Dpad:
+			return IconSource{.texture = _sdlConfig.ps5Textures[2].get(), .size = menuSquare};
+		case UiIcon::MenuPS5Cross:
+			return IconSource{.texture = _sdlConfig.ps5Textures[1].get(), .size = menuSquare};
+		case UiIcon::SideBarEnemyTank:
+			return IconSource{.texture = atlas,
+							  .sprite = RectToSdlRect(TextureOffset::kEnemyIcon),
+							  .size = kSideBarEnemyTankSize};
+		case UiIcon::SideBarPlayerOne:
+			return IconSource{.texture = atlas,
+							  .sprite = RectToSdlRect(TextureOffset::kPlayer1Icon),
+							  .size = kSideBarLivesSize};
+		case UiIcon::SideBarPlayerTwo:
+			return IconSource{.texture = atlas,
+							  .sprite = RectToSdlRect(TextureOffset::kPlayer2Icon),
+							  .size = kSideBarLivesSize};
+		case UiIcon::SideBarStageFlag:
+			return IconSource{.texture = atlas,
+							  .sprite = RectToSdlRect(TextureOffset::kStageNumberFlag),
+							  .size = kSideBarStageSize};
 	}
+
+	return IconSource{};
+}
+
+void RenderManager::DrawIcon(const UiIcon icon, const SDL_Rect dstRect) const
+{
+	const IconSource source{Icon(icon)};
+	if (source.sprite)
+	{
+		RenderCopyWithClipping(source.texture, *source.sprite, dstRect);
+		return;
+	}
+
+	RenderCopy(source.texture, dstRect);
 }
 
 UiLayout::Measure RenderManager::CellMeasurer(const int pointSize, const float scale) const
@@ -402,7 +364,7 @@ UiLayout::Measure RenderManager::CellMeasurer(const int pointSize, const float s
 	{
 		if (cell.icon != UiIcon::None)
 		{
-			return Point{.x = kMenuIconSize, .y = kMenuIconSize};
+			return Icon(cell.icon).size;
 		}
 
 		return _textCache.MeasureString(cell.text, pointSize, scale);
@@ -444,31 +406,31 @@ void RenderManager::DrawTablePictures(const UiTable& table, const UiLayout::Plac
 {
 	for (const UiLayout::PlacedCell& placed: placement.cells)
 	{
-		const UiCell& cell{table.rows[static_cast<std::size_t>(placed.row)]
-								   .cells[static_cast<std::size_t>(placed.column)]};
-		if (cell.icon == UiIcon::None)
+		const UiCell& cell{table.rows[placed.row].cells[placed.column]};
+		if (cell.background != UiIcon::None)
 		{
-			continue;
+			DrawIcon(cell.background, RectOf(placed.boxPos, placed.boxSize));
 		}
 
-		RenderCopy(IconTexture(cell.icon),
-				   {.x = placed.pos.x, .y = placed.pos.y, .w = placed.size.x, .h = placed.size.y});
+		if (cell.icon != UiIcon::None)
+		{
+			DrawIcon(cell.icon, RectOf(placed.pos, placed.size));
+		}
 	}
 }
 
-void RenderManager::DrawTableText(const UiTable& table, const UiLayout::Placement& placement,
+void RenderManager::DrawTableText(const UiTable& table, const UiLayout::Placement& placement, const int pointSize,
 								  const float scale) const
 {
 	for (const UiLayout::PlacedCell& placed: placement.cells)
 	{
-		const UiCell& cell{table.rows[static_cast<std::size_t>(placed.row)]
-								   .cells[static_cast<std::size_t>(placed.column)]};
+		const UiCell& cell{table.rows[placed.row].cells[placed.column]};
 		if (cell.icon != UiIcon::None || cell.text.empty())
 		{
 			continue;
 		}
 
-		DrawTextAt(placed.pos, IntToColor(cell.color), cell.text, _menuPointSize, scale);
+		DrawTextAt(placed.pos, IntToColor(cell.color), cell.text, pointSize, scale);
 	}
 }
 
@@ -517,19 +479,19 @@ void RenderManager::DrawMenu(const RenderMenuEvent& event) const
 	const auto selected{static_cast<std::size_t>(event.selectedRow)};
 	if (selected < modes.rows.size())
 	{
-		RenderCopy(IconTexture(UiIcon::Selector),
-				   {.x = modes.rows[selected].x - kMenuSelectorGap,
-					.y = modes.rows[selected].y + (kMenuRowHeight - kMenuIconSize) / 2,
-					.w = kMenuIconSize,
-					.h = kMenuIconSize});
+		DrawIcon(UiIcon::MenuSelector,
+				 {.x = modes.rows[selected].x - kMenuSelectorGap,
+				  .y = modes.rows[selected].y + (kMenuRowHeight - kMenuIconSize) / 2,
+				  .w = kMenuIconSize,
+				  .h = kMenuIconSize});
 	}
 
 	DrawTablePictures(event.controls, controls);
 
 	//NOTE: one scale for all the words at once - the pictures are drawn in logical pixels above
 	const ScopedRenderScale scaled{_sdlConfig.renderer.get(), scale};
-	DrawTableText(event.modes, modes, scale);
-	DrawTableText(event.controls, controls, scale);
+	DrawTableText(event.modes, modes, _menuPointSize, scale);
+	DrawTableText(event.controls, controls, _menuPointSize, scale);
 
 	AnnounceMenuTiles(modes);
 }
@@ -606,38 +568,6 @@ void RenderManager::DrawTextCentered(const SDL_Rect& box, const SDL_Color color,
 									 const int basePointSize, const float scale) const
 {
 	const TextCache::CachedText* cached{_textCache.Acquire(text, color, basePointSize, scale)};
-	if (cached == nullptr)
-	{
-		return;
-	}
-
-	const Point pos{CenteredIn(box, *cached)};
-
-	DrawText(*cached, pos.x, pos.y, scale);
-}
-
-void RenderManager::DrawCounterAt(const TextCache::Slot slot, const Point pos, const SDL_Color color,
-								  const int value) const
-{
-	const float scale{CurrentRenderScale()};
-	const ScopedRenderScale scaled{_sdlConfig.renderer.get(), scale};
-	const TextCache::CachedText* cached{
-			_textCache.AcquireSlot(slot, std::to_string(value), color, SDL_Config::kFontSizePtMedium, scale)};
-	if (cached == nullptr)
-	{
-		return;
-	}
-
-	DrawText(*cached, pos.x, pos.y, scale);
-}
-
-void RenderManager::DrawCounterCentered(const TextCache::Slot slot, const SDL_Rect& box, const SDL_Color color,
-										const int value) const
-{
-	const float scale{CurrentRenderScale()};
-	const ScopedRenderScale scaled{_sdlConfig.renderer.get(), scale};
-	const TextCache::CachedText* cached{
-			_textCache.AcquireSlot(slot, std::to_string(value), color, SDL_Config::kFontSizePtMedium, scale)};
 	if (cached == nullptr)
 	{
 		return;
@@ -784,6 +714,11 @@ inline SDL_Rect RenderManager::RectToSdlRect(const ObjRectangle& rect)
 					.y = static_cast<int>(rect.y),
 					.w = static_cast<int>(rect.w),
 					.h = static_cast<int>(rect.h)};
+}
+
+SDL_Rect RenderManager::RectOf(const Point pos, const Point size)
+{
+	return SDL_Rect{.x = pos.x, .y = pos.y, .w = size.x, .h = size.y};
 }
 
 SDL_FRect RenderManager::ToFRect(const SDL_Rect& rect)
@@ -938,8 +873,10 @@ void RenderManager::RenderFPS(const RenderFPSEvent& event) const
 	}
 
 	constexpr SDL_Color textColor{.r = 140u, .g = 0u, .b = 255u, .a = 255u};
+	const float scale{CurrentRenderScale()};
+	const ScopedRenderScale scaled{_sdlConfig.renderer.get(), scale};
 	//NOTE: three digits are 72 px in a 71 px column - the pixel over buys reusing the one font opened at startup
-	DrawCounterCentered(TextCache::Slot::Fps, _fpsBox, textColor, static_cast<int>(fps));
+	DrawTextCentered(_fpsBox, textColor, std::to_string(fps), SDL_Config::kFontSizePtMedium, scale);
 }
 
 void RenderManager::DrawHealthBar(const RenderHealthBarEvent& event) const

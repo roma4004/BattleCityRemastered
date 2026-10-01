@@ -64,32 +64,17 @@ struct MenuTilesPlacedEvent
 };
 
 
-struct RenderEnemyIconBackgroundEvent {};
-
 struct RenderPauseTextEvent {};
 
 struct RenderGameOverTextEvent {};
 
 struct RenderGameWonTextEvent {};
 
-struct RenderEnemyIconsEvent
+//NOTE: the side column as two tables - the reserve stands in its frame at the top, the counters under it
+struct RenderSideBarEvent
 {
-	unsigned short count;
-};
-
-struct RenderPlayerOneIconEvent
-{
-	unsigned short respawnCount;
-};
-
-struct RenderPlayerTwoIconEvent
-{
-	unsigned short respawnCount;
-};
-
-struct RenderStageNumberEvent
-{
-	unsigned short stageNumber;
+	UiTable enemies{};
+	UiTable counters{};
 };
 
 struct RenderFPSEvent

@@ -4,6 +4,8 @@
 #include "geometry/Point.h"
 #include <algorithm>
 #include <cstddef>
+#include <optional>
+#include <utility>
 #include <vector>
 
 namespace
@@ -24,29 +26,48 @@ int AlignedX(const UiCell& cell, const int columnWidth, const int cellWidth)
 			return 0;
 	}
 }
+
+//NOTE: the larger of the two on each axis; the offset is not counted, so a nudged word may run past its picture
+Point BoxSize(const UiCell& cell, const Point size, const UiLayout::Measure& measure)
+{
+	if (cell.background == UiIcon::None)
+	{
+		return size;
+	}
+
+	const Point background{measure(UiCell{.icon = cell.background})};
+
+	return Point{.x = std::max(size.x, background.x), .y = std::max(size.y, background.y)};
+}
 }//namespace
 
-UiLayout::Placement UiLayout::Place(const UiTable& table, const Point origin, const int rowHeight,
-									const Measure& measure)
+UiLayout::Placement UiLayout::Place(const UiTable& table, const Point origin, const std::optional<int> rowHeight,
+									const Measure& measure, const int columnGap)
 {
 	std::vector<std::vector<Point>> sizes{};
 	std::vector<int> columnWidths{};
+	std::vector<int> rowHeights{};
 	sizes.reserve(table.rows.size());
+	rowHeights.reserve(table.rows.size());
 
 	for (const UiRow& row: table.rows)
 	{
 		std::vector<Point> rowSizes{};
 		rowSizes.reserve(row.cells.size());
 		columnWidths.resize(std::max(columnWidths.size(), row.cells.size()));
+		int tallest{};
 
 		for (std::size_t column{}; column < row.cells.size(); ++column)
 		{
 			const Point size{measure(row.cells[column])};
-			columnWidths[column] = std::max(columnWidths[column], size.x);
+			const Point box{BoxSize(row.cells[column], size, measure)};
+			columnWidths[column] = std::max(columnWidths[column], box.x);
+			tallest = std::max(tallest, box.y);
 			rowSizes.push_back(size);
 		}
 
 		sizes.push_back(std::move(rowSizes));
+		rowHeights.push_back(rowHeight.value_or(tallest));
 	}
 
 	std::vector<int> columnStarts(columnWidths.size());
@@ -54,16 +75,15 @@ UiLayout::Placement UiLayout::Place(const UiTable& table, const Point origin, co
 	for (std::size_t column{}; column < columnWidths.size(); ++column)
 	{
 		columnStarts[column] = tableWidth;
-		tableWidth += columnWidths[column] + (column + 1 < columnWidths.size() ? kColumnGap : 0);
+		tableWidth += columnWidths[column] + (column + 1 < columnWidths.size() ? columnGap : 0);
 	}
 
 	Placement placement{};
-	placement.size = Point{.x = tableWidth, .y = static_cast<int>(table.rows.size()) * rowHeight};
 	placement.rows.reserve(table.rows.size());
 
+	int rowTop{origin.y};
 	for (std::size_t row{}; row < table.rows.size(); ++row)
 	{
-		const int rowTop{origin.y + static_cast<int>(row) * rowHeight};
 		placement.rows.push_back(Point{.x = origin.x, .y = rowTop});
 
 		for (std::size_t column{}; column < table.rows[row].cells.size(); ++column)
@@ -72,14 +92,20 @@ UiLayout::Placement UiLayout::Place(const UiTable& table, const Point origin, co
 			const Point size{sizes[row][column]};
 			const Point pos{.x = origin.x + columnStarts[column] + AlignedX(cell, columnWidths[column], size.x)
 								 + cell.offset.x,
-							.y = rowTop + (rowHeight - size.y) / 2 + cell.offset.y};
+							.y = rowTop + (rowHeights[row] - size.y) / 2 + cell.offset.y};
 
 			placement.cells.push_back(PlacedCell{.pos = pos,
 												 .size = size,
-												 .row = static_cast<int>(row),
-												 .column = static_cast<int>(column)});
+												 .boxPos = {.x = origin.x + columnStarts[column], .y = rowTop},
+												 .boxSize = {.x = columnWidths[column], .y = rowHeights[row]},
+												 .row = row,
+												 .column = column});
 		}
+
+		rowTop += rowHeights[row];
 	}
+
+	placement.size = Point{.x = tableWidth, .y = rowTop - origin.y};
 
 	return placement;
 }

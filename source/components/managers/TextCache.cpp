@@ -21,7 +21,6 @@ void TextCache::Clear()
 {
 	_entries.clear();
 	_measures.clear();
-	_slots = {};
 	_fonts.clear();
 	_engine.reset();
 }
@@ -177,8 +176,7 @@ const TextCache::CachedText* TextCache::Acquire(const std::string_view text, con
 		return &it->second;
 	}
 
-	//NOTE: dropping the layouts bounds the cache and keeps the fonts they were laid out with - the few
-	//lines on screen refill it, and a counter that fills it belongs in a slot anyway
+	//NOTE: dropping the layouts bounds the cache and keeps their fonts - the few lines on screen refill it
 	if (_entries.size() >= kMaxEntries)
 	{
 		_entries.clear();
@@ -196,53 +194,4 @@ const TextCache::CachedText* TextCache::Acquire(const std::string_view text, con
 	return &_entries.insert_or_assign(Key{.text = std::string{text}, .basePointSize = basePointSize},
 									  std::move(entry))
 					 .first->second;
-}
-
-const TextCache::CachedText* TextCache::AcquireSlot(const Slot slot, const std::string_view text,
-													const SDL_Color& color, const int basePointSize,
-													const float scale)
-{
-	if (!IsReady())
-	{
-		return nullptr;
-	}
-
-	SyncScale(scale);
-
-	SlotEntry& entry{_slots[static_cast<size_t>(slot)]};
-	const int pixelSize{PixelSize(basePointSize, scale)};
-
-	if (!entry.cached.text)
-	{
-		entry.cached = LayOut(text, FontForScale(basePointSize, scale), scale);
-	}
-	else if (entry.pixelSize != pixelSize || entry.text != text)
-	{
-		//NOTE: the layout is rewritten in place - that is what a slot is for, and the font carries the size
-		if (entry.pixelSize != pixelSize
-			&& !TTF_SetTextFont(entry.cached.text.get(), FontForScale(basePointSize, scale)))
-		{
-			return nullptr;
-		}
-
-		if (!TTF_SetTextString(entry.cached.text.get(), text.data(), text.size()))
-		{
-			return nullptr;
-		}
-
-		const Point size{SizeOfLaidOut(entry.cached.text.get(), scale)};
-		entry.cached.width = size.x;
-		entry.cached.height = size.y;
-	}
-
-	if (!entry.cached.text)
-	{
-		return nullptr;
-	}
-
-	entry.text = text;
-	entry.pixelSize = pixelSize;
-	TTF_SetTextColor(entry.cached.text.get(), color.r, color.g, color.b, color.a);
-
-	return &entry.cached;
 }

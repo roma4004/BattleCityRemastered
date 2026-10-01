@@ -1,18 +1,15 @@
 #pragma once
-#include "geometry/Point.h"
 #include "components/EventSystem.h"
 #include <memory>
 #include <vector>
 
-struct ObjRectangle;
 struct DrawUserInterfaceEvent;
 struct RespawnCountChangedToEvent;
+struct UiTable;
 class GameConfig;
-class EventSystem;
 
 class RightSideBar final
 {
-	Point _pos{};
 	unsigned short _enemiesRespawnCount{};
 	unsigned short _playerOneRespawnCount{};
 	unsigned short _playerTwoRespawnCount{};
@@ -24,6 +21,8 @@ class RightSideBar final
 
 	void Subscribe();
 	void Draw() const;
+	[[nodiscard]] UiTable EnemiesTable() const;
+	[[nodiscard]] UiTable CountersTable() const;
 	void OnDrawUserInterface(const DrawUserInterfaceEvent&) const;
 	void OnRespawnCountChangedTo(const RespawnCountChangedToEvent& event);
 

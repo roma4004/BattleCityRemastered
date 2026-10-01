@@ -3,9 +3,7 @@
 #include "application/SdlHandle.h"
 #include "geometry/Point.h"
 #include <SDL3_ttf/SDL_ttf.h>
-#include <array>
 #include <cstddef>
-#include <cstdint>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -24,16 +22,6 @@ using FontHandle = SdlHandle<TTF_Font, TTF_CloseFont>;
 class TextCache final
 {
 public:
-	//NOTE: a counter is a new string every time - a slot rewrites its layout instead of minting one to evict
-	enum class Slot : std::uint8_t
-	{
-		Fps,
-		PlayerOneLives,
-		PlayerTwoLives,
-		StageNumber,
-		Count
-	};
-
 	struct TextDeleter
 	{
 		void operator()(TTF_Text* text) const noexcept;
@@ -58,8 +46,6 @@ public:
 	//NOTE: the color is set per call, so one entry serves every color of the same line
 	[[nodiscard]] const CachedText* Acquire(std::string_view text, const SDL_Color& color, int basePointSize,
 											float scale);
-	[[nodiscard]] const CachedText* AcquireSlot(Slot slot, std::string_view text, const SDL_Color& color,
-												int basePointSize, float scale);
 
 	//NOTE: no layout - fitting tries sizes nothing will draw
 	[[nodiscard]] Point MeasureString(std::string_view text, int basePointSize, float scale);
@@ -100,13 +86,6 @@ private:
 		[[nodiscard]] bool operator()(KeyView lhs, const Key& rhs) const noexcept;
 	};
 
-	struct SlotEntry
-	{
-		CachedText cached{};
-		std::string text{};
-		int pixelSize{};
-	};
-
 	struct EngineDeleter
 	{
 		void operator()(TTF_TextEngine* engine) const noexcept;
@@ -133,7 +112,6 @@ private:
 
 	std::unordered_map<Key, CachedText, KeyHash, KeyEqual> _entries{};
 	std::unordered_map<Key, Point, KeyHash, KeyEqual> _measures{};
-	std::array<SlotEntry, static_cast<size_t>(Slot::Count)> _slots{};
 	float _scale{};
 
 	static constexpr size_t kMaxEntries{512};

@@ -35,11 +35,7 @@ struct RenderColorTextureEvent;
 struct RenderTextureEvent;
 struct RenderFPSEvent;
 struct RenderHealthBarEvent;
-struct RenderEnemyIconBackgroundEvent;
-struct RenderEnemyIconsEvent;
-struct RenderPlayerOneIconEvent;
-struct RenderPlayerTwoIconEvent;
-struct RenderStageNumberEvent;
+struct RenderSideBarEvent;
 struct WorldGeometryChangedEvent;
 struct WindowSizeChangedToEvent;
 struct RenderTargetsResetEvent;
@@ -131,9 +127,23 @@ class RenderManager final
 	static constexpr int kSideBarColumnPadding{55};
 	static constexpr int kSideBarItemWidth{71};
 	static constexpr int kSideBarColumnTop{60};
-	static constexpr int kSideBarCounterTextPadding{38};
-	//NOTE: opaque on purpose - the engine does not promote a transparent alpha
-	static constexpr SDL_Color kSideBarCounterColor{.r = 0, .g = 0, .b = 2, .a = 255};
+	static constexpr int kReserveFrameHeight{277};
+	static constexpr int kReserveGapBelow{13};
+	//NOTE: 4, not 5 - the 25 px tank is centered in its 27 px row
+	static constexpr Point kReserveInset{.x = 5, .y = 4};
+	static constexpr int kReserveRowHeight{27};
+	static constexpr int kReserveColumnGap{1};
+	static constexpr Point kSideBarEnemyTankSize{.x = 30, .y = 25};
+	static constexpr Point kSideBarLivesSize{.x = kSideBarItemWidth, .y = 70};
+	static constexpr Point kSideBarStageSize{.x = kSideBarItemWidth, .y = 95};
+
+	//NOTE: no sprite means the whole texture
+	struct IconSource final
+	{
+		SDL_Texture* texture{nullptr};
+		std::optional<SDL_Rect> sprite{};
+		Point size{};
+	};
 
 	mutable TextCache _textCache;
 
@@ -155,16 +165,13 @@ class RenderManager final
 	void DrawPauseText(const RenderPauseTextEvent&) const;
 	void DrawGameOverText(const RenderGameOverTextEvent&) const;
 	void DrawGameWonText(const RenderGameWonTextEvent&) const;
-	void DrawEnemyIconBackground(const RenderEnemyIconBackgroundEvent&) const;
-	void DrawEnemyIcons(const RenderEnemyIconsEvent& event) const;
-	void DrawPlayerOneIcons(const RenderPlayerOneIconEvent& event) const;
-	void DrawPlayerTwoIcons(const RenderPlayerTwoIconEvent& event) const;
-	void DrawStageNumber(const RenderStageNumberEvent& event) const;
+	void DrawSideBar(const RenderSideBarEvent& event) const;
 
 	[[nodiscard]] static unsigned int ColorToInt(const SDL_Color& color);
 	[[nodiscard]] static SDL_Color IntToColor(unsigned int color);
 	[[nodiscard]] static unsigned int ComponentsToColor(Uint8 r, Uint8 g, Uint8 b, Uint8 a);
 	[[nodiscard]] static SDL_Rect RectToSdlRect(const ObjRectangle& rect);
+	[[nodiscard]] static SDL_Rect RectOf(Point pos, Point size);
 	//NOTE: everything here is laid out in whole logical pixels; SDL3 wants floats only at the call
 	[[nodiscard]] static SDL_FRect ToFRect(const SDL_Rect& rect);
 	void FillRect(const SDL_Rect& rect) const;
@@ -174,15 +181,16 @@ class RenderManager final
 	void RenderCopyWithClipping(SDL_Texture* texture, SDL_Rect srcRect, SDL_Rect dstRect) const;
 	void RenderCopy(SDL_Texture* texture, SDL_Rect dstRect) const;
 	void DrawMenu(const RenderMenuEvent& event) const;
-	//NOTE: the picture a cell asks for - which texture stands behind it is nothing the menu knows
-	[[nodiscard]] SDL_Texture* IconTexture(UiIcon icon) const;
-	//NOTE: what a table needs to become places: a word is as wide as the font makes it, a picture is a square
+	//NOTE: one switch with no default - an icon left out is a compiler warning, not an empty square
+	[[nodiscard]] IconSource Icon(UiIcon icon) const;
+	void DrawIcon(UiIcon icon, SDL_Rect dstRect) const;
+	//NOTE: what a table needs to become places: a word is as wide as the font makes it, a picture as Icon says
 	[[nodiscard]] UiLayout::Measure CellMeasurer(int pointSize, float scale) const;
 	[[nodiscard]] int FitMenuPointSize(const RenderMenuEvent& event, const SDL_Rect& panel, float scale) const;
 	[[nodiscard]] UiLayout::Placement PlaceCentered(const UiTable& table, const SDL_Rect& panel, int top,
 													const UiLayout::Measure& measure) const;
 	void DrawTablePictures(const UiTable& table, const UiLayout::Placement& placement) const;
-	void DrawTableText(const UiTable& table, const UiLayout::Placement& placement, float scale) const;
+	void DrawTableText(const UiTable& table, const UiLayout::Placement& placement, int pointSize, float scale) const;
 	void AnnounceMenuTiles(const UiLayout::Placement& modes) const;
 	void DrawMenuTextBlock(const RenderMenuTextBlockEvent& event) const;
 	[[nodiscard]] SDL_Rect MenuPanelRect(Point menuPos) const;
@@ -200,9 +208,6 @@ class RenderManager final
 	//NOTE: keeps the proportions and the given size - a line wider than the box is not shrunk, it runs over
 	void DrawTextCentered(const SDL_Rect& box, SDL_Color color, std::string_view text, int basePointSize,
 						  float scale) const;
-	//NOTE: a counter is a new string every time, so it draws from its own slot instead of leaving dead layouts
-	void DrawCounterAt(TextCache::Slot slot, Point pos, SDL_Color color, int value) const;
-	void DrawCounterCentered(TextCache::Slot slot, const SDL_Rect& box, SDL_Color color, int value) const;
 	//NOTE: the render scale is the caller's - a run of lines sets it once, see ScopedRenderScale
 	void DrawText(const TextCache::CachedText& cached, int x, int y, float scale) const;
 	[[nodiscard]] static Point CenteredIn(const SDL_Rect& box, const TextCache::CachedText& cached);

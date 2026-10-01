@@ -2,7 +2,9 @@
 
 #include "components/UiTable.h"
 #include "geometry/Point.h"
+#include <cstddef>
 #include <functional>
+#include <optional>
 #include <vector>
 
 //NOTE: turns a table into places. All it knows of a cell comes from the measurer, so the same code lays
@@ -14,8 +16,11 @@ public:
 	{
 		Point pos{};
 		Point size{};
-		int row{};
-		int column{};
+		//NOTE: the whole slot of its column and row - what a background fills
+		Point boxPos{};
+		Point boxSize{};
+		std::size_t row{};
+		std::size_t column{};
 	};
 
 	struct Placement final
@@ -30,6 +35,7 @@ public:
 
 	static constexpr int kColumnGap{20};
 
-	[[nodiscard]] static Placement Place(const UiTable& table, Point origin, int rowHeight,
-										 const Measure& measure);
+	//NOTE: without a row height every row is as tall as its tallest cell
+	[[nodiscard]] static Placement Place(const UiTable& table, Point origin, std::optional<int> rowHeight,
+										 const Measure& measure, int columnGap = kColumnGap);
 };

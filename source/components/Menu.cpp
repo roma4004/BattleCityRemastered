@@ -74,18 +74,18 @@ UiTable Menu::ModesTable()
 
 UiTable Menu::ControlsTable()
 {
-	return UiTable{.rows = {UiRow{.cells = {Text("Controls:"), Text("P1/P2"), Picture(UiIcon::XBoxHome),
-											Text("XBox"), Picture(UiIcon::PS5Home), Text("PS")}},
-							UiRow{.cells = {Text("Pause"), Text("P"), Picture(UiIcon::XBoxView), Text("View"),
-											Picture(UiIcon::PS5Create), Text("Create")}},
-							UiRow{.cells = {Text("Menu"), Text("M"), Picture(UiIcon::XBoxMenu), Text("Menu"),
-											Picture(UiIcon::PS5Options), Text("Options")}},
-							UiRow{.cells = {Text("Swap"), Text("TAB"), Picture(UiIcon::XBoxY), Text("Y"),
-											Picture(UiIcon::PS5Triangle), Text("Triangle")}},
-							UiRow{.cells = {Text("Move"), Text("Arrows/WASD"), Picture(UiIcon::XBoxDpad),
-											Text("D-pad"), Picture(UiIcon::PS5Dpad), Text("D-pad")}},
-							UiRow{.cells = {Text("Fire"), Text("Space/LCtrl"), Picture(UiIcon::XBoxA), Text("A"),
-											Picture(UiIcon::PS5Cross), Text("Cross")}}}};
+	return UiTable{.rows = {UiRow{.cells = {Text("Controls:"), Text("P1/P2"), Picture(UiIcon::MenuXBoxHome),
+											Text("XBox"), Picture(UiIcon::MenuPS5Home), Text("PS")}},
+							UiRow{.cells = {Text("Pause"), Text("P"), Picture(UiIcon::MenuXBoxView), Text("View"),
+											Picture(UiIcon::MenuPS5Create), Text("Create")}},
+							UiRow{.cells = {Text("Menu"), Text("M"), Picture(UiIcon::MenuXBoxMenu), Text("Menu"),
+											Picture(UiIcon::MenuPS5Options), Text("Options")}},
+							UiRow{.cells = {Text("Swap"), Text("TAB"), Picture(UiIcon::MenuXBoxY), Text("Y"),
+											Picture(UiIcon::MenuPS5Triangle), Text("Triangle")}},
+							UiRow{.cells = {Text("Move"), Text("Arrows/WASD"), Picture(UiIcon::MenuXBoxDpad),
+											Text("D-pad"), Picture(UiIcon::MenuPS5Dpad), Text("D-pad")}},
+							UiRow{.cells = {Text("Fire"), Text("Space/LCtrl"), Picture(UiIcon::MenuXBoxA), Text("A"),
+											Picture(UiIcon::MenuPS5Cross), Text("Cross")}}}};
 }
 
 int Menu::SelectedRow() const

@@ -14,14 +14,16 @@ enum class UiAlign : char8_t
 	Right
 };
 
-//NOTE: one word or one picture, never both - an empty text with UiIcon::None is a spacer holding a column
+//NOTE: a word or a picture, never both, over an optional background - an empty cell is a spacer holding a column
 struct UiCell final
 {
 	std::string text{};
 	UiIcon icon{UiIcon::None};
+	//NOTE: fills the cell's whole slot and is drawn first, so the word lands on it
+	UiIcon background{UiIcon::None};
 	unsigned int color{};
 	UiAlign align{};
-	//NOTE: nudge off the place the row gives it, for a picture that reads better a few pixels aside
+	//NOTE: a nudge off the place the row gives it - a picture a few pixels aside, a word onto its background's spot
 	Point offset{};
 };
 
