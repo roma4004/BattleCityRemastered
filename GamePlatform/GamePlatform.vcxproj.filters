@@ -13,6 +13,9 @@
     <Filter Include="headers\components\managers">
       <UniqueIdentifier>{8cff987a-38bf-2f96-eafb-cc4660b23c90}</UniqueIdentifier>
     </Filter>
+    <Filter Include="headers\utils">
+      <UniqueIdentifier>{db0d532d-a858-6684-72ff-86c898ecb9e8}</UniqueIdentifier>
+    </Filter>
     <Filter Include="source">
       <UniqueIdentifier>{f2ebaa59-6fc7-0118-29e4-efae98d1ffae}</UniqueIdentifier>
     </Filter>
@@ -24,6 +27,9 @@
     </Filter>
     <Filter Include="source\components\managers">
       <UniqueIdentifier>{bd5ceea0-1814-2c64-cfeb-b94bf47ff52d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\utils">
+      <UniqueIdentifier>{b9ff25f0-4ddc-9157-3fcf-57a5653d87ba}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -44,6 +50,12 @@
     </ClCompile>
     <ClCompile Include="..\source\components\managers\TextCache.cpp">
       <Filter>source\components\managers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\components\UiRenderer.cpp">
+      <Filter>source\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\utils\SdlRenderUtils.cpp">
+      <Filter>source\utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -67,6 +79,12 @@
     </ClInclude>
     <ClInclude Include="..\headers\components\managers\TextCache.h">
       <Filter>headers\components\managers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\UiRenderer.h">
+      <Filter>headers\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\utils\SdlRenderUtils.h">
+      <Filter>headers\utils</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

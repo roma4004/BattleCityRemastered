@@ -4,6 +4,11 @@
 #include "geometry/Point.h"
 #include <algorithm>
 #include <cstddef>
+#include <functional>
+#include <iterator>
+#include <ranges>
+#include <span>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -124,4 +129,61 @@ UiLayout::Placement UiLayout::Place(const UiTable& table, const Point origin, co
 	placement.size = Point{.x = tableWidth, .y = rowTop - origin.y};
 
 	return placement;
+}
+
+std::vector<UiLayout::Placement> UiLayout::MeasureAll(const std::span<const UiTable> tables, const int rowHeight,
+													  const Measure& measure)
+{
+	const auto measured = [rowHeight, &measure](const UiTable& table)
+	{
+		return Place(table, Point{}, rowHeight, measure);
+	};
+
+	return tables | std::views::transform(measured) | std::ranges::to<std::vector>();
+}
+
+UiLayout::Placement UiLayout::CenteredAcross(Placement placement, const Point origin, const int width)
+{
+	placement.ShiftBy(Point{.x = origin.x + (width - placement.size.x) / 2, .y = origin.y});
+
+	return placement;
+}
+
+int UiLayout::StackHeight(const std::span<const Placement> placed, const int gap)
+{
+	const auto heightOf = [](const Placement& placement) { return placement.size.y; };
+
+	return std::ranges::fold_left(placed | std::views::transform(heightOf), 0, std::plus{})
+		   + gap * (static_cast<int>(placed.size()) - 1);
+}
+
+bool UiLayout::FitsAcross(const std::span<const UiTable> tables, const std::span<const Placement> placed,
+						  const int width, const int rowHeight)
+{
+	const auto isWord = [](const UiCell& cell) { return !IsPicture(cell) && !cell.text.empty(); };
+	const auto goesIn = [isWord, width, rowHeight](const UiTable& table, const Placement& placement)
+	{
+		const auto isLowEnough = [&table, isWord, rowHeight](const PlacedCell& cell)
+		{
+			return !isWord(table.rows[cell.row].cells[cell.column]) || cell.size.y <= rowHeight;
+		};
+		const bool hasWords{std::ranges::any_of(table.rows, [isWord](const UiRow& row)
+		{
+			return std::ranges::any_of(row.cells, isWord);
+		})};
+
+		return (!hasWords || placement.size.x <= width) && std::ranges::all_of(placement.cells, isLowEnough);
+	};
+
+	return std::ranges::all_of(std::views::zip(tables, placed),
+							   [&goesIn](const auto& pair) { return std::apply(goesIn, pair); });
+}
+
+//NOTE: what goes in keeps going in as it shrinks, so the smallest refused size bounds the answer
+int UiLayout::FitPointSize(const int smallest, const int largest, const std::function<bool(int)>& goesIn)
+{
+	const auto sizes{std::views::iota(smallest, largest + 1)};
+	const auto firstRefused{std::ranges::partition_point(sizes, goesIn)};
+
+	return firstRefused == sizes.begin() ? smallest : *std::ranges::prev(firstRefused);
 }

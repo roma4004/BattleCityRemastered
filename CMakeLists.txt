@@ -34,6 +34,8 @@ set(GAME_PLATFORM_SOURCES
         source/application/UserInput.cpp
         source/components/managers/RenderManager.cpp
         source/components/managers/TextCache.cpp
+        source/components/UiRenderer.cpp
+        source/utils/SdlRenderUtils.cpp
 )
 
 # GameCore sources: every game .cpp except main.cpp (the exe's own entry point) and the platform list above

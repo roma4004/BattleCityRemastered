@@ -165,6 +165,8 @@
     <ClCompile Include="..\source\application\UserInput.cpp" />
     <ClCompile Include="..\source\components\managers\RenderManager.cpp" />
     <ClCompile Include="..\source\components\managers\TextCache.cpp" />
+    <ClCompile Include="..\source\components\UiRenderer.cpp" />
+    <ClCompile Include="..\source\utils\SdlRenderUtils.cpp" />
   </ItemGroup>
   <!-- Headers matching the .cpp files above; header+impl live in the same project. -->
   <ItemGroup>
@@ -175,6 +177,8 @@
     <ClInclude Include="..\headers\application\UserInput.h" />
     <ClInclude Include="..\headers\components\managers\RenderManager.h" />
     <ClInclude Include="..\headers\components\managers\TextCache.h" />
+    <ClInclude Include="..\headers\components\UiRenderer.h" />
+    <ClInclude Include="..\headers\utils\SdlRenderUtils.h" />
   </ItemGroup>
   <ItemDefinitionGroup>
     <PreBuildEvent>

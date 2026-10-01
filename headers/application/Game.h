@@ -25,6 +25,7 @@ class RightSideBar;
 class ScoreBoard;
 class Simulation;
 class TextureManager;
+class UiRenderer;
 class UserInput;
 class WindowConfig;
 
@@ -77,6 +78,7 @@ private:
 	std::unique_ptr<FramePerSecondManager> _fpsManager{nullptr};
 	std::unique_ptr<Simulation> _simulation{nullptr};
 	std::unique_ptr<RenderManager> _renderManager{nullptr};
+	std::unique_ptr<UiRenderer> _uiRenderer{nullptr};
 	std::unique_ptr<ScoreBoard> _scoreBoard{nullptr};
 	std::unique_ptr<LobbyScreen> _lobbyScreen{nullptr};
 	std::unique_ptr<RightSideBar> _rightSideBar{nullptr};

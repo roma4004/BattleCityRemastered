@@ -12,6 +12,7 @@
 #include "components/Menu.h"
 #include "components/RightSideBar.h"
 #include "components/ScoreBoard.h"
+#include "components/UiRenderer.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/GameModeEvents.h"
 #include "components/events/RenderUIEvents.h"
@@ -45,6 +46,7 @@ Game::Game(GameConfig& gameConfig, const ProjectConfig& projectConfig, const Win
 	, _fpsManager{std::make_unique<FramePerSecondManager>(_events, projectConfig, true)}
 	, _simulation{std::make_unique<Simulation>(_events, gameConfig)}
 	, _renderManager{std::make_unique<RenderManager>(_events, gameConfig, sdlConfig)}
+	, _uiRenderer{std::make_unique<UiRenderer>(_events, gameConfig, sdlConfig)}
 	, _scoreBoard{std::make_unique<ScoreBoard>(_events, _simulation->Statistics())}
 	, _lobbyScreen{std::make_unique<LobbyScreen>(_events, gameConfig)}
 	, _rightSideBar{std::make_unique<RightSideBar>(_events, gameConfig)}
