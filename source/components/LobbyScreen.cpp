@@ -3,11 +3,18 @@
 #include "components/EventSystem.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/RenderUIEvents.h"
+#include "components/UiTable.h"
 #include "enums/GameMode.h"
 #include "enums/DisconnectReason.h"
 #include "enums/GameState.h"
 #include <string>
+#include <utility>
 #include <vector>
+
+namespace
+{
+constexpr unsigned int kTextColor{0xffffffffu};
+}//namespace
 
 LobbyScreen::LobbyScreen(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig)
 	: _events{events}
@@ -53,27 +60,26 @@ void LobbyScreen::Display(const bool isDisplayed)
 
 void LobbyScreen::Draw() const
 {
-	_events->EmitEvent(RenderMenuBackgroundEvent{.pos = _pos});
+	_events->EmitEvent(RenderMenuBackgroundEvent{});
 
-	constexpr unsigned int color{0xffffffffu};
-	constexpr int lineStep{30};
-	std::vector<TextBlockLine> lines;
+	const auto line = [](std::string text)
+	{
+		return UiRow{.cells = {TextCell(std::move(text), kTextColor, UiAlign::Centered)}};
+	};
+
+	UiTable lines{};
 	if (_isServerFull)
 	{
-		lines.push_back(TextBlockLine{.color = color, .text = "MATCH IN PROGRESS"});
-		lines.push_back(TextBlockLine{.color = color, .text = "WAITING FOR A FREE SEAT"});
+		lines.rows = {line("MATCH IN PROGRESS"), line("WAITING FOR A FREE SEAT")};
 	}
 	else
 	{
-		const std::string waitingFor{
-				IsHost(_gameConfig.gameMode) ? "WAITING FOR PLAYER" : "CONNECTING TO HOST"};
-		lines.push_back(TextBlockLine{.color = color, .text = waitingFor});
+		lines.rows = {line(IsHost(_gameConfig.gameMode) ? "WAITING FOR PLAYER" : "CONNECTING TO HOST")};
 	}
 
-	lines.push_back(TextBlockLine{.color = color, .text = "PRESS M FOR MENU"});
+	lines.rows.push_back(line("PRESS M FOR MENU"));
 
-	_events->EmitEvent(RenderMenuTextBlockEvent{.menuPos = _pos,
-												.lineHeight = lineStep,
-												.align = TextBlockAlign::CenteredInPanel,
-												.lines = std::move(lines)});
+	std::vector<UiTable> tables{};
+	tables.push_back(std::move(lines));
+	_events->EmitEvent(RenderPanelTablesEvent{.tables = std::move(tables)});
 }

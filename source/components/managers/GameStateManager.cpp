@@ -6,6 +6,7 @@
 #include "components/events/RenderUIEvents.h"
 #include "components/events/ReplicationEvents.h"
 #include "components/WorldSnapshot.h"
+#include "enums/UiIcon.h"
 #include "enums/PlayerSlot.h"
 #include <cstddef>
 
@@ -197,21 +198,12 @@ void GameStateManager::OnWorldSnapshotRequested(const WorldSnapshotRequestedEven
 	event.snapshot.phase = _state;
 }
 
+//NOTE: the pause only - the end of a match is the scoreboard's, which shows its plate on itself or in the field
 void GameStateManager::Draw(const PreDrawUserInterfaceEvent&) const
 {
-	switch (_state)
+	if (_state == GameState::Paused)
 	{
-		case GameState::Paused:
-			_events->EmitEvent(RenderPauseTextEvent{});
-			break;
-		case GameState::Over:
-			_events->EmitEvent(RenderGameOverTextEvent{});
-			break;
-		case GameState::Won:
-			_events->EmitEvent(RenderGameWonTextEvent{});
-			break;
-		default:
-			break;
+		_events->EmitEvent(RenderPlateEvent{.plate = UiIcon::PlatePause});
 	}
 }
 

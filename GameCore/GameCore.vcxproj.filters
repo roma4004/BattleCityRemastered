@@ -617,9 +617,6 @@
     <ClInclude Include="..\headers\enums\Terrain.h">
       <Filter>headers\enums</Filter>
     </ClInclude>
-    <ClInclude Include="..\headers\enums\TextBlockAlign.h">
-      <Filter>headers\enums</Filter>
-    </ClInclude>
     <ClInclude Include="..\headers\enums\TextureOffset.h">
       <Filter>headers\enums</Filter>
     </ClInclude>

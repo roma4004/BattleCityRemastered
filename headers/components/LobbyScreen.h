@@ -1,6 +1,5 @@
 #pragma once
 
-#include "geometry/Point.h"
 #include "components/EventSystem.h"
 #include <memory>
 #include <vector>
@@ -15,8 +14,6 @@ class EventSystem;
 
 class LobbyScreen final
 {
-	Point _pos{.x = 25, .y = 25};
-
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
 	EventSubscription _drawSub{};

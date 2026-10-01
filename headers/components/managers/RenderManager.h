@@ -9,8 +9,10 @@
 #include <SDL3/SDL_render.h>
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -28,14 +30,13 @@ struct GameModeChangedToEvent;
 struct PlayerSlotAssignedEvent;
 struct RenderMenuBackgroundEvent;
 struct RenderMenuEvent;
-struct RenderPauseTextEvent;
-struct RenderGameOverTextEvent;
-struct RenderGameWonTextEvent;
+struct RenderPlateEvent;
 struct RenderColorTextureEvent;
 struct RenderTextureEvent;
 struct RenderFPSEvent;
 struct RenderHealthBarEvent;
 struct RenderSideBarEvent;
+struct RenderPanelTablesEvent;
 struct WorldGeometryChangedEvent;
 struct WindowSizeChangedToEvent;
 struct RenderTargetsResetEvent;
@@ -56,56 +57,34 @@ class RenderManager final
 		//NOTE: whole cells, so the panel's sides land on the outermost brick blocks - the number has to
 		//match the border the .map files leave around the pattern
 		static constexpr size_t kSideInsetCells{5u};
+		static constexpr size_t kTopInset{50u};
 
 		UPoint panelSize{};
-		size_t padding{};
 		size_t sideInset{};
 
 		void Init(const UPoint windowSize, const size_t sideBarWidth)
 		{
-			padding = 50;
 			sideInset = static_cast<size_t>(WorldGeometry::kCellSize) * kSideInsetCells;
 			//NOTE: as far off the bottom edge as off the sides - the panel reads as one frame
 			panelSize = UPoint{.x = windowSize.x - sideBarWidth - sideInset * 2,
-							   .y = windowSize.y - padding - sideInset};
+							   .y = windowSize.y - kTopInset - sideInset};
 		}
 	};
 
 	MenuParams _menuParams{};
 
-	//NOTE: what a block needs across at one point size - where its leftmost line starts, how far the
-	//line reaching furthest gets from there, and the height of the tallest of them
-	struct BlockSpan
-	{
-		int left{};
-		int width{};
-		int tallestLine{};
-	};
-
-	//NOTE: kept between frames - everything the fitted size rests on, and menuPos is not part of it:
-	//the slide reaches the panel only through its y, which neither the width nor the line step reads
-	struct FittedBlock
-	{
-		std::vector<TextBlockLine> lines{};
-		int lineHeight{};
-		TextBlockAlign align{};
-		float scale{};
-		int pointSize{};
-		int shiftX{};
-
-		[[nodiscard]] bool Matches(const RenderMenuTextBlockEvent& event, float renderScale) const;
-	};
-
-	mutable FittedBlock _menuBlockFit{};
-
 	//NOTE: fitting only ever shrinks - every panel screen starts from the same size
-	static constexpr int kBlockMinPointSize{8};
+	static constexpr int kFitMinPointSize{8};
+	//NOTE: the scoreboard and the lobby at the full point size - a row, and the gap between tables, shrink with it
+	static constexpr int kPanelRowHeight{20};
+	//NOTE: the widest table still leaves this much of the panel on each side
+	static constexpr int kPanelSideMargin{20};
 
-	//NOTE: the menu's own places inside the panel - the tables stand where the hand-placed lines used to
-	static constexpr int kMenuLogoTop{17};
-	static constexpr int kMenuLogoWidth{300};
-	static constexpr int kMenuLogoHeight{75};
-	static constexpr int kMenuModesTop{120};
+	//NOTE: the menu's own places inside the panel
+	static constexpr int kMenuTitleTop{17};
+	static constexpr Point kMenuLogoSize{.x = 300, .y = 75};
+	//NOTE: the modes start this far under the logo
+	static constexpr int kMenuTitleGap{28};
 	//NOTE: the controls hang off the bottom of the panel, so the room under them stays the same
 	static constexpr int kMenuControlsBottomGap{25};
 	static constexpr int kMenuRowHeight{30};
@@ -114,9 +93,20 @@ class RenderManager final
 	static constexpr int kMenuSelectorGap{35};
 	static constexpr int kMenuRowPadding{5};
 
-	//NOTE: kept between frames - the fit rests on the scale alone, the menu's words never change
+	//NOTE: kept between frames - the menu's words never change, a new scale refits them and InitMenu forgets it
 	mutable int _menuPointSize{};
 	mutable float _menuScale{};
+
+	//NOTE: kept between frames - a scoreboard number changes a few times a match, not every frame
+	struct PanelFit final
+	{
+		std::vector<UiTable> tables{};
+		float scale{};
+		Point panelSize{};
+		int pointSize{};
+	};
+
+	mutable PanelFit _panelFit{};
 	mutable std::vector<Point> _menuTilePlaces{};
 
 	SDL_Rect _fpsBox{};
@@ -126,7 +116,7 @@ class RenderManager final
 	//NOTE: one column - fps box, enemy grid, counters and the flag share x and width
 	static constexpr int kSideBarColumnPadding{55};
 	static constexpr int kSideBarItemWidth{71};
-	static constexpr int kSideBarColumnTop{60};
+	static constexpr int kFpsBoxHeight{60};
 	static constexpr int kReserveFrameHeight{277};
 	static constexpr int kReserveGapBelow{13};
 	//NOTE: 4, not 5 - the 25 px tank is centered in its 27 px row
@@ -162,9 +152,7 @@ class RenderManager final
 	void OnRenderDeviceReset(const RenderDeviceResetEvent&);
 	void ApplyLogicalSize();
 
-	void DrawPauseText(const RenderPauseTextEvent&) const;
-	void DrawGameOverText(const RenderGameOverTextEvent&) const;
-	void DrawGameWonText(const RenderGameWonTextEvent&) const;
+	void DrawPlate(const RenderPlateEvent& event) const;
 	void DrawSideBar(const RenderSideBarEvent& event) const;
 
 	[[nodiscard]] static unsigned int ColorToInt(const SDL_Color& color);
@@ -186,24 +174,26 @@ class RenderManager final
 	void DrawIcon(UiIcon icon, SDL_Rect dstRect) const;
 	//NOTE: what a table needs to become places: a word is as wide as the font makes it, a picture as Icon says
 	[[nodiscard]] UiLayout::Measure CellMeasurer(int pointSize, float scale) const;
-	[[nodiscard]] int FitMenuPointSize(const RenderMenuEvent& event, const SDL_Rect& panel, float scale) const;
-	[[nodiscard]] UiLayout::Placement PlaceCentered(const UiTable& table, const SDL_Rect& panel, int top,
-													const UiLayout::Measure& measure) const;
+	//NOTE: one size for every table of a screen - tables shrunk apart would read as different screens
+	[[nodiscard]] static int FitPointSize(const std::function<bool(int)>& goesIn);
+	[[nodiscard]] static std::vector<UiLayout::Placement> MeasureAll(std::span<const UiTable> tables, int rowHeight,
+																	 const UiLayout::Measure& measure);
+	//NOTE: only the words answer to the font - a picture is not asked, nor a table of nothing but pictures
+	[[nodiscard]] static bool FitsAcross(std::span<const UiTable> tables, std::span<const UiLayout::Placement> placed,
+										 int width, int rowHeight);
+	[[nodiscard]] static UiLayout::Placement CenteredAcross(UiLayout::Placement placement, const SDL_Rect& panel,
+															int top);
+	[[nodiscard]] int PanelPointSize(const std::vector<UiTable>& tables, const SDL_Rect& panel, float scale) const;
+	[[nodiscard]] static int PanelRowHeight(int pointSize);
+	[[nodiscard]] static int StackHeight(std::span<const UiLayout::Placement> placed, int gap);
 	void DrawTablePictures(const UiTable& table, const UiLayout::Placement& placement) const;
 	void DrawTableText(const UiTable& table, const UiLayout::Placement& placement, int pointSize, float scale) const;
 	void AnnounceMenuTiles(const UiLayout::Placement& modes) const;
-	void DrawMenuTextBlock(const RenderMenuTextBlockEvent& event) const;
-	[[nodiscard]] SDL_Rect MenuPanelRect(Point menuPos) const;
-	//NOTE: the block is never empty here - the draw returns before it reaches this
-	[[nodiscard]] BlockSpan MeasureBlock(const RenderMenuTextBlockEvent& event, int pointSize, float scale) const;
-	[[nodiscard]] int FitBlockPointSize(const RenderMenuTextBlockEvent& event, float scale) const;
-	[[nodiscard]] int MenuBlockShiftX(const RenderMenuTextBlockEvent& event, int pointSize, float scale) const;
-	//NOTE: the menu lays its content out around the text, so the icons and the logo take the shift the
-	//block was last drawn with - the menu emits the block ahead of them for exactly that
-	[[nodiscard]] Point MenuContentPos(Point pos) const;
+	void DrawPanelTables(const RenderPanelTablesEvent& event) const;
+	[[nodiscard]] SDL_Rect MenuPanelRect(int slide) const;
 	[[nodiscard]] float CurrentRenderScale() const;
-	//NOTE: the largest a menu block ever starts from - fitting only ever shrinks from here
-	[[nodiscard]] static int BlockStartPointSize();
+	//NOTE: the largest a panel screen ever starts from - fitting only ever shrinks from here
+	[[nodiscard]] static int FitStartPointSize();
 	void DrawTextAt(Point pos, SDL_Color color, std::string_view text, int basePointSize, float scale) const;
 	//NOTE: keeps the proportions and the given size - a line wider than the box is not shrunk, it runs over
 	void DrawTextCentered(const SDL_Rect& box, SDL_Color color, std::string_view text, int basePointSize,
@@ -233,7 +223,7 @@ class RenderManager final
 	[[nodiscard]] SDL_Rect CenteredInField(int width, int height) const;
 	//NOTE: the field says how wide the plate is, the sprite says what shape - so a bigger map moves it
 	//and grows it without stretching the picture
-	[[nodiscard]] SDL_Rect PlateRect(const ObjRectangle& sprite, double widthShare) const;
+	[[nodiscard]] Point PlateSize(const ObjRectangle& sprite, double widthShare) const;
 
 	static constexpr double kPausePlateShare{0.40};
 	static constexpr double kGameOverPlateShare{0.27};

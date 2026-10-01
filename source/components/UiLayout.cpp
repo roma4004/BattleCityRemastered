@@ -4,7 +4,6 @@
 #include "geometry/Point.h"
 #include <algorithm>
 #include <cstddef>
-#include <optional>
 #include <utility>
 #include <vector>
 
@@ -41,7 +40,24 @@ Point BoxSize(const UiCell& cell, const Point size, const UiLayout::Measure& mea
 }
 }//namespace
 
-UiLayout::Placement UiLayout::Place(const UiTable& table, const Point origin, const std::optional<int> rowHeight,
+void UiLayout::Placement::ShiftBy(const Point offset)
+{
+	const auto shift = [offset](Point& point)
+	{
+		point.x += offset.x;
+		point.y += offset.y;
+	};
+
+	for (PlacedCell& cell: cells)
+	{
+		shift(cell.pos);
+		shift(cell.boxPos);
+	}
+
+	std::ranges::for_each(rows, shift);
+}
+
+UiLayout::Placement UiLayout::Place(const UiTable& table, const Point origin, const int minRowHeight,
 									const Measure& measure, const int columnGap)
 {
 	std::vector<std::vector<Point>> sizes{};
@@ -55,7 +71,7 @@ UiLayout::Placement UiLayout::Place(const UiTable& table, const Point origin, co
 		std::vector<Point> rowSizes{};
 		rowSizes.reserve(row.cells.size());
 		columnWidths.resize(std::max(columnWidths.size(), row.cells.size()));
-		int tallest{};
+		int tallest{minRowHeight};
 
 		for (std::size_t column{}; column < row.cells.size(); ++column)
 		{
@@ -67,7 +83,7 @@ UiLayout::Placement UiLayout::Place(const UiTable& table, const Point origin, co
 		}
 
 		sizes.push_back(std::move(rowSizes));
-		rowHeights.push_back(rowHeight.value_or(tallest));
+		rowHeights.push_back(tallest);
 	}
 
 	std::vector<int> columnStarts(columnWidths.size());

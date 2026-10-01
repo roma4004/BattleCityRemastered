@@ -7,15 +7,16 @@
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/InputEvents.h"
 #include "components/events/RenderUIEvents.h"
+#include "components/UiTable.h"
 #include "enums/GameState.h"
 #include "enums/RespawnGroup.h"
+#include "enums/UiIcon.h"
 #include <algorithm>
 #include <array>
 #include <cstddef>
-#include <iomanip>
+#include <iterator>
 #include <ranges>
-#include <span>
-#include <sstream>
+#include <string>
 #include <string_view>
 #include <utility>
 #include <vector>
@@ -24,15 +25,10 @@ namespace
 {
 using StatField = unsigned short StatisticsData::*;
 
-//NOTE: the scoreboard is a table, so it is written as one - a label and up to three counters,
-//columns in the order P1, P2, the third party. An unset column simply is not printed
+//NOTE: a label and up to three counters, columns in the order P1, P2, the third party - an unset one is not shown
 inline constexpr std::size_t kMaxColumns{3};
 
-//NOTE: in characters - the header row lines up with the counters by using the same width
-inline constexpr int kLabelWidth{22};
-inline constexpr int kColumnWidth{4};
-
-inline constexpr int kRowStep{20};
+inline constexpr unsigned int kTextColor{0xff00ffffu};
 
 struct StatRow final
 {
@@ -83,17 +79,15 @@ constexpr std::array kStatRows{
 		StatRow{.label = "BONUS EXPIRED", .columns = {&StatisticsData::bonusExpired}},
 };
 
-void AddRow(std::vector<TextBlockLine>& lines, const Point pos, const unsigned int color,
-			const std::string_view text, const std::span<const unsigned short> values)
-{
-	std::ostringstream textStream;
-	textStream << std::left << std::setw(kLabelWidth) << text;
-	for (const unsigned short value: values)
-	{
-		textStream << std::setw(kColumnWidth) << value;
-	}
+UiTable Caption(std::string text) { return UiTable{.rows = {UiRow{.cells = {TextCell(std::move(text), kTextColor)}}}}; }
 
-	lines.push_back(TextBlockLine{.pos = pos, .color = color, .text = textStream.str()});
+UiRow RowOf(const std::string_view label, std::ranges::input_range auto&& values)
+{
+	UiRow row{.cells = {TextCell(std::string{label}, kTextColor)}};
+	std::ranges::transform(values, std::back_inserter(row.cells),
+						   [](const unsigned short value) { return TextCell(std::to_string(value), kTextColor); });
+
+	return row;
 }
 }//namespace
 
@@ -129,6 +123,13 @@ void ScoreBoard::OnRespawnCountChangedTo(const RespawnCountChangedToEvent& event
 
 void ScoreBoard::OnDrawUserInterface(const DrawUserInterfaceEvent&) const { Draw(); }
 
+void ScoreBoard::OnPreDrawUserInterface(const PreDrawUserInterfaceEvent&) const
+{
+	_events->EmitEvent(RenderPlateEvent{.plate = Plate()});
+}
+
+UiIcon ScoreBoard::Plate() const { return _isWon ? UiIcon::PlateGameWon : UiIcon::PlateGameOver; }
+
 void ScoreBoard::OnMenuShowed(const MenuShowedEvent& event)
 {
 	if (event.isShown)
@@ -140,7 +141,8 @@ void ScoreBoard::OnMenuShowed(const MenuShowedEvent& event)
 //NOTE: driven by the phase, which a client gets over the wire - it never runs the win check itself
 void ScoreBoard::OnGameStateChangedTo(const GameStateChangedToEvent& event)
 {
-	if (event.state == GameState::Won || event.state == GameState::Over)
+	_isFinished = event.state == GameState::Won || event.state == GameState::Over;
+	if (_isFinished)
 	{
 		_isWon = event.state == GameState::Won;
 		DisplayScore(!_isDemo);
@@ -157,65 +159,35 @@ void ScoreBoard::OnGameStateChangedTo(const GameStateChangedToEvent& event)
 
 void ScoreBoard::Draw() const
 {
-	_events->EmitEvent(RenderMenuBackgroundEvent{.pos = _pos});
+	_events->EmitEvent(RenderMenuBackgroundEvent{});
 	RenderStatistics();
 }
 
-//NOTE: one block, not line by line - the renderer sizes and centers the table whole, so its columns stay aligned
 void ScoreBoard::RenderStatistics() const
 {
-	//NOTE: the board's own top left - the captions and the table hang off it, nothing off the menu's anchor
-	const Point origin{.x = _pos.x + 50, .y = _pos.y + 200};
-	constexpr unsigned int color{0xff00ffffu};
-
-	std::vector<TextBlockLine> lines;
-	lines.push_back(TextBlockLine{.pos = Point{.x = origin.x + 70, .y = origin.y},
-								  .color = color,
-								  .text = _isWon ? "PRESS ENTER FOR NEXT LEVEL, M FOR MENU" : "PRESS M TO SHOW MENU"});
-	lines.push_back(TextBlockLine{.pos = Point{.x = origin.x + 110, .y = origin.y + 40},
-								  .color = color,
-								  .text = "GAME STATISTICS:"});
-
-	std::ostringstream header;
-	header << std::left;
-	for (const std::string_view column: {"P1", "P2", "ENEMY"})
-	{
-		header << std::setw(kColumnWidth) << column;
-	}
-
-	//NOTE: over the counters, a label's width to the right of where the rows start
-	lines.push_back(TextBlockLine{.pos = Point{.x = origin.x + 310, .y = origin.y + 60},
-								  .color = color,
-								  .text = header.str()});
-
-	int y{origin.y + 80};
+	UiTable statistics{.rows = {UiRow{.cells = {TextCell("", kTextColor), TextCell("P1", kTextColor),
+												TextCell("P2", kTextColor), TextCell("ENEMY", kTextColor)}}}};
 
 	//NOTE: the respawn counts are the scoreboard's own, not the statistics block's
-	AddRow(lines, {.x = origin.x, .y = y}, color, "RESPAWN REMAIN",
-		   std::array{_playerOneRespawnCount, _playerTwoRespawnCount, _enemyRespawnCount});
+	statistics.rows.push_back(
+			RowOf("RESPAWN REMAIN", std::array{_playerOneRespawnCount, _playerTwoRespawnCount, _enemyRespawnCount}));
 
 	const StatisticsData& data{_statistics.GetData()};
 	for (const auto& [label, columns]: kStatRows)
 	{
-		y += kRowStep;
-
-		//NOTE: a row fills its columns from the left, so the unset ones are the tail
-		const auto filled{static_cast<std::size_t>(std::ranges::count_if(columns, [](const StatField field)
-		{
-			return field != nullptr;
-		}))};
-
-		std::array<unsigned short, kMaxColumns> values{};
-		std::ranges::transform(columns | std::views::take(filled), values.begin(),
-							   [&data](const StatField field) { return data.*field; });
-
-		AddRow(lines, {.x = origin.x, .y = y}, color, label, std::span{values}.first(filled));
+		statistics.rows.push_back(
+				RowOf(label, columns | std::views::take_while([](const StatField field) { return field != nullptr; })
+									 | std::views::transform([&data](const StatField field) { return data.*field; })));
 	}
 
-	_events->EmitEvent(RenderMenuTextBlockEvent{.menuPos = _pos,
-												.lineHeight = kRowStep,
-												.align = TextBlockAlign::CenteredBlock,
-												.lines = std::move(lines)});
+	std::vector<UiTable> tables{};
+	tables.reserve(4u);
+	tables.push_back(UiTable{.rows = {UiRow{.cells = {UiCell{.icon = Plate()}}}}});
+	tables.push_back(Caption(_isWon ? "PRESS ENTER FOR NEXT LEVEL, M FOR MENU" : "PRESS M TO SHOW MENU"));
+	tables.push_back(Caption("GAME STATISTICS:"));
+	tables.push_back(std::move(statistics));
+
+	_events->EmitEvent(RenderPanelTablesEvent{.tables = std::move(tables)});
 }
 
 void ScoreBoard::DisplayScore(const bool isDisplayed)
@@ -238,6 +210,9 @@ void ScoreBoard::DisplayScore(const bool isDisplayed)
 
 	_enterSub = _isScoreBoardDisplayed && _isWon ? _events->AddListener(this, &ScoreBoard::OnEnter)
 												 : EventSubscription{};
+	_plateSub = _isFinished && !_isScoreBoardDisplayed
+						? _events->AddListener(this, &ScoreBoard::OnPreDrawUserInterface)
+						: EventSubscription{};
 
 	_events->EmitEvent(ScoreBoardShowedEvent{.isDisplayed = isDisplayed});
 }

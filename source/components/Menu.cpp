@@ -21,14 +21,13 @@ constexpr unsigned int kTextColor{0xffffffffu};
 constexpr std::array kModes{GameMode::OnePlayer, GameMode::TwoPlayers, GameMode::CoopWithBot,
 							GameMode::PlayAsHost, GameMode::PlayAsClient};
 
-UiCell Text(std::string text) { return UiCell{.text = std::move(text), .color = kTextColor}; }
+UiCell Text(std::string text) { return TextCell(std::move(text), kTextColor); }
 
 UiCell Picture(const UiIcon icon) { return UiCell{.icon = icon, .color = kTextColor}; }
 }//namespace
 
 Menu::Menu(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig)
-	: _pos{.x = 25, .y = 0}
-	, _yOffsetStart{static_cast<int>(gameConfig.LogicalSize().y)}
+	: _slide{static_cast<int>(gameConfig.LogicalSize().y)}
 	, _events{events}
 	, _input{std::make_unique<InputProviderForMenu>(events, gameConfig)}
 	, _selectedGameMode{GameMode::OnePlayer}
@@ -48,20 +47,21 @@ void Menu::OnMenuShowed(const MenuShowedEvent& event) { DisplayMenu(event.isShow
 
 void Menu::Draw()
 {
-	//NOTE: the opening slide - the menu scrolls up from below the screen to its resting place
-	if (constexpr int yOffsetEnd = 0; _yOffsetStart > yOffsetEnd)
+	if (_slide > 0)
 	{
-		_yOffsetStart -= 3;
-		constexpr int padding{25};
-		_pos.y = padding + _yOffsetStart;
+		constexpr int slideStep{3};
+		_slide = std::max(_slide - slideStep, 0);
 	}
 
-	_events->EmitEvent(RenderMenuBackgroundEvent{.pos = _pos});
-	_events->EmitEvent(RenderMenuEvent{.menuPos = _pos,
+	_events->EmitEvent(RenderMenuBackgroundEvent{.slide = _slide});
+	_events->EmitEvent(RenderMenuEvent{.slide = _slide,
 									   .selectedRow = SelectedRow(),
+									   .title = TitleTable(),
 									   .modes = ModesTable(),
 									   .controls = ControlsTable()});
 }
+
+UiTable Menu::TitleTable() { return UiTable{.rows = {UiRow{.cells = {Picture(UiIcon::MenuLogo)}}}}; }
 
 UiTable Menu::ModesTable()
 {

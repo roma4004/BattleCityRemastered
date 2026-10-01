@@ -4,7 +4,6 @@
 #include "geometry/Point.h"
 #include <cstddef>
 #include <functional>
-#include <optional>
 #include <vector>
 
 //NOTE: turns a table into places. All it knows of a cell comes from the measurer, so the same code lays
@@ -29,13 +28,16 @@ public:
 		//NOTE: the top left of every row, each as wide as the table - what a clickable row is built from
 		std::vector<Point> rows{};
 		Point size{};
+
+		//NOTE: the same places moved as one - a measured table goes where it belongs without being laid out again
+		void ShiftBy(Point offset);
 	};
 
 	using Measure = std::function<Point(const UiCell&)>;
 
 	static constexpr int kColumnGap{20};
 
-	//NOTE: without a row height every row is as tall as its tallest cell
-	[[nodiscard]] static Placement Place(const UiTable& table, Point origin, std::optional<int> rowHeight,
-										 const Measure& measure, int columnGap = kColumnGap);
+	//NOTE: a row is as tall as its tallest cell, and never lower than minRowHeight
+	[[nodiscard]] static Placement Place(const UiTable& table, Point origin, int minRowHeight, const Measure& measure,
+										 int columnGap = kColumnGap);
 };

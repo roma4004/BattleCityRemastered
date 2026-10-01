@@ -1,6 +1,5 @@
 #pragma once
 
-#include "geometry/Point.h"
 #include "components/EventSystem.h"
 #include "components/UiTable.h"
 #include "components/input/InputProviderForMenu.h"
@@ -18,8 +17,7 @@ class InputProviderForMenu;
 
 class Menu final
 {
-	Point _pos{};
-	int _yOffsetStart{};
+	int _slide{};
 
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
@@ -36,6 +34,7 @@ class Menu final
 	void OnSelectedGameModeChangedTo(const SelectedGameModeChangedToEvent& event);
 	void OnMenuShowed(const MenuShowedEvent& event);
 
+	[[nodiscard]] static UiTable TitleTable();
 	[[nodiscard]] static UiTable ModesTable();
 	//NOTE: an action, the keys that do it, and for each pad its button as a picture and by name
 	[[nodiscard]] static UiTable ControlsTable();

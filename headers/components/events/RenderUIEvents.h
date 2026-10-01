@@ -1,9 +1,8 @@
 #pragma once
 
-#include "enums/TextBlockAlign.h"
 #include "components/UiTable.h"
+#include "enums/UiIcon.h"
 #include "geometry/Point.h"
-#include <string>
 #include <vector>
 
 struct MenuShowedEvent
@@ -21,35 +20,25 @@ struct ScoreBoardShowedEvent
 	bool isDisplayed;
 };
 
+//NOTE: how far below its resting place the panel still is - only the menu slides in
 struct RenderMenuBackgroundEvent
 {
-	Point pos;
+	int slide{};
 };
 
-//NOTE: no size of its own - the renderer fits one font size to the whole block
-struct TextBlockLine
+//NOTE: tables stacked top to bottom in the middle of the panel, each centered across it, one font size for all
+struct RenderPanelTablesEvent
 {
-	Point pos{};
-	unsigned int color{};
-	std::string text{};
-
-	[[nodiscard]] bool operator==(const TextBlockLine& rhs) const noexcept = default;
-};
-
-struct RenderMenuTextBlockEvent
-{
-	Point menuPos;
-	int lineHeight;
-	TextBlockAlign align{};
-	std::vector<TextBlockLine> lines;
+	std::vector<UiTable> tables{};
 };
 
 //NOTE: the whole menu in one ask - what travels is the rows themselves, because the panel they stand in,
 //and with it every pixel, belongs to the renderer
 struct RenderMenuEvent
 {
-	Point menuPos{};
+	int slide{};
 	int selectedRow{};
+	UiTable title{};
 	UiTable modes{};
 	UiTable controls{};
 };
@@ -64,11 +53,11 @@ struct MenuTilesPlacedEvent
 };
 
 
-struct RenderPauseTextEvent {};
-
-struct RenderGameOverTextEvent {};
-
-struct RenderGameWonTextEvent {};
+//NOTE: a plate in the middle of the field - the pause, or the end of a match nobody shows a scoreboard for
+struct RenderPlateEvent
+{
+	UiIcon plate{};
+};
 
 //NOTE: the side column as two tables - the reserve stands in its frame at the top, the counters under it
 struct RenderSideBarEvent

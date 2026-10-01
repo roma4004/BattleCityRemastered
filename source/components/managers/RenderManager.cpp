@@ -19,15 +19,20 @@
 #include "geometry/ObjRectangle.h"
 #include "utils/Log.h"
 #include <algorithm>
+#include <array>
 #include <cmath>
-#include <limits>
+#include <functional>
 #include <optional>
 #include <ranges>
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_video.h>
 #include <SDL3_ttf/SDL_ttf.h>
+#include <span>
 #include <string>
 #include <string_view>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 namespace
 {
@@ -74,14 +79,12 @@ void RenderManager::Subscribe()
 	_subs.push_back(_events->AddListener(this, &RenderManager::PresentFrame));
 	_subs.push_back(_events->AddListener(this, &RenderManager::OnGameModeChangedTo));
 	_subs.push_back(_events->AddListener(this, &RenderManager::OnPlayerSlotAssigned));
-	_subs.push_back(_events->AddListener(this, &RenderManager::DrawMenuTextBlock));
+	_subs.push_back(_events->AddListener(this, &RenderManager::DrawPanelTables));
 
 	_subs.push_back(_events->AddListener(this, &RenderManager::DrawMenuBackground));
 	_subs.push_back(_events->AddListener(this, &RenderManager::DrawMenu));
 
-	_subs.push_back(_events->AddListener(this, &RenderManager::DrawPauseText));
-	_subs.push_back(_events->AddListener(this, &RenderManager::DrawGameOverText));
-	_subs.push_back(_events->AddListener(this, &RenderManager::DrawGameWonText));
+	_subs.push_back(_events->AddListener(this, &RenderManager::DrawPlate));
 
 	_subs.push_back(_events->AddListener(this, &RenderManager::DrawColorTexture));
 	_subs.push_back(_events->AddListener(this, &RenderManager::DrawTexture));
@@ -200,42 +203,17 @@ SDL_Rect RenderManager::CenteredInField(const int width, const int height) const
 					.h = height};
 }
 
-SDL_Rect RenderManager::PlateRect(const ObjRectangle& sprite, const double widthShare) const
+Point RenderManager::PlateSize(const ObjRectangle& sprite, const double widthShare) const
 {
 	const auto width{static_cast<int>(static_cast<double>(_gameConfig.battlefieldSize.x) * widthShare)};
-	const auto height{static_cast<int>(static_cast<double>(width) * sprite.h / sprite.w)};
 
-	return CenteredInField(width, height);
+	return Point{.x = width, .y = static_cast<int>(static_cast<double>(width) * sprite.h / sprite.w)};
 }
 
-void RenderManager::DrawPauseText(const RenderPauseTextEvent&) const
+void RenderManager::DrawPlate(const RenderPlateEvent& event) const
 {
-	const SDL_Rect dstRect{PlateRect(TextureOffset::kPauseText, kPausePlateShare)};
-	constexpr SDL_Rect srcRect{.x = static_cast<int>(TextureOffset::kPauseText.x),
-							   .y = static_cast<int>(TextureOffset::kPauseText.y),
-							   .w = static_cast<int>(TextureOffset::kPauseText.w),
-							   .h = static_cast<int>(TextureOffset::kPauseText.h)};
-	RenderCopyWithClipping(_sdlConfig.atlasTexture.get(), srcRect, dstRect);
-}
-
-void RenderManager::DrawGameOverText(const RenderGameOverTextEvent&) const
-{
-	const SDL_Rect dstRect{PlateRect(TextureOffset::kGameOverText, kGameOverPlateShare)};
-	constexpr SDL_Rect srcRect{.x = static_cast<int>(TextureOffset::kGameOverText.x),
-							   .y = static_cast<int>(TextureOffset::kGameOverText.y),
-							   .w = static_cast<int>(TextureOffset::kGameOverText.w),
-							   .h = static_cast<int>(TextureOffset::kGameOverText.h)};
-	RenderCopyWithClipping(_sdlConfig.atlasTexture.get(), srcRect, dstRect);
-}
-
-void RenderManager::DrawGameWonText(const RenderGameWonTextEvent&) const
-{
-	const SDL_Rect dstRect{PlateRect(TextureOffset::kGameWonText, kGameWonPlateShare)};
-	constexpr SDL_Rect srcRect{.x = static_cast<int>(TextureOffset::kGameWonText.x),
-							   .y = static_cast<int>(TextureOffset::kGameWonText.y),
-							   .w = static_cast<int>(TextureOffset::kGameWonText.w),
-							   .h = static_cast<int>(TextureOffset::kGameWonText.h)};
-	RenderCopyWithClipping(_sdlConfig.atlasTexture.get(), srcRect, dstRect);
+	const auto [width, height]{Icon(event.plate).size};
+	DrawIcon(event.plate, CenteredInField(width, height));
 }
 
 void RenderManager::DrawSideBar(const RenderSideBarEvent& event) const
@@ -244,14 +222,14 @@ void RenderManager::DrawSideBar(const RenderSideBarEvent& event) const
 	const UiLayout::Measure measure{CellMeasurer(SDL_Config::kFontSizePtMedium, scale)};
 
 	const SDL_Rect frame{
-			.x = SideBarColumnX(), .y = kSideBarColumnTop, .w = kSideBarItemWidth, .h = kReserveFrameHeight};
+			.x = SideBarColumnX(), .y = _fpsBox.y + _fpsBox.h, .w = kSideBarItemWidth, .h = kReserveFrameHeight};
 	RenderCopyWithClipping(_sdlConfig.atlasTexture.get(), RectToSdlRect(TextureOffset::kEnemyIconBackground), frame);
 
 	const Point reserveAt{.x = frame.x + kReserveInset.x, .y = frame.y + kReserveInset.y};
 	const UiLayout::Placement enemies{
 			UiLayout::Place(event.enemies, reserveAt, kReserveRowHeight, measure, kReserveColumnGap)};
 	const Point countersAt{.x = frame.x, .y = frame.y + frame.h + kReserveGapBelow};
-	const UiLayout::Placement counters{UiLayout::Place(event.counters, countersAt, std::nullopt, measure)};
+	const UiLayout::Placement counters{UiLayout::Place(event.counters, countersAt, 0, measure)};
 
 	DrawTablePictures(event.enemies, enemies);
 	DrawTablePictures(event.counters, counters);
@@ -281,7 +259,7 @@ unsigned int RenderManager::ComponentsToColor(const Uint8 r, const Uint8 g, cons
 
 void RenderManager::DrawMenuBackground(const RenderMenuBackgroundEvent& event) const
 {
-	const SDL_Rect backgroundRect{MenuPanelRect(event.pos)};
+	const SDL_Rect backgroundRect{MenuPanelRect(event.slide)};
 	constexpr unsigned int color{0x91808080u};
 	constexpr Uint8 a{(color >> 24u) & 0xFFu};
 	constexpr Uint8 r{(color >> 16u) & 0xFFu};
@@ -299,6 +277,8 @@ RenderManager::IconSource RenderManager::Icon(const UiIcon icon) const
 	{
 		case UiIcon::None:
 			break;
+		case UiIcon::MenuLogo:
+			return IconSource{.texture = _sdlConfig.logoTexture.get(), .size = kMenuLogoSize};
 		case UiIcon::MenuSelector:
 			return IconSource{.texture = _sdlConfig.selectorIconTexture.get(), .size = menuSquare};
 		case UiIcon::MenuXBoxHome:
@@ -341,6 +321,18 @@ RenderManager::IconSource RenderManager::Icon(const UiIcon icon) const
 			return IconSource{.texture = atlas,
 							  .sprite = RectToSdlRect(TextureOffset::kStageNumberFlag),
 							  .size = kSideBarStageSize};
+		case UiIcon::PlatePause:
+			return IconSource{.texture = atlas,
+							  .sprite = RectToSdlRect(TextureOffset::kPauseText),
+							  .size = PlateSize(TextureOffset::kPauseText, kPausePlateShare)};
+		case UiIcon::PlateGameOver:
+			return IconSource{.texture = atlas,
+							  .sprite = RectToSdlRect(TextureOffset::kGameOverText),
+							  .size = PlateSize(TextureOffset::kGameOverText, kGameOverPlateShare)};
+		case UiIcon::PlateGameWon:
+			return IconSource{.texture = atlas,
+							  .sprite = RectToSdlRect(TextureOffset::kGameWonText),
+							  .size = PlateSize(TextureOffset::kGameWonText, kGameWonPlateShare)};
 	}
 
 	return IconSource{};
@@ -371,35 +363,88 @@ UiLayout::Measure RenderManager::CellMeasurer(const int pointSize, const float s
 	};
 }
 
-//NOTE: one size for both tables - a menu whose halves shrank apart would read as two screens
-int RenderManager::FitMenuPointSize(const RenderMenuEvent& event, const SDL_Rect& panel, const float scale) const
+//NOTE: what goes in keeps going in as it shrinks, so the smallest refused size bounds the answer
+int RenderManager::FitPointSize(const std::function<bool(int)>& goesIn)
 {
-	auto goesIn = [this, &event, &panel, scale](const int pointSize)
-	{
-		const UiLayout::Measure measure{CellMeasurer(pointSize, scale)};
-		const UiLayout::Placement modes{UiLayout::Place(event.modes, Point{}, kMenuRowHeight, measure)};
-		const UiLayout::Placement controls{UiLayout::Place(event.controls, Point{}, kMenuRowHeight, measure)};
-		const auto isLowEnough = [](const UiLayout::PlacedCell& cell) { return cell.size.y <= kMenuRowHeight; };
-
-		return std::max(modes.size.x, controls.size.x) <= panel.w
-			   && std::ranges::all_of(controls.cells, isLowEnough);
-	};
-
-	//NOTE: what goes in keeps going in as it shrinks, so the smallest refused size bounds the answer
-	const auto sizes{std::views::iota(kBlockMinPointSize, BlockStartPointSize() + 1)};
+	const auto sizes{std::views::iota(kFitMinPointSize, FitStartPointSize() + 1)};
 	const auto firstRefused{std::ranges::partition_point(sizes, goesIn)};
 
-	return firstRefused == sizes.begin() ? kBlockMinPointSize : *std::ranges::prev(firstRefused);
+	return firstRefused == sizes.begin() ? kFitMinPointSize : *std::ranges::prev(firstRefused);
 }
 
-//NOTE: measured once to learn how wide it came out, then placed where that width sits in the middle
-UiLayout::Placement RenderManager::PlaceCentered(const UiTable& table, const SDL_Rect& panel, const int top,
-												 const UiLayout::Measure& measure) const
+std::vector<UiLayout::Placement> RenderManager::MeasureAll(const std::span<const UiTable> tables, const int rowHeight,
+														   const UiLayout::Measure& measure)
 {
-	const UiLayout::Placement measured{UiLayout::Place(table, Point{}, kMenuRowHeight, measure)};
-	const Point origin{.x = panel.x + (panel.w - measured.size.x) / 2, .y = panel.y + top};
+	const auto measured = [rowHeight, &measure](const UiTable& table)
+	{
+		return UiLayout::Place(table, Point{}, rowHeight, measure);
+	};
 
-	return UiLayout::Place(table, origin, kMenuRowHeight, measure);
+	return tables | std::views::transform(measured) | std::ranges::to<std::vector>();
+}
+
+bool RenderManager::FitsAcross(const std::span<const UiTable> tables, const std::span<const UiLayout::Placement> placed,
+							   const int width, const int rowHeight)
+{
+	const auto isWord = [](const UiCell& cell) { return cell.icon == UiIcon::None && !cell.text.empty(); };
+	const auto goesIn = [isWord, width, rowHeight](const UiTable& table, const UiLayout::Placement& placement)
+	{
+		const auto isLowEnough = [&table, isWord, rowHeight](const UiLayout::PlacedCell& cell)
+		{
+			return !isWord(table.rows[cell.row].cells[cell.column]) || cell.size.y <= rowHeight;
+		};
+		const bool hasWords{std::ranges::any_of(table.rows, [isWord](const UiRow& row)
+		{
+			return std::ranges::any_of(row.cells, isWord);
+		})};
+
+		return (!hasWords || placement.size.x <= width) && std::ranges::all_of(placement.cells, isLowEnough);
+	};
+
+	return std::ranges::all_of(std::views::zip(tables, placed),
+							   [&goesIn](const auto& pair) { return std::apply(goesIn, pair); });
+}
+
+//NOTE: measured once, then moved to where its width sits in the middle - no second layout
+UiLayout::Placement RenderManager::CenteredAcross(UiLayout::Placement placement, const SDL_Rect& panel, const int top)
+{
+	placement.ShiftBy(Point{.x = panel.x + (panel.w - placement.size.x) / 2, .y = panel.y + top});
+
+	return placement;
+}
+
+int RenderManager::PanelRowHeight(const int pointSize) { return pointSize * kPanelRowHeight / FitStartPointSize(); }
+
+int RenderManager::StackHeight(const std::span<const UiLayout::Placement> placed, const int gap)
+{
+	const auto heightOf = [](const UiLayout::Placement& placement) { return placement.size.y; };
+
+	return std::ranges::fold_left(placed | std::views::transform(heightOf), 0, std::plus{})
+		   + gap * (static_cast<int>(placed.size()) - 1);
+}
+
+//NOTE: as large as the stack lets it be - the plate does not shrink, so the words make the room it needs
+int RenderManager::PanelPointSize(const std::vector<UiTable>& tables, const SDL_Rect& panel, const float scale) const
+{
+	const Point panelSize{.x = panel.w, .y = panel.h};
+	if (_panelFit.tables == tables && _panelFit.panelSize == panelSize
+		&& MathUtils::AreEqualAbsolute(static_cast<double>(_panelFit.scale), static_cast<double>(scale)))
+	{
+		return _panelFit.pointSize;
+	}
+
+	const int width{panel.w - kPanelSideMargin * 2};
+	const int pointSize{FitPointSize([this, &tables, &panel, width, scale](const int size)
+	{
+		const int rowHeight{PanelRowHeight(size)};
+		const auto placed{MeasureAll(tables, rowHeight, CellMeasurer(size, scale))};
+
+		return FitsAcross(tables, placed, width, rowHeight) && StackHeight(placed, rowHeight) <= panel.h;
+	})};
+
+	_panelFit = PanelFit{.tables = tables, .scale = scale, .panelSize = panelSize, .pointSize = pointSize};
+
+	return pointSize;
 }
 
 void RenderManager::DrawTablePictures(const UiTable& table, const UiLayout::Placement& placement) const
@@ -457,24 +502,30 @@ void RenderManager::AnnounceMenuTiles(const UiLayout::Placement& modes) const
 
 void RenderManager::DrawMenu(const RenderMenuEvent& event) const
 {
-	const SDL_Rect panel{MenuPanelRect(event.menuPos)};
+	const SDL_Rect panel{MenuPanelRect(event.slide)};
 	const float scale{CurrentRenderScale()};
-	if (!MathUtils::AreEqualAbsolute(scale, _menuScale))
+	if (!MathUtils::AreEqualAbsolute(static_cast<double>(scale), static_cast<double>(_menuScale)))
 	{
 		_menuScale = scale;
-		_menuPointSize = FitMenuPointSize(event, panel, scale);
+		const std::array tables{event.modes, event.controls};
+		const int width{panel.w - kPanelSideMargin * 2};
+		_menuPointSize = FitPointSize([this, &tables, width, scale](const int size)
+		{
+			return FitsAcross(tables, MeasureAll(tables, kMenuRowHeight, CellMeasurer(size, scale)), width,
+							  kMenuRowHeight);
+		});
 	}
 
 	const UiLayout::Measure measure{CellMeasurer(_menuPointSize, scale)};
-	const UiLayout::Placement modes{PlaceCentered(event.modes, panel, kMenuModesTop, measure)};
-	const int controlsHeight{static_cast<int>(event.controls.rows.size()) * kMenuRowHeight};
-	const int controlsTop{panel.h - kMenuControlsBottomGap - controlsHeight};
-	const UiLayout::Placement controls{PlaceCentered(event.controls, panel, controlsTop, measure)};
-
-	RenderCopy(_sdlConfig.logoTexture.get(), {.x = panel.x + (panel.w - kMenuLogoWidth) / 2,
-											  .y = panel.y + kMenuLogoTop,
-											  .w = kMenuLogoWidth,
-											  .h = kMenuLogoHeight});
+	const auto measured = [&measure](const UiTable& table)
+	{
+		return UiLayout::Place(table, Point{}, kMenuRowHeight, measure);
+	};
+	const UiLayout::Placement title{CenteredAcross(measured(event.title), panel, kMenuTitleTop)};
+	const UiLayout::Placement modes{
+			CenteredAcross(measured(event.modes), panel, kMenuTitleTop + title.size.y + kMenuTitleGap)};
+	UiLayout::Placement controls{measured(event.controls)};
+	controls = CenteredAcross(std::move(controls), panel, panel.h - kMenuControlsBottomGap - controls.size.y);
 
 	const auto selected{static_cast<std::size_t>(event.selectedRow)};
 	if (selected < modes.rows.size())
@@ -486,6 +537,7 @@ void RenderManager::DrawMenu(const RenderMenuEvent& event) const
 				  .h = kMenuIconSize});
 	}
 
+	DrawTablePictures(event.title, title);
 	DrawTablePictures(event.controls, controls);
 
 	//NOTE: one scale for all the words at once - the pictures are drawn in logical pixels above
@@ -494,6 +546,38 @@ void RenderManager::DrawMenu(const RenderMenuEvent& event) const
 	DrawTableText(event.controls, controls, _menuPointSize, scale);
 
 	AnnounceMenuTiles(modes);
+}
+
+void RenderManager::DrawPanelTables(const RenderPanelTablesEvent& event) const
+{
+	if (event.tables.empty())
+	{
+		return;
+	}
+
+	const SDL_Rect panel{MenuPanelRect(0)};
+	const float scale{CurrentRenderScale()};
+	const int pointSize{PanelPointSize(event.tables, panel, scale)};
+	const int rowHeight{PanelRowHeight(pointSize)};
+
+	auto placements{MeasureAll(event.tables, rowHeight, CellMeasurer(pointSize, scale))};
+	int top{(panel.h - StackHeight(placements, rowHeight)) / 2};
+	for (UiLayout::Placement& placement: placements)
+	{
+		placement = CenteredAcross(std::move(placement), panel, top);
+		top += placement.size.y + rowHeight;
+	}
+
+	for (const auto [table, placement]: std::views::zip(event.tables, placements))
+	{
+		DrawTablePictures(table, placement);
+	}
+
+	const ScopedRenderScale scaled{_sdlConfig.renderer.get(), scale};
+	for (const auto [table, placement]: std::views::zip(event.tables, placements))
+	{
+		DrawTableText(table, placement, pointSize, scale);
+	}
 }
 
 void RenderManager::RenderCopyWithClipping(SDL_Texture* texture, const SDL_Rect srcRect, const SDL_Rect dstRect) const
@@ -510,22 +594,7 @@ void RenderManager::RenderCopy(SDL_Texture* texture, const SDL_Rect dstRect) con
 }
 
 
-int RenderManager::BlockStartPointSize() { return SDL_Config::kFontSizePtSmall; }
-
-bool RenderManager::FittedBlock::Matches(const RenderMenuTextBlockEvent& event, const float renderScale) const
-{
-	//NOTE: y is left out on purpose - the slide walks every line down together, and the fit reads only
-	//what a line says (its text) and where it starts across (its x)
-	auto sameLine = [](const TextBlockLine& fitted, const TextBlockLine& line)
-	{
-		return fitted.pos.x == line.pos.x && fitted.text == line.text;
-	};
-
-	return MathUtils::AreEqualAbsolute(scale, renderScale)
-		   && lineHeight == event.lineHeight
-		   && align == event.align
-		   && std::ranges::equal(lines, event.lines, sameLine);
-}
+int RenderManager::FitStartPointSize() { return SDL_Config::kFontSizePtSmall; }
 
 Point RenderManager::CenteredIn(const SDL_Rect& box, const TextCache::CachedText& cached)
 {
@@ -578,129 +647,13 @@ void RenderManager::DrawTextCentered(const SDL_Rect& box, const SDL_Color color,
 	DrawText(*cached, pos.x, pos.y, scale);
 }
 
-//NOTE: the panel belongs to the field, not to whoever is showing it - only the slide-in rides menuPos,
-//which is why nothing here reads its x
-SDL_Rect RenderManager::MenuPanelRect(const Point menuPos) const
+//NOTE: the panel belongs to the field, not to whoever is showing it - all it takes from them is the slide-in
+SDL_Rect RenderManager::MenuPanelRect(const int slide) const
 {
 	return SDL_Rect{.x = static_cast<int>(_menuParams.sideInset),
-					.y = menuPos.y + static_cast<int>(_menuParams.padding / 2u),
+					.y = static_cast<int>(MenuParams::kTopInset) + slide,
 					.w = static_cast<int>(_menuParams.panelSize.x),
 					.h = static_cast<int>(_menuParams.panelSize.y)};
-}
-
-RenderManager::BlockSpan RenderManager::MeasureBlock(const RenderMenuTextBlockEvent& event, const int pointSize,
-													 const float scale) const
-{
-	//NOTE: a block the panel stacks in its middle is measured from zero - its lines carry no position
-	const bool readsLinePositions{event.align != TextBlockAlign::CenteredInPanel};
-
-	BlockSpan span{.left = std::numeric_limits<int>::max()};
-	int right{std::numeric_limits<int>::min()};
-	for (const TextBlockLine& line: event.lines)
-	{
-		//NOTE: one measurement answers both questions the fit asks of a line
-		const Point size{_textCache.MeasureString(line.text, pointSize, scale)};
-		const int lineLeft{readsLinePositions ? line.pos.x : 0};
-
-		span.left = std::min(span.left, lineLeft);
-		span.tallestLine = std::max(span.tallestLine, size.y);
-		right = std::max(right, lineLeft + size.x);
-	}
-
-	span.width = right - span.left;
-
-	return span;
-}
-
-//NOTE: the tightest line decides, the line step caps it
-int RenderManager::FitBlockPointSize(const RenderMenuTextBlockEvent& event, const float scale) const
-{
-	const SDL_Rect panel{MenuPanelRect(event.menuPos)};
-	//NOTE: the block is placed by the panel either way, so all it has to do is go in
-	auto goesIn = [this, &event, panel, scale](const int pointSize)
-	{
-		const BlockSpan span{MeasureBlock(event, pointSize, scale)};
-
-		return span.tallestLine <= event.lineHeight && span.width <= panel.w;
-	};
-
-	//NOTE: what goes in keeps going in as it shrinks, so the smallest refused size bounds the answer
-	const auto sizes{std::views::iota(kBlockMinPointSize, BlockStartPointSize() + 1)};
-	const auto firstRefused{std::ranges::partition_point(sizes, goesIn)};
-
-	return firstRefused == sizes.begin() ? kBlockMinPointSize : *std::ranges::prev(firstRefused);
-}
-
-//NOTE: the whole block moved by one amount, never a line on its own - the columns of the controls table
-//only stay columns while every line shifts alike
-int RenderManager::MenuBlockShiftX(const RenderMenuTextBlockEvent& event, const int pointSize,
-								   const float scale) const
-{
-	if (event.align != TextBlockAlign::CenteredBlock)
-	{
-		return 0;
-	}
-
-	const SDL_Rect panel{MenuPanelRect(event.menuPos)};
-	const BlockSpan span{MeasureBlock(event, pointSize, scale)};
-
-	return panel.x + (panel.w - span.width) / 2 - span.left;
-}
-
-Point RenderManager::MenuContentPos(const Point pos) const
-{
-	return Point{.x = pos.x + _menuBlockFit.shiftX, .y = pos.y};
-}
-
-void RenderManager::DrawMenuTextBlock(const RenderMenuTextBlockEvent& event) const
-{
-	if (event.lines.empty())
-	{
-		return;
-	}
-
-	const float scale{CurrentRenderScale()};
-	if (!_menuBlockFit.Matches(event, scale))
-	{
-		const int pointSize{FitBlockPointSize(event, scale)};
-		const int shiftX{MenuBlockShiftX(event, pointSize, scale)};
-
-		_menuBlockFit = {.lines = event.lines,
-						 .lineHeight = event.lineHeight,
-						 .align = event.align,
-						 .scale = scale,
-						 .pointSize = pointSize,
-						 .shiftX = shiftX};
-	}
-
-	//NOTE: one scale for the whole block - the lines draw back to back inside it
-	const ScopedRenderScale scaled{_sdlConfig.renderer.get(), scale};
-
-	if (event.align == TextBlockAlign::CenteredInPanel)
-	{
-		const SDL_Rect panel{MenuPanelRect(event.menuPos)};
-		const int blockHeight{static_cast<int>(event.lines.size()) * event.lineHeight};
-		int lineY{panel.y + (panel.h - blockHeight) / 2};
-
-		for (const TextBlockLine& line: event.lines)
-		{
-			const SDL_Rect lineBox{.x = panel.x, .y = lineY, .w = panel.w, .h = event.lineHeight};
-			DrawTextCentered(lineBox, IntToColor(line.color), line.text, _menuBlockFit.pointSize, scale);
-			lineY += event.lineHeight;
-		}
-
-		return;
-	}
-
-	//NOTE: clipped here, not in the block - a line missing from the event would change what FitBlockPointSize measures
-	const auto logicalHeight{static_cast<int>(_gameConfig.LogicalSize().y)};
-	for (const TextBlockLine& line: event.lines)
-	{
-		if (line.pos.y < logicalHeight)
-		{
-			DrawTextAt(MenuContentPos(line.pos), IntToColor(line.color), line.text, _menuBlockFit.pointSize, scale);
-		}
-	}
 }
 
 void RenderManager::DrawText(const TextCache::CachedText& cached, const int x, const int y, const float scale) const
@@ -919,6 +872,7 @@ void RenderManager::DrawHealthBar(const RenderHealthBarEvent& event) const
 void RenderManager::InitMenu(const GameConfig& gameConfig)
 {
 	_menuParams.Init(gameConfig.LogicalSize(), gameConfig.sideBarWidth);
+	_menuScale = {};
 
 	CreateColorTexture(kGrayColor);
 }
@@ -928,7 +882,7 @@ SDL_Rect RenderManager::CalcFpsBox(const UPoint& battlefieldSize)
 	return SDL_Rect{.x = static_cast<int>(battlefieldSize.x) + kSideBarColumnPadding,
 					.y = 0,
 					.w = kSideBarItemWidth,
-					.h = kSideBarColumnTop};
+					.h = kFpsBoxHeight};
 }
 
 //NOTE: CalcFpsBox stays static - it runs before the geometry event; everything else asks here

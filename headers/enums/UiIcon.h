@@ -4,6 +4,7 @@
 enum class UiIcon : char8_t
 {
 	None,
+	MenuLogo,
 	MenuSelector,
 	MenuXBoxHome,
 	MenuXBoxView,
@@ -20,5 +21,8 @@ enum class UiIcon : char8_t
 	SideBarEnemyTank,
 	SideBarPlayerOne,
 	SideBarPlayerTwo,
-	SideBarStageFlag
+	SideBarStageFlag,
+	PlatePause,
+	PlateGameOver,
+	PlateGameWon
 };

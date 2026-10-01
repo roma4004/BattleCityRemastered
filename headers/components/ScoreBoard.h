@@ -1,13 +1,14 @@
 #pragma once
 
-#include "geometry/Point.h"
 #include "components/EventSystem.h"
 
 #include <memory>
 #include <vector>
 
+enum class UiIcon : char8_t;
 struct RespawnCountChangedToEvent;
 struct DrawUserInterfaceEvent;
+struct PreDrawUserInterfaceEvent;
 struct EnterEvent;
 struct MenuShowedEvent;
 struct GameStateChangedToEvent;
@@ -16,8 +17,6 @@ class GameStatistics;
 
 class ScoreBoard final
 {
-	Point _pos{.x = 25, .y = 25};
-
 	std::shared_ptr<EventSystem> _events{nullptr};
 	const GameStatistics& _statistics;
 	std::vector<EventSubscription> _subs{};
@@ -25,11 +24,14 @@ class ScoreBoard final
 	EventSubscription _drawSub{};
 
 	bool _isScoreBoardDisplayed{};
+	//NOTE: the match is over - its plate stands on the board, or in the field when there is no board
+	bool _isFinished{};
 	bool _isDemo{};
 	//NOTE: only a won map offers the next one - a lost one is replayed from the menu
 	bool _isWon{};
 	// Held only while the offer is on screen, so Enter means the next level and nothing else
 	EventSubscription _enterSub{};
+	EventSubscription _plateSub{};
 
 	unsigned short _enemyRespawnCount{20u};
 	unsigned short _playerOneRespawnCount{3u};
@@ -39,11 +41,13 @@ class ScoreBoard final
 
 	void OnRespawnCountChangedTo(const RespawnCountChangedToEvent& event);
 	void OnDrawUserInterface(const DrawUserInterfaceEvent&) const;
+	void OnPreDrawUserInterface(const PreDrawUserInterfaceEvent&) const;
 	void OnMenuShowed(const MenuShowedEvent& event);
 	void OnGameStateChangedTo(const GameStateChangedToEvent& event);
 	void OnEnter(const EnterEvent& event);
 
 	void RenderStatistics() const;
+	[[nodiscard]] UiIcon Plate() const;
 
 	void DisplayScore(bool isDisplayed);
 
