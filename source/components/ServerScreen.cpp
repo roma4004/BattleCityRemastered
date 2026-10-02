@@ -230,21 +230,6 @@ constexpr auto kCaretBlink{1060ms};
 
 	return {seats + address.substr(0, cut), std::string(kPlayersHeader.size(), ' ') + address.substr(cut)};
 }
-//TEMP: fake servers for a visual check of the scrolled list - not for commit
-void AddFakeServers(std::vector<network::FoundServer>& servers)
-{
-	const std::vector<network::FoundServer> fakes{
-			{.host = "255.255.255.255", .gamePort = 65535, .freeSeats = 1},
-			{.host = "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff", .gamePort = 65535, .freeSeats = 2},
-			{.host = "192.168.0.10", .gamePort = 50001, .freeSeats = 2},
-			{.host = "255.255.255.254", .gamePort = 65534, .freeSeats = 0},
-			{.host = "2001:db8:85a3:1234:5678:8a2e:370:7334", .gamePort = 65535, .freeSeats = 1},
-			{.host = "ffff:ffff:ffff:ffff:ffff:ffff:ffff:fffe", .gamePort = 65534, .freeSeats = 0},
-			{.host = "10.0.0.6", .gamePort = 4001, .freeSeats = 0},
-			{.host = "fdfd::1a54:4f90", .gamePort = 5000, .freeSeats = 2},
-			{.host = "192.168.0.14", .gamePort = 50005, .freeSeats = 1}};
-	servers.insert(servers.end(), fakes.begin(), fakes.end());
-}
 
 //NOTE: a server with someone waiting first, then an empty one, a full one last
 [[nodiscard]] std::vector<network::FoundServer> JoinOrder(std::vector<network::FoundServer> servers)
@@ -276,6 +261,19 @@ void AddFakeServers(std::vector<network::FoundServer>& servers)
 
 	return first;
 }
+//TEMP: fake servers for a visual check of the scrolled list, after the real ones - not for commit
+std::vector<network::FoundServer> FakeServers()
+{
+	return JoinOrder({{.host = "255.255.255.255", .gamePort = 65535, .freeSeats = 1},
+					  {.host = "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff", .gamePort = 65535, .freeSeats = 2},
+					  {.host = "192.168.0.10", .gamePort = 50001, .freeSeats = 2},
+					  {.host = "255.255.255.254", .gamePort = 65534, .freeSeats = 0},
+					  {.host = "2001:db8:85a3:1234:5678:8a2e:370:7334", .gamePort = 65535, .freeSeats = 1},
+					  {.host = "ffff:ffff:ffff:ffff:ffff:ffff:ffff:fffe", .gamePort = 65534, .freeSeats = 0},
+					  {.host = "10.0.0.6", .gamePort = 4001, .freeSeats = 0},
+					  {.host = "fdfd::1a54:4f90", .gamePort = 5000, .freeSeats = 2},
+					  {.host = "192.168.0.14", .gamePort = 50005, .freeSeats = 1}});
+}
 }//namespace
 
 ServerScreen::ServerScreen(const std::shared_ptr<EventSystem>& events, const network::ServerAddress& address)
@@ -299,14 +297,13 @@ void ServerScreen::Open(const GameMode mode)
 	if (!IsHosting())
 	{
 		_scan = std::make_unique<network::DiscoveryScan>(network::LocalAddress());
-		AddFakeServers(_servers); //TEMP
-		_servers = JoinOrder(std::move(_servers)); //TEMP
 	}
 
 	//NOTE: the caret starts at the address, only a paste puts it on the port
 	std::ranges::for_each(_rows, [](Row& row) { row.StepToStart(0); });
 
 	PickFirst();
+	std::ranges::copy(FakeServers(), std::back_inserter(_servers)); //TEMP
 
 	_openSubs.push_back(_events->AddListener(this, &ServerScreen::OnPreTickUpdate));
 	_openSubs.push_back(_events->AddListener(this, &ServerScreen::OnTextTyped));
@@ -364,10 +361,10 @@ void ServerScreen::OnPreTickUpdate(const PreTickUpdateEvent&)
 
 	const std::optional<network::FoundServer> focused{
 			_focus.line == Line::Server ? std::optional{_servers[_focus.server]} : std::nullopt};
+	_servers.resize(_servers.size() - FakeServers().size()); //TEMP
 	const bool wasEmpty{_servers.empty()};
 	_servers = JoinOrder(_scan->Servers());
-	AddFakeServers(_servers); //TEMP
-	_servers = JoinOrder(std::move(_servers)); //TEMP
+	std::ranges::copy(FakeServers(), std::back_inserter(_servers)); //TEMP
 	_firstShown = std::min(_firstShown, LastFirstShown(_servers));
 	if (!focused)
 	{
