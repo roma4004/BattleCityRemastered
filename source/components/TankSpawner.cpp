@@ -353,15 +353,17 @@ void TankSpawner::SpendLoadout(const Uuid uuid, const TankType type, const int h
 		_events->EmitEvent(Key(SeatOf(type)), BonusShipPickupEvent{});
 	}
 
-	if (IsHost(_gameMode) && carried.tier > 1u)
+	if (!IsHost(_gameMode))
 	{
-		_events->EmitEvent(Key(uuid), TierChangedEvent{.tier = carried.tier, .uuid = uuid});
+		return;
 	}
 
-	if (IsHost(_gameMode))
+	if (carried.tier > 1u)
 	{
-		_events->EmitEvent(HealthChangedEvent{.health = health, .uuid = uuid});
+		_events->EmitEvent(TierChangedEvent{.tier = carried.tier, .uuid = uuid});
 	}
+
+	_events->EmitEvent(HealthChangedEvent{.health = health, .uuid = uuid});
 }
 
 bool TankSpawner::IsSpawnSpotFree(const ObjRectangle& rect, const Uuid ignoredSpawn) const

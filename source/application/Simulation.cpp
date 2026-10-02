@@ -115,7 +115,7 @@ void Simulation::OnGameModeChangedTo(const GameModeChangedToEvent& event)
 		//dial yet. The game watches for a server to publish one and comes back here with it
 		if (_gameConfig.serverAddress.port == network::kAnyFreePort)
 		{
-			Log::Info("no server port to join yet - asking for one on the network, or pass --port=N");
+			Log::Info("no server port to join yet - waiting for the server to tell it");
 
 			return;
 		}
@@ -136,7 +136,7 @@ void Simulation::OnMatchStarted(const MatchStartedEvent&)
 	_events->EmitEvent(GameResetEvent{.keepsPlayerProgress = _isNextLevel});
 	_isNextLevel = false;
 
-	_events->EmitEvent(ShowMenuEvent{.show = false});
+	_events->EmitEvent(ShowMenuEvent{.isShown = false});
 	_events->EmitEvent(SetPauseEvent{.isPaused = false});
 
 	_events->EmitEvent(LoadMapEvent{});
@@ -176,7 +176,10 @@ void Simulation::StartNextLevel()
 	_events->EmitEvent(MatchRestartRequestedEvent{});
 }
 
-void Simulation::OnMapLoadFailed(const MapLoadFailedEvent&) const { _events->EmitEvent(ShowMenuEvent{.show = true}); }
+void Simulation::OnMapLoadFailed(const MapLoadFailedEvent&) const
+{
+	_events->EmitEvent(ShowMenuEvent{.isShown = true});
+}
 
 void Simulation::OnConnectedToHost(const ClientConnectedToHostEvent&)
 {
@@ -200,7 +203,7 @@ void Simulation::EnterLobby()
 	//NOTE: carries the level flag too - on a host the lobby stands between the won board and the next
 	//map, and a plain reset here would take the tier and the lives the players just earned
 	_events->EmitEvent(GameResetEvent{.keepsPlayerProgress = _isNextLevel});
-	_events->EmitEvent(ShowMenuEvent{.show = false});
+	_events->EmitEvent(ShowMenuEvent{.isShown = false});
 
 	if (_isLinkUp)
 	{

@@ -8,7 +8,7 @@
 enum class GameMode : char8_t;
 struct DrawUserInterfaceEvent;
 struct SelectedGameModeChangedToEvent;
-struct MenuShowedEvent;
+struct MenuShownEvent;
 class GameConfig;
 class EventSystem;
 class GameStatistics;
@@ -25,16 +25,16 @@ class Menu final
 	std::unique_ptr<InputProviderForMenu> _input{nullptr};
 
 	GameMode _selectedGameMode{};
-	bool _isMenuDisplayed{};
+	bool _isMenuShown{};
 
 	void Subscribe();
 
 	void OnDrawUserInterface(const DrawUserInterfaceEvent&);
 	void OnSelectedGameModeChangedTo(const SelectedGameModeChangedToEvent& event);
-	void OnMenuShowed(const MenuShowedEvent& event);
+	void OnMenuShown(const MenuShownEvent& event);
 
 	[[nodiscard]] int SelectedRow() const;
-	void DisplayMenu(bool isDisplayed);
+	void DisplayMenu(bool isShown);
 
 	void Draw();
 

@@ -13,6 +13,7 @@ struct ClientConnectedToHostEvent;
 struct NextGameModeEvent;
 struct PreviousGameModeEvent;
 struct SelectedGameModeChangedToEvent;
+struct ServerAddressChosenEvent;
 class ServerProcess;
 class EventSystem;
 class FramePerSecondManager;
@@ -23,6 +24,7 @@ class ProjectConfig;
 class RenderManager;
 class RightSideBar;
 class ScoreBoard;
+class ServerScreen;
 class Simulation;
 class TextureManager;
 class UiRenderer;
@@ -60,10 +62,12 @@ private:
 	void OnSelectedGameModeChangedTo(const SelectedGameModeChangedToEvent& event);
 	void OnConnectedToHost(const ClientConnectedToHostEvent&);
 
+	void OnServerAddressChosen(const ServerAddressChosenEvent& event);
 	void EnterGameMode(GameMode mode);
+	void AbandonHosting();
 
-	//NOTE: a client nobody gave a port to has one place to look - the file a dedicated server writes next
-	//to the exe. It is watched rather than read once, so the two windows may be started in either order
+	//NOTE: a port nobody named, and our own child's, is asked of the server's beacon or read from the file it
+	//writes next to the exe. It is watched rather than read once, so the two windows may be started in either order
 	void WatchPublishedPort(GameMode mode);
 	void PollPublishedPort();
 	//NOTE: the answer matters only to the poll - the first reading is taken for its side effect
@@ -82,6 +86,7 @@ private:
 	std::unique_ptr<ScoreBoard> _scoreBoard{nullptr};
 	std::unique_ptr<LobbyScreen> _lobbyScreen{nullptr};
 	std::unique_ptr<RightSideBar> _rightSideBar{nullptr};
+	std::unique_ptr<ServerScreen> _serverScreen{nullptr};
 
 	std::vector<EventSubscription> _subs{};
 
@@ -89,9 +94,12 @@ private:
 
 	GameMode _selectedGameMode{};
 
-	//NOTE: a port that came in on the command line beats anything published - it is the one the user named
-	bool _isPortNamedByArguments{};
+	//NOTE: an address on the command line skips the server screen
+	bool _isAddressNamedByArguments{};
+	//NOTE: a port named on the command line or the server screen beats a published one - for a client only
+	bool _isPortNamed{};
 	bool _isDialingPublishedPort{};
+	bool _isPortFileRead{};
 	std::chrono::steady_clock::time_point _nextPortPoll{};
 	//NOTE: built only while there is a port to look for, and dropped with the mode that wanted it
 	std::unique_ptr<network::DiscoveryProbe> _portProbe{nullptr};

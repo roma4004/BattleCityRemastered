@@ -1,16 +1,19 @@
 #include "network/Discovery.h"
 #include "network/DiscoveryBeacon.h"
 #include "network/DiscoveryProbe.h"
+#include "network/DiscoveryScan.h"
 #include "network/Endpoints.h"
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/address.hpp>
 #include <gtest/gtest.h>
+#include <algorithm>
 #include <chrono>
 #include <cstdint>
 #include <optional>
 #include <string>
 #include <string_view>
 #include <thread>
+#include <tuple>
 
 // the reply is raw bytes rather than a command, so the pack/parse pair is the whole contract
 TEST(DiscoveryFormatTest, APackedReplyParsesBackToItself)
@@ -146,4 +149,28 @@ TEST_F(DiscoveryBeaconTest, ASecondBeaconDoesNotListen)
 										  [] { return std::uint8_t{2}; }};
 
 	EXPECT_FALSE(second.IsListening());
+}
+
+// the scan asks this machine by its address too - its own broadcast may never come back to it
+TEST_F(DiscoveryBeaconTest, AScanFindsTheServerOnThisMachine)
+{
+	constexpr std::uint16_t gamePort{54321u};
+	network::DiscoveryBeacon beacon{_ioContext, boost::asio::ip::address_v4::loopback(), gamePort,
+									[] { return std::uint8_t{2}; }};
+	if (!beacon.IsListening())
+	{
+		GTEST_SKIP() << "the discovery port is taken by something else on this machine";
+	}
+
+	network::DiscoveryScan scan{std::string{network::kDefaultHost}};
+	const network::FoundServer expected{.host = network::kDefaultHost, .gamePort = gamePort, .freeSeats = 2u};
+
+	for (int attempt{}; attempt < 100 && !std::ranges::contains(scan.Servers(), expected); ++attempt)
+	{
+		_ioContext.poll();
+		std::ignore = scan.Poll();
+		std::this_thread::sleep_for(std::chrono::milliseconds{5});
+	}
+
+	EXPECT_TRUE(std::ranges::contains(scan.Servers(), expected));
 }

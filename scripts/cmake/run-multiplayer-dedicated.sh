@@ -2,9 +2,9 @@
 # A server process of its own, then two client windows - it outlives them, so a window can leave
 # and come back. run-multiplayer.sh is the shorter path when that does not matter.
 # Runs build/cmake/Debug-MinGW; an argument names another exe.
-# BC_ADDRESS moves the server off 127.0.0.1. BC_PORT pins the port (BC_PORT=1234); left alone, the
+# BC_ADDRESS overrides this machine's network address. BC_PORT pins the port (BC_PORT=1234); left alone, the
 # server takes any free one and writes it to server-port.txt, which is where the windows read it from
-host=${BC_ADDRESS:-127.0.0.1}
+address=${BC_ADDRESS:+--address=$BC_ADDRESS}
 port=${BC_PORT:-0}
 game_exe=${1:-$(dirname "$0")/../../build/cmake/Debug-MinGW/BattleCityRemastered}
 # assets are copied next to the exe, so the cwd must be its folder
@@ -23,7 +23,7 @@ fi
 port_file=server-port.txt
 rm -f "$port_file"
 # stdin from /dev/null - its console reader would get a background job stopped by the terminal
-./BattleCityServer --address="$host" --port="$port" --port-file="$port_file" < /dev/null &
+./BattleCityServer $address --port="$port" --port-file="$port_file" < /dev/null &
 server_pid=$!
 # nothing owns the server here the way the game does, so take it down with this script
 trap 'kill "$server_pid" 2>/dev/null' EXIT INT TERM
@@ -40,12 +40,12 @@ if [ ! -s "$port_file" ]; then
 	exit 1
 fi
 port=$(cat "$port_file")
-echo "server on $host:$port"
+echo "server on ${BC_ADDRESS:-this machine's address}:$port"
 
-"$exe" --client --address="$host" --port="$port" --size=800,600 --pos=0,0 &
+"$exe" --client $address --port="$port" --size=800,600 --pos=0,0 &
 first=$!
 sleep 1
-"$exe" --client --address="$host" --port="$port" --size=800,600 --pos=810,0 &
+"$exe" --client $address --port="$port" --size=800,600 --pos=810,0 &
 second=$!
 
 wait "$first" "$second"

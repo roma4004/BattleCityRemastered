@@ -12,6 +12,7 @@
 #include "components/Menu.h"
 #include "components/RightSideBar.h"
 #include "components/ScoreBoard.h"
+#include "components/ServerScreen.h"
 #include "components/UiRenderer.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/GameModeEvents.h"
@@ -52,8 +53,17 @@ Game::Game(GameConfig& gameConfig, const ProjectConfig& projectConfig, const Win
 	, _rightSideBar{std::make_unique<RightSideBar>(_events, gameConfig)}
 	, _gameConfig{gameConfig}
 	, _selectedGameMode{GameMode::OnePlayer}
-	, _isPortNamedByArguments{gameConfig.serverAddress.port != network::kAnyFreePort}
+	, _isAddressNamedByArguments{launchOptions.serverHost.has_value()}
+	, _isPortNamed{gameConfig.serverAddress.port != network::kAnyFreePort}
 {
+	//NOTE: loopback is out of reach from another machine
+	if (!_isAddressNamedByArguments)
+	{
+		_gameConfig.serverAddress.host = network::LocalAddress();
+	}
+
+	_serverScreen = std::make_unique<ServerScreen>(_events, _gameConfig.serverAddress);
+
 	Subscribe();
 
 	EnterGameMode(launchOptions.gameMode);
@@ -61,7 +71,7 @@ Game::Game(GameConfig& gameConfig, const ProjectConfig& projectConfig, const Win
 	if (launchOptions.isDemo)
 	{
 		_events->EmitEvent(DemoStartedEvent{});
-		_events->EmitEvent(ShowMenuEvent{.show = true});
+		_events->EmitEvent(ShowMenuEvent{.isShown = true});
 	}
 }
 
@@ -74,21 +84,46 @@ void Game::Subscribe()
 	_subs.push_back(_events->AddListener(this, &Game::OnApplyGameMode));
 	_subs.push_back(_events->AddListener(this, &Game::OnSelectedGameModeChangedTo));
 	_subs.push_back(_events->AddListener(this, &Game::OnConnectedToHost));
+	_subs.push_back(_events->AddListener(this, &Game::OnServerAddressChosen));
 }
 
-void Game::OnApplyGameMode(const ApplyGameModeEvent&) { EnterGameMode(_selectedGameMode); }
+void Game::OnApplyGameMode(const ApplyGameModeEvent&)
+{
+	//NOTE: only the server process tells the two network entries apart; a restart needs no address
+	const GameMode entered{_serverProcess ? GameMode::PlayAsHost : _gameConfig.gameMode};
+	//NOTE: a client asked again picks its server anew, unless the command line named it
+	const bool isPickedAnew{_selectedGameMode == GameMode::PlayAsClient && !_isAddressNamedByArguments};
+	if (_selectedGameMode == entered && !isPickedAnew && _simulation->TryRestartMatch())
+	{
+		return;
+	}
+
+	if (IsNetworkGame(_selectedGameMode) && !_isAddressNamedByArguments)
+	{
+		_serverScreen->Open(_selectedGameMode);
+
+		return;
+	}
+
+	EnterGameMode(_selectedGameMode);
+}
+
+//NOTE: a port the screen leaves out is looked up anew
+void Game::OnServerAddressChosen(const ServerAddressChosenEvent& event)
+{
+	_gameConfig.serverAddress = event.address;
+	_isPortNamed = event.address.port != network::kAnyFreePort;
+	//NOTE: a server still up was started on the address before; the link goes first, as in EnterGameMode
+	_simulation->LeaveGameMode();
+	_serverProcess.reset();
+
+	EnterGameMode(event.mode);
+}
 
 //NOTE: PlayAsHost starts BattleCityServer and joins it as an ordinary client - this process runs
 //as a client either way, and takes whichever seat is free
 void Game::EnterGameMode(const GameMode mode)
 {
-	//NOTE: both network entries apply PlayAsClient; only the server process tells them apart
-	const GameMode entered{_serverProcess ? GameMode::PlayAsHost : _gameConfig.gameMode};
-	if (mode == entered && _simulation->TryRestartMatch())
-	{
-		return;
-	}
-
 	//NOTE: the link goes before the process it talks to - built any earlier it dials a server
 	//this call is about to kill
 	_simulation->LeaveGameMode();
@@ -107,25 +142,24 @@ void Game::EnterGameMode(const GameMode mode)
 		_serverProcess = std::make_unique<ServerProcess>();
 	}
 
-	const std::optional<std::uint16_t> port{_serverProcess->Start(_gameConfig.serverAddress)};
-	if (!port)
+	if (!_serverProcess->Start(_gameConfig.serverAddress))
 	{
-		_serverProcess.reset();
-		_events->EmitEvent(ShowMenuEvent{.show = true});
+		AbandonHosting();
 
 		return;
 	}
 
-	//NOTE: with --port=auto the child picked its own, so this is the first moment the game knows where to dial
-	_gameConfig.serverAddress.port = *port;
-	_isDialingPublishedPort = false;
-
+	//NOTE: the lobby comes up at once rather than the window freezing while the child starts
+	WatchPublishedPort(mode);
 	_simulation->ApplyGameMode(GameMode::PlayAsClient);
 }
 
 void Game::WatchPublishedPort(const GameMode mode)
 {
-	_isDialingPublishedPort = mode == GameMode::PlayAsClient && !_isPortNamedByArguments;
+	//NOTE: our own server is dialled by the port it writes down even when it was named - it listens only then
+	_isDialingPublishedPort = mode == GameMode::PlayAsHost || (mode == GameMode::PlayAsClient && !_isPortNamed);
+	//NOTE: the file lies next to this exe, so it can only name a server on this machine
+	_isPortFileRead = mode == GameMode::PlayAsHost || network::IsThisMachine(_gameConfig.serverAddress.host);
 	if (!_isDialingPublishedPort)
 	{
 		//NOTE: dropped with the mode that wanted it - its socket and thread have nobody to ask any more
@@ -138,7 +172,10 @@ void Game::WatchPublishedPort(const GameMode mode)
 	//what a server says now is worth dialling, even when it says the same thing again
 	_gameConfig.serverAddress.port = network::kAnyFreePort;
 	_nextPortPoll = std::chrono::steady_clock::time_point{};
-	_portProbe = std::make_unique<network::DiscoveryProbe>(_gameConfig.serverAddress.host);
+	//NOTE: a beacon on this machine may be another server's - our own child is read from its file
+	_portProbe = mode == GameMode::PlayAsHost
+						 ? nullptr
+						 : std::make_unique<network::DiscoveryProbe>(_gameConfig.serverAddress.host);
 
 	TryAdoptPublishedPort();
 }
@@ -157,6 +194,15 @@ void Game::PollPublishedPort()
 	}
 
 	_nextPortPoll = now + kPublishedPortPollStep;
+
+	//NOTE: a child that died says so at once - the lobby would wait for its port for ever
+	if (_serverProcess && !_serverProcess->IsRunning())
+	{
+		Log::Error("ServerProcess: BattleCityServer exited before the game joined it");
+		AbandonHosting();
+
+		return;
+	}
 
 	if (!TryAdoptPublishedPort())
 	{
@@ -182,7 +228,7 @@ bool Game::TryAdoptPublishedPort()
 		}
 	}
 
-	if (!port)
+	if (!port && _isPortFileRead)
 	{
 		port = ServerProcess::PublishedPort();
 	}
@@ -195,6 +241,16 @@ bool Game::TryAdoptPublishedPort()
 	_gameConfig.serverAddress.port = *port;
 
 	return true;
+}
+
+//NOTE: back to the menu, with nothing left dialling a server that is not there
+void Game::AbandonHosting()
+{
+	_serverProcess.reset();
+	_isDialingPublishedPort = false;
+	_portProbe.reset();
+	_simulation->LeaveGameMode();
+	_events->EmitEvent(ShowMenuEvent{.isShown = true});
 }
 
 //NOTE: the number held now is the one that answered, so there is nothing left to watch for

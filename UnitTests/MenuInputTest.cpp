@@ -5,6 +5,8 @@
 #include "components/events/RenderUIEvents.h"
 #include "components/events/TimingEvents.h"
 #include "components/input/InputProviderForMenu.h"
+#include "enums/GameMode.h"
+#include "enums/GameState.h"
 #include "gtest/gtest.h"
 #include <memory>
 #include <vector>
@@ -30,7 +32,7 @@ protected:
 
 		_subs.push_back(_events->AddListener([this](const ApplyGameModeEvent&) { ++_applyCount; }));
 		_subs.push_back(_events->AddListener([this](const ShowMenuEvent&) { ++_showMenuCount; }));
-		_subs.push_back(_events->AddListener([this](const MenuShowedEvent& event)
+		_subs.push_back(_events->AddListener([this](const MenuShownEvent& event)
 		{
 			_menuShown.push_back(event.isShown);
 		}));
@@ -92,4 +94,23 @@ TEST_F(MenuInputTest, ConfirmIsIgnoredWhileTheMenuIsClosed)
 	_events->EmitEvent(PreTickUpdateEvent{});
 
 	EXPECT_EQ(_applyCount, 0);
+}
+
+//NOTE: a client's unpause goes to the server - the screen standing in for the menu must not send one
+TEST_F(MenuInputTest, HidingTheMenuForTheServerScreenKeepsTheMatchPaused)
+{
+	_gameConfig.gameMode = GameMode::PlayAsClient;
+	_gameConfig.gameState = GameState::Playing;
+	_events->EmitEvent(MenuReleasedEvent{});
+	std::vector<bool> requested{};
+	const EventSubscription sub{_events->AddListener([&requested](const PauseRequestedEvent& event)
+	{
+		requested.push_back(event.isPaused);
+	})};
+
+	_events->EmitEvent(ServerScreenShownEvent{.isShown = true});
+	_events->EmitEvent(ShowMenuEvent{.isShown = false});
+
+	EXPECT_TRUE(_menuInput->GetPause());
+	EXPECT_TRUE(requested.empty());
 }

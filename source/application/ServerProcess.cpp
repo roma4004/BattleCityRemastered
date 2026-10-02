@@ -2,7 +2,6 @@
 #include "network/Endpoints.h"
 #include "utils/Log.h"
 #include <charconv>
-#include <chrono>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
@@ -10,7 +9,6 @@
 #include <optional>
 #include <string>
 #include <system_error>
-#include <thread>
 #include <windows.h>
 
 namespace
@@ -20,8 +18,6 @@ constexpr auto kServerExeName{L"BattleCityServer.exe"};
 //runs with the exe's folder as its working directory. Two games hosting at once would share it, and the
 //second one would read the first one's port - a lobby is what fixes that, not a longer name
 constexpr auto kPortFileName{"server-port.txt"};
-constexpr auto kPortWait{std::chrono::seconds{5}};
-constexpr auto kPortPollStep{std::chrono::milliseconds{20}};
 
 //NOTE: the three options the child reads back - the host stays a bare literal, the port is its own word
 std::string ChildArguments(const network::ServerAddress& address)
@@ -49,28 +45,6 @@ std::optional<std::uint16_t> ReadPortFile(const std::filesystem::path& path)
 	}
 
 	return static_cast<std::uint16_t>(port);
-}
-
-//NOTE: the game dials the port, so it has to be in hand before the client node is built - hence a wait
-//here rather than a retry around the first connect. A child that died says so at once, without the timeout
-std::optional<std::uint16_t> WaitForPort(const std::filesystem::path& portFile, const HANDLE process)
-{
-	for (auto waited{std::chrono::milliseconds::zero()}; waited < kPortWait; waited += kPortPollStep)
-	{
-		if (const std::optional<std::uint16_t> port{ReadPortFile(portFile)})
-		{
-			return port;
-		}
-
-		if (WaitForSingleObject(process, 0u) != WAIT_TIMEOUT)
-		{
-			return std::nullopt;
-		}
-
-		std::this_thread::sleep_for(kPortPollStep);
-	}
-
-	return std::nullopt;
 }
 
 [[nodiscard]] std::string LastErrorText(const char* what)
@@ -133,11 +107,11 @@ ServerProcess::ServerProcess() = default;
 
 ServerProcess::~ServerProcess() = default;
 
-std::optional<std::uint16_t> ServerProcess::Start(const network::ServerAddress& address)
+bool ServerProcess::Start(const network::ServerAddress& address)
 {
 	if (IsRunning())
 	{
-		return _boundPort;
+		return true;
 	}
 
 	const std::filesystem::path exe{ServerExePath()};
@@ -146,7 +120,7 @@ std::optional<std::uint16_t> ServerProcess::Start(const network::ServerAddress& 
 	{
 		Log::Error("ServerProcess: " + exe.string() + " is not next to the game exe");
 
-		return std::nullopt;
+		return false;
 	}
 
 	//NOTE: gone before the child starts, so what turns up later is this run's port and not the last one's
@@ -160,7 +134,7 @@ std::optional<std::uint16_t> ServerProcess::Start(const network::ServerAddress& 
 	{
 		Log::Error("ServerProcess: " + LastErrorText("CreateJobObject"));
 
-		return std::nullopt;
+		return false;
 	}
 
 	//NOTE: the OS closes the handle for us if the game crashes without running its destructor
@@ -170,7 +144,7 @@ std::optional<std::uint16_t> ServerProcess::Start(const network::ServerAddress& 
 	{
 		Log::Error("ServerProcess: " + LastErrorText("SetInformationJobObject"));
 
-		return std::nullopt;
+		return false;
 	}
 
 	//NOTE: CreateProcess writes into this buffer, so it cannot be a literal
@@ -192,7 +166,7 @@ std::optional<std::uint16_t> ServerProcess::Start(const network::ServerAddress& 
 	{
 		Log::Error("ServerProcess: " + LastErrorText("CreateProcess"));
 
-		return std::nullopt;
+		return false;
 	}
 
 	process->process = info.hProcess;
@@ -203,25 +177,15 @@ std::optional<std::uint16_t> ServerProcess::Start(const network::ServerAddress& 
 		Log::Error("ServerProcess: " + LastErrorText("AssignProcessToJobObject"));
 		TerminateProcess(info.hProcess, 1u);
 
-		return std::nullopt;
+		return false;
 	}
 
 	ResumeThread(info.hThread);
 
 	_process = std::move(process);
+	Log::Info("ServerProcess: started BattleCityServer");
 
-	_boundPort = WaitForPort(portFile, info.hProcess);
-	if (!_boundPort)
-	{
-		Log::Error("ServerProcess: BattleCityServer never reported a port");
-		_process.reset();
-
-		return std::nullopt;
-	}
-
-	Log::Info("ServerProcess: started BattleCityServer on port " + std::to_string(*_boundPort));
-
-	return _boundPort;
+	return true;
 }
 
 std::optional<std::uint16_t> ServerProcess::PublishedPort()

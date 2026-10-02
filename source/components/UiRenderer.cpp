@@ -22,6 +22,7 @@
 #include <SDL3_ttf/SDL_ttf.h>
 #include <span>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -52,6 +53,12 @@ constexpr Point kMenuIconSize{.x = 30, .y = 30};
 constexpr int kMenuSelectorGap{35};
 constexpr int kMenuRowPadding{5};
 
+constexpr int kScrollBarWidthShare{4};
+//NOTE: one dot of the pixel font, eight to a glyph's height
+constexpr int kCaretWidthShare{8};
+constexpr SDL_Color kScrollTrackColor{.r = 0xffu, .g = 0xffu, .b = 0xffu, .a = 0x40u};
+constexpr SDL_Color kScrollThumbColor{.r = 0xffu, .g = 0xffu, .b = 0xffu, .a = 0xffu};
+
 //NOTE: one column - fps box, enemy grid, counters and the flag share x and width
 constexpr int kSideBarColumnPadding{55};
 constexpr int kSideBarItemWidth{71};
@@ -74,6 +81,8 @@ constexpr double kPausePlateMiddle{0.5};
 constexpr double kMatchEndPlateMiddle{0.25};
 
 int PanelRowHeight(const int pointSize) { return pointSize * kPanelRowHeight / kFitStartPointSize; }
+
+int ScrollBarWidth(const int rowHeight) { return std::max(rowHeight / kScrollBarWidthShare, 2); }
 
 //NOTE: glyphs are sized in output pixels, so the logical scale is cancelled around the drawing and
 //folded into the position - once around a run of lines, because every change of it breaks the batch
@@ -217,13 +226,21 @@ void UiRenderer::DrawPanelTables(const RenderPanelTablesEvent& event) const
 	const SDL_Rect panel{MenuPanelRect(0)};
 	const float scale{CurrentRenderScale()};
 	const int width{panel.w - kPanelSideMargin * 2};
+	//NOTE: the selector left of the picked table and the scroll bar right of it are centered with it as one block
+	const auto flanks = [&event](const int rowHeight)
+	{
+		return std::pair{rowHeight + kMenuRowPadding, event.scroll ? kMenuRowPadding + ScrollBarWidth(rowHeight) : 0};
+	};
 	//NOTE: as large as the stack lets it be - the plate does not shrink, so the words make the room it needs
-	const auto goesIn = [this, &event, &panel, width, scale](const int size)
+	const auto goesIn = [this, &event, &panel, width, scale, &flanks](const int size)
 	{
 		const int rowHeight{PanelRowHeight(size)};
 		const auto placed{UiLayout::MeasureAll(event.tables, rowHeight, CellMeasurer(size, scale))};
+		const auto [left, right]{flanks(rowHeight)};
+		const bool isPickedIn{!event.pickedTable || *event.pickedTable >= placed.size()
+							  || placed[*event.pickedTable].size.x + left + right <= width};
 
-		return UiLayout::FitsAcross(event.tables, placed, width, rowHeight)
+		return isPickedIn && UiLayout::FitsAcross(event.tables, placed, width, rowHeight)
 			   && UiLayout::StackHeight(placed, rowHeight) <= panel.h;
 	};
 	const int pointSize{_panelFit.PointSize(event.tables, panel, scale, goesIn)};
@@ -237,7 +254,92 @@ void UiRenderer::DrawPanelTables(const RenderPanelTablesEvent& event) const
 		top += placement.size.y + rowHeight;
 	}
 
+	if (event.pickedTable && *event.pickedTable < placements.size())
+	{
+		UiLayout::Placement& picked{placements[*event.pickedTable]};
+		const auto [left, right]{flanks(rowHeight)};
+		picked.ShiftBy(Point{.x = (left - right) / 2});
+
+		//NOTE: the arrow is a row tall here - the menu's own is sized for the menu's taller rows
+		if (event.selectedRow < picked.rows.size())
+		{
+			const Point row{picked.rows[event.selectedRow]};
+			DrawIcon(UiIcon::MenuSelector,
+					 {.x = row.x - rowHeight - kMenuRowPadding, .y = row.y, .w = rowHeight, .h = rowHeight});
+		}
+
+		if (event.scroll)
+		{
+			DrawScrollBar(picked, *event.scroll, rowHeight);
+		}
+
+		AnnouncePanelRows(picked, rowHeight);
+	}
+
 	DrawTables(std::views::zip(event.tables, placements), pointSize, scale);
+
+	if (event.pickedTable && *event.pickedTable < placements.size() && event.caret)
+	{
+		DrawCaret(event.tables[*event.pickedTable], placements[*event.pickedTable], *event.caret, pointSize, scale);
+	}
+}
+
+void UiRenderer::DrawCaret(const UiTable& table, const UiLayout::Placement& placement, const PanelCaret& caret,
+						   const int pointSize, const float scale) const
+{
+	const auto isCaretCell = [&caret](const UiLayout::PlacedCell& cell)
+	{
+		return cell.row == caret.row && cell.column == 0;
+	};
+	const auto placed{std::ranges::find_if(placement.cells, isCaretCell)};
+	if (placed == placement.cells.end())
+	{
+		return;
+	}
+
+	const UiCell& cell{table.rows[caret.row].cells.front()};
+	const int size{CellPointSize(cell, pointSize, scale)};
+	const int height{_textCache.MeasureString(cell.text, size, scale).y};
+	const int before{_textCache.MeasureString(std::string_view{cell.text}.substr(0, caret.symbol), size, scale).x};
+	const SDL_Rect bar{.x = placed->pos.x + before,
+					   .y = placed->pos.y + (placed->size.y - height) / 2,
+					   .w = std::max(height / kCaretWidthShare, 1),
+					   .h = height};
+
+	SDL_Renderer* const renderer{_sdlConfig.renderer.get()};
+	SDL_SetRenderDrawColor(renderer, 0xffu, 0xffu, 0xffu, caret.alpha);
+	SdlRenderUtils::FillRect(renderer, bar);
+}
+
+//NOTE: right of the table along the window's rows; the thumb is the window's share and place in the list
+void UiRenderer::DrawScrollBar(const UiLayout::Placement& picked, const PanelScroll& scroll, const int rowHeight) const
+{
+	if (scroll.total <= scroll.shownCount || scroll.rowCount == 0
+		|| scroll.firstRow + scroll.rowCount > picked.rows.size())
+	{
+		return;
+	}
+
+	const Point top{picked.rows[scroll.firstRow]};
+	const int height{picked.rows[scroll.firstRow + scroll.rowCount - 1].y + rowHeight - top.y};
+	const int total{static_cast<int>(scroll.total)};
+	const SDL_Rect track{.x = top.x + picked.size.x + kMenuRowPadding,
+						 .y = top.y,
+						 .w = ScrollBarWidth(rowHeight),
+						 .h = height};
+	const SDL_Rect thumb{.x = track.x,
+						 .y = track.y + height * static_cast<int>(scroll.firstShown) / total,
+						 .w = track.w,
+						 .h = height * static_cast<int>(scroll.shownCount) / total};
+
+	SDL_Renderer* const renderer{_sdlConfig.renderer.get()};
+	const auto fill = [renderer](const SDL_Color& color, const SDL_Rect& rect)
+	{
+		SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+		SdlRenderUtils::FillRect(renderer, rect);
+	};
+	fill(kScrollTrackColor, track);
+	fill(kScrollThumbColor, thumb);
 }
 
 void UiRenderer::DrawSideBar(const RenderSideBarEvent& event) const
@@ -368,8 +470,31 @@ UiLayout::Measure UiRenderer::CellMeasurer(const int pointSize, const float scal
 			return Icon(cell.icon).size;
 		}
 
+		if (cell.symbols > 0)
+		{
+			return _textCache.MeasureString(std::string(cell.symbols, '0'), pointSize, scale);
+		}
+
 		return _textCache.MeasureString(cell.text, pointSize, scale);
 	};
+}
+
+//NOTE: measured on zeros, not on the text, so every cell asking for the same symbols gets the same size
+int UiRenderer::CellPointSize(const UiCell& cell, const int pointSize, const float scale) const
+{
+	if (cell.fitSymbols <= cell.symbols)
+	{
+		return pointSize;
+	}
+
+	const int width{_textCache.MeasureString(std::string(cell.symbols, '0'), pointSize, scale).x};
+	const std::string widest(cell.fitSymbols, '0');
+	const auto goesIn = [this, &widest, width, scale](const int size)
+	{
+		return _textCache.MeasureString(widest, size, scale).x <= width;
+	};
+
+	return UiLayout::FitPointSize(kFitMinPointSize, pointSize, goesIn);
 }
 
 void UiRenderer::DrawTablePictures(const UiTable& table, const UiLayout::Placement& placement) const
@@ -400,15 +525,18 @@ void UiRenderer::DrawTableText(const UiTable& table, const UiLayout::Placement& 
 			continue;
 		}
 
+		const int size{CellPointSize(cell, pointSize, scale)};
 		const TextCache::CachedText* cached{
-				_textCache.Acquire(cell.text, SdlRenderUtils::IntToColor(cell.color), pointSize, scale)};
+				_textCache.Acquire(cell.text, SdlRenderUtils::IntToColor(cell.color), size, scale)};
 		if (cached == nullptr)
 		{
 			continue;
 		}
 
+		//NOTE: a word drawn smaller stands in the middle of its row
+		const int inset{size == pointSize ? 0 : (placed.size.y - cached->height) / 2};
 		TTF_DrawRendererText(cached->text.get(), static_cast<float>(placed.pos.x) * scale,
-							 static_cast<float>(placed.pos.y) * scale);
+							 static_cast<float>(placed.pos.y + inset) * scale);
 	}
 }
 
@@ -426,6 +554,19 @@ void UiRenderer::AnnounceMenuTiles(const UiLayout::Placement& modes) const
 	_events->EmitEvent(MenuTilesPlacedEvent{.tiles = std::move(tiles),
 										 .tileSize = {.x = modes.size.x + kMenuRowPadding * 2,
 													 .y = kMenuRowHeight}});
+}
+
+void UiRenderer::AnnouncePanelRows(const UiLayout::Placement& picked, const int rowHeight) const
+{
+	const Point rowSize{.x = picked.size.x, .y = rowHeight};
+	if (picked.rows == _panelRowPlaces && rowSize == _panelRowSize)
+	{
+		return;
+	}
+
+	_panelRowPlaces = picked.rows;
+	_panelRowSize = rowSize;
+	_events->EmitEvent(PanelRowsPlacedEvent{.rows = picked.rows, .rowSize = rowSize});
 }
 
 //NOTE: the panel belongs to the field, not to whoever is showing it - all it takes from them is the slide-in

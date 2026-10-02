@@ -3,9 +3,10 @@ rem Two windows: the first brings its own server up and plays on it, the second 
 rem way to test a match. The server dies with the first window; run-multiplayer-dedicated.bat
 rem keeps it standing. Runs build/cmake/Debug-MinGW; an argument names another exe.
 setlocal
-rem BC_ADDRESS moves the server off 127.0.0.1. BC_PORT pins the port (set BC_PORT=1234); left alone, the
+rem BC_ADDRESS overrides this machine's network address. BC_PORT pins the port (set BC_PORT=1234); left alone, the
 rem server takes any free one and writes it to server-port.txt, which is where the second window reads it
-if not defined BC_ADDRESS set "BC_ADDRESS=127.0.0.1"
+set "ADDRESS_ARG="
+if defined BC_ADDRESS set "ADDRESS_ARG=--address=%BC_ADDRESS%"
 if not defined BC_PORT set "BC_PORT=0"
 set "GAME_EXE=%~1"
 if "%GAME_EXE%"=="" set "GAME_EXE=%~dp0..\..\build\cmake\Debug-MinGW\BattleCityRemastered.exe"
@@ -17,7 +18,7 @@ if not exist "%GAME_EXE%" (
 )
 
 del "%GAME_DIR%server-port.txt" >nul 2>&1
-start "" /D "%GAME_DIR%" "%GAME_EXE%" --server --address=%BC_ADDRESS% --port=%BC_PORT% --size=800,600 --pos=0,0
+start "" /D "%GAME_DIR%" "%GAME_EXE%" --server %ADDRESS_ARG% --port=%BC_PORT% --size=800,600 --pos=0,0
 rem the first window spawns the server and waits for its port the same way - the file appears once it binds
 set "PORT_FILE=%GAME_DIR%server-port.txt"
 set "TRIES=0"
@@ -32,5 +33,5 @@ goto wait_for_port
 echo the server never reported a port 1>&2
 exit /b 1
 :got_port
-echo server on %BC_ADDRESS%:%PORT%
-start "" /D "%GAME_DIR%" "%GAME_EXE%" --client --mute --address=%BC_ADDRESS% --port=%PORT% --size=800,600 --pos=810,0
+if defined BC_ADDRESS (echo server on %BC_ADDRESS%:%PORT%) else echo server on this machine's address:%PORT%
+start "" /D "%GAME_DIR%" "%GAME_EXE%" --client --mute %ADDRESS_ARG% --port=%PORT% --size=800,600 --pos=810,0

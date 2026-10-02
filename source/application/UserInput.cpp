@@ -9,11 +9,19 @@
 #include "components/events/TimingEvents.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
+#include <SDL3/SDL_clipboard.h>
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_gamepad.h>
+#include <SDL3/SDL_keyboard.h>
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <iterator>
+#include <optional>
+#include <ranges>
+#include <string>
+#include <utility>
+#include <vector>
 #include "utils/Log.h"
 
 namespace
@@ -42,6 +50,39 @@ bool IsSameController(const std::shared_ptr<SDL_Gamepad>& controller, const SDL_
 
 	return false;
 }
+
+//NOTE: by the key's place, not the layout - SDL names a non-Latin layout's keys as on QWERTY
+[[nodiscard]] std::optional<char> AddressSymbol(const SDL_KeyboardEvent& key)
+{
+	if ((key.mod & (SDL_KMOD_CTRL | SDL_KMOD_ALT)) != 0)
+	{
+		return std::nullopt;
+	}
+
+	if (key.key >= SDLK_A && key.key <= SDLK_Z)
+	{
+		return static_cast<char>(key.key);
+	}
+
+	const bool isShift{(key.mod & SDL_KMOD_SHIFT) != 0};
+	//NOTE: without Num Lock the pad's dot is Delete
+	if ((key.key == SDLK_PERIOD && !isShift) || (key.key == SDLK_KP_PERIOD && (key.mod & SDL_KMOD_NUM) != 0))
+	{
+		return '.';
+	}
+
+	if (key.key == SDLK_SEMICOLON && isShift)
+	{
+		return ':';
+	}
+
+	if ((key.key == SDLK_LEFTBRACKET || key.key == SDLK_RIGHTBRACKET) && !isShift)
+	{
+		return key.key == SDLK_LEFTBRACKET ? '[' : ']';
+	}
+
+	return std::nullopt;
+}
 }// namespace
 
 UserInput::UserInput(const std::shared_ptr<EventSystem>& events, const WindowConfig& windowConfig,
@@ -67,7 +108,9 @@ void UserInput::Subscribe()
 	_subs.push_back(_events->AddListener(this, &UserInput::OnPauseStatus));
 	_subs.push_back(_events->AddListener(this, &UserInput::SwapControllers));
 	_subs.push_back(_events->AddListener(this, &UserInput::OnPreTickUpdate));
-	_subs.push_back(_events->AddListener(this, &UserInput::OnMenuShowed));
+	_subs.push_back(_events->AddListener(this, &UserInput::OnMenuShown));
+	_subs.push_back(_events->AddListener(this, &UserInput::OnServerScreenShown));
+	_subs.push_back(_events->AddListener(this, &UserInput::OnPanelRowsPlaced));
 	_subs.push_back(_events->AddListener(this, &UserInput::OnMenuTilesPlaced));
 }
 
@@ -75,7 +118,30 @@ void UserInput::OnPauseStatus(const PauseStatusEvent& event) { _isPause = event.
 
 void UserInput::OnPreTickUpdate(const PreTickUpdateEvent&) { Update(); }
 
-void UserInput::OnMenuShowed(const MenuShowedEvent& event) { _isMenuDisplayed = event.isShown; }
+void UserInput::OnMenuShown(const MenuShownEvent& event) { _isMenuShown = event.isShown; }
+
+//NOTE: SDL sends typed text only between these two calls
+void UserInput::OnServerScreenShown(const ServerScreenShownEvent& event)
+{
+	_isTyping = event.isShown;
+	if (_isTyping)
+	{
+		SDL_StartTextInput(_sdlConfig.sdlWindow.get());
+	}
+	else
+	{
+		SDL_StopTextInput(_sdlConfig.sdlWindow.get());
+	}
+}
+
+void UserInput::OnPanelRowsPlaced(const PanelRowsPlacedEvent& event)
+{
+	const auto toRect = [&event](const Point& row)
+	{
+		return SDL_Rect{.x = row.x, .y = row.y, .w = event.rowSize.x, .h = event.rowSize.y};
+	};
+	_panelRows = event.rows | std::views::transform(toRect) | std::ranges::to<std::vector>();
+}
 
 void UserInput::OnMenuTilesPlaced(const MenuTilesPlacedEvent& event)
 {
@@ -182,7 +248,14 @@ void UserInput::MouseEvents(const SDL_Event& event)
 		_mouseButtons.MouseLeftButton = true;
 
 		const SDL_Point mouse{ToLogical(event.button.x, event.button.y)};
-		if (_isMenuDisplayed && SDL_PointInRect(&mouse, &_allTilesRect))
+		if (_isTyping)
+		{
+			ClickPanelRow(mouse);
+
+			return;
+		}
+
+		if (_isMenuShown && SDL_PointInRect(&mouse, &_allTilesRect))
 		{
 			_isMenuPressHeld = true;
 			_events->EmitEvent(EnterEvent{.isPressed = true});
@@ -207,7 +280,7 @@ void UserInput::MouseEvents(const SDL_Event& event)
 	{
 		const SDL_Point mouse{ToLogical(event.motion.x, event.motion.y)};
 
-		if (_isMenuDisplayed
+		if (_isMenuShown
 			&& SDL_PointInRect(&mouse, &_allTilesRect))
 		{
 			for (auto& [rect, gameMode]: _menuTiles)
@@ -221,6 +294,16 @@ void UserInput::MouseEvents(const SDL_Event& event)
 				}
 			}
 		}
+	}
+}
+
+void UserInput::ClickPanelRow(const SDL_Point& mouse) const
+{
+	const auto isHit = [&mouse](const SDL_Rect& row) { return SDL_PointInRect(&mouse, &row); };
+	if (const auto row{std::ranges::find_if(_panelRows, isHit)}; row != _panelRows.end())
+	{
+		const auto index{static_cast<std::size_t>(std::distance(_panelRows.begin(), row))};
+		_events->EmitEvent(PanelRowClickedEvent{.row = index});
 	}
 }
 
@@ -288,8 +371,15 @@ void UserInput::KeyboardKeyPressRelease(const SDL_Event& event, const bool& isPr
 	}
 }
 
-void UserInput::KeyboardEvents(const SDL_Event& event) const
+void UserInput::KeyboardEvents(const SDL_Event& event)
 {
+	if (_isTyping)
+	{
+		TypingEvents(event);
+
+		return;
+	}
+
 	if (event.type == SDL_EVENT_KEY_DOWN)
 	{
 		KeyboardKeyPressRelease(event, true);
@@ -297,6 +387,95 @@ void UserInput::KeyboardEvents(const SDL_Event& event) const
 	else if (event.type == SDL_EVENT_KEY_UP)
 	{
 		KeyboardKeyPressRelease(event, false);
+	}
+}
+
+//NOTE: no key steers here - A and D are IPv6 hex; Enter does not repeat, or it confirms the screen it opened
+void UserInput::TypingEvents(const SDL_Event& event)
+{
+	if (event.type == SDL_EVENT_TEXT_INPUT)
+	{
+		if (!std::exchange(_isKeyTyped, false))
+		{
+			_events->EmitEvent(TextTypedEvent{.text = event.text.text});
+		}
+
+		return;
+	}
+
+	if (event.type == SDL_EVENT_KEY_UP)
+	{
+		if (event.key.key == SDLK_RETURN)
+		{
+			_events->EmitEvent(EnterEvent{.isPressed = false});
+		}
+
+		return;
+	}
+
+	if (event.type != SDL_EVENT_KEY_DOWN)
+	{
+		return;
+	}
+
+	const std::optional<char> symbol{AddressSymbol(event.key)};
+	_isKeyTyped = symbol.has_value();
+	if (symbol)
+	{
+		_events->EmitEvent(TextTypedEvent{.text = std::string(1, *symbol)});
+
+		return;
+	}
+
+	const bool isWordJump{(event.key.mod & SDL_KMOD_CTRL) != 0};
+	switch (event.key.key)
+	{
+		case SDLK_RETURN:
+			if (!event.key.repeat)
+			{
+				_events->EmitEvent(EnterEvent{.isPressed = true});
+			}
+			break;
+		case SDLK_BACKSPACE:
+			_events->EmitEvent(TextKeyEvent{.key = TextKey::Erase});
+			break;
+		//NOTE: the pad's dot without Num Lock is Delete too
+		case SDLK_DELETE:
+		case SDLK_KP_PERIOD:
+			_events->EmitEvent(TextKeyEvent{.key = TextKey::EraseRight});
+			break;
+		//NOTE: a space skips a symbol rather than typing one
+		case SDLK_SPACE:
+			_events->EmitEvent(TextKeyEvent{.key = TextKey::CaretRight});
+			break;
+		case SDLK_UP:
+			_events->EmitEvent(TextKeyEvent{.key = TextKey::PreviousField});
+			break;
+		case SDLK_DOWN:
+			_events->EmitEvent(TextKeyEvent{.key = TextKey::NextField});
+			break;
+		case SDLK_LEFT:
+			_events->EmitEvent(TextKeyEvent{.key = isWordJump ? TextKey::WordLeft : TextKey::CaretLeft});
+			break;
+		case SDLK_RIGHT:
+			_events->EmitEvent(TextKeyEvent{.key = isWordJump ? TextKey::WordRight : TextKey::CaretRight});
+			break;
+		case SDLK_TAB:
+			_events->EmitEvent(TextKeyEvent{.key = (event.key.mod & SDL_KMOD_SHIFT) != 0 ? TextKey::WordLeft
+																						: TextKey::WordRight});
+			break;
+		case SDLK_V:
+			if ((event.key.mod & SDL_KMOD_CTRL) != 0)
+			{
+				//NOTE: SDL types nothing for Ctrl+V; a failed read is an empty string, never null
+				char* const clipboard{SDL_GetClipboardText()};
+				_events->EmitEvent(TextPastedEvent{.text = clipboard});
+				SDL_free(clipboard);
+			}
+			break;
+
+		default:
+			break;
 	}
 }
 
@@ -515,7 +694,13 @@ void UserInput::Update()
 	SDL_Event event;
 	while (SDL_PollEvent(&event))
 	{
-		if (event.type == SDL_EVENT_QUIT || (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_ESCAPE))
+		//NOTE: Esc closes a text field before the game; a held one does not do both
+		const bool isEscape{event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_ESCAPE && !event.key.repeat};
+		if (isEscape && _isTyping)
+		{
+			_events->EmitEvent(TextInputCancelledEvent{});
+		}
+		else if (event.type == SDL_EVENT_QUIT || isEscape)
 		{
 			_isShutdown = true;
 		}

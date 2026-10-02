@@ -65,6 +65,7 @@
     <ClCompile Include="DatagramLinkTest.cpp" />
     <ClCompile Include="DiscoveryTest.cpp" />
     <ClCompile Include="CommandLineParserTest.cpp" />
+    <ClCompile Include="EndpointsTest.cpp" />
     <ClCompile Include="CoopBotTest.cpp" />
     <ClCompile Include="DeadObjectFilterTest.cpp" />
     <ClCompile Include="DirectionUtilsTest.cpp" />

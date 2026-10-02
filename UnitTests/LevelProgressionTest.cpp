@@ -249,6 +249,27 @@ TEST_F(LevelProgressionTest, TheHostReportsTheCarriedHealth)
 	EXPECT_EQ(report->health, carried);
 }
 
+// and the tier - the client's tank is built at the first one
+TEST_F(LevelProgressionTest, TheHostReportsTheCarriedTier)
+{
+	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
+	StartMatch(GameResetEvent{});
+	_events->EmitEvent(Key(Author::Player1), BonusStarPickupEvent{});
+	const unsigned int carried{PlayerOne()->GetTier()};
+	std::vector<TierChangedEvent> reported;
+	const EventSubscription reportSub{_events->AddListener([&reported](const TierChangedEvent& event)
+	{
+		reported.push_back(event);
+	})};
+
+	_events->EmitEvent(NextLevelRequestedEvent{});
+	StartMatch(GameResetEvent{.keepsPlayerProgress = true});
+
+	const auto report{std::ranges::find(reported, PlayerOne()->GetUuid(), &TierChangedEvent::uuid)};
+	ASSERT_NE(report, reported.end());
+	EXPECT_EQ(report->tier, carried);
+}
+
 // lives are the other half of what travels: one is spent whenever a tank takes the field, so a level
 // change spends the next of the same three, while a restart hands out three again
 TEST_F(LevelProgressionTest, TheLivesLeftRideOnToTheNextLevelAndARestartGivesThemBack)

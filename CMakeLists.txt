@@ -63,6 +63,7 @@ set(GAME_CORE_SOURCES
         source/components/ObstacleSpawner.cpp
         source/components/RightSideBar.cpp
         source/components/LobbyScreen.cpp
+        source/components/ServerScreen.cpp
         source/components/ScoreBoard.cpp
         source/components/TankPool.cpp
         source/components/TankSpawner.cpp
@@ -96,6 +97,8 @@ set(GAME_CORE_SOURCES
         source/network/DatagramLink.cpp
         source/network/DiscoveryBeacon.cpp
         source/network/DiscoveryProbe.cpp
+        source/network/DiscoveryScan.cpp
+        source/network/Endpoints.cpp
         source/network/NetworkNodeBase.cpp
         source/network/PeerLink.cpp
         source/network/ReplicationApplier.cpp
@@ -131,6 +134,7 @@ set(UNIT_TESTS_SOURCES
         UnitTests/DatagramLinkTest.cpp
         UnitTests/DiscoveryTest.cpp
         UnitTests/CommandLineParserTest.cpp
+        UnitTests/EndpointsTest.cpp
         UnitTests/ConsoleCommandTest.cpp
         UnitTests/ProjectConfigTest.cpp
         UnitTests/CoopBotTest.cpp

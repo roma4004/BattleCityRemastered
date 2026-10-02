@@ -23,7 +23,7 @@ void GameStateManager::Subscribe()
 	_subs.push_back(_events->AddListener(this, &GameStateManager::OnPauseStatus));
 	_subs.push_back(_events->AddListener(this, &GameStateManager::Draw));
 	_subs.push_back(_events->AddListener(this, &GameStateManager::DrawOverScoreBoard));
-	_subs.push_back(_events->AddListener(this, &GameStateManager::OnScoreBoardShowed));
+	_subs.push_back(_events->AddListener(this, &GameStateManager::OnScoreBoardShown));
 	_subs.push_back(_events->AddListener(this, &GameStateManager::Reset));
 	_subs.push_back(_events->AddListener(this, &GameStateManager::OnGameFinished));
 	_subs.push_back(_events->AddListener(this, &GameStateManager::OnMapLoadFailed));
@@ -202,9 +202,9 @@ void GameStateManager::OnWorldSnapshotRequested(const WorldSnapshotRequestedEven
 	event.snapshot.phase = _state;
 }
 
-void GameStateManager::OnScoreBoardShowed(const ScoreBoardShowedEvent& event)
+void GameStateManager::OnScoreBoardShown(const ScoreBoardShownEvent& event)
 {
-	_isScoreBoardShown = event.isDisplayed;
+	_isScoreBoardShown = event.isShown;
 }
 
 bool GameStateManager::IsPauseShown() const

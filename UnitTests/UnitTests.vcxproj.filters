@@ -60,6 +60,9 @@
     <ClCompile Include="CommandLineParserTest.cpp">
       <Filter></Filter>
     </ClCompile>
+    <ClCompile Include="EndpointsTest.cpp">
+      <Filter></Filter>
+    </ClCompile>
     <ClCompile Include="CoopBotTest.cpp">
       <Filter></Filter>
     </ClCompile>

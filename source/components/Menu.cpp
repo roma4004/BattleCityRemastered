@@ -66,12 +66,12 @@ Menu::Menu(const std::shared_ptr<EventSystem>& events, const GameConfig& gameCon
 void Menu::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &Menu::OnSelectedGameModeChangedTo));
-	_subs.push_back(_events->AddListener(this, &Menu::OnMenuShowed));
+	_subs.push_back(_events->AddListener(this, &Menu::OnMenuShown));
 }
 
 void Menu::OnDrawUserInterface(const DrawUserInterfaceEvent&) { Draw(); }
 void Menu::OnSelectedGameModeChangedTo(const SelectedGameModeChangedToEvent& event) { _selectedGameMode = event.mode; }
-void Menu::OnMenuShowed(const MenuShowedEvent& event) { DisplayMenu(event.isShown); }
+void Menu::OnMenuShown(const MenuShownEvent& event) { DisplayMenu(event.isShown); }
 
 void Menu::Draw()
 {
@@ -96,11 +96,11 @@ int Menu::SelectedRow() const
 	return mode == kModes.end() ? 0 : static_cast<int>(std::distance(kModes.begin(), mode));
 }
 
-void Menu::DisplayMenu(const bool isDisplayed)
+void Menu::DisplayMenu(const bool isShown)
 {
-	_isMenuDisplayed = isDisplayed;
+	_isMenuShown = isShown;
 
-	if (_isMenuDisplayed)
+	if (_isMenuShown)
 	{
 		_drawSub = _events->AddListener(this, &Menu::OnDrawUserInterface);
 	}

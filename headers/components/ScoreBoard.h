@@ -10,7 +10,7 @@ struct RespawnCountChangedToEvent;
 struct DrawUserInterfaceEvent;
 struct PreDrawUserInterfaceEvent;
 struct EnterEvent;
-struct MenuShowedEvent;
+struct MenuShownEvent;
 struct GameStateChangedToEvent;
 class EventSystem;
 class GameStatistics;
@@ -23,7 +23,7 @@ class ScoreBoard final
 	// Toggled at runtime by DisplayScore(), where _subs is filled once at construction and stays
 	EventSubscription _drawSub{};
 
-	bool _isScoreBoardDisplayed{};
+	bool _isScoreBoardShown{};
 	//NOTE: the match is over - its plate stands on the board, or in the field when there is no board
 	bool _isFinished{};
 	bool _isDemo{};
@@ -42,14 +42,14 @@ class ScoreBoard final
 	void OnRespawnCountChangedTo(const RespawnCountChangedToEvent& event);
 	void OnDrawUserInterface(const DrawUserInterfaceEvent&) const;
 	void OnPreDrawUserInterface(const PreDrawUserInterfaceEvent&) const;
-	void OnMenuShowed(const MenuShowedEvent& event);
+	void OnMenuShown(const MenuShownEvent& event);
 	void OnGameStateChangedTo(const GameStateChangedToEvent& event);
 	void OnEnter(const EnterEvent& event);
 
 	void RenderStatistics() const;
 	[[nodiscard]] UiIcon Plate() const;
 
-	void DisplayScore(bool isDisplayed);
+	void DisplayScore(bool isShown);
 
 	void Draw() const;
 

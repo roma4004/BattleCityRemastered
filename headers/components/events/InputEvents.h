@@ -1,6 +1,8 @@
 #pragma once
 
 #include "enums/PlayerSlot.h"
+#include <cstddef>
+#include <string>
 
 // Each event needs a type of its own - under type-based dispatch two bare bools would collide
 
@@ -55,6 +57,44 @@ struct EnterEvent
 {
 	bool isPressed;
 };
+
+struct TextTypedEvent
+{
+	std::string text;
+};
+
+//NOTE: apart from typing - a whole address goes to the row it belongs to
+struct TextPastedEvent
+{
+	std::string text;
+};
+
+//NOTE: a word lies between separators - an octet of an address
+enum class TextKey : char8_t
+{
+	Erase,
+	EraseRight,
+	CaretLeft,
+	CaretRight,
+	WordLeft,
+	WordRight,
+	NextField,
+	PreviousField
+};
+
+struct TextKeyEvent
+{
+	TextKey key;
+};
+
+//NOTE: the row of PanelRowsPlacedEvent a click landed on
+struct PanelRowClickedEvent
+{
+	std::size_t row;
+};
+
+//NOTE: Esc while typing leaves the field, not the game
+struct TextInputCancelledEvent {};
 
 enum class GamepadButton : char8_t
 {

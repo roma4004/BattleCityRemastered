@@ -101,7 +101,7 @@ ScoreBoard::ScoreBoard(const std::shared_ptr<EventSystem>& events, const GameSta
 void ScoreBoard::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &ScoreBoard::OnRespawnCountChangedTo));
-	_subs.push_back(_events->AddListener(this, &ScoreBoard::OnMenuShowed));
+	_subs.push_back(_events->AddListener(this, &ScoreBoard::OnMenuShown));
 	_subs.push_back(_events->AddListener(this, &ScoreBoard::OnGameStateChangedTo));
 }
 
@@ -130,7 +130,7 @@ void ScoreBoard::OnPreDrawUserInterface(const PreDrawUserInterfaceEvent&) const
 
 UiIcon ScoreBoard::Plate() const { return _isWon ? UiIcon::PlateGameWon : UiIcon::PlateGameOver; }
 
-void ScoreBoard::OnMenuShowed(const MenuShowedEvent& event)
+void ScoreBoard::OnMenuShown(const MenuShownEvent& event)
 {
 	if (event.isShown)
 	{
@@ -190,16 +190,16 @@ void ScoreBoard::RenderStatistics() const
 	_events->EmitEvent(RenderPanelTablesEvent{.tables = std::move(tables)});
 }
 
-void ScoreBoard::DisplayScore(const bool isDisplayed)
+void ScoreBoard::DisplayScore(const bool isShown)
 {
-	if (isDisplayed)
+	if (isShown)
 	{
-		_events->EmitEvent(ShowMenuEvent{.show = false});
+		_events->EmitEvent(ShowMenuEvent{.isShown = false});
 	}
 
-	_isScoreBoardDisplayed = isDisplayed;
+	_isScoreBoardShown = isShown;
 
-	if (_isScoreBoardDisplayed)
+	if (_isScoreBoardShown)
 	{
 		_drawSub = _events->AddListener(this, &ScoreBoard::OnDrawUserInterface);
 	}
@@ -208,13 +208,13 @@ void ScoreBoard::DisplayScore(const bool isDisplayed)
 		_drawSub = EventSubscription{};
 	}
 
-	_enterSub = _isScoreBoardDisplayed && _isWon ? _events->AddListener(this, &ScoreBoard::OnEnter)
+	_enterSub = _isScoreBoardShown && _isWon ? _events->AddListener(this, &ScoreBoard::OnEnter)
 												 : EventSubscription{};
-	_plateSub = _isFinished && !_isScoreBoardDisplayed
+	_plateSub = _isFinished && !_isScoreBoardShown
 						? _events->AddListener(this, &ScoreBoard::OnPreDrawUserInterface)
 						: EventSubscription{};
 
-	_events->EmitEvent(ScoreBoardShowedEvent{.isDisplayed = isDisplayed});
+	_events->EmitEvent(ScoreBoardShownEvent{.isShown = isShown});
 }
 
 //NOTE: on the release, and the offer is taken down with it - a held key would ask for a level per frame,

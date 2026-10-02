@@ -22,6 +22,8 @@ struct RenderPlateEvent;
 struct RenderFPSEvent;
 struct RenderSideBarEvent;
 struct RenderPanelTablesEvent;
+struct PanelScroll;
+struct PanelCaret;
 struct RenderDeviceResetEvent;
 class GameConfig;
 
@@ -48,6 +50,8 @@ class UiRenderer final
 	mutable PanelFit _menuFit{};
 	mutable PanelFit _panelFit{};
 	mutable std::vector<Point> _menuTilePlaces{};
+	mutable std::vector<Point> _panelRowPlaces{};
+	mutable Point _panelRowSize{};
 
 	//NOTE: no sprite means the whole texture
 	struct IconSource final
@@ -77,12 +81,17 @@ class UiRenderer final
 	void DrawIcon(UiIcon icon, SDL_Rect dstRect) const;
 	//NOTE: what a table needs to become places: a word is as wide as the font makes it, a picture as Icon says
 	[[nodiscard]] UiLayout::Measure CellMeasurer(int pointSize, float scale) const;
+	[[nodiscard]] int CellPointSize(const UiCell& cell, int pointSize, float scale) const;
 	//NOTE: every picture first, then every word under one render scale - each change of it breaks the batch
 	void DrawTables(const auto& placedTables, int pointSize, float scale) const;
 	void DrawTablePictures(const UiTable& table, const UiLayout::Placement& placement) const;
 	//NOTE: the render scale is the caller's - a run of lines sets it once, see ScopedRenderScale
 	void DrawTableText(const UiTable& table, const UiLayout::Placement& placement, int pointSize, float scale) const;
 	void AnnounceMenuTiles(const UiLayout::Placement& modes) const;
+	void AnnouncePanelRows(const UiLayout::Placement& picked, int rowHeight) const;
+	void DrawScrollBar(const UiLayout::Placement& picked, const PanelScroll& scroll, int rowHeight) const;
+	void DrawCaret(const UiTable& table, const UiLayout::Placement& placement, const PanelCaret& caret, int pointSize,
+				   float scale) const;
 	[[nodiscard]] SDL_Rect MenuPanelRect(int slide) const;
 	[[nodiscard]] float CurrentRenderScale() const;
 

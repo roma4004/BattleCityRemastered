@@ -10,7 +10,8 @@ struct SetPauseEvent;
 struct GameResetEvent;
 struct PreTickUpdateEvent;
 struct ShowMenuEvent;
-struct MenuShowedEvent;
+struct MenuShownEvent;
+struct ServerScreenShownEvent;
 struct MoveUpEvent;
 struct MoveDownEvent;
 struct EnterEvent;
@@ -36,6 +37,8 @@ class InputProviderForMenu final
 	std::vector<EventSubscription> _menuNavSubs{};
 	const GameConfig& _gameConfig;
 	MenuKeys _keys{};
+	//NOTE: it stands in for the menu, so hiding the menu for it is no unpause
+	bool _isServerScreenShown{};
 
 	void OnMenuReleased(const MenuReleasedEvent&);
 	void OnPauseReleased(const PauseReleasedEvent&);
@@ -43,7 +46,8 @@ class InputProviderForMenu final
 	void OnGameReset(const GameResetEvent&);
 	void OnPreTickUpdate(const PreTickUpdateEvent&);
 	void OnShowMenu(const ShowMenuEvent& event);
-	void OnMenuShowed(const MenuShowedEvent& event);
+	void OnMenuShown(const MenuShownEvent& event);
+	void OnServerScreenShown(const ServerScreenShownEvent& event);
 
 	void OnMenuNavUp(const MoveUpEvent& event);
 	void OnMenuNavDown(const MoveDownEvent& event);

@@ -1,9 +1,5 @@
 #include "application/CommandLineParser.h"
 #include "network/Endpoints.h"
-#include <boost/asio/ip/address.hpp>
-#include <boost/system/error_code.hpp>
-#include <algorithm>
-#include <cstdint>
 #include "enums/WindowSide.h"
 #include <charconv>
 #include <optional>
@@ -11,48 +7,6 @@
 
 namespace
 {
-//NOTE: the host alone - the port has its own option, so an IPv6 literal needs no brackets to keep them apart.
-//A name is not resolved, so it is rejected
-std::optional<std::string> ParseHost(const std::string_view value)
-{
-	//NOTE: brackets and a glued-on port are refused, not parsed - make_address cannot be the guard, because
-	//on Windows it goes through WSAStringToAddress, which takes "1.2.3.4:4321" and "[::1]:5000" and drops the
-	//port on the floor. A single colon can only be a port, since the shortest IPv6 literal has two
-	if (value.contains('[') || value.contains(']') || std::ranges::count(value, ':') == 1)
-	{
-		return std::nullopt;
-	}
-
-	boost::system::error_code ec;
-	const auto parsed{boost::asio::ip::make_address(std::string{value}, ec)};
-	if (ec)
-	{
-		return std::nullopt;
-	}
-
-	return parsed.to_string();
-}
-
-//NOTE: "auto" and "0" both ask bind for any free port - the word reads better in a script, the number is
-//what every other tool spells it. Leaving the option out means the same thing
-std::optional<std::uint16_t> ParsePort(const std::string_view value)
-{
-	if (value == "auto")
-	{
-		return std::uint16_t{};
-	}
-
-	unsigned number{};
-	const auto* const last{value.data() + value.size()};
-	const auto [ptr, error] = std::from_chars(value.data(), last, number);
-	if (error != std::errc{} || ptr != last || number > 65535u)
-	{
-		return std::nullopt;
-	}
-
-	return static_cast<std::uint16_t>(number);
-}
-
 //NOTE: "800,600", fully consumed - "800x600"/"800,60a" rejected
 std::optional<UPoint> ParsePoint(const std::string_view value)
 {
@@ -166,7 +120,7 @@ std::expected<LaunchOptions, ArgError> CommandLineParser::Parse(const int argc, 
 		}
 		else if (key == "address")
 		{
-			launchOptions.serverHost = ParseHost(value);
+			launchOptions.serverHost = network::ParseHost(value);
 			if (!launchOptions.serverHost)
 			{
 				return std::unexpected(ArgError{.arg = std::string{arg},
@@ -175,7 +129,7 @@ std::expected<LaunchOptions, ArgError> CommandLineParser::Parse(const int argc, 
 		}
 		else if (key == "port")
 		{
-			launchOptions.serverPort = ParsePort(value);
+			launchOptions.serverPort = network::ParsePort(value);
 			if (!launchOptions.serverPort)
 			{
 				return std::unexpected(ArgError{.arg = std::string{arg},
@@ -216,7 +170,7 @@ std::expected<LaunchOptions, ArgError> CommandLineParser::ParseServer(const int 
 
 		if (arg.starts_with("--address="))
 		{
-			launchOptions.serverHost = ParseHost(arg.substr(std::string_view{"--address="}.size()));
+			launchOptions.serverHost = network::ParseHost(arg.substr(std::string_view{"--address="}.size()));
 			if (!launchOptions.serverHost)
 			{
 				return std::unexpected(ArgError{.arg = std::string{arg},
@@ -243,7 +197,7 @@ std::expected<LaunchOptions, ArgError> CommandLineParser::ParseServer(const int 
 											.reason = "the server takes --address, --port, --port-file and --help"});
 		}
 
-		launchOptions.serverPort = ParsePort(arg.substr(std::string_view{"--port="}.size()));
+		launchOptions.serverPort = network::ParsePort(arg.substr(std::string_view{"--port="}.size()));
 		if (!launchOptions.serverPort)
 		{
 			return std::unexpected(ArgError{.arg = std::string{arg},

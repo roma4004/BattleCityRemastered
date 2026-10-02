@@ -1,7 +1,9 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <string>
+#include <string_view>
 
 namespace network
 {
@@ -22,4 +24,19 @@ struct ServerAddress final
 	std::string host{kDefaultHost};
 	std::uint16_t port{kAnyFreePort};
 };
+
+//NOTE: this machine's address that another machine can dial - loopback when there is no network
+[[nodiscard]] std::string LocalAddress();
+
+//NOTE: loopback, every interface, or the address LocalAddress finds - a literal only, as in ParseHost
+[[nodiscard]] bool IsThisMachine(std::string_view host);
+
+//NOTE: a literal only - a name is not resolved
+[[nodiscard]] std::optional<std::string> ParseHost(std::string_view value);
+
+//NOTE: "auto" and "0" both ask bind for any free port
+[[nodiscard]] std::optional<std::uint16_t> ParsePort(std::string_view value);
+
+//NOTE: IPv6 has a port in brackets, or when it is no address whole - "fe80::1:5000" has none
+[[nodiscard]] std::optional<ServerAddress> ParseServerAddress(std::string_view value);
 }//namespace network

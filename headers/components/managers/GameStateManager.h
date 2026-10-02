@@ -12,7 +12,7 @@ enum class PlayerSlot : std::uint8_t;
 struct PauseStatusEvent;
 struct PreDrawUserInterfaceEvent;
 struct PostDrawUserInterfaceEvent;
-struct ScoreBoardShowedEvent;
+struct ScoreBoardShownEvent;
 struct GameResetEvent;
 struct GameModeAppliedEvent;
 struct DemoStartedEvent;
@@ -69,7 +69,7 @@ class GameStateManager final
 	void FreeSeat(PlayerSlot slot);
 	void LoseHost();
 
-	void OnScoreBoardShowed(const ScoreBoardShowedEvent& event);
+	void OnScoreBoardShown(const ScoreBoardShownEvent& event);
 	[[nodiscard]] bool IsPauseShown() const;
 	void Draw(const PreDrawUserInterfaceEvent&) const;
 	void DrawOverScoreBoard(const PostDrawUserInterfaceEvent&) const;

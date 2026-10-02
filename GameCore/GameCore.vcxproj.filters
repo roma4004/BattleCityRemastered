@@ -195,6 +195,9 @@
     <ClCompile Include="..\source\components\ScoreBoard.cpp">
       <Filter>source\components</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\components\ServerScreen.cpp">
+      <Filter>source\components</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\components\TankPool.cpp">
       <Filter>source\components</Filter>
     </ClCompile>
@@ -256,6 +259,12 @@
       <Filter>source\network</Filter>
     </ClCompile>
     <ClCompile Include="..\source\network\DiscoveryProbe.cpp">
+      <Filter>source\network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\network\DiscoveryScan.cpp">
+      <Filter>source\network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\network\Endpoints.cpp">
       <Filter>source\network</Filter>
     </ClCompile>
     <ClCompile Include="..\source\network\NetworkNodeBase.cpp">
@@ -468,6 +477,9 @@
       <Filter>headers\components</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\components\ScoreBoard.h">
+      <Filter>headers\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\ServerScreen.h">
       <Filter>headers\components</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\components\StatisticsData.h">
@@ -744,6 +756,9 @@
       <Filter>headers\network</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\DiscoveryProbe.h">
+      <Filter>headers\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\DiscoveryScan.h">
       <Filter>headers\network</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\Endpoints.h">

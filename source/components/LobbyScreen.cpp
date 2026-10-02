@@ -26,7 +26,8 @@ LobbyScreen::LobbyScreen(const std::shared_ptr<EventSystem>& events, const GameC
 void LobbyScreen::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &LobbyScreen::OnGameStateChangedTo));
-	_subs.push_back(_events->AddListener(this, &LobbyScreen::OnMenuShowed));
+	_subs.push_back(_events->AddListener(this, &LobbyScreen::OnMenuShown));
+	_subs.push_back(_events->AddListener(this, &LobbyScreen::OnServerScreenShown));
 	_subs.push_back(_events->AddListener(this, &LobbyScreen::OnRefusedOrLost));
 	_subs.push_back(_events->AddListener(this, &LobbyScreen::OnConnectedToHost));
 }
@@ -34,14 +35,21 @@ void LobbyScreen::Subscribe()
 void LobbyScreen::OnGameStateChangedTo(const GameStateChangedToEvent& event)
 {
 	_isLobby = event.state == GameState::Lobby;
-	Display(_isLobby && !_isMenuShown);
+	Display();
 }
 
 //NOTE: the menu opens on top - two panels stacked would darken each other
-void LobbyScreen::OnMenuShowed(const MenuShowedEvent& event)
+void LobbyScreen::OnMenuShown(const MenuShownEvent& event)
 {
 	_isMenuShown = event.isShown;
-	Display(_isLobby && !_isMenuShown);
+	Display();
+}
+
+//NOTE: so does the server screen
+void LobbyScreen::OnServerScreenShown(const ServerScreenShownEvent& event)
+{
+	_isServerScreenShown = event.isShown;
+	Display();
 }
 
 void LobbyScreen::OnRefusedOrLost(const ClientInDisconnectEvent& event)
@@ -53,9 +61,10 @@ void LobbyScreen::OnConnectedToHost(const ClientConnectedToHostEvent&) { _isServ
 
 void LobbyScreen::OnDrawUserInterface(const DrawUserInterfaceEvent&) const { Draw(); }
 
-void LobbyScreen::Display(const bool isDisplayed)
+void LobbyScreen::Display()
 {
-	_drawSub = isDisplayed ? _events->AddListener(this, &LobbyScreen::OnDrawUserInterface) : EventSubscription{};
+	const bool isShown{_isLobby && !_isMenuShown && !_isServerScreenShown};
+	_drawSub = isShown ? _events->AddListener(this, &LobbyScreen::OnDrawUserInterface) : EventSubscription{};
 }
 
 void LobbyScreen::Draw() const

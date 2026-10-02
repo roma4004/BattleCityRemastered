@@ -20,10 +20,12 @@ enum class GameMode : char8_t;
 union SDL_Event;
 struct SDL_GamepadAxisEvent;
 struct SDL_Config;
+struct ServerScreenShownEvent;
+struct PanelRowsPlacedEvent;
 struct PauseStatusEvent;
 struct TabReleasedEvent;
 struct PreTickUpdateEvent;
-struct MenuShowedEvent;
+struct MenuShownEvent;
 struct MenuTilesPlacedEvent;
 class EventSystem;
 class WindowConfig;
@@ -43,10 +45,14 @@ class UserInput final
 	bool _isPause{};
 	bool _isPausedByWindowDrag{};
 	bool _isWindowDragging{};
-	bool _isMenuDisplayed{};
+	bool _isMenuShown{};
 	//NOTE: a release is only the other half of a press that landed on a menu item - loose ones reach
 	//whoever else listens for Enter, and the won scoreboard would take a click meant for the window
 	bool _isMenuPressHeld{};
+	//NOTE: the keys type instead of steering, and Esc closes the field
+	bool _isTyping{};
+	//NOTE: the last key down typed its symbol itself - the layout's text for that press is dropped
+	bool _isKeyTyped{};
 	GameMode _selectedGameMode{};
 	bool _areControllersSwapped{};
 	UPoint _windowSize{};
@@ -61,11 +67,14 @@ class UserInput final
 	//NOTE: the rows as the renderer drew them - nothing here works them out, a click just lands on them
 	SDL_Rect _allTilesRect{};
 	std::vector<SubTile> _menuTiles;
+	std::vector<SDL_Rect> _panelRows{};
 
 	void MouseEvents(const SDL_Event& event);
+	void ClickPanelRow(const SDL_Point& mouse) const;
 	[[nodiscard]] SDL_Point ToLogical(float windowX, float windowY) const;
 	void KeyboardKeyPressRelease(const SDL_Event& event, const bool& isPressed) const;
-	void KeyboardEvents(const SDL_Event& event) const;
+	void KeyboardEvents(const SDL_Event& event);
+	void TypingEvents(const SDL_Event& event);
 	void GamepadKeyPressRelease(const SDL_Event& event, const bool& isPressed);
 	void GamepadEvents(const SDL_Event& event);
 	void SteerByDpad(SDL_JoystickID instanceId, Direction dir, bool isPressed);
@@ -83,7 +92,9 @@ class UserInput final
 	void OnPauseStatus(const PauseStatusEvent& event);
 	void SwapControllers(const TabReleasedEvent&);
 	void OnPreTickUpdate(const PreTickUpdateEvent&);
-	void OnMenuShowed(const MenuShowedEvent& event);
+	void OnMenuShown(const MenuShownEvent& event);
+	void OnServerScreenShown(const ServerScreenShownEvent& event);
+	void OnPanelRowsPlaced(const PanelRowsPlacedEvent& event);
 
 	void InitControllers();
 	void ConnectController(const std::shared_ptr<SDL_Gamepad>& newController);

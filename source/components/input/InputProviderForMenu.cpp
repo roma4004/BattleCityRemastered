@@ -25,7 +25,8 @@ void InputProviderForMenu::Subscribe()
 	_subs.push_back(_events->AddListener(this, &InputProviderForMenu::OnPreTickUpdate));
 	_subs.push_back(_events->AddListener(this, &InputProviderForMenu::OnShowMenu));
 
-	_subs.push_back(_events->AddListener(this, &InputProviderForMenu::OnMenuShowed));
+	_subs.push_back(_events->AddListener(this, &InputProviderForMenu::OnMenuShown));
+	_subs.push_back(_events->AddListener(this, &InputProviderForMenu::OnServerScreenShown));
 }
 
 void InputProviderForMenu::OnMenuReleased(const MenuReleasedEvent&) { ToggleMenuInputSubscription(); }
@@ -36,28 +37,31 @@ void InputProviderForMenu::OnPreTickUpdate(const PreTickUpdateEvent&) { MenuUpda
 
 void InputProviderForMenu::OnShowMenu(const ShowMenuEvent& event)
 {
-	const bool isDisplayed{event.show};
-	if ((isDisplayed && !_keys.menuShow)
-		|| (!isDisplayed && _keys.menuShow))
+	if (event.isShown != _keys.menuShow)
 	{
 		ToggleMenuInputSubscription();
 	}
 }
 
 //TODO: change direction without move (one turn before move)
-void InputProviderForMenu::OnMenuShowed(const MenuShowedEvent& event)
+void InputProviderForMenu::OnMenuShown(const MenuShownEvent& event)
 {
 	//NOTE: neither owns the pause here - a demo runs behind an open menu, a lobby is not running at all
-	if (_gameConfig.gameState == GameState::Demo || _gameConfig.gameState == GameState::Lobby)
+	if (_gameConfig.gameState == GameState::Demo || _gameConfig.gameState == GameState::Lobby
+		|| _isServerScreenShown)
 	{
 		return;
 	}
 
-	const bool isDisplayed{event.isShown};
-	if (isDisplayed != _keys.pause)//NOTE: menu visibility and the pause flag drifted apart
+	if (event.isShown != _keys.pause)//NOTE: menu visibility and the pause flag drifted apart
 	{
 		TogglePause();
 	}
+}
+
+void InputProviderForMenu::OnServerScreenShown(const ServerScreenShownEvent& event)
+{
+	_isServerScreenShown = event.isShown;
 }
 
 void InputProviderForMenu::EnableMenuInput()
@@ -94,7 +98,7 @@ void InputProviderForMenu::ToggleMenuInputSubscription()
 		DisableMenuInput();
 	}
 
-	_events->EmitEvent(MenuShowedEvent{.isShown = _keys.menuShow});
+	_events->EmitEvent(MenuShownEvent{.isShown = _keys.menuShow});
 
 	_keys.reset = false;
 }
@@ -151,6 +155,7 @@ void InputProviderForMenu::MenuUpdate()
 
 	if (menuKeysStats.reset)
 	{
+		_keys.reset = false;
 		_events->EmitEvent(ApplyGameModeEvent{});
 	}
 }

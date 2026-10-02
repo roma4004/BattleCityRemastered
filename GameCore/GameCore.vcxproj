@@ -194,6 +194,7 @@
     <ClCompile Include="..\source\components\ObstacleSpawner.cpp" />
     <ClCompile Include="..\source\components\RightSideBar.cpp" />
     <ClCompile Include="..\source\components\LobbyScreen.cpp" />
+    <ClCompile Include="..\source\components\ServerScreen.cpp" />
     <ClCompile Include="..\source\components\ScoreBoard.cpp" />
     <ClCompile Include="..\source\components\TankPool.cpp" />
     <ClCompile Include="..\source\components\TankSpawner.cpp" />
@@ -215,6 +216,8 @@
     <ClCompile Include="..\source\network\DatagramLink.cpp" />
     <ClCompile Include="..\source\network\DiscoveryBeacon.cpp" />
     <ClCompile Include="..\source\network\DiscoveryProbe.cpp" />
+    <ClCompile Include="..\source\network\DiscoveryScan.cpp" />
+    <ClCompile Include="..\source\network\Endpoints.cpp" />
     <ClCompile Include="..\source\network\NetworkNodeBase.cpp" />
     <ClCompile Include="..\source\network\PeerLink.cpp" />
     <ClCompile Include="..\source\network\ReplicationApplier.cpp" />
@@ -290,6 +293,7 @@
     <ClInclude Include="..\headers\components\ObstacleSpawner.h" />
     <ClInclude Include="..\headers\components\RightSideBar.h" />
     <ClInclude Include="..\headers\components\LobbyScreen.h" />
+    <ClInclude Include="..\headers\components\ServerScreen.h" />
     <ClInclude Include="..\headers\components\PooledSlots.h" />
     <ClInclude Include="..\headers\components\ScoreBoard.h" />
     <ClInclude Include="..\headers\components\events\SpawnEvents.h" />
@@ -357,6 +361,7 @@
     <ClInclude Include="..\headers\network\Discovery.h" />
     <ClInclude Include="..\headers\network\DiscoveryBeacon.h" />
     <ClInclude Include="..\headers\network\DiscoveryProbe.h" />
+    <ClInclude Include="..\headers\network\DiscoveryScan.h" />
     <ClInclude Include="..\headers\network\NetworkNodeBase.h" />
     <ClInclude Include="..\headers\network\PeerLink.h" />
     <ClInclude Include="..\headers\network\commands\AnyCommand.h" />

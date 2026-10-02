@@ -2,6 +2,7 @@
 
 #include "enums/UiIcon.h"
 #include "geometry/Point.h"
+#include <cstddef>
 #include <string>
 #include <utility>
 #include <vector>
@@ -26,6 +27,10 @@ struct UiCell final
 	UiAlign align{};
 	//NOTE: a nudge off the place the row gives it - a picture a few pixels aside, a word onto its background's spot
 	Point offset{};
+	//NOTE: a word this many symbols wide - a shorter one leaves the rest empty
+	std::size_t symbols{};
+	//NOTE: drawn small enough to fit this many symbols in that width
+	std::size_t fitSymbols{};
 
 	[[nodiscard]] bool operator==(const UiCell& rhs) const = default;
 };

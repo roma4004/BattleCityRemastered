@@ -13,6 +13,7 @@
 #include "components/MapLoader.h"
 #include "enums/GameMode.h"
 #include "enums/GameState.h"
+#include "network/Endpoints.h"
 #include "utils/Log.h"
 #include <algorithm>
 #include <atomic>
@@ -214,7 +215,8 @@ int main(const int argc, char* argv[])
 	}
 
 	GameConfig gameConfig{};
-	gameConfig.serverAddress.host = launchOptions->serverHost.value_or(gameConfig.serverAddress.host);
+	//NOTE: loopback is out of reach from another machine
+	gameConfig.serverAddress.host = launchOptions->serverHost ? *launchOptions->serverHost : network::LocalAddress();
 	gameConfig.serverAddress.port = launchOptions->serverPort.value_or(gameConfig.serverAddress.port);
 
 	const auto events{std::make_shared<EventSystem>()};
