@@ -93,6 +93,12 @@ struct PanelRowClickedEvent
 	std::size_t row;
 };
 
+//NOTE: and the one the pointer moved onto
+struct PanelRowHoveredEvent
+{
+	std::size_t row;
+};
+
 //NOTE: Esc while typing leaves the field, not the game
 struct TextInputCancelledEvent {};
 

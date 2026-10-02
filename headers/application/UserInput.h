@@ -10,6 +10,7 @@
 #include <SDL3/SDL_gamepad.h>
 #include <SDL3/SDL_rect.h>
 #include <chrono>
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <unordered_map>
@@ -68,9 +69,13 @@ class UserInput final
 	SDL_Rect _allTilesRect{};
 	std::vector<SubTile> _menuTiles;
 	std::vector<SDL_Rect> _panelRows{};
+	//NOTE: only a move onto another row is news - resting on one must not take back what the keys picked
+	std::optional<std::size_t> _hoveredPanelRow{};
 
 	void MouseEvents(const SDL_Event& event);
+	[[nodiscard]] std::optional<std::size_t> PanelRowAt(const SDL_Point& mouse) const;
 	void ClickPanelRow(const SDL_Point& mouse) const;
+	void HoverPanelRow(const SDL_Point& mouse);
 	[[nodiscard]] SDL_Point ToLogical(float windowX, float windowY) const;
 	void KeyboardKeyPressRelease(const SDL_Event& event, const bool& isPressed) const;
 	void KeyboardEvents(const SDL_Event& event);

@@ -310,6 +310,7 @@ void ServerScreen::Open(const GameMode mode)
 	_openSubs.push_back(_events->AddListener(this, &ServerScreen::OnTextPasted));
 	_openSubs.push_back(_events->AddListener(this, &ServerScreen::OnTextKey));
 	_openSubs.push_back(_events->AddListener(this, &ServerScreen::OnRowClicked));
+	_openSubs.push_back(_events->AddListener(this, &ServerScreen::OnRowHovered));
 	_openSubs.push_back(_events->AddListener(this, &ServerScreen::OnEnter));
 	_openSubs.push_back(_events->AddListener(this, &ServerScreen::OnCancelled));
 	_openSubs.push_back(_events->AddListener(this, &ServerScreen::OnDrawUserInterface));
@@ -470,24 +471,25 @@ void ServerScreen::OnTextKey(const TextKeyEvent& event)
 //NOTE: a click on anything but an address row presses it at once
 void ServerScreen::OnRowClicked(const PanelRowClickedEvent& event)
 {
-	const std::vector<Item> lines{Lines()};
-	if (event.row >= lines.size())
+	const std::optional<Item> item{PickableAt(event.row)};
+	if (!item)
 	{
 		return;
 	}
 
-	//NOTE: a server's second line picks the server
-	Item item{lines[event.row]};
-	item.line = item.line == Line::ServerTail ? Line::Server : item.line;
-	if (!IsPickable(item))
-	{
-		return;
-	}
-
-	Pick(item);
+	Pick(*item);
 	if (_focus.line != Line::IPv4 && _focus.line != Line::IPv6)
 	{
 		Press();
+	}
+}
+
+//NOTE: the pointer picks what it passes over, as in the menu - only a click presses
+void ServerScreen::OnRowHovered(const PanelRowHoveredEvent& event)
+{
+	if (const std::optional<Item> item{PickableAt(event.row)}; item && *item != _focus)
+	{
+		Pick(*item);
 	}
 }
 
@@ -646,6 +648,21 @@ bool ServerScreen::IsPickable(const Item& item) const
 	}
 
 	return true;
+}
+
+//NOTE: a server's second line stands for the server
+std::optional<ServerScreen::Item> ServerScreen::PickableAt(const std::size_t row) const
+{
+	const std::vector<Item> lines{Lines()};
+	if (row >= lines.size())
+	{
+		return std::nullopt;
+	}
+
+	Item item{lines[row]};
+	item.line = item.line == Line::ServerTail ? Line::Server : item.line;
+
+	return IsPickable(item) ? std::optional{item} : std::nullopt;
 }
 
 //NOTE: a server found on the network is what a client most likely came for

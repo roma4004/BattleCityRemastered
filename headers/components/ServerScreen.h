@@ -19,6 +19,7 @@ struct MenuShownEvent;
 struct MoveDownEvent;
 struct MoveUpEvent;
 struct PanelRowClickedEvent;
+struct PanelRowHoveredEvent;
 struct PreTickUpdateEvent;
 struct TextInputCancelledEvent;
 struct TextKeyEvent;
@@ -113,6 +114,7 @@ class ServerScreen final
 	void OnTextPasted(const TextPastedEvent& event);
 	void OnTextKey(const TextKeyEvent& event);
 	void OnRowClicked(const PanelRowClickedEvent& event);
+	void OnRowHovered(const PanelRowHoveredEvent& event);
 	void OnEnter(const EnterEvent& event);
 	void OnFire(const FireEvent& event);
 	void OnPadUp(const MoveUpEvent& event);
@@ -129,6 +131,7 @@ class ServerScreen final
 
 	[[nodiscard]] std::vector<Item> Lines() const;
 	[[nodiscard]] bool IsPickable(const Item& item) const;
+	[[nodiscard]] std::optional<Item> PickableAt(std::size_t row) const;
 	void PickFirst();
 	void Pick(const Item& item);
 	void Step(bool isForward);

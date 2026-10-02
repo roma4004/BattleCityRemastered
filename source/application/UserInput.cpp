@@ -124,6 +124,7 @@ void UserInput::OnMenuShown(const MenuShownEvent& event) { _isMenuShown = event.
 void UserInput::OnServerScreenShown(const ServerScreenShownEvent& event)
 {
 	_isTyping = event.isShown;
+	_hoveredPanelRow.reset();
 	if (_isTyping)
 	{
 		SDL_StartTextInput(_sdlConfig.sdlWindow.get());
@@ -279,6 +280,12 @@ void UserInput::MouseEvents(const SDL_Event& event)
 	if (event.type == SDL_EVENT_MOUSE_MOTION)
 	{
 		const SDL_Point mouse{ToLogical(event.motion.x, event.motion.y)};
+		if (_isTyping)
+		{
+			HoverPanelRow(mouse);
+
+			return;
+		}
 
 		if (_isMenuShown
 			&& SDL_PointInRect(&mouse, &_allTilesRect))
@@ -297,13 +304,38 @@ void UserInput::MouseEvents(const SDL_Event& event)
 	}
 }
 
-void UserInput::ClickPanelRow(const SDL_Point& mouse) const
+std::optional<std::size_t> UserInput::PanelRowAt(const SDL_Point& mouse) const
 {
 	const auto isHit = [&mouse](const SDL_Rect& row) { return SDL_PointInRect(&mouse, &row); };
-	if (const auto row{std::ranges::find_if(_panelRows, isHit)}; row != _panelRows.end())
+	const auto row{std::ranges::find_if(_panelRows, isHit)};
+	if (row == _panelRows.end())
 	{
-		const auto index{static_cast<std::size_t>(std::distance(_panelRows.begin(), row))};
-		_events->EmitEvent(PanelRowClickedEvent{.row = index});
+		return std::nullopt;
+	}
+
+	return static_cast<std::size_t>(std::distance(_panelRows.begin(), row));
+}
+
+void UserInput::ClickPanelRow(const SDL_Point& mouse) const
+{
+	if (const std::optional<std::size_t> row{PanelRowAt(mouse)})
+	{
+		_events->EmitEvent(PanelRowClickedEvent{.row = *row});
+	}
+}
+
+void UserInput::HoverPanelRow(const SDL_Point& mouse)
+{
+	const std::optional<std::size_t> row{PanelRowAt(mouse)};
+	if (row == _hoveredPanelRow)
+	{
+		return;
+	}
+
+	_hoveredPanelRow = row;
+	if (row)
+	{
+		_events->EmitEvent(PanelRowHoveredEvent{.row = *row});
 	}
 }
 
