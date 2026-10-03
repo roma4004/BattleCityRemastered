@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Discovery.h"
+#include "Endpoints.h"
 #include "enums/MatchRules.h"
 #include <array>
 #include <boost/asio/io_context.hpp>
@@ -16,12 +17,13 @@ using boost::asio::ip::udp;
 
 struct FoundServer final
 {
-	std::string host{};
-	std::uint16_t gamePort{};
+	//NOTE: the port is the game's, not the one the beacon answered from
+	ServerAddress address{};
 	std::uint8_t seats{};
 	std::uint8_t freeSeats{};
 	MatchRules rules{};
 
+	[[nodiscard]] bool IsFull() const noexcept { return freeSeats == 0u; }
 	[[nodiscard]] bool operator==(const FoundServer& rhs) const = default;
 };
 

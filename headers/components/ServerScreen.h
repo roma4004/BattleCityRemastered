@@ -1,14 +1,13 @@
 #pragma once
 
+#include "components/AddressField.h"
 #include "components/EventSystem.h"
 #include "network/DiscoveryScan.h"
 #include "network/Endpoints.h"
-#include <array>
 #include <chrono>
 #include <cstddef>
 #include <memory>
 #include <optional>
-#include <string>
 #include <vector>
 
 enum class GameMode : char8_t;
@@ -25,32 +24,12 @@ struct TextInputCancelledEvent;
 struct TextKeyEvent;
 struct TextPastedEvent;
 struct TextTypedEvent;
+struct UiRow;
 class EventSystem;
 
 //NOTE: where a network game is created or joined; what is typed outlives the screen
 class ServerScreen final
 {
-	//NOTE: four octets and a port, or an IPv6 address and a port - the separators between parts are drawn
-	struct Row
-	{
-		std::vector<std::string> parts{};
-		std::size_t part{};
-		//NOTE: symbols of the part before the caret
-		std::size_t offset{};
-
-		void StepToStart(const std::size_t at)
-		{
-			part = at;
-			offset = 0;
-		}
-
-		void StepToEnd(const std::size_t at)
-		{
-			part = at;
-			offset = parts[at].size();
-		}
-	};
-
 	enum class Line : char8_t
 	{
 		ServersCaption,
@@ -78,12 +57,6 @@ class ServerScreen final
 		[[nodiscard]] bool operator==(const Item& rhs) const = default;
 	};
 
-	struct ShownRow
-	{
-		std::string text{};
-		std::optional<std::size_t> caret{};
-	};
-
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
 	//NOTE: held only while the screen is up - clearing them closes it
@@ -93,14 +66,11 @@ class ServerScreen final
 	std::vector<network::FoundServer> _servers{};
 	std::size_t _firstShown{};
 
-	std::array<Row, 2> _rows{};
+	AddressField _ipv4{AddressFamily::IPv4};
+	AddressField _ipv6{AddressFamily::IPv6};
 	Item _focus{};
 	GameMode _mode{};
 	bool _isRejected{};
-	//NOTE: the IPv6 row's last colon closed a full group - a colon typed next is the same one
-	bool _isColonAdded{};
-	//NOTE: only drawn - the text never holds the brackets
-	bool _isBracketed{};
 	//NOTE: the caret blinks from here - typing or moving it shows it whole
 	std::chrono::steady_clock::time_point _caretMoved{};
 	//NOTE: a release confirms only a press made while the screen was up, not the one that opened it
@@ -134,24 +104,13 @@ class ServerScreen final
 	void Pick(const Item& item);
 	void Step(bool isForward);
 
-	[[nodiscard]] Row* FocusedRow();
-	void Fill(const network::ServerAddress& address);
+	[[nodiscard]] AddressField* FocusedField();
+	//NOTE: the row a typed line or its button belongs to
+	[[nodiscard]] const AddressField& FieldOf(Line line) const;
+	void Fill(const network::ServerAddress& address, bool isBracketed);
 	void Type(char symbol);
-	static void TypeIPv4(Row& row, char symbol);
-	void TypeIPv6(Row& row, char symbol);
-	void TypeScope(Row& row, char symbol);
-	static void TypePort(Row& row, char symbol);
-	void CloseFullGroup(Row& row);
-	void Erase(Row& row);
-	static void EraseRight(Row& row);
-	static void CaretLeft(Row& row);
-	static void CaretRight(Row& row);
-	void WordLeft(Row& row) const;
-	void WordRight(Row& row) const;
-
-	//NOTE: the row as the parser reads it, and as drawn - with placeholders
-	[[nodiscard]] std::string Text(Line line) const;
-	[[nodiscard]] ShownRow Shown(Line line) const;
+	//NOTE: one table row a line - a click on row N is a click on Lines()[N]
+	[[nodiscard]] UiRow LineRow(const Item& item) const;
 	void Draw() const;
 
 public:

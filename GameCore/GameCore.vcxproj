@@ -194,6 +194,7 @@
     <ClCompile Include="..\source\components\ObstacleSpawner.cpp" />
     <ClCompile Include="..\source\components\RightSideBar.cpp" />
     <ClCompile Include="..\source\components\LobbyScreen.cpp" />
+    <ClCompile Include="..\source\components\AddressField.cpp" />
     <ClCompile Include="..\source\components\ServerScreen.cpp" />
     <ClCompile Include="..\source\components\ScoreBoard.cpp" />
     <ClCompile Include="..\source\components\TankPool.cpp" />
@@ -293,6 +294,7 @@
     <ClInclude Include="..\headers\components\ObstacleSpawner.h" />
     <ClInclude Include="..\headers\components\RightSideBar.h" />
     <ClInclude Include="..\headers\components\LobbyScreen.h" />
+    <ClInclude Include="..\headers\components\AddressField.h" />
     <ClInclude Include="..\headers\components\ServerScreen.h" />
     <ClInclude Include="..\headers\components\PooledSlots.h" />
     <ClInclude Include="..\headers\components\ScoreBoard.h" />

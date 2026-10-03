@@ -23,6 +23,12 @@
 # free space. Everything else, the fortress ring included, is one character per cell - the ring is
 # drawn two cells thick, the same number the spawner reads from kFortressRingCells.
 #
+# A level sends 20 enemies, each one a random model, unless a line like "20 enemies: 4 basic, fast"
+# says otherwise: the number is how many enemies the level has, the list after the colon gives the
+# models of the first ones in the order they come - "4 armor" for four in a row, a bare "fast" for
+# one - and every enemy past the list is rolled. The list may be left out: "7 enemies:" sends seven
+# random ones. The models are basic, fast, power and armor.
+#
 # Lines starting with # and blank lines are ignored, so feel free to sketch here.
 0000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000

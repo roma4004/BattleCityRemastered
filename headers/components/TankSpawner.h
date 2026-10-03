@@ -5,6 +5,7 @@
 #include "utils/Timer.h"
 #include "utils/Uuid.h"
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -20,6 +21,7 @@ enum class GameMode : char8_t;
 enum class PlayerSlot : std::uint8_t;
 struct PawnProperty;
 struct BonusEffectProperty;
+struct EnemyLineupLoadedEvent;
 struct GameResetEvent;
 struct NextLevelRequestedEvent;
 struct PostTickUpdateEvent;
@@ -76,10 +78,14 @@ class TankSpawner final
 	const GameConfig& _gameConfig;
 	std::vector<DelayedTankSpawn> _delayedSpawns{};
 	std::vector<NextLevelLoadout> _nextLevelLoadouts{};
+	//NOTE: the models of the map's first enemies and how far down them the enemies have come - past, they are rolled
+	std::vector<TankModel> _enemyLineup{};
+	std::size_t _enemiesChosen{};
 
 	void Subscribe();
 	void OnRespawnTank(const RespawnTankEvent& event);
 	void OnNextLevelRequested(const NextLevelRequestedEvent&);
+	void OnEnemyLineupLoaded(const EnemyLineupLoadedEvent& event);
 	void OnSpawnAnimationFinished(const SpawnAnimationFinishedEvent& event);
 	void OnTankRespawned(const TankRespawnedEvent& event);
 	void OnTankSpawnCompleted(const TankSpawnCompletedEvent& event);
@@ -123,7 +129,8 @@ class TankSpawner final
 	void DelayedSpawnStart(ObjRectangle rect, Uuid uuid, TankType type, TankModel model);
 	[[nodiscard]] std::unique_ptr<IInputProvider> MakeDriver(TankType type) const;
 
-	//NOTE: an empty model is one to roll - it arrives filled only where the authority already chose it
+	[[nodiscard]] TankModel NextEnemyModel();
+	//NOTE: an empty model is the lineup's next - it arrives filled only where the authority already chose it
 	void RespawnEnemyTanks(TankType type, Uuid uuid, std::optional<ObjRectangle> rect = std::nullopt,
 						   std::optional<TankModel> model = std::nullopt);
 	[[nodiscard]] std::optional<ObjRectangle> GetPlayerRandomPosX(PlayerSlot slot) const;

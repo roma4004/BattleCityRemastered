@@ -97,18 +97,14 @@ bool DiscoveryScan::Poll()
 			continue;
 		}
 
-		const FoundServer server{.host = sender.address().to_string(),
-								 .gamePort = reply->gamePort,
+		const FoundServer server{.address = ServerAddress{.host = sender.address().to_string(),
+														  .port = reply->gamePort},
 								 .seats = reply->seats,
 								 .freeSeats = reply->freeSeats,
 								 .rules = reply->rules};
-		const auto isSame = [&server](const Entry& entry)
-		{
-			return entry.server.host == server.host && entry.server.gamePort == server.gamePort;
-		};
-
 		//NOTE: the broadcast and the direct probe may both reach one server
-		if (const auto known{std::ranges::find_if(_entries, isSame)}; known != _entries.end())
+		const auto addressOf{[](const Entry& entry) -> const ServerAddress& { return entry.server.address; }};
+		if (const auto known{std::ranges::find(_entries, server.address, addressOf)}; known != _entries.end())
 		{
 			isChanged = isChanged || known->server != server;
 			*known = Entry{.server = server, .isAnswering = true};

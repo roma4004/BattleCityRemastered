@@ -1,4 +1,5 @@
 #include "components/ServerScreen.h"
+#include "components/AddressField.h"
 #include "components/EventSystem.h"
 #include "components/UiTable.h"
 #include "components/events/CoreLifecycleEvents.h"
@@ -41,129 +42,17 @@ constexpr unsigned int kErrorColor{0xffff0000u};
 //NOTE: rows kept for the list, so a found server does not push the address down
 constexpr std::size_t kListRows{5};
 
-constexpr std::size_t kOctets{4};
-constexpr std::size_t kOctetDigits{3};
-constexpr int kMaxOctet{255};
-constexpr std::size_t kPortDigits{5};
-//NOTE: eight groups of four and the seven colons between them
-constexpr std::size_t kIPv6Length{39};
-//NOTE: the whole address, then the port - a scope id typed after '%' takes a part between them
-constexpr std::size_t kIPv6Parts{2};
-constexpr std::size_t kScopePart{1};
 //NOTE: a little wider than the longest hint
 constexpr std::size_t kRowSymbols{40};
-//NOTE: the IPv6 row at its longest - both typed rows are drawn small enough to fit it
-constexpr std::size_t kTypedSymbols{std::string_view{"[]:"}.size() + kIPv6Length + kPortDigits};
-constexpr std::ptrdiff_t kIPv6Groups{8};
-constexpr std::size_t kGroupDigits{4};
 constexpr std::string_view kPlayersHeader{"PLAYERS  "};
 constexpr std::string_view kModeHeader{"MODE     "};
 //NOTE: discovery is IPv4 only - the longest address a found server has
-constexpr std::size_t kFoundAddressSymbols{kOctets * kOctetDigits + kOctets - 1 + 1 + kPortDigits};
+constexpr std::size_t kFoundAddressSymbols{std::string_view{"255.255.255.255:65535"}.size()};
 static_assert(kPlayersHeader.size() + kModeHeader.size() + kFoundAddressSymbols <= kRowSymbols,
 			  "a found server has to fit in one row");
 
 //NOTE: a terminal caret's period, fading instead of switching
 constexpr auto kCaretBlink{1060ms};
-
-[[nodiscard]] bool IsDigit(const char symbol) { return std::isdigit(static_cast<unsigned char>(symbol)) != 0; }
-
-[[nodiscard]] bool IsHexDigit(const char symbol) { return std::isxdigit(static_cast<unsigned char>(symbol)) != 0; }
-
-[[nodiscard]] bool IsOctet(const std::string& part)
-{
-	return part.size() <= kOctetDigits && (part.empty() || std::stoi(part) <= kMaxOctet);
-}
-
-[[nodiscard]] bool IsPort(const std::string& part)
-{
-	return part.size() <= kPortDigits && (part.empty() || network::ParsePort(part).has_value());
-}
-
-[[nodiscard]] std::size_t GroupStart(const std::string_view address, const std::size_t offset)
-{
-	const std::size_t colon{address.substr(0, offset).rfind(':')};
-
-	return colon == std::string_view::npos ? 0 : colon + 1;
-}
-
-[[nodiscard]] std::string_view GroupAt(const std::string_view address, const std::size_t offset)
-{
-	const std::size_t start{GroupStart(address, offset)};
-
-	return address.substr(start, address.find(':', offset) - start);
-}
-
-[[nodiscard]] std::ptrdiff_t GroupCount(const std::string_view address)
-{
-	return std::ranges::count_if(address | std::views::split(':'),
-								 [](const auto& group) { return !std::ranges::empty(group); });
-}
-
-//NOTE: eight groups, or seven around "::"
-[[nodiscard]] std::ptrdiff_t MaxGroups(const std::string_view address)
-{
-	return address.contains("::") ? kIPv6Groups - 1 : kIPv6Groups;
-}
-
-//NOTE: nothing more can follow
-[[nodiscard]] bool IsWholeIPv6(const std::string_view address) { return GroupCount(address) == MaxGroups(address); }
-
-//NOTE: the IPv6 row has a scope id once '%' is typed
-[[nodiscard]] bool IsScoped(const std::vector<std::string>& ipv6) { return ipv6.size() == kIPv6Parts + 1; }
-
-//NOTE: '%' with nothing after it yet - erasing it takes the part away
-[[nodiscard]] bool IsScopeEmpty(const std::vector<std::string>& ipv6)
-{
-	return IsScoped(ipv6) && ipv6[kScopePart].empty();
-}
-
-//NOTE: the address shares the room of a whole one with its scope id, so the row never outgrows its cell
-[[nodiscard]] std::size_t AddressRoom(const std::vector<std::string>& ipv6)
-{
-	return IsScoped(ipv6) ? kIPv6Length - 1 - ipv6[kScopePart].size() : kIPv6Length;
-}
-
-//NOTE: erased, it would join two groups past four digits - so it is stepped over, as a dot between octets
-[[nodiscard]] bool IsKeptColon(const std::string_view address, const std::size_t at)
-{
-	return address[at] == ':' && GroupAt(address, at).size() + GroupAt(address, at + 1).size() > kGroupDigits;
-}
-
-//NOTE: where the typed digit ends up once a group past four hands its last one on; nothing with no room left
-[[nodiscard]] std::optional<std::size_t> FlowIPv6(std::string& address, std::size_t typed, const std::size_t room)
-{
-	for (std::size_t start{GroupStart(address, typed)};;)
-	{
-		const std::size_t end{std::min(address.find(':', start), address.size())};
-		if (end - start <= kGroupDigits)
-		{
-			break;
-		}
-
-		const std::size_t last{end - 1};
-		if (end == address.size())
-		{
-			address.insert(last, 1, ':');
-			typed += typed == last ? 1 : 0;
-			break;
-		}
-
-		const std::size_t next{std::min(address.find_first_not_of(':', end), address.size())};
-		const char carried{address[last]};
-		address.erase(last, 1);
-		address.insert(next - 1, 1, carried);
-		typed = typed == last ? next - 1 : typed;
-		start = next - 1;
-	}
-
-	if (GroupCount(address) > MaxGroups(address) || address.size() > room)
-	{
-		return std::nullopt;
-	}
-
-	return typed;
-}
 
 //NOTE: whole when it has just moved, then out and back once a blink
 [[nodiscard]] std::uint8_t CaretAlpha(const std::chrono::steady_clock::duration shown)
@@ -185,7 +74,10 @@ constexpr auto kCaretBlink{1060ms};
 
 [[nodiscard]] UiCell Typed(std::string text)
 {
-	return UiCell{.text = std::move(text), .color = kTextColor, .symbols = kRowSymbols, .fitSymbols = kTypedSymbols};
+	return UiCell{.text = std::move(text),
+				  .color = kTextColor,
+				  .symbols = kRowSymbols,
+				  .fitSymbols = AddressField::kLongestShown};
 }
 
 [[nodiscard]] UiCell Centered(std::string text)
@@ -217,13 +109,14 @@ constexpr auto kCaretBlink{1060ms};
 [[nodiscard]] std::string ServerLine(const network::FoundServer& server)
 {
 	const int players{server.seats - server.freeSeats};
-	std::string seats{server.freeSeats == 0 ? "FULL" : std::to_string(players) + '/' + std::to_string(server.seats)};
+	std::string seats{server.IsFull() ? "FULL" : std::to_string(players) + '/' + std::to_string(server.seats)};
 	seats.resize(kPlayersHeader.size(), ' ');
 	std::string mode{server.rules == MatchRules::FreeForAll ? "FFA" : "CLASSIC"};
 	mode.resize(kModeHeader.size(), ' ');
-	const std::string host{server.host.contains(':') ? '[' + server.host + ']' : server.host};
+	const std::string& host{server.address.host};
 
-	return seats + mode + host + ':' + std::to_string(server.gamePort);
+	return seats + mode + (host.contains(':') ? '[' + host + ']' : host) + ':'
+		   + std::to_string(server.address.port);
 }
 
 //NOTE: a server with someone waiting first, then an empty one, a full one last
@@ -231,7 +124,7 @@ constexpr auto kCaretBlink{1060ms};
 {
 	const auto rank = [](const network::FoundServer& server)
 	{
-		return server.freeSeats == 0 ? 2 : (server.freeSeats < server.seats ? 0 : 1);
+		return server.IsFull() ? 2 : (server.freeSeats < server.seats ? 0 : 1);
 	};
 	std::ranges::stable_sort(servers, {}, rank);
 
@@ -247,24 +140,23 @@ constexpr auto kCaretBlink{1060ms};
 std::vector<network::FoundServer> FakeServers()
 {
 	constexpr MatchRules ffa{MatchRules::FreeForAll};
-	return JoinOrder({{.host = "255.255.255.255", .gamePort = 65535, .seats = 2, .freeSeats = 1},
-					  {.host = "172.16.254.1", .gamePort = 65535, .seats = 4, .freeSeats = 4, .rules = ffa},
-					  {.host = "192.168.0.10", .gamePort = 50001, .seats = 2, .freeSeats = 2},
-					  {.host = "255.255.255.254", .gamePort = 65534, .seats = 2, .freeSeats = 0},
-					  {.host = "10.20.30.40", .gamePort = 65535, .seats = 3, .freeSeats = 1, .rules = ffa},
-					  {.host = "255.255.255.253", .gamePort = 65534, .seats = 4, .freeSeats = 0, .rules = ffa},
-					  {.host = "10.0.0.6", .gamePort = 4001, .seats = 2, .freeSeats = 0},
-					  {.host = "192.168.100.200", .gamePort = 5000, .seats = 4, .freeSeats = 2},
-					  {.host = "192.168.0.14", .gamePort = 50005, .seats = 2, .freeSeats = 1}});
+	return JoinOrder({{.address = {.host = "255.255.255.255", .port = 65535}, .seats = 2, .freeSeats = 1},
+					  {.address = {.host = "172.16.254.1", .port = 65535}, .seats = 4, .freeSeats = 4, .rules = ffa},
+					  {.address = {.host = "192.168.0.10", .port = 50001}, .seats = 2, .freeSeats = 2},
+					  {.address = {.host = "255.255.255.254", .port = 65534}, .seats = 2, .freeSeats = 0},
+					  {.address = {.host = "10.20.30.40", .port = 65535}, .seats = 3, .freeSeats = 1, .rules = ffa},
+					  {.address = {.host = "255.255.255.253", .port = 65534}, .seats = 4, .freeSeats = 0, .rules = ffa},
+					  {.address = {.host = "10.0.0.6", .port = 4001}, .seats = 2, .freeSeats = 0},
+					  {.address = {.host = "192.168.100.200", .port = 5000}, .seats = 4, .freeSeats = 2},
+					  {.address = {.host = "192.168.0.14", .port = 50005}, .seats = 2, .freeSeats = 1}});
 }
 }//namespace
 
 ServerScreen::ServerScreen(const std::shared_ptr<EventSystem>& events, const network::ServerAddress& address)
 	: _events{events}
-	, _rows{Row{.parts = std::vector<std::string>(kOctets + 1)}, Row{.parts = std::vector<std::string>(kIPv6Parts)}}
 {
-	Fill(address);
-	_rows.back().parts = {"ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff", "65535"}; //TEMP
+	Fill(address, false);
+	_ipv6.Fill(network::ServerAddress{.host = "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff", .port = 65535}, false); //TEMP
 
 	_subs.push_back(_events->AddListener(this, &ServerScreen::OnMenuShown));
 }
@@ -283,7 +175,8 @@ void ServerScreen::Open(const GameMode mode)
 	}
 
 	//NOTE: the caret starts at the address, only a paste puts it on the port
-	std::ranges::for_each(_rows, [](Row& row) { row.StepToStart(0); });
+	_ipv4.CaretToStart();
+	_ipv6.CaretToStart();
 
 	PickFirst();
 	std::ranges::copy(FakeServers(), std::back_inserter(_servers)); //TEMP
@@ -343,8 +236,8 @@ void ServerScreen::OnPreTickUpdate(const PreTickUpdateEvent&)
 		return;
 	}
 
-	const std::optional<network::FoundServer> focused{
-			_focus.line == Line::Server ? std::optional{_servers[_focus.server]} : std::nullopt};
+	const std::optional<network::ServerAddress> focused{
+			_focus.line == Line::Server ? std::optional{_servers[_focus.server].address} : std::nullopt};
 	_servers.resize(_servers.size() - FakeServers().size()); //TEMP
 	const bool wasEmpty{_servers.empty()};
 	_servers = JoinOrder(_scan->Servers());
@@ -353,8 +246,7 @@ void ServerScreen::OnPreTickUpdate(const PreTickUpdateEvent&)
 	if (!focused)
 	{
 		//NOTE: the first servers found take the focus they would have had at opening, unless it has moved since
-		const Row& typed{_rows.front()};
-		if (wasEmpty && _focus == Item{.line = Line::IPv4} && typed.part == 0 && typed.offset == 0)
+		if (wasEmpty && _focus == Item{.line = Line::IPv4} && _ipv4.IsCaretAtStart())
 		{
 			PickFirst();
 		}
@@ -362,11 +254,7 @@ void ServerScreen::OnPreTickUpdate(const PreTickUpdateEvent&)
 		return;
 	}
 
-	const auto isFocused = [&focused](const network::FoundServer& server)
-	{
-		return server.host == focused->host && server.gamePort == focused->gamePort;
-	};
-	const auto server{std::ranges::find_if(_servers, isFocused)};
+	const auto server{std::ranges::find(_servers, *focused, &network::FoundServer::address)};
 	if (server != _servers.end())
 	{
 		Pick(Item{.line = Line::Server, .server = static_cast<std::size_t>(std::distance(_servers.begin(), server))});
@@ -392,11 +280,7 @@ void ServerScreen::OnTextPasted(const TextPastedEvent& event)
 
 	if (const std::optional<network::ServerAddress> address{network::ParseServerAddress(text)})
 	{
-		Fill(*address);
-		if (_focus.line == Line::IPv6)
-		{
-			_isBracketed = text.starts_with('[');
-		}
+		Fill(*address, text.starts_with('['));
 	}
 	else
 	{
@@ -410,7 +294,6 @@ void ServerScreen::OnTextPasted(const TextPastedEvent& event)
 void ServerScreen::OnTextKey(const TextKeyEvent& event)
 {
 	_isRejected = false;
-	_isColonAdded = false;
 	_caretMoved = std::chrono::steady_clock::now();
 	if (event.key == TextKey::NextField || event.key == TextKey::PreviousField)
 	{
@@ -419,35 +302,9 @@ void ServerScreen::OnTextKey(const TextKeyEvent& event)
 		return;
 	}
 
-	Row* const row{FocusedRow()};
-	if (row == nullptr)
+	if (AddressField* const field{FocusedField()})
 	{
-		return;
-	}
-
-	switch (event.key)
-	{
-		case TextKey::Erase:
-			Erase(*row);
-			break;
-		case TextKey::EraseRight:
-			EraseRight(*row);
-			break;
-		case TextKey::CaretLeft:
-			CaretLeft(*row);
-			break;
-		case TextKey::CaretRight:
-			CaretRight(*row);
-			break;
-		case TextKey::WordLeft:
-			WordLeft(*row);
-			break;
-		case TextKey::WordRight:
-			WordRight(*row);
-			break;
-		case TextKey::NextField:
-		case TextKey::PreviousField:
-			break;
+		field->Press(event.key);
 	}
 }
 
@@ -535,17 +392,15 @@ void ServerScreen::Press()
 	if (_focus.line == Line::Server)
 	{
 		//NOTE: a full server is scrolled through, not joined
-		if (IsPickable(_focus) && _servers[_focus.server].freeSeats > 0)
+		if (IsPickable(_focus) && !_servers[_focus.server].IsFull())
 		{
-			const network::FoundServer& server{_servers[_focus.server]};
-			Choose(network::ServerAddress{.host = server.host, .port = server.gamePort});
+			Choose(_servers[_focus.server].address);
 		}
 
 		return;
 	}
 
-	const Line row{_focus.line == Line::IPv6 || _focus.line == Line::ConfirmIPv6 ? Line::IPv6 : Line::IPv4};
-	const std::optional<network::ServerAddress> address{network::ParseServerAddress(Text(row))};
+	const std::optional<network::ServerAddress> address{network::ParseServerAddress(FieldOf(_focus.line).Text())};
 	_isRejected = !address;
 	if (address)
 	{
@@ -638,8 +493,7 @@ std::optional<ServerScreen::Item> ServerScreen::PickableAt(const std::size_t row
 //NOTE: a server found on the network is what a client most likely came for
 void ServerScreen::PickFirst()
 {
-	const auto isFree = [](const network::FoundServer& server) { return server.freeSeats > 0; };
-	const auto server{std::ranges::find_if(_servers, isFree)};
+	const auto server{std::ranges::find(_servers, false, &network::FoundServer::IsFull)};
 	if (server == _servers.end())
 	{
 		Pick(Item{.line = Line::IPv4});
@@ -653,7 +507,11 @@ void ServerScreen::PickFirst()
 void ServerScreen::Pick(const Item& item)
 {
 	_focus = item;
-	_isColonAdded = false;
+	if (AddressField* const field{FocusedField()})
+	{
+		field->Focus();
+	}
+
 	_caretMoved = std::chrono::steady_clock::now();
 	if (item.line == Line::Server)
 	{
@@ -685,603 +543,92 @@ void ServerScreen::Step(const bool isForward)
 	Pick(pickable[(index + (isForward ? 1 : count - 1)) % count]);
 }
 
-ServerScreen::Row* ServerScreen::FocusedRow()
+AddressField* ServerScreen::FocusedField()
 {
 	if (_focus.line == Line::IPv4)
 	{
-		return &_rows.front();
+		return &_ipv4;
 	}
 
-	return _focus.line == Line::IPv6 ? &_rows.back() : nullptr;
+	return _focus.line == Line::IPv6 ? &_ipv6 : nullptr;
 }
 
 //NOTE: the address goes to the row of its kind with the caret on the port; the other row keeps its text
-void ServerScreen::Fill(const network::ServerAddress& address)
+void ServerScreen::Fill(const network::ServerAddress& address, const bool isBracketed)
 {
-	const bool isIPv6{address.host.contains(':')};
-	Pick(Item{.line = isIPv6 ? Line::IPv6 : Line::IPv4});
-	Row& row{*FocusedRow()};
-	if (isIPv6)
-	{
-		//NOTE: a scope id keeps its part when the address leaves it room
-		const std::size_t percent{address.host.find('%')};
-		const bool isScoped{percent != std::string::npos && address.host.size() <= kIPv6Length};
-		row.parts = std::vector<std::string>(isScoped ? kIPv6Parts + 1 : kIPv6Parts);
-		row.parts.front() = address.host.substr(0, percent);
-		if (isScoped)
-		{
-			row.parts[kScopePart] = address.host.substr(percent + 1);
-		}
-	}
-	else
-	{
-		std::ranges::fill(row.parts, std::string{});
-		for (auto&& [part, octet]: std::views::zip(row.parts, address.host | std::views::split('.')))
-		{
-			part = std::ranges::to<std::string>(octet);
-		}
-	}
-
-	row.parts.back() = address.port == network::kAnyFreePort ? std::string{} : std::to_string(address.port);
-	row.StepToEnd(row.parts.size() - 1);
+	Pick(Item{.line = address.host.contains(':') ? Line::IPv6 : Line::IPv4});
+	FocusedField()->Fill(address, isBracketed);
 }
 
 void ServerScreen::Type(const char symbol)
 {
-	Row* const focused{FocusedRow()};
-	if (focused == nullptr)
+	if (AddressField* const field{FocusedField()})
 	{
-		return;
-	}
-
-	Row& row{*focused};
-	if (row.part == row.parts.size() - 1)
-	{
-		TypePort(row, symbol);
-	}
-	else if (_focus.line == Line::IPv6 && row.part == 0)
-	{
-		TypeIPv6(row, symbol);
-	}
-	else if (_focus.line == Line::IPv6)
-	{
-		TypeScope(row, symbol);
-	}
-	else
-	{
-		TypeIPv4(row, symbol);
+		field->Type(symbol);
 	}
 }
 
-//NOTE: a digit pushes the rest right, an octet past 255 handing its last one on; with no room it overwrites
-void ServerScreen::TypeIPv4(Row& row, const char symbol)
+const AddressField& ServerScreen::FieldOf(const Line line) const
 {
-	const std::size_t port{row.parts.size() - 1};
-	//NOTE: a dot only out of a started octet, and never past the last one
-	if (symbol == ':' || (symbol == '.' && row.offset > 0 && row.part + 1 < port))
-	{
-		row.StepToStart(symbol == ':' ? port : row.part + 1);
-
-		return;
-	}
-
-	if (!IsDigit(symbol))
-	{
-		return;
-	}
-
-	//NOTE: an octet no digit can follow hands the caret on at once
-	const auto handOn = [](Row& typed)
-	{
-		const std::string& octet{typed.parts[typed.part]};
-		if (typed.offset == octet.size() && (octet.size() == kOctetDigits || std::stoi(octet) * 10 > kMaxOctet))
-		{
-			typed.StepToStart(typed.part + 1);
-		}
-	};
-
-	Row flowed{row};
-	flowed.parts[flowed.part].insert(flowed.offset++, 1, symbol);
-	for (std::size_t at{flowed.part}; at + 1 < port; ++at)
-	{
-		std::string& octet{flowed.parts[at]};
-		while (!IsOctet(octet))
-		{
-			flowed.parts[at + 1].insert(0, 1, octet.back());
-			octet.pop_back();
-			if (flowed.part == at + 1)
-			{
-				++flowed.offset;
-			}
-			else if (flowed.part == at && flowed.offset > octet.size())
-			{
-				flowed.StepToStart(at + 1);
-				++flowed.offset;
-			}
-		}
-	}
-
-	if (IsOctet(flowed.parts[port - 1]))
-	{
-		row = std::move(flowed);
-		handOn(row);
-
-		return;
-	}
-
-	Row over{row};
-	if (over.offset == over.parts[over.part].size())
-	{
-		over.StepToStart(over.part + 1);
-	}
-
-	if (over.part == port)
-	{
-		row = std::move(over);
-		TypePort(row, symbol);
-
-		return;
-	}
-
-	over.parts[over.part][over.offset++] = symbol;
-	if (IsOctet(over.parts[over.part]))
-	{
-		row = std::move(over);
-		handOn(row);
-	}
+	return line == Line::IPv6 || line == Line::ConfirmIPv6 ? _ipv6 : _ipv4;
 }
 
-//NOTE: a digit pushes the rest right, a group past four handing its last one on; with no room it overwrites
-void ServerScreen::TypeIPv6(Row& row, const char symbol)
+UiRow ServerScreen::LineRow(const Item& item) const
 {
-	const bool isAfterAddedColon{std::exchange(_isColonAdded, false)};
-	const std::size_t port{row.parts.size() - 1};
-	std::string& address{row.parts.front()};
-	const bool isAtEnd{row.offset == address.size()};
-	//NOTE: the closing bracket ends the address, as a colon does in IPv4
-	if (symbol == '[' || symbol == ']')
+	switch (item.line)
 	{
-		_isBracketed = true;
-		if (symbol == ']')
+		case Line::ServersCaption:
+			return UiRow{.cells = {Centered("Server List:")}};
+		case Line::ServersHeader:
+			return UiRow{.cells = {Word(std::string{kPlayersHeader} + std::string{kModeHeader} + "ADDRESS")}};
+		case Line::NoServers:
+			return UiRow{.cells = {Centered(_scan->IsSearching() ? "SEARCHING..." : "NONE FOUND")}};
+		case Line::Server:
 		{
-			if (isAfterAddedColon)
-			{
-				address.pop_back();
-			}
+			const network::FoundServer& server{_servers[item.server]};
 
-			row.StepToStart(port);
+			return UiRow{.cells = {Address(ServerLine(server), server.IsFull() ? kFullServerColor : kTextColor)}};
 		}
-
-		return;
+		case Line::Refresh:
+			return UiRow{.cells = {Word("REFRESH", kButtonColor)}};
+		case Line::Gap:
+			return UiRow{};
+		case Line::AddressCaption:
+			return UiRow{.cells = {Centered("Connect via IP:")}};
+		case Line::IPv4Caption:
+			return UiRow{.cells = {Word("IPv4:")}};
+		case Line::IPv6Caption:
+			return UiRow{.cells = {Word("IPv6:")}};
+		case Line::IPv4:
+		case Line::IPv6:
+			return UiRow{.cells = {Typed(FieldOf(item.line).Shown(false).text)}};
+		case Line::ConfirmIPv4:
+		case Line::ConfirmIPv6:
+			return UiRow{.cells = {Button(IsHosting(), item.line == Line::ConfirmIPv6)}};
+		case Line::Error:
+			break;
 	}
 
-	//NOTE: a percent sign ends the address with a scope id - the number of the interface to go out by
-	if (symbol == '%')
-	{
-		if (isAfterAddedColon)
-		{
-			address.pop_back();
-		}
-
-		if (!IsScoped(row.parts) && address.size() + 1 < kIPv6Length)
-		{
-			row.parts.insert(std::prev(row.parts.end()), std::string{});
-		}
-
-		if (IsScoped(row.parts))
-		{
-			row.StepToEnd(kScopePart);
-		}
-
-		return;
-	}
-
-	//NOTE: a colon right of the caret is stepped over, and so is one typed right after the added one
-	if (symbol == ':')
-	{
-		if (!isAtEnd && address[row.offset] == ':')
-		{
-			++row.offset;
-		}
-		else if (isAtEnd && IsWholeIPv6(address))
-		{
-			row.StepToStart(port);
-		}
-		else if (!isAfterAddedColon && address.size() < AddressRoom(row.parts))
-		{
-			address.insert(row.offset++, 1, ':');
-		}
-
-		return;
-	}
-
-	if (!IsHexDigit(symbol))
-	{
-		return;
-	}
-
-	std::string flowed{address};
-	flowed.insert(row.offset, 1, symbol);
-	if (const std::optional<std::size_t> typed{FlowIPv6(flowed, row.offset, AddressRoom(row.parts))})
-	{
-		address = std::move(flowed);
-		row.offset = *typed + 1;
-		CloseFullGroup(row);
-
-		return;
-	}
-
-	//NOTE: past a whole address only the port is left
-	if (isAtEnd)
-	{
-		if (IsWholeIPv6(address))
-		{
-			row.StepToStart(port);
-			TypePort(row, symbol);
-		}
-
-		return;
-	}
-
-	const std::size_t next{address.find_first_not_of(':', row.offset)};
-	if (next != std::string::npos)
-	{
-		address[next] = symbol;
-		row.offset = next + 1;
-		CloseFullGroup(row);
-	}
-}
-
-//NOTE: Windows names an interface by its number; a colon or the closing bracket goes on to the port
-void ServerScreen::TypeScope(Row& row, const char symbol)
-{
-	if (symbol == ':' || symbol == ']')
-	{
-		_isBracketed = _isBracketed || symbol == ']';
-		row.StepToStart(row.parts.size() - 1);
-
-		return;
-	}
-
-	if (IsDigit(symbol) && row.parts.front().size() < AddressRoom(row.parts))
-	{
-		row.parts[kScopePart].insert(row.offset++, 1, symbol);
-	}
-}
-
-//NOTE: a digit pushes the rest right, or with no room goes over the digit right of the caret
-void ServerScreen::TypePort(Row& row, const char symbol)
-{
-	if (!IsDigit(symbol))
-	{
-		return;
-	}
-
-	std::string& port{row.parts.back()};
-	std::string typed{port};
-	typed.insert(row.offset, 1, symbol);
-	if (!IsPort(typed) && row.offset < port.size())
-	{
-		typed = port;
-		typed[row.offset] = symbol;
-	}
-
-	if (IsPort(typed))
-	{
-		port = std::move(typed);
-		++row.offset;
-	}
-}
-
-//NOTE: a group filled at the end gets its colon, like a full octet; past a whole address only the port is left
-void ServerScreen::CloseFullGroup(Row& row)
-{
-	std::string& address{row.parts.front()};
-	if (row.offset < address.size() || GroupAt(address, row.offset).size() < kGroupDigits)
-	{
-		return;
-	}
-
-	if (IsWholeIPv6(address))
-	{
-		row.StepToStart(row.parts.size() - 1);
-	}
-	else if (address.size() < AddressRoom(row.parts))
-	{
-		address.push_back(':');
-		++row.offset;
-		_isColonAdded = true;
-	}
-}
-
-//NOTE: at the start of a part it reaches back over the separator, at the start of IPv6 over the bracket
-void ServerScreen::Erase(Row& row)
-{
-	if (_focus.line == Line::IPv6 && row.part == 0 && row.offset == 0)
-	{
-		_isBracketed = false;
-	}
-
-	//NOTE: right after the '%' of an empty scope id it is the '%' that goes
-	if (row.part == kScopePart && IsScopeEmpty(row.parts))
-	{
-		row.parts.erase(std::next(row.parts.begin()));
-		row.StepToEnd(0);
-
-		return;
-	}
-
-	if (row.offset == 0 && row.part > 0)
-	{
-		row.StepToEnd(row.part - 1);
-	}
-
-	if (row.offset > 0)
-	{
-		std::string& part{row.parts[row.part]};
-		--row.offset;
-		if (IsKeptColon(part, row.offset))
-		{
-			--row.offset;
-		}
-
-		part.erase(row.offset, 1);
-	}
-}
-
-//NOTE: at the end of a part it reaches over the separator into the next one
-void ServerScreen::EraseRight(Row& row)
-{
-	if (row.part == 0 && row.offset == row.parts.front().size() && IsScopeEmpty(row.parts))
-	{
-		row.parts.erase(std::next(row.parts.begin()));
-
-		return;
-	}
-
-	if (row.offset == row.parts[row.part].size() && row.part + 1 < row.parts.size())
-	{
-		row.StepToStart(row.part + 1);
-	}
-
-	std::string& part{row.parts[row.part]};
-	if (row.offset < part.size())
-	{
-		if (IsKeptColon(part, row.offset))
-		{
-			++row.offset;
-		}
-
-		part.erase(row.offset, 1);
-	}
-}
-
-//NOTE: a separator is stepped over like a symbol
-void ServerScreen::CaretLeft(Row& row)
-{
-	if (row.offset > 0)
-	{
-		--row.offset;
-	}
-	else if (row.part > 0)
-	{
-		row.StepToEnd(row.part - 1);
-	}
-}
-
-void ServerScreen::CaretRight(Row& row)
-{
-	if (row.offset < row.parts[row.part].size())
-	{
-		++row.offset;
-	}
-	else if (row.part + 1 < row.parts.size())
-	{
-		row.StepToStart(row.part + 1);
-	}
-}
-
-//NOTE: to the start of the word, or of the previous one - octets, IPv6 groups and the port are words
-void ServerScreen::WordLeft(Row& row) const
-{
-	if (row.offset == 0 && row.part > 0)
-	{
-		row.StepToEnd(row.part - 1);
-	}
-
-	const std::string& part{row.parts[row.part]};
-	if (_focus.line != Line::IPv6 || row.part != 0)
-	{
-		row.offset = 0;
-
-		return;
-	}
-
-	while (row.offset > 0 && part[row.offset - 1] == ':')
-	{
-		--row.offset;
-	}
-
-	while (row.offset > 0 && part[row.offset - 1] != ':')
-	{
-		--row.offset;
-	}
-}
-
-//NOTE: to the end of the word, or of the next one
-void ServerScreen::WordRight(Row& row) const
-{
-	const std::size_t port{row.parts.size() - 1};
-	const std::string& part{row.parts[row.part]};
-	if (_focus.line == Line::IPv6 && row.part == 0 && row.offset < part.size())
-	{
-		while (row.offset < part.size() && part[row.offset] == ':')
-		{
-			++row.offset;
-		}
-
-		while (row.offset < part.size() && part[row.offset] != ':')
-		{
-			++row.offset;
-		}
-
-		return;
-	}
-
-	if (row.offset < part.size())
-	{
-		row.offset = part.size();
-	}
-	else if (row.part < port)
-	{
-		row.StepToEnd(row.part + 1);
-	}
-}
-
-std::string ServerScreen::Text(const Line line) const
-{
-	const Row& row{line == Line::IPv6 ? _rows.back() : _rows.front()};
-	const std::string& port{row.parts.back()};
-
-	std::string host{};
-	if (line == Line::IPv6)
-	{
-		//NOTE: the colon a full group gets only leads on to the next one - the address ends before it
-		std::string_view address{row.parts.front()};
-		if (address.ends_with(':') && !address.ends_with("::"))
-		{
-			address.remove_suffix(1);
-		}
-
-		const bool hasScope{IsScoped(row.parts) && !row.parts[kScopePart].empty()};
-		host = '[' + std::string{address} + (hasScope ? '%' + row.parts[kScopePart] : std::string{}) + ']';
-	}
-	else
-	{
-		//NOTE: an octet typed with leading zeros goes out as its number - the parser takes "010" for no octet
-		const auto octet = [](const std::string& part)
-		{
-			return part.empty() ? part : std::to_string(std::stoi(part));
-		};
-		host = row.parts | std::views::take(kOctets) | std::views::transform(octet) | std::views::join_with('.')
-			   | std::ranges::to<std::string>();
-	}
-
-	return port.empty() ? host : host + ':' + port;
-}
-
-ServerScreen::ShownRow ServerScreen::Shown(const Line line) const
-{
-	const Row& row{line == Line::IPv6 ? _rows.back() : _rows.front()};
-	ShownRow shown{};
-	const auto append = [this, &row, &shown, line](const std::size_t at, const std::string_view placeholder)
-	{
-		if (_focus.line == line && at == row.part)
-		{
-			shown.caret = shown.text.size() + row.offset;
-		}
-
-		const std::string& text{row.parts[at]};
-		shown.text += text.empty() ? placeholder : text;
-	};
-
-	const std::size_t port{row.parts.size() - 1};
-	if (line == Line::IPv6)
-	{
-		//NOTE: the brackets have their places either way, so showing them does not move the address
-		shown.text += _isBracketed ? '[' : ' ';
-		append(0, "____");
-		if (IsScoped(row.parts))
-		{
-			shown.text += '%';
-			append(kScopePart, "");
-		}
-
-		shown.text += _isBracketed ? ']' : ' ';
-	}
-	else
-	{
-		for (std::size_t at{}; at < port; ++at)
-		{
-			if (at > 0)
-			{
-				shown.text += '.';
-			}
-
-			append(at, "___");
-		}
-	}
-
-	shown.text += ':';
-	append(port, "auto");
-
-	return shown;
+	return _isRejected ? UiRow{.cells = {Word("NOT AN ADDRESS", kErrorColor)}} : UiRow{};
 }
 
 void ServerScreen::Draw() const
 {
 	const std::vector<Item> lines{Lines()};
-	UiTable picked{};
-	std::optional<PanelCaret> caret{};
-	for (const Item& item: lines)
-	{
-		switch (item.line)
-		{
-			case Line::ServersCaption:
-				picked.rows.push_back(UiRow{.cells = {Centered("Server List:")}});
-				break;
-			case Line::ServersHeader:
-				picked.rows.push_back(
-						UiRow{.cells = {Word(std::string{kPlayersHeader} + std::string{kModeHeader} + "ADDRESS")}});
-				break;
-			case Line::NoServers:
-				picked.rows.push_back(UiRow{.cells = {Centered(_scan->IsSearching() ? "SEARCHING..." : "NONE FOUND")}});
-				break;
-			case Line::Server:
-			{
-				const network::FoundServer& server{_servers[item.server]};
-				const unsigned int color{server.freeSeats > 0 ? kTextColor : kFullServerColor};
-				picked.rows.push_back(UiRow{.cells = {Address(ServerLine(server), color)}});
-				break;
-			}
-			case Line::Refresh:
-				picked.rows.push_back(UiRow{.cells = {Word("REFRESH", kButtonColor)}});
-				break;
-			case Line::Gap:
-				picked.rows.push_back(UiRow{});
-				break;
-			case Line::AddressCaption:
-				picked.rows.push_back(UiRow{.cells = {Centered("Connect via IP:")}});
-				break;
-			case Line::IPv4Caption:
-				picked.rows.push_back(UiRow{.cells = {Word("IPv4:")}});
-				break;
-			case Line::IPv6Caption:
-				picked.rows.push_back(UiRow{.cells = {Word("IPv6:")}});
-				break;
-			case Line::IPv4:
-			case Line::IPv6:
-			{
-				ShownRow shown{Shown(item.line)};
-				if (shown.caret)
-				{
-					caret = PanelCaret{.row = picked.rows.size(),
-									   .symbol = *shown.caret,
-									   .alpha = CaretAlpha(std::chrono::steady_clock::now() - _caretMoved)};
-				}
+	UiTable picked{.rows = lines | std::views::transform([this](const Item& item) { return LineRow(item); })
+						   | std::ranges::to<std::vector>()};
 
-				picked.rows.push_back(UiRow{.cells = {Typed(std::move(shown.text))}});
-				break;
-			}
-			case Line::ConfirmIPv4:
-			case Line::ConfirmIPv6:
-				picked.rows.push_back(UiRow{.cells = {Button(IsHosting(), item.line == Line::ConfirmIPv6)}});
-				break;
-			case Line::Error:
-				picked.rows.push_back(_isRejected ? UiRow{.cells = {Word("NOT AN ADDRESS", kErrorColor)}} : UiRow{});
-				break;
-		}
-	}
+	//NOTE: a row a line, so the focused line's place in the lines is its row
+	const auto focus{std::ranges::find(lines, _focus)};
+	const auto focusRow{static_cast<std::size_t>(std::distance(lines.begin(), focus))};
+	const bool isTyping{_focus.line == Line::IPv4 || _focus.line == Line::IPv6};
+	const std::optional<std::size_t> symbol{isTyping ? FieldOf(_focus.line).Shown(true).caret : std::nullopt};
+	const std::optional<PanelCaret> caret{symbol.transform([this, focusRow](const std::size_t at)
+	{
+		return PanelCaret{.row = focusRow,
+						  .symbol = at,
+						  .alpha = CaretAlpha(std::chrono::steady_clock::now() - _caretMoved)};
+	})};
 
 	std::vector<UiTable> tables{};
 	tables.push_back(Caption(IsHosting() ? "PLAY AS HOST" : "PLAY AS CLIENT"));
@@ -1303,12 +650,11 @@ void ServerScreen::Draw() const
 							 .total = _servers.size()};
 	}
 
-	const auto focus{std::ranges::find(lines, _focus)};
 	_events->EmitEvent(RenderMenuBackgroundEvent{});
 	_events->EmitEvent(RenderPanelTablesEvent{
 			.tables = std::move(tables),
-			.pickedTable = pickedTable,
-			.selectedRow = static_cast<std::size_t>(std::distance(lines.begin(), focus)),
-			.scroll = scroll,
-			.caret = caret});
+			.pick = PanelPick{.table = pickedTable,
+							  .selectedRow = focusRow,
+							  .scroll = scroll,
+							  .caret = caret}});
 }

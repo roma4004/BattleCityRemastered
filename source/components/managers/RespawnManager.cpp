@@ -24,6 +24,9 @@
 
 namespace
 {
+//NOTE: a map that does not say how many enemies it has sends this many
+constexpr unsigned short kUnlistedEnemies{20u};
+
 bool IsEnemyGroup(const RespawnGroup group) noexcept { return group == RespawnGroup::ENEMY_ALL; }
 
 [[nodiscard]] constexpr std::size_t GroupIndex(const PlayerSlot slot) noexcept
@@ -62,6 +65,7 @@ void RespawnManager::Subscribe()
 	_subs.push_back(_events->AddListener(this, &RespawnManager::OnBonusTankPickup));
 	_subs.push_back(_events->AddListener(this, &RespawnManager::OnPlayersBaseFinished));
 	_subs.push_back(_events->AddListener(this, &RespawnManager::OnRespawnTanks));
+	_subs.push_back(_events->AddListener(this, &RespawnManager::OnEnemyLineupLoaded));
 
 	if (IsClient(_gameMode))
 	{
@@ -89,18 +93,36 @@ void RespawnManager::OnRespawnTanks(const RespawnTanksEvent&) { RespawnTanks(); 
 
 void RespawnManager::OnBonusTankApplied(const BonusTankAppliedEvent& event) { OnBonusTank(event.author); }
 
+//NOTE: the reset before it counted the default - a map that says how many enemies it has overrides it
+void RespawnManager::OnEnemyLineupLoaded(const EnemyLineupLoadedEvent& event)
+{
+	if (!event.count)
+	{
+		return;
+	}
+
+	constexpr auto enemies{RespawnGroup::ENEMY_ALL};
+	_respawnCount[static_cast<std::size_t>(enemies)] = static_cast<unsigned short>(*event.count);
+	SetEnemyNeedRespawn();
+
+	_events->EmitEvent(RespawnCountChangedToEvent{.group = enemies,
+												   .respawnCount = _respawnCount[static_cast<std::size_t>(enemies)]});
+}
+
+//NOTE: no more seats than enemies left - a short list would otherwise fill every one of them at once
 void RespawnManager::SetEnemyNeedRespawn()
 {
+	const std::size_t left{_respawnCount[static_cast<std::size_t>(RespawnGroup::ENEMY_ALL)]};
 	const auto isEnemy = [](const SpawnSlot& slot) { return IsEnemyGroup(slot.group); };
-	for (SpawnSlot& slot: _slots | std::views::filter(isEnemy) | std::views::take(_enemySeats))
-	{
-		slot.isAvailable = true;
-	}
+	auto enemies{_slots | std::views::filter(isEnemy)};
+	std::ranges::for_each(enemies, [](SpawnSlot& slot) { slot.isAvailable = false; });
+	std::ranges::for_each(enemies | std::views::take(std::min(_enemySeats, left)),
+						  [](SpawnSlot& slot) { slot.isAvailable = true; });
 }
 
 void RespawnManager::ResetRespawnStat(const bool keepsPlayerLives)
 {
-	_respawnCount[static_cast<std::size_t>(RespawnGroup::ENEMY_ALL)] = 20u;
+	_respawnCount[static_cast<std::size_t>(RespawnGroup::ENEMY_ALL)] = kUnlistedEnemies;
 	if (!keepsPlayerLives)
 	{
 		std::ranges::for_each(kSlots, [this](const PlayerSlot slot) { _respawnCount[GroupIndex(slot)] = 3u; });

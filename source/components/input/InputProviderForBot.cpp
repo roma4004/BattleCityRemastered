@@ -320,8 +320,6 @@ bool InputProviderForBot::IsCenteredOn(const Tank& self, const Direction dir, co
 //NOTE: turns the hull onto an opponent worth a shot or a bonus worth driving to, and returns what is in front
 std::shared_ptr<BaseObj> InputProviderForBot::TurnOntoNearestSeen(Tank& self)
 {
-	_driveLineOfSight.reset();
-
 	const FPoint bulletSize{.x = self.GetBulletWidth(), .y = self.GetBulletHeight()};
 	LineOfSight lineOfSight(self.GetRect(), bulletSize, _allObjects, _gameConfig);
 
@@ -342,6 +340,9 @@ std::shared_ptr<BaseObj> InputProviderForBot::TurnOntoNearestSeen(Tank& self)
 			seen = bonus;
 		}
 	}
+
+	//NOTE: kept past the call it holds every tank it saw - two bots seeing each other would never be freed
+	_driveLineOfSight.reset();
 
 	return seen;
 }

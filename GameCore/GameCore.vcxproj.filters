@@ -117,6 +117,9 @@
     <ClCompile Include="..\source\behavior\ShootingBeh.cpp">
       <Filter>source\behavior</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\components\AddressField.cpp">
+      <Filter>source\components</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\components\BonusSpawner.cpp">
       <Filter>source\components</Filter>
     </ClCompile>
@@ -349,6 +352,9 @@
     </ClInclude>
     <ClInclude Include="..\headers\behavior\ShootingBeh.h">
       <Filter>headers\behavior</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\AddressField.h">
+      <Filter>headers\components</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\components\AnimatedObjects.h">
       <Filter>headers\components</Filter>

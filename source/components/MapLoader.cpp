@@ -1,11 +1,22 @@
 #include "components/MapLoader.h"
 #include "components/WorldGeometry.h"
 #include "enums/BonusType.h"
+#include "enums/TankModel.h"
 #include <algorithm>
+#include <cctype>
+#include <charconv>
+#include <cstddef>
+#include <expected>
 #include <fstream>
+#include <limits>
 #include <map>
+#include <optional>
 #include <ranges>
 #include <sstream>
+#include <string>
+#include <string_view>
+#include <system_error>
+#include <utility>
 #include <vector>
 
 namespace
@@ -14,10 +25,15 @@ constexpr char kCommentPrefix{'#'};
 //NOTE: the digits line up with ObstacleType by construction, so the legend in the map file is the
 //enum order - keep them in step when a new obstacle appears
 constexpr char kFirstSymbol{'0'};
+constexpr std::string_view kBlanks{" \t"};
+//NOTE: "20 enemies: 6 basic, 2 fast" - a grid row holds no blank, so the line never reads as one
+constexpr std::string_view kEnemiesKey{"enemies:"};
+//NOTE: the enemy counter is an unsigned short
+constexpr std::size_t kMaxListedEnemies{std::numeric_limits<unsigned short>::max()};
 
 [[nodiscard]] bool IsSkippable(const std::string_view line)
 {
-	const std::size_t firstVisible{line.find_first_not_of(" \t")};
+	const std::size_t firstVisible{line.find_first_not_of(kBlanks)};
 
 	return firstVisible == std::string_view::npos || line[firstVisible] == kCommentPrefix;
 }
@@ -98,6 +114,120 @@ constexpr char kFirstSymbol{'0'};
 	return std::ranges::any_of(std::views::iota(std::size_t{}, map.cols - span + 1u), isFree);
 }
 
+[[nodiscard]] std::string_view Trimmed(const std::string_view text)
+{
+	const std::size_t first{text.find_first_not_of(kBlanks)};
+	if (first == std::string_view::npos)
+	{
+		return {};
+	}
+
+	return text.substr(first, text.find_last_not_of(kBlanks) - first + 1u);
+}
+
+[[nodiscard]] bool IsEnemiesLine(const std::string_view line)
+{
+	const std::string_view text{Trimmed(line)};
+	const std::size_t digits{std::min(text.find_first_not_of("0123456789"), text.size())};
+
+	return digits > 0u && Trimmed(text.substr(digits)).starts_with(kEnemiesKey);
+}
+
+//NOTE: any case, so "Armor" the way the log spells it reads too; the player's model is no enemy
+[[nodiscard]] std::optional<TankModel> EnemyModelNamed(const std::string_view name)
+{
+	const auto lower = [](const char symbol) { return std::tolower(static_cast<unsigned char>(symbol)); };
+	const auto models{std::views::iota(kFirstTankModelId, kLastEnemyModelId + 1)
+					  | std::views::transform([](const int id) { return static_cast<TankModel>(id); })};
+	const auto found{std::ranges::find_if(models, [name, lower](const TankModel model)
+	{
+		return std::ranges::equal(name, ToString(model), {}, lower, lower);
+	})};
+	if (found == models.end())
+	{
+		return std::nullopt;
+	}
+
+	return *found;
+}
+
+//NOTE: "fast" is one enemy and "4 armor" four in a row, in the order the list gives them
+[[nodiscard]] std::expected<std::vector<TankModel>, std::string> ParseLineup(const std::string_view list)
+{
+	std::vector<TankModel> lineup;
+	for (const auto entry: list | std::views::split(','))
+	{
+		std::string_view item{Trimmed(std::string_view{entry.begin(), entry.end()})};
+		std::size_t count{1u};
+		const auto [end, error]{std::from_chars(item.data(), item.data() + item.size(), count)};
+		if (error == std::errc{})
+		{
+			item = Trimmed(item.substr(static_cast<std::size_t>(end - item.data())));
+		}
+
+		if (error == std::errc::result_out_of_range || count > kMaxListedEnemies - lineup.size())
+		{
+			return std::unexpected("the enemy list holds more than " + std::to_string(kMaxListedEnemies)
+								   + " tanks");
+		}
+
+		if (count == 0u)
+		{
+			return std::unexpected(std::string{"a count of 0 in the enemy list - leave the entry out"});
+		}
+
+		if (item.empty())
+		{
+			return std::unexpected(std::string{"an entry of the enemy list names no model"});
+		}
+
+		const std::optional<TankModel> model{EnemyModelNamed(item)};
+		if (!model)
+		{
+			return std::unexpected("unknown enemy '" + std::string{item} + "' - see the legend");
+		}
+
+		lineup.insert(lineup.end(), count, *model);
+	}
+
+	return lineup;
+}
+
+//NOTE: the count, then the models of the first enemies - the list may be shorter or left out, the rest are rolled
+[[nodiscard]] std::expected<void, std::string> ReadEnemies(const std::string_view line, MapData& map)
+{
+	const std::string_view text{Trimmed(line)};
+	std::size_t count{};
+	const auto [end, error]{std::from_chars(text.data(), text.data() + text.size(), count)};
+	if (error == std::errc::result_out_of_range || count > kMaxListedEnemies)
+	{
+		return std::unexpected("a level holds at most " + std::to_string(kMaxListedEnemies) + " enemies");
+	}
+
+	if (count == 0u)
+	{
+		return std::unexpected(std::string{"a level of 0 enemies is never won - leave the line out for 20"});
+	}
+
+	const std::string_view rest{Trimmed(text.substr(static_cast<std::size_t>(end - text.data())))};
+	auto lineup{ParseLineup(rest.substr(kEnemiesKey.size()))};
+	if (!lineup)
+	{
+		return std::unexpected(std::move(lineup).error());
+	}
+
+	if (lineup->size() > count)
+	{
+		return std::unexpected("the list names " + std::to_string(lineup->size()) + " enemies, and the level has "
+							   + std::to_string(count));
+	}
+
+	map.enemyCount = count;
+	map.enemyLineup = std::move(*lineup);
+
+	return {};
+}
+
 [[nodiscard]] bool IsKnownSymbol(const char symbol)
 {
 	if (IsSpawnableBonus(BonusOfSymbol(symbol)))
@@ -170,6 +300,25 @@ std::expected<MapData, MapError> MapLoader::Parse(const std::string_view text, s
 
 		if (IsSkippable(line))
 		{
+			continue;
+		}
+
+		if (IsEnemiesLine(line))
+		{
+			if (map.enemyCount)
+			{
+				return std::unexpected(MapError{.path = std::move(path),
+												.reason = "the enemies are counted twice",
+												.line = lineNumber});
+			}
+
+			if (auto read{ReadEnemies(line, map)}; !read)
+			{
+				return std::unexpected(MapError{.path = std::move(path),
+												.reason = std::move(read).error(),
+												.line = lineNumber});
+			}
+
 			continue;
 		}
 

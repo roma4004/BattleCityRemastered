@@ -12,7 +12,11 @@
 #include "enums/Faction.h"
 #include "enums/GameMode.h"
 #include "enums/GameState.h"
+#include "enums/RespawnGroup.h"
+#include "enums/TankModel.h"
+#include "enums/TankType.h"
 #include "gtest/gtest.h"
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <ranges>
@@ -43,7 +47,57 @@ protected:
 	}
 
 	void TearDown() override {}
+
+	//NOTE: the latest count the enemy team was told, read into the given variable
+	[[nodiscard]] EventSubscription WatchEnemiesLeft(unsigned short& enemiesLeft) const
+	{
+		return _events->AddListener([&enemiesLeft](const RespawnCountChangedToEvent& event)
+		{
+			if (event.group == RespawnGroup::ENEMY_ALL)
+			{
+				enemiesLeft = event.respawnCount;
+			}
+		});
+	}
 };
+
+// a map that says how many enemies it has sets the count, whatever its list holds
+TEST_F(RespawnManagerTest, TheMapsEnemyCountSetsTheEnemyCount)
+{
+	unsigned short enemiesLeft{};
+	const EventSubscription countSub{WatchEnemiesLeft(enemiesLeft)};
+
+	_events->EmitEvent(EnemyLineupLoadedEvent{.count = 3u, .models = {TankModel::Armor}});
+
+	EXPECT_EQ(enemiesLeft, 3u);
+}
+
+// one that does not say keeps the twenty the reset counted
+TEST_F(RespawnManagerTest, AMapWithoutAnEnemyCountSendsTwenty)
+{
+	unsigned short enemiesLeft{};
+	const EventSubscription countSub{WatchEnemiesLeft(enemiesLeft)};
+
+	_events->EmitEvent(GameResetEvent{});
+	_events->EmitEvent(EnemyLineupLoadedEvent{});
+
+	EXPECT_EQ(enemiesLeft, 20u);
+}
+
+// fewer enemies than seats put no more tanks on the field than there are
+TEST_F(RespawnManagerTest, FewerEnemiesThanSeatsFillNoMoreSeatsThanThereAre)
+{
+	std::size_t enemiesSent{};
+	const EventSubscription respawnSub{_events->AddListener([&enemiesSent](const RespawnTankEvent& event)
+	{
+		enemiesSent += SlotOf(event.type) ? 0u : 1u;
+	})};
+
+	_events->EmitEvent(EnemyLineupLoadedEvent{.count = 2u});
+	_events->EmitEvent(RespawnTanksEvent{});
+
+	EXPECT_EQ(enemiesSent, 2u);
+}
 
 // a dead bot takes one off the enemy team's count
 TEST_F(RespawnManagerTest, EnemyDiedRespawnCount)

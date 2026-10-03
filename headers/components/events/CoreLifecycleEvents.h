@@ -4,7 +4,10 @@
 #include "enums/DisconnectReason.h"
 #include "enums/GameState.h"
 #include "enums/PlayerSlot.h"
+#include "enums/TankModel.h"
 #include <cstddef>
+#include <optional>
+#include <vector>
 
 struct ServerInClientReadyToStartGameEvent
 {
@@ -129,6 +132,15 @@ struct MapLoadedEvent
 	std::size_t cols;
 	std::size_t rows;
 	unsigned short stage{};
+};
+
+//NOTE: read on the host only - a client gets each model with its tank and the count with the snapshot
+struct EnemyLineupLoadedEvent
+{
+	//NOTE: none when the map does not say
+	std::optional<std::size_t> count{};
+	//NOTE: the first enemies' models - past them every one is rolled
+	std::vector<TankModel> models{};
 };
 
 //NOTE: the reason is already in the log - this only says the world never got filled, so whoever started

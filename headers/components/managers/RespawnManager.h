@@ -14,6 +14,7 @@ enum class TankType : char8_t;
 enum class GameMode : char8_t;
 class GameConfig;
 struct GameResetEvent;
+struct EnemyLineupLoadedEvent;
 struct TankSpawnEvent;
 struct TankDiedEvent;
 struct BonusTankPickupEvent;
@@ -63,6 +64,7 @@ class RespawnManager final
 	void OnBonusTankPickup(const BonusTankPickupEvent& event);
 	void OnPlayersBaseFinished(const PlayersBaseFinishedEvent&);
 	void OnRespawnTanks(const RespawnTanksEvent& event);
+	void OnEnemyLineupLoaded(const EnemyLineupLoadedEvent& event);
 
 	void SetEnemyNeedRespawn();
 	void SetPlayerNeedRespawn();

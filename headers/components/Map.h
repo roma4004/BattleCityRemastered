@@ -1,10 +1,13 @@
 #pragma once
 
 #include "MapData.h"
+#include "enums/TankModel.h"
 #include <cstddef>
 #include <expected>
 #include <filesystem>
 #include <memory>
+#include <optional>
+#include <vector>
 
 class EventSystem;
 
@@ -21,6 +24,8 @@ public:
 
 	[[nodiscard]] std::size_t GetCols() const noexcept { return _data.cols; }
 	[[nodiscard]] std::size_t GetRows() const noexcept { return _data.rows; }
+	[[nodiscard]] std::optional<std::size_t> GetEnemyCount() const noexcept { return _data.enemyCount; }
+	[[nodiscard]] const std::vector<TankModel>& GetEnemyLineup() const noexcept { return _data.enemyLineup; }
 
 	//NOTE: baseless - no eagle and no wall around it
 	void CreateObstacles(double cellSize, bool isBaseless) const;

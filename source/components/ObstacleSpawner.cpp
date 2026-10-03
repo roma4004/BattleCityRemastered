@@ -174,6 +174,7 @@ void ObstacleSpawner::LoadMap() const
 	//NOTE: the cell size comes from this, so it has to be settled before a single obstacle is placed -
 	//the bus is synchronous, so by the time this returns _gameConfig already holds the new geometry
 	_events->EmitEvent(MapLoadedEvent{.cols = map.GetCols(), .rows = map.GetRows(), .stage = _gameConfig.stageNumber});
+	_events->EmitEvent(EnemyLineupLoadedEvent{.count = map.GetEnemyCount(), .models = map.GetEnemyLineup()});
 
 	const bool isBaseless{_gameConfig.IsFreeForAll()};
 	map.CreateObstacles(_gameConfig.gridOffset, isBaseless);

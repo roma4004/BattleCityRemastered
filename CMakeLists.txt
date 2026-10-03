@@ -63,6 +63,7 @@ set(GAME_CORE_SOURCES
         source/components/ObstacleSpawner.cpp
         source/components/RightSideBar.cpp
         source/components/LobbyScreen.cpp
+        source/components/AddressField.cpp
         source/components/ServerScreen.cpp
         source/components/ScoreBoard.cpp
         source/components/TankPool.cpp
@@ -135,6 +136,7 @@ set(UNIT_TESTS_SOURCES
         UnitTests/DiscoveryTest.cpp
         UnitTests/CommandLineParserTest.cpp
         UnitTests/EndpointsTest.cpp
+        UnitTests/AddressFieldTest.cpp
         UnitTests/ConsoleCommandTest.cpp
         UnitTests/ProjectConfigTest.cpp
         UnitTests/CoopBotTest.cpp

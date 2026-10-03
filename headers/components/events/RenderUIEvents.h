@@ -54,15 +54,20 @@ struct PanelCaret
 	std::uint8_t alpha{};
 };
 
+//NOTE: the arrow marks the selected row of this table, and its rows' places go out as PanelRowsPlacedEvent
+struct PanelPick
+{
+	std::size_t table{};
+	std::size_t selectedRow{};
+	std::optional<PanelScroll> scroll{};
+	std::optional<PanelCaret> caret{};
+};
+
 //NOTE: tables stacked top to bottom in the middle of the panel, each centered across it, one font size for all
 struct RenderPanelTablesEvent
 {
 	std::vector<UiTable> tables{};
-	//NOTE: the arrow marks its selected row, and its rows' places go out as PanelRowsPlacedEvent
-	std::optional<std::size_t> pickedTable{};
-	std::size_t selectedRow{};
-	std::optional<PanelScroll> scroll{};
-	std::optional<PanelCaret> caret{};
+	std::optional<PanelPick> pick{};
 };
 
 //NOTE: the whole menu in one ask - what travels is the rows themselves, because the panel they stand in,

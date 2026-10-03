@@ -63,6 +63,9 @@
     <ClCompile Include="EndpointsTest.cpp">
       <Filter></Filter>
     </ClCompile>
+    <ClCompile Include="AddressFieldTest.cpp">
+      <Filter></Filter>
+    </ClCompile>
     <ClCompile Include="CoopBotTest.cpp">
       <Filter></Filter>
     </ClCompile>

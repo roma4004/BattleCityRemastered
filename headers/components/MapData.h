@@ -2,8 +2,10 @@
 
 #include "enums/BonusType.h"
 #include "enums/ObstacleType.h"
+#include "enums/TankModel.h"
 #include <cstddef>
 #include <filesystem>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -21,6 +23,10 @@ struct MapData
 	std::size_t rows{};
 	std::vector<ObstacleType> cells{};
 	std::vector<BonusPlacement> bonuses{};
+	//NOTE: none when the map does not say
+	std::optional<std::size_t> enemyCount{};
+	//NOTE: the models of the first enemies in the order they come - the rest are rolled
+	std::vector<TankModel> enemyLineup{};
 
 	[[nodiscard]] ObstacleType At(const std::size_t col, const std::size_t row) const
 	{

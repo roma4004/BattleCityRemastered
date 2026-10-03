@@ -170,7 +170,8 @@ TEST_F(DiscoveryBeaconTest, AScanFindsTheServerOnThisMachine)
 
 	network::DiscoveryScan scan{std::string{network::kDefaultHost}};
 	const network::FoundServer expected{
-			.host = network::kDefaultHost, .gamePort = gamePort, .seats = 4u, .freeSeats = 2u,
+			.address = network::ServerAddress{.host = network::kDefaultHost, .port = gamePort}, .seats = 4u,
+			.freeSeats = 2u,
 			.rules = MatchRules::FreeForAll};
 
 	for (int attempt{}; attempt < 100 && !std::ranges::contains(scan.Servers(), expected); ++attempt)

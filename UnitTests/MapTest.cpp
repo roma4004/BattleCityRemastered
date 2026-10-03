@@ -7,6 +7,7 @@
 #include "enums/BonusType.h"
 #include "enums/GameMode.h"
 #include "enums/ObstacleType.h"
+#include "enums/TankModel.h"
 #include "entities/BaseObj.h"
 #include "utils/UuidUtils.h"
 #include "components/WorldGeometry.h"
@@ -18,6 +19,7 @@
 #include <fstream>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <system_error>
 #include <vector>
 #include "TestUtils.h"//NOTE: PrintTo for the Point types
@@ -153,6 +155,69 @@ TEST_F(MapLoaderTest, DigitPastTheLastObstacleIsRejected)
 	const auto map{MapLoader::Parse("0080\n")};
 
 	ASSERT_FALSE(map.has_value());
+}
+
+// "N enemies:" gives the level its count, and the list after it the models of the first ones in their order
+TEST_F(MapLoaderTest, TheEnemyCountAndListAreRead)
+{
+	const auto map{MapLoader::Parse("6 enemies: 2 armor, fast, 1 basic\n0000\n")};
+
+	ASSERT_TRUE(map.has_value()) << map.error().reason;
+	EXPECT_EQ(map->enemyCount, 6u);
+	const std::vector expected{TankModel::Armor, TankModel::Armor, TankModel::Fast, TankModel::Basic};
+	EXPECT_EQ(map->enemyLineup, expected);
+}
+
+// the list may be left out - every one of them is rolled then
+TEST_F(MapLoaderTest, ACountAloneListsNoModels)
+{
+	const auto map{MapLoader::Parse("7 enemies:\n0000\n")};
+
+	ASSERT_TRUE(map.has_value()) << map.error().reason;
+	EXPECT_EQ(map->enemyCount, 7u);
+	EXPECT_TRUE(map->enemyLineup.empty());
+}
+
+// without that line the map says nothing about its enemies
+TEST_F(MapLoaderTest, AMapWithoutAnEnemyLineSaysNothing)
+{
+	const auto map{MapLoader::Parse(kTinyMap)};
+
+	ASSERT_TRUE(map.has_value()) << map.error().reason;
+	EXPECT_FALSE(map->enemyCount.has_value());
+	EXPECT_TRUE(map->enemyLineup.empty());
+}
+
+// a comment stays a comment, whatever it looks like
+TEST_F(MapLoaderTest, ACommentedEnemyLineIsIgnored)
+{
+	const auto map{MapLoader::Parse("# 3 enemies: armor\n0000\n")};
+
+	ASSERT_TRUE(map.has_value()) << map.error().reason;
+	EXPECT_FALSE(map->enemyCount.has_value());
+}
+
+// a broken line is refused with the line it stands on, the way a broken row is
+TEST_F(MapLoaderTest, ABrokenEnemyLineIsRejectedWithItsLineNumber)
+{
+	for (const std::string_view enemies: {"4 enemies: tiger", "4 enemies: basic,", "4 enemies: 0 basic",
+										   "4 enemies: 3", "0 enemies:", "70000 enemies:", "2 enemies: 3 basic"})
+	{
+		SCOPED_TRACE(enemies);
+		const auto map{MapLoader::Parse("# legend\n" + std::string{enemies} + "\n0000\n")};
+
+		ASSERT_FALSE(map.has_value());
+		EXPECT_EQ(map.error().line, 2u);
+	}
+}
+
+// and so is a second one - which of the two the level means is not for the loader to guess
+TEST_F(MapLoaderTest, ASecondEnemyLineIsRejected)
+{
+	const auto map{MapLoader::Parse("1 enemies: basic\n1 enemies: fast\n0000\n")};
+
+	ASSERT_FALSE(map.has_value());
+	EXPECT_EQ(map.error().line, 2u);
 }
 
 // a file of comments alone holds no grid

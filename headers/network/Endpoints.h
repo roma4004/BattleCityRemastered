@@ -23,6 +23,8 @@ struct ServerAddress final
 {
 	std::string host{kDefaultHost};
 	std::uint16_t port{kAnyFreePort};
+
+	[[nodiscard]] bool operator==(const ServerAddress& rhs) const = default;
 };
 
 //NOTE: this machine's address that another machine can dial - loopback when there is no network

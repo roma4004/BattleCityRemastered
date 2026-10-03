@@ -17,6 +17,7 @@
 #include <array>
 #include <cstddef>
 #include <functional>
+#include <optional>
 #include <ranges>
 #include <SDL3/SDL_render.h>
 #include <SDL3_ttf/SDL_ttf.h>
@@ -231,19 +232,22 @@ void UiRenderer::DrawPanelTables(const RenderPanelTablesEvent& event) const
 	const SDL_Rect panel{MenuPanelRect(0)};
 	const float scale{CurrentRenderScale()};
 	const int width{panel.w - kPanelSideMargin * 2};
+	//NOTE: a pick past the tables is no pick
+	const bool isPickInTables{event.pick && event.pick->table < event.tables.size()};
+	const std::optional<PanelPick> pick{isPickInTables ? event.pick : std::nullopt};
 	//NOTE: the selector left of the picked table and the scroll bar right of it are centered with it as one block
-	const auto flanks = [&event](const int rowHeight)
+	const bool hasScrollBar{pick && pick->scroll.has_value()};
+	const auto flanks = [hasScrollBar](const int rowHeight)
 	{
-		return std::pair{rowHeight + kMenuRowPadding, event.scroll ? kMenuRowPadding + ScrollBarWidth(rowHeight) : 0};
+		return std::pair{rowHeight + kMenuRowPadding, hasScrollBar ? kMenuRowPadding + ScrollBarWidth(rowHeight) : 0};
 	};
 	//NOTE: as large as the stack lets it be - the plate does not shrink, so the words make the room it needs
-	const auto goesIn = [this, &event, &panel, width, scale, &flanks](const int size)
+	const auto goesIn = [this, &event, &panel, width, scale, &pick, &flanks](const int size)
 	{
 		const int rowHeight{PanelRowHeight(size)};
 		const auto placed{UiLayout::MeasureAll(event.tables, rowHeight, CellMeasurer(size, scale))};
 		const auto [left, right]{flanks(rowHeight)};
-		const bool isPickedIn{!event.pickedTable || *event.pickedTable >= placed.size()
-							  || placed[*event.pickedTable].size.x + left + right <= width};
+		const bool isPickedIn{!pick || placed[pick->table].size.x + left + right <= width};
 
 		return isPickedIn && UiLayout::FitsAcross(event.tables, placed, width, rowHeight)
 			   && UiLayout::StackHeight(placed, rowHeight) <= panel.h - kPanelSideMargin * 2;
@@ -259,23 +263,23 @@ void UiRenderer::DrawPanelTables(const RenderPanelTablesEvent& event) const
 		top += placement.size.y + rowHeight;
 	}
 
-	if (event.pickedTable && *event.pickedTable < placements.size())
+	if (pick)
 	{
-		UiLayout::Placement& picked{placements[*event.pickedTable]};
+		UiLayout::Placement& picked{placements[pick->table]};
 		const auto [left, right]{flanks(rowHeight)};
 		picked.ShiftBy(Point{.x = (left - right) / 2});
 
 		//NOTE: the arrow is a row tall here - the menu's own is sized for the menu's taller rows
-		if (event.selectedRow < picked.rows.size())
+		if (pick->selectedRow < picked.rows.size())
 		{
-			const Point row{picked.rows[event.selectedRow]};
+			const Point row{picked.rows[pick->selectedRow]};
 			DrawIcon(UiIcon::MenuSelector,
 					 {.x = row.x - rowHeight - kMenuRowPadding, .y = row.y, .w = rowHeight, .h = rowHeight});
 		}
 
-		if (event.scroll)
+		if (pick->scroll)
 		{
-			DrawScrollBar(picked, *event.scroll, rowHeight);
+			DrawScrollBar(picked, *pick->scroll, rowHeight);
 		}
 
 		AnnouncePanelRows(picked, rowHeight);
@@ -283,9 +287,9 @@ void UiRenderer::DrawPanelTables(const RenderPanelTablesEvent& event) const
 
 	DrawTables(std::views::zip(event.tables, placements), pointSize, scale);
 
-	if (event.pickedTable && *event.pickedTable < placements.size() && event.caret)
+	if (pick && pick->caret)
 	{
-		DrawCaret(event.tables[*event.pickedTable], placements[*event.pickedTable], *event.caret, pointSize, scale);
+		DrawCaret(event.tables[pick->table], placements[pick->table], *pick->caret, pointSize, scale);
 	}
 }
 

@@ -38,6 +38,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstddef>
 #include <iterator>
 #include <memory>
 #include <optional>
@@ -71,7 +72,7 @@ namespace
 		   && rect.Bottom() <= static_cast<double>(battlefieldSize.y);
 }
 
-//NOTE: an even roll over the enemy models - which ones a stage sends, and when, the map does not describe yet
+//NOTE: an even roll over the enemy models - for every enemy past the end of the map's list
 [[nodiscard]] TankModel RollEnemyModel()
 {
 	const std::uniform_int_distribution distModel{kFirstTankModelId, kLastEnemyModelId};
@@ -101,6 +102,7 @@ void TankSpawner::Subscribe()
 	if (IsAuthority(_gameMode))
 	{
 		_subs.push_back(_events->AddListener(this, &TankSpawner::OnSpawnAnimationFinished));
+		_subs.push_back(_events->AddListener(this, &TankSpawner::OnEnemyLineupLoaded));
 		_subs.push_back(_events->AddListener(this, &TankSpawner::OnPostTickUpdate));
 	}
 
@@ -304,6 +306,19 @@ void TankSpawner::Reset(const GameResetEvent& event)
 	}
 }
 
+void TankSpawner::OnEnemyLineupLoaded(const EnemyLineupLoadedEvent& event)
+{
+	_enemyLineup = event.models;
+	_enemiesChosen = 0u;
+}
+
+TankModel TankSpawner::NextEnemyModel()
+{
+	const std::size_t next{_enemiesChosen++};
+
+	return next < _enemyLineup.size() ? _enemyLineup[next] : RollEnemyModel();
+}
+
 //NOTE: asked of the field while it still stands - the reset that empties it comes a phase later, and
 //on a server several ready signals later
 void TankSpawner::OnNextLevelRequested(const NextLevelRequestedEvent&)
@@ -454,7 +469,7 @@ void TankSpawner::RespawnEnemyTanks(const TankType type, const Uuid uuid, const 
 		return;
 	}
 
-	const TankModel spawnModel{model.has_value() ? *model : RollEnemyModel()};
+	const TankModel spawnModel{model.has_value() ? *model : NextEnemyModel()};
 	const bool isSuccessSpawn{SpawnEnemy(*spawnRect, uuid, type, spawnModel)};
 	if (isSuccessSpawn && IsHost(_gameMode))
 	{
