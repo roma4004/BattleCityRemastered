@@ -33,17 +33,30 @@ public:
 
 	//NOTE: false when the port was already taken - a second server on this machine is reachable by its
 	//number alone, and says so instead of fighting the first one for the well-known one
-	[[nodiscard]] bool IsListening() const noexcept { return _socket.is_open(); }
+	[[nodiscard]] bool IsListening() const noexcept { return _inbox.socket.is_open(); }
 
 	void Shutdown();
 
 private:
-	void Receive();
+	//NOTE: a socket probes come in by, with the last one's sender and bytes
+	struct Inbox final
+	{
+		udp::socket socket;
+		udp::endpoint sender{};
+		//NOTE: room enough to tell a probe from anything else - a longer datagram is not one either way
+		std::array<char, 16u> buffer{};
+	};
 
-	udp::socket _socket;
-	udp::endpoint _sender{};
-	//NOTE: room enough to tell a probe from anything else - a longer datagram is not one either way
-	std::array<char, 16u> _receiveBuffer{};
+	//NOTE: false when the address is taken, or is not this machine's
+	bool Listen(Inbox& inbox, const boost::asio::ip::address& address);
+	void Receive(Inbox& inbox);
+
+	//NOTE: bound to the server's address - every answer goes out of it, so the asker reads that address
+	Inbox _inbox;
+	//NOTE: Linux hands a broadcast only to a socket bound to the address it was sent to - 255.255.255.255,
+	//or the broadcast of the server's own network
+	Inbox _broadcastInbox;
+	Inbox _subnetInbox;
 	const std::uint16_t _gamePort;
 	const std::uint8_t _seats;
 	const MatchRules _rules;

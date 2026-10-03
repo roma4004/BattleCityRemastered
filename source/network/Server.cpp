@@ -1,5 +1,6 @@
 #include "network/Server.h"
 #include "components/EventSystem.h"
+#include "components/MatchSettings.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/ServerConsoleEvents.h"
 #include "components/events/ReplicationEvents.h"
@@ -31,15 +32,26 @@
 #include <variant>
 #include <vector>
 
+namespace
+{
+//NOTE: one to four seats, whatever the launch asked for
+MatchSettings Seated(MatchSettings match)
+{
+	match.seats = std::clamp(match.seats, std::uint8_t{1}, static_cast<std::uint8_t>(kSeatCount));
+
+	return match;
+}
+}//namespace
+
 namespace network::commands
 {
 Server::Server(boost::asio::io_context& ioContext, const ServerAddress& address,
-			   const std::shared_ptr<EventSystem>& events, const std::size_t seatCount, const MatchRules rules)
+			   const std::shared_ptr<EventSystem>& events, const MatchSettings& match)
 	: _socket{ioContext, udp::endpoint{boost::asio::ip::make_address(address.host), address.port}}
 	, _boundPort{_socket.local_endpoint().port()}
-	, _seatCount{std::clamp(seatCount, std::size_t{1}, kSeatCount)}
+	, _match{Seated(match)}
 	, _beacon{ioContext, boost::asio::ip::make_address(address.host), _boundPort,
-			  static_cast<std::uint8_t>(_seatCount), rules, [this] { return CountFreeSlots(); }}
+			  _match.seats, _match.rules, [this] { return CountFreeSlots(); }}
 	, _tickTimer{ioContext}
 	, _events{events}
 	, _replicationOut{events}
@@ -98,7 +110,7 @@ std::uint8_t Server::CountFreeSlots() const
 	const std::lock_guard lock{_sessionsMutex};
 
 	std::uint8_t free{};
-	for (const PlayerSlot slot: kSlots | std::views::take(_seatCount))
+	for (const PlayerSlot slot: kSlots | std::views::take(_match.seats))
 	{
 		const auto holdsSlot = [slot](const std::shared_ptr<Session>& session)
 		{
@@ -219,8 +231,7 @@ void Server::Seat(const udp::endpoint& endpoint, const std::uint32_t connectionI
 		return;
 	}
 
-	const auto session{std::make_shared<Session>(endpoint, connectionId, _events, *slot,
-												 static_cast<std::uint8_t>(_seatCount), now)};
+	const auto session{std::make_shared<Session>(endpoint, connectionId, _events, *slot, _match, now)};
 	_sessions.emplace_back(session);
 	lock.unlock();
 
@@ -298,7 +309,7 @@ void Server::OnStatusRequested(const ServerStatusRequestedEvent&) const
 
 	Log::Info("port " + std::to_string(_boundPort)
 			  + (_isAccepting.load(std::memory_order_acquire) ? " open" : " closed") + ", seats taken "
-			  + std::to_string(seated) + '/' + std::to_string(_seatCount));
+			  + std::to_string(seated) + '/' + std::to_string(_match.seats));
 }
 
 void Server::OnPlayersRequested(const ServerPlayersRequestedEvent&) const
@@ -408,7 +419,7 @@ std::vector<std::shared_ptr<Session>> Server::CopySessions() const
 
 std::optional<PlayerSlot> Server::FindFreeSlot() const
 {
-	for (const PlayerSlot slot: kSlots | std::views::take(_seatCount))
+	for (const PlayerSlot slot: kSlots | std::views::take(_match.seats))
 	{
 		//NOTE: a finished session gives its seat up at once - a client dialling back takes it before the sweep
 		const auto holdsSlot = [slot](const std::shared_ptr<Session>& session)

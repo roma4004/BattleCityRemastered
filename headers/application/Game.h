@@ -1,6 +1,7 @@
 #pragma once
 
 #include "components/EventSystem.h"
+#include "components/MatchSettings.h"
 #include <chrono>
 #include <memory>
 #include <vector>
@@ -94,6 +95,8 @@ private:
 
 	GameMode _selectedGameMode{};
 
+	//NOTE: what the server screen picked - a restart starts the server for it again
+	MatchSettings _hostedMatch{};
 	//NOTE: an address on the command line skips the server screen
 	bool _isAddressNamedByArguments{};
 	//NOTE: a port named on the command line or the server screen beats a published one - for a client only

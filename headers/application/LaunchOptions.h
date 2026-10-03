@@ -29,4 +29,8 @@ struct LaunchOptions final
 	std::optional<std::size_t> seats{};
 	//NOTE: server only - who fights whom
 	std::optional<MatchRules> rules{};
+	//NOTE: server only - the first match's map, by name
+	std::optional<std::string> mapName{};
+	//NOTE: server only - how many enemies the field holds at once
+	std::optional<std::size_t> enemiesAtOnce{};
 };

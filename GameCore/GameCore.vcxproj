@@ -158,6 +158,11 @@
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
     </ClCompile>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup>
+    <Lib>
+      <AdditionalDependencies>iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Lib>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\source\application\CommandLineParser.cpp" />
     <ClCompile Include="..\source\application\ConsoleCommand.cpp" />
@@ -288,6 +293,7 @@
     <ClInclude Include="..\headers\components\Map.h" />
     <ClInclude Include="..\headers\components\MapData.h" />
     <ClInclude Include="..\headers\components\MapLoader.h" />
+    <ClInclude Include="..\headers\components\MatchSettings.h" />
     <ClInclude Include="..\headers\components\WorldGeometry.h" />
     <ClInclude Include="..\headers\components\WorldSnapshot.h" />
     <ClInclude Include="..\headers\components\Menu.h" />

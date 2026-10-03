@@ -51,6 +51,8 @@ struct PanelCaret
 {
 	std::size_t row{};
 	std::size_t symbol{};
+	//NOTE: none is a bar before the symbol, more underline that many - a column picked, not a place to type
+	std::size_t symbols{};
 	std::uint8_t alpha{};
 };
 
@@ -95,6 +97,8 @@ struct PanelRowsPlacedEvent
 {
 	std::vector<Point> rows{};
 	Point rowSize{};
+	//NOTE: the font is monospaced, so how far across a row a click is reads as a symbol of its text
+	int symbolWidth{};
 };
 
 

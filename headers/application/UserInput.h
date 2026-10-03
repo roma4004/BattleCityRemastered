@@ -74,6 +74,7 @@ class UserInput final
 	SDL_Rect _allTilesRect{};
 	std::vector<SubTile> _menuTiles;
 	std::vector<SDL_Rect> _panelRows{};
+	int _panelSymbolWidth{};
 	//NOTE: only a move onto another row is news - resting on one must not take back what the keys picked
 	std::optional<std::size_t> _hoveredPanelRow{};
 

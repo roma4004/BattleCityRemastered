@@ -112,6 +112,7 @@ void Game::OnApplyGameMode(const ApplyGameModeEvent&)
 void Game::OnServerAddressChosen(const ServerAddressChosenEvent& event)
 {
 	_gameConfig.serverAddress = event.address;
+	_hostedMatch = event.match;
 	_isPortNamed = event.address.port != network::kAnyFreePort;
 	//NOTE: a server still up was started on the address before; the link goes first, as in EnterGameMode
 	_simulation->LeaveGameMode();
@@ -142,7 +143,7 @@ void Game::EnterGameMode(const GameMode mode)
 		_serverProcess = std::make_unique<ServerProcess>();
 	}
 
-	if (!_serverProcess->Start(_gameConfig.serverAddress))
+	if (!_serverProcess->Start(_gameConfig.serverAddress, _hostedMatch))
 	{
 		AbandonHosting();
 

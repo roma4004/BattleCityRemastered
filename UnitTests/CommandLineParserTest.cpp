@@ -408,6 +408,26 @@ TEST(ServerCommandLineTest, TheRulesAreTaken)
 	EXPECT_FALSE(ParseServerRaw({"--rules=coop"}).has_value());
 }
 
+// the map is named the way the console names it, never by a path
+TEST(ServerCommandLineTest, TheMapIsTakenByName)
+{
+	EXPECT_EQ(ParseServerRaw({"--map=level2"}).value_or(LaunchOptions{}).mapName, "level2");
+	for (const char* arg: {"--map=", "--map=../level1", "--map=level1.map", "--map=a\\b", "--map=a b"})
+	{
+		EXPECT_FALSE(ParseServerRaw({arg}).has_value()) << arg;
+	}
+}
+
+// and the enemies on the field at once, one to four
+TEST(ServerCommandLineTest, TheEnemiesAtOnceAreTakenFromOneToFour)
+{
+	EXPECT_EQ(ParseServerRaw({"--enemies=1"}).value_or(LaunchOptions{}).enemiesAtOnce, 1u);
+	for (const char* arg: {"--enemies=0", "--enemies=5", "--enemies=x", "--enemies="})
+	{
+		EXPECT_FALSE(ParseServerRaw({arg}).has_value()) << arg;
+	}
+}
+
 // one to four seats only
 TEST(ServerCommandLineTest, ASeatCountOutsideOneToFourIsRefused)
 {

@@ -73,7 +73,7 @@ BulletCaliber Tank::BaseCaliber() const
 {
 	constexpr FPoint baseShell{.x = 9.0, .y = 9.0};
 	constexpr double baseBulletSpeed{300.0};
-	constexpr unsigned int baseDamage{15};
+	constexpr unsigned int baseDamage{30};
 	const FPoint shell{ShellSizeOf(_model, baseShell)};
 
 	return BulletCaliber{.speed = baseBulletSpeed * SpecOf(_model).bulletSpeedFactor,

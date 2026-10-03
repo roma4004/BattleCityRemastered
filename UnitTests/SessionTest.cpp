@@ -1,4 +1,5 @@
 #include "components/EventSystem.h"
+#include "components/MatchSettings.h"
 #include "enums/PlayerSlot.h"
 #include "network/DatagramLink.h"
 #include "network/Session.h"
@@ -16,7 +17,7 @@ class SessionTest : public testing::Test
 protected:
 	std::shared_ptr<EventSystem> _events{std::make_shared<EventSystem>()};
 	std::shared_ptr<network::commands::Session> _session{std::make_shared<network::commands::Session>(
-			boost::asio::ip::udp::endpoint{}, 7u, _events, PlayerSlot::P2, std::uint8_t{2},
+			boost::asio::ip::udp::endpoint{}, 7u, _events, PlayerSlot::P2, MatchSettings{},
 			network::DatagramLink::Clock::now())};
 	network::WireFrame _frame{.reliable = "frame", .latest = {}, .isSnapshot = false};
 };

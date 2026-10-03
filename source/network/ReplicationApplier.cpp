@@ -165,7 +165,7 @@ void ReplicationApplier::Emit(const BonusSpawn& command) const
 
 void ReplicationApplier::Emit(const SlotAssignment& command) const
 {
-	_events->EmitEvent(PlayerSlotAssignedEvent{.slot = command.slot, .seatCount = command.seatCount});
+	_events->EmitEvent(PlayerSlotAssignedEvent{.slot = command.slot, .match = command.match});
 }
 
 //NOTE: the mirror is replaced, not patched - the reset first, then the phase before the field, since

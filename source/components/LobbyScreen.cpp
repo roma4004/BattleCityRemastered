@@ -7,6 +7,7 @@
 #include "enums/GameMode.h"
 #include "enums/DisconnectReason.h"
 #include "enums/GameState.h"
+#include "enums/MatchRules.h"
 #include <string>
 #include <utility>
 #include <vector>
@@ -30,6 +31,7 @@ void LobbyScreen::Subscribe()
 	_subs.push_back(_events->AddListener(this, &LobbyScreen::OnServerScreenShown));
 	_subs.push_back(_events->AddListener(this, &LobbyScreen::OnRefusedOrLost));
 	_subs.push_back(_events->AddListener(this, &LobbyScreen::OnConnectedToHost));
+	_subs.push_back(_events->AddListener(this, &LobbyScreen::OnSlotAssigned));
 }
 
 void LobbyScreen::OnGameStateChangedTo(const GameStateChangedToEvent& event)
@@ -55,9 +57,12 @@ void LobbyScreen::OnServerScreenShown(const ServerScreenShownEvent& event)
 void LobbyScreen::OnRefusedOrLost(const ClientInDisconnectEvent& event)
 {
 	_isServerFull = event.reason == DisconnectReason::ServerFull;
+	_match.reset();
 }
 
 void LobbyScreen::OnConnectedToHost(const ClientConnectedToHostEvent&) { _isServerFull = false; }
+
+void LobbyScreen::OnSlotAssigned(const PlayerSlotAssignedEvent& event) { _match = event.match; }
 
 void LobbyScreen::OnDrawUserInterface(const DrawUserInterfaceEvent&) const { Draw(); }
 
@@ -84,6 +89,17 @@ void LobbyScreen::Draw() const
 	else
 	{
 		lines.rows = {line(IsHost(_gameConfig.gameMode) ? "WAITING FOR PLAYER" : "CONNECTING TO HOST")};
+	}
+
+	if (_match)
+	{
+		const bool isClassic{_match->rules == MatchRules::Classic};
+		lines.rows.push_back(line(std::string{isClassic ? "CLASSIC" : "FREE FOR ALL"} + ", "
+								  + std::to_string(_match->seats) + " SEATS, MAP " + _match->map));
+		if (isClassic)
+		{
+			lines.rows.push_back(line(std::to_string(_match->enemiesAtOnce) + " ENEMIES AT ONCE"));
+		}
 	}
 
 	lines.rows.push_back(line("PRESS M FOR MENU"));

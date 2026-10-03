@@ -4,6 +4,7 @@
 #include "components/EventSystem.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/InputEvents.h"
+#include "components/MatchSettings.h"
 #include "network/DatagramLink.h"
 #include "network/Serializer.h"
 #include "network/WireFrame.h"
@@ -58,12 +59,12 @@ void EmitInput(EventSystem& events, const PlayerSlot slot, const InputSignal sig
 }// namespace
 
 Session::Session(udp::endpoint endpoint, const std::uint32_t connectionId, const std::shared_ptr<EventSystem>& events,
-				 const PlayerSlot slot, const std::uint8_t seatCount, const DatagramLink::Clock::time_point now)
+				 const PlayerSlot slot, MatchSettings match, const DatagramLink::Clock::time_point now)
 	: PeerLink("Session", events)
 	, _endpoint{std::move(endpoint)}
 	, _link{connectionId, now}
 	, _slot{slot}
-	, _seatCount{seatCount} {}
+	, _match{std::move(match)} {}
 
 void Session::OnCommand(const AnyCommand& command)
 {
@@ -74,7 +75,7 @@ void Session::OnCommand(const AnyCommand& command)
 void Session::Start()
 {
 	CommandBatch assignment;
-	assignment.commands.emplace_back(SlotAssignment{.slot = _slot, .seatCount = _seatCount});
+	assignment.commands.emplace_back(SlotAssignment{.slot = _slot, .match = _match});
 	std::ignore = _link.SendReliable(network::Serialize(assignment));
 }
 

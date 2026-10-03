@@ -1,5 +1,6 @@
 #include "network/Endpoints.h"
 #include "gtest/gtest.h"
+#include <algorithm>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -63,16 +64,33 @@ TEST(EndpointsTest, AnIPv6ThatReadsWholeHasNoPort)
 TEST(EndpointsTest, LoopbackEveryInterfaceAndTheNetworkAddressAreThisMachine)
 {
 	for (const std::string& host: {std::string{"127.0.0.1"}, std::string{"::1"}, std::string{"0.0.0.0"},
-								   network::LocalAddress()})
+								   network::LocalAddress(), network::LocalIPv6Address()})
 	{
 		EXPECT_TRUE(network::IsThisMachine(host)) << host;
 	}
 }
 
-// 192.0.2.0/24 is kept for documentation, so no machine has it
+// 192.0.2.0/24 and 2001:db8::/32 are kept for documentation, so no machine has them
 TEST(EndpointsTest, AnotherAddressIsNotThisMachine)
 {
-	EXPECT_FALSE(network::IsThisMachine("192.0.2.1"));
+	for (const std::string_view host: {"192.0.2.1", "2001:db8::1"})
+	{
+		EXPECT_FALSE(network::IsThisMachine(host)) << host;
+	}
+}
+
+// the network's own broadcast is one of those a scan probes; an address no interface has is in no network
+TEST(EndpointsTest, TheSubnetBroadcastIsAmongTheLocalOnesAndNoneForAnotherAddress)
+{
+	if (const std::optional<std::string> own{network::SubnetBroadcast(network::LocalAddress())})
+	{
+		EXPECT_TRUE(std::ranges::contains(network::LocalBroadcasts(), *own)) << *own;
+	}
+
+	for (const std::string_view host: {"192.0.2.1", "127.0.0.1", "nonsense"})
+	{
+		EXPECT_FALSE(network::SubnetBroadcast(host).has_value()) << host;
+	}
 }
 
 TEST(EndpointsTest, WhatIsNoAddressIsRefused)

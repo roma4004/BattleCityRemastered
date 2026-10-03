@@ -1,6 +1,8 @@
 #include "components/ServerScreen.h"
 #include "components/AddressField.h"
 #include "components/EventSystem.h"
+#include "components/LevelRotation.h"
+#include "components/MatchSettings.h"
 #include "components/UiTable.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/GameModeEvents.h"
@@ -13,12 +15,16 @@
 #include "enums/PlayerSlot.h"
 #include "network/DiscoveryScan.h"
 #include "network/Endpoints.h"
+#include <boost/asio/ip/address.hpp>
+#include <boost/system/error_code.hpp>
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <chrono>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <iterator>
 #include <memory>
 #include <numbers>
@@ -38,18 +44,29 @@ constexpr unsigned int kTextColor{0xffffffffu};
 constexpr unsigned int kButtonColor{0xff00ffffu};
 constexpr unsigned int kFullServerColor{0xffa0a0a0u};
 constexpr unsigned int kErrorColor{0xffff0000u};
+constexpr std::string_view kNotAnAddress{"NOT AN ADDRESS"};
+constexpr std::string_view kNotThisMachine{"NOT THIS PC'S ADDRESS"};
 
 //NOTE: rows kept for the list, so a found server does not push the address down
 constexpr std::size_t kListRows{5};
 
 //NOTE: a little wider than the longest hint
 constexpr std::size_t kRowSymbols{40};
-constexpr std::string_view kPlayersHeader{"PLAYERS  "};
-constexpr std::string_view kModeHeader{"MODE     "};
+//NOTE: in the order of ServerScreen::Column
+constexpr std::array<std::string_view, 3> kHeaders{"PLAYERS", "MODE", "ADDRESS"};
+//NOTE: the players and the mode - "PLAYERS" with its sort arrow, or "CLASSIC", and a gap
+constexpr std::size_t kColumnSymbols{9};
 //NOTE: discovery is IPv4 only - the longest address a found server has
 constexpr std::size_t kFoundAddressSymbols{std::string_view{"255.255.255.255:65535"}.size()};
-static_assert(kPlayersHeader.size() + kModeHeader.size() + kFoundAddressSymbols <= kRowSymbols,
-			  "a found server has to fit in one row");
+static_assert(2 * kColumnSymbols + kFoundAddressSymbols <= kRowSymbols, "a found server has to fit in one row");
+//NOTE: the up and down triangles in UTF-8 - spelled in bytes, so no compiler reads them in its own code page
+constexpr std::string_view kAscending{"\xE2\x96\xB2"};
+constexpr std::string_view kDescending{"\xE2\x96\xBC"};
+
+//NOTE: a network match of one would be a local one
+constexpr std::uint8_t kMinNetworkSeats{2u};
+//NOTE: a setting's name, then its value between the arrows that say left and right turn it
+constexpr std::size_t kSettingNameSymbols{10};
 
 //NOTE: a terminal caret's period, fading instead of switching
 constexpr auto kCaretBlink{1060ms};
@@ -95,40 +112,67 @@ constexpr auto kCaretBlink{1060ms};
 	return Word(std::string{isHosting ? "CREATE ON " : "CONNECT BY "} + (isIPv6 ? "IPv6" : "IPv4"), kButtonColor);
 }
 
-[[nodiscard]] UiTable Keys()
+[[nodiscard]] UiTable Keys(const bool isHosting)
 {
-	return UiTable{.rows = {UiRow{.cells = {Word("Choose"), Word("Up / Down")}},
-							UiRow{.cells = {Word("Caret"), Word("Left / Right, Space")}},
-							UiRow{.cells = {Word("Word"), Word("Ctrl+Left / Right, Tab")}},
-							UiRow{.cells = {Word("Port"), Word("optional, picked automatically")}},
-							UiRow{.cells = {Word("Paste"), Word("Ctrl+V")}},
-							UiRow{.cells = {Word("Confirm"), Word("Enter")}},
-							UiRow{.cells = {Word("Back"), Word("Esc")}}}};
+	UiTable keys{.rows = {UiRow{.cells = {Word("Choose"), Word("Up / Down")}},
+						  UiRow{.cells = {Word("Caret"), Word("Left / Right, Space")}},
+						  UiRow{.cells = {Word("Word"), Word("Ctrl+Left / Right, Tab")}},
+						  UiRow{.cells = {Word("Port"), Word("optional, picked automatically")}},
+						  UiRow{.cells = {Word("Paste"), Word("Ctrl+V")}},
+						  UiRow{.cells = {Word("Confirm"), Word("Enter")}},
+						  UiRow{.cells = {Word("Back"), Word("Esc")}}}};
+	keys.rows.insert(std::next(keys.rows.begin()),
+					 isHosting ? UiRow{.cells = {Word("Setting"), Word("Left / Right")}}
+							   : UiRow{.cells = {Word("Sort"), Word("header, Left / Right, Enter")}});
+
+	return keys;
+}
+
+[[nodiscard]] UiRow SettingRow(const std::string_view name, const std::string& value, const bool isChangeable)
+{
+	std::string text{name};
+	text.resize(kSettingNameSymbols, ' ');
+	if (!isChangeable)
+	{
+		return UiRow{.cells = {Word(text + value, kFullServerColor)}};
+	}
+
+	return UiRow{.cells = {Word(text + "< " + value + " >")}};
+}
+
+//NOTE: one step round - forward past the last value is the first one again
+[[nodiscard]] std::size_t Turned(const std::size_t at, const std::size_t count, const bool isForward)
+{
+	return (at + (isForward ? 1u : count - 1u)) % count;
+}
+
+[[nodiscard]] int PlayersOf(const network::FoundServer& server) { return server.seats - server.freeSeats; }
+
+//NOTE: by number, not by text - "10.0.0.9" comes before "10.0.0.10"
+[[nodiscard]] std::pair<boost::asio::ip::address, std::uint16_t> AddressOrder(const network::FoundServer& server)
+{
+	boost::system::error_code ec;
+
+	return {boost::asio::ip::make_address(server.address.host, ec), server.address.port};
 }
 
 [[nodiscard]] std::string ServerLine(const network::FoundServer& server)
 {
-	const int players{server.seats - server.freeSeats};
-	std::string seats{server.IsFull() ? "FULL" : std::to_string(players) + '/' + std::to_string(server.seats)};
-	seats.resize(kPlayersHeader.size(), ' ');
+	std::string seats{server.IsFull() ? "FULL"
+									  : std::to_string(PlayersOf(server)) + '/' + std::to_string(server.seats)};
+	seats.resize(kColumnSymbols, ' ');
 	std::string mode{server.rules == MatchRules::FreeForAll ? "FFA" : "CLASSIC"};
-	mode.resize(kModeHeader.size(), ' ');
+	mode.resize(kColumnSymbols, ' ');
 	const std::string& host{server.address.host};
 
 	return seats + mode + (host.contains(':') ? '[' + host + ']' : host) + ':'
 		   + std::to_string(server.address.port);
 }
 
-//NOTE: a server with someone waiting first, then an empty one, a full one last
-[[nodiscard]] std::vector<network::FoundServer> JoinOrder(std::vector<network::FoundServer> servers)
+//NOTE: the players column's order - a server with someone waiting first, then an empty one, a full one last
+[[nodiscard]] int JoinRank(const network::FoundServer& server)
 {
-	const auto rank = [](const network::FoundServer& server)
-	{
-		return server.IsFull() ? 2 : (server.freeSeats < server.seats ? 0 : 1);
-	};
-	std::ranges::stable_sort(servers, {}, rank);
-
-	return servers;
+	return server.IsFull() ? 2 : (server.freeSeats < server.seats ? 0 : 1);
 }
 
 //NOTE: as far as the list scrolls - from there its last servers fill the rows
@@ -140,23 +184,26 @@ constexpr auto kCaretBlink{1060ms};
 std::vector<network::FoundServer> FakeServers()
 {
 	constexpr MatchRules ffa{MatchRules::FreeForAll};
-	return JoinOrder({{.address = {.host = "255.255.255.255", .port = 65535}, .seats = 2, .freeSeats = 1},
-					  {.address = {.host = "172.16.254.1", .port = 65535}, .seats = 4, .freeSeats = 4, .rules = ffa},
-					  {.address = {.host = "192.168.0.10", .port = 50001}, .seats = 2, .freeSeats = 2},
-					  {.address = {.host = "255.255.255.254", .port = 65534}, .seats = 2, .freeSeats = 0},
-					  {.address = {.host = "10.20.30.40", .port = 65535}, .seats = 3, .freeSeats = 1, .rules = ffa},
-					  {.address = {.host = "255.255.255.253", .port = 65534}, .seats = 4, .freeSeats = 0, .rules = ffa},
-					  {.address = {.host = "10.0.0.6", .port = 4001}, .seats = 2, .freeSeats = 0},
-					  {.address = {.host = "192.168.100.200", .port = 5000}, .seats = 4, .freeSeats = 2},
-					  {.address = {.host = "192.168.0.14", .port = 50005}, .seats = 2, .freeSeats = 1}});
+	return {{.address = {.host = "255.255.255.255", .port = 65535}, .seats = 2, .freeSeats = 1},
+			{.address = {.host = "172.16.254.1", .port = 65535}, .seats = 4, .freeSeats = 4, .rules = ffa},
+			{.address = {.host = "192.168.0.10", .port = 50001}, .seats = 2, .freeSeats = 2},
+			{.address = {.host = "255.255.255.254", .port = 65534}, .seats = 2, .freeSeats = 0},
+			{.address = {.host = "10.20.30.40", .port = 65535}, .seats = 3, .freeSeats = 1, .rules = ffa},
+			{.address = {.host = "255.255.255.253", .port = 65534}, .seats = 4, .freeSeats = 0, .rules = ffa},
+			{.address = {.host = "10.0.0.6", .port = 4001}, .seats = 2, .freeSeats = 0},
+			{.address = {.host = "192.168.100.200", .port = 5000}, .seats = 4, .freeSeats = 2},
+			{.address = {.host = "192.168.0.14", .port = 50005}, .seats = 2, .freeSeats = 1}};
 }
 }//namespace
 
 ServerScreen::ServerScreen(const std::shared_ptr<EventSystem>& events, const network::ServerAddress& address)
 	: _events{events}
+	, _offeredIPv4{address}
+	, _offeredIPv6{.host = network::LocalIPv6Address(), .port = address.port}
 {
+	//NOTE: the IPv6 row offers this machine's own address, unless the given one is an IPv6 and takes it
+	_ipv6.Fill(_offeredIPv6, false);
 	Fill(address, false);
-	_ipv6.Fill(network::ServerAddress{.host = "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff", .port = 65535}, false); //TEMP
 
 	_subs.push_back(_events->AddListener(this, &ServerScreen::OnMenuShown));
 }
@@ -164,22 +211,32 @@ ServerScreen::ServerScreen(const std::shared_ptr<EventSystem>& events, const net
 void ServerScreen::Open(const GameMode mode)
 {
 	_mode = mode;
-	_isRejected = false;
+	_rejection = {};
 	_isConfirmHeld = false;
 	_servers.clear();
 	_firstShown = 0;
 
-	if (!IsHosting())
+	if (IsHosting())
+	{
+		//NOTE: read again on every opening - a map dropped in since turns up without a restart
+		_maps = LevelRotation{}.Names() | std::views::filter(IsMapName) | std::ranges::to<std::vector>();
+		if (!_maps.empty() && !std::ranges::contains(_maps, _match.map))
+		{
+			_match.map = _maps.front();
+		}
+	}
+	else
 	{
 		_scan = std::make_unique<network::DiscoveryScan>(network::LocalAddress());
 	}
 
+	OfferLocalAddresses();
 	//NOTE: the caret starts at the address, only a paste puts it on the port
 	_ipv4.CaretToStart();
 	_ipv6.CaretToStart();
 
 	PickFirst();
-	std::ranges::copy(FakeServers(), std::back_inserter(_servers)); //TEMP
+	_servers = Ordered(FakeServers()); //TEMP
 
 	_openSubs.push_back(_events->AddListener(this, &ServerScreen::OnPreTickUpdate));
 	_openSubs.push_back(_events->AddListener(this, &ServerScreen::OnTextTyped));
@@ -190,11 +247,13 @@ void ServerScreen::Open(const GameMode mode)
 	_openSubs.push_back(_events->AddListener(this, &ServerScreen::OnEnter));
 	_openSubs.push_back(_events->AddListener(this, &ServerScreen::OnCancelled));
 	_openSubs.push_back(_events->AddListener(this, &ServerScreen::OnDrawUserInterface));
-	//NOTE: a pad cannot type, but it can pick a server and confirm
+	//NOTE: a pad cannot type, but it can pick a server, turn a setting and confirm
 	for (const InputChannel channel: kSlots | std::views::transform(LocalInput))
 	{
 		_openSubs.push_back(_events->AddListener(Key(channel), this, &ServerScreen::OnPadUp));
 		_openSubs.push_back(_events->AddListener(Key(channel), this, &ServerScreen::OnPadDown));
+		_openSubs.push_back(_events->AddListener(Key(channel), this, &ServerScreen::OnPadLeft));
+		_openSubs.push_back(_events->AddListener(Key(channel), this, &ServerScreen::OnPadRight));
 		_openSubs.push_back(_events->AddListener(Key(channel), this, &ServerScreen::OnFire));
 	}
 
@@ -228,7 +287,6 @@ void ServerScreen::OnMenuShown(const MenuShownEvent& event)
 	}
 }
 
-//NOTE: the focus follows its server as the list shifts, and leaves one gone
 void ServerScreen::OnPreTickUpdate(const PreTickUpdateEvent&)
 {
 	if (!_scan || !_scan->Poll())
@@ -236,39 +294,21 @@ void ServerScreen::OnPreTickUpdate(const PreTickUpdateEvent&)
 		return;
 	}
 
-	const std::optional<network::ServerAddress> focused{
-			_focus.line == Line::Server ? std::optional{_servers[_focus.server].address} : std::nullopt};
-	_servers.resize(_servers.size() - FakeServers().size()); //TEMP
-	const bool wasEmpty{_servers.empty()};
-	_servers = JoinOrder(_scan->Servers());
-	std::ranges::copy(FakeServers(), std::back_inserter(_servers)); //TEMP
-	_firstShown = std::min(_firstShown, LastFirstShown(_servers.size()));
-	if (!focused)
+	const bool wasEmpty{_servers.size() == FakeServers().size()}; //TEMP: _servers.empty()
+	std::vector<network::FoundServer> servers{_scan->Servers()};
+	std::ranges::copy(FakeServers(), std::back_inserter(servers)); //TEMP
+	Arrange(std::move(servers));
+	//NOTE: the first servers found take the focus they would have had at opening, unless it has moved since
+	if (wasEmpty && _focus == Item{.line = Line::IPv4} && _ipv4.IsCaretAtStart())
 	{
-		//NOTE: the first servers found take the focus they would have had at opening, unless it has moved since
-		if (wasEmpty && _focus == Item{.line = Line::IPv4} && _ipv4.IsCaretAtStart())
-		{
-			PickFirst();
-		}
-
-		return;
+		PickFirst();
 	}
-
-	const auto server{std::ranges::find(_servers, *focused, &network::FoundServer::address)};
-	if (server != _servers.end())
-	{
-		Pick(Item{.line = Line::Server, .server = static_cast<std::size_t>(std::distance(_servers.begin(), server))});
-
-		return;
-	}
-
-	PickFirst();
 }
 
 void ServerScreen::OnTextTyped(const TextTypedEvent& event)
 {
 	std::ranges::for_each(event.text, [this](const char symbol) { Type(symbol); });
-	_isRejected = false;
+	_rejection = {};
 	_caretMoved = std::chrono::steady_clock::now();
 }
 
@@ -287,17 +327,27 @@ void ServerScreen::OnTextPasted(const TextPastedEvent& event)
 		std::ranges::for_each(text, [this](const char symbol) { Type(symbol); });
 	}
 
-	_isRejected = false;
+	_rejection = {};
 	_caretMoved = std::chrono::steady_clock::now();
 }
 
 void ServerScreen::OnTextKey(const TextKeyEvent& event)
 {
-	_isRejected = false;
+	_rejection = {};
 	_caretMoved = std::chrono::steady_clock::now();
 	if (event.key == TextKey::NextField || event.key == TextKey::PreviousField)
 	{
 		Step(event.key == TextKey::NextField);
+
+		return;
+	}
+
+	//NOTE: on a setting or the header the keys that move a caret turn it instead
+	const bool isLeft{event.key == TextKey::CaretLeft || event.key == TextKey::WordLeft};
+	const bool isRight{event.key == TextKey::CaretRight || event.key == TextKey::WordRight};
+	if (IsTurnable(_focus.line) && (isLeft || isRight))
+	{
+		Change(isRight);
 
 		return;
 	}
@@ -308,13 +358,18 @@ void ServerScreen::OnTextKey(const TextKeyEvent& event)
 	}
 }
 
-//NOTE: a click on anything but an address row presses it at once
+//NOTE: a click on anything but an address row presses it at once - on the header, the column under it
 void ServerScreen::OnRowClicked(const PanelRowClickedEvent& event)
 {
-	const std::optional<Item> item{PickableAt(event.row)};
-	if (!item)
+	const std::optional<Item> item{ItemAt(event.row)};
+	if (!item || !IsPickable(*item))
 	{
 		return;
+	}
+
+	if (item->line == Line::ServersHeader)
+	{
+		_column = ColumnAt(event.symbol);
 	}
 
 	Pick(*item);
@@ -327,7 +382,7 @@ void ServerScreen::OnRowClicked(const PanelRowClickedEvent& event)
 //NOTE: the pointer picks what it passes over, as in the menu - only a click presses
 void ServerScreen::OnRowHovered(const PanelRowHoveredEvent& event)
 {
-	if (const std::optional<Item> item{PickableAt(event.row)}; item && *item != _focus)
+	if (const std::optional<Item> item{ItemAt(event.row)}; item && IsPickable(*item) && *item != _focus)
 	{
 		Pick(*item);
 	}
@@ -350,6 +405,22 @@ void ServerScreen::OnPadDown(const MoveDownEvent& event)
 	if (event.isPressed)
 	{
 		Step(true);
+	}
+}
+
+void ServerScreen::OnPadLeft(const MoveLeftEvent& event)
+{
+	if (event.isPressed && IsTurnable(_focus.line))
+	{
+		Change(false);
+	}
+}
+
+void ServerScreen::OnPadRight(const MoveRightEvent& event)
+{
+	if (event.isPressed && IsTurnable(_focus.line))
+	{
+		Change(true);
 	}
 }
 
@@ -379,6 +450,20 @@ void ServerScreen::Confirm(const bool isPressed)
 
 void ServerScreen::Press()
 {
+	if (_focus.line == Line::ServersHeader)
+	{
+		SortBy(_column);
+
+		return;
+	}
+
+	if (IsTurnable(_focus.line))
+	{
+		Change(true);
+
+		return;
+	}
+
 	if (_focus.line == Line::Refresh)
 	{
 		if (_scan)
@@ -401,18 +486,137 @@ void ServerScreen::Press()
 	}
 
 	const std::optional<network::ServerAddress> address{network::ParseServerAddress(FieldOf(_focus.line).Text())};
-	_isRejected = !address;
-	if (address)
+	if (!address)
 	{
-		Choose(*address);
+		_rejection = kNotAnAddress;
+
+		return;
 	}
+
+	//NOTE: a server listens only on an address this machine has
+	if (IsHosting() && !network::IsThisMachine(address->host))
+	{
+		_rejection = kNotThisMachine;
+
+		return;
+	}
+
+	Choose(*address);
 }
 
 void ServerScreen::Choose(const network::ServerAddress& address)
 {
 	const GameMode mode{_mode};
 	Close();
-	_events->EmitEvent(ServerAddressChosenEvent{.mode = mode, .address = address});
+	_events->EmitEvent(ServerAddressChosenEvent{.mode = mode, .address = address, .match = _match});
+}
+
+bool ServerScreen::IsTurnable(const Line line) noexcept
+{
+	return line == Line::ServersHeader || line == Line::Rules || line == Line::Seats || line == Line::Map
+		   || line == Line::Enemies;
+}
+
+//NOTE: round and round, the way the list is stepped through
+void ServerScreen::Change(const bool isForward)
+{
+	if (_focus.line == Line::ServersHeader)
+	{
+		_column = static_cast<Column>(Turned(static_cast<std::size_t>(_column), kHeaders.size(), isForward));
+		_caretMoved = std::chrono::steady_clock::now();
+	}
+	else if (_focus.line == Line::Rules)
+	{
+		_match.rules = _match.rules == MatchRules::Classic ? MatchRules::FreeForAll : MatchRules::Classic;
+	}
+	else if (_focus.line == Line::Seats)
+	{
+		const std::size_t choices{kSeatCount - kMinNetworkSeats + 1u};
+		const std::size_t at{static_cast<std::size_t>(_match.seats - kMinNetworkSeats)};
+		_match.seats = static_cast<std::uint8_t>(kMinNetworkSeats + Turned(at, choices, isForward));
+	}
+	else if (_focus.line == Line::Map && !_maps.empty())
+	{
+		const auto at{static_cast<std::size_t>(std::distance(_maps.begin(), std::ranges::find(_maps, _match.map)))};
+		_match.map = _maps[Turned(at % _maps.size(), _maps.size(), isForward)];
+	}
+	else if (_focus.line == Line::Enemies)
+	{
+		const std::size_t at{static_cast<std::size_t>(_match.enemiesAtOnce - 1u)};
+		_match.enemiesAtOnce = static_cast<std::uint8_t>(1u + Turned(at, kMaxEnemiesAtOnce, isForward));
+	}
+}
+
+//NOTE: a second click on the same column turns the order round
+void ServerScreen::SortBy(const Column column)
+{
+	const bool isDescending{_sort.column == column && !_sort.isDescending};
+	_sort = Sort{.column = column, .isDescending = isDescending};
+	Arrange(_servers);
+}
+
+ServerScreen::Column ServerScreen::ColumnAt(const std::size_t symbol) noexcept
+{
+	if (symbol < kColumnSymbols)
+	{
+		return Column::Players;
+	}
+
+	return symbol < 2 * kColumnSymbols ? Column::Mode : Column::Address;
+}
+
+//NOTE: the focus follows its server as the list shifts, and leaves one gone
+void ServerScreen::Arrange(std::vector<network::FoundServer> servers)
+{
+	const std::optional<network::ServerAddress> focused{
+			_focus.line == Line::Server ? std::optional{_servers[_focus.server].address} : std::nullopt};
+	_servers = Ordered(std::move(servers));
+	_firstShown = std::min(_firstShown, LastFirstShown(_servers.size()));
+	if (!focused)
+	{
+		return;
+	}
+
+	const auto server{std::ranges::find(_servers, *focused, &network::FoundServer::address)};
+	if (server == _servers.end())
+	{
+		PickFirst();
+
+		return;
+	}
+
+	Pick(Item{.line = Line::Server, .server = static_cast<std::size_t>(std::distance(_servers.begin(), server))});
+}
+
+//NOTE: JoinRank first - a sort by another column keeps it among the servers it finds equal
+std::vector<network::FoundServer> ServerScreen::Ordered(std::vector<network::FoundServer> servers) const
+{
+	std::ranges::stable_sort(servers, {}, JoinRank);
+	const auto sort = [&servers, isDescending = _sort.isDescending](const auto key)
+	{
+		if (isDescending)
+		{
+			std::ranges::stable_sort(servers, std::ranges::greater{}, key);
+		}
+		else
+		{
+			std::ranges::stable_sort(servers, std::ranges::less{}, key);
+		}
+	};
+	switch (_sort.column)
+	{
+		case Column::Players:
+			sort(JoinRank);
+			break;
+		case Column::Mode:
+			sort(&network::FoundServer::rules);
+			break;
+		case Column::Address:
+			sort(AddressOrder);
+			break;
+	}
+
+	return servers;
 }
 
 std::vector<ServerScreen::Item> ServerScreen::Lines() const
@@ -438,6 +642,14 @@ std::vector<ServerScreen::Item> ServerScreen::Lines() const
 		lines.push_back(Item{.line = Line::Gap});
 		lines.push_back(Item{.line = Line::AddressCaption});
 	}
+	else
+	{
+		lines.push_back(Item{.line = Line::Rules});
+		lines.push_back(Item{.line = Line::Seats});
+		lines.push_back(Item{.line = Line::Map});
+		lines.push_back(Item{.line = Line::Enemies});
+		lines.push_back(Item{.line = Line::Gap});
+	}
 
 	lines.push_back(Item{.line = Line::IPv4Caption});
 	lines.push_back(Item{.line = Line::IPv4});
@@ -456,7 +668,6 @@ bool ServerScreen::IsPickable(const Item& item) const
 	switch (item.line)
 	{
 		case Line::ServersCaption:
-		case Line::ServersHeader:
 		case Line::NoServers:
 		case Line::Gap:
 		case Line::AddressCaption:
@@ -466,6 +677,12 @@ bool ServerScreen::IsPickable(const Item& item) const
 			return false;
 		case Line::Server:
 			return item.server < _servers.size();
+		case Line::Enemies:
+			return _match.rules == MatchRules::Classic;
+		case Line::ServersHeader:
+		case Line::Rules:
+		case Line::Seats:
+		case Line::Map:
 		case Line::Refresh:
 		case Line::IPv4:
 		case Line::ConfirmIPv4:
@@ -477,17 +694,11 @@ bool ServerScreen::IsPickable(const Item& item) const
 	return true;
 }
 
-std::optional<ServerScreen::Item> ServerScreen::PickableAt(const std::size_t row) const
+std::optional<ServerScreen::Item> ServerScreen::ItemAt(const std::size_t row) const
 {
 	const std::vector<Item> lines{Lines()};
-	if (row >= lines.size())
-	{
-		return std::nullopt;
-	}
 
-	const Item& item{lines[row]};
-
-	return IsPickable(item) ? std::optional{item} : std::nullopt;
+	return row < lines.size() ? std::optional{lines[row]} : std::nullopt;
 }
 
 //NOTE: a server found on the network is what a client most likely came for
@@ -527,15 +738,19 @@ void ServerScreen::Pick(const Item& item)
 //NOTE: round and round, past the servers scrolled off the list too
 void ServerScreen::Step(const bool isForward)
 {
-	std::vector<Item> pickable{std::views::iota(std::size_t{}, _servers.size())
-							   | std::views::transform([](const std::size_t server)
-							   {
-								   return Item{.line = Line::Server, .server = server};
-							   })
-							   | std::ranges::to<std::vector>()};
-	const auto isNoServer = [](const Item& item) { return item.line != Line::Server; };
-	std::ranges::copy_if(Lines(), std::back_inserter(pickable), isNoServer);
-	std::erase_if(pickable, [this](const Item& item) { return !IsPickable(item); });
+	std::vector<Item> pickable{Lines()};
+	std::erase_if(pickable, [this](const Item& item) { return item.line == Line::Server || !IsPickable(item); });
+	const auto servers{std::views::iota(std::size_t{}, _servers.size())
+					   | std::views::transform([](const std::size_t server)
+					   {
+						   return Item{.line = Line::Server, .server = server};
+					   })};
+	//NOTE: every server under the header, the shown ones and the scrolled off alike
+	const auto header{std::ranges::find(pickable, Line::ServersHeader, &Item::line)};
+	if (header != pickable.end())
+	{
+		pickable.insert(std::next(header), servers.begin(), servers.end());
+	}
 
 	const auto at{std::ranges::find(pickable, _focus)};
 	const std::size_t index{at == pickable.end() ? 0 : static_cast<std::size_t>(std::distance(pickable.begin(), at))};
@@ -560,6 +775,23 @@ void ServerScreen::Fill(const network::ServerAddress& address, const bool isBrac
 	FocusedField()->Fill(address, isBracketed);
 }
 
+//NOTE: the network may have changed since the rows were given their addresses
+void ServerScreen::OfferLocalAddresses()
+{
+	const auto offer = [](AddressField& field, network::ServerAddress& offered, std::string host)
+	{
+		if (network::ParseServerAddress(field.Text()) != offered)
+		{
+			return;
+		}
+
+		offered.host = std::move(host);
+		field.Fill(offered, false);
+	};
+	offer(_ipv4, _offeredIPv4, network::LocalAddress());
+	offer(_ipv6, _offeredIPv6, network::LocalIPv6Address());
+}
+
 void ServerScreen::Type(const char symbol)
 {
 	if (AddressField* const field{FocusedField()})
@@ -580,7 +812,7 @@ UiRow ServerScreen::LineRow(const Item& item) const
 		case Line::ServersCaption:
 			return UiRow{.cells = {Centered("Server List:")}};
 		case Line::ServersHeader:
-			return UiRow{.cells = {Word(std::string{kPlayersHeader} + std::string{kModeHeader} + "ADDRESS")}};
+			return UiRow{.cells = {Word(Header())}};
 		case Line::NoServers:
 			return UiRow{.cells = {Centered(_scan->IsSearching() ? "SEARCHING..." : "NONE FOUND")}};
 		case Line::Server:
@@ -605,11 +837,63 @@ UiRow ServerScreen::LineRow(const Item& item) const
 		case Line::ConfirmIPv4:
 		case Line::ConfirmIPv6:
 			return UiRow{.cells = {Button(IsHosting(), item.line == Line::ConfirmIPv6)}};
+		case Line::Rules:
+			return SettingRow("RULES", _match.rules == MatchRules::FreeForAll ? "FFA" : "CLASSIC", true);
+		case Line::Seats:
+			return SettingRow("SEATS", std::to_string(_match.seats), true);
+		case Line::Map:
+			return SettingRow("MAP", _match.map, true);
+		case Line::Enemies:
+			return IsPickable(item) ? SettingRow("ENEMIES", std::to_string(_match.enemiesAtOnce), true)
+									: SettingRow("ENEMIES", std::to_string(kFreeForAllBots), false);
 		case Line::Error:
 			break;
 	}
 
-	return _isRejected ? UiRow{.cells = {Word("NOT AN ADDRESS", kErrorColor)}} : UiRow{};
+	return _rejection.empty() ? UiRow{} : UiRow{.cells = {Word(std::string{_rejection}, kErrorColor)}};
+}
+
+//NOTE: the column the list is sorted by carries an arrow - up for ascending, as file lists have it
+std::string ServerScreen::Header() const
+{
+	const auto title = [this](const Column column)
+	{
+		const std::string_view word{kHeaders[static_cast<std::size_t>(column)]};
+		const bool isSorted{_sort.column == column};
+		std::string text{word};
+		text += isSorted ? (_sort.isDescending ? kDescending : kAscending) : std::string_view{};
+		//NOTE: the arrow is three bytes and one symbol
+		text.append(kColumnSymbols - word.size() - (isSorted ? 1 : 0), ' ');
+
+		return text;
+	};
+
+	return title(Column::Players) + title(Column::Mode) + title(Column::Address);
+}
+
+//NOTE: where Left and Right act - a typed line's caret, or the header's column underlined
+std::optional<PanelCaret> ServerScreen::Caret(const std::size_t row) const
+{
+	const std::uint8_t alpha{CaretAlpha(std::chrono::steady_clock::now() - _caretMoved)};
+	if (_focus.line == Line::ServersHeader)
+	{
+		const auto column{static_cast<std::size_t>(_column)};
+
+		return PanelCaret{.row = row,
+						  .symbol = column * kColumnSymbols,
+						  .symbols = kHeaders[column].size(),
+						  .alpha = alpha};
+	}
+
+	if (_focus.line != Line::IPv4 && _focus.line != Line::IPv6)
+	{
+		return std::nullopt;
+	}
+
+	return FieldOf(_focus.line).Shown(true).caret.transform([row, alpha](const std::size_t symbol)
+	{
+		return PanelCaret{.row = row, .symbol = symbol, .alpha = alpha};
+	});
 }
 
 void ServerScreen::Draw() const
@@ -621,21 +905,13 @@ void ServerScreen::Draw() const
 	//NOTE: a row a line, so the focused line's place in the lines is its row
 	const auto focus{std::ranges::find(lines, _focus)};
 	const auto focusRow{static_cast<std::size_t>(std::distance(lines.begin(), focus))};
-	const bool isTyping{_focus.line == Line::IPv4 || _focus.line == Line::IPv6};
-	const std::optional<std::size_t> symbol{isTyping ? FieldOf(_focus.line).Shown(true).caret : std::nullopt};
-	const std::optional<PanelCaret> caret{symbol.transform([this, focusRow](const std::size_t at)
-	{
-		return PanelCaret{.row = focusRow,
-						  .symbol = at,
-						  .alpha = CaretAlpha(std::chrono::steady_clock::now() - _caretMoved)};
-	})};
 
 	std::vector<UiTable> tables{};
 	tables.push_back(Caption(IsHosting() ? "PLAY AS HOST" : "PLAY AS CLIENT"));
 
 	const std::size_t pickedTable{tables.size()};
 	tables.push_back(std::move(picked));
-	tables.push_back(Keys());
+	tables.push_back(Keys(IsHosting()));
 
 	//NOTE: sent for a short list too - the bar's room is kept, so the block does not move as servers come
 	std::optional<PanelScroll> scroll{};
@@ -656,5 +932,5 @@ void ServerScreen::Draw() const
 			.pick = PanelPick{.table = pickedTable,
 							  .selectedRow = focusRow,
 							  .scroll = scroll,
-							  .caret = caret}});
+							  .caret = Caret(focusRow)}});
 }

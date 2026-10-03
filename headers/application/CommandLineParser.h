@@ -31,6 +31,8 @@ inline constexpr std::array kServerUsage{"--address=IP           what to listen 
 										 "--port-file=PATH       write the port it got here, for whoever spawned it",
 										 "--seats=N              how many players the match takes, 1 to 4; left out, 2",
 										 "--rules=classic|ffa    classic or free for all; left out, classic",
+										 "--map=NAME             first map, a file in Resources/Maps without .map",
+										 "--enemies=N            enemies at once in classic, 1 to 4; left out, 4",
 										 "--help                 this text"};
 
 class CommandLineParser final

@@ -95,6 +95,8 @@ struct TextKeyEvent
 struct PanelRowClickedEvent
 {
 	std::size_t row;
+	//NOTE: the symbol of the row's text under it, counted at the panel's own size
+	std::size_t symbol;
 };
 
 //NOTE: and the one the pointer moved onto

@@ -35,14 +35,15 @@ struct TankModelSpec final
 								 .speedFactor = 1.6,
 								 .healthFactor = 0.2,
 								 .bulletSpeedFactor = 1.6,
-								 .damageFactor = 1.0 / 3.0,
+								 .damageFactor = 1.0 / 6.0,
 								 .blastFactor = 0.8,
 								 .shellCaliberFactor = 0.6,
 								 .shellLengthFactor = 0.8,
 								 .reloadFactor = 3.6};
 		case TankModel::Power:
 			return TankModelSpec{.spriteRow = 2,
-								 .healthFactor = 0.5,
+								 .healthFactor = 0.6,
+								 .damageFactor = 0.5,
 								 .blastFactor = 1.3,
 								 .shellLengthFactor = 1.2,
 								 .reloadFactor = 2.1};
@@ -51,7 +52,7 @@ struct TankModelSpec final
 								 .speedFactor = 0.7,
 								 .healthFactor = 1.0,
 								 .bulletSpeedFactor = 0.75,
-								 .damageFactor = 4.0 / 3.0,
+								 .damageFactor = 2.0 / 3.0,
 								 .blastFactor = 2.0,
 								 .shellCaliberFactor = 1.4,
 								 .shellLengthFactor = 1.6,
@@ -65,9 +66,9 @@ struct TankModelSpec final
 	}
 
 	//NOTE: also what an unknown model is built as - the wire is the only place one can come from
-	return TankModelSpec{.healthFactor = 0.35,
+	return TankModelSpec{.healthFactor = 0.4,
 						 .bulletSpeedFactor = 1.2,
-						 .damageFactor = 2.0 / 3.0,
+						 .damageFactor = 1.0 / 3.0,
 						 .reloadFactor = 3.0};
 }
 
@@ -95,7 +96,7 @@ inline constexpr int kPlayerTierRows{4};
 	return MathUtils::RoundTo<int>(baseHealth * SpecOf(model).healthFactor);
 }
 
-//NOTE: rounded for the same reason as the health - a third of the base is five points, not four
+//NOTE: rounded for the same reason as the health - a share of the base is the nearest point, not the one below
 [[nodiscard]] constexpr unsigned int DamageOf(const TankModel model, const unsigned int baseDamage) noexcept
 {
 	return MathUtils::RoundTo<unsigned int>(baseDamage * SpecOf(model).damageFactor);

@@ -145,6 +145,7 @@ void UserInput::OnPanelRowsPlaced(const PanelRowsPlacedEvent& event)
 		return SDL_Rect{.x = row.x, .y = row.y, .w = event.rowSize.x, .h = event.rowSize.y};
 	};
 	_panelRows = event.rows | std::views::transform(toRect) | std::ranges::to<std::vector>();
+	_panelSymbolWidth = event.symbolWidth;
 }
 
 //NOTE: a new link may hand out another seat
@@ -339,10 +340,14 @@ std::optional<std::size_t> UserInput::PanelRowAt(const SDL_Point& mouse) const
 
 void UserInput::ClickPanelRow(const SDL_Point& mouse) const
 {
-	if (const std::optional<std::size_t> row{PanelRowAt(mouse)})
+	const std::optional<std::size_t> row{PanelRowAt(mouse)};
+	if (!row)
 	{
-		_events->EmitEvent(PanelRowClickedEvent{.row = *row});
+		return;
 	}
+
+	const int across{(mouse.x - _panelRows[*row].x) / std::max(_panelSymbolWidth, 1)};
+	_events->EmitEvent(PanelRowClickedEvent{.row = *row, .symbol = static_cast<std::size_t>(across)});
 }
 
 void UserInput::HoverPanelRow(const SDL_Point& mouse)

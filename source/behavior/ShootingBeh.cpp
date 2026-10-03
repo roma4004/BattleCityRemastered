@@ -8,11 +8,13 @@
 #include "components/events/SpawnEvents.h"
 #include "entities/BulletCaliber.h"
 #include "utils/DirectionUtils.h"
+#include "utils/MathUtils.h"
 #include "utils/RandUtils.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/BulletResetProperty.h"
 #include "entities/pawns/Tank.h"
 #include "enums/Direction.h"
+#include <algorithm>
 #include <memory>
 #include <optional>
 #include <random>
@@ -80,11 +82,13 @@ BulletCaliber ShootingBeh::CaliberOfShot(const std::optional<unsigned int> damag
 		return shot;
 	}
 
-	if (const unsigned int spread{_gameConfig.bulletDamageSpread};
-		spread != 0u && !_gameConfig.IsClient())
+	if (const double spread{_gameConfig.bulletDamageSpread};
+		spread > 0.0 && !_gameConfig.IsClient())
 	{
-		const unsigned int lowest{_caliber.damage > spread ? _caliber.damage - spread : 1u};
-		shot.damage = RandUtils::GetRandNumber(std::uniform_int_distribution{lowest, _caliber.damage + spread});
+		const double base{static_cast<double>(_caliber.damage)};
+		const auto lowest{MathUtils::RoundTo<unsigned int>(std::max(base * (1.0 - spread), 1.0))};
+		const auto highest{MathUtils::RoundTo<unsigned int>(base * (1.0 + spread))};
+		shot.damage = RandUtils::GetRandNumber(std::uniform_int_distribution{lowest, highest});
 	}
 
 	return shot;

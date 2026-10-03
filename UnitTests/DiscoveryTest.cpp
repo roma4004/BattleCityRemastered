@@ -65,6 +65,14 @@ TEST(DiscoveryFormatTest, SomeoneElsesDatagramIsRefused)
 	EXPECT_FALSE(network::discovery::Parse("hello there").has_value());
 }
 
+// nor one with more seats free than the server has - the list would show a negative player count
+TEST(DiscoveryFormatTest, MoreFreeSeatsThanSeatsIsRefused)
+{
+	const auto bytes{network::discovery::Pack(network::discovery::Reply{.seats = 2u, .freeSeats = 3u})};
+
+	EXPECT_FALSE(network::discovery::Parse(std::string_view{bytes.data(), bytes.size()}).has_value());
+}
+
 // the beacon and the probe talk over a real loopback socket - the point is the two halves meeting,
 // so the io_context is pumped by hand instead of running a thread for it
 class DiscoveryBeaconTest : public ::testing::Test

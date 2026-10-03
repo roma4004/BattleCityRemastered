@@ -10,6 +10,7 @@
 #include "components/events/ServerConsoleEvents.h"
 #include "components/managers/FramePerSecondManager.h"
 #include "components/LevelRotation.h"
+#include "components/MapData.h"
 #include "components/MapLoader.h"
 #include "enums/GameMode.h"
 #include "enums/GameState.h"
@@ -82,6 +83,31 @@ std::string KnownMaps()
 	return listed;
 }
 
+//NOTE: a map that does not load or cannot be played says why, and no match is started on it
+[[nodiscard]] bool IsPlayable(const std::string& path)
+{
+	const auto loaded{MapLoader::LoadFromFile(path)};
+	if (!loaded)
+	{
+		const MapError& error{loaded.error()};
+		const std::string where{error.line != 0u ? " (line " + std::to_string(error.line) + ')'
+												 : std::string{}};
+		Log::Error("cannot load map " + path + where + ": " + error.reason + KnownMaps());
+
+		return false;
+	}
+
+	if (const auto playable{MapLoader::Validate(*loaded, path)};
+		!playable)
+	{
+		Log::Error("map " + path + " cannot be played: " + playable.error().reason);
+
+		return false;
+	}
+
+	return true;
+}
+
 //NOTE: what the console asks for, done on the game thread between frames; a restart goes the way a player's does
 struct ConsoleCommandHandler final
 {
@@ -112,22 +138,8 @@ struct ConsoleCommandHandler final
 	void operator()(const MapCommand& command) const
 	{
 		const std::string path{MapPathForName(command.name)};
-		const auto loaded{MapLoader::LoadFromFile(path)};
-		if (!loaded)
+		if (!IsPlayable(path))
 		{
-			const MapError& error{loaded.error()};
-			const std::string where{error.line != 0u ? " (line " + std::to_string(error.line) + ')'
-													 : std::string{}};
-			Log::Error("cannot load map " + path + where + ": " + error.reason + KnownMaps());
-
-			return;
-		}
-
-		if (const auto playable{MapLoader::Validate(*loaded, path)};
-			!playable)
-		{
-			Log::Error("map " + path + " cannot be played: " + playable.error().reason);
-
 			return;
 		}
 
@@ -220,6 +232,15 @@ int main(const int argc, char* argv[])
 	gameConfig.serverAddress.port = launchOptions->serverPort.value_or(gameConfig.serverAddress.port);
 	gameConfig.networkSeats = launchOptions->seats.value_or(gameConfig.networkSeats);
 	gameConfig.networkRules = launchOptions->rules.value_or(gameConfig.networkRules);
+	gameConfig.simultaneousEnemies = launchOptions->enemiesAtOnce.value_or(gameConfig.simultaneousEnemies);
+	if (launchOptions->mapName)
+	{
+		gameConfig.mapPath = MapPathForName(*launchOptions->mapName);
+		if (!IsPlayable(gameConfig.mapPath))
+		{
+			return 1;
+		}
+	}
 
 	const auto events{std::make_shared<EventSystem>()};
 	const PauseSwitch pauseSwitch{events};
@@ -231,6 +252,14 @@ int main(const int argc, char* argv[])
 
 	//NOTE: the port asked for may have been 0, so this is the first place the real one is known
 	const std::uint16_t boundPort{simulation.BoundPort()};
+	//NOTE: a failed bind is caught and logged by the event system - no port is all that is left of it here
+	if (boundPort == network::kAnyFreePort)
+	{
+		Log::Error("server: cannot listen on " + gameConfig.serverAddress.host + ':'
+				   + std::to_string(gameConfig.serverAddress.port) + " - not this machine's address, or a port in use");
+
+		return 1;
+	}
 	if (launchOptions->portFilePath && !WriteBoundPort(*launchOptions->portFilePath, boundPort))
 	{
 		Log::Error("server: could not write the port to " + *launchOptions->portFilePath

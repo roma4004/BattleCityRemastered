@@ -1,4 +1,6 @@
 #include "application/ServerProcess.h"
+#include "components/MatchSettings.h"
+#include "enums/MatchRules.h"
 #include "network/Endpoints.h"
 #include "utils/Log.h"
 #include <charconv>
@@ -19,11 +21,14 @@ constexpr auto kServerExeName{L"BattleCityServer.exe"};
 //second one would read the first one's port - a lobby is what fixes that, not a longer name
 constexpr auto kPortFileName{"server-port.txt"};
 
-//NOTE: the three options the child reads back - the host stays a bare literal, the port is its own word
-std::string ChildArguments(const network::ServerAddress& address)
+//NOTE: what the child reads back - the host stays a bare literal, the port is its own word, the map a bare name
+std::string ChildArguments(const network::ServerAddress& address, const MatchSettings& match)
 {
+	const std::string rules{match.rules == MatchRules::FreeForAll ? "ffa" : "classic"};
+
 	return " --address=" + address.host + " --port=" + std::to_string(address.port) + " --port-file="
-		   + kPortFileName;
+		   + kPortFileName + " --seats=" + std::to_string(match.seats) + " --rules=" + rules + " --map=" + match.map
+		   + " --enemies=" + std::to_string(match.enemiesAtOnce);
 }
 
 std::optional<std::uint16_t> ReadPortFile(const std::filesystem::path& path)
@@ -107,7 +112,7 @@ ServerProcess::ServerProcess() = default;
 
 ServerProcess::~ServerProcess() = default;
 
-bool ServerProcess::Start(const network::ServerAddress& address)
+bool ServerProcess::Start(const network::ServerAddress& address, const MatchSettings& match)
 {
 	if (IsRunning())
 	{
@@ -148,7 +153,7 @@ bool ServerProcess::Start(const network::ServerAddress& address)
 	}
 
 	//NOTE: CreateProcess writes into this buffer, so it cannot be a literal
-	const std::string argument{ChildArguments(address)};
+	const std::string argument{ChildArguments(address, match)};
 	std::wstring commandLine{L"\"" + exe.wstring() + L"\"" + std::wstring(argument.begin(), argument.end())};
 
 	STARTUPINFOW startup{};

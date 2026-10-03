@@ -52,6 +52,7 @@ class UiRenderer final
 	mutable std::vector<Point> _menuTilePlaces{};
 	mutable std::vector<Point> _panelRowPlaces{};
 	mutable Point _panelRowSize{};
+	mutable int _panelSymbolWidth{};
 
 	//NOTE: no sprite means the whole texture
 	struct IconSource final
@@ -88,7 +89,7 @@ class UiRenderer final
 	//NOTE: the render scale is the caller's - a run of lines sets it once, see ScopedRenderScale
 	void DrawTableText(const UiTable& table, const UiLayout::Placement& placement, int pointSize, float scale) const;
 	void AnnounceMenuTiles(const UiLayout::Placement& modes) const;
-	void AnnouncePanelRows(const UiLayout::Placement& picked, int rowHeight) const;
+	void AnnouncePanelRows(const UiLayout::Placement& picked, int rowHeight, int symbolWidth) const;
 	void DrawScrollBar(const UiLayout::Placement& picked, const PanelScroll& scroll, int rowHeight) const;
 	void DrawCaret(const UiTable& table, const UiLayout::Placement& placement, const PanelCaret& caret, int pointSize,
 				   float scale) const;

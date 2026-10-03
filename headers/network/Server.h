@@ -7,6 +7,7 @@
 #include "Session.h"
 #include "WireFrame.h"
 #include "components/EventSystem.h"
+#include "components/MatchSettings.h"
 #include "enums/DisconnectReason.h"
 #include "enums/MatchRules.h"
 #include "enums/PlayerSlot.h"
@@ -40,7 +41,7 @@ class Server final
 {
 public:
 	Server(boost::asio::io_context& ioContext, const ServerAddress& address,
-		   const std::shared_ptr<EventSystem>& events, std::size_t seatCount, MatchRules rules);
+		   const std::shared_ptr<EventSystem>& events, const MatchSettings& match);
 
 	~Server();
 
@@ -96,7 +97,8 @@ private:
 	//no acceptor to close, so the socket stays bound and the hello is turned away
 	std::atomic_bool _isAccepting{true};
 	const uint16_t _boundPort;
-	const std::size_t _seatCount;
+	//NOTE: its seats held to one to four - every client is told the match as it is played
+	const MatchSettings _match;
 	//NOTE: after _boundPort - it answers with that number, so it may not be built before there is one
 	DiscoveryBeacon _beacon;
 	boost::asio::steady_timer _tickTimer;

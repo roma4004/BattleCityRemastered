@@ -1,4 +1,5 @@
 #include "application/ConsoleCommand.h"
+#include "components/LevelRotation.h"
 #include "enums/PlayerSlot.h"
 #include "utils/Log.h"
 #include <algorithm>
@@ -75,8 +76,7 @@ std::expected<ConsoleCommand, std::string> ParseConsoleCommand(const std::string
 	{
 		//NOTE: a name, not a path - a slash or a suffix here would let the console reach outside the maps
 		//folder, and the answer to "which levels are there" is the folder listing, not a typed path
-		if (!argument || argument->empty()
-			|| argument->find_first_of("/\\.") != std::string_view::npos)
+		if (!argument || !IsMapName(*argument))
 		{
 			return Rejected("expected /map NAME, where NAME is a file in Resources/Maps without .map");
 		}

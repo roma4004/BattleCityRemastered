@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cstddef>
+#include <iterator>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -41,6 +42,10 @@ DiscoveryScan::DiscoveryScan(const std::string& ownHost)
 	std::ignore = _socket.non_blocking(true, ec);
 
 	_targets.emplace_back(boost::asio::ip::address_v4::broadcast(), kDiscoveryPort);
+	std::ranges::transform(LocalBroadcasts(), std::back_inserter(_targets), [](const std::string& broadcast)
+	{
+		return udp::endpoint{boost::asio::ip::make_address_v4(broadcast), kDiscoveryPort};
+	});
 	if (const auto own{boost::asio::ip::make_address(ownHost, ec)}; !ec && own.is_v4())
 	{
 		_targets.emplace_back(own, kDiscoveryPort);

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "components/MatchSettings.h"
 #include "geometry/Point.h"
 #include "enums/DisconnectReason.h"
 #include "enums/GameState.h"
@@ -44,8 +45,8 @@ struct HostPhaseAnnouncedEvent
 struct PlayerSlotAssignedEvent
 {
 	PlayerSlot slot;
-	//NOTE: the host's seat count; zero when not sent
-	std::uint8_t seatCount{};
+	//NOTE: the match the host was started for - its seat count, and what the lobby shows
+	MatchSettings match{};
 };
 
 //NOTE: the link dropped without a goodbye - an announced leave is ServerInDisconnectEvent

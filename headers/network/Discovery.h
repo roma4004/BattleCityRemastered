@@ -15,7 +15,7 @@ inline constexpr std::string_view kReplyTag{"BC!2"};
 
 //NOTE: bumped whenever AnyCommand or the link header changes shape - an old client that dialled a new
 //server would break on the first batch, and the reply is the last place it can still be told
-inline constexpr std::uint16_t kProtocolVersion{2};
+inline constexpr std::uint16_t kProtocolVersion{3};
 
 struct Reply final
 {
@@ -62,10 +62,18 @@ inline constexpr std::size_t kReplySize{kReplyTag.size() + 7u};
 		return static_cast<std::uint16_t>(static_cast<unsigned char>(datagram[index]));
 	};
 
+	const auto seats{static_cast<std::uint8_t>(byteAt(8))};
+	const auto freeSeats{static_cast<std::uint8_t>(byteAt(9))};
+	//NOTE: no server has more seats free than it has
+	if (freeSeats > seats)
+	{
+		return std::nullopt;
+	}
+
 	return Reply{.protocolVersion = static_cast<std::uint16_t>(byteAt(4) | byteAt(5) << 8u),
 				 .gamePort = static_cast<std::uint16_t>(byteAt(6) | byteAt(7) << 8u),
-				 .seats = static_cast<std::uint8_t>(byteAt(8)),
-				 .freeSeats = static_cast<std::uint8_t>(byteAt(9)),
+				 .seats = seats,
+				 .freeSeats = freeSeats,
 				 .rules = static_cast<MatchRules>(byteAt(10))};
 }
 }//namespace network::discovery

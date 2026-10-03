@@ -1,5 +1,6 @@
 #pragma once
 
+#include "components/MatchSettings.h"
 #include "enums/GameMode.h"
 #include "network/Endpoints.h"
 
@@ -23,4 +24,6 @@ struct ServerAddressChosenEvent
 {
 	GameMode mode;
 	network::ServerAddress address;
+	//NOTE: read when hosting - the server is started for this match
+	MatchSettings match{};
 };

@@ -1,5 +1,6 @@
 #include "geometry/Point.h"
 #include "components/EventSystem.h"
+#include "components/MatchSettings.h"
 #include "components/events/SpawnEvents.h"
 #include "components/events/BonusPickupEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
@@ -10,6 +11,7 @@
 #include "components/events/StatisticsEvents.h"
 #include "components/events/TimingEvents.h"
 #include "components/WorldSnapshot.h"
+#include "enums/MatchRules.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
 #include "enums/DespawnReason.h"
@@ -760,15 +762,16 @@ TEST_F(NetworkTest, AThirdClientIsToldTheSeatsAreTaken)
 	EXPECT_EQ(*refusal, DisconnectReason::ServerFull);
 }
 
-// a three-seat host seats a third client and tells it the seat count
-TEST_F(NetworkTest, AThreeSeatServerSeatsAThirdClientAndSaysHowManySeatsThereAre)
+// a three-seat host seats a third client and tells it the match it was started for
+TEST_F(NetworkTest, AThreeSeatServerSeatsAThirdClientAndTellsItTheMatch)
 {
 	std::optional<PlayerSlotAssignedEvent> third{};
 	const EventSubscription thirdSub{_thirdClientEvents->AddListener(
 			[&third](const PlayerSlotAssignedEvent& e) { third = e; })};
 
+	const MatchSettings match{.rules = MatchRules::FreeForAll, .seats = 3u, .map = "level2", .enemiesAtOnce = 1u};
 	const auto server{std::make_unique<network::commands::ServerNode>(network::ServerAddress{.port = 0},
-																	  _serverEvents, 3u)};
+																	  _serverEvents, match)};
 	const uint16_t port{server->GetBoundPort()};
 	const auto client{MakeClient(port)};
 	const auto secondClient{std::make_unique<network::commands::ClientNode>(network::ServerAddress{.port = port},
@@ -778,7 +781,7 @@ TEST_F(NetworkTest, AThreeSeatServerSeatsAThirdClientAndSaysHowManySeatsThereAre
 
 	ASSERT_TRUE(PumpUntil([&third] { return third.has_value(); })) << "the third client was told no seat";
 	EXPECT_EQ(third->slot, PlayerSlot::P3);
-	EXPECT_EQ(third->seatCount, 3u);
+	EXPECT_EQ(third->match, match);
 }
 
 // A ready landing in a running match is owed the field, and the snapshot goes out in place of that frame -

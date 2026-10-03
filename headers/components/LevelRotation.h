@@ -4,6 +4,9 @@
 #include <string_view>
 #include <vector>
 
+//NOTE: letters, digits, '-' and '_' - never a path out of the maps folder, never two words on a command line
+[[nodiscard]] bool IsMapName(std::string_view name);
+
 //NOTE: the campaign is the maps folder itself, read in name order - a new level joins by being dropped in,
 //and nothing in the code lists the levels by hand
 class LevelRotation final

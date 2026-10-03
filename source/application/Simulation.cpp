@@ -105,8 +105,7 @@ void Simulation::OnGameModeChangedTo(const GameModeChangedToEvent& event)
 	if (IsHost(event.mode))
 	{
 		auto server{std::make_unique<network::commands::ServerNode>(_gameConfig.serverAddress, _events,
-																	_gameConfig.networkSeats,
-																	_gameConfig.networkRules)};
+																	_gameConfig.HostedMatch())};
 		//NOTE: asked for port 0, the OS picked one - read it here, while the concrete type is still in hand
 		_boundPort = server->GetBoundPort();
 		_networkNode = std::move(server);
@@ -194,10 +193,7 @@ void Simulation::OnConnectedToHost(const ClientConnectedToHostEvent&)
 void Simulation::OnPlayerSlotAssigned(const PlayerSlotAssignedEvent& event)
 {
 	_gameConfig.ownSlot = event.slot;
-	if (event.seatCount > 0u)
-	{
-		_gameConfig.networkSeats = event.seatCount;
-	}
+	_gameConfig.networkSeats = event.match.seats;
 }
 
 void Simulation::OnHostLeft(const ClientInDisconnectEvent&) { _isLinkUp = false; }

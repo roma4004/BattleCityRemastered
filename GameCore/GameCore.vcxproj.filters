@@ -470,6 +470,9 @@
     <ClInclude Include="..\headers\components\MapLoader.h">
       <Filter>headers\components</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\components\MatchSettings.h">
+      <Filter>headers\components</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\components\Menu.h">
       <Filter>headers\components</Filter>
     </ClInclude>

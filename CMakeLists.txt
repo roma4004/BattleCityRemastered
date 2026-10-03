@@ -173,7 +173,11 @@ set(UNIT_TESTS_SOURCES
 
 # --- Targets ---
 if (WIN32)
-    set(PLATFORM_NETWORK_LIBS wsock32 ws2_32) #NOTE: Winsock, needed for boost::asio sockets on Windows; POSIX systems already have sockets in libc
+    #NOTE: wsock32, ws2_32 - Winsock for boost::asio; iphlpapi - GetAdaptersAddresses, the interface list
+    set(PLATFORM_NETWORK_LIBS wsock32 ws2_32 iphlpapi)
+else ()
+    #NOTE: nothing to link - sockets and getifaddrs, the interface list's Linux side, are part of libc
+    set(PLATFORM_NETWORK_LIBS)
 endif ()
 
 # game logic, no SDL: a static lib propagates its deps to consumers (PRIVATE ones too, as LINK_ONLY),

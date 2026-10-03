@@ -1,4 +1,6 @@
 #include "application/CommandLineParser.h"
+#include "components/LevelRotation.h"
+#include "components/MatchSettings.h"
 #include "network/Endpoints.h"
 #include "enums/GameMode.h"
 #include "enums/MatchRules.h"
@@ -9,6 +11,7 @@
 #include <charconv>
 #include <cstddef>
 #include <optional>
+#include <string>
 #include <string_view>
 #include <system_error>
 #include <utility>
@@ -225,6 +228,37 @@ std::expected<LaunchOptions, ArgError> CommandLineParser::ParseServer(const int 
 			}
 
 			launchOptions.rules = value == "ffa" ? MatchRules::FreeForAll : MatchRules::Classic;
+
+			continue;
+		}
+
+		if (arg.starts_with("--map="))
+		{
+			const std::string_view value{arg.substr(std::string_view{"--map="}.size())};
+			if (!IsMapName(value))
+			{
+				return std::unexpected(ArgError{.arg = std::string{arg},
+												.reason = "expected --map=NAME, a map file's name without .map"});
+			}
+
+			launchOptions.mapName = std::string{value};
+
+			continue;
+		}
+
+		if (arg.starts_with("--enemies="))
+		{
+			const std::string_view value{arg.substr(std::string_view{"--enemies="}.size())};
+			std::size_t enemies{};
+			const auto* const last{value.data() + value.size()};
+			if (const auto [ptr, error] = std::from_chars(value.data(), last, enemies);
+				error != std::errc{} || ptr != last || enemies == 0u || enemies > kMaxEnemiesAtOnce)
+			{
+				return std::unexpected(
+						ArgError{.arg = std::string{arg}, .reason = "expected --enemies=1 to --enemies=4"});
+			}
+
+			launchOptions.enemiesAtOnce = enemies;
 
 			continue;
 		}

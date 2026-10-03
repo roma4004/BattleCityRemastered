@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "components/MatchSettings.h"
 #include "components/WorldGeometry.h"
 #include "enums/GameMode.h"
 #include "enums/GameState.h"
@@ -63,9 +64,11 @@ public:
 	//NOTE: a free-for-all of several players keeps two bots on the field
 	[[nodiscard]] std::size_t EnemySeats() const noexcept
 	{
-		return IsFreeForAll() && SeatCount() > 1u ? 2u : simultaneousEnemies;
+		return IsFreeForAll() && SeatCount() > 1u ? kFreeForAllBots : simultaneousEnemies;
 	}
 	[[nodiscard]] UPoint LogicalSize() const noexcept;
+	//NOTE: the match this server runs, as every client is told it
+	[[nodiscard]] MatchSettings HostedMatch() const;
 
 	UPoint battlefieldSize{WorldGeometry::kClassicBattlefieldSize};
 	size_t sideBarWidth{WorldGeometry::kSideBarWidth};
@@ -76,8 +79,8 @@ public:
 	double tankSize{gridOffset * static_cast<double>(WorldGeometry::kTankCellSpan)};
 	double tankSpeed{142.0};
 	int bonusSize{static_cast<int>(tankSize)};
-	//NOTE: how far a shot may fall either side of the model damage; zero makes every shot identical
-	unsigned int bulletDamageSpread{3u};
+	//NOTE: how far a shot may fall either side of its damage, as a share of it; zero makes every shot identical
+	double bulletDamageSpread{1.0 / 3.0};
 	//NOTE: a share of the notice bands in InputProviderForBot - zero makes a bot see everything at once
 	double botNoticeDelayFactor{1.0};
 	double botShootObstacleChance{0.35};

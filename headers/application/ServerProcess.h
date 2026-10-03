@@ -6,6 +6,8 @@
 
 //NOTE: the handle to BattleCityServer, no network code of its own. The job object kills the child
 //when the game is killed rather than closed - a survivor would hold the port
+struct MatchSettings;
+
 namespace network
 {
 struct ServerAddress;
@@ -30,7 +32,7 @@ public:
 
 	//NOTE: looks for the exe next to our own, never on PATH. Does not wait for it to listen - the port turns
 	//up in PublishedPort once it does
-	[[nodiscard]] bool Start(const network::ServerAddress& address);
+	[[nodiscard]] bool Start(const network::ServerAddress& address, const MatchSettings& match);
 
 	//NOTE: the port a server started next to us wrote down, whoever started it - the only number a
 	//client has to dial while the lobby cannot ask for one. Empty until a server publishes it

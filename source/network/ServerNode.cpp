@@ -1,18 +1,17 @@
 #include "network/ServerNode.h"
 #include "network/Server.h"
 #include "network/Endpoints.h"
-#include "enums/MatchRules.h"
+#include "components/MatchSettings.h"
 #include <boost/asio/post.hpp>
-#include <cstddef>
 #include <functional>
 #include <memory>
 
 namespace network::commands
 {
 ServerNode::ServerNode(const ServerAddress& address, const std::shared_ptr<EventSystem>& events,
-					   const std::size_t seatCount, const MatchRules rules)
+					   const MatchSettings& match)
 	: NetworkNodeBase(events, "ServerNode")
-	, _server{std::make_unique<Server>(IoContext(), address, events, seatCount, rules)}
+	, _server{std::make_unique<Server>(IoContext(), address, events, match)}
 {
 	StartIoThread();
 	SubscribeToNetCommandUpdate();

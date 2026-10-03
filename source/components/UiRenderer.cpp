@@ -17,6 +17,7 @@
 #include <array>
 #include <cstddef>
 #include <functional>
+#include <iterator>
 #include <optional>
 #include <ranges>
 #include <SDL3/SDL_render.h>
@@ -86,6 +87,18 @@ constexpr double kMatchEndPlateMiddle{0.25};
 int PanelRowHeight(const int pointSize) { return pointSize * kPanelRowHeight / kFitStartPointSize; }
 
 int ScrollBarWidth(const int rowHeight) { return std::max(rowHeight / kScrollBarWidthShare, 2); }
+
+//NOTE: where a UTF-8 text's symbol starts - the bytes continuing one are 10xxxxxx; past the end is the size
+std::size_t ByteOf(const std::string_view text, const std::size_t symbol)
+{
+	auto starts{text | std::views::filter([](const char byte)
+	{
+		return (static_cast<unsigned char>(byte) & 0xc0u) != 0x80u;
+	})};
+	const auto at{std::ranges::next(starts.begin(), static_cast<std::ptrdiff_t>(symbol), starts.end())};
+
+	return static_cast<std::size_t>(std::distance(text.begin(), at.base()));
+}
 
 //NOTE: glyphs are sized in output pixels, so the logical scale is cancelled around the drawing and
 //folded into the position - once around a run of lines, because every change of it breaks the batch
@@ -282,7 +295,7 @@ void UiRenderer::DrawPanelTables(const RenderPanelTablesEvent& event) const
 			DrawScrollBar(picked, *pick->scroll, rowHeight);
 		}
 
-		AnnouncePanelRows(picked, rowHeight);
+		AnnouncePanelRows(picked, rowHeight, _textCache.MeasureString("0", pointSize, scale).x);
 	}
 
 	DrawTables(std::views::zip(event.tables, placements), pointSize, scale);
@@ -307,13 +320,20 @@ void UiRenderer::DrawCaret(const UiTable& table, const UiLayout::Placement& plac
 	}
 
 	const UiCell& cell{table.rows[caret.row].cells.front()};
+	const std::string_view text{cell.text};
 	const int size{CellPointSize(cell, pointSize, scale)};
-	const int height{_textCache.MeasureString(cell.text, size, scale).y};
-	const int before{_textCache.MeasureString(std::string_view{cell.text}.substr(0, caret.symbol), size, scale).x};
-	const SDL_Rect bar{.x = placed->pos.x + before,
-					   .y = placed->pos.y + (placed->size.y - height) / 2,
-					   .w = std::max(height / kCaretWidthShare, 1),
-					   .h = height};
+	const int height{_textCache.MeasureString(text, size, scale).y};
+	const std::size_t start{ByteOf(text, caret.symbol)};
+	const int before{_textCache.MeasureString(text.substr(0, start), size, scale).x};
+	const int top{placed->pos.y + (placed->size.y - height) / 2};
+	const int thickness{std::max(height / kCaretWidthShare, 1)};
+	const std::string_view under{text.substr(start, ByteOf(text, caret.symbol + caret.symbols) - start)};
+	const SDL_Rect bar{caret.symbols == 0
+							   ? SDL_Rect{.x = placed->pos.x + before, .y = top, .w = thickness, .h = height}
+							   : SDL_Rect{.x = placed->pos.x + before,
+										  .y = top + height - thickness,
+										  .w = _textCache.MeasureString(under, size, scale).x,
+										  .h = thickness}};
 
 	SDL_Renderer* const renderer{_sdlConfig.renderer.get()};
 	SDL_SetRenderDrawColor(renderer, 0xffu, 0xffu, 0xffu, caret.alpha);
@@ -565,17 +585,19 @@ void UiRenderer::AnnounceMenuTiles(const UiLayout::Placement& modes) const
 													 .y = kMenuModeRowHeight}});
 }
 
-void UiRenderer::AnnouncePanelRows(const UiLayout::Placement& picked, const int rowHeight) const
+void UiRenderer::AnnouncePanelRows(const UiLayout::Placement& picked, const int rowHeight,
+								   const int symbolWidth) const
 {
 	const Point rowSize{.x = picked.size.x, .y = rowHeight};
-	if (picked.rows == _panelRowPlaces && rowSize == _panelRowSize)
+	if (picked.rows == _panelRowPlaces && rowSize == _panelRowSize && symbolWidth == _panelSymbolWidth)
 	{
 		return;
 	}
 
 	_panelRowPlaces = picked.rows;
 	_panelRowSize = rowSize;
-	_events->EmitEvent(PanelRowsPlacedEvent{.rows = picked.rows, .rowSize = rowSize});
+	_panelSymbolWidth = symbolWidth;
+	_events->EmitEvent(PanelRowsPlacedEvent{.rows = picked.rows, .rowSize = rowSize, .symbolWidth = symbolWidth});
 }
 
 //NOTE: the panel belongs to the field, not to whoever is showing it - all it takes from them is the slide-in

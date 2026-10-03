@@ -2,12 +2,15 @@
 
 #include "components/AddressField.h"
 #include "components/EventSystem.h"
+#include "components/MatchSettings.h"
 #include "network/DiscoveryScan.h"
 #include "network/Endpoints.h"
 #include <chrono>
 #include <cstddef>
 #include <memory>
 #include <optional>
+#include <string>
+#include <string_view>
 #include <vector>
 
 enum class GameMode : char8_t;
@@ -16,7 +19,10 @@ struct EnterEvent;
 struct FireEvent;
 struct MenuShownEvent;
 struct MoveDownEvent;
+struct MoveLeftEvent;
+struct MoveRightEvent;
 struct MoveUpEvent;
+struct PanelCaret;
 struct PanelRowClickedEvent;
 struct PanelRowHoveredEvent;
 struct PreTickUpdateEvent;
@@ -38,6 +44,10 @@ class ServerScreen final
 		Server,
 		Refresh,
 		Gap,
+		Rules,
+		Seats,
+		Map,
+		Enemies,
 		AddressCaption,
 		IPv4Caption,
 		IPv4,
@@ -46,6 +56,13 @@ class ServerScreen final
 		IPv6,
 		ConfirmIPv6,
 		Error
+	};
+
+	enum class Column : char8_t
+	{
+		Players,
+		Mode,
+		Address
 	};
 
 	struct Item
@@ -57,6 +74,13 @@ class ServerScreen final
 		[[nodiscard]] bool operator==(const Item& rhs) const = default;
 	};
 
+	//NOTE: the order the header asks for
+	struct Sort
+	{
+		Column column{};
+		bool isDescending{};
+	};
+
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
 	//NOTE: held only while the screen is up - clearing them closes it
@@ -65,12 +89,24 @@ class ServerScreen final
 	std::unique_ptr<network::DiscoveryScan> _scan{nullptr};
 	std::vector<network::FoundServer> _servers{};
 	std::size_t _firstShown{};
+	//NOTE: by the players at first; kept past closing, as what is typed is
+	Sort _sort{};
+	//NOTE: the header column Left and Right move along, sorted by on Enter
+	Column _column{};
 
+	//NOTE: what CREATE ON starts the server for - kept past closing, as what is typed is
+	MatchSettings _match{};
+	//NOTE: the maps folder, read on opening
+	std::vector<std::string> _maps{};
 	AddressField _ipv4{AddressFamily::IPv4};
 	AddressField _ipv6{AddressFamily::IPv6};
+	//NOTE: what the rows were given - a row still holding it gets this machine's current address on opening
+	network::ServerAddress _offeredIPv4{};
+	network::ServerAddress _offeredIPv6{};
 	Item _focus{};
 	GameMode _mode{};
-	bool _isRejected{};
+	//NOTE: why the last confirm went nowhere - empty when it did not
+	std::string_view _rejection{};
 	//NOTE: the caret blinks from here - typing or moving it shows it whole
 	std::chrono::steady_clock::time_point _caretMoved{};
 	//NOTE: a release confirms only a press made while the screen was up, not the one that opened it
@@ -87,6 +123,8 @@ class ServerScreen final
 	void OnFire(const FireEvent& event);
 	void OnPadUp(const MoveUpEvent& event);
 	void OnPadDown(const MoveDownEvent& event);
+	void OnPadLeft(const MoveLeftEvent& event);
+	void OnPadRight(const MoveRightEvent& event);
 	void OnCancelled(const TextInputCancelledEvent&);
 	void OnDrawUserInterface(const DrawUserInterfaceEvent&) const;
 
@@ -97,9 +135,18 @@ class ServerScreen final
 	void Press();
 	void Choose(const network::ServerAddress& address);
 
+	//NOTE: Left and Right turn a setting's value and the header's column, not a caret
+	[[nodiscard]] static bool IsTurnable(Line line) noexcept;
+	void Change(bool isForward);
+
+	void SortBy(Column column);
+	[[nodiscard]] static Column ColumnAt(std::size_t symbol) noexcept;
+	void Arrange(std::vector<network::FoundServer> servers);
+	[[nodiscard]] std::vector<network::FoundServer> Ordered(std::vector<network::FoundServer> servers) const;
+
 	[[nodiscard]] std::vector<Item> Lines() const;
 	[[nodiscard]] bool IsPickable(const Item& item) const;
-	[[nodiscard]] std::optional<Item> PickableAt(std::size_t row) const;
+	[[nodiscard]] std::optional<Item> ItemAt(std::size_t row) const;
 	void PickFirst();
 	void Pick(const Item& item);
 	void Step(bool isForward);
@@ -108,9 +155,12 @@ class ServerScreen final
 	//NOTE: the row a typed line or its button belongs to
 	[[nodiscard]] const AddressField& FieldOf(Line line) const;
 	void Fill(const network::ServerAddress& address, bool isBracketed);
+	void OfferLocalAddresses();
 	void Type(char symbol);
 	//NOTE: one table row a line - a click on row N is a click on Lines()[N]
 	[[nodiscard]] UiRow LineRow(const Item& item) const;
+	[[nodiscard]] std::string Header() const;
+	[[nodiscard]] std::optional<PanelCaret> Caret(std::size_t row) const;
 	void Draw() const;
 
 public:

@@ -28,6 +28,7 @@
 #include "geometry/ObjRectangle.h"
 #include <ser20/types/array.hpp>
 #include <ser20/types/common.hpp>
+#include <ser20/types/string.hpp>
 #include <ser20/types/variant.hpp>
 #include <ser20/types/vector.hpp>
 
@@ -118,10 +119,19 @@ void serialize(Archive& ar, network::commands::SignalEvent& cmd, const unsigned 
 }
 
 template<class Archive>
+void serialize(Archive& ar, MatchSettings& match, const unsigned int /*version*/)
+{
+	ar & match.rules;
+	ar & match.seats;
+	ar & match.map;
+	ar & match.enemiesAtOnce;
+}
+
+template<class Archive>
 void serialize(Archive& ar, network::commands::SlotAssignment& cmd, const unsigned int /*version*/)
 {
 	ar & cmd.slot;
-	ar & cmd.seatCount;
+	ar & cmd.match;
 }
 
 template<class Archive>
