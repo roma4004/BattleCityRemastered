@@ -20,8 +20,8 @@ class MoveLikeBulletBeh final : public IMoveBeh
 	const BulletCaliber& _caliber;
 
 	[[nodiscard]] bool IsSelfOrAuthor(const BaseObj& object) const;
-	[[nodiscard]] bool IsInTheWay(const std::shared_ptr<BaseObj>& object, const ObjRectangle& nextPosRect) const;
-	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>> GetCircleCollisionObjects(
+	[[nodiscard]] bool IsInTheWay(const BaseObj* object, const ObjRectangle& nextPosRect) const;
+	[[nodiscard]] std::vector<BaseObj*> GetCircleCollisionObjects(
 			FPoint blowCenter, const std::vector<std::shared_ptr<BaseObj>>& objects) const;
 	[[nodiscard]] bool IsCanMove(double deltaTime, Direction dir,
 								 const std::vector<std::shared_ptr<BaseObj>>& objects) const;
@@ -39,9 +39,9 @@ public:
 
 	[[nodiscard]]
 	bool Move(Direction dir, double deltaTime, const std::vector<std::shared_ptr<BaseObj>>& objects,
-			  std::vector<std::shared_ptr<BaseObj>>& outCollisions) override;
+			  std::vector<BaseObj*>& outCollisions) override;
 
 	//NOTE: the first layer the shell runs into - empty when the edge of the field comes first
-	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>> GetContacts(
+	[[nodiscard]] std::vector<BaseObj*> GetContacts(
 			Direction dir, double deltaTime, const std::vector<std::shared_ptr<BaseObj>>& objects) const;
 };

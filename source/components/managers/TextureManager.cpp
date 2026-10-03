@@ -3,6 +3,7 @@
 #include "enums/TextureOffset.h"
 #include "enums/TextureType.h"
 #include "components/EventSystem.h"
+#include "components/Sprite.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "entities/TankModelSpec.h"
 #include "utils/MathUtils.h"
@@ -17,8 +18,7 @@ constexpr int kBonusSpawnFrames{3};
 constexpr double kBonusBoxWidth{15.0};
 constexpr double kBonusBoxHeight{14.0};
 
-//NOTE: entity sprites only - DrawObjEvent comes from Bullet, Obstacle and Bonus. UI reads
-//TextureOffset directly and never lands here.
+//NOTE: entity sprites only - UI reads TextureOffset directly and never lands here
 ObjRectangle GetTextureRect(const TextureType texture)
 {
 	switch (texture)
@@ -106,7 +106,6 @@ TextureManager::TextureManager(const std::shared_ptr<EventSystem>& events)
 
 void TextureManager::Subscribe()
 {
-	_subs.push_back(_events->AddListener(this, &TextureManager::Draw));
 	_subs.push_back(_events->AddListener(this, &TextureManager::DrawAnimation));
 }
 
@@ -149,25 +148,24 @@ TextureManager::AtlasFrames TextureManager::GetAnimFrames(const AnimationType ty
 	return AtlasFrames{};
 }
 
-void TextureManager::Draw(const DrawObjEvent& event) const
+void TextureManager::Draw(const Sprite& sprite) const
 {
-	const auto& [rect, dir, texture, rimColor] = event;
-	const ObjRectangle destRect{rect};
-	const ObjRectangle textureRect{GetTextureRect(texture)};
+	const ObjRectangle destRect{sprite.rect};
+	const ObjRectangle textureRect{GetTextureRect(sprite.texture)};
 	if (constexpr ObjRectangle defaultSdlRect{};
 		MathUtils::AreEqualAbsolute(textureRect.x, defaultSdlRect.x)
 		&& MathUtils::AreEqualAbsolute(textureRect.y, defaultSdlRect.y)
 		&& MathUtils::AreEqualAbsolute(textureRect.w, defaultSdlRect.w)
 		&& MathUtils::AreEqualAbsolute(textureRect.h, defaultSdlRect.h))
 	{
-		_events->EmitEvent(RenderColorTextureEvent{.rect = rect});
+		_events->EmitEvent(RenderColorTextureEvent{.rect = destRect});
 	}
 
-	_events->EmitEvent(RenderTextureEvent{.textureRect = textureRect, .destRect = destRect, .dir = dir});
+	_events->EmitEvent(RenderTextureEvent{.textureRect = textureRect, .destRect = destRect, .dir = sprite.dir});
 
-	if (rimColor != 0u)
+	if (sprite.rimColor != 0u)
 	{
-		DrawRim(textureRect, destRect, dir, rimColor);
+		DrawRim(textureRect, destRect, sprite.dir, sprite.rimColor);
 	}
 }
 

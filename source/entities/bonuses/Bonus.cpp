@@ -2,12 +2,12 @@
 #include "application/GameConfig.h"
 #include "components/EventSystem.h"
 #include "components/events/AnimationRenderEvents.h"
-#include "components/events/CoreLifecycleEvents.h"
 #include "components/events/ObjectLifecycleEvents.h"
 #include "components/events/ReplicationEvents.h"
 #include "components/events/SpawnEvents.h"
 #include "components/events/StatisticsEvents.h"
 #include "components/events/BonusPickupEvents.h"
+#include "components/Sprite.h"
 #include "components/WorldSnapshot.h"
 #include "entities/BaseObjProperty.h"
 #include "enums/Author.h"
@@ -21,6 +21,7 @@
 #include <chrono>
 #include <cmath>
 #include <numbers>
+#include <optional>
 #include <ranges>
 
 namespace
@@ -150,8 +151,6 @@ void Bonus::Despawn(const DespawnReason reason)
 
 void Bonus::Subscribe()
 {
-	_subs.push_back(_events->AddListener(this, &Bonus::OnDraw));
-
 	if (!_gameConfig.IsAuthority())
 	{
 		SubscribeAsClient();
@@ -162,8 +161,6 @@ void Bonus::Subscribe()
 		_subs.push_back(_events->AddListener(this, &Bonus::OnWorldSnapshotRequested));
 	}
 }
-
-void Bonus::OnDraw(const DrawEvent&) const { Draw(); }
 
 void Bonus::SubscribeAsClient()
 {
@@ -209,12 +206,13 @@ namespace
 }
 }//namespace
 
-void Bonus::Draw() const
+std::optional<Sprite> Bonus::Look() const
 {
-	_events->EmitEvent(DrawObjEvent{.rect = _rect,
-									.dir = Direction::UP,
-									.texture = TextureOf(_bonusType),
-									.rimColor = _isSuper ? SuperRimColor() : 0u});
+	return Sprite{.layer = kLayer,
+				  .rect = _rect,
+				  .dir = Direction::UP,
+				  .texture = TextureOf(_bonusType),
+				  .rimColor = _isSuper ? SuperRimColor() : 0u};
 }
 
 bool Bonus::GetIsSuper() const noexcept { return _isSuper; }

@@ -20,6 +20,7 @@
 #include "components/events/TimingEvents.h"
 #include "components/managers/FramePerSecondManager.h"
 #include "components/managers/RenderManager.h"
+#include "components/ScenePainter.h"
 #include "components/managers/TextureManager.h"
 #include "enums/GameMode.h"
 #include "network/DiscoveryProbe.h"
@@ -46,6 +47,7 @@ Game::Game(GameConfig& gameConfig, const ProjectConfig& projectConfig, const Win
 	, _userInput{std::make_unique<UserInput>(_events, windowConfig, sdlConfig, projectConfig.GamepadDeadZone())}
 	, _fpsManager{std::make_unique<FramePerSecondManager>(_events, projectConfig, true)}
 	, _simulation{std::make_unique<Simulation>(_events, gameConfig)}
+	, _scenePainter{std::make_unique<ScenePainter>(_events, _simulation->World(), *_textureManager)}
 	, _renderManager{std::make_unique<RenderManager>(_events, gameConfig, sdlConfig)}
 	, _uiRenderer{std::make_unique<UiRenderer>(_events, gameConfig, sdlConfig)}
 	, _scoreBoard{std::make_unique<ScoreBoard>(_events, _simulation->Statistics(), gameConfig)}

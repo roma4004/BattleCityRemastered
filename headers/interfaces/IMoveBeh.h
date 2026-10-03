@@ -13,5 +13,5 @@ public:
 
 	[[nodiscard]] virtual bool Move(Direction direction, double deltaTime,
 									const std::vector<std::shared_ptr<BaseObj>>& objects,
-									std::vector<std::shared_ptr<BaseObj>>& outCollisions) = 0;
+									std::vector<BaseObj*>& outCollisions) = 0;
 };

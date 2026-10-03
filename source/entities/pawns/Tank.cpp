@@ -74,10 +74,13 @@ BulletCaliber Tank::BaseCaliber() const
 	constexpr FPoint baseShell{.x = 9.0, .y = 9.0};
 	constexpr double baseBulletSpeed{300.0};
 	constexpr unsigned int baseDamage{30};
+	//NOTE: half the damage - the player's shell hits a tank harder than it digs into a wall
+	constexpr int baseShellHealth{15};
 	const FPoint shell{ShellSizeOf(_model, baseShell)};
 
 	return BulletCaliber{.speed = baseBulletSpeed * SpecOf(_model).bulletSpeedFactor,
 						 .damage = DamageOf(_model, baseDamage),
+						 .health = ShellHealthOf(_model, baseShellHealth),
 						 .damageRadius = BlastOf(_model, WorldGeometry::BlastRadiusFor(_gameConfig.tankSize,
 																					   shell.y)),
 						 .tier = _tier,
@@ -266,9 +269,9 @@ double Tank::ShoveDistance(const Direction dir, const double wanted, const int d
 	}
 
 	double allowed{wanted};
-	for (const std::shared_ptr<BaseObj>& blocker: _tankMoveBeh->BlockersAhead(dir, wanted, _allObjects))
+	for (const BaseObj* const blocker: _tankMoveBeh->BlockersAhead(dir, wanted, _allObjects))
 	{
-		const auto peer{std::dynamic_pointer_cast<Tank>(blocker)};
+		const auto* const peer{dynamic_cast<const Tank*>(blocker)};
 		if (peer == nullptr || peer->IsDrivingAgainst(dir))
 		{
 			return 0.0;
@@ -290,9 +293,9 @@ void Tank::ShoveBy(const double distance, const Direction dir, const double velo
 
 	alreadyMoved.push_back(this);
 
-	for (const std::shared_ptr<BaseObj>& blocker: _tankMoveBeh->BlockersAhead(dir, distance, _allObjects))
+	for (BaseObj* const blocker: _tankMoveBeh->BlockersAhead(dir, distance, _allObjects))
 	{
-		if (const auto peer{std::dynamic_pointer_cast<Tank>(blocker)})
+		if (auto* const peer{dynamic_cast<Tank*>(blocker)})
 		{
 			peer->ShoveBy(distance, dir, velocity, alreadyMoved);
 		}
@@ -315,7 +318,7 @@ void Tank::ShoveBy(const double distance, const Direction dir, const double velo
 //again, and so is one driving at us
 void Tank::ShoveAhead(const Direction dir, const double step)
 {
-	const std::vector<std::shared_ptr<BaseObj>> blockers{_tankMoveBeh->BlockersAhead(dir, step, _allObjects)};
+	const std::vector<BaseObj*> blockers{_tankMoveBeh->BlockersAhead(dir, step, _allObjects)};
 	if (blockers.empty())
 	{
 		return;
@@ -323,10 +326,10 @@ void Tank::ShoveAhead(const Direction dir, const double step)
 
 	const double wanted{_effects.isTouchTheIce ? step : step * kShoveShare};
 	double allowed{wanted};
-	std::vector<std::shared_ptr<Tank>> pushed{};
-	for (const std::shared_ptr<BaseObj>& blocker: blockers)
+	std::vector<Tank*> pushed{};
+	for (BaseObj* const blocker: blockers)
 	{
-		const auto peer{std::dynamic_pointer_cast<Tank>(blocker)};
+		auto* const peer{dynamic_cast<Tank*>(blocker)};
 		if (peer == nullptr || peer->IsDrivingAgainst(dir))
 		{
 			return;
@@ -344,7 +347,7 @@ void Tank::ShoveAhead(const Direction dir, const double step)
 	//NOTE: shared across the whole push, so the far end of the chain moves by one distance and no more
 	std::vector<const Tank*> alreadyMoved{};
 	const double velocity{_tankMoveBeh->GetVelocity(dir)};
-	std::ranges::for_each(pushed, [allowed, dir, velocity, &alreadyMoved](const std::shared_ptr<Tank>& peer)
+	std::ranges::for_each(pushed, [allowed, dir, velocity, &alreadyMoved](Tank* const peer)
 	{
 		peer->ShoveBy(allowed, dir, velocity, alreadyMoved);
 	});
@@ -358,7 +361,7 @@ void Tank::TickUpdate(const double deltaTime)
 		_shootTimer.isActive = false;
 	}
 
-	std::vector<std::shared_ptr<BaseObj>> outCollisions;
+	std::vector<BaseObj*> outCollisions;
 	const Direction oldDir{_dir};
 
 	const std::optional<Direction> chosen{_inputProvider->ChooseDirection(*this, deltaTime)};
@@ -395,7 +398,7 @@ void Tank::TickUpdate(const double deltaTime)
 
 	if (!outCollisions.empty())
 	{
-		HandleBonusPickUp(outCollisions.front());
+		HandleBonusPickUp(*outCollisions.front());
 		outCollisions.clear();
 	}
 
@@ -491,6 +494,7 @@ void Tank::ApplyTier(const unsigned short tier)
 	_speed = SpeedOf(_model, _gameConfig.tankSpeed) * faster;
 	_caliber.speed = base.speed * faster;
 	_caliber.damage = MathUtils::RoundTo<unsigned int>(base.damage * (1.0 + kTierStep.damageShare * steps));
+	_caliber.health = MathUtils::RoundTo<int>(base.health * (1.0 + kTierStep.damageShare * steps));
 	_caliber.damageRadius = base.damageRadius * (1.0 + kTierStep.blastShare * steps);
 	_caliber.tier = _tier;
 	_shootTimer.cooldown = std::chrono::round<std::chrono::milliseconds>(
@@ -554,10 +558,10 @@ void Tank::OnDespawned(const DespawnedEvent& event)
 	_events->EmitEvent(AnimationCreateTankExplosionEvent{.rect = _rect, .author = _author});
 }
 
-void Tank::HandleBonusPickUp(const std::shared_ptr<BaseObj>& object)
+void Tank::HandleBonusPickUp(BaseObj& object)
 {
-	auto* bonus{dynamic_cast<IPickupableBonus*>(object.get())};
-	if (bonus == nullptr || !object->GetIsAlive())
+	auto* bonus{dynamic_cast<IPickupableBonus*>(&object)};
+	if (bonus == nullptr || !object.GetIsAlive())
 	{
 		return;
 	}

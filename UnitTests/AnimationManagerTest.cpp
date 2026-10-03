@@ -5,6 +5,7 @@
 #include "components/BulletPool.h"
 #include "components/TankPool.h"
 #include "components/EventSystem.h"
+#include "components/ScenePainter.h"
 #include "components/TankSpawner.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "components/events/BonusPickupEvents.h"
@@ -16,6 +17,7 @@
 #include "components/events/TimingEvents.h"
 #include "components/managers/AnimationManager.h"
 #include "components/managers/RespawnManager.h"
+#include "components/managers/TextureManager.h"
 #include "entities/obstacles/BrickWall.h"
 #include "entities/obstacles/WaterTile.h"
 #include "entities/pawns/Bullet.h"
@@ -23,6 +25,8 @@
 #include "enums/AnimationType.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
+#include "enums/TextureOffset.h"
+#include "utils/MathUtils.h"
 #include "utils/Uuid.h"
 #include "utils/UuidUtils.h"
 #include "gtest/gtest.h"
@@ -397,7 +401,7 @@ TEST_F(AnimationManagerTest, WaterStaysInTheMainDrawPhase)
 	EXPECT_TRUE(WasDrawn(AnimationType::Water_Flow));
 }
 
-// The manager subscribes before the match and a wall only when it spawns, so the water paints first
+// The scene painter is built after the manager, as the game builds them, so the water paints under the walls
 TEST_F(AnimationManagerTest, WaterIsPaintedBeforeAWallOfTheSamePhase)
 {
 	std::vector<std::string_view> painted{};
@@ -405,14 +409,21 @@ TEST_F(AnimationManagerTest, WaterIsPaintedBeforeAWallOfTheSamePhase)
 	{
 		painted.emplace_back("water");
 	})};
-	const EventSubscription objectSub{_events->AddListener([&painted](const DrawObjEvent&)
+	const EventSubscription wallSub{_events->AddListener([&painted](const RenderTextureEvent& event)
 	{
-		painted.emplace_back("wall");
+		if (MathUtils::AreEqualAbsolute(event.textureRect.x, TextureOffset::kBrick.x)
+			&& MathUtils::AreEqualAbsolute(event.textureRect.y, TextureOffset::kBrick.y))
+		{
+			painted.emplace_back("wall");
+		}
 	})};
+	const TextureManager textures{_events};
+	const ScenePainter painter{_events, _allObjects, textures};
 
 	_events->EmitEvent(AnimationCreateWaterEvent{.rect = _rect});
 	SpawnObstacle(_rect, ObstacleType::Brick);
 
+	_events->EmitEvent(PreDrawEvent{});
 	_events->EmitEvent(DrawEvent{});
 
 	EXPECT_EQ(painted, (std::vector<std::string_view>{"water", "wall"}));

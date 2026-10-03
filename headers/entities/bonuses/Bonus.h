@@ -3,26 +3,28 @@
 #include "../BaseObj.h"
 #include "../Tags.h"
 #include "components/EventSystem.h"
-#include "interfaces/IDrawable.h"
+#include "components/Sprite.h"
+#include "enums/DrawLayer.h"
 #include "interfaces/IPickupableBonus.h"
 #include <memory>
+#include <optional>
 #include <vector>
 
 enum class Faction : char8_t;
 enum class BonusType : char8_t;
 enum class DespawnReason : char8_t;
 struct BaseObjProperty;
-struct DrawEvent;
 struct DespawnedEvent;
 struct WorldSnapshotRequestedEvent;
 class EventSystem;
 class GameConfig;
 
-class Bonus final : public BaseObj, public IDrawable, public IPickupableBonus
+class Bonus final : public BaseObj, public IPickupableBonus
 {
 public:
 	static constexpr CollisionTags kCollision{tags::Impassable{}, tags::Destructible{}, tags::Impenetrable{},
 											  tags::NoTerrain{}};
+	static constexpr DrawLayer kLayer{DrawLayer::World};
 
 private:
 	const GameConfig& _gameConfig;
@@ -32,8 +34,6 @@ private:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
 
-	void Draw() const override;
-	void OnDraw(const DrawEvent&) const;
 	void OnDespawned(const DespawnedEvent& event);
 	void OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const;
 	void Subscribe();
@@ -56,4 +56,6 @@ public:
 	void PickUpBonus(Author author) override;
 
 	[[nodiscard]] bool GetIsSuper() const noexcept;
+
+	[[nodiscard]] std::optional<Sprite> Look() const override;
 };

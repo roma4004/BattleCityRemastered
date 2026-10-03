@@ -4,7 +4,6 @@
 #include "components/TankPool.h"
 #include "components/EventSystem.h"
 #include "components/events/AnimationRenderEvents.h"
-#include "components/events/CoreLifecycleEvents.h"
 #include "components/events/ObjectLifecycleEvents.h"
 #include "components/events/InputEvents.h"
 #include "components/events/TimingEvents.h"
@@ -13,7 +12,6 @@
 #include "entities/pawns/Tank.h"
 #include "enums/Direction.h"
 #include "enums/InputChannel.h"
-#include "enums/TextureType.h"
 #include "gtest/gtest.h"
 #include <algorithm>
 #include <memory>
@@ -93,36 +91,27 @@ TEST_F(BulletPoolTest, SpentBulletsAreHandedOutAgain)
 	EXPECT_EQ(firstRound, secondRound);
 }
 
-// a player fires and the bullet draws once; kill it, sweep, and the next draw finds nothing - a
-// reclaimed bullet is off the bus, not merely invisible
+// a player fires and the bullet flies; kill it and sweep, and it is off the bus - brought back to life by
+// hand, it is still left where it stopped, not merely hidden
 TEST_F(BulletPoolTest, ReturnedBulletLeavesTheBus)
 {
-	int bulletDraws{};
-	const EventSubscription drawSub{_events->AddListener([&bulletDraws](const DrawObjEvent& event)
-	{
-		if (event.texture == TextureType::Bullet)
-		{
-			++bulletDraws;
-		}
-	})};
-
 	CreatePlayer({.x = 0.0, .y = 0.0}, Direction::DOWN);
 
-	constexpr bool isPressed{true};
-	_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = isPressed});
+	_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = true});
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = false});
 
 	const std::shared_ptr<BaseObj> bullet{_allObjects.back()};
 	ASSERT_NE(nullptr, dynamic_cast<Bullet*>(bullet.get()));
 
-	_events->EmitEvent(DrawEvent{});
-	EXPECT_EQ(1, bulletDraws);
-
 	bullet->SetIsAlive(false);
 	_events->EmitEvent(PostTickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	bullet->SetIsAlive(true);
+	const FPoint parked{bullet->GetPos()};
 
-	_events->EmitEvent(DrawEvent{});
-	EXPECT_EQ(1, bulletDraws);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_EQ(parked, bullet->GetPos());
 }
 
 // Handed back any earlier, a bullet sits in the free list and in _allObjects at once, and the next shot reuses it

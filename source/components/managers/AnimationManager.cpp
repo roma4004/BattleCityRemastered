@@ -134,8 +134,7 @@ void AnimationManager::OnDraw(const DrawEvent&) const
 	std::ranges::for_each(_turnBasedTankObjects | std::views::filter(IsEnabled), drawObject);
 }
 
-//NOTE: later than the walls, which subscribe after this manager and would paint over every blast;
-//still earlier than the bush, which draws later in this same phase - cover is meant to hide
+//NOTE: over the walls of the main phase, under the bush painted later in this one - cover is meant to hide
 void AnimationManager::OnPostDraw(const PostDrawEvent&) const
 {
 	std::ranges::for_each(_autoAnimatedObjects | std::views::filter(IsEnabled),

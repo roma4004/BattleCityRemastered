@@ -22,7 +22,7 @@ MoveLikeTankBeh::MoveLikeTankBeh(ObjRectangle& rect, double& speed, Uuid& uuid, 
 	, _effects{effects}
 	, _gameConfig{gameConfig} {}
 
-bool MoveLikeTankBeh::IsBlocking(const std::shared_ptr<BaseObj>& object, const ObjRectangle& nextPosRect) const
+bool MoveLikeTankBeh::IsBlocking(const BaseObj* const object, const ObjRectangle& nextPosRect) const
 {
 	if (!ObjectUtils::IsAlive(object) || _uuid == object->GetUuid() || object->GetIsPassable())
 	{
@@ -45,7 +45,7 @@ bool MoveLikeTankBeh::IsCanMove(const double deltaTime, const Direction dir,
 
 	auto blocking = [this, &tankNextPosRect](const std::shared_ptr<BaseObj>& object)
 	{
-		return IsBlocking(object, tankNextPosRect);
+		return IsBlocking(object.get(), tankNextPosRect);
 	};
 
 	return std::ranges::none_of(objects, blocking);
@@ -53,7 +53,7 @@ bool MoveLikeTankBeh::IsCanMove(const double deltaTime, const Direction dir,
 
 double MoveLikeTankBeh::GetTravelledDistance(const double step, const Direction dir,
 											 const std::vector<std::shared_ptr<BaseObj>>& objects,
-											 std::vector<std::shared_ptr<BaseObj>>& outTouched) const
+											 std::vector<BaseObj*>& outTouched) const
 {
 	const ObjRectangle sweptRect{DirectionUtils::Swept(_rect, step, dir)};
 
@@ -64,12 +64,12 @@ double MoveLikeTankBeh::GetTravelledDistance(const double step, const Direction 
 	outTouched.clear();
 	for (const std::shared_ptr<BaseObj>& object: objects)
 	{
-		if (!IsBlocking(object, sweptRect))
+		if (!IsBlocking(object.get(), sweptRect))
 		{
 			continue;
 		}
 
-		outTouched.push_back(object);
+		outTouched.push_back(object.get());
 		//NOTE: only what is behind the leading edge is out of the way - a tank standing against a wall is
 		//a hair inside it as often as a hair short of it, and a bare sign test lets that hair through
 		if (const double gap{DirectionUtils::GapTo(_rect, object->GetRect(), dir)};
@@ -84,7 +84,7 @@ double MoveLikeTankBeh::GetTravelledDistance(const double step, const Direction 
 
 bool MoveLikeTankBeh::NudgeIntoGap(const Direction dir, const double step,
 								   const std::vector<std::shared_ptr<BaseObj>>& objects,
-								   const std::vector<std::shared_ptr<BaseObj>>& blockers)
+								   const std::vector<BaseObj*>& blockers)
 {
 	//NOTE: half the tank across - less than that inside the opening is not aiming for it, it is missing it
 	const double reach{DirectionUtils::SizeAlong(_rect, DirectionUtils::Laterals(dir).front()) / 2.0};
@@ -92,7 +92,7 @@ bool MoveLikeTankBeh::NudgeIntoGap(const Direction dir, const double step,
 	for (const Direction lateral: DirectionUtils::Laterals(dir))
 	{
 		double needed{};
-		for (const std::shared_ptr<BaseObj>& blocker: blockers)
+		for (const BaseObj* const blocker: blockers)
 		{
 			//NOTE: exactly onto the edge - a corridor is cut to the tank's width, an overshoot lands in the far wall
 			needed = std::max(needed, DirectionUtils::DistanceOutOfLane(_rect, blocker->GetRect(), lateral));
@@ -110,7 +110,7 @@ bool MoveLikeTankBeh::NudgeIntoGap(const Direction dir, const double step,
 		const ObjRectangle aligned{DirectionUtils::Moved(_rect, needed, lateral)};
 		auto blocking = [this, &aligned, step, dir](const std::shared_ptr<BaseObj>& object)
 		{
-			return IsBlocking(object, DirectionUtils::Swept(aligned, step, dir));
+			return IsBlocking(object.get(), DirectionUtils::Swept(aligned, step, dir));
 		};
 
 		if (std::ranges::any_of(objects, blocking))
@@ -119,7 +119,7 @@ bool MoveLikeTankBeh::NudgeIntoGap(const Direction dir, const double step,
 		}
 
 		//NOTE: the same ceiling the forward step has, and over the same checked path
-		std::vector<std::shared_ptr<BaseObj>> touched;
+		std::vector<BaseObj*> touched;
 		const double distance{GetTravelledDistance(std::min(step, needed), lateral, objects, touched)};
 		if (distance <= 0.0)
 		{
@@ -134,10 +134,10 @@ bool MoveLikeTankBeh::NudgeIntoGap(const Direction dir, const double step,
 	return false;
 }
 
-std::vector<std::shared_ptr<BaseObj>> MoveLikeTankBeh::BlockersAhead(
+std::vector<BaseObj*> MoveLikeTankBeh::BlockersAhead(
 		const Direction dir, const double step, const std::vector<std::shared_ptr<BaseObj>>& objects) const
 {
-	std::vector<std::shared_ptr<BaseObj>> blockers{};
+	std::vector<BaseObj*> blockers{};
 	std::ignore = GetTravelledDistance(step, dir, objects, blockers);
 
 	return blockers;
@@ -145,7 +145,7 @@ std::vector<std::shared_ptr<BaseObj>> MoveLikeTankBeh::BlockersAhead(
 
 bool MoveLikeTankBeh::Move(const Direction dir, const double deltaTime,
 						   const std::vector<std::shared_ptr<BaseObj>>& objects,
-						   std::vector<std::shared_ptr<BaseObj>>& outCollisions)
+						   std::vector<BaseObj*>& outCollisions)
 {
 	const double step{_speed * deltaTime};
 	if (!DirectionUtils::FitsBeforeEdge(_rect, _gameConfig.battlefieldSize, step, dir))

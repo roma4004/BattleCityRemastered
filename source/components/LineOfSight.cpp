@@ -72,7 +72,7 @@ void LineOfSight::CheckLineOfSight(const bool isWaterSkip, const std::vector<std
 
 	for (const std::shared_ptr<BaseObj>& object: objects)
 	{
-		if (!ObjectUtils::IsAlive(object))
+		if (!ObjectUtils::IsAlive(object.get()))
 		{
 			continue;
 		}
@@ -87,22 +87,22 @@ void LineOfSight::CheckLineOfSight(const bool isWaterSkip, const std::vector<std
 		{
 			if (ColliderUtils::IsCollide(upSideRect, object->GetRect()))
 			{
-				_upSideObstacles.emplace_back(object);
+				_upSideObstacles.emplace_back(object.get());
 			}
 
 			if (ColliderUtils::IsCollide(leftSightRect, object->GetRect()))
 			{
-				_leftSideObstacles.emplace_back(object);
+				_leftSideObstacles.emplace_back(object.get());
 			}
 
 			if (ColliderUtils::IsCollide(downSideRect, object->GetRect()))
 			{
-				_downSideObstacles.emplace_back(object);
+				_downSideObstacles.emplace_back(object.get());
 			}
 
 			if (ColliderUtils::IsCollide(rightSightRect, object->GetRect()))
 			{
-				_rightSideObstacles.emplace_back(object);
+				_rightSideObstacles.emplace_back(object.get());
 			}
 		}
 	}
@@ -112,7 +112,7 @@ void LineOfSight::CheckLineOfSight(const bool isWaterSkip, const std::vector<std
 
 void LineOfSight::SortToNearest()
 {
-	std::ranges::sort(_upSideObstacles, [](const std::shared_ptr<BaseObj>& a, const std::shared_ptr<BaseObj>& b)
+	std::ranges::sort(_upSideObstacles, [](const BaseObj* const a, const BaseObj* const b)
 	{
 		if (!a)
 		{
@@ -127,7 +127,7 @@ void LineOfSight::SortToNearest()
 		return a->GetPos().y > b->GetPos().y;
 	});
 
-	std::ranges::sort(_leftSideObstacles, [](const std::shared_ptr<BaseObj>& a, const std::shared_ptr<BaseObj>& b)
+	std::ranges::sort(_leftSideObstacles, [](const BaseObj* const a, const BaseObj* const b)
 	{
 		if (!a)
 		{
@@ -142,7 +142,7 @@ void LineOfSight::SortToNearest()
 		return a->GetPos().x > b->GetPos().x;
 	});
 
-	std::ranges::sort(_downSideObstacles, [](const std::shared_ptr<BaseObj>& a, const std::shared_ptr<BaseObj>& b)
+	std::ranges::sort(_downSideObstacles, [](const BaseObj* const a, const BaseObj* const b)
 	{
 		if (!a)
 		{
@@ -157,7 +157,7 @@ void LineOfSight::SortToNearest()
 		return a->GetPos().y < b->GetPos().y;
 	});
 
-	std::ranges::sort(_rightSideObstacles, [](const std::shared_ptr<BaseObj>& a, const std::shared_ptr<BaseObj>& b)
+	std::ranges::sort(_rightSideObstacles, [](const BaseObj* const a, const BaseObj* const b)
 	{
 		if (!a)
 		{
@@ -173,7 +173,7 @@ void LineOfSight::SortToNearest()
 	});
 }
 
-std::vector<std::shared_ptr<BaseObj>>& LineOfSight::SideObstacles(const Direction dir)
+std::vector<BaseObj*>& LineOfSight::SideObstacles(const Direction dir)
 {
 	switch (dir)
 	{

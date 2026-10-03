@@ -53,5 +53,7 @@ class SpawnManager final
 public:
 	SpawnManager(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig);
 
+	[[nodiscard]] const std::vector<std::shared_ptr<BaseObj>>& World() const noexcept { return _allObjects; }
+
 	~SpawnManager();
 };

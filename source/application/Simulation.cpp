@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <cmath>
 #include <memory>
+#include <vector>
 
 namespace
 {
@@ -65,6 +66,8 @@ void Simulation::Subscribe()
 	_subs.push_back(_events->AddListener(this, &Simulation::OnHostUnreachable));
 	_subs.push_back(_events->AddListener(this, &Simulation::OnHostLost));
 }
+
+const std::vector<std::shared_ptr<BaseObj>>& Simulation::World() const { return _spawnManager->World(); }
 
 const GameStatistics& Simulation::Statistics() const { return *_statistics; }
 

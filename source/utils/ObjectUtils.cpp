@@ -7,39 +7,39 @@
 #include "enums/Faction.h"
 #include "interfaces/IPickupableBonus.h"
 
-bool ObjectUtils::IsAlive(const std::shared_ptr<BaseObj>& object)
+bool ObjectUtils::IsAlive(const BaseObj* const object)
 {
 	return object != nullptr && object->GetIsAlive();
 }
 
-bool ObjectUtils::IsOpponent(const BaseObj& self, const std::shared_ptr<BaseObj>& other)
+bool ObjectUtils::IsOpponent(const BaseObj& self, const BaseObj& other)
 {
-	const Faction faction{other->GetFaction()};
+	const Faction faction{other.GetFaction()};
 
 	return faction != Faction::Neutral && (faction != self.GetFaction() || faction == Faction::Solo);
 }
 
-bool ObjectUtils::IsAlly(const BaseObj& self, const std::shared_ptr<BaseObj>& other)
+bool ObjectUtils::IsAlly(const BaseObj& self, const BaseObj& other)
 {
-	return other->GetFaction() == self.GetFaction() && self.GetFaction() != Faction::Solo;
+	return other.GetFaction() == self.GetFaction() && self.GetFaction() != Faction::Solo;
 }
 
-bool ObjectUtils::IsBonus(const std::shared_ptr<BaseObj>& object)
+bool ObjectUtils::IsBonus(const BaseObj& object)
 {
-	return dynamic_cast<IPickupableBonus*>(object.get()) != nullptr;
+	return dynamic_cast<const IPickupableBonus*>(&object) != nullptr;
 }
 
-const Bullet* ObjectUtils::AsBullet(const std::shared_ptr<BaseObj>& object)
+const Bullet* ObjectUtils::AsBullet(const BaseObj& object)
 {
-	return dynamic_cast<Bullet*>(object.get());
+	return dynamic_cast<const Bullet*>(&object);
 }
 
-bool ObjectUtils::IsFortress(const std::shared_ptr<BaseObj>& object)
+bool ObjectUtils::IsFortress(const BaseObj& object)
 {
-	return dynamic_cast<IFortress*>(object.get()) != nullptr;
+	return dynamic_cast<const IFortress*>(&object) != nullptr;
 }
 
-bool ObjectUtils::IsWall(const std::shared_ptr<BaseObj>& object)
+bool ObjectUtils::IsWall(const BaseObj& object)
 {
-	return dynamic_cast<BrickWall*>(object.get()) != nullptr || dynamic_cast<SteelWall*>(object.get()) != nullptr;
+	return dynamic_cast<const BrickWall*>(&object) != nullptr || dynamic_cast<const SteelWall*>(&object) != nullptr;
 }

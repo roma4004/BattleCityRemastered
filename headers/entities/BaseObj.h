@@ -6,10 +6,12 @@
 #include "enums/Faction.h"
 #include "interfaces/IObstacle.h"
 #include "utils/Uuid.h"
+#include <optional>
 
 enum class Terrain : char8_t;
 struct FPoint;
 struct BaseObjProperty;
+struct Sprite;
 
 class BaseObj : public IObstacle
 {
@@ -38,6 +40,9 @@ public:
 	//NOTE: entering and leaving the world; called on a fully built object, so the virtual call reaches the leaf
 	virtual void Activate() {}
 	virtual void Deactivate() {}
+	//NOTE: none while an animation paints it - a tank, the water
+	[[nodiscard]] virtual std::optional<Sprite> Look() const = 0;
+	[[nodiscard]] virtual std::optional<int> ShownHealth() const { return std::nullopt; }
 
 	[[nodiscard]] FPoint GetPos() const noexcept;
 	void SetPos(const FPoint& pos);

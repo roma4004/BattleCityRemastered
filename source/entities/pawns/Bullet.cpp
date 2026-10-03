@@ -4,10 +4,10 @@
 #include "behavior/MoveLikeBulletBeh.h"
 #include "components/EventSystem.h"
 #include "components/events/AnimationRenderEvents.h"
-#include "components/events/CoreLifecycleEvents.h"
 #include "components/events/ObjectLifecycleEvents.h"
 #include "components/events/ReplicationEvents.h"
 #include "components/events/StatisticsEvents.h"
+#include "components/Sprite.h"
 #include "components/WorldSnapshot.h"
 #include "entities/pawns/BulletResetProperty.h"
 #include "entities/pawns/PawnProperty.h"
@@ -19,8 +19,10 @@
 #include "utils/ObjectUtils.h"
 #include "utils/UuidUtils.h"
 #include <algorithm>
+#include <optional>
 #include <ranges>
 #include <tuple>
+#include <vector>
 
 Bullet::Bullet(PawnProperty pawnProperty, const GameConfig& gameConfig, const BulletCaliber& caliber)
 	: Pawn{std::move(pawnProperty), gameConfig, kCollision}
@@ -40,15 +42,11 @@ void Bullet::Subscribe()
 {
 	Pawn::Subscribe();
 
-	_subs.push_back(_events->AddListener(this, &Bullet::OnDraw));
-
 	if (_gameConfig.IsHost())
 	{
 		_subs.push_back(_events->AddListener(this, &Bullet::OnWorldSnapshotRequested));
 	}
 }
-
-void Bullet::OnDraw(const DrawEvent&) const { Draw(); }
 
 void Bullet::OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const
 {
@@ -62,9 +60,9 @@ void Bullet::OnDespawned(const DespawnedEvent& event)
 	_events->EmitEvent(AnimationCreateBulletExplosionEvent{.rect = _rect});
 }
 
-void Bullet::Draw() const
+std::optional<Sprite> Bullet::Look() const
 {
-	_events->EmitEvent(DrawObjEvent{.rect = _rect, .dir = _dir, .texture = TextureType::Bullet});
+	return Sprite{.layer = kLayer, .rect = _rect, .dir = _dir, .texture = TextureType::Bullet};
 }
 
 Uuid Bullet::GetUuid() const
@@ -88,7 +86,7 @@ void Bullet::Reset(const BulletResetProperty& resetProperty)
 
 void Bullet::TickUpdate(const double deltaTime)
 {
-	std::vector<std::shared_ptr<BaseObj>> outCollisions;
+	std::vector<BaseObj*> outCollisions;
 	const bool isMove{_moveBeh->Move(_dir, deltaTime, _allObjects, outCollisions)};
 	if (!isMove && !SinkIntoWall(deltaTime, outCollisions))
 	{
@@ -114,12 +112,12 @@ unsigned int Bullet::GetTier() const noexcept { return _caliber.tier; }
 bool Bullet::CanBreak(const BaseObj& target) const noexcept { return target.GetIsDestructible() || _caliber.tier > 2u; }
 
 //NOTE: a layer of wall costs the shell its toughest quarter, and a shell that cannot pay detonates against it
-bool Bullet::SinkIntoWall(const double deltaTime, const std::vector<std::shared_ptr<BaseObj>>& blast)
+bool Bullet::SinkIntoWall(const double deltaTime, const std::vector<BaseObj*>& blast)
 {
-	const std::vector<std::shared_ptr<BaseObj>> contacts{_bulletMoveBeh->GetContacts(_dir, deltaTime, _allObjects)};
-	const bool isWall{!contacts.empty() && std::ranges::all_of(contacts, [this](const std::shared_ptr<BaseObj>& contact)
+	const std::vector<BaseObj*> contacts{_bulletMoveBeh->GetContacts(_dir, deltaTime, _allObjects)};
+	const bool isWall{!contacts.empty() && std::ranges::all_of(contacts, [this](const BaseObj* const contact)
 	{
-		return ObjectUtils::IsWall(contact) && CanBreak(*contact);
+		return ObjectUtils::IsWall(*contact) && CanBreak(*contact);
 	})};
 	if (!isWall)
 	{
@@ -135,11 +133,16 @@ bool Bullet::SinkIntoWall(const double deltaTime, const std::vector<std::shared_
 	TakeDamage(static_cast<unsigned int>(cost), Author::None);
 	//NOTE: the whole blast and not a shell-wide slot - one shot has to leave a hole the shooter fits through
 	std::ignore = Blast(blast);
+	//NOTE: a shell met inside the wall may have finished this one - it goes off where it stopped all the same
+	if (!GetIsAlive())
+	{
+		_events->EmitEvent(AnimationCreateBulletExplosionEvent{.rect = _rect});
+	}
 
 	return true;
 }
 
-void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
+void Bullet::DealDamage(const std::vector<BaseObj*>& objectList)
 {
 	if (!Blast(objectList))
 	{
@@ -151,19 +154,18 @@ void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 	_events->EmitEvent(AnimationCreateBulletExplosionEvent{.rect = _rect});
 }
 
-bool Bullet::Blast(const std::vector<std::shared_ptr<BaseObj>>& objectList)
+bool Bullet::Blast(const std::vector<BaseObj*>& objectList)
 {
 	bool isBulletHitBullet{};
-	for (const auto& target: objectList)
+	for (BaseObj* const target: objectList)
 	{
 		if (target == nullptr)
 		{
 			continue;
 		}
 
-		auto* baseObj{target.get()};
 		//NOTE: no tier reaches water or ice; a bush is not here because the tier check below burns it
-		if (const Terrain terrain{baseObj->GetTerrain()}; terrain == Terrain::Water || terrain == Terrain::Ice)
+		if (const Terrain terrain{target->GetTerrain()}; terrain == Terrain::Water || terrain == Terrain::Ice)
 		{
 			continue;
 		}
@@ -173,7 +175,7 @@ bool Bullet::Blast(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 			target->TakeDamage(_caliber.damage, _author);
 		}
 
-		const auto* otherBullet{ObjectUtils::AsBullet(target)};
+		const auto* otherBullet{ObjectUtils::AsBullet(*target)};
 		if (otherBullet == nullptr)
 		{
 			continue;

@@ -2,6 +2,7 @@
 
 #include "../BonusEffectProperty.h"
 #include "Pawn.h"
+#include "components/Sprite.h"
 #include "entities/BulletCaliber.h"
 #include "utils/Timer.h"
 #include <chrono>
@@ -129,7 +130,7 @@ protected:
 
 	void Shot(std::optional<Uuid> withUuid = std::nullopt, std::optional<unsigned int> withDamage = std::nullopt);
 
-	void HandleBonusPickUp(const std::shared_ptr<BaseObj>& object);
+	void HandleBonusPickUp(BaseObj& object);
 	void OnPosChanged(const PosChangedEvent& event) override;
 	[[nodiscard]] bool IsTouchBush() const;
 	[[nodiscard]] bool IsTouchIce() const;
@@ -147,6 +148,8 @@ public:
 	void Deactivate() override;
 
 	void TakeDamage(unsigned int damage, Author author) override;
+
+	[[nodiscard]] std::optional<Sprite> Look() const override { return std::nullopt; }
 
 	//NOTE: back into service from the pool - everything a previous life could have changed
 	void Reset(const TankResetProperty& resetProperty, std::unique_ptr<IInputProvider> driver);

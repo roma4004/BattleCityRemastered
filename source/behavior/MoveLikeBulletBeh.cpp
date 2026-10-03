@@ -29,7 +29,7 @@ double MoveLikeBulletBeh::GetTravelledDistance(const double deltaTime, const Dir
 
 	for (const std::shared_ptr<BaseObj>& object: objects)
 	{
-		if (!IsInTheWay(object, nextPosRect))
+		if (!IsInTheWay(object.get(), nextPosRect))
 		{
 			continue;
 		}
@@ -53,7 +53,7 @@ bool MoveLikeBulletBeh::IsSelfOrAuthor(const BaseObj& object) const
 	return objectUuid == _uuid || (_authorUuid != Uuid{} && objectUuid == _authorUuid);
 }
 
-bool MoveLikeBulletBeh::IsInTheWay(const std::shared_ptr<BaseObj>& object, const ObjRectangle& nextPosRect) const
+bool MoveLikeBulletBeh::IsInTheWay(const BaseObj* const object, const ObjRectangle& nextPosRect) const
 {
 	return ObjectUtils::IsAlive(object)
 		   && !IsSelfOrAuthor(*object)
@@ -68,13 +68,13 @@ bool MoveLikeBulletBeh::IsCanMove(const double deltaTime, const Direction dir,
 
 	return std::ranges::none_of(objects, [this, nextPosRect](const std::shared_ptr<BaseObj>& object)
 	{
-		return IsInTheWay(object, nextPosRect);
+		return IsInTheWay(object.get(), nextPosRect);
 	});
 }
 
 bool MoveLikeBulletBeh::Move(const Direction dir, const double deltaTime,
 							 const std::vector<std::shared_ptr<BaseObj>>& objects,
-							 std::vector<std::shared_ptr<BaseObj>>& outCollisions)
+							 std::vector<BaseObj*>& outCollisions)
 {
 	const double speed{_caliber.speed * deltaTime};
 	if (speed <= DirectionUtils::GapToEdge(_rect, _gameConfig.battlefieldSize, dir)
@@ -91,7 +91,7 @@ bool MoveLikeBulletBeh::Move(const Direction dir, const double deltaTime,
 	return false;
 }
 
-std::vector<std::shared_ptr<BaseObj>> MoveLikeBulletBeh::GetContacts(
+std::vector<BaseObj*> MoveLikeBulletBeh::GetContacts(
 		const Direction dir, const double deltaTime, const std::vector<std::shared_ptr<BaseObj>>& objects) const
 {
 	const ObjRectangle nextPosRect{DirectionUtils::Swept(_rect, _caliber.speed * deltaTime, dir)};
@@ -99,24 +99,24 @@ std::vector<std::shared_ptr<BaseObj>> MoveLikeBulletBeh::GetContacts(
 
 	auto contacts{objects | std::views::filter([this, &nextPosRect, travelled, dir](const std::shared_ptr<BaseObj>& obj)
 	{
-		return IsInTheWay(obj, nextPosRect) && DirectionUtils::GapTo(_rect, obj->GetRect(), dir) <= travelled;
+		return IsInTheWay(obj.get(), nextPosRect) && DirectionUtils::GapTo(_rect, obj->GetRect(), dir) <= travelled;
 	})};
 
-	return std::vector<std::shared_ptr<BaseObj>>{contacts.begin(), contacts.end()};
+	return contacts | std::views::transform(ObjectUtils::Raw) | std::ranges::to<std::vector>();
 }
 
-std::vector<std::shared_ptr<BaseObj>> MoveLikeBulletBeh::GetCircleCollisionObjects(
+std::vector<BaseObj*> MoveLikeBulletBeh::GetCircleCollisionObjects(
 		const FPoint blowCenter, const std::vector<std::shared_ptr<BaseObj>>& objects) const
 {
 	const Circle circle{.center = blowCenter, .radius = _caliber.damageRadius};
 
 	auto collisions{objects | std::views::filter([this, &circle](const std::shared_ptr<BaseObj>& obj)
 	{
-		return ObjectUtils::IsAlive(obj)
+		return ObjectUtils::IsAlive(obj.get())
 			   && obj->GetUuid() != _uuid
 			   && ColliderUtils::IsCollide(circle, obj->GetRect());
 	})};
 
-	return std::vector<std::shared_ptr<BaseObj>>{collisions.begin(), collisions.end()};
+	return collisions | std::views::transform(ObjectUtils::Raw) | std::ranges::to<std::vector>();
 }
 

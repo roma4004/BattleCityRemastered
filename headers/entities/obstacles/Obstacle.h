@@ -3,8 +3,10 @@
 #include "../BaseObj.h"
 #include "../Tags.h"
 #include "components/EventSystem.h"
-#include "interfaces/IDrawable.h"
+#include "components/Sprite.h"
+#include "enums/DrawLayer.h"
 #include <memory>
+#include <optional>
 #include <vector>
 
 enum class Faction : char8_t;
@@ -15,8 +17,10 @@ struct WorldSnapshotRequestedEvent;
 class EventSystem;
 class GameConfig;
 
-class Obstacle : public BaseObj, public IDrawable
+class Obstacle : public BaseObj
 {
+	const DrawLayer _layer;
+
 	void OnHealthChanged(const HealthChangedEvent& event);
 	void OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const;
 	void SubscribeAsClient();
@@ -25,7 +29,7 @@ protected:
 	//NOTE: a quarter of brick or steel - what a shell pays to sink one layer deeper
 	static constexpr int kWallHealth{10};
 
-	//NOTE: empty, not pure - WaterTile draws nothing of its own and has nothing to add here
+	//NOTE: empty, not pure - only the eagle has something to hear
 	virtual void Subscribe();
 	virtual void OnDespawned(const DespawnedEvent& event);
 	std::shared_ptr<EventSystem> _events{nullptr};
@@ -33,16 +37,16 @@ protected:
 	const GameConfig& _gameConfig;
 	ObstacleType _obstacleType{};
 
-	void Draw() const override;
-
 	void EmitDeathStatistics(Author author) override = 0;
 
 	Obstacle(ObjRectangle rect, int health, const std::shared_ptr<EventSystem>& events, Uuid uuid,
-			 const GameConfig& gameConfig, ObstacleType obstacleType, CollisionTags collision);
+			 const GameConfig& gameConfig, ObstacleType obstacleType, CollisionTags collision, DrawLayer layer);
 
 public:
 	void Activate() override;
 	void Deactivate() override;
 
 	void TakeDamage(unsigned int damage, Author author) override;
+
+	[[nodiscard]] std::optional<Sprite> Look() const override;
 };

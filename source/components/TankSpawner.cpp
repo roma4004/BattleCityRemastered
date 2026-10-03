@@ -194,7 +194,7 @@ void TankSpawner::NudgeSpawnSquare(DelayedTankSpawn& spawn)
 		return;
 	}
 
-	const std::shared_ptr<Tank> pusher{TankStandingIn(spawn.rect)};
+	const Tank* const pusher{TankStandingIn(spawn.rect)};
 	if (pusher == nullptr)
 	{
 		return;
@@ -223,16 +223,21 @@ void TankSpawner::MoveSpawnSquare(DelayedTankSpawn& spawn, const ObjRectangle& t
 }
 
 //NOTE: only a hull shoves - a wall grown on the square or a shell crossing it is waited out
-std::shared_ptr<Tank> TankSpawner::TankStandingIn(const ObjRectangle& rect) const
+const Tank* TankSpawner::TankStandingIn(const ObjRectangle& rect) const
 {
-	const auto isTankThere = [&rect](const std::shared_ptr<BaseObj>& object)
+	const auto tankThere = [&rect](const std::shared_ptr<BaseObj>& object) -> const Tank*
 	{
-		return ObjectUtils::IsAlive(object) && ColliderUtils::IsCollide(rect, object->GetRect())
-			   && std::dynamic_pointer_cast<Tank>(object) != nullptr;
-	};
-	const auto found{std::ranges::find_if(_allObjects, isTankThere)};
+		if (!ObjectUtils::IsAlive(object.get()) || !ColliderUtils::IsCollide(rect, object->GetRect()))
+		{
+			return nullptr;
+		}
 
-	return found == _allObjects.end() ? nullptr : std::static_pointer_cast<Tank>(*found);
+		return dynamic_cast<const Tank*>(object.get());
+	};
+	const auto tanks{_allObjects | std::views::transform(tankThere)};
+	const auto found{std::ranges::find_if(tanks, [](const Tank* const tank) { return tank != nullptr; })};
+
+	return found == tanks.end() ? nullptr : *found;
 }
 
 std::optional<ObjRectangle> TankSpawner::RoomOutOfTheWay(const DelayedTankSpawn& spawn, const Tank& pusher) const

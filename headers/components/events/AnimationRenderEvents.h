@@ -88,14 +88,6 @@ struct DrawAnimationEvent
 	unsigned short tier{1u};
 };
 
-struct DrawObjEvent
-{
-	ObjRectangle rect;
-	Direction dir;
-	TextureType texture;
-	unsigned int rimColor{};//NOTE: 0 leaves the sprite frame as the atlas has it
-};
-
 struct RenderHealthBarEvent
 {
 	ObjRectangle rect;

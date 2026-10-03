@@ -24,19 +24,19 @@ class MoveLikeTankBeh final : public IMoveBeh
 	std::optional<Direction> _carriedTo{};
 	const GameConfig& _gameConfig;
 
-	[[nodiscard]] bool IsBlocking(const std::shared_ptr<BaseObj>& object, const ObjRectangle& nextPosRect) const;
+	[[nodiscard]] bool IsBlocking(const BaseObj* object, const ObjRectangle& nextPosRect) const;
 	[[nodiscard]] bool IsCanMove(double deltaTime, Direction dir,
 								 const std::vector<std::shared_ptr<BaseObj>>& objects) const;
 	//NOTE: how far the tank actually gets - the frame step is the ceiling, not the answer
 	[[nodiscard]] double GetTravelledDistance(double step, Direction dir,
 											  const std::vector<std::shared_ptr<BaseObj>>& objects,
-											  std::vector<std::shared_ptr<BaseObj>>& outTouched) const;
+											  std::vector<BaseObj*>& outTouched) const;
 
 	//NOTE: a wall with an opening beside it - the tank is steered in rather than left standing, but only
 	//when it is already more than half inside
 	[[nodiscard]] bool NudgeIntoGap(Direction dir, double step,
 									const std::vector<std::shared_ptr<BaseObj>>& objects,
-									const std::vector<std::shared_ptr<BaseObj>>& blockers);
+									const std::vector<BaseObj*>& blockers);
 
 public:
 	MoveLikeTankBeh(ObjRectangle& rect, double& speed, Uuid& uuid, BonusEffectProperty& effects,
@@ -46,10 +46,10 @@ public:
 
 	[[nodiscard]]
 	bool Move(Direction dir, double deltaTime, const std::vector<std::shared_ptr<BaseObj>>& objects,
-			  std::vector<std::shared_ptr<BaseObj>>& outCollisions) override;
+			  std::vector<BaseObj*>& outCollisions) override;
 	//NOTE: what stands in the way of this step - the caller decides whether any of it can be moved out
 	//of the way, this only measures
-	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>> BlockersAhead(
+	[[nodiscard]] std::vector<BaseObj*> BlockersAhead(
 			Direction dir, double step, const std::vector<std::shared_ptr<BaseObj>>& objects) const;
 	[[nodiscard]] bool ApplyMoveVelocity(double deltaTime, const std::vector<std::shared_ptr<BaseObj>>& objects);
 	[[nodiscard]] double GetVelocity(Direction dir) const;

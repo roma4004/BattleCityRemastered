@@ -1,43 +1,36 @@
 #include "entities/obstacles/EagleTile.h"
 #include "components/EventSystem.h"
-#include "components/events/AnimationRenderEvents.h"
 #include "components/events/BonusPickupEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/ReplicationEvents.h"
 #include "enums/ObstacleType.h"
 #include "application/GameConfig.h"
+#include <optional>
 
 EagleTile::EagleTile(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const Uuid uuid,
 					 const GameConfig& gameConfig)
-	: Obstacle{rect, kHealth, events, uuid, gameConfig, ObstacleType::Eagle, kCollision}
+	: Obstacle{rect, kHealth, events, uuid, gameConfig, ObstacleType::Eagle, kCollision, kLayer}
 {}
 
 void EagleTile::Subscribe()
 {
-	_subs.push_back(_events->AddListener(this, &EagleTile::OnDraw));
-	_subs.push_back(_events->AddListener(this, &EagleTile::OnPostDraw));
-
 	if (_gameConfig.IsAuthority())
 	{
 		_subs.push_back(_events->AddListener(this, &EagleTile::OnBonusShovel));
 	}
 }
 
-void EagleTile::OnDraw(const DrawEvent&) const { Draw(); }
-
 //NOTE: a whole eagle wears no bar - it shows up with the first hit
-void EagleTile::OnPostDraw(const PostDrawEvent&) const
+std::optional<int> EagleTile::ShownHealth() const
 {
-	if (GetHealth() < kHealth)
-	{
-		_events->EmitEvent(RenderHealthBarEvent{.rect = GetRect(), .health = GetHealth()});
-	}
+	return GetHealth() < kHealth ? std::optional{GetHealth()} : std::nullopt;
 }
 
 //NOTE: the players' shovel heals the eagle at once; the enemies' arrives switched off and only sweeps the walls away
 void EagleTile::OnBonusShovel(const BonusShovelStatusChangeEvent& event)
 {
-	if (!event.isActive)
+	//NOTE: an eagle shot down this tick is not healed back - its corpse waits for the sweep
+	if (!event.isActive || !GetIsAlive())
 	{
 		return;
 	}

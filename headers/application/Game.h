@@ -27,6 +27,7 @@ class RightSideBar;
 class ScoreBoard;
 class ServerScreen;
 class Simulation;
+class ScenePainter;
 class TextureManager;
 class UiRenderer;
 class UserInput;
@@ -82,6 +83,8 @@ private:
 	std::unique_ptr<UserInput> _userInput{nullptr};
 	std::unique_ptr<FramePerSecondManager> _fpsManager{nullptr};
 	std::unique_ptr<Simulation> _simulation{nullptr};
+	//NOTE: after the simulation - its animations paint first in every phase
+	std::unique_ptr<ScenePainter> _scenePainter{nullptr};
 	std::unique_ptr<RenderManager> _renderManager{nullptr};
 	std::unique_ptr<UiRenderer> _uiRenderer{nullptr};
 	std::unique_ptr<ScoreBoard> _scoreBoard{nullptr};

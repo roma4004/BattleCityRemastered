@@ -201,6 +201,7 @@
     <ClCompile Include="..\source\components\LobbyScreen.cpp" />
     <ClCompile Include="..\source\components\AddressField.cpp" />
     <ClCompile Include="..\source\components\ServerScreen.cpp" />
+    <ClCompile Include="..\source\components\ScenePainter.cpp" />
     <ClCompile Include="..\source\components\ScoreBoard.cpp" />
     <ClCompile Include="..\source\components\TankPool.cpp" />
     <ClCompile Include="..\source\components\TankSpawner.cpp" />
@@ -302,6 +303,8 @@
     <ClInclude Include="..\headers\components\LobbyScreen.h" />
     <ClInclude Include="..\headers\components\AddressField.h" />
     <ClInclude Include="..\headers\components\ServerScreen.h" />
+    <ClInclude Include="..\headers\components\ScenePainter.h" />
+    <ClInclude Include="..\headers\components\Sprite.h" />
     <ClInclude Include="..\headers\components\PooledSlots.h" />
     <ClInclude Include="..\headers\components\ScoreBoard.h" />
     <ClInclude Include="..\headers\components\events\SpawnEvents.h" />
@@ -342,6 +345,7 @@
     <ClInclude Include="..\headers\enums\InputChannel.h" />
     <ClInclude Include="..\headers\enums\PlayerSlot.h" />
     <ClInclude Include="..\headers\enums\Direction.h" />
+    <ClInclude Include="..\headers\enums\DrawLayer.h" />
     <ClInclude Include="..\headers\enums\Faction.h" />
     <ClInclude Include="..\headers\enums\GameMode.h" />
     <ClInclude Include="..\headers\enums\GameState.h" />
@@ -355,7 +359,6 @@
     <ClInclude Include="..\headers\enums\UiIcon.h" />
     <ClInclude Include="..\headers\enums\TextureOffset.h" />
     <ClInclude Include="..\headers\enums\WindowSide.h" />
-    <ClInclude Include="..\headers\interfaces\IDrawable.h" />
     <ClInclude Include="..\headers\interfaces\IInputProvider.h" />
     <ClInclude Include="..\headers\interfaces\IMoveBeh.h" />
     <ClInclude Include="..\headers\interfaces\INetworkNode.h" />

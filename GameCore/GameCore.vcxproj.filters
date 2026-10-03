@@ -195,6 +195,9 @@
     <ClCompile Include="..\source\components\RightSideBar.cpp">
       <Filter>source\components</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\components\ScenePainter.cpp">
+      <Filter>source\components</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\components\ScoreBoard.cpp">
       <Filter>source\components</Filter>
     </ClCompile>
@@ -485,10 +488,16 @@
     <ClInclude Include="..\headers\components\RightSideBar.h">
       <Filter>headers\components</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\components\ScenePainter.h">
+      <Filter>headers\components</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\components\ScoreBoard.h">
       <Filter>headers\components</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\components\ServerScreen.h">
+      <Filter>headers\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\Sprite.h">
       <Filter>headers\components</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\components\StatisticsData.h">
@@ -602,6 +611,9 @@
     <ClInclude Include="..\headers\enums\DisconnectReason.h">
       <Filter>headers\enums</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\enums\DrawLayer.h">
+      <Filter>headers\enums</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\enums\Faction.h">
       <Filter>headers\enums</Filter>
     </ClInclude>
@@ -658,9 +670,6 @@
     </ClInclude>
     <ClInclude Include="..\headers\geometry\Point.h">
       <Filter>headers\geometry</Filter>
-    </ClInclude>
-    <ClInclude Include="..\headers\interfaces\IDrawable.h">
-      <Filter>headers\interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\interfaces\IInputProvider.h">
       <Filter>headers\interfaces</Filter>

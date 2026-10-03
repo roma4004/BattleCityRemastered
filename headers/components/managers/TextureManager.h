@@ -9,7 +9,7 @@
 enum class AnimationType : char8_t;
 enum class Direction : char8_t;
 enum class TankModel : char8_t;
-struct DrawObjEvent;
+struct Sprite;
 struct DrawAnimationEvent;
 class BaseObj;
 class EventSystem;
@@ -21,7 +21,6 @@ class TextureManager final
 
 	void Subscribe();
 
-	void Draw(const DrawObjEvent& event) const;
 	void DrawRim(const ObjRectangle& textureRect, const ObjRectangle& destRect, Direction dir,
 				 unsigned int color) const;
 	void DrawAnimation(const DrawAnimationEvent& event) const;
@@ -38,4 +37,7 @@ class TextureManager final
 
 public:
 	explicit TextureManager(const std::shared_ptr<EventSystem>& events);
+
+	//NOTE: called by the scene painter directly, not over the bus
+	void Draw(const Sprite& sprite) const;
 };

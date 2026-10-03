@@ -65,6 +65,7 @@ set(GAME_CORE_SOURCES
         source/components/LobbyScreen.cpp
         source/components/AddressField.cpp
         source/components/ServerScreen.cpp
+        source/components/ScenePainter.cpp
         source/components/ScoreBoard.cpp
         source/components/TankPool.cpp
         source/components/TankSpawner.cpp

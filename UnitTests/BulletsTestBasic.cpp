@@ -5,6 +5,8 @@
 #include "components/BulletPool.h"
 #include "components/TankPool.h"
 #include "components/EventSystem.h"
+#include "components/events/AnimationRenderEvents.h"
+#include "components/events/BonusPickupEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/TimingEvents.h"
 #include "entities/obstacles/BrickWall.h"
@@ -14,6 +16,7 @@
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/Tank.h"
 #include "enums/Direction.h"
+#include "enums/Faction.h"
 #include "gtest/gtest.h"
 #include <memory>
 
@@ -360,6 +363,27 @@ TEST_F(BulletTest, BulletSinksIntoABrickItCanPayFor)
 	EXPECT_EQ(1, bullet->GetHealth());
 }
 
+// a shell met inside the wall finishes the one sinking into it, and that one still goes off
+TEST_F(BulletTest, BulletFinishedInsideAWallStillExplodes)
+{
+	int explosions{};
+	const EventSubscription explosionSub{_events->AddListener(
+			[&explosions](const AnimationCreateBulletExplosionEvent&) { ++explosions; })};
+	const auto brickWall{SpawnObstacle({.x = 0.0, .y = 6.0, .w = _gridSize, .h = _gridSize}, ObstacleType::Brick)};
+	const int brickWallHealth{brickWall->GetHealth()};
+	_caliber.damage = static_cast<unsigned int>(brickWallHealth);
+	const ObjRectangle bulletRect{.x = 0.0, .y = 0.0, .w = _caliber.size.x, .h = _caliber.size.y};
+	const auto bullet{TestUtils::CreateBullet(bulletRect, brickWallHealth + 1, _bulletPool, _events, _caliber,
+											  Direction::DOWN, Author::Player1)};
+	CreateBullet({.x = _caliber.size.x + 1.0, .y = 6.0}, Direction::RIGHT, Author::Enemy1);
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	ASSERT_FALSE(brickWall->GetIsAlive());
+	ASSERT_FALSE(bullet->GetIsAlive());
+	EXPECT_EQ(1, explosions);
+}
+
 // steel below the third tier is not sunk into, whatever the shot has to spare
 TEST_F(BulletTest, BulletBelowTierThreeDetonatesAgainstSteel)
 {
@@ -411,6 +435,18 @@ TEST_F(BulletTest, EagleFallsOnlyWhenItsHealthIsGone)
 	eagle->TakeDamage(static_cast<unsigned int>(eagle->GetHealth()), Author::Enemy1);
 
 	EXPECT_TRUE(isBaseFinished);
+}
+
+// the shovel heals a standing eagle, not one shot down in the same tick
+TEST_F(BulletTest, ShovelDoesNotHealAFallenEagle)
+{
+	const auto eagle{SpawnObstacle({.x = 0.0, .y = 6.0, .w = _gridSize, .h = _gridSize}, ObstacleType::Eagle)};
+	eagle->TakeDamage(static_cast<unsigned int>(eagle->GetHealth()), Author::Enemy1);
+
+	_events->EmitEvent(BonusShovelStatusChangeEvent{.faction = Faction::PlayerTeam, .isActive = true});
+
+	EXPECT_FALSE(eagle->GetIsAlive());
+	EXPECT_GE(0, eagle->GetHealth());
 }
 
 // steel swallows a tier 1 shot whole

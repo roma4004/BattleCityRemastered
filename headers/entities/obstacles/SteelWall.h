@@ -5,19 +5,16 @@
 #include <string>
 
 enum class Faction : char8_t;
-struct DrawEvent;
 class GameConfig;
 
 class SteelWall : public Obstacle
 {
-	void Subscribe() override;
-	void OnDraw(const DrawEvent&) const;
-
 protected:
 	void EmitDeathStatistics(Author author) override;
 
 	static constexpr CollisionTags kCollision{tags::Impassable{}, tags::Indestructible{}, tags::Impenetrable{},
 											  tags::NoTerrain{}};
+	static constexpr DrawLayer kLayer{DrawLayer::World};
 
 public:
 	SteelWall(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, Uuid uuid, const GameConfig& gameConfig);

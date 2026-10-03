@@ -6,7 +6,7 @@
 
 WaterTile::WaterTile(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const Uuid uuid,
 					 const GameConfig& gameConfig)
-	: Obstacle{rect, 1, events, uuid, gameConfig, ObstacleType::Water, kCollision}
+	: Obstacle{rect, 1, events, uuid, gameConfig, ObstacleType::Water, kCollision, kLayer}
 {
 	_events->EmitEvent(AnimationCreateWaterEvent{.rect = _rect});
 }

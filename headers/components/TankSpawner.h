@@ -108,7 +108,7 @@ class TankSpawner final
 	//NOTE: a tank driving into a burst shoves its square aside until home is free - the landing square may move
 	void NudgeSpawnSquare(DelayedTankSpawn& spawn);
 	void MoveSpawnSquare(DelayedTankSpawn& spawn, const ObjRectangle& to);
-	[[nodiscard]] std::shared_ptr<Tank> TankStandingIn(const ObjRectangle& rect) const;
+	[[nodiscard]] const Tank* TankStandingIn(const ObjRectangle& rect) const;
 	//NOTE: the way the hull drives first, so the square reads as pushed along and not as jumped
 	[[nodiscard]] std::optional<ObjRectangle> RoomOutOfTheWay(const DelayedTankSpawn& spawn,
 															  const Tank& pusher) const;

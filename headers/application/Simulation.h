@@ -21,6 +21,7 @@ struct PauseStatusEvent;
 struct PlayerSlotAssignedEvent;
 struct PostTickUpdateEvent;
 class AnimationManager;
+class BaseObj;
 class BonusManager;
 class EventSystem;
 class GameConfig;
@@ -97,6 +98,7 @@ public:
 	Simulation& operator=(Simulation&&) = delete;
 
 	[[nodiscard]] const GameStatistics& Statistics() const;
+	[[nodiscard]] const std::vector<std::shared_ptr<BaseObj>>& World() const;
 
 	//NOTE: drops the link only, so a caller can act between the old link going and the new one arriving
 	void LeaveGameMode();

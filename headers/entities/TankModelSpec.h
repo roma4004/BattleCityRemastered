@@ -16,6 +16,8 @@ struct TankModelSpec final
 	double bulletSpeedFactor{1.0};
 	//NOTE: the heavier the hull, the slower and the harder its shell - the two always move apart
 	double damageFactor{1.0};
+	//NOTE: of the shell's own health - how deep it sinks into a wall, so a harder hit need not dig deeper
+	double shellHealthFactor{1.0};
 	//NOTE: of the blast the geometry asks for - a light shell alone no longer opens a passage, the tier grows it
 	double blastFactor{1.0};
 	//NOTE: across the flight and along it - a scout's round reads as a needle, a heavy's as a log
@@ -36,6 +38,7 @@ struct TankModelSpec final
 								 .healthFactor = 0.2,
 								 .bulletSpeedFactor = 1.6,
 								 .damageFactor = 1.0 / 6.0,
+								 .shellHealthFactor = 1.0 / 3.0,
 								 .blastFactor = 0.8,
 								 .shellCaliberFactor = 0.6,
 								 .shellLengthFactor = 0.8,
@@ -53,6 +56,7 @@ struct TankModelSpec final
 								 .healthFactor = 1.0,
 								 .bulletSpeedFactor = 0.75,
 								 .damageFactor = 2.0 / 3.0,
+								 .shellHealthFactor = 4.0 / 3.0,
 								 .blastFactor = 2.0,
 								 .shellCaliberFactor = 1.4,
 								 .shellLengthFactor = 1.6,
@@ -69,6 +73,7 @@ struct TankModelSpec final
 	return TankModelSpec{.healthFactor = 0.4,
 						 .bulletSpeedFactor = 1.2,
 						 .damageFactor = 1.0 / 3.0,
+						 .shellHealthFactor = 2.0 / 3.0,
 						 .reloadFactor = 3.0};
 }
 
@@ -100,6 +105,11 @@ inline constexpr int kPlayerTierRows{4};
 [[nodiscard]] constexpr unsigned int DamageOf(const TankModel model, const unsigned int baseDamage) noexcept
 {
 	return MathUtils::RoundTo<unsigned int>(baseDamage * SpecOf(model).damageFactor);
+}
+
+[[nodiscard]] constexpr int ShellHealthOf(const TankModel model, const int baseHealth) noexcept
+{
+	return MathUtils::RoundTo<int>(baseHealth * SpecOf(model).shellHealthFactor);
 }
 
 [[nodiscard]] constexpr double BlastOf(const TankModel model, const double baseRadius) noexcept

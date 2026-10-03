@@ -1,16 +1,17 @@
 #pragma once
 
 #include "Pawn.h"
+#include "components/Sprite.h"
 #include "entities/BulletCaliber.h"
-#include "interfaces/IDrawable.h"
+#include "enums/DrawLayer.h"
 #include "utils/Uuid.h"
 #include <memory>
+#include <optional>
 #include <vector>
 
 enum class Faction : char8_t;
 struct BulletResetProperty;
 struct UPoint;
-struct DrawEvent;
 struct DespawnedEvent;
 struct WorldSnapshotRequestedEvent;
 class EventSystem;
@@ -18,7 +19,7 @@ class MoveLikeBulletBeh;
 class BulletPool;
 class GameConfig;
 
-class Bullet final : public Pawn, public IDrawable
+class Bullet final : public Pawn
 {
 	friend BulletPool;
 
@@ -27,22 +28,21 @@ class Bullet final : public Pawn, public IDrawable
 	MoveLikeBulletBeh* _bulletMoveBeh{nullptr};
 
 	void Reset(const BulletResetProperty& resetProperty);
-	void OnDraw(const DrawEvent&) const;
 	void OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const;
 	[[nodiscard]] bool CanBreak(const BaseObj& target) const noexcept;
-	[[nodiscard]] bool SinkIntoWall(double deltaTime, const std::vector<std::shared_ptr<BaseObj>>& blast);
+	[[nodiscard]] bool SinkIntoWall(double deltaTime, const std::vector<BaseObj*>& blast);
 	//NOTE: whether it met another shell - one that did is spent by the meeting, not burnt out by itself
-	[[nodiscard]] bool Blast(const std::vector<std::shared_ptr<BaseObj>>& objectList);
+	[[nodiscard]] bool Blast(const std::vector<BaseObj*>& objectList);
 
 protected:
 	void Subscribe() override;
 	void OnDespawned(const DespawnedEvent& event) override;
-	void Draw() const override;
 	void TickUpdate(double deltaTime) override;
 
 public:
 	static constexpr CollisionTags kCollision{tags::Passable{}, tags::Destructible{}, tags::Impenetrable{},
 											  tags::NoTerrain{}};
+	static constexpr DrawLayer kLayer{DrawLayer::World};
 
 	Bullet(PawnProperty pawnProperty, const GameConfig& gameConfig, const BulletCaliber& caliber = {});
 
@@ -59,5 +59,7 @@ public:
 
 	[[nodiscard]] unsigned int GetTier() const noexcept;
 
-	void DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList);
+	void DealDamage(const std::vector<BaseObj*>& objectList);
+
+	[[nodiscard]] std::optional<Sprite> Look() const override;
 };

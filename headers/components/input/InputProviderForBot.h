@@ -1,5 +1,6 @@
 #pragma once
 
+#include "geometry/ObjRectangle.h"
 #include "interfaces/IInputProvider.h"
 #include "utils/Timer.h"
 #include "utils/Uuid.h"
@@ -22,7 +23,8 @@ class InputProviderForBot final : public IInputProvider
 	//NOTE: found once a frame and read by both halves - the dodge and the intercept are one decision
 	struct BulletThreat final
 	{
-		std::shared_ptr<BaseObj> bullet{nullptr};
+		//NOTE: where the shell was when found - none when nothing is coming; kept past the tick, so no pointer
+		std::optional<ObjRectangle> bulletRect{};
 		//NOTE: seconds, not a distance - a higher tier's shell flies faster
 		double timeToImpact{};
 		//NOTE: where it is going, which is the axis a dodge has to leave
@@ -97,15 +99,14 @@ class InputProviderForBot final : public IInputProvider
 														 double deltaTime) const;
 
 	[[nodiscard]] bool ChangeDirIfSeenBonus(Tank& self, Direction dir,
-											const std::vector<std::shared_ptr<BaseObj>>& sideObstacle);
+											const std::vector<BaseObj*>& sideObstacle);
 	[[nodiscard]] bool ChangeDirIfSeenOpponent(Tank& self, Direction dir,
-											   const std::vector<std::shared_ptr<BaseObj>>& sideObstacle);
+											   const std::vector<BaseObj*>& sideObstacle);
 	//NOTE: what makes a side worth turning to - the two lookups differ by this and nothing else
 	using SightTrigger = bool (InputProviderForBot::*)(Tank&, Direction,
-													  const std::vector<std::shared_ptr<BaseObj>>&);
+													  const std::vector<BaseObj*>&);
 
-	[[nodiscard]] std::shared_ptr<BaseObj> Lookup(Tank& self, LineOfSight& lineOfSight, Direction& dir,
-												  SightTrigger trigger);
+	[[nodiscard]] BaseObj* Lookup(Tank& self, LineOfSight& lineOfSight, Direction& dir, SightTrigger trigger);
 
 	[[nodiscard]] bool IsCenteredOn(const Tank& self, Direction dir, const BaseObj& target) const;
 	//NOTE: arms the delay on the first sighting of that target and answers whether it has run out
@@ -114,15 +115,15 @@ class InputProviderForBot final : public IInputProvider
 
 	[[nodiscard]] bool CanDriveToBonus(const Tank& self, Direction dir);
 
-	[[nodiscard]] std::shared_ptr<BaseObj> TurnOntoNearestSeen(Tank& self);
+	[[nodiscard]] BaseObj* TurnOntoNearestSeen(Tank& self);
 
 	//NOTE: after a turn of our own - else the random one fires on the next frame and undoes it
 	void PostponeRandomTurn();
 	[[nodiscard]] std::optional<Direction> PickRandomDirection(const Tank& self, double deltaTime,
 															   bool excludeCurrentDirection = false);
 
-	[[nodiscard]] bool ShouldShootOpponent(const Tank& self, const std::shared_ptr<BaseObj>& obj);
-	[[nodiscard]] bool RollShootObstacle(const std::shared_ptr<BaseObj>& obj);
+	[[nodiscard]] bool ShouldShootOpponent(const Tank& self, const BaseObj& obj);
+	[[nodiscard]] bool RollShootObstacle(const BaseObj& obj);
 
 public:
 	InputProviderForBot(const std::vector<std::shared_ptr<BaseObj>>& allObjects, const GameConfig& gameConfig);
