@@ -44,6 +44,8 @@ class BonusManager final
 		BonusType type{};
 		EffectTarget target{};
 		Timer timer{};
+		//NOTE: who a free-for-all timer leaves running
+		Author spared{};
 	};
 
 	std::vector<SpawnedBonus> _spawnedBonuses{};
@@ -66,10 +68,9 @@ class BonusManager final
 	void ExpireEffects();
 	void Reset();
 
-	void StartEffect(BonusType type, EffectTarget target, milliseconds duration);
+	void StartEffect(BonusType type, EffectTarget target, milliseconds duration, Author spared = {});
 	void FinishEffect(BonusType type, const EffectTarget& target);
-	void EmitEffectStatus(BonusType type, const EffectTarget& target, bool isActive) const;
-	[[nodiscard]] bool IsEffectActive(BonusType type, const EffectTarget& target) const;
+	void EmitEffectStatus(const ActiveEffect& effect, bool isActive) const;
 	[[nodiscard]] std::vector<ActiveEffect>::iterator FindEffect(BonusType type, const EffectTarget& target);
 
 public:

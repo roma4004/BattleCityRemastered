@@ -6,6 +6,7 @@
 #include "gtest/gtest.h"
 #include <boost/asio/ip/udp.hpp>
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 
 // A client that acks nothing is not sent the tail it missed - its session drops the backlog and owes a
@@ -15,7 +16,8 @@ class SessionTest : public testing::Test
 protected:
 	std::shared_ptr<EventSystem> _events{std::make_shared<EventSystem>()};
 	std::shared_ptr<network::commands::Session> _session{std::make_shared<network::commands::Session>(
-			boost::asio::ip::udp::endpoint{}, 7u, _events, PlayerSlot::P2, network::DatagramLink::Clock::now())};
+			boost::asio::ip::udp::endpoint{}, 7u, _events, PlayerSlot::P2, std::uint8_t{2},
+			network::DatagramLink::Clock::now())};
 	network::WireFrame _frame{.reliable = "frame", .latest = {}, .isSnapshot = false};
 };
 

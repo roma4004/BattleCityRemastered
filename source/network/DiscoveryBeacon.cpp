@@ -1,8 +1,11 @@
 #include "network/DiscoveryBeacon.h"
 #include "network/Discovery.h"
 #include "network/Endpoints.h"
+#include "enums/MatchRules.h"
 #include "utils/Log.h"
 #include <boost/system/error_code.hpp>
+#include <cstdint>
+#include <functional>
 #include <string>
 #include <string_view>
 #include <tuple>
@@ -11,9 +14,12 @@
 namespace network
 {
 DiscoveryBeacon::DiscoveryBeacon(boost::asio::io_context& ioContext, const boost::asio::ip::address& host,
-								 const std::uint16_t gamePort, std::function<std::uint8_t()> freeSeats)
+								 const std::uint16_t gamePort, const std::uint8_t seats, const MatchRules rules,
+								 std::function<std::uint8_t()> freeSeats)
 	: _socket{ioContext}
 	, _gamePort{gamePort}
+	, _seats{seats}
+	, _rules{rules}
 	, _freeSeats{std::move(freeSeats)}
 {
 	const udp::endpoint endpoint{host, kDiscoveryPort};
@@ -68,7 +74,9 @@ void DiscoveryBeacon::Receive()
 									   const discovery::Reply reply{
 											   .protocolVersion = discovery::kProtocolVersion,
 											   .gamePort = _gamePort,
-											   .freeSeats = _freeSeats ? _freeSeats() : std::uint8_t{}};
+											   .seats = _seats,
+											   .freeSeats = _freeSeats ? _freeSeats() : std::uint8_t{},
+											   .rules = _rules};
 
 									   //NOTE: one datagram, no retry - a probe that got no answer asks again
 									   boost::system::error_code sendEc;

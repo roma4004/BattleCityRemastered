@@ -22,8 +22,9 @@ public:
 	[[nodiscard]] std::size_t GetCols() const noexcept { return _data.cols; }
 	[[nodiscard]] std::size_t GetRows() const noexcept { return _data.rows; }
 
-	void CreateObstacles(double cellSize) const;
+	//NOTE: baseless - no eagle and no wall around it
+	void CreateObstacles(double cellSize, bool isBaseless) const;
 
 	//NOTE: separate from the obstacles because a bonus is not one - it is picked up, not driven around
-	void CreateBonuses(double bonusSize, double cellSize) const;
+	void CreateBonuses(double bonusSize, double cellSize, bool isBaseless) const;
 };

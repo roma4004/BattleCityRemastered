@@ -26,7 +26,7 @@ class Session final : public PeerLink, public std::enable_shared_from_this<Sessi
 {
 public:
 	Session(udp::endpoint endpoint, std::uint32_t connectionId, const std::shared_ptr<EventSystem>& events,
-			PlayerSlot slot, DatagramLink::Clock::time_point now);
+			PlayerSlot slot, std::uint8_t seatCount, DatagramLink::Clock::time_point now);
 
 	//NOTE: the seat is the session's, fixed when the server took the client in - a press off the wire names
 	//the key, and the seat says whose it is
@@ -101,6 +101,8 @@ private:
 	const udp::endpoint _endpoint;
 	DatagramLink _link;
 	const PlayerSlot _slot;
+	//NOTE: sent to the client with its seat
+	const std::uint8_t _seatCount;
 	const std::chrono::steady_clock::time_point _connectedAt{std::chrono::steady_clock::now()};
 	bool _isPeerGone{};
 	std::atomic_bool _isFinished{};

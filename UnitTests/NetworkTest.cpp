@@ -760,6 +760,27 @@ TEST_F(NetworkTest, AThirdClientIsToldTheSeatsAreTaken)
 	EXPECT_EQ(*refusal, DisconnectReason::ServerFull);
 }
 
+// a three-seat host seats a third client and tells it the seat count
+TEST_F(NetworkTest, AThreeSeatServerSeatsAThirdClientAndSaysHowManySeatsThereAre)
+{
+	std::optional<PlayerSlotAssignedEvent> third{};
+	const EventSubscription thirdSub{_thirdClientEvents->AddListener(
+			[&third](const PlayerSlotAssignedEvent& e) { third = e; })};
+
+	const auto server{std::make_unique<network::commands::ServerNode>(network::ServerAddress{.port = 0},
+																	  _serverEvents, 3u)};
+	const uint16_t port{server->GetBoundPort()};
+	const auto client{MakeClient(port)};
+	const auto secondClient{std::make_unique<network::commands::ClientNode>(network::ServerAddress{.port = port},
+																			_secondClientEvents)};
+	const auto thirdClient{std::make_unique<network::commands::ClientNode>(network::ServerAddress{.port = port},
+																		   _thirdClientEvents)};
+
+	ASSERT_TRUE(PumpUntil([&third] { return third.has_value(); })) << "the third client was told no seat";
+	EXPECT_EQ(third->slot, PlayerSlot::P3);
+	EXPECT_EQ(third->seatCount, 3u);
+}
+
 // A ready landing in a running match is owed the field, and the snapshot goes out in place of that frame -
 // sent beside it, the frame's spawns would land a second time on top
 TEST_F(NetworkTest, AReadyInARunningMatchIsAnsweredWithTheFieldInsteadOfTheFrame)

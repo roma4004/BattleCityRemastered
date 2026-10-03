@@ -5,17 +5,19 @@
 #include "utils/Timer.h"
 #include "utils/Uuid.h"
 #include <chrono>
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <random>
 #include <string>
-#include <string_view>
 #include <vector>
 
+enum class Author : char8_t;
 enum class Faction : char8_t;
 enum class TankModel : char8_t;
 enum class TankType : char8_t;
 enum class GameMode : char8_t;
+enum class PlayerSlot : std::uint8_t;
 struct PawnProperty;
 struct BonusEffectProperty;
 struct GameResetEvent;
@@ -106,7 +108,7 @@ class TankSpawner final
 															  const Tank& pusher) const;
 	void DelayedSpawnWith(const DelayedTankSpawn& params);
 	void RestoreTank(const TankSnapshot& tank);
-	void CancelDelayedSpawnsOf(Faction faction);
+	void CancelDelayedSpawnsOf(Faction faction, Author spared);
 	void DropDelayedSpawn(Uuid uuid);
 
 	//NOTE: the rolled point first, then the grid outwards from it - obstacles sit on the grid, so a spot
@@ -116,7 +118,7 @@ class TankSpawner final
 
 	[[nodiscard]] std::optional<ObjRectangle> GetEnemyRandomPosX(TankType type) const;
 	[[nodiscard]] bool SpawnEnemy(ObjRectangle rect, Uuid uuid, TankType type, TankModel model);
-	void SpawnPlayer(ObjRectangle rect, Uuid uuid, TankType type, std::string_view name);
+	void SpawnPlayer(ObjRectangle rect, Uuid uuid, TankType type);
 
 	void DelayedSpawnStart(ObjRectangle rect, Uuid uuid, TankType type, TankModel model);
 	[[nodiscard]] std::unique_ptr<IInputProvider> MakeDriver(TankType type) const;
@@ -124,7 +126,7 @@ class TankSpawner final
 	//NOTE: an empty model is one to roll - it arrives filled only where the authority already chose it
 	void RespawnEnemyTanks(TankType type, Uuid uuid, std::optional<ObjRectangle> rect = std::nullopt,
 						   std::optional<TankModel> model = std::nullopt);
-	[[nodiscard]] std::optional<ObjRectangle> GetPlayerRandomPosX(bool isFirst) const;
+	[[nodiscard]] std::optional<ObjRectangle> GetPlayerRandomPosX(PlayerSlot slot) const;
 	void RespawnPlayerTeam(TankType type, Uuid uuid, std::optional<ObjRectangle> rect = std::nullopt);
 	void RespawnTank(TankType type, Uuid uuid, std::optional<ObjRectangle> rect = std::nullopt,
 					 std::optional<TankModel> model = std::nullopt);

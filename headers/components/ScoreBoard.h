@@ -1,7 +1,8 @@
 #pragma once
 
 #include "components/EventSystem.h"
-
+#include "enums/RespawnGroup.h"
+#include <array>
 #include <memory>
 #include <vector>
 
@@ -13,12 +14,14 @@ struct EnterEvent;
 struct MenuShownEvent;
 struct GameStateChangedToEvent;
 class EventSystem;
+class GameConfig;
 class GameStatistics;
 
 class ScoreBoard final
 {
 	std::shared_ptr<EventSystem> _events{nullptr};
 	const GameStatistics& _statistics;
+	const GameConfig& _gameConfig;
 	std::vector<EventSubscription> _subs{};
 	// Toggled at runtime by DisplayScore(), where _subs is filled once at construction and stays
 	EventSubscription _drawSub{};
@@ -33,9 +36,8 @@ class ScoreBoard final
 	EventSubscription _enterSub{};
 	EventSubscription _plateSub{};
 
-	unsigned short _enemyRespawnCount{20u};
-	unsigned short _playerOneRespawnCount{3u};
-	unsigned short _playerTwoRespawnCount{3u};
+	//NOTE: indexed by RespawnGroup
+	std::array<unsigned short, kRespawnGroupCount> _respawnCounts{};
 
 	void Subscribe();
 
@@ -54,5 +56,6 @@ class ScoreBoard final
 	void Draw() const;
 
 public:
-	ScoreBoard(const std::shared_ptr<EventSystem>& events, const GameStatistics& statistics);
+	ScoreBoard(const std::shared_ptr<EventSystem>& events, const GameStatistics& statistics,
+			   const GameConfig& gameConfig);
 };

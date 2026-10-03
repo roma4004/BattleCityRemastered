@@ -7,13 +7,15 @@
 #include "entities/pawns/PawnProperty.h"
 #include "entities/pawns/Tank.h"
 #include "entities/pawns/TankResetProperty.h"
+#include "enums/PlayerSlot.h"
 #include "utils/Log.h"
+#include <cstddef>
 #include <string>
 
 namespace
 {
-//NOTE: four enemy seats and two player ones - the field never holds more at once
-constexpr std::size_t kSeatCount{6u};
+//NOTE: the most tanks on the field at once
+constexpr std::size_t kTankSeats{4u + kSeatCount};
 }//namespace
 
 TankPool::TankPool(const std::shared_ptr<EventSystem>& events,
@@ -24,7 +26,7 @@ TankPool::TankPool(const std::shared_ptr<EventSystem>& events,
 	, _gameConfig{gameConfig}
 	, _bulletPool{bulletPool}
 {
-	for (std::size_t i = 0u; i < kSeatCount; ++i)
+	for (std::size_t i = 0u; i < kTankSeats; ++i)
 	{
 		_slots.AddFree(CreateNewTank());
 	}

@@ -1,10 +1,14 @@
 #pragma once
 
+#include <cstddef>
+
 enum class GameMode : char8_t
 {
 	OnePlayer,
 	TwoPlayers,
 	CoopWithBot,
+	FreeForAll,
+	TwoPlayersFreeForAll,
 	PlayAsHost,
 	PlayAsClient,
 
@@ -26,8 +30,17 @@ enum class GameMode : char8_t
 
 [[nodiscard]] constexpr bool IsLocalGame(const GameMode mode) noexcept { return !IsNetworkGame(mode); }
 
-//NOTE: seat two is taken in every mode but one - by a bot in CoopWithBot, by the peer in a net game
-[[nodiscard]] constexpr bool HasSecondPlayer(const GameMode mode) noexcept { return mode != GameMode::OnePlayer; }
+//NOTE: every tank for itself, no base
+[[nodiscard]] constexpr bool IsFreeForAll(const GameMode mode) noexcept
+{
+	return mode == GameMode::FreeForAll || mode == GameMode::TwoPlayersFreeForAll;
+}
+
+//NOTE: seats a local mode fills; CoopWithBot's bot takes the second
+[[nodiscard]] constexpr std::size_t LocalSeats(const GameMode mode) noexcept
+{
+	return mode == GameMode::OnePlayer || mode == GameMode::FreeForAll ? 1u : 2u;
+}
 
 //NOTE: seat one is the phase's call, not the mode's - the demo hands both seats to bots
 [[nodiscard]] constexpr bool UsesCoopBots(const GameMode mode) noexcept { return mode == GameMode::CoopWithBot; }

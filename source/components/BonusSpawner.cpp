@@ -205,10 +205,16 @@ void BonusSpawner::Materialize(const PendingSpawn& pending) const
 	_events->EmitEvent(AddToSpawnQueueEvent{.obj = std::move(bonus)});
 }
 
+//NOTE: no base to wall in a free-for-all - rolled again
 BonusSpawner::RolledBonus BonusSpawner::RollBonus() const
 {
-	return RolledBonus{.type = static_cast<BonusType>(RandUtils::GetRandNumber(_distSpawnType)),
-					   .isSuper = RandUtils::GetRandNumber(_distSuperRoll) == 1};
+	BonusType type{};
+	do
+	{
+		type = static_cast<BonusType>(RandUtils::GetRandNumber(_distSpawnType));
+	} while (type == BonusType::Shovel && _gameConfig.IsFreeForAll());
+
+	return RolledBonus{.type = type, .isSuper = RandUtils::GetRandNumber(_distSuperRoll) == 1};
 }
 
 void BonusSpawner::SpawnRandomBonus(const ObjRectangle rect)

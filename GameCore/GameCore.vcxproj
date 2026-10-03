@@ -337,6 +337,7 @@
     <ClInclude Include="..\headers\enums\Faction.h" />
     <ClInclude Include="..\headers\enums\GameMode.h" />
     <ClInclude Include="..\headers\enums\GameState.h" />
+    <ClInclude Include="..\headers\enums\MatchRules.h" />
     <ClInclude Include="..\headers\enums\ObstacleType.h" />
     <ClInclude Include="..\headers\enums\RespawnGroup.h" />
     <ClInclude Include="..\headers\enums\StatisticsType.h" />

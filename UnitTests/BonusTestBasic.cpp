@@ -21,6 +21,7 @@
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
 #include "enums/Faction.h"
+#include "enums/GameMode.h"
 #include "enums/ObstacleType.h"
 #include "enums/InputChannel.h"
 #include "utils/UuidUtils.h"
@@ -173,6 +174,28 @@ TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(enemyPos, enemyBot->GetPos());
+}
+
+// a second player's timer buys more of the same freeze - it is not announced as a new one
+TEST_F(BonusTest, AnotherPlayersTimerExtendsTheFreeze)
+{
+	int activations{};
+	const EventSubscription statusSub{_events->AddListener(Key(Faction::EnemyTeam),
+		[&activations](const BonusTimerStatusChangeEvent& event)
+		{
+			activations += event.isActive ? 1 : 0;
+		})};
+	_bonusSpawner->SpawnBonus({.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize}, BonusType::Timer);
+	const auto first{std::dynamic_pointer_cast<Bonus>(_allObjects.back())};
+	_bonusSpawner->SpawnBonus({.x = _tankSize * 3.0, .y = 0.0, .w = _tankSize, .h = _tankSize}, BonusType::Timer);
+	const auto second{std::dynamic_pointer_cast<Bonus>(_allObjects.back())};
+	ASSERT_NE(first, nullptr);
+	ASSERT_NE(second, nullptr);
+
+	first->PickUpBonus(Author::Player1);
+	second->PickUpBonus(Author::Player2);
+
+	EXPECT_EQ(activations, 1);
 }
 
 // and leaves it driving while nobody has picked it up
@@ -517,4 +540,43 @@ TEST_F(BonusTest, ABonusLaidOutByTheMapNeverExpires)
 
 	EXPECT_FALSE(dropped->GetIsAlive()) << "the dropped one outlived its cooldown";
 	EXPECT_TRUE(placed->GetIsAlive());
+}
+
+// a free-for-all grenade spares only its taker
+TEST_F(BonusTest, AFreeForAllGrenadeTakesEveryoneButItsTaker)
+{
+	_gameConfig.gameMode = GameMode::FreeForAll;
+	const auto taker{CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN)};
+	const auto otherBot{CreateBot({.x = _tankSize * 2.0, .y = 0.0}, Author::Enemy2, Direction::DOWN)};
+	const auto player{CreatePlayer({.x = _tankSize * 4.0, .y = 0.0})};
+	_bonusSpawner->SpawnBonus({.x = 0.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize}, BonusType::Grenade);
+	const auto grenade{std::dynamic_pointer_cast<Bonus>(_allObjects.back())};
+	ASSERT_NE(grenade, nullptr);
+
+	grenade->PickUpBonus(Author::Enemy1);
+
+	EXPECT_GT(taker->GetHealth(), 0);
+	EXPECT_EQ(otherBot->GetHealth(), 0);
+	EXPECT_EQ(player->GetHealth(), 0);
+}
+
+// and a free-for-all timer freezes everyone but its taker
+TEST_F(BonusTest, AFreeForAllTimerFreezesEveryoneButItsTaker)
+{
+	_gameConfig.gameMode = GameMode::FreeForAll;
+	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
+	const auto taker{CreateBot({.x = _tankSize * 2.0, .y = _tankSize * 2.0}, Author::Enemy1, Direction::DOWN)};
+	_bonusSpawner->SpawnBonus({.x = _tankSize * 6.0, .y = _tankSize * 6.0, .w = _tankSize, .h = _tankSize},
+							  BonusType::Timer);
+	const auto timer{std::dynamic_pointer_cast<Bonus>(_allObjects.back())};
+	ASSERT_NE(timer, nullptr);
+
+	timer->PickUpBonus(Author::Enemy1);
+	_events->EmitEvent(Key(InputChannel::LocalP1), MoveRightEvent{.isPressed = true});
+	const FPoint playerPos{player->GetPos()};
+	const FPoint takerPos{taker->GetPos()};
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_EQ(playerPos, player->GetPos()) << "the player drove on under another's timer";
+	EXPECT_NE(takerPos, taker->GetPos()) << "the timer froze the one who took it";
 }

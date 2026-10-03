@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <!-- port 0 names none, so the window joins whatever server-port.txt next to the exe says;
+       put 1234 here to dial a fixed one -->
+  <configuration default="false" name="client window (2 of 4)" folderName="BattleCity (cmake)" type="CMakeRunConfiguration" factoryName="Application" singleton="false" PROGRAM_PARAMS="--client --mute --port=0 --size=640,480 --pos=650,40" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="BattleCityRemastered" TARGET_NAME="BattleCityRemastered" CONFIG_NAME="Debug-MinGW" RUN_TARGET_PROJECT_NAME="BattleCityRemastered" RUN_TARGET_NAME="BattleCityRemastered">
+    <method v="2">
+      <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+    </method>
+  </configuration>
+</component>

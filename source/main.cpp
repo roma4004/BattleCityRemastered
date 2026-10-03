@@ -59,5 +59,5 @@ int main(const int argc, char* argv[])
 	//NOTE: while the window still exists; projectConfig's destructor writes the ini afterwards
 	sdlEnv.SaveWindowState(projectConfig);
 
-	return game.Result();
+	return Game::Result();
 }

@@ -14,7 +14,7 @@ std::expected<void, MapError> Map::LoadFromFile(const std::filesystem::path& pat
 	return MapLoader::LoadFromFile(path).transform([this](MapData data) { _data = std::move(data); });
 }
 
-void Map::CreateObstacles(const double cellSize) const
+void Map::CreateObstacles(const double cellSize, const bool isBaseless) const
 {
 	for (std::size_t row = 0u; row < _data.rows; ++row)
 	{
@@ -22,7 +22,8 @@ void Map::CreateObstacles(const double cellSize) const
 		{
 			//NOTE: checked here too, not only in the loader - MapData is a plain struct anyone can fill
 			const ObstacleType type{_data.At(col, row)};
-			if (!IsSpawnableObstacle(type))
+			if (!IsSpawnableObstacle(type)
+				|| (isBaseless && (type == ObstacleType::Eagle || type == ObstacleType::Fortress)))
 			{
 				continue;
 			}
@@ -38,12 +39,12 @@ void Map::CreateObstacles(const double cellSize) const
 	}
 }
 
-void Map::CreateBonuses(const double bonusSize, const double cellSize) const
+void Map::CreateBonuses(const double bonusSize, const double cellSize, const bool isBaseless) const
 {
 	for (const auto& [col, row, type]: _data.bonuses)
 	{
 		//NOTE: checked here too, not only in the loader - MapData is a plain struct anyone can fill
-		if (!IsSpawnableBonus(type))
+		if (!IsSpawnableBonus(type) || (isBaseless && type == BonusType::Shovel))
 		{
 			continue;
 		}

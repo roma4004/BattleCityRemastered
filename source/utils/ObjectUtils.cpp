@@ -14,12 +14,14 @@ bool ObjectUtils::IsAlive(const std::shared_ptr<BaseObj>& object)
 
 bool ObjectUtils::IsOpponent(const BaseObj& self, const std::shared_ptr<BaseObj>& other)
 {
-	return other->GetFaction() != self.GetFaction() && other->GetFaction() != Faction::Neutral;
+	const Faction faction{other->GetFaction()};
+
+	return faction != Faction::Neutral && (faction != self.GetFaction() || faction == Faction::Solo);
 }
 
 bool ObjectUtils::IsAlly(const BaseObj& self, const std::shared_ptr<BaseObj>& other)
 {
-	return other->GetFaction() == self.GetFaction();
+	return other->GetFaction() == self.GetFaction() && self.GetFaction() != Faction::Solo;
 }
 
 bool ObjectUtils::IsBonus(const std::shared_ptr<BaseObj>& object)

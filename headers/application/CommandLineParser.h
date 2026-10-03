@@ -14,6 +14,8 @@ struct ArgError final
 //NOTE: what --help prints, and the only list of what Parse accepts - a new option is added in both
 inline constexpr std::array kUsage{"--server               bring a server up and play on it",
 								   "--client               join a match",
+								   "--ffa                  free for all, alone against the bots",
+								   "--2p-ffa               free for all, two at one keyboard and two bots at a time",
 								   "--address=IP           IPv4 or IPv6; left out, this machine's own on its network",
 								   "--port=N               the port; left out, or auto, takes any free one",
 								   "--size=WIDTH,HEIGHT    window size, unscaled",
@@ -27,6 +29,8 @@ inline constexpr std::array kServerUsage{"--address=IP           what to listen 
 										 "left out, this machine's own on its network",
 										 "--port=N               the port to listen on; left out, or auto, takes any free one",
 										 "--port-file=PATH       write the port it got here, for whoever spawned it",
+										 "--seats=N              how many players the match takes, 1 to 4; left out, 2",
+										 "--rules=classic|ffa    classic or free for all; left out, classic",
 										 "--help                 this text"};
 
 class CommandLineParser final

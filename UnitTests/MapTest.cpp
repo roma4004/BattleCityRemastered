@@ -1,20 +1,25 @@
 #include "components/MapLoader.h"
+#include "components/Map.h"
 #include "application/GameConfig.h"
 #include "components/EventSystem.h"
 #include "components/ObstacleSpawner.h"
 #include "components/events/SpawnEvents.h"
 #include "enums/BonusType.h"
 #include "enums/GameMode.h"
+#include "enums/ObstacleType.h"
 #include "entities/BaseObj.h"
 #include "utils/UuidUtils.h"
 #include "components/WorldGeometry.h"
 #include <gtest/gtest.h>
 #include <cstddef>
 #include <expected>
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
+#include <memory>
 #include <string>
 #include <system_error>
+#include <vector>
 #include "TestUtils.h"//NOTE: PrintTo for the Point types
 
 // the loader turns a character grid into a map, or says what went wrong - each case feeds it one grid
@@ -338,4 +343,37 @@ TEST(ObstacleSpawnerTest, ClientGivesTheEagleTheSameSpanTheMapDoes)
 	ASSERT_EQ(allObjects.size(), 2u);
 	EXPECT_DOUBLE_EQ(allObjects[0]->GetWidth(), cell * ObstacleCellSpan(ObstacleType::Eagle));
 	EXPECT_DOUBLE_EQ(allObjects[1]->GetWidth(), cell);
+}
+
+// a baseless map leaves out the eagle, its wall and the shovel
+TEST_F(MapLoaderTest, ABaselessMatchLeavesTheEagleItsWallAndTheShovelOut)
+{
+	_tempMap = std::filesystem::temp_directory_path()
+			   / ("battlecity_base_" + UuidUtils::GetStringUuid(UuidUtils::GetRandomUuid()) + ".map");
+	std::string grid{kPlayableGrid};
+	grid[kRowStride * 3u + 4u] = '4';
+	grid[kRowStride * 1u + 1u] = 'v';
+	grid[kRowStride * 1u + 2u] = 'h';
+	std::ofstream{_tempMap} << grid;
+
+	const auto events{std::make_shared<EventSystem>()};
+	std::vector<ObstacleType> obstacles{};
+	std::vector<BonusType> bonuses{};
+	const EventSubscription obstacleSub{events->AddListener([&obstacles](const SpawnObstacleEvent& event)
+	{
+		obstacles.push_back(event.type);
+	})};
+	const EventSubscription bonusSub{events->AddListener([&bonuses](const SpawnMapBonusEvent& event)
+	{
+		bonuses.push_back(event.type);
+	})};
+	Map map{events};
+	ASSERT_TRUE(map.LoadFromFile(_tempMap).has_value());
+
+	map.CreateObstacles(WorldGeometry::kCellSize, true);
+	map.CreateBonuses(WorldGeometry::kCellSize, WorldGeometry::kCellSize, true);
+
+	EXPECT_FALSE(std::ranges::contains(obstacles, ObstacleType::Eagle));
+	EXPECT_FALSE(std::ranges::contains(obstacles, ObstacleType::Fortress));
+	EXPECT_EQ(bonuses, std::vector{BonusType::Helmet});
 }

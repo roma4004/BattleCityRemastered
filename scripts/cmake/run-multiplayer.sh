@@ -17,7 +17,8 @@ fi
 
 port_file=server-port.txt
 rm -f "$port_file"
-"$exe" --server $address --port="$port" --size=800,600 --pos=0,0 &
+# --pos places the picture, not the frame - y=40 keeps the title bar on the screen
+"$exe" --server $address --port="$port" --size=800,600 --pos=0,40 &
 first=$!
 
 # the first window spawns the server and waits for its port the same way - the file appears once it binds
@@ -33,7 +34,7 @@ fi
 port=$(cat "$port_file")
 echo "server on ${BC_ADDRESS:-this machine's address}:$port"
 
-"$exe" --client --mute $address --port="$port" --size=800,600 --pos=810,0 &
+"$exe" --client --mute $address --port="$port" --size=800,600 --pos=810,40 &
 second=$!
 
 wait "$first" "$second"

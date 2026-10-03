@@ -17,6 +17,7 @@
 #include "entities/TankModelSpec.h"
 #include "entities/pawns/Tank.h"
 #include "entities/pawns/TankResetProperty.h"
+#include "enums/Author.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
 #include "enums/GameState.h"
@@ -41,7 +42,7 @@
 #include <memory>
 #include <optional>
 #include <ranges>
-#include <string_view>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -121,11 +122,11 @@ void TankSpawner::Subscribe()
 	//the others - the spawner cancels it on their behalf, and only where the world is decided
 	if (IsAuthority(_gameMode))
 	{
-		for (const Faction faction: {Faction::PlayerTeam, Faction::EnemyTeam})
+		for (const Faction faction: {Faction::PlayerTeam, Faction::EnemyTeam, Faction::Solo})
 		{
-			_subs.push_back(_events->AddListener(Key(faction), [this, faction](const BonusGrenadePickupEvent&)
+			_subs.push_back(_events->AddListener(Key(faction), [this, faction](const BonusGrenadePickupEvent& event)
 			{
-				CancelDelayedSpawnsOf(faction);
+				CancelDelayedSpawnsOf(faction, event.spared);
 			}));
 		}
 	}
@@ -318,7 +319,7 @@ void TankSpawner::OnNextLevelRequested(const NextLevelRequestedEvent&)
 	_nextLevelLoadouts.clear();
 	for (const TankSnapshot& tank: field.tanks)
 	{
-		if (tank.type == TankType::PLAYER1 || tank.type == TankType::PLAYER2)
+		if (IsPlayerTank(tank.type))
 		{
 			_nextLevelLoadouts.push_back(NextLevelLoadout{.type = tank.type,
 											   .tier = tank.tier,
@@ -423,7 +424,7 @@ std::optional<ObjRectangle> TankSpawner::GetEnemyRandomPosX(const TankType type)
 bool TankSpawner::SpawnEnemy(const ObjRectangle rect, const Uuid uuid, const TankType type, const TankModel model)
 {
 	const std::string name{"Enemy" + std::to_string(static_cast<int>(type) + 1)};
-	constexpr auto faction{Faction::EnemyTeam};
+	const Faction faction{FactionOf(SeatOf(type), _gameConfig.Rules())};
 
 	Log::Info("spawn " + name + " (" + std::string{ToString(faction)} + ") " + std::string{ToString(model)}
 			  + " uuid " + UuidUtils::GetStringUuid(uuid));
@@ -434,13 +435,12 @@ bool TankSpawner::SpawnEnemy(const ObjRectangle rect, const Uuid uuid, const Tan
 }
 
 //NOTE: a bot in a player's seat is still the player's tank - the seat says who drives, the model what it is worth
-void TankSpawner::SpawnPlayer(const ObjRectangle rect, const Uuid uuid, const TankType type,
-							  const std::string_view name)
+void TankSpawner::SpawnPlayer(const ObjRectangle rect, const Uuid uuid, const TankType type)
 {
-	constexpr auto faction{Faction::PlayerTeam};
+	const Faction faction{FactionOf(SeatOf(type), _gameConfig.Rules())};
 
-	Log::Info("spawn " + std::string{name} + " (" + std::string{ToString(faction)} + ") uuid "
-			  + UuidUtils::GetStringUuid(uuid));
+	const std::string name{(IsPlayerTank(type) ? "Player" : "CoopBot") + std::to_string(SeatIndex(*SlotOf(type)) + 1u)};
+	Log::Info("spawn " + name + " (" + std::string{ToString(faction)} + ") uuid " + UuidUtils::GetStringUuid(uuid));
 
 	DelayedSpawnStart(rect, uuid, type, TankModel::Player);
 }
@@ -466,7 +466,7 @@ void TankSpawner::RespawnEnemyTanks(const TankType type, const Uuid uuid, const 
 }
 
 //TODO: write unit test for bot change direction if faced obstacle
-std::optional<ObjRectangle> TankSpawner::GetPlayerRandomPosX(const bool isFirst) const
+std::optional<ObjRectangle> TankSpawner::GetPlayerRandomPosX(const PlayerSlot slot) const
 {
 	const auto battleFieldSizeX{static_cast<double>(_gameConfig.battlefieldSize.x)};
 	const auto battleFieldSizeY{static_cast<double>(_gameConfig.battlefieldSize.y)};
@@ -479,9 +479,16 @@ std::optional<ObjRectangle> TankSpawner::GetPlayerRandomPosX(const bool isFirst)
 									  + static_cast<double>(WorldGeometry::kFortressRingCells))};
 	const double middle{battleFieldSizeX / 2.0};
 
-	const std::pair spawnRangePlayer1{0.0, middle - fortressHalfWidth - tankSize};
-	const std::pair spawnRangePlayer2{middle + fortressHalfWidth, battleFieldSizeX - tankSize};
-	const auto [minX, maxX]{isFirst ? spawnRangePlayer1 : spawnRangePlayer2};
+	const bool isLeft{slot == PlayerSlot::P1 || slot == PlayerSlot::P3};
+	auto [minX, maxX]{isLeft ? std::pair{0.0, middle - fortressHalfWidth - tankSize}
+							 : std::pair{middle + fortressHalfWidth, battleFieldSizeX - tankSize}};
+	//NOTE: past two seats each side splits, the first pair next to the fortress
+	if (_gameConfig.SeatCount() > 2u)
+	{
+		const double split{(minX + maxX) / 2.0};
+		const bool isInner{slot == PlayerSlot::P1 || slot == PlayerSlot::P2};
+		(isLeft == isInner ? minX : maxX) = split;
+	}
 
 	const std::uniform_real_distribution distRandId{minX, maxX};
 	const double randomX{RandUtils::GetRandNumber(distRandId)};
@@ -492,8 +499,8 @@ std::optional<ObjRectangle> TankSpawner::GetPlayerRandomPosX(const bool isFirst)
 void TankSpawner::RespawnPlayerTeam(const TankType type, const Uuid uuid,
 									const std::optional<ObjRectangle> rect)
 {
-	const bool isFirst{type == TankType::PLAYER1};
-	const std::optional<ObjRectangle> spawnRect{rect.has_value() ? rect : GetPlayerRandomPosX(isFirst)};
+	const PlayerSlot slot{*SlotOf(type)};
+	const std::optional<ObjRectangle> spawnRect{rect.has_value() ? rect : GetPlayerRandomPosX(slot)};
 	if (!spawnRect)
 	{
 		return;
@@ -501,13 +508,9 @@ void TankSpawner::RespawnPlayerTeam(const TankType type, const Uuid uuid,
 
 	//NOTE: the demo is the phase where nobody sits down - every seat goes to a bot
 	const bool isDemo{_gameConfig.gameState == GameState::Demo};
-	if (!isDemo
-		&& (_gameMode == GameMode::OnePlayer
-			|| _gameMode == GameMode::TwoPlayers
-			|| IsNetworkGame(_gameMode)
-			|| (_gameMode == GameMode::CoopWithBot && isFirst)))
+	if (!isDemo && (!UsesCoopBots(_gameMode) || slot == PlayerSlot::P1))
 	{
-		SpawnPlayer(*spawnRect, uuid, type, isFirst ? "Player1" : "Player2");
+		SpawnPlayer(*spawnRect, uuid, type);
 		if (IsHost(_gameMode))
 		{
 			_events->EmitEvent(TankRespawnedEvent{.type = type,
@@ -518,7 +521,7 @@ void TankSpawner::RespawnPlayerTeam(const TankType type, const Uuid uuid,
 	}
 	else if (UsesCoopBots(_gameMode))
 	{
-		SpawnPlayer(*spawnRect, uuid, isFirst ? TankType::COOP1 : TankType::COOP2, isFirst ? "CoopBot1" : "CoopBot2");
+		SpawnPlayer(*spawnRect, uuid, CoopTankOf(slot));
 	}
 }
 
@@ -546,8 +549,12 @@ void TankSpawner::RespawnTank(const TankType type, const Uuid uuid, const std::o
 		}
 		case TankType::PLAYER1:
 		case TankType::PLAYER2:
+		case TankType::PLAYER3:
+		case TankType::PLAYER4:
 		case TankType::COOP1:
 		case TankType::COOP2:
+		case TankType::COOP3:
+		case TankType::COOP4:
 			RespawnPlayerTeam(type, uuid, rect);
 			break;
 	}
@@ -562,12 +569,12 @@ void TankSpawner::OnClientRespawn(const TankType type, const Uuid uuid, const Ob
 
 std::unique_ptr<IInputProvider> TankSpawner::MakeDriver(const TankType type) const
 {
-	if (type != TankType::PLAYER1 && type != TankType::PLAYER2)
+	if (!IsPlayerTank(type))
 	{
 		return std::make_unique<InputProviderForBot>(_allObjects, _gameConfig);
 	}
 
-	const PlayerSlot slot{type == TankType::PLAYER1 ? PlayerSlot::P1 : PlayerSlot::P2};
+	const PlayerSlot slot{*SlotOf(type)};
 
 	//NOTE: whose seat it is, not which mode - a client must not wire the mirrored tank to its keyboard
 	const InputChannel channel{_gameConfig.IsOwnSlot(slot) ? LocalInput(slot) : RemoteInput(slot)};
@@ -623,11 +630,13 @@ void TankSpawner::OnSpawnDelayFinished(const Uuid uuid)
 	DelayedSpawnWith(spawn);
 }
 
-void TankSpawner::CancelDelayedSpawnsOf(const Faction faction)
+void TankSpawner::CancelDelayedSpawnsOf(const Faction faction, const Author spared)
 {
-	const auto isTargeted = [faction](const DelayedTankSpawn& spawn)
+	const auto isTargeted = [this, faction, spared](const DelayedTankSpawn& spawn)
 	{
-		return (spawn.type > TankType::ENEMY4 ? Faction::PlayerTeam : Faction::EnemyTeam) == faction;
+		const Author author{SeatOf(spawn.type)};
+
+		return author != spared && FactionOf(author, _gameConfig.Rules()) == faction;
 	};
 
 	std::vector<DelayedTankSpawn> cancelled;

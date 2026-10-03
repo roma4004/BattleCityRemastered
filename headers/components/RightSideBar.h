@@ -1,5 +1,7 @@
 #pragma once
 #include "components/EventSystem.h"
+#include "enums/RespawnGroup.h"
+#include <array>
 #include <memory>
 #include <vector>
 
@@ -11,9 +13,8 @@ class GameConfig;
 
 class RightSideBar final
 {
-	unsigned short _enemiesRespawnCount{};
-	unsigned short _playerOneRespawnCount{};
-	unsigned short _playerTwoRespawnCount{};
+	//NOTE: indexed by RespawnGroup
+	std::array<unsigned short, kRespawnGroupCount> _respawnCounts{};
 	unsigned short _stageNumber{1u};
 	const GameConfig& _gameConfig;
 

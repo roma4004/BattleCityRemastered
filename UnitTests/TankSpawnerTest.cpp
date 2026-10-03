@@ -15,11 +15,13 @@
 #include "components/events/TimingEvents.h"
 #include "components/TankSpawner.h"
 #include "components/managers/RespawnManager.h"
+#include "entities/BaseObj.h"
 #include "enums/Author.h"
 #include "enums/Direction.h"
 #include "enums/Faction.h"
 #include "enums/GameMode.h"
 #include "enums/InputChannel.h"
+#include "enums/MatchRules.h"
 #include "enums/TankModel.h"
 #include "enums/TankType.h"
 #include "utils/ColliderUtils.h"
@@ -156,6 +158,33 @@ TEST_F(TankSpawnerTest, PlayAsHostGameModeStart)
 	_events->EmitEvent(GameResetEvent{});
 	_events->EmitEvent(RespawnTanksEvent{});
 	EXPECT_EQ(_allObjects.size(), 6u);
+}
+
+// a four-seat host spawns four players, two on each side of the fortress
+TEST_F(TankSpawnerTest, AFourSeatHostMatchSeatsFourPlayers)
+{
+	_gameConfig.networkSeats = 4u;
+	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
+	_events->EmitEvent(GameResetEvent{});
+	_events->EmitEvent(RespawnTanksEvent{});
+
+	EXPECT_EQ(_allObjects.size(), 8u);
+}
+
+// a host told to play free-for-all sets every tank against every other and keeps two bots on the field
+TEST_F(TankSpawnerTest, AFreeForAllHostPutsEveryTankOnItsOwn)
+{
+	_gameConfig.networkSeats = 4u;
+	_gameConfig.networkRules = MatchRules::FreeForAll;
+	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
+	_events->EmitEvent(GameResetEvent{});
+	_events->EmitEvent(RespawnTanksEvent{});
+
+	EXPECT_EQ(_allObjects.size(), 6u);
+	EXPECT_TRUE(std::ranges::all_of(_allObjects, [](const std::shared_ptr<BaseObj>& tank)
+	{
+		return tank->GetFaction() == Faction::Solo;
+	}));
 }
 
 // A client puts no tank on the field on its own - it waits for the server to say the spawn is done
@@ -567,4 +596,15 @@ TEST_F(TankSpawnerTest, AnEnemyLeavesItsQuarterOnlyWhenNothingFitsInIt)
 	_events->EmitEvent(RespawnTanksEvent{});
 
 	EXPECT_EQ(CountTanksInTopRow(), 4u) << "the seat whose quarter was walled off never came up";
+}
+
+// 2P free-for-all keeps two bots on the field, not four
+TEST_F(TankSpawnerTest, TwoPlayersFreeForAllStartsWithTwoPlayersAndTwoBots)
+{
+	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::TwoPlayersFreeForAll, _respawnManager,
+							 _tankSpawner);
+	_events->EmitEvent(GameResetEvent{});
+	_events->EmitEvent(RespawnTanksEvent{});
+
+	EXPECT_EQ(_allObjects.size(), 4u);
 }

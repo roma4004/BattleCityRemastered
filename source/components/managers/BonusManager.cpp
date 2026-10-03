@@ -6,6 +6,7 @@
 #include "components/events/SpawnEvents.h"
 #include "components/events/TimingEvents.h"
 #include "entities/bonuses/Bonus.h"
+#include "enums/Author.h"
 #include "enums/Faction.h"
 #include "utils/TimeUtils.h"
 #include "utils/Uuid.h"
@@ -86,9 +87,9 @@ void BonusManager::ExpireEffects()
 		return effect.timer.IsCooldownFinish(now);
 	};
 
-	for (const auto& [type, target, timer]: _activeEffects | std::views::filter(isExpired))
+	for (const ActiveEffect& effect: _activeEffects | std::views::filter(isExpired))
 	{
-		EmitEffectStatus(type, target, false);
+		EmitEffectStatus(effect, false);
 	}
 
 	std::erase_if(_activeEffects, isExpired);
@@ -103,27 +104,30 @@ std::vector<BonusManager::ActiveEffect>::iterator BonusManager::FindEffect(const
 	});
 }
 
-bool BonusManager::IsEffectActive(const BonusType type, const EffectTarget& target) const
-{
-	return std::ranges::any_of(_activeEffects, [type, &target](const ActiveEffect& effect)
-	{
-		return effect.type == type && effect.target == target;
-	});
-}
-
-void BonusManager::StartEffect(const BonusType type, const EffectTarget target, const milliseconds duration)
+void BonusManager::StartEffect(const BonusType type, const EffectTarget target, const milliseconds duration,
+							   const Author spared)
 {
 	if (const auto it{FindEffect(type, target)};
 		it != _activeEffects.end())
 	{
 		//NOTE: picking the same bonus up again buys more of the same effect, it does not restart it
-		it->timer.cooldown += duration;
+		if (it->spared == spared)
+		{
+			it->timer.cooldown += duration;
+
+			return;
+		}
+
+		//NOTE: a free-for-all timer retaken turns on its former taker
+		*it = ActiveEffect{.type = type, .target = target, .timer = Timer{duration}, .spared = spared};
+		EmitEffectStatus(*it, true);
 
 		return;
 	}
 
-	_activeEffects.emplace_back(ActiveEffect{.type = type, .target = target, .timer = Timer{duration}});
-	EmitEffectStatus(type, target, true);
+	const ActiveEffect& effect{_activeEffects.emplace_back(
+			ActiveEffect{.type = type, .target = target, .timer = Timer{duration}, .spared = spared})};
+	EmitEffectStatus(effect, true);
 }
 
 void BonusManager::FinishEffect(const BonusType type, const EffectTarget& target)
@@ -134,17 +138,20 @@ void BonusManager::FinishEffect(const BonusType type, const EffectTarget& target
 		return;
 	}
 
+	const ActiveEffect finished{*it};
 	_activeEffects.erase(it);
-	EmitEffectStatus(type, target, false);
+	EmitEffectStatus(finished, false);
 }
 
-void BonusManager::EmitEffectStatus(const BonusType type, const EffectTarget& target, const bool isActive) const
+void BonusManager::EmitEffectStatus(const ActiveEffect& effect, const bool isActive) const
 {
+	const auto& [type, target, timer, spared]{effect};
 	//NOTE: the type decides which alternative the target holds, so each std::get matches what was stored
 	switch (type)
 	{
 		case BonusType::Timer:
-			_events->EmitEvent(Key(std::get<Faction>(target)), BonusTimerStatusChangeEvent{.isActive = isActive});
+			_events->EmitEvent(Key(std::get<Faction>(target)),
+							   BonusTimerStatusChangeEvent{.isActive = isActive, .spared = spared});
 			break;
 		case BonusType::Helmet:
 			_events->EmitEvent(Key(std::get<Author>(target)), BonusHelmetStatusChangeEvent{.isActive = isActive});
@@ -165,7 +172,7 @@ void BonusManager::OnBonusHelmetPickup(const BonusHelmetPickupEvent& event)
 
 void BonusManager::OnTimerBonus(const BonusTimerPickupEvent& event)
 {
-	StartEffect(BonusType::Timer, event.target, kEffectDuration);
+	StartEffect(BonusType::Timer, event.target, kEffectDuration, event.spared);
 }
 
 void BonusManager::OnBonusShovelPickup(const BonusShovelPickupEvent& event)
@@ -190,7 +197,12 @@ void BonusManager::ApplyBonusEffectsOnSpawnTo(const BonusReApplyEvent& event)
 		return;
 	}
 
-	const bool isFrozen{IsEffectActive(BonusType::Timer, FactionOf(event.author))};
+	const EffectTarget side{FactionOf(event.author, _gameConfig.Rules())};
+	const auto freezes = [&side, &event](const ActiveEffect& effect)
+	{
+		return effect.type == BonusType::Timer && effect.target == side && effect.spared != event.author;
+	};
+	const bool isFrozen{std::ranges::any_of(_activeEffects, freezes)};
 	_events->EmitEvent(Key(event.uuid), BonusTimerReApplyOnSpawnEvent{.isEnabled = isFrozen});
 
 	StartEffect(BonusType::Helmet, event.author, kRespawnHelmetDuration);

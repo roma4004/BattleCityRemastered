@@ -73,6 +73,10 @@ std::optional<ObjRectangle> QuarterOf(const Author author)
 			return TextureOffset::kPlayer1;
 		case Author::Player2:
 			return TextureOffset::kPlayer2;
+		case Author::Player3:
+			return TextureOffset::kPlayer3;
+		case Author::Player4:
+			return TextureOffset::kPlayer4;
 		case Author::None:
 		case Author::lastId:
 			break;

@@ -1,4 +1,5 @@
 #include "components/ScoreBoard.h"
+#include "application/GameConfig.h"
 #include "components/EventSystem.h"
 #include "components/GameStatistics.h"
 #include "components/StatisticsData.h"
@@ -9,12 +10,14 @@
 #include "components/events/RenderUIEvents.h"
 #include "components/UiTable.h"
 #include "enums/GameState.h"
+#include "enums/PlayerSlot.h"
 #include "enums/RespawnGroup.h"
 #include "enums/UiIcon.h"
 #include <algorithm>
 #include <array>
 #include <cstddef>
 #include <iterator>
+#include <memory>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -23,60 +26,46 @@
 
 namespace
 {
-using StatField = unsigned short StatisticsData::*;
-
-//NOTE: a label and up to three counters, columns in the order P1, P2, the third party - an unset one is not shown
-inline constexpr std::size_t kMaxColumns{3};
+using SeatField = unsigned short SeatStatistics::*;
+using TeamField = unsigned short EnemyTeamStatistics::*;
 
 inline constexpr unsigned int kTextColor{0xff00ffffu};
 
+//NOTE: a column per seat, then the enemy team's; a row without that field leaves the cell empty
 struct StatRow final
 {
 	std::string_view label{};
-	std::array<StatField, kMaxColumns> columns{};
+	SeatField seat{};
+	TeamField team{};
 };
 
 constexpr std::array kStatRows{
 		StatRow{.label = "BULLET HIT BY BULLET",
-				.columns = {&StatisticsData::bulletHitByPlayerOne,
-							&StatisticsData::bulletHitByPlayerTwo,
-							&StatisticsData::bulletHitByEnemy}},
-		StatRow{.label = "PLAYER HIT BY ENEMY",
-				.columns = {&StatisticsData::playerOneHitByEnemyTeam,
-							&StatisticsData::playerTwoHitByEnemyTeam}},
+				.seat = &SeatStatistics::bulletHits,
+				.team = &EnemyTeamStatistics::bulletHits},
+		StatRow{.label = "PLAYER HIT BY ENEMY", .seat = &SeatStatistics::hitByEnemyTeam},
 		StatRow{.label = "ENEMY HIT BY",
-				.columns = {&StatisticsData::enemyHitByPlayerOne,
-							&StatisticsData::enemyHitByPlayerTwo,
-							&StatisticsData::enemyHitByFriendlyFire}},
-		StatRow{.label = "TANK KILLS",
-				.columns = {&StatisticsData::enemyDiedByPlayerOne,
-							&StatisticsData::enemyDiedByPlayerTwo,
-							&StatisticsData::playerDiedByEnemyTeam}},
+				.seat = &SeatStatistics::enemyHits,
+				.team = &EnemyTeamStatistics::friendlyHitsTaken},
+		StatRow{.label = "TANK KILLS", .seat = &SeatStatistics::enemyKills, .team = &EnemyTeamStatistics::playerKills},
 		StatRow{.label = "FRIENDLY HITS TAKEN",
-				.columns = {&StatisticsData::playerOneHitFriendlyFire,
-							&StatisticsData::playerTwoHitFriendlyFire,
-							&StatisticsData::enemyHitByFriendlyFire}},
+				.seat = &SeatStatistics::friendlyHitsTaken,
+				.team = &EnemyTeamStatistics::friendlyHitsTaken},
 		StatRow{.label = "FRIENDLY KILLS TAKEN",
-				.columns = {&StatisticsData::playerOneDiedByFriendlyFire,
-							&StatisticsData::playerTwoDiedByFriendlyFire,
-							&StatisticsData::enemyDiedByFriendlyFire}},
+				.seat = &SeatStatistics::friendlyKillsTaken,
+				.team = &EnemyTeamStatistics::friendlyKillsTaken},
 		StatRow{.label = "BRICK KILLS",
-				.columns = {&StatisticsData::brickWallDiedByPlayerOne,
-							&StatisticsData::brickWallDiedByPlayerTwo,
-							&StatisticsData::brickWallDiedByEnemyTeam}},
+				.seat = &SeatStatistics::brickWallKills,
+				.team = &EnemyTeamStatistics::brickWallKills},
 		StatRow{.label = "STEEL KILLS",
-				.columns = {&StatisticsData::steelWallDiedByPlayerOne,
-							&StatisticsData::steelWallDiedByPlayerTwo,
-							&StatisticsData::steelWallDiedByEnemyTeam}},
+				.seat = &SeatStatistics::steelWallKills,
+				.team = &EnemyTeamStatistics::steelWallKills},
 		StatRow{.label = "BONUS PICKUPS",
-				.columns = {&StatisticsData::bonusPickupByPlayerOne,
-							&StatisticsData::bonusPickupByPlayerTwo,
-							&StatisticsData::bonusPickupByEnemyTeam}},
+				.seat = &SeatStatistics::bonusPickups,
+				.team = &EnemyTeamStatistics::bonusPickups},
 		StatRow{.label = "BONUS DESTROYED",
-				.columns = {&StatisticsData::bonusDestroyedByPlayerOne,
-							&StatisticsData::bonusDestroyedByPlayerTwo,
-							&StatisticsData::bonusDestroyedByEnemyTeam}},
-		StatRow{.label = "BONUS EXPIRED", .columns = {&StatisticsData::bonusExpired}},
+				.seat = &SeatStatistics::bonusesDestroyed,
+				.team = &EnemyTeamStatistics::bonusesDestroyed},
 };
 
 UiTable Caption(std::string text) { return UiTable{.rows = {UiRow{.cells = {TextCell(std::move(text), kTextColor)}}}}; }
@@ -91,9 +80,11 @@ UiRow RowOf(const std::string_view label, std::ranges::input_range auto&& values
 }
 }//namespace
 
-ScoreBoard::ScoreBoard(const std::shared_ptr<EventSystem>& events, const GameStatistics& statistics)
+ScoreBoard::ScoreBoard(const std::shared_ptr<EventSystem>& events, const GameStatistics& statistics,
+					   const GameConfig& gameConfig)
 	: _events{events}
 	, _statistics{statistics}
+	, _gameConfig{gameConfig}
 {
 	Subscribe();
 }
@@ -107,18 +98,7 @@ void ScoreBoard::Subscribe()
 
 void ScoreBoard::OnRespawnCountChangedTo(const RespawnCountChangedToEvent& event)
 {
-	switch (event.group)
-	{
-		case RespawnGroup::ENEMY_ALL:
-			_enemyRespawnCount = event.respawnCount;
-			return;
-		case RespawnGroup::PLAYER1:
-			_playerOneRespawnCount = event.respawnCount;
-			return;
-		case RespawnGroup::PLAYER2:
-			_playerTwoRespawnCount = event.respawnCount;
-			return;
-	}
+	_respawnCounts[static_cast<std::size_t>(event.group)] = event.respawnCount;
 }
 
 void ScoreBoard::OnDrawUserInterface(const DrawUserInterfaceEvent&) const { Draw(); }
@@ -165,20 +145,38 @@ void ScoreBoard::Draw() const
 
 void ScoreBoard::RenderStatistics() const
 {
-	UiTable statistics{.rows = {UiRow{.cells = {TextCell("", kTextColor), TextCell("P1", kTextColor),
-												TextCell("P2", kTextColor), TextCell("ENEMY", kTextColor)}}}};
+	const auto seats{kSlots | std::views::take(_gameConfig.SeatCount())};
+	UiTable statistics{.rows = {UiRow{.cells = {TextCell("", kTextColor)}}}};
+	std::ranges::transform(seats, std::back_inserter(statistics.rows.front().cells), [](const PlayerSlot slot)
+	{
+		return TextCell("P" + std::to_string(SeatIndex(slot) + 1u), kTextColor);
+	});
+	statistics.rows.front().cells.push_back(TextCell("ENEMY", kTextColor));
 
 	//NOTE: the respawn counts are the scoreboard's own, not the statistics block's
-	statistics.rows.push_back(
-			RowOf("RESPAWN REMAIN", std::array{_playerOneRespawnCount, _playerTwoRespawnCount, _enemyRespawnCount}));
+	std::vector<unsigned short> lives{};
+	std::ranges::transform(seats, std::back_inserter(lives), [this](const PlayerSlot slot)
+	{
+		return _respawnCounts[static_cast<std::size_t>(GroupOf(slot))];
+	});
+	lives.push_back(_respawnCounts[static_cast<std::size_t>(RespawnGroup::ENEMY_ALL)]);
+	statistics.rows.push_back(RowOf("RESPAWN REMAIN", lives));
 
 	const StatisticsData& data{_statistics.GetData()};
-	for (const auto& [label, columns]: kStatRows)
+	for (const auto& [label, seatField, teamField]: kStatRows)
 	{
-		statistics.rows.push_back(
-				RowOf(label, columns | std::views::take_while([](const StatField field) { return field != nullptr; })
-									 | std::views::transform([&data](const StatField field) { return data.*field; })));
+		std::vector<unsigned short> values{};
+		std::ranges::transform(seats, std::back_inserter(values),
+							   [&data, seatField](const PlayerSlot slot) { return data.Seat(slot).*seatField; });
+		if (teamField != nullptr)
+		{
+			values.push_back(data.enemyTeam.*teamField);
+		}
+
+		statistics.rows.push_back(RowOf(label, values));
 	}
+
+	statistics.rows.push_back(RowOf("BONUS EXPIRED", std::array{data.bonusExpired}));
 
 	std::vector<UiTable> tables{};
 	tables.reserve(4u);

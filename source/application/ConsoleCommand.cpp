@@ -62,17 +62,13 @@ std::expected<ConsoleCommand, std::string> ParseConsoleCommand(const std::string
 
 	if (name == "/kick")
 	{
-		if (argument == "p1")
+		const auto isNamed = [&argument](const PlayerSlot slot) { return argument == ToString(slot); };
+		if (const auto slot{std::ranges::find_if(kSlots, isNamed)}; slot != kSlots.end())
 		{
-			return KickCommand{.slot = PlayerSlot::P1};
+			return KickCommand{.slot = *slot};
 		}
 
-		if (argument == "p2")
-		{
-			return KickCommand{.slot = PlayerSlot::P2};
-		}
-
-		return Rejected("expected /kick p1 or /kick p2");
+		return Rejected("expected /kick and a seat, p1 to p4");
 	}
 
 	if (name == "/map")

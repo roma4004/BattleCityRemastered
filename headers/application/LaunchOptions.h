@@ -2,7 +2,9 @@
 
 #include "geometry/Point.h"
 #include "enums/GameMode.h"
+#include "enums/MatchRules.h"
 #include "enums/WindowSide.h"
+#include <cstddef>
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -23,4 +25,8 @@ struct LaunchOptions final
 	std::optional<std::uint16_t> serverPort{};
 	//NOTE: server only - where to write the port it actually got, for whoever spawned it
 	std::optional<std::string> portFilePath{};
+	//NOTE: server only - how many players the match takes
+	std::optional<std::size_t> seats{};
+	//NOTE: server only - who fights whom
+	std::optional<MatchRules> rules{};
 };

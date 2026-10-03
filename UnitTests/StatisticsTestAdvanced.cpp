@@ -7,6 +7,7 @@
 #include "components/StatisticsData.h"
 #include "entities/pawns/Bullet.h"
 #include "enums/Direction.h"
+#include "enums/PlayerSlot.h"
 #include "gtest/gtest.h"
 #include <memory>
 
@@ -55,13 +56,13 @@ TEST_F(StatisticsTestAdvanced, BulletHitByEnemyBullet)
 {
 	CreateBullet({.x = 0.0, .y = 5.0 + 1}, Direction::UP, 1u, Author::Enemy1);
 
-	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerOne, 0u);
-	EXPECT_EQ(_statistics->GetData().bulletHitByEnemy, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).bulletHits, 0u);
+	EXPECT_EQ(_statistics->GetData().enemyTeam.bulletHits, 0u);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerOne, 1u);
-	EXPECT_EQ(_statistics->GetData().bulletHitByEnemy, 1u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).bulletHits, 1u);
+	EXPECT_EQ(_statistics->GetData().enemyTeam.bulletHits, 1u);
 }
 
 // the incoming one is player two's - friendly fire counts the same
@@ -69,11 +70,11 @@ TEST_F(StatisticsTestAdvanced, BulletHitByPlayerOne)
 {
 	CreateBullet({.x = 0.0, .y = 5.0 + 1}, Direction::UP, 1u, Author::Player2);
 
-	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerOne, 0u);
-	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerTwo, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).bulletHits, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P2).bulletHits, 0u);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerOne, 1u);
-	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerTwo, 1u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).bulletHits, 1u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P2).bulletHits, 1u);
 }

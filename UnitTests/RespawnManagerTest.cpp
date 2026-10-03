@@ -7,9 +7,16 @@
 #include "components/events/ObjectLifecycleEvents.h"
 #include "components/TankSpawner.h"
 #include "components/managers/RespawnManager.h"
+#include "entities/pawns/Tank.h"
+#include "enums/Author.h"
+#include "enums/Faction.h"
 #include "enums/GameMode.h"
+#include "enums/GameState.h"
 #include "gtest/gtest.h"
 #include <memory>
+#include <optional>
+#include <ranges>
+#include <vector>
 
 // who is owed a respawn and how many lives are left: a death is announced and the counter of that seat is read
 class RespawnManagerTest : public testing::Test
@@ -270,4 +277,55 @@ TEST_F(RespawnManagerTest, PlayerTwoRunOutRespawnPointsAndTryMore)
 
 	EXPECT_EQ(0u, respawnActual);
 
+}
+
+// 2P free-for-all is won by the last player standing, not by clearing the bots
+TEST_F(RespawnManagerTest, TwoPlayersFreeForAllIsWonByTheLastPlayerStanding)
+{
+	std::optional<GameState> finished{};
+	const EventSubscription finishSub{_events->AddListener([&finished](const GameFinishedEvent& event)
+	{
+		finished = event.state;
+	})};
+	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::TwoPlayersFreeForAll, _respawnManager,
+							 _tankSpawner);
+	_events->EmitEvent(GameResetEvent{});
+
+	const auto killEvery = [this](const auto& isTarget)
+	{
+		for (const std::shared_ptr<BaseObj>& tank: _allObjects | std::views::filter(isTarget))
+		{
+			_events->EmitEvent(TankDiedEvent{.uuid = tank->GetUuid()});
+		}
+
+		std::erase_if(_allObjects, isTarget);
+	};
+	const auto isBot = [](const std::shared_ptr<BaseObj>& obj)
+	{
+		const auto tank{std::dynamic_pointer_cast<Tank>(obj)};
+
+		return tank != nullptr && FactionOf(tank->GetAuthor()) == Faction::EnemyTeam;
+	};
+	const auto isPlayerOne = [](const std::shared_ptr<BaseObj>& obj)
+	{
+		const auto tank{std::dynamic_pointer_cast<Tank>(obj)};
+
+		return tank != nullptr && tank->GetAuthor() == Author::Player1;
+	};
+
+	for (int wave{}; wave < 20; ++wave)
+	{
+		_events->EmitEvent(RespawnTanksEvent{});
+		killEvery(isBot);
+	}
+
+	ASSERT_FALSE(finished.has_value()) << "the bots were cleared with both players standing, and that ended it";
+
+	for (int life{}; life < 3; ++life)
+	{
+		_events->EmitEvent(RespawnTanksEvent{});
+		killEvery(isPlayerOne);
+	}
+
+	EXPECT_EQ(finished, GameState::Won);
 }

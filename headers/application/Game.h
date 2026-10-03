@@ -51,7 +51,7 @@ public:
 
 	void Run();
 
-	[[nodiscard]] int Result() const;
+	[[nodiscard]] static int Result();
 
 private:
 	void Subscribe();

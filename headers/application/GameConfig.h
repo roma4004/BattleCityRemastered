@@ -2,6 +2,7 @@
 #include "components/WorldGeometry.h"
 #include "enums/GameMode.h"
 #include "enums/GameState.h"
+#include "enums/MatchRules.h"
 #include "enums/PlayerSlot.h"
 #include "network/Endpoints.h"
 #include <chrono>
@@ -24,6 +25,12 @@ public:
 
 	std::optional<PlayerSlot> ownSlot{};
 	network::ServerAddress serverAddress{};
+	//NOTE: the host's; a client learns it with its seat
+	std::size_t networkSeats{kDefaultSeats};
+	//NOTE: the server's - a client mirrors the match and never needs them
+	MatchRules networkRules{};
+	//NOTE: how many enemies the field holds at once
+	std::size_t simultaneousEnemies{4u};
 
 	[[nodiscard]] bool IsAuthority() const noexcept { return ::IsAuthority(gameMode); }
 	[[nodiscard]] bool IsClient() const noexcept { return ::IsClient(gameMode); }
@@ -39,7 +46,25 @@ public:
 
 		return !IsClient() || ownSlot == slot;
 	}
-	[[nodiscard]] bool HasSecondPlayer() const noexcept { return ::HasSecondPlayer(gameMode); }
+	[[nodiscard]] std::size_t SeatCount() const noexcept
+	{
+		return IsNetworkGame(gameMode) ? networkSeats : LocalSeats(gameMode);
+	}
+	[[nodiscard]] MatchRules Rules() const noexcept
+	{
+		if (IsNetworkGame(gameMode))
+		{
+			return networkRules;
+		}
+
+		return ::IsFreeForAll(gameMode) ? MatchRules::FreeForAll : MatchRules::Classic;
+	}
+	[[nodiscard]] bool IsFreeForAll() const noexcept { return Rules() == MatchRules::FreeForAll; }
+	//NOTE: a free-for-all of several players keeps two bots on the field
+	[[nodiscard]] std::size_t EnemySeats() const noexcept
+	{
+		return IsFreeForAll() && SeatCount() > 1u ? 2u : simultaneousEnemies;
+	}
 	[[nodiscard]] UPoint LogicalSize() const noexcept;
 
 	UPoint battlefieldSize{WorldGeometry::kClassicBattlefieldSize};

@@ -39,6 +39,24 @@ protected:
 	}
 };
 
+// a four-seat host waits for four readies
+TEST_F(GameStateTest, AFourSeatServerWaitsForEveryReady)
+{
+	_stateManager = std::make_unique<GameStateManager>(_events, 4u);
+	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
+
+	for (const PlayerSlot slot: {PlayerSlot::P1, PlayerSlot::P2, PlayerSlot::P3})
+	{
+		_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = slot});
+	}
+
+	ASSERT_EQ(GameState::Lobby, _stateManager->GetState()) << "three of four started the match";
+
+	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P4});
+
+	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
+}
+
 // a local mode has both seats filled from the start, so the match begins on the spot
 TEST_F(GameStateTest, LocalGameStartsPlayingWithNoOneToWaitFor)
 {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Discovery.h"
+#include "enums/MatchRules.h"
 #include <array>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/udp.hpp>
@@ -17,7 +18,9 @@ struct FoundServer final
 {
 	std::string host{};
 	std::uint16_t gamePort{};
+	std::uint8_t seats{};
 	std::uint8_t freeSeats{};
+	MatchRules rules{};
 
 	[[nodiscard]] bool operator==(const FoundServer& rhs) const = default;
 };

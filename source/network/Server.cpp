@@ -11,11 +11,14 @@
 #include "network/commands/CommandBatch.h"
 #include "network/commands/Disconnect.h"
 #include "enums/DisconnectReason.h"
+#include "enums/MatchRules.h"
 #include "enums/PlayerSlot.h"
 #include "enums/GameState.h"
 #include "utils/Log.h"
 #include <algorithm>
 #include <chrono>
+#include <cstddef>
+#include <cstdint>
 #include <boost/asio/strand.hpp>
 #include <boost/asio/post.hpp>
 #include <memory>
@@ -31,11 +34,12 @@
 namespace network::commands
 {
 Server::Server(boost::asio::io_context& ioContext, const ServerAddress& address,
-			   const std::shared_ptr<EventSystem>& events)
+			   const std::shared_ptr<EventSystem>& events, const std::size_t seatCount, const MatchRules rules)
 	: _socket{ioContext, udp::endpoint{boost::asio::ip::make_address(address.host), address.port}}
 	, _boundPort{_socket.local_endpoint().port()}
+	, _seatCount{std::clamp(seatCount, std::size_t{1}, kSeatCount)}
 	, _beacon{ioContext, boost::asio::ip::make_address(address.host), _boundPort,
-			  [this] { return CountFreeSlots(); }}
+			  static_cast<std::uint8_t>(_seatCount), rules, [this] { return CountFreeSlots(); }}
 	, _tickTimer{ioContext}
 	, _events{events}
 	, _replicationOut{events}
@@ -55,7 +59,7 @@ Server::Server(boost::asio::io_context& ioContext, const ServerAddress& address,
 	_subs.push_back(_events->AddListener(this, &Server::OnAcceptingChanged));
 }
 
-Server::~Server()
+Server::~Server()// NOLINT(bugprone-exception-escape) - cancel() throws only on an error the timer service never sets
 {
 	Shutdown();
 }
@@ -94,7 +98,7 @@ std::uint8_t Server::CountFreeSlots() const
 	const std::lock_guard lock{_sessionsMutex};
 
 	std::uint8_t free{};
-	for (const PlayerSlot slot: {PlayerSlot::P1, PlayerSlot::P2})
+	for (const PlayerSlot slot: kSlots | std::views::take(_seatCount))
 	{
 		const auto holdsSlot = [slot](const std::shared_ptr<Session>& session)
 		{
@@ -184,7 +188,7 @@ void Server::OnDatagram(const std::string_view datagram, const Clock::time_point
 
 void Server::RefuseSeat(const udp::endpoint& endpoint, const std::uint32_t connectionId, const Clock::time_point now)
 {
-	Log::Info("Server: both seats are taken, the client is told to wait for a free match");
+	Log::Info("Server: every seat is taken, the client is told to wait for a free match");
 
 	CommandBatch farewell;
 	farewell.commands.emplace_back(Disconnect{.reason = DisconnectReason::ServerFull});
@@ -215,7 +219,8 @@ void Server::Seat(const udp::endpoint& endpoint, const std::uint32_t connectionI
 		return;
 	}
 
-	const auto session{std::make_shared<Session>(endpoint, connectionId, _events, *slot, now)};
+	const auto session{std::make_shared<Session>(endpoint, connectionId, _events, *slot,
+												 static_cast<std::uint8_t>(_seatCount), now)};
 	_sessions.emplace_back(session);
 	lock.unlock();
 
@@ -293,7 +298,7 @@ void Server::OnStatusRequested(const ServerStatusRequestedEvent&) const
 
 	Log::Info("port " + std::to_string(_boundPort)
 			  + (_isAccepting.load(std::memory_order_acquire) ? " open" : " closed") + ", seats taken "
-			  + std::to_string(seated) + "/2");
+			  + std::to_string(seated) + '/' + std::to_string(_seatCount));
 }
 
 void Server::OnPlayersRequested(const ServerPlayersRequestedEvent&) const
@@ -403,7 +408,7 @@ std::vector<std::shared_ptr<Session>> Server::CopySessions() const
 
 std::optional<PlayerSlot> Server::FindFreeSlot() const
 {
-	for (const PlayerSlot slot: {PlayerSlot::P1, PlayerSlot::P2})
+	for (const PlayerSlot slot: kSlots | std::views::take(_seatCount))
 	{
 		//NOTE: a finished session gives its seat up at once - a client dialling back takes it before the sweep
 		const auto holdsSlot = [slot](const std::shared_ptr<Session>& session)

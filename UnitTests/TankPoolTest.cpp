@@ -12,6 +12,7 @@
 #include "enums/Author.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
+#include "enums/PlayerSlot.h"
 #include "enums/TankType.h"
 #include "geometry/ObjRectangle.h"
 #include "utils/Uuid.h"
@@ -25,7 +26,7 @@
 namespace
 {
 //NOTE: as many tanks as TankPool pre-builds
-constexpr std::size_t kSeatCount{6u};
+constexpr std::size_t kTankSeats{4u + kSeatCount};
 }//namespace
 
 class TankPoolTest : public testing::Test
@@ -70,7 +71,7 @@ TEST_F(TankPoolTest, AResetShelvesLiveTanksInsteadOfDroppingThem)
 
 	//NOTE: the free list is a queue, so it comes back only behind the seats that were never taken
 	std::vector<const Tank*> reused{};
-	for (std::size_t i = 0u; i < kSeatCount; ++i)
+	for (std::size_t i = 0u; i < kTankSeats; ++i)
 	{
 		reused.push_back(SpawnTank(UuidUtils::GetRandomUuid()).get());
 	}

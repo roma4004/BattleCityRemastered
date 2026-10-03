@@ -99,7 +99,9 @@ bool DiscoveryScan::Poll()
 
 		const FoundServer server{.host = sender.address().to_string(),
 								 .gamePort = reply->gamePort,
-								 .freeSeats = reply->freeSeats};
+								 .seats = reply->seats,
+								 .freeSeats = reply->freeSeats,
+								 .rules = reply->rules};
 		const auto isSame = [&server](const Entry& entry)
 		{
 			return entry.server.host == server.host && entry.server.gamePort == server.gamePort;

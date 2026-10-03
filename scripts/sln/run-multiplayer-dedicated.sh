@@ -42,10 +42,11 @@ fi
 port=$(cat "$port_file")
 echo "server on ${BC_ADDRESS:-this machine's address}:$port"
 
-"$exe" --client $address --port="$port" --size=800,600 --pos=0,0 &
+# --pos places the picture, not the frame - y=40 keeps the title bar on the screen
+"$exe" --client $address --port="$port" --size=800,600 --pos=0,40 &
 first=$!
 sleep 1
-"$exe" --client $address --port="$port" --size=800,600 --pos=810,0 &
+"$exe" --client $address --port="$port" --size=800,600 --pos=810,40 &
 second=$!
 
 wait "$first" "$second"

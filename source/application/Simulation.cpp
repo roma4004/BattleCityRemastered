@@ -36,7 +36,7 @@ constexpr double kMaxCatchUpSteps{4.0};
 
 Simulation::Simulation(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig)
 	: _events{events}
-	, _stateManager{std::make_unique<GameStateManager>(events)}
+	, _stateManager{std::make_unique<GameStateManager>(events, gameConfig.networkSeats)}
 	, _animationManager{std::make_unique<AnimationManager>(events)}
 	, _statistics{std::make_unique<GameStatistics>(events)}
 	, _worldScaleManager{std::make_unique<WorldScaleManager>(events, gameConfig)}
@@ -104,7 +104,9 @@ void Simulation::OnGameModeChangedTo(const GameModeChangedToEvent& event)
 
 	if (IsHost(event.mode))
 	{
-		auto server{std::make_unique<network::commands::ServerNode>(_gameConfig.serverAddress, _events)};
+		auto server{std::make_unique<network::commands::ServerNode>(_gameConfig.serverAddress, _events,
+																	_gameConfig.networkSeats,
+																	_gameConfig.networkRules)};
 		//NOTE: asked for port 0, the OS picked one - read it here, while the concrete type is still in hand
 		_boundPort = server->GetBoundPort();
 		_networkNode = std::move(server);
@@ -189,7 +191,14 @@ void Simulation::OnConnectedToHost(const ClientConnectedToHostEvent&)
 	_isEnterLobbyPending = _gameConfig.gameState == GameState::Lobby;
 }
 
-void Simulation::OnPlayerSlotAssigned(const PlayerSlotAssignedEvent& event) { _gameConfig.ownSlot = event.slot; }
+void Simulation::OnPlayerSlotAssigned(const PlayerSlotAssignedEvent& event)
+{
+	_gameConfig.ownSlot = event.slot;
+	if (event.seatCount > 0u)
+	{
+		_gameConfig.networkSeats = event.seatCount;
+	}
+}
 
 void Simulation::OnHostLeft(const ClientInDisconnectEvent&) { _isLinkUp = false; }
 

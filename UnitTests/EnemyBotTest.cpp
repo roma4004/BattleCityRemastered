@@ -20,6 +20,7 @@
 #include "enums/Direction.h"
 #include "geometry/Point.h"
 #include "gtest/gtest.h"
+#include "enums/GameMode.h"
 #include <memory>
 
 // what a bot decides to shoot at: a target is put in its line of sight, one tick runs, and a new object means it fired
@@ -497,4 +498,20 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayerInTheBush)
 	const size_t sizeAfter{_allObjects.size()};
 	EXPECT_EQ(sizeBefore, sizeAfter);
 	EXPECT_EQ(sizeAfter, sizeBefore);
+}
+
+// in a free-for-all another bot is a target
+TEST_F(EnemyBotTest, AFreeForAllBotShootsAnotherBot)
+{
+	_gameConfig.gameMode = GameMode::FreeForAll;
+	_gameConfig.botShootObstacleChance = 0.0;
+	_gameConfig.botNoticeDelayFactor = 0.0;
+	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
+	CreateBot({.x = 0.0, .y = _tankSize * 3.0}, Author::Enemy2, Direction::DOWN);
+
+	const size_t sizeBefore{_allObjects.size()};
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_LT(sizeBefore, _allObjects.size());
 }

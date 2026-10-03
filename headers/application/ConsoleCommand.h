@@ -49,7 +49,7 @@ inline constexpr std::array kConsoleHelp{
 		"/restart - restart the match",
 		"/status - phase, uptime, fps, port, seats",
 		"/players - who sits where, from which address, for how long",
-		"/kick p1|p2 - send a seat's client away for good",
+		"/kick p1..p4 - send a seat's client away for good",
 		"/close, /open - stop and resume taking new clients",
 		"/pause, /resume - pause and resume the match",
 		"/map NAME - restart the match on Resources/Maps/NAME.map",

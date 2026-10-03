@@ -18,6 +18,7 @@
 #include "enums/Direction.h"
 #include "enums/InputChannel.h"
 #include "geometry/Point.h"
+#include "enums/PlayerSlot.h"
 #include "gtest/gtest.h"
 #include <chrono>
 #include <memory>
@@ -112,11 +113,11 @@ TEST_F(StatisticsTest, PlayerOneHitByEnemy)
 	CreatePlayer({.x = 0.0, .y = 0.0});
 	CreateBullet({.x = _tankSize / 2.0, .y = _tankSize}, Direction::UP, Author::Enemy1);
 
-	EXPECT_EQ(_statistics->GetData().playerOneHitByEnemyTeam, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).hitByEnemyTeam, 0u);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetData().playerOneHitByEnemyTeam, 1u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).hitByEnemyTeam, 1u);
 }
 
 // the same shot fired by the other seat is friendly fire and counted apart
@@ -125,11 +126,11 @@ TEST_F(StatisticsTest, PlayerOneHitByFriend)
 	CreatePlayer({.x = 0.0, .y = 0.0});
 	CreateBullet({.x = _tankSize / 2.0, .y = _tankSize + 1.0}, Direction::UP, Author::Player2);
 
-	EXPECT_EQ(_statistics->GetData().playerOneHitFriendlyFire, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).friendlyHitsTaken, 0u);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetData().playerOneHitFriendlyFire, 1u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).friendlyHitsTaken, 1u);
 }
 
 // the second seat keeps its own counters, so the enemy shot is repeated into it
@@ -138,11 +139,11 @@ TEST_F(StatisticsTest, PlayerTwoHitByEnemy)
 	CreatePlayer({.x = _tankSize + 1.0, .y = 0.0}, Author::Player2);
 	CreateBullet({.x = _tankSize + _tankSize / 2.0, .y = _tankSize}, Direction::UP, Author::Enemy1);
 
-	EXPECT_EQ(_statistics->GetData().playerTwoHitByEnemyTeam, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P2).hitByEnemyTeam, 0u);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetData().playerTwoHitByEnemyTeam, 1u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P2).hitByEnemyTeam, 1u);
 }
 
 // and player one shooting player two is friendly fire on that seat
@@ -151,11 +152,11 @@ TEST_F(StatisticsTest, PlayerTwoHitByFriend)
 	CreatePlayer({.x = _tankSize + 1.0, .y = 0.0}, Author::Player2);
 	CreateBullet({.x = _tankSize + _tankSize / 2.0, .y = _tankSize}, Direction::UP, Author::Player1);
 
-	EXPECT_EQ(_statistics->GetData().playerTwoHitFriendlyFire, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P2).friendlyHitsTaken, 0u);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetData().playerTwoHitFriendlyFire, 1u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P2).friendlyHitsTaken, 1u);
 }
 
 // the same shot read as a death: friendly fire kills are per seat
@@ -164,11 +165,11 @@ TEST_F(StatisticsTest, PlayerOneDiedByFriend)
 	CreatePlayer({.x = 0.0, .y = 0.0});
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::UP, Author::Player2);
 
-	EXPECT_EQ(_statistics->GetData().playerOneDiedByFriendlyFire, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).friendlyKillsTaken, 0u);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetData().playerOneDiedByFriendlyFire, 1u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).friendlyKillsTaken, 1u);
 }
 
 // a player killed by the enemy team goes into one shared counter, whichever seat fell
@@ -177,11 +178,11 @@ TEST_F(StatisticsTest, PlayerTwoDiedByEnemy)
 	CreatePlayer({.x = _tankSize + 1.0, .y = 0.0}, Author::Player2);
 	CreateBullet({.x = _tankSize + _tankSize / 2.0, .y = _tankSize}, Direction::UP, Author::Enemy1);
 
-	EXPECT_EQ(_statistics->GetData().playerDiedByEnemyTeam, 0u);
+	EXPECT_EQ(_statistics->GetData().enemyTeam.playerKills, 0u);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetData().playerDiedByEnemyTeam, 1u);
+	EXPECT_EQ(_statistics->GetData().enemyTeam.playerKills, 1u);
 }
 
 // the other seat, to show the shared counter takes both
@@ -190,11 +191,11 @@ TEST_F(StatisticsTest, PlayerOneDiedByEnemy)
 	CreatePlayer({.x = 0.0, .y = 0.0});
 	CreateBullet({.x = _caliber.size.x, .y = _tankSize}, Direction::UP, Author::Enemy1);
 
-	EXPECT_EQ(_statistics->GetData().playerDiedByEnemyTeam, 0u);
+	EXPECT_EQ(_statistics->GetData().enemyTeam.playerKills, 0u);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetData().playerDiedByEnemyTeam, 1u);
+	EXPECT_EQ(_statistics->GetData().enemyTeam.playerKills, 1u);
 }
 
 // a death by friendly fire, on the other hand, keeps the seat it happened to
@@ -203,11 +204,11 @@ TEST_F(StatisticsTest, PlayerTwoDiedByFriend)
 	CreatePlayer({.x = _tankSize + 1.0, .y = 0.0}, Author::Player2);
 	CreateBullet({.x = _tankSize + _tankSize / 2.0, .y = _tankSize}, Direction::UP, Author::Player1);
 
-	EXPECT_EQ(_statistics->GetData().playerTwoDiedByFriendlyFire, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P2).friendlyKillsTaken, 0u);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetData().playerTwoDiedByFriendlyFire, 1u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P2).friendlyKillsTaken, 1u);
 }
 
 // a bot shot by a bot - the enemy team counts its own friendly fire too
@@ -216,11 +217,11 @@ TEST_F(StatisticsTest, EnemyHitByFriend)
 	CreateBot({.x = _tankSize * 2.0 + 2.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
 	CreateBullet({.x = _tankSize * 2.0 + 2.0 + _tankSize / 2.0, .y = _tankSize}, Direction::UP, Author::Enemy2);
 
-	EXPECT_EQ(_statistics->GetData().enemyHitByFriendlyFire, 0u);
+	EXPECT_EQ(_statistics->GetData().enemyTeam.friendlyHitsTaken, 0u);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetData().enemyHitByFriendlyFire, 1u);
+	EXPECT_EQ(_statistics->GetData().enemyTeam.friendlyHitsTaken, 1u);
 }
 
 // a bot hit by player one
@@ -229,11 +230,11 @@ TEST_F(StatisticsTest, EnemyHitByPlayerOne)
 	CreateBot({.x = _tankSize * 2.0 + 2.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
 	CreateBullet({.x = _tankSize * 2.0 + 2.0 + _tankSize / 2.0, .y = _tankSize}, Direction::UP, Author::Player1);
 
-	EXPECT_EQ(_statistics->GetData().enemyHitByPlayerOne, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).enemyHits, 0u);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetData().enemyHitByPlayerOne, 1u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).enemyHits, 1u);
 }
 
 // and by player two - the seats never share a bucket
@@ -242,11 +243,11 @@ TEST_F(StatisticsTest, EnemyHitByPlayerTwo)
 	CreateBot({.x = _tankSize * 2.0 + 2.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
 	CreateBullet({.x = _tankSize * 2.0 + 2.0 + _tankSize / 2.0, .y = _tankSize + 1}, Direction::UP, Author::Player2);
 
-	EXPECT_EQ(_statistics->GetData().enemyHitByPlayerTwo, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P2).enemyHits, 0u);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetData().enemyHitByPlayerTwo, 1u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P2).enemyHits, 1u);
 }
 
 // the same three shots read as kills, because a tank dies from the hit it takes
@@ -255,11 +256,11 @@ TEST_F(StatisticsTest, EnemyDiedByFriend)
 	CreateBot({.x = _tankSize * 2.0 + 2.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
 	CreateBullet({.x = _tankSize * 2.0 + 2.0 + _tankSize / 2.0, .y = _tankSize}, Direction::UP, Author::Enemy2);
 
-	EXPECT_EQ(_statistics->GetData().enemyDiedByFriendlyFire, 0u);
+	EXPECT_EQ(_statistics->GetData().enemyTeam.friendlyKillsTaken, 0u);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetData().enemyDiedByFriendlyFire, 1u);
+	EXPECT_EQ(_statistics->GetData().enemyTeam.friendlyKillsTaken, 1u);
 }
 
 // a bot killed by player one
@@ -268,11 +269,11 @@ TEST_F(StatisticsTest, EnemyDiedByPlayerOne)
 	CreateBot({.x = _tankSize * 2.0 + 2.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
 	CreateBullet({.x = _tankSize * 2.0 + 2.0 + _tankSize / 2.0, .y = _tankSize + 1}, Direction::UP, Author::Player1);
 
-	EXPECT_EQ(_statistics->GetData().enemyDiedByPlayerOne, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).enemyKills, 0u);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetData().enemyDiedByPlayerOne, 1u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).enemyKills, 1u);
 }
 
 // and by player two
@@ -281,11 +282,23 @@ TEST_F(StatisticsTest, EnemyDiedByPlayerTwo)
 	CreateBot({.x = _tankSize * 2.0 + 2.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
 	CreateBullet({.x = _tankSize * 2.0 + 2.0 + _tankSize / 2.0, .y = _tankSize}, Direction::UP, Author::Player2);
 
-	EXPECT_EQ(_statistics->GetData().enemyDiedByPlayerTwo, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P2).enemyKills, 0u);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetData().enemyDiedByPlayerTwo, 1u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P2).enemyKills, 1u);
+}
+
+// a third seat scores into its own column
+TEST_F(StatisticsTest, AThirdSeatScoresIntoItsOwnColumn)
+{
+	CreateBot({.x = _tankSize * 2.0 + 2.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
+	CreateBullet({.x = _tankSize * 2.0 + 2.0 + _tankSize / 2.0, .y = _tankSize}, Direction::UP, Author::Player3);
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P3).enemyHits, 1u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).enemyHits, 0u);
 }
 
 // two shots meeting head-on: both authors are credited, each in their own counter
@@ -294,13 +307,13 @@ TEST_F(StatisticsTest, BulletHitByPlayerTwo)
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player1);
 	CreateBullet({.x = 0.0, .y = _tankSize + _caliber.size.y + 1.0}, Direction::UP, Author::Player2);
 
-	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerOne, 0u);
-	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerTwo, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).bulletHits, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P2).bulletHits, 0u);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerOne, 1u);
-	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerTwo, 1u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).bulletHits, 1u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P2).bulletHits, 1u);
 }
 
 // the counter is about bullets meeting bullets - a wall the shot destroys has a row of its own
@@ -312,8 +325,8 @@ TEST_F(StatisticsTest, BulletIntoBrickWallIsNotABulletHit)
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerOne, 0u);
-	EXPECT_EQ(_statistics->GetData().brickWallDiedByPlayerOne, 1u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).bulletHits, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).brickWallKills, 1u);
 }
 
 // a shot the wall swallows whole is nobody's hit either
@@ -324,8 +337,8 @@ TEST_F(StatisticsTest, BulletIntoSteelWallIsNotABulletHit)
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerOne, 0u);
-	EXPECT_EQ(_statistics->GetData().steelWallDiedByPlayerOne, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).bulletHits, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).steelWallKills, 0u);
 }
 
 // and the shot that flies off the field is not one either - that was the bug
@@ -335,7 +348,7 @@ TEST_F(StatisticsTest, BulletIntoFieldEdgeIsNotABulletHit)
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerOne, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).bulletHits, 0u);
 }
 
 // a brick blown out by the enemy team
@@ -346,11 +359,11 @@ TEST_F(StatisticsTest, BrickWallDiedByEnemy)
 
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Enemy1);
 
-	EXPECT_EQ(_statistics->GetData().brickWallDiedByEnemyTeam, 0u);
+	EXPECT_EQ(_statistics->GetData().enemyTeam.brickWallKills, 0u);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetData().brickWallDiedByEnemyTeam, 1u);
+	EXPECT_EQ(_statistics->GetData().enemyTeam.brickWallKills, 1u);
 }
 
 // the same brick by player one
@@ -361,11 +374,11 @@ TEST_F(StatisticsTest, BrickWallDiedByPlayerOne)
 
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player1);
 
-	EXPECT_EQ(_statistics->GetData().brickWallDiedByPlayerOne, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).brickWallKills, 0u);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetData().brickWallDiedByPlayerOne, 1u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).brickWallKills, 1u);
 }
 
 // and by player two
@@ -376,11 +389,11 @@ TEST_F(StatisticsTest, BrickDiedByPlayerTwo)
 
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player2);
 
-	EXPECT_EQ(_statistics->GetData().brickWallDiedByPlayerTwo, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P2).brickWallKills, 0u);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetData().brickWallDiedByPlayerTwo, 1u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P2).brickWallKills, 1u);
 }
 
 // steel gives only to a tier 3 shot, so the caliber is raised before firing
@@ -392,11 +405,11 @@ TEST_F(StatisticsTest, SteelWallDiedByEnemy)
 	_caliber.tier = 3u;
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Enemy1);
 
-	EXPECT_EQ(_statistics->GetData().steelWallDiedByEnemyTeam, 0u);
+	EXPECT_EQ(_statistics->GetData().enemyTeam.steelWallKills, 0u);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetData().steelWallDiedByEnemyTeam, 1u);
+	EXPECT_EQ(_statistics->GetData().enemyTeam.steelWallKills, 1u);
 }
 
 // the same tier 3 shot from player one
@@ -408,11 +421,11 @@ TEST_F(StatisticsTest, SteelWallDiedByPlayerOne)
 	_caliber.tier = 3u;
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player1);
 
-	EXPECT_EQ(_statistics->GetData().steelWallDiedByPlayerOne, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).steelWallKills, 0u);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetData().steelWallDiedByPlayerOne, 1u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).steelWallKills, 1u);
 }
 
 // and from player two
@@ -424,11 +437,11 @@ TEST_F(StatisticsTest, SteelDiedByPlayerTwo)
 	_caliber.tier = 3u;
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player2);
 
-	EXPECT_EQ(_statistics->GetData().steelWallDiedByPlayerTwo, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P2).steelWallKills, 0u);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetData().steelWallDiedByPlayerTwo, 1u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P2).steelWallKills, 1u);
 }
 
 // two enemy shots cancelling each other land in one bucket, so it reads two
@@ -437,11 +450,11 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByEnemy)
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Enemy1);
 	CreateBullet({.x = 0.0, .y = _tankSize + _caliber.size.y + 1.0}, Direction::UP, Author::Enemy2);
 
-	EXPECT_EQ(_statistics->GetData().bulletHitByEnemy, 0u);
+	EXPECT_EQ(_statistics->GetData().enemyTeam.bulletHits, 0u);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetData().bulletHitByEnemy, 2u);
+	EXPECT_EQ(_statistics->GetData().enemyTeam.bulletHits, 2u);
 }
 
 // the same meeting between the seats gives each of them one
@@ -450,13 +463,13 @@ TEST_F(StatisticsTest, BulletHitBulletPlayerOneAndByPlayerTwo)
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player1);
 	CreateBullet({.x = 0.0, .y = _tankSize + _caliber.size.y + 1.0}, Direction::UP, Author::Player2);
 
-	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerOne, 0u);
-	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerTwo, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).bulletHits, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P2).bulletHits, 0u);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerOne, 1u);
-	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerTwo, 1u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).bulletHits, 1u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P2).bulletHits, 1u);
 }
 
 // a mixed meeting credits both sides at once
@@ -465,13 +478,13 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerOne)
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player1);
 	CreateBullet({.x = 0.0, .y = _tankSize + _caliber.size.y + 1.0}, Direction::UP, Author::Enemy1);
 
-	EXPECT_EQ(_statistics->GetData().bulletHitByEnemy, 0u);
-	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerOne, 0u);
+	EXPECT_EQ(_statistics->GetData().enemyTeam.bulletHits, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).bulletHits, 0u);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetData().bulletHitByEnemy, 1u);
-	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerOne, 1u);
+	EXPECT_EQ(_statistics->GetData().enemyTeam.bulletHits, 1u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).bulletHits, 1u);
 }
 
 // the same across the other seat
@@ -480,13 +493,13 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerTwo)
 	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player2);
 	CreateBullet({.x = 0.0, .y = _tankSize + _caliber.size.y + 1.0}, Direction::UP, Author::Enemy1);
 
-	EXPECT_EQ(_statistics->GetData().bulletHitByEnemy, 0u);
-	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerTwo, 0u);
+	EXPECT_EQ(_statistics->GetData().enemyTeam.bulletHits, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P2).bulletHits, 0u);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetData().bulletHitByEnemy, 1u);
-	EXPECT_EQ(_statistics->GetData().bulletHitByPlayerTwo, 1u);
+	EXPECT_EQ(_statistics->GetData().enemyTeam.bulletHits, 1u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P2).bulletHits, 1u);
 }
 
 // two bonuses dropped in front of a bot, one of them under it - only that one is taken
@@ -497,15 +510,15 @@ TEST_F(StatisticsTest, BonusPickUpByEnemyCount)
 	_bonusSpawner->SpawnRandomBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize});
 	_bonusSpawner->SpawnRandomBonus({.x = _tankSize + 1.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize});
 
-	EXPECT_EQ(_statistics->GetData().bonusPickupByEnemyTeam, 0u);
-	EXPECT_EQ(_statistics->GetData().bonusPickupByPlayerOne, 0u);
-	EXPECT_EQ(_statistics->GetData().bonusPickupByPlayerTwo, 0u);
+	EXPECT_EQ(_statistics->GetData().enemyTeam.bonusPickups, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).bonusPickups, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P2).bonusPickups, 0u);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetData().bonusPickupByEnemyTeam, 1u);
-	EXPECT_EQ(_statistics->GetData().bonusPickupByPlayerOne, 0u);
-	EXPECT_EQ(_statistics->GetData().bonusPickupByPlayerTwo, 0u);
+	EXPECT_EQ(_statistics->GetData().enemyTeam.bonusPickups, 1u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).bonusPickups, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P2).bonusPickups, 0u);
 }
 
 // the same pair placed out of reach: standing still picks nothing up
@@ -516,15 +529,15 @@ TEST_F(StatisticsTest, BonusNotPickUpByEnemyNotCount)
 	_bonusSpawner->SpawnRandomBonus({.x = 0.0, .y = _tankSize * 2 + 1.0, .w = _tankSize, .h = _tankSize});
 	_bonusSpawner->SpawnRandomBonus({.x = _tankSize * 2 + 1.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize});
 
-	EXPECT_EQ(_statistics->GetData().bonusPickupByEnemyTeam, 0u);
-	EXPECT_EQ(_statistics->GetData().bonusPickupByPlayerOne, 0u);
-	EXPECT_EQ(_statistics->GetData().bonusPickupByPlayerTwo, 0u);
+	EXPECT_EQ(_statistics->GetData().enemyTeam.bonusPickups, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).bonusPickups, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P2).bonusPickups, 0u);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetData().bonusPickupByEnemyTeam, 0u);
-	EXPECT_EQ(_statistics->GetData().bonusPickupByPlayerOne, 0u);
-	EXPECT_EQ(_statistics->GetData().bonusPickupByPlayerTwo, 0u);
+	EXPECT_EQ(_statistics->GetData().enemyTeam.bonusPickups, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).bonusPickups, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P2).bonusPickups, 0u);
 }
 
 // player one is driven down onto the bonus and the pickup is credited to that seat alone
@@ -536,15 +549,15 @@ TEST_F(StatisticsTest, BonusPickUpByPlayerOneCount)
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
 
-	EXPECT_EQ(_statistics->GetData().bonusPickupByEnemyTeam, 0u);
-	EXPECT_EQ(_statistics->GetData().bonusPickupByPlayerOne, 0u);
-	EXPECT_EQ(_statistics->GetData().bonusPickupByPlayerTwo, 0u);
+	EXPECT_EQ(_statistics->GetData().enemyTeam.bonusPickups, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).bonusPickups, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P2).bonusPickups, 0u);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetData().bonusPickupByEnemyTeam, 0u);
-	EXPECT_EQ(_statistics->GetData().bonusPickupByPlayerOne, 1u);
-	EXPECT_EQ(_statistics->GetData().bonusPickupByPlayerTwo, 0u);
+	EXPECT_EQ(_statistics->GetData().enemyTeam.bonusPickups, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).bonusPickups, 1u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P2).bonusPickups, 0u);
 }
 
 // driven the other way instead - the bonus stays where it is
@@ -556,15 +569,15 @@ TEST_F(StatisticsTest, BonusNotPickUpByPlayerOneNotCount)
 
 	_bonusSpawner->SpawnRandomBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize});
 
-	EXPECT_EQ(_statistics->GetData().bonusPickupByEnemyTeam, 0u);
-	EXPECT_EQ(_statistics->GetData().bonusPickupByPlayerOne, 0u);
-	EXPECT_EQ(_statistics->GetData().bonusPickupByPlayerTwo, 0u);
+	EXPECT_EQ(_statistics->GetData().enemyTeam.bonusPickups, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).bonusPickups, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P2).bonusPickups, 0u);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetData().bonusPickupByEnemyTeam, 0u);
-	EXPECT_EQ(_statistics->GetData().bonusPickupByPlayerOne, 0u);
-	EXPECT_EQ(_statistics->GetData().bonusPickupByPlayerTwo, 0u);
+	EXPECT_EQ(_statistics->GetData().enemyTeam.bonusPickups, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).bonusPickups, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P2).bonusPickups, 0u);
 }
 
 // the second seat does the same, with its own keys and its own counter
@@ -576,15 +589,15 @@ TEST_F(StatisticsTest, BonusPickUpByPlayerTwoCount)
 
 	_bonusSpawner->SpawnRandomBonus({.x = _tankSize + 1.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize});
 
-	EXPECT_EQ(_statistics->GetData().bonusPickupByEnemyTeam, 0u);
-	EXPECT_EQ(_statistics->GetData().bonusPickupByPlayerOne, 0u);
-	EXPECT_EQ(_statistics->GetData().bonusPickupByPlayerTwo, 0u);
+	EXPECT_EQ(_statistics->GetData().enemyTeam.bonusPickups, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).bonusPickups, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P2).bonusPickups, 0u);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetData().bonusPickupByEnemyTeam, 0u);
-	EXPECT_EQ(_statistics->GetData().bonusPickupByPlayerOne, 0u);
-	EXPECT_EQ(_statistics->GetData().bonusPickupByPlayerTwo, 1u);
+	EXPECT_EQ(_statistics->GetData().enemyTeam.bonusPickups, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).bonusPickups, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P2).bonusPickups, 1u);
 }
 
 // and drives away from it just as fruitlessly
@@ -596,15 +609,15 @@ TEST_F(StatisticsTest, BonusNotPickUpByPlayerTwoNotCount)
 
 	_bonusSpawner->SpawnRandomBonus({.x = _tankSize + 1.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize});
 
-	EXPECT_EQ(_statistics->GetData().bonusPickupByEnemyTeam, 0u);
-	EXPECT_EQ(_statistics->GetData().bonusPickupByPlayerOne, 0u);
-	EXPECT_EQ(_statistics->GetData().bonusPickupByPlayerTwo, 0u);
+	EXPECT_EQ(_statistics->GetData().enemyTeam.bonusPickups, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).bonusPickups, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P2).bonusPickups, 0u);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(_statistics->GetData().bonusPickupByEnemyTeam, 0u);
-	EXPECT_EQ(_statistics->GetData().bonusPickupByPlayerOne, 0u);
-	EXPECT_EQ(_statistics->GetData().bonusPickupByPlayerTwo, 0u);
+	EXPECT_EQ(_statistics->GetData().enemyTeam.bonusPickups, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).bonusPickups, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P2).bonusPickups, 0u);
 }
 
 // a bonus nobody touched: the lifetime runs out and the expiry is counted with no author
@@ -639,8 +652,8 @@ TEST_F(StatisticsTest, BonusShotIsCountedAndPickupIsNot)
 	shot->TakeDamage(1u, Author::Player1);
 
 	EXPECT_FALSE(shot->GetIsAlive());
-	EXPECT_EQ(_statistics->GetData().bonusDestroyedByPlayerOne, 1u);
-	EXPECT_EQ(_statistics->GetData().bonusPickupByPlayerOne, 0u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).bonusesDestroyed, 1u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).bonusPickups, 0u);
 
 	_bonusSpawner->SpawnBonus(rectBonus, BonusType::Helmet);
 	const auto taken{std::dynamic_pointer_cast<Bonus>(_allObjects.back())};
@@ -649,6 +662,6 @@ TEST_F(StatisticsTest, BonusShotIsCountedAndPickupIsNot)
 	taken->PickUpBonus(Author::Player1);
 
 	EXPECT_FALSE(taken->GetIsAlive());
-	EXPECT_EQ(_statistics->GetData().bonusPickupByPlayerOne, 1u);
-	EXPECT_EQ(_statistics->GetData().bonusDestroyedByPlayerOne, 1u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).bonusPickups, 1u);
+	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).bonusesDestroyed, 1u);
 }

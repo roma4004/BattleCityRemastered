@@ -10,6 +10,7 @@
 #include "components/events/BonusPickupEvents.h"
 #include "components/WorldSnapshot.h"
 #include "entities/BaseObjProperty.h"
+#include "enums/Author.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
 #include "enums/Faction.h"
@@ -35,10 +36,11 @@ struct BonusRecipe
 
 constexpr std::array s_recipes{
 		BonusRecipe{.type = BonusType::Timer,
-					.emit = [](EventSystem& events, Author, const Faction faction)
+					.emit = [](EventSystem& events, const Author author, const Faction faction)
 					{
-						//NOTE: a timer freezes the other side, same as a grenade wipes it
-						events.EmitEvent(BonusTimerPickupEvent{.target = EnemiesOf(faction)});
+						//NOTE: freezes the other side, as a grenade wipes it; a free-for-all spares its taker
+						const Author spared{faction == Faction::Solo ? author : Author::None};
+						events.EmitEvent(BonusTimerPickupEvent{.target = EnemiesOf(faction), .spared = spared});
 					}},
 		BonusRecipe{.type = BonusType::Helmet,
 					.emit = [](EventSystem& events, const Author author, Faction)
@@ -46,9 +48,9 @@ constexpr std::array s_recipes{
 						events.EmitEvent(BonusHelmetPickupEvent{.author = author});
 					}},
 		BonusRecipe{.type = BonusType::Grenade,
-					.emit = [](EventSystem& events, Author, const Faction faction)
+					.emit = [](EventSystem& events, const Author author, const Faction faction)
 					{
-						events.EmitEvent(Key(EnemiesOf(faction)), BonusGrenadePickupEvent{});
+						events.EmitEvent(Key(EnemiesOf(faction)), BonusGrenadePickupEvent{.spared = author});
 					}},
 		BonusRecipe{.type = BonusType::Tank,
 					.emit = [](EventSystem& events, const Author author, Faction)
@@ -256,13 +258,14 @@ void Bonus::PickUpBonus(const Author author)
 		_events->EmitEvent(StatisticsBonusPickupEvent{.author = author});
 
 		const PickupEmitter emit{GetRecipe(_bonusType).emit};
-		emit(*_events, author, FactionOf(author));
+		const Faction faction{FactionOf(author, _gameConfig.Rules())};
+		emit(*_events, author, faction);
 
 		if (_isSuper)
 		{
 			//NOTE: a super bonus is simply its own effect twice - timed ones stack their duration,
 			//stepped ones (a tier, a life) advance one more step
-			emit(*_events, author, FactionOf(author));
+			emit(*_events, author, faction);
 		}
 
 		Despawn(DespawnReason::PickedUp);

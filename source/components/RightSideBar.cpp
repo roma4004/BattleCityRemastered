@@ -5,9 +5,11 @@
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/RenderUIEvents.h"
 #include "components/UiTable.h"
+#include "enums/PlayerSlot.h"
 #include "enums/RespawnGroup.h"
 #include "enums/UiIcon.h"
 #include "geometry/Point.h"
+#include <cstddef>
 #include <ranges>
 #include <string>
 #include <vector>
@@ -52,20 +54,34 @@ UiTable RightSideBar::EnemiesTable() const
 {
 	const auto toRow = [](auto&& tanks) { return UiRow{.cells = std::ranges::to<std::vector>(tanks)}; };
 
-	return UiTable{.rows = std::views::repeat(UiCell{.icon = UiIcon::SideBarEnemyTank}, _enemiesRespawnCount)
+	const unsigned short enemies{_respawnCounts[static_cast<std::size_t>(RespawnGroup::ENEMY_ALL)]};
+
+	return UiTable{.rows = std::views::repeat(UiCell{.icon = UiIcon::SideBarEnemyTank}, enemies)
 						   | std::views::chunk(kReservePerRow) | std::views::transform(toRow)
 						   | std::ranges::to<std::vector>()};
 }
 
-//NOTE: no second player, no row - the flag moves up into the place it leaves
+//NOTE: a row per seat, the flag moves up; past two seats they are text - the atlas pictures only two
 UiTable RightSideBar::CountersTable() const
 {
-	UiTable table{
-			.rows = {UiRow{.cells = {Counter(UiIcon::SideBarPlayerOne, _playerOneRespawnCount, kLivesNumberOffset)}}}};
-	if (_gameConfig.HasSecondPlayer())
+	const auto livesOf = [this](const PlayerSlot slot)
 	{
-		table.rows.push_back(
-				UiRow{.cells = {Counter(UiIcon::SideBarPlayerTwo, _playerTwoRespawnCount, kLivesNumberOffset)}});
+		return _respawnCounts[static_cast<std::size_t>(GroupOf(slot))];
+	};
+	const std::size_t seats{_gameConfig.SeatCount()};
+
+	UiTable table{};
+	for (const PlayerSlot slot: kSlots | std::views::take(seats))
+	{
+		if (seats > 2u)
+		{
+			const std::string label{std::to_string(SeatIndex(slot) + 1u) + "P " + std::to_string(livesOf(slot))};
+			table.rows.push_back(UiRow{.cells = {TextCell(label, kCounterColor)}});
+			continue;
+		}
+
+		const UiIcon picture{slot == PlayerSlot::P1 ? UiIcon::SideBarPlayerOne : UiIcon::SideBarPlayerTwo};
+		table.rows.push_back(UiRow{.cells = {Counter(picture, livesOf(slot), kLivesNumberOffset)}});
 	}
 
 	table.rows.push_back(UiRow{.cells = {Counter(UiIcon::SideBarStageFlag, _stageNumber, kStageNumberOffset)}});
@@ -75,18 +91,7 @@ UiTable RightSideBar::CountersTable() const
 
 void RightSideBar::OnRespawnCountChangedTo(const RespawnCountChangedToEvent& event)
 {
-	switch (event.group)
-	{
-		case RespawnGroup::ENEMY_ALL:
-			_enemiesRespawnCount = event.respawnCount;
-			return;
-		case RespawnGroup::PLAYER1:
-			_playerOneRespawnCount = event.respawnCount;
-			return;
-		case RespawnGroup::PLAYER2:
-			_playerTwoRespawnCount = event.respawnCount;
-			return;
-	}
+	_respawnCounts[static_cast<std::size_t>(event.group)] = event.respawnCount;
 }
 
 void RightSideBar::OnMapLoaded(const MapLoadedEvent& event) { _stageNumber = event.stage; }

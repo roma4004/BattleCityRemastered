@@ -1,12 +1,27 @@
 #include "application/CommandLineParser.h"
 #include "network/Endpoints.h"
+#include "enums/GameMode.h"
+#include "enums/MatchRules.h"
+#include "enums/PlayerSlot.h"
 #include "enums/WindowSide.h"
+#include <algorithm>
+#include <array>
 #include <charconv>
+#include <cstddef>
 #include <optional>
 #include <string_view>
+#include <system_error>
+#include <utility>
 
 namespace
 {
+//NOTE: each skips the demo and the menu
+constexpr std::array<std::pair<std::string_view, GameMode>, 4> kModeFlags{{
+		{"--server", GameMode::PlayAsHost},
+		{"--client", GameMode::PlayAsClient},
+		{"--ffa", GameMode::FreeForAll},
+		{"--2p-ffa", GameMode::TwoPlayersFreeForAll}}};
+
 //NOTE: "800,600", fully consumed - "800x600"/"800,60a" rejected
 std::optional<UPoint> ParsePoint(const std::string_view value)
 {
@@ -65,17 +80,10 @@ std::expected<LaunchOptions, ArgError> CommandLineParser::Parse(const int argc, 
 			continue;
 		}
 
-		if (arg == "--server")
+		if (const auto flag{std::ranges::find(kModeFlags, arg, &std::pair<std::string_view, GameMode>::first)};
+			flag != kModeFlags.end())
 		{
-			launchOptions.gameMode = GameMode::PlayAsHost;
-			launchOptions.isDemo = false;
-
-			continue;
-		}
-
-		if (arg == "--client")
-		{
-			launchOptions.gameMode = GameMode::PlayAsClient;
+			launchOptions.gameMode = flag->second;
 			launchOptions.isDemo = false;
 
 			continue;
@@ -191,10 +199,39 @@ std::expected<LaunchOptions, ArgError> CommandLineParser::ParseServer(const int 
 			continue;
 		}
 
+		if (arg.starts_with("--seats="))
+		{
+			const std::string_view value{arg.substr(std::string_view{"--seats="}.size())};
+			std::size_t seats{};
+			const auto* const last{value.data() + value.size()};
+			if (const auto [ptr, error] = std::from_chars(value.data(), last, seats);
+				error != std::errc{} || ptr != last || seats == 0u || seats > kSeatCount)
+			{
+				return std::unexpected(ArgError{.arg = std::string{arg}, .reason = "expected --seats=1 to --seats=4"});
+			}
+
+			launchOptions.seats = seats;
+
+			continue;
+		}
+
+		if (arg.starts_with("--rules="))
+		{
+			const std::string_view value{arg.substr(std::string_view{"--rules="}.size())};
+			if (value != "classic" && value != "ffa")
+			{
+				return std::unexpected(
+						ArgError{.arg = std::string{arg}, .reason = "expected --rules=classic or --rules=ffa"});
+			}
+
+			launchOptions.rules = value == "ffa" ? MatchRules::FreeForAll : MatchRules::Classic;
+
+			continue;
+		}
+
 		if (!arg.starts_with("--port="))
 		{
-			return std::unexpected(ArgError{.arg = std::string{arg},
-											.reason = "the server takes --address, --port, --port-file and --help"});
+			return std::unexpected(ArgError{.arg = std::string{arg}, .reason = "unknown option, --help lists them"});
 		}
 
 		launchOptions.serverPort = network::ParsePort(arg.substr(std::string_view{"--port="}.size()));

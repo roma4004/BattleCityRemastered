@@ -6,6 +6,7 @@
 #include <memory>
 #include <vector>
 
+enum class Author : char8_t;
 struct GameResetEvent;
 struct TankDiedEvent;
 struct WorldSnapshotRequestedEvent;
@@ -21,6 +22,8 @@ class GameStatistics final
 	void Subscribe();
 	void OnGameReset(const GameResetEvent&);
 	void Reset();
+	void Credit(Author author, unsigned short EnemyTeamStatistics::*team, unsigned short SeatStatistics::*seat);
+	void CreditSeat(Author author, unsigned short SeatStatistics::*seat);
 
 	void OnBulletHit(const StatisticsBulletHitEvent& event);
 	void OnTankHit(const StatisticsTankHitEvent& event);

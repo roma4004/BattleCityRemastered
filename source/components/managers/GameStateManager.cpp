@@ -6,12 +6,15 @@
 #include "components/events/RenderUIEvents.h"
 #include "components/events/ReplicationEvents.h"
 #include "components/WorldSnapshot.h"
+#include "enums/GameMode.h"
 #include "enums/UiIcon.h"
 #include "enums/PlayerSlot.h"
 #include <cstddef>
+#include <memory>
 
-GameStateManager::GameStateManager(const std::shared_ptr<EventSystem>& events)
+GameStateManager::GameStateManager(const std::shared_ptr<EventSystem>& events, const std::size_t seatCount)
 	: _events{events}
+	, _seatCount{seatCount}
 {
 	Subscribe();
 }
@@ -80,7 +83,7 @@ GameState GameStateManager::IdleStateForMode() const
 	}
 
 	//NOTE: only the host counts seats. A client waits to be told, so its own idle phase is the lobby
-	return IsHost(_gameMode) && _readySeats.all() ? GameState::Playing : GameState::Lobby;
+	return IsHost(_gameMode) && IsEveryoneReady() ? GameState::Playing : GameState::Lobby;
 }
 
 void GameStateManager::OnGameModeApplied(const GameModeAppliedEvent& event)
@@ -124,7 +127,7 @@ void GameStateManager::TakeSeat(const PlayerSlot slot)
 {
 	_readySeats.set(static_cast<std::size_t>(slot));
 
-	if (_state == GameState::Lobby && _readySeats.all())
+	if (_state == GameState::Lobby && IsEveryoneReady())
 	{
 		SetState(GameState::Playing);
 	}

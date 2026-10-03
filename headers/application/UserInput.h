@@ -22,6 +22,8 @@ union SDL_Event;
 struct SDL_GamepadAxisEvent;
 struct SDL_Config;
 struct ServerScreenShownEvent;
+struct GameModeChangedToEvent;
+struct PlayerSlotAssignedEvent;
 struct PanelRowsPlacedEvent;
 struct PauseStatusEvent;
 struct TabReleasedEvent;
@@ -56,6 +58,9 @@ class UserInput final
 	bool _isKeyTyped{};
 	GameMode _selectedGameMode{};
 	bool _areControllersSwapped{};
+	bool _isSecondPairSwapped{};
+	//NOTE: a client's seat; P3 and P4 drive it with the first device
+	std::optional<PlayerSlot> _ownSlot{};
 	UPoint _windowSize{};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
@@ -100,6 +105,9 @@ class UserInput final
 	void OnMenuShown(const MenuShownEvent& event);
 	void OnServerScreenShown(const ServerScreenShownEvent& event);
 	void OnPanelRowsPlaced(const PanelRowsPlacedEvent& event);
+	void OnGameModeChangedTo(const GameModeChangedToEvent&);
+	void OnPlayerSlotAssigned(const PlayerSlotAssignedEvent& event);
+	[[nodiscard]] PlayerSlot DeviceSlot(std::size_t index) const;
 
 	void InitControllers();
 	void ConnectController(const std::shared_ptr<SDL_Gamepad>& newController);

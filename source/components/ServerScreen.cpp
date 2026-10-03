@@ -8,6 +8,8 @@
 #include "components/events/TimingEvents.h"
 #include "enums/GameMode.h"
 #include "enums/InputChannel.h"
+#include "enums/MatchRules.h"
+#include "enums/PlayerSlot.h"
 #include "network/DiscoveryScan.h"
 #include "network/Endpoints.h"
 #include <algorithm>
@@ -16,13 +18,11 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
-#include <functional>
 #include <iterator>
 #include <memory>
 #include <numbers>
 #include <optional>
 #include <ranges>
-#include <span>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -39,7 +39,7 @@ constexpr unsigned int kFullServerColor{0xffa0a0a0u};
 constexpr unsigned int kErrorColor{0xffff0000u};
 
 //NOTE: rows kept for the list, so a found server does not push the address down
-constexpr std::size_t kListRows{4};
+constexpr std::size_t kListRows{5};
 
 constexpr std::size_t kOctets{4};
 constexpr std::size_t kOctetDigits{3};
@@ -50,15 +50,18 @@ constexpr std::size_t kIPv6Length{39};
 //NOTE: the whole address, then the port - a scope id typed after '%' takes a part between them
 constexpr std::size_t kIPv6Parts{2};
 constexpr std::size_t kScopePart{1};
-//NOTE: a little wider than the longest hint - a longer server row goes on to a second line
+//NOTE: a little wider than the longest hint
 constexpr std::size_t kRowSymbols{40};
 //NOTE: the IPv6 row at its longest - both typed rows are drawn small enough to fit it
 constexpr std::size_t kTypedSymbols{std::string_view{"[]:"}.size() + kIPv6Length + kPortDigits};
 constexpr std::ptrdiff_t kIPv6Groups{8};
 constexpr std::size_t kGroupDigits{4};
-//NOTE: a server tells only how many seats are free
-constexpr int kSeats{2};
 constexpr std::string_view kPlayersHeader{"PLAYERS  "};
+constexpr std::string_view kModeHeader{"MODE     "};
+//NOTE: discovery is IPv4 only - the longest address a found server has
+constexpr std::size_t kFoundAddressSymbols{kOctets * kOctetDigits + kOctets - 1 + 1 + kPortDigits};
+static_assert(kPlayersHeader.size() + kModeHeader.size() + kFoundAddressSymbols <= kRowSymbols,
+			  "a found server has to fit in one row");
 
 //NOTE: a terminal caret's period, fading instead of switching
 constexpr auto kCaretBlink{1060ms};
@@ -202,8 +205,7 @@ constexpr auto kCaretBlink{1060ms};
 
 [[nodiscard]] UiTable Keys()
 {
-	return UiTable{.rows = {UiRow{},
-							UiRow{.cells = {Word("Choose"), Word("Up / Down")}},
+	return UiTable{.rows = {UiRow{.cells = {Word("Choose"), Word("Up / Down")}},
 							UiRow{.cells = {Word("Caret"), Word("Left / Right, Space")}},
 							UiRow{.cells = {Word("Word"), Word("Ctrl+Left / Right, Tab")}},
 							UiRow{.cells = {Word("Port"), Word("optional, picked automatically")}},
@@ -212,23 +214,16 @@ constexpr auto kCaretBlink{1060ms};
 							UiRow{.cells = {Word("Back"), Word("Esc")}}}};
 }
 
-//NOTE: an address too long for the row goes on under itself, broken after a colon
-[[nodiscard]] std::vector<std::string> ServerLines(const network::FoundServer& server)
+[[nodiscard]] std::string ServerLine(const network::FoundServer& server)
 {
-	const int players{kSeats - server.freeSeats};
-	std::string seats{server.freeSeats == 0 ? "FULL" : std::to_string(players) + '/' + std::to_string(kSeats)};
+	const int players{server.seats - server.freeSeats};
+	std::string seats{server.freeSeats == 0 ? "FULL" : std::to_string(players) + '/' + std::to_string(server.seats)};
 	seats.resize(kPlayersHeader.size(), ' ');
+	std::string mode{server.rules == MatchRules::FreeForAll ? "FFA" : "CLASSIC"};
+	mode.resize(kModeHeader.size(), ' ');
 	const std::string host{server.host.contains(':') ? '[' + server.host + ']' : server.host};
-	const std::string address{host + ':' + std::to_string(server.gamePort)};
-	const std::size_t room{kRowSymbols - kPlayersHeader.size()};
-	if (address.size() <= room)
-	{
-		return {seats + address};
-	}
 
-	const std::size_t cut{address.rfind(':', room - 1) + 1};
-
-	return {seats + address.substr(0, cut), std::string(kPlayersHeader.size(), ' ') + address.substr(cut)};
+	return seats + mode + host + ':' + std::to_string(server.gamePort);
 }
 
 //NOTE: a server with someone waiting first, then an empty one, a full one last
@@ -236,43 +231,31 @@ constexpr auto kCaretBlink{1060ms};
 {
 	const auto rank = [](const network::FoundServer& server)
 	{
-		return server.freeSeats == 0 ? kSeats + 1 : server.freeSeats;
+		return server.freeSeats == 0 ? 2 : (server.freeSeats < server.seats ? 0 : 1);
 	};
 	std::ranges::stable_sort(servers, {}, rank);
 
 	return servers;
 }
 
-[[nodiscard]] std::size_t ListRows(const std::span<const network::FoundServer> servers)
-{
-	const auto rowsOf = [](const network::FoundServer& server) { return ServerLines(server).size(); };
-
-	return std::ranges::fold_left(servers | std::views::transform(rowsOf), std::size_t{}, std::plus{});
-}
-
 //NOTE: as far as the list scrolls - from there its last servers fill the rows
-[[nodiscard]] std::size_t LastFirstShown(const std::span<const network::FoundServer> servers)
+[[nodiscard]] constexpr std::size_t LastFirstShown(const std::size_t servers) noexcept
 {
-	std::size_t first{servers.size()};
-	while (first > 0 && ListRows(servers.subspan(first - 1)) <= kListRows)
-	{
-		--first;
-	}
-
-	return first;
+	return servers - std::min(servers, kListRows);
 }
 //TEMP: fake servers for a visual check of the scrolled list, after the real ones - not for commit
 std::vector<network::FoundServer> FakeServers()
 {
-	return JoinOrder({{.host = "255.255.255.255", .gamePort = 65535, .freeSeats = 1},
-					  {.host = "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff", .gamePort = 65535, .freeSeats = 2},
-					  {.host = "192.168.0.10", .gamePort = 50001, .freeSeats = 2},
-					  {.host = "255.255.255.254", .gamePort = 65534, .freeSeats = 0},
-					  {.host = "2001:db8:85a3:1234:5678:8a2e:370:7334", .gamePort = 65535, .freeSeats = 1},
-					  {.host = "ffff:ffff:ffff:ffff:ffff:ffff:ffff:fffe", .gamePort = 65534, .freeSeats = 0},
-					  {.host = "10.0.0.6", .gamePort = 4001, .freeSeats = 0},
-					  {.host = "fdfd::1a54:4f90", .gamePort = 5000, .freeSeats = 2},
-					  {.host = "192.168.0.14", .gamePort = 50005, .freeSeats = 1}});
+	constexpr MatchRules ffa{MatchRules::FreeForAll};
+	return JoinOrder({{.host = "255.255.255.255", .gamePort = 65535, .seats = 2, .freeSeats = 1},
+					  {.host = "172.16.254.1", .gamePort = 65535, .seats = 4, .freeSeats = 4, .rules = ffa},
+					  {.host = "192.168.0.10", .gamePort = 50001, .seats = 2, .freeSeats = 2},
+					  {.host = "255.255.255.254", .gamePort = 65534, .seats = 2, .freeSeats = 0},
+					  {.host = "10.20.30.40", .gamePort = 65535, .seats = 3, .freeSeats = 1, .rules = ffa},
+					  {.host = "255.255.255.253", .gamePort = 65534, .seats = 4, .freeSeats = 0, .rules = ffa},
+					  {.host = "10.0.0.6", .gamePort = 4001, .seats = 2, .freeSeats = 0},
+					  {.host = "192.168.100.200", .gamePort = 5000, .seats = 4, .freeSeats = 2},
+					  {.host = "192.168.0.14", .gamePort = 50005, .seats = 2, .freeSeats = 1}});
 }
 }//namespace
 
@@ -315,7 +298,7 @@ void ServerScreen::Open(const GameMode mode)
 	_openSubs.push_back(_events->AddListener(this, &ServerScreen::OnCancelled));
 	_openSubs.push_back(_events->AddListener(this, &ServerScreen::OnDrawUserInterface));
 	//NOTE: a pad cannot type, but it can pick a server and confirm
-	for (const InputChannel channel: {InputChannel::LocalP1, InputChannel::LocalP2})
+	for (const InputChannel channel: kSlots | std::views::transform(LocalInput))
 	{
 		_openSubs.push_back(_events->AddListener(Key(channel), this, &ServerScreen::OnPadUp));
 		_openSubs.push_back(_events->AddListener(Key(channel), this, &ServerScreen::OnPadDown));
@@ -366,7 +349,7 @@ void ServerScreen::OnPreTickUpdate(const PreTickUpdateEvent&)
 	const bool wasEmpty{_servers.empty()};
 	_servers = JoinOrder(_scan->Servers());
 	std::ranges::copy(FakeServers(), std::back_inserter(_servers)); //TEMP
-	_firstShown = std::min(_firstShown, LastFirstShown(_servers));
+	_firstShown = std::min(_firstShown, LastFirstShown(_servers.size()));
 	if (!focused)
 	{
 		//NOTE: the first servers found take the focus they would have had at opening, unless it has moved since
@@ -585,19 +568,9 @@ std::vector<ServerScreen::Item> ServerScreen::Lines() const
 		lines.push_back(Item{.line = Line::ServersCaption});
 		lines.push_back(Item{.line = Line::ServersHeader});
 		const std::size_t listStart{lines.size()};
-		for (std::size_t server{_firstShown}; server < _servers.size(); ++server)
+		for (std::size_t server{_firstShown}; server < std::min(_servers.size(), _firstShown + kListRows); ++server)
 		{
-			const std::size_t rows{ServerLines(_servers[server]).size()};
-			if (lines.size() - listStart + rows > kListRows)
-			{
-				break;
-			}
-
 			lines.push_back(Item{.line = Line::Server, .server = server});
-			if (rows > 1)
-			{
-				lines.push_back(Item{.line = Line::ServerTail, .server = server});
-			}
 		}
 
 		if (_servers.empty())
@@ -630,7 +603,6 @@ bool ServerScreen::IsPickable(const Item& item) const
 		case Line::ServersCaption:
 		case Line::ServersHeader:
 		case Line::NoServers:
-		case Line::ServerTail:
 		case Line::Gap:
 		case Line::AddressCaption:
 		case Line::IPv4Caption:
@@ -650,7 +622,6 @@ bool ServerScreen::IsPickable(const Item& item) const
 	return true;
 }
 
-//NOTE: a server's second line stands for the server
 std::optional<ServerScreen::Item> ServerScreen::PickableAt(const std::size_t row) const
 {
 	const std::vector<Item> lines{Lines()};
@@ -659,8 +630,7 @@ std::optional<ServerScreen::Item> ServerScreen::PickableAt(const std::size_t row
 		return std::nullopt;
 	}
 
-	Item item{lines[row]};
-	item.line = item.line == Line::ServerTail ? Line::Server : item.line;
+	const Item& item{lines[row]};
 
 	return IsPickable(item) ? std::optional{item} : std::nullopt;
 }
@@ -689,9 +659,9 @@ void ServerScreen::Pick(const Item& item)
 	{
 		//NOTE: scrolled just far enough to show the server picked
 		_firstShown = std::min(_firstShown, item.server);
-		while (ListRows(std::span{_servers}.subspan(_firstShown, item.server + 1 - _firstShown)) > kListRows)
+		if (item.server >= _firstShown + kListRows)
 		{
-			++_firstShown;
+			_firstShown = item.server + 1 - kListRows;
 		}
 	}
 }
@@ -1112,7 +1082,7 @@ void ServerScreen::CaretRight(Row& row)
 }
 
 //NOTE: to the start of the word, or of the previous one - octets, IPv6 groups and the port are words
-void ServerScreen::WordLeft(Row& row)
+void ServerScreen::WordLeft(Row& row) const
 {
 	if (row.offset == 0 && row.part > 0)
 	{
@@ -1139,7 +1109,7 @@ void ServerScreen::WordLeft(Row& row)
 }
 
 //NOTE: to the end of the word, or of the next one
-void ServerScreen::WordRight(Row& row)
+void ServerScreen::WordRight(Row& row) const
 {
 	const std::size_t port{row.parts.size() - 1};
 	const std::string& part{row.parts[row.part]};
@@ -1261,18 +1231,17 @@ void ServerScreen::Draw() const
 				picked.rows.push_back(UiRow{.cells = {Centered("Server List:")}});
 				break;
 			case Line::ServersHeader:
-				picked.rows.push_back(UiRow{.cells = {Word(std::string{kPlayersHeader} + "ADDRESS")}});
+				picked.rows.push_back(
+						UiRow{.cells = {Word(std::string{kPlayersHeader} + std::string{kModeHeader} + "ADDRESS")}});
 				break;
 			case Line::NoServers:
 				picked.rows.push_back(UiRow{.cells = {Centered(_scan->IsSearching() ? "SEARCHING..." : "NONE FOUND")}});
 				break;
 			case Line::Server:
-			case Line::ServerTail:
 			{
 				const network::FoundServer& server{_servers[item.server]};
 				const unsigned int color{server.freeSeats > 0 ? kTextColor : kFullServerColor};
-				std::string text{ServerLines(server)[item.line == Line::Server ? 0 : 1]};
-				picked.rows.push_back(UiRow{.cells = {Address(std::move(text), color)}});
+				picked.rows.push_back(UiRow{.cells = {Address(ServerLine(server), color)}});
 				break;
 			}
 			case Line::Refresh:

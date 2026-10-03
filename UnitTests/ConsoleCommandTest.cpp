@@ -30,10 +30,10 @@ TEST(ConsoleCommandTest, CloseAndOpenSayWhetherClientsAreTaken)
 // the argument is a seat, and it reaches the command as one
 TEST(ConsoleCommandTest, KickNamesTheSeat)
 {
-	const auto command{ParseConsoleCommand("/kick p2")};
+	const auto command{ParseConsoleCommand("/kick p4")};
 
 	ASSERT_TRUE(command.has_value()) << command.error();
-	EXPECT_EQ(std::get<KickCommand>(*command).slot, PlayerSlot::P2);
+	EXPECT_EQ(std::get<KickCommand>(*command).slot, PlayerSlot::P4);
 }
 
 // leading spaces, a tab between the words, a trailing carriage return - a line typed into a console
@@ -46,10 +46,10 @@ TEST(ConsoleCommandTest, BlanksAroundTheWordsDoNotMatter)
 	EXPECT_EQ(std::get<LogLevelCommand>(*command).level, Log::Level::Detailed);
 }
 
-//NOTE: a typo is refused whole - half-obeying "/exit now" or "/kick p3" would be worse than a message
+//NOTE: a typo is refused whole - half-obeying "/exit now" or "/kick p5" would be worse than a message
 TEST(ConsoleCommandTest, AMistypedLineIsRefusedWithAReason)
 {
-	constexpr std::array kMistyped{"", "/unknown", "restart", "/kick", "/kick p3", "/log loud", "/exit now",
+	constexpr std::array kMistyped{"", "/unknown", "restart", "/kick", "/kick p5", "/log loud", "/exit now",
 								   "/kick p1 p2"};
 
 	std::ranges::for_each(kMistyped, [](const char* line)

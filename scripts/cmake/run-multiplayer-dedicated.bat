@@ -40,9 +40,10 @@ echo the server never reported a port 1>&2
 exit /b 1
 :got_port
 if defined BC_ADDRESS (echo server on %BC_ADDRESS%:%PORT%) else echo server on this machine's address:%PORT%
-start "" /D "%GAME_DIR%" "%GAME_EXE%" --client %ADDRESS_ARG% --port=%PORT% --size=800,600 --pos=0,0
+rem --pos places the picture, not the frame - y=40 keeps the title bar on the screen
+start "" /D "%GAME_DIR%" "%GAME_EXE%" --client %ADDRESS_ARG% --port=%PORT% --size=800,600 --pos=0,40
 timeout /t 1 /nobreak >nul
-start "" /D "%GAME_DIR%" "%GAME_EXE%" --client %ADDRESS_ARG% --port=%PORT% --size=800,600 --pos=810,0
+start "" /D "%GAME_DIR%" "%GAME_EXE%" --client %ADDRESS_ARG% --port=%PORT% --size=800,600 --pos=810,40
 
 rem nothing owns the server here the way the game does, so this window sweeps it once the games are gone
 :wait_for_windows

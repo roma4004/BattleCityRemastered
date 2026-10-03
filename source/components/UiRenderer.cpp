@@ -33,7 +33,7 @@ constexpr int kFitStartPointSize{SDL_Config::kFontSizePtSmall};
 constexpr int kFitMinPointSize{8};
 //NOTE: the scoreboard and the lobby at the full point size - a row, and the gap between tables, shrink with it
 constexpr int kPanelRowHeight{20};
-//NOTE: the widest table still leaves this much of the panel on each side
+//NOTE: kept free on every side of the panel
 constexpr int kPanelSideMargin{20};
 //NOTE: whole cells, so the panel's sides land on the outermost brick blocks - the number has to
 //match the border the .map files leave around the pattern
@@ -46,8 +46,10 @@ constexpr Point kMenuLogoSize{.x = 300, .y = 75};
 //NOTE: the modes start this far under the logo
 constexpr int kMenuTitleGap{28};
 //NOTE: the controls hang off the bottom of the panel, so the room under them stays the same
-constexpr int kMenuControlsBottomGap{25};
+constexpr int kMenuControlsBottomGap{10};
 constexpr int kMenuRowHeight{30};
+//NOTE: tighter than the controls' rows, which hold pad pictures
+constexpr int kMenuModeRowHeight{24};
 constexpr Point kMenuIconSize{.x = 30, .y = 30};
 //NOTE: room for the arrow to the left of the mode it points at, and the slack a click still lands in
 constexpr int kMenuSelectorGap{35};
@@ -180,32 +182,35 @@ void UiRenderer::DrawMenu(const RenderMenuEvent& event) const
 	{
 		const std::array tables{event.modes, event.controls};
 
-		return UiLayout::FitsAcross(tables, UiLayout::MeasureAll(tables, kMenuRowHeight, CellMeasurer(size, scale)),
-									width, kMenuRowHeight);
+		//NOTE: one size for both tables - it has to fit the modes' tighter row
+		return UiLayout::FitsAcross(tables, UiLayout::MeasureAll(tables, kMenuModeRowHeight, CellMeasurer(size, scale)),
+									width, kMenuModeRowHeight);
 	};
 	//NOTE: the menu's words never change - only another scale or panel refits them
 	const int pointSize{_menuFit.PointSize({}, panel, scale, goesIn)};
 
 	const UiLayout::Measure measure{CellMeasurer(pointSize, scale)};
-	const auto measured = [&measure](const UiTable& table)
+	const auto measured = [&measure](const UiTable& table, const int rowHeight)
 	{
-		return UiLayout::Place(table, Point{}, kMenuRowHeight, measure);
+		return UiLayout::Place(table, Point{}, rowHeight, measure);
 	};
 	const auto across = [&panel](UiLayout::Placement placement, const int top)
 	{
 		return UiLayout::CenteredAcross(std::move(placement), Point{.x = panel.x, .y = panel.y + top}, panel.w);
 	};
-	const UiLayout::Placement title{across(measured(event.title), kMenuTitleTop)};
-	const UiLayout::Placement modes{across(measured(event.modes), kMenuTitleTop + title.size.y + kMenuTitleGap)};
-	UiLayout::Placement controls{measured(event.controls)};
-	controls = across(std::move(controls), panel.h - kMenuControlsBottomGap - controls.size.y);
+	const UiLayout::Placement title{across(measured(event.title, kMenuRowHeight), kMenuTitleTop)};
+	const UiLayout::Placement modes{across(measured(event.modes, kMenuModeRowHeight),
+										   kMenuTitleTop + title.size.y + kMenuTitleGap)};
+	UiLayout::Placement controls{measured(event.controls, kMenuRowHeight)};
+	const int controlsTop{panel.h - kMenuControlsBottomGap - controls.size.y};
+	controls = across(std::move(controls), controlsTop);
 
 	const auto selected{static_cast<std::size_t>(event.selectedRow)};
 	if (selected < modes.rows.size())
 	{
 		DrawIcon(UiIcon::MenuSelector,
 				 {.x = modes.rows[selected].x - kMenuSelectorGap,
-				  .y = modes.rows[selected].y + (kMenuRowHeight - kMenuIconSize.y) / 2,
+				  .y = modes.rows[selected].y + (kMenuModeRowHeight - kMenuIconSize.y) / 2,
 				  .w = kMenuIconSize.x,
 				  .h = kMenuIconSize.y});
 	}
@@ -241,7 +246,7 @@ void UiRenderer::DrawPanelTables(const RenderPanelTablesEvent& event) const
 							  || placed[*event.pickedTable].size.x + left + right <= width};
 
 		return isPickedIn && UiLayout::FitsAcross(event.tables, placed, width, rowHeight)
-			   && UiLayout::StackHeight(placed, rowHeight) <= panel.h;
+			   && UiLayout::StackHeight(placed, rowHeight) <= panel.h - kPanelSideMargin * 2;
 	};
 	const int pointSize{_panelFit.PointSize(event.tables, panel, scale, goesIn)};
 	const int rowHeight{PanelRowHeight(pointSize)};
@@ -553,7 +558,7 @@ void UiRenderer::AnnounceMenuTiles(const UiLayout::Placement& modes) const
 	_menuTilePlaces = tiles;
 	_events->EmitEvent(MenuTilesPlacedEvent{.tiles = std::move(tiles),
 										 .tileSize = {.x = modes.size.x + kMenuRowPadding * 2,
-													 .y = kMenuRowHeight}});
+													 .y = kMenuModeRowHeight}});
 }
 
 void UiRenderer::AnnouncePanelRows(const UiLayout::Placement& picked, const int rowHeight) const

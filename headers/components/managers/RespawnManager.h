@@ -4,12 +4,15 @@
 #include "enums/Author.h"
 #include "enums/RespawnGroup.h"
 #include "utils/Uuid.h"
+#include <array>
 #include <chrono>
+#include <cstddef>
 #include <memory>
 #include <vector>
 
 enum class TankType : char8_t;
 enum class GameMode : char8_t;
+class GameConfig;
 struct GameResetEvent;
 struct TankSpawnEvent;
 struct TankDiedEvent;
@@ -28,7 +31,8 @@ class RespawnManager final
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
 
-	std::vector<unsigned short> _respawnCount{20u, 3u, 3u};
+	//NOTE: indexed by RespawnGroup
+	std::array<unsigned short, kRespawnGroupCount> _respawnCount{};
 
 	struct SpawnSlot
 	{
@@ -36,9 +40,13 @@ class RespawnManager final
 		TankType type{};
 		RespawnGroup group{};
 		bool isAvailable{};
+		bool isOnField{};
 	};
 
 	GameMode _gameMode{};
+	bool _isFreeForAll{};
+	std::size_t _seatCount{};
+	std::size_t _enemySeats{};
 	unsigned short _enemiesSpawnCount{};
 	unsigned short _enemiesDeathCount{};
 	unsigned short _playersSpawnCount{};
@@ -68,11 +76,13 @@ class RespawnManager final
 	void OnTankSpawn(const TankSpawnEvent& event);
 	void OnEnemyDied(bool isAvailable);
 	void OnPlayerDied(bool isAvailable);
+	[[nodiscard]] bool AreEnemiesGone() const;
+	[[nodiscard]] std::size_t PlayersStillIn() const;
 	void OnTankDied(const TankDiedEvent& event);
 	void RespawnTanks();
 
 	std::vector<SpawnSlot> _slots{};
 
 public:
-	RespawnManager(const std::shared_ptr<EventSystem>& events, GameMode gameMode);
+	RespawnManager(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig);
 };

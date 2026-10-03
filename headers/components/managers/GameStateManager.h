@@ -3,12 +3,13 @@
 #include "components/EventSystem.h"
 #include "enums/GameMode.h"
 #include "enums/GameState.h"
+#include "enums/PlayerSlot.h"
 #include <bitset>
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <vector>
 
-enum class PlayerSlot : std::uint8_t;
 struct PauseStatusEvent;
 struct PreDrawUserInterfaceEvent;
 struct PostDrawUserInterfaceEvent;
@@ -38,7 +39,9 @@ class GameStateManager final
 	GameState _state{GameState::Menu};
 	GameMode _gameMode{};
 	//NOTE: seats, not a count - a seat whose client drops before its ready was never taken
-	std::bitset<2> _readySeats{};
+	std::bitset<kSeatCount> _readySeats{};
+	//NOTE: the match starts once this many are ready
+	std::size_t _seatCount{};
 	bool _isDemo{};
 	bool _isPaused{};
 	bool _isScoreBoardShown{};
@@ -48,6 +51,7 @@ class GameStateManager final
 	void AnnouncePhase() const;
 	void Resume();
 	[[nodiscard]] GameState IdleStateForMode() const;
+	[[nodiscard]] bool IsEveryoneReady() const noexcept { return _readySeats.count() >= _seatCount; }
 
 	void OnGameModeApplied(const GameModeAppliedEvent& event);
 	void OnDemoStarted(const DemoStartedEvent&);
@@ -76,7 +80,7 @@ class GameStateManager final
 	void Reset(const GameResetEvent&);
 
 public:
-	explicit GameStateManager(const std::shared_ptr<EventSystem>& events);
+	explicit GameStateManager(const std::shared_ptr<EventSystem>& events, std::size_t seatCount = kDefaultSeats);
 
 	[[nodiscard]] GameState GetState() const noexcept { return _state; }
 };

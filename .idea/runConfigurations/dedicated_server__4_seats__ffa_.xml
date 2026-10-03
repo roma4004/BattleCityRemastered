@@ -1,0 +1,8 @@
+<component name="ProjectRunConfigurationManager">
+  <!-- port 0 takes any free one, port-file publishes it for the windows to read; 1234 pins it -->
+  <configuration default="false" name="dedicated server (4 seats, ffa)" folderName="BattleCity (cmake)" type="CMakeRunConfiguration" factoryName="Application" singleton="true" PROGRAM_PARAMS="--port=0 --port-file=server-port.txt --seats=4 --rules=ffa" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="BattleCityRemastered" TARGET_NAME="BattleCityServer" CONFIG_NAME="Debug-MinGW" RUN_TARGET_PROJECT_NAME="BattleCityRemastered" RUN_TARGET_NAME="BattleCityServer">
+    <method v="2">
+      <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+    </method>
+  </configuration>
+</component>

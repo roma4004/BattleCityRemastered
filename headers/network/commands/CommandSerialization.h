@@ -121,6 +121,7 @@ template<class Archive>
 void serialize(Archive& ar, network::commands::SlotAssignment& cmd, const unsigned int /*version*/)
 {
 	ar & cmd.slot;
+	ar & cmd.seatCount;
 }
 
 template<class Archive>
@@ -227,46 +228,38 @@ void serialize(Archive& ar, BulletSnapshot& bullet, const unsigned int /*version
 }
 
 template<class Archive>
+void serialize(Archive& ar, SeatStatistics& seat, const unsigned int /*version*/)
+{
+	ar & seat.bulletHits;
+	ar & seat.enemyHits;
+	ar & seat.enemyKills;
+	ar & seat.hitByEnemyTeam;
+	ar & seat.friendlyHitsTaken;
+	ar & seat.friendlyKillsTaken;
+	ar & seat.brickWallKills;
+	ar & seat.steelWallKills;
+	ar & seat.bonusPickups;
+	ar & seat.bonusesDestroyed;
+}
+
+template<class Archive>
+void serialize(Archive& ar, EnemyTeamStatistics& team, const unsigned int /*version*/)
+{
+	ar & team.bulletHits;
+	ar & team.playerKills;
+	ar & team.friendlyHitsTaken;
+	ar & team.friendlyKillsTaken;
+	ar & team.brickWallKills;
+	ar & team.steelWallKills;
+	ar & team.bonusPickups;
+	ar & team.bonusesDestroyed;
+}
+
+template<class Archive>
 void serialize(Archive& ar, StatisticsData& data, const unsigned int /*version*/)
 {
-	ar & data.bulletHitByEnemy;
-	ar & data.bulletHitByPlayerOne;
-	ar & data.bulletHitByPlayerTwo;
-
-	ar & data.enemyHitByFriendlyFire;
-	ar & data.enemyHitByPlayerOne;
-	ar & data.enemyHitByPlayerTwo;
-
-	ar & data.playerOneHitFriendlyFire;
-	ar & data.playerOneHitByEnemyTeam;
-
-	ar & data.playerTwoHitFriendlyFire;
-	ar & data.playerTwoHitByEnemyTeam;
-
-	ar & data.enemyDiedByFriendlyFire;
-	ar & data.enemyDiedByPlayerOne;
-	ar & data.enemyDiedByPlayerTwo;
-
-	ar & data.playerOneDiedByFriendlyFire;
-	ar & data.playerTwoDiedByFriendlyFire;
-	ar & data.playerDiedByEnemyTeam;
-
-	ar & data.brickWallDiedByEnemyTeam;
-	ar & data.brickWallDiedByPlayerOne;
-	ar & data.brickWallDiedByPlayerTwo;
-
-	ar & data.steelWallDiedByEnemyTeam;
-	ar & data.steelWallDiedByPlayerOne;
-	ar & data.steelWallDiedByPlayerTwo;
-
-	ar & data.bonusPickupByEnemyTeam;
-	ar & data.bonusPickupByPlayerOne;
-	ar & data.bonusPickupByPlayerTwo;
-
-	ar & data.bonusDestroyedByEnemyTeam;
-	ar & data.bonusDestroyedByPlayerOne;
-	ar & data.bonusDestroyedByPlayerTwo;
-
+	ar & data.seats;
+	ar & data.enemyTeam;
 	ar & data.bonusExpired;
 }
 

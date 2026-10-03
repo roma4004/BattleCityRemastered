@@ -18,6 +18,7 @@
 #include "entities/pawns/PawnProperty.h"
 #include "entities/pawns/TankResetProperty.h"
 #include "geometry/Point.h"
+#include "enums/Author.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
 #include "enums/TankType.h"
@@ -102,7 +103,7 @@ void Tank::Reset(const TankResetProperty& resetProperty, std::unique_ptr<IInputP
 	_type = resetProperty.type;
 	_model = resetProperty.model;
 	_author = SeatOf(_type);
-	_faction = FactionOf(_author);
+	_faction = FactionOf(_author, _gameConfig.Rules());
 	_tier = 1u;
 
 	ApplyFreshLoadout();
@@ -449,7 +450,7 @@ void Tank::SetBulletDamageRadius(const double bulletDamageRadius) { _caliber.dam
 
 void Tank::OnBonusTimer(const BonusTimerStatusChangeEvent& event)
 {
-	if (event.isActive)
+	if (event.isActive && event.spared != _author)
 	{
 		UnsubscribeTickUpdate();
 	}
@@ -471,9 +472,9 @@ void Tank::OnBonusHelmet(const bool isActive)
 	}
 }
 
-void Tank::OnBonusGrenade(const BonusGrenadePickupEvent&)
+void Tank::OnBonusGrenade(const BonusGrenadePickupEvent& event)
 {
-	if (const int health{GetHealth()}; health > 0)
+	if (const int health{GetHealth()}; health > 0 && event.spared != _author)
 	{
 		TakeDamage(static_cast<unsigned int>(health), Author::None);
 	}

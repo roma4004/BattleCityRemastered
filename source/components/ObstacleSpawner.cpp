@@ -175,6 +175,7 @@ void ObstacleSpawner::LoadMap() const
 	//the bus is synchronous, so by the time this returns _gameConfig already holds the new geometry
 	_events->EmitEvent(MapLoadedEvent{.cols = map.GetCols(), .rows = map.GetRows(), .stage = _gameConfig.stageNumber});
 
-	map.CreateObstacles(_gameConfig.gridOffset);
-	map.CreateBonuses(_gameConfig.bonusSize, _gameConfig.gridOffset);
+	const bool isBaseless{_gameConfig.IsFreeForAll()};
+	map.CreateObstacles(_gameConfig.gridOffset, isBaseless);
+	map.CreateBonuses(_gameConfig.bonusSize, _gameConfig.gridOffset, isBaseless);
 }

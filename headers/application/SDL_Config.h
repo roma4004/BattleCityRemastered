@@ -37,7 +37,7 @@ struct SDL_Config final
 
 	[[nodiscard]] std::expected<void, InitError> Init();
 
-	[[nodiscard]] std::expected<void, InitError> SetVSync(int mode);
+	[[nodiscard]] std::expected<void, InitError> SetVSync(int mode) const;
 
 	[[nodiscard]] std::expected<void, InitError> RecreateTexturesFromSurfaces();
 

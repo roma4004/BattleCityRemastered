@@ -57,8 +57,6 @@ class ServerScreen final
 		ServersHeader,
 		NoServers,
 		Server,
-		//NOTE: the second line of a server whose address does not fit one
-		ServerTail,
 		Refresh,
 		Gap,
 		AddressCaption,
@@ -139,17 +137,17 @@ class ServerScreen final
 	[[nodiscard]] Row* FocusedRow();
 	void Fill(const network::ServerAddress& address);
 	void Type(char symbol);
-	void TypeIPv4(Row& row, char symbol);
+	static void TypeIPv4(Row& row, char symbol);
 	void TypeIPv6(Row& row, char symbol);
 	void TypeScope(Row& row, char symbol);
-	void TypePort(Row& row, char symbol);
+	static void TypePort(Row& row, char symbol);
 	void CloseFullGroup(Row& row);
 	void Erase(Row& row);
-	void EraseRight(Row& row);
-	void CaretLeft(Row& row);
-	void CaretRight(Row& row);
-	void WordLeft(Row& row);
-	void WordRight(Row& row);
+	static void EraseRight(Row& row);
+	static void CaretLeft(Row& row);
+	static void CaretRight(Row& row);
+	void WordLeft(Row& row) const;
+	void WordRight(Row& row) const;
 
 	//NOTE: the row as the parser reads it, and as drawn - with placeholders
 	[[nodiscard]] std::string Text(Line line) const;

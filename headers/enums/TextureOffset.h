@@ -10,6 +10,10 @@ struct TextureOffset
 	static constexpr ObjRectangle kEnemy{.x = 129, .y = 1, .w = 13, .h = 13};
 	static constexpr ObjRectangle kPlayer1{.x = 1, .y = 1, .w = 13, .h = 13};
 	static constexpr ObjRectangle kPlayer2{.x = 1, .y = 129, .w = 13, .h = 13};
+	//NOTE: P3 borrows the spare purple quarter
+	static constexpr ObjRectangle kPlayer3{.x = 129, .y = 129, .w = 13, .h = 13};
+	//NOTE: not in the sheet - SDL_Config whitens a copy of the gray quarter under it
+	static constexpr ObjRectangle kPlayer4{.x = 129, .y = 257, .w = 13, .h = 13};
 
 	// Map
 	static constexpr ObjRectangle kBullet{.x = 320, .y = 80, .w = 16, .h = 16};

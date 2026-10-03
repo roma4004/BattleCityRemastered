@@ -1,5 +1,6 @@
 #pragma once
 
+#include "enums/MatchRules.h"
 #include <array>
 #include <cstdint>
 #include <optional>
@@ -10,22 +11,24 @@ namespace network::discovery
 //NOTE: raw bytes, not a ser20 command: the whole point is that a client asks before it knows whether it
 //speaks the same protocol at all, so the answer has to be readable by a version that disagrees
 inline constexpr std::string_view kProbe{"BC?1"};
-inline constexpr std::string_view kReplyTag{"BC!1"};
+inline constexpr std::string_view kReplyTag{"BC!2"};
 
 //NOTE: bumped whenever AnyCommand or the link header changes shape - an old client that dialled a new
 //server would break on the first batch, and the reply is the last place it can still be told
-inline constexpr std::uint16_t kProtocolVersion{1};
+inline constexpr std::uint16_t kProtocolVersion{2};
 
 struct Reply final
 {
 	std::uint16_t protocolVersion{};
 	std::uint16_t gamePort{};
+	std::uint8_t seats{};
 	//NOTE: answered even at zero - silence reads as "no server here", and a client that is told the
 	//match is full knows to wait rather than to keep dialling
 	std::uint8_t freeSeats{};
+	MatchRules rules{};
 };
 
-inline constexpr std::size_t kReplySize{kReplyTag.size() + 5u};
+inline constexpr std::size_t kReplySize{kReplyTag.size() + 7u};
 
 //NOTE: written byte by byte, little end first - a struct on the wire would carry this machine's padding
 [[nodiscard]] inline std::array<char, kReplySize> Pack(const Reply& reply) noexcept
@@ -40,7 +43,9 @@ inline constexpr std::size_t kReplySize{kReplyTag.size() + 5u};
 	bytes[5] = static_cast<char>(reply.protocolVersion >> 8u);
 	bytes[6] = static_cast<char>(reply.gamePort & 0xFFu);
 	bytes[7] = static_cast<char>(reply.gamePort >> 8u);
-	bytes[8] = static_cast<char>(reply.freeSeats);
+	bytes[8] = static_cast<char>(reply.seats);
+	bytes[9] = static_cast<char>(reply.freeSeats);
+	bytes[10] = static_cast<char>(reply.rules);
 
 	return bytes;
 }
@@ -59,6 +64,8 @@ inline constexpr std::size_t kReplySize{kReplyTag.size() + 5u};
 
 	return Reply{.protocolVersion = static_cast<std::uint16_t>(byteAt(4) | byteAt(5) << 8u),
 				 .gamePort = static_cast<std::uint16_t>(byteAt(6) | byteAt(7) << 8u),
-				 .freeSeats = static_cast<std::uint8_t>(byteAt(8))};
+				 .seats = static_cast<std::uint8_t>(byteAt(8)),
+				 .freeSeats = static_cast<std::uint8_t>(byteAt(9)),
+				 .rules = static_cast<MatchRules>(byteAt(10))};
 }
 }//namespace network::discovery

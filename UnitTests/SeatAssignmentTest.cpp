@@ -18,15 +18,28 @@ protected:
 // without the swap the first device takes player one, the second player two
 TEST_F(SeatAssignmentTest, TheNthDeviceDrivesTheNthSeat)
 {
-	EXPECT_EQ(SlotForDevice(0u, false), PlayerSlot::P1);
-	EXPECT_EQ(SlotForDevice(1u, false), PlayerSlot::P2);
+	EXPECT_EQ(SlotForDevice(0u, false, false), PlayerSlot::P1);
+	EXPECT_EQ(SlotForDevice(1u, false, false), PlayerSlot::P2);
+	EXPECT_EQ(SlotForDevice(2u, false, false), PlayerSlot::P3);
+	EXPECT_EQ(SlotForDevice(3u, false, false), PlayerSlot::P4);
 }
 
-//NOTE: one flag for every device, so a pair playing on pads swaps together with the keyboard
-TEST_F(SeatAssignmentTest, TheSwapFlipsEveryDevice)
+//NOTE: the swap covers the keyboard halves and the first two pads
+TEST_F(SeatAssignmentTest, TheSwapFlipsTheFirstTwoDevicesOnly)
 {
-	EXPECT_EQ(SlotForDevice(0u, true), PlayerSlot::P2);
-	EXPECT_EQ(SlotForDevice(1u, true), PlayerSlot::P1);
+	EXPECT_EQ(SlotForDevice(0u, true, false), PlayerSlot::P2);
+	EXPECT_EQ(SlotForDevice(1u, true, false), PlayerSlot::P1);
+	EXPECT_EQ(SlotForDevice(2u, true, false), PlayerSlot::P3);
+	EXPECT_EQ(SlotForDevice(3u, true, false), PlayerSlot::P4);
+}
+
+// and Shift+Tab flips the other two, leaving the first pair where it was
+TEST_F(SeatAssignmentTest, TheSecondSwapFlipsTheLastTwoDevicesOnly)
+{
+	EXPECT_EQ(SlotForDevice(0u, false, true), PlayerSlot::P1);
+	EXPECT_EQ(SlotForDevice(1u, false, true), PlayerSlot::P2);
+	EXPECT_EQ(SlotForDevice(2u, false, true), PlayerSlot::P4);
+	EXPECT_EQ(SlotForDevice(3u, false, true), PlayerSlot::P3);
 }
 
 // the spawned server plays nothing, so neither half is its own

@@ -7,6 +7,8 @@
 #include "components/events/TimingEvents.h"
 #include "enums/GameState.h"
 #include "enums/InputChannel.h"
+#include "enums/PlayerSlot.h"
+#include <ranges>
 
 InputProviderForMenu::InputProviderForMenu(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig)
 	: _events{events}
@@ -68,9 +70,9 @@ void InputProviderForMenu::EnableMenuInput()
 {
 	_menuNavSubs.push_back(_events->AddListener(this, &InputProviderForMenu::OnMenuNavEnter));
 
-	//NOTE: both local seats drive the menu in every mode - the peer scrolls nothing here, its keys
+	//NOTE: every local seat drives the menu in every mode - the peer scrolls nothing here, its keys
 	//arrive on the remote channels and the menu is not on them
-	for (const InputChannel channel: {InputChannel::LocalP1, InputChannel::LocalP2})
+	for (const InputChannel channel: kSlots | std::views::transform(LocalInput))
 	{
 		_menuNavSubs.push_back(_events->AddListener(Key(channel), this, &InputProviderForMenu::OnMenuNavUp));
 		_menuNavSubs.push_back(_events->AddListener(Key(channel), this, &InputProviderForMenu::OnMenuNavDown));

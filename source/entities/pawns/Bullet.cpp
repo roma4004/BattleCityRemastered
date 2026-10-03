@@ -80,7 +80,7 @@ void Bullet::Reset(const BulletResetProperty& resetProperty)
 
 	_author = resetProperty.author;
 	_authorUuid = resetProperty.authorUuid;
-	_faction = FactionOf(_author);
+	_faction = FactionOf(_author, _gameConfig.Rules());
 	_caliber = resetProperty.caliber;
 
 	_isAlive = true;

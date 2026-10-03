@@ -9,6 +9,7 @@
 #include "components/events/TimingEvents.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
+#include "enums/PlayerSlot.h"
 #include <SDL3/SDL_clipboard.h>
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_gamepad.h>
@@ -112,6 +113,8 @@ void UserInput::Subscribe()
 	_subs.push_back(_events->AddListener(this, &UserInput::OnServerScreenShown));
 	_subs.push_back(_events->AddListener(this, &UserInput::OnPanelRowsPlaced));
 	_subs.push_back(_events->AddListener(this, &UserInput::OnMenuTilesPlaced));
+	_subs.push_back(_events->AddListener(this, &UserInput::OnGameModeChangedTo));
+	_subs.push_back(_events->AddListener(this, &UserInput::OnPlayerSlotAssigned));
 }
 
 void UserInput::OnPauseStatus(const PauseStatusEvent& event) { _isPause = event.isPaused; }
@@ -144,10 +147,26 @@ void UserInput::OnPanelRowsPlaced(const PanelRowsPlacedEvent& event)
 	_panelRows = event.rows | std::views::transform(toRect) | std::ranges::to<std::vector>();
 }
 
+//NOTE: a new link may hand out another seat
+void UserInput::OnGameModeChangedTo(const GameModeChangedToEvent&) { _ownSlot.reset(); }
+
+void UserInput::OnPlayerSlotAssigned(const PlayerSlotAssignedEvent& event) { _ownSlot = event.slot; }
+
+PlayerSlot UserInput::DeviceSlot(const std::size_t index) const
+{
+	if (index == 0u && _ownSlot && SeatIndex(*_ownSlot) >= 2u)
+	{
+		return *_ownSlot;
+	}
+
+	return SlotForDevice(index, _areControllersSwapped, _isSecondPairSwapped);
+}
+
 void UserInput::OnMenuTilesPlaced(const MenuTilesPlacedEvent& event)
 {
-	static constexpr std::array kModes{GameMode::OnePlayer, GameMode::TwoPlayers, GameMode::CoopWithBot,
-									   GameMode::PlayAsHost, GameMode::PlayAsClient};
+	static constexpr std::array kModes{GameMode::OnePlayer,  GameMode::TwoPlayers,           GameMode::CoopWithBot,
+									   GameMode::FreeForAll, GameMode::TwoPlayersFreeForAll, GameMode::PlayAsHost,
+									   GameMode::PlayAsClient};
 
 	_menuTiles.clear();
 	for (std::size_t row{}; row < event.tiles.size() && row < kModes.size(); ++row)
@@ -190,10 +209,12 @@ void UserInput::WindowDragEvents(const SDL_Event& event)
 	_lastDragEventTime = std::chrono::steady_clock::now();
 }
 
-void UserInput::SwapControllers(const TabReleasedEvent&)
+void UserInput::SwapControllers(const TabReleasedEvent& event)
 {
-	_areControllersSwapped = !_areControllersSwapped;
-	Log::Info("controllers swap state: " + std::to_string(_areControllersSwapped));// left while visual label is absent
+	bool& isSwapped{event.isSecondPair ? _isSecondPairSwapped : _areControllersSwapped};
+	isSwapped = !isSwapped;
+	Log::Info("controllers swap state: " + std::to_string(_areControllersSwapped) + '/'
+			  + std::to_string(_isSecondPairSwapped));// left while visual label is absent
 }
 
 PlayerSlot UserInput::ControllerSlotDefiner(const SDL_JoystickID instanceId) const
@@ -209,7 +230,7 @@ PlayerSlot UserInput::ControllerSlotDefiner(const SDL_JoystickID instanceId) con
 							? 0u
 							: static_cast<std::size_t>(std::distance(_slotsForController.begin(), it))};
 
-	return SlotForDevice(index, _areControllersSwapped);
+	return DeviceSlot(index);
 }
 
 void UserInput::OnWindowDragStop()
@@ -341,8 +362,8 @@ void UserInput::HoverPanelRow(const SDL_Point& mouse)
 
 void UserInput::KeyboardKeyPressRelease(const SDL_Event& event, const bool& isPressed) const
 {
-	const PlayerSlot keyboardLeftSideSlot{SlotForDevice(0u, _areControllersSwapped)};
-	const PlayerSlot keyboardRightSideSlot{SlotForDevice(1u, _areControllersSwapped)};
+	const PlayerSlot keyboardLeftSideSlot{DeviceSlot(0u)};
+	const PlayerSlot keyboardRightSideSlot{DeviceSlot(1u)};
 
 	switch (event.key.key)
 	{
@@ -391,7 +412,7 @@ void UserInput::KeyboardKeyPressRelease(const SDL_Event& event, const bool& isPr
 		case SDLK_TAB:
 			if (isPressed == false)
 			{
-				_events->EmitEvent(TabReleasedEvent{});
+				_events->EmitEvent(TabReleasedEvent{.isSecondPair = (event.key.mod & SDL_KMOD_SHIFT) != 0});
 			}
 			break;
 		case SDLK_RETURN:
@@ -803,8 +824,8 @@ void UserInput::InitControllers()
 
 	Log::Detail(std::to_string(joystickCount) + " gamepad(s) connected");
 
-	//NOTE: two seats, so the pads past the second one stay unopened
-	constexpr int kMaxControllers{2};
+	//NOTE: one pad per seat
+	constexpr auto kMaxControllers{static_cast<int>(kSeatCount)};
 	for (int i = 0; i < joystickCount && i < kMaxControllers; ++i)
 	{
 		if (SDL_Gamepad* gamepad{SDL_OpenGamepad(joysticks[i])};

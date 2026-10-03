@@ -9,16 +9,20 @@ enum class InputChannel : std::uint8_t
 {
 	LocalP1,
 	LocalP2,
+	LocalP3,
+	LocalP4,
 	RemoteP1,
 	RemoteP2,
+	RemoteP3,
+	RemoteP4,
 };
 
 [[nodiscard]] constexpr InputChannel LocalInput(const PlayerSlot slot) noexcept
 {
-	return slot == PlayerSlot::P1 ? InputChannel::LocalP1 : InputChannel::LocalP2;
+	return static_cast<InputChannel>(SeatIndex(slot));
 }
 
 [[nodiscard]] constexpr InputChannel RemoteInput(const PlayerSlot slot) noexcept
 {
-	return slot == PlayerSlot::P1 ? InputChannel::RemoteP1 : InputChannel::RemoteP2;
+	return static_cast<InputChannel>(kSeatCount + SeatIndex(slot));
 }

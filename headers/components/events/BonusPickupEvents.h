@@ -11,7 +11,11 @@ struct BonusCaliberPickupEvent {};
 
 struct BonusShipPickupEvent {};
 
-struct BonusGrenadePickupEvent {};
+//NOTE: spares its taker, who in a free-for-all is on the side it hits
+struct BonusGrenadePickupEvent
+{
+	Author spared{};
+};
 
 struct BonusHelmetPickupEvent
 {
@@ -33,12 +37,14 @@ struct BonusShovelPickupEvent
 struct BonusTimerPickupEvent
 {
 	Faction target{};
+	Author spared{};
 };
 
-//NOTE: keyed by the faction it is on
+//NOTE: keyed by the faction it is on; its taker runs on in a free-for-all
 struct BonusTimerStatusChangeEvent
 {
 	bool isActive;
+	Author spared{};
 };
 
 //NOTE: keyed by the seat it is on

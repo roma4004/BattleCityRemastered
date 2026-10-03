@@ -18,7 +18,8 @@ if not exist "%GAME_EXE%" (
 )
 
 del "%GAME_DIR%server-port.txt" >nul 2>&1
-start "" /D "%GAME_DIR%" "%GAME_EXE%" --server %ADDRESS_ARG% --port=%BC_PORT% --size=800,600 --pos=0,0
+rem --pos places the picture, not the frame - y=40 keeps the title bar on the screen
+start "" /D "%GAME_DIR%" "%GAME_EXE%" --server %ADDRESS_ARG% --port=%BC_PORT% --size=800,600 --pos=0,40
 rem the first window spawns the server and waits for its port the same way - the file appears once it binds
 set "PORT_FILE=%GAME_DIR%server-port.txt"
 set "TRIES=0"
@@ -34,4 +35,4 @@ echo the server never reported a port 1>&2
 exit /b 1
 :got_port
 if defined BC_ADDRESS (echo server on %BC_ADDRESS%:%PORT%) else echo server on this machine's address:%PORT%
-start "" /D "%GAME_DIR%" "%GAME_EXE%" --client --mute %ADDRESS_ARG% --port=%PORT% --size=800,600 --pos=810,0
+start "" /D "%GAME_DIR%" "%GAME_EXE%" --client --mute %ADDRESS_ARG% --port=%PORT% --size=800,600 --pos=810,40

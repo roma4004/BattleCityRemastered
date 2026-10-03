@@ -340,9 +340,12 @@ TEST_F(WorldSnapshotTest, TheScoreAndTheLivesAreTakenOverAsTheyStand)
 	Replicate();
 
 	const StatisticsData& client{_clientStatistics->GetData()};
-	EXPECT_EQ(client.brickWallDiedByPlayerTwo, 1u);
-	EXPECT_EQ(client.enemyHitByPlayerOne, 1u);
-	EXPECT_EQ(_clientLives, _hostLives);
+	EXPECT_EQ(client.Seat(PlayerSlot::P2).brickWallKills, 1u);
+	EXPECT_EQ(client.Seat(PlayerSlot::P1).enemyHits, 1u);
+	for (const auto& [group, lives]: _hostLives)
+	{
+		EXPECT_EQ(_clientLives.at(group), lives) << static_cast<int>(group);
+	}
 }
 
 // a second snapshot replaces the field rather than laying another one over it

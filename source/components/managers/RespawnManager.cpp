@@ -1,4 +1,5 @@
 #include "components/managers/RespawnManager.h"
+#include "application/GameConfig.h"
 #include "components/EventSystem.h"
 #include "components/events/SpawnEvents.h"
 #include "components/events/BonusPickupEvents.h"
@@ -7,34 +8,48 @@
 #include "components/events/ObjectLifecycleEvents.h"
 #include "components/events/ReplicationEvents.h"
 #include "components/WorldSnapshot.h"
+#include "enums/Author.h"
 #include "enums/GameMode.h"
 #include "enums/RespawnGroup.h"
 #include "enums/TankType.h"
 #include "utils/UuidUtils.h"
 #include "utils/Uuid.h"
 #include "enums/Faction.h"
+#include "enums/PlayerSlot.h"
 #include <algorithm>
 #include <cstddef>
 #include <memory>
+#include <optional>
 #include <ranges>
 
 namespace
 {
 bool IsEnemyGroup(const RespawnGroup group) noexcept { return group == RespawnGroup::ENEMY_ALL; }
+
+[[nodiscard]] constexpr std::size_t GroupIndex(const PlayerSlot slot) noexcept
+{
+	return static_cast<std::size_t>(GroupOf(slot));
+}
 }//namespace
 
-RespawnManager::RespawnManager(const std::shared_ptr<EventSystem>& events, const GameMode gameMode)
+RespawnManager::RespawnManager(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig)
 	: _events{events}
-	, _gameMode{gameMode}
+	, _gameMode{gameConfig.gameMode}
+	, _isFreeForAll{gameConfig.IsFreeForAll()}
+	, _seatCount{gameConfig.SeatCount()}
+	, _enemySeats{gameConfig.EnemySeats()}
 {
-	_slots = {
-			{.uuid = UuidUtils::GetRandomUuid(), .type = TankType::ENEMY1, .group = RespawnGroup::ENEMY_ALL},
-			{.uuid = UuidUtils::GetRandomUuid(), .type = TankType::ENEMY2, .group = RespawnGroup::ENEMY_ALL},
-			{.uuid = UuidUtils::GetRandomUuid(), .type = TankType::ENEMY3, .group = RespawnGroup::ENEMY_ALL},
-			{.uuid = UuidUtils::GetRandomUuid(), .type = TankType::ENEMY4, .group = RespawnGroup::ENEMY_ALL},
-			{.uuid = UuidUtils::GetRandomUuid(), .type = TankType::PLAYER1, .group = RespawnGroup::PLAYER1},
-			{.uuid = UuidUtils::GetRandomUuid(), .type = TankType::PLAYER2, .group = RespawnGroup::PLAYER2},
-	};
+	for (const TankType enemy: {TankType::ENEMY1, TankType::ENEMY2, TankType::ENEMY3, TankType::ENEMY4})
+	{
+		_slots.push_back(
+				SpawnSlot{.uuid = UuidUtils::GetRandomUuid(), .type = enemy, .group = RespawnGroup::ENEMY_ALL});
+	}
+
+	for (const PlayerSlot slot: kSlots)
+	{
+		_slots.push_back(
+				SpawnSlot{.uuid = UuidUtils::GetRandomUuid(), .type = PlayerTankOf(slot), .group = GroupOf(slot)});
+	}
 
 	Subscribe();
 }
@@ -76,24 +91,25 @@ void RespawnManager::OnBonusTankApplied(const BonusTankAppliedEvent& event) { On
 
 void RespawnManager::SetEnemyNeedRespawn()
 {
-	for (size_t i = 0u; i < 4u; ++i)
+	const auto isEnemy = [](const SpawnSlot& slot) { return IsEnemyGroup(slot.group); };
+	for (SpawnSlot& slot: _slots | std::views::filter(isEnemy) | std::views::take(_enemySeats))
 	{
-		_slots[i].isAvailable = true;
+		slot.isAvailable = true;
 	}
 }
 
 void RespawnManager::ResetRespawnStat(const bool keepsPlayerLives)
 {
-	_respawnCount[static_cast<int>(RespawnGroup::ENEMY_ALL)] = 20u;
+	_respawnCount[static_cast<std::size_t>(RespawnGroup::ENEMY_ALL)] = 20u;
 	if (!keepsPlayerLives)
 	{
-		_respawnCount[static_cast<int>(RespawnGroup::PLAYER1)] = 3u;
-		_respawnCount[static_cast<int>(RespawnGroup::PLAYER2)] = 3u;
+		std::ranges::for_each(kSlots, [this](const PlayerSlot slot) { _respawnCount[GroupIndex(slot)] = 3u; });
 	}
 
-	for (auto& [uuid, tankType, respawnGroup, isAvailable]: _slots)
+	for (SpawnSlot& slot: _slots)
 	{
-		isAvailable = false;
+		slot.isAvailable = false;
+		slot.isOnField = false;
 	}
 
 	_enemiesSpawnCount = 0u;
@@ -110,22 +126,19 @@ void RespawnManager::ResetSpawn(const bool keepsPlayerLives)
 
 	//NOTE: said out loud on every reset - the counters on screen are told what the numbers are, and a
 	//level change is the one reset that does not put them back where they started
-	for (const RespawnGroup group: {RespawnGroup::ENEMY_ALL, RespawnGroup::PLAYER1, RespawnGroup::PLAYER2})
+	for (const std::size_t group: std::views::iota(std::size_t{}, kRespawnGroupCount))
 	{
-		_events->EmitEvent(RespawnCountChangedToEvent{.group = group,
-													   .respawnCount = _respawnCount[static_cast<size_t>(group)]});
+		_events->EmitEvent(RespawnCountChangedToEvent{.group = static_cast<RespawnGroup>(group),
+													   .respawnCount = _respawnCount[group]});
 	}
 }
 
+//NOTE: only the seats this match has
 void RespawnManager::SetPlayerNeedRespawn()
 {
-	constexpr auto player1Id{static_cast<size_t>(TankType::PLAYER1)};
-	_slots[player1Id].isAvailable = true;
-
-	if (HasSecondPlayer(_gameMode))
+	for (const PlayerSlot slot: kSlots | std::views::take(_seatCount))
 	{
-		constexpr auto player2Id{static_cast<size_t>(TankType::PLAYER2)};
-		_slots[player2Id].isAvailable = true;
+		std::ranges::find(_slots, PlayerTankOf(slot), &SpawnSlot::type)->isAvailable = true;
 	}
 }
 
@@ -142,31 +155,22 @@ void RespawnManager::ChangeRespawnCount(const int delta, RespawnGroup type)
 
 void RespawnManager::TriggerLastPlayersLife()
 {
-	_respawnCount[1] = 0u;
-	_events->EmitEvent(RespawnCountChangedToEvent{.group = RespawnGroup::PLAYER1, .respawnCount = _respawnCount[1]});
-	_respawnCount[2] = 0u;
-	_events->EmitEvent(RespawnCountChangedToEvent{.group = RespawnGroup::PLAYER2, .respawnCount = _respawnCount[2]});
+	for (const PlayerSlot slot: kSlots)
+	{
+		_respawnCount[GroupIndex(slot)] = 0u;
+		_events->EmitEvent(RespawnCountChangedToEvent{.group = GroupOf(slot), .respawnCount = 0u});
+	}
 }
 
 void RespawnManager::OnBonusTank(const Author author)
 {
-	switch (author)
+	if (FactionOf(author) == Faction::EnemyTeam)
 	{
-		case Author::Enemy1:
-		case Author::Enemy2:
-		case Author::Enemy3:
-		case Author::Enemy4:
-			ChangeRespawnCount(1, RespawnGroup::ENEMY_ALL);
-			break;
-		case Author::Player1:
-			ChangeRespawnCount(1, RespawnGroup::PLAYER1);
-			break;
-		case Author::Player2:
-			ChangeRespawnCount(1, RespawnGroup::PLAYER2);
-			break;
-		case Author::None:
-		case Author::lastId:
-			break;
+		ChangeRespawnCount(1, RespawnGroup::ENEMY_ALL);
+	}
+	else if (const std::optional<PlayerSlot> slot{SlotOf(author)})
+	{
+		ChangeRespawnCount(1, GroupOf(*slot));
 	}
 
 	if (IsHost(_gameMode))
@@ -177,24 +181,15 @@ void RespawnManager::OnBonusTank(const Author author)
 
 void RespawnManager::OnTankRespawned(const TankRespawnedEvent& event)
 {
+	//NOTE: a coop bot spends no life of the seat it sits in
 	const TankType type{event.type};
-	switch (type)
+	if (!SlotOf(type))
 	{
-		case TankType::ENEMY1:
-		case TankType::ENEMY2:
-		case TankType::ENEMY3:
-		case TankType::ENEMY4:
-			ChangeRespawnCount(-1, RespawnGroup::ENEMY_ALL);
-			break;
-		case TankType::PLAYER1:
-		case TankType::PLAYER2:
-			ChangeRespawnCount(-1, type == TankType::PLAYER1
-									   ? RespawnGroup::PLAYER1
-									   : RespawnGroup::PLAYER2);
-			break;
-		case TankType::COOP1:
-		case TankType::COOP2:
-			break;
+		ChangeRespawnCount(-1, RespawnGroup::ENEMY_ALL);
+	}
+	else if (IsPlayerTank(type))
+	{
+		ChangeRespawnCount(-1, GroupOf(*SlotOf(type)));
 	}
 }
 
@@ -205,11 +200,11 @@ void RespawnManager::OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent&
 
 void RespawnManager::OnWorldSnapshotReceived(const WorldSnapshotReceivedEvent& event)
 {
-	for (const RespawnGroup group: {RespawnGroup::ENEMY_ALL, RespawnGroup::PLAYER1, RespawnGroup::PLAYER2})
+	for (const std::size_t group: std::views::iota(std::size_t{}, kRespawnGroupCount))
 	{
-		const auto id{static_cast<std::size_t>(group)};
-		_respawnCount[id] = event.snapshot.respawnCounts[id];
-		_events->EmitEvent(RespawnCountChangedToEvent{.group = group, .respawnCount = _respawnCount[id]});
+		_respawnCount[group] = event.snapshot.respawnCounts[group];
+		_events->EmitEvent(RespawnCountChangedToEvent{.group = static_cast<RespawnGroup>(group),
+													   .respawnCount = _respawnCount[group]});
 	}
 }
 
@@ -220,6 +215,7 @@ void RespawnManager::OnTankSpawn(const TankSpawnEvent& event)
 		it != _slots.end())
 	{
 		it->isAvailable = false;
+		it->isOnField = true;
 		ChangeRespawnCount(-1, it->group);
 		if (IsEnemyGroup(it->group))
 		{
@@ -232,10 +228,12 @@ void RespawnManager::OnTankSpawn(const TankSpawnEvent& event)
 	}
 }
 
+//NOTE: a free-for-all is won by the last one standing
 void RespawnManager::OnEnemyDied(const bool isAvailable)
 {
 	++_enemiesDeathCount;
-	if (isAvailable == false && _enemiesSpawnCount == _enemiesDeathCount)
+	if (isAvailable == false && _enemiesSpawnCount == _enemiesDeathCount
+		&& (!_isFreeForAll || PlayersStillIn() <= 1u))
 	{
 		_events->EmitEvent(GameFinishedEvent{.state = GameState::Won});
 	}
@@ -247,7 +245,31 @@ void RespawnManager::OnPlayerDied(const bool isAvailable)
 	if (isAvailable == false && _playersSpawnCount == _playersDeathCount)
 	{
 		_events->EmitEvent(GameFinishedEvent{.state = GameState::Over});
+
+		return;
 	}
+
+	if (_isFreeForAll && AreEnemiesGone() && PlayersStillIn() == 1u)
+	{
+		_events->EmitEvent(GameFinishedEvent{.state = GameState::Won});
+	}
+}
+
+bool RespawnManager::AreEnemiesGone() const
+{
+	return _respawnCount[static_cast<std::size_t>(RespawnGroup::ENEMY_ALL)] == 0u
+		   && _enemiesSpawnCount == _enemiesDeathCount;
+}
+
+//NOTE: in while its tank stands or a life is left
+std::size_t RespawnManager::PlayersStillIn() const
+{
+	const auto isIn = [](const SpawnSlot& slot)
+	{
+		return !IsEnemyGroup(slot.group) && (slot.isOnField || slot.isAvailable);
+	};
+
+	return static_cast<std::size_t>(std::ranges::count_if(_slots, isIn));
 }
 
 void RespawnManager::OnTankDied(const TankDiedEvent& event)
@@ -256,6 +278,7 @@ void RespawnManager::OnTankDied(const TankDiedEvent& event)
 	if (const auto it{std::ranges::find(_slots, uuid, &SpawnSlot::uuid)};
 		it != _slots.end())
 	{
+		it->isOnField = false;
 		it->isAvailable = _respawnCount[static_cast<size_t>(it->group)] > 0u;
 		if (IsEnemyGroup(it->group))
 		{

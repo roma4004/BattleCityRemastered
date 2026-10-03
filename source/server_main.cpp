@@ -218,9 +218,11 @@ int main(const int argc, char* argv[])
 	//NOTE: loopback is out of reach from another machine
 	gameConfig.serverAddress.host = launchOptions->serverHost ? *launchOptions->serverHost : network::LocalAddress();
 	gameConfig.serverAddress.port = launchOptions->serverPort.value_or(gameConfig.serverAddress.port);
+	gameConfig.networkSeats = launchOptions->seats.value_or(gameConfig.networkSeats);
+	gameConfig.networkRules = launchOptions->rules.value_or(gameConfig.networkRules);
 
 	const auto events{std::make_shared<EventSystem>()};
-	PauseSwitch pauseSwitch{events};
+	const PauseSwitch pauseSwitch{events};
 	//NOTE: no presenter here, so its pacing is all that stands between this loop and a busy spin
 	const FramePerSecondManager fpsManager{events, projectConfig, false};
 	Simulation simulation{events, gameConfig};

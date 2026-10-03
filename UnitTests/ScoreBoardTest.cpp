@@ -29,7 +29,7 @@ protected:
 		_events = std::make_shared<EventSystem>();
 		_statistics = std::make_unique<GameStatistics>(_events);
 		_stateManager = std::make_unique<GameStateManager>(_events);
-		_scoreBoard = std::make_unique<ScoreBoard>(_events, *_statistics);
+		_scoreBoard = std::make_unique<ScoreBoard>(_events, *_statistics, _gameConfig);
 
 		_shownSub = _events->AddListener([this](const ScoreBoardShownEvent& event)
 		{

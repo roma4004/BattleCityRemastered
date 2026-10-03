@@ -8,6 +8,8 @@ enum class Faction : char8_t
 
 	PlayerTeam,
 	EnemyTeam,
+	//NOTE: a free-for-all tank - everyone's opponent, another Solo too
+	Solo,
 
 	lastId
 };
@@ -25,6 +27,8 @@ enum class Faction : char8_t
 			return Faction::EnemyTeam;
 		case Faction::EnemyTeam:
 			return Faction::PlayerTeam;
+		case Faction::Solo:
+			return Faction::Solo;
 		case Faction::Neutral:
 		case Faction::lastId:
 			break;
@@ -41,6 +45,8 @@ enum class Faction : char8_t
 			return "PlayerTeam";
 		case Faction::EnemyTeam:
 			return "EnemyTeam";
+		case Faction::Solo:
+			return "Solo";
 		case Faction::Neutral:
 		case Faction::lastId:
 			break;

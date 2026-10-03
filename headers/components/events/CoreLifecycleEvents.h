@@ -41,6 +41,8 @@ struct HostPhaseAnnouncedEvent
 struct PlayerSlotAssignedEvent
 {
 	PlayerSlot slot;
+	//NOTE: the host's seat count; zero when not sent
+	std::uint8_t seatCount{};
 };
 
 //NOTE: the link dropped without a goodbye - an announced leave is ServerInDisconnectEvent

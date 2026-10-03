@@ -3,39 +3,26 @@
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/ObjectLifecycleEvents.h"
 #include "components/events/ReplicationEvents.h"
+#include "components/StatisticsData.h"
 #include "components/WorldSnapshot.h"
 #include "enums/Author.h"
+#include "enums/Faction.h"
+#include "enums/PlayerSlot.h"
+#include <optional>
 
 namespace
 {
-//NOTE: every counter here splits the same three ways
-struct Buckets final
-{
-	unsigned short& byEnemyTeam;
-	unsigned short& byPlayerOne;
-	unsigned short& byPlayerTwo;
-};
+using SeatField = unsigned short SeatStatistics::*;
+using TeamField = unsigned short EnemyTeamStatistics::*;
 
-void Credit(const Author author, const Buckets buckets)
+[[nodiscard]] constexpr bool IsEnemyTeam(const Author author) noexcept
 {
-	switch (author)
-	{
-		case Author::Enemy1:
-		case Author::Enemy2:
-		case Author::Enemy3:
-		case Author::Enemy4:
-			++buckets.byEnemyTeam;
-			break;
-		case Author::Player1:
-			++buckets.byPlayerOne;
-			break;
-		case Author::Player2:
-			++buckets.byPlayerTwo;
-			break;
-		case Author::None:
-		case Author::lastId:
-			break;
-	}
+	return FactionOf(author) == Faction::EnemyTeam;
+}
+
+[[nodiscard]] constexpr bool IsFriendlyFire(const Author author, const Author who) noexcept
+{
+	return IsEnemyTeam(author) == IsEnemyTeam(who);
 }
 }//namespace
 
@@ -66,96 +53,87 @@ void GameStatistics::Subscribe()
 
 void GameStatistics::OnGameReset(const GameResetEvent&) { Reset(); }
 
+//NOTE: the enemy team as one, each seat on its own
+void GameStatistics::Credit(const Author author, const TeamField team, const SeatField seat)
+{
+	if (IsEnemyTeam(author))
+	{
+		++(_data.enemyTeam.*team);
+
+		return;
+	}
+
+	CreditSeat(author, seat);
+}
+
+void GameStatistics::CreditSeat(const Author author, const SeatField seat)
+{
+	if (const std::optional<PlayerSlot> slot{SlotOf(author)})
+	{
+		++(_data.seats[SeatIndex(*slot)].*seat);
+	}
+}
+
 void GameStatistics::OnBulletHit(const StatisticsBulletHitEvent& event)
 {
-	Credit(event.author, {.byEnemyTeam = _data.bulletHitByEnemy,
-						  .byPlayerOne = _data.bulletHitByPlayerOne,
-						  .byPlayerTwo = _data.bulletHitByPlayerTwo});
+	Credit(event.author, &EnemyTeamStatistics::bulletHits, &SeatStatistics::bulletHits);
 }
 
-//NOTE: friendly fire is one bucket, whichever player pulled the trigger - hence one counter in two positions
+//NOTE: friendly fire is the one hit's to take; across the sides the player scores, hitting or hit
 void GameStatistics::OnTankHit(const StatisticsTankHitEvent& event)
 {
-	switch (event.who)
+	if (FactionOf(event.author) == Faction::Neutral)
 	{
-		case Author::Enemy1:
-		case Author::Enemy2:
-		case Author::Enemy3:
-		case Author::Enemy4:
-			Credit(event.author, {.byEnemyTeam = _data.enemyHitByFriendlyFire,
-								  .byPlayerOne = _data.enemyHitByPlayerOne,
-								  .byPlayerTwo = _data.enemyHitByPlayerTwo});
-			break;
-		case Author::Player1:
-			Credit(event.author, {.byEnemyTeam = _data.playerOneHitByEnemyTeam,
-								  .byPlayerOne = _data.playerOneHitFriendlyFire,
-								  .byPlayerTwo = _data.playerOneHitFriendlyFire});
-			break;
-		case Author::Player2:
-			Credit(event.author, {.byEnemyTeam = _data.playerTwoHitByEnemyTeam,
-								  .byPlayerOne = _data.playerTwoHitFriendlyFire,
-								  .byPlayerTwo = _data.playerTwoHitFriendlyFire});
-			break;
-		case Author::None:
-		case Author::lastId:
-			break;
+		return;
 	}
+
+	if (IsFriendlyFire(event.author, event.who))
+	{
+		Credit(event.who, &EnemyTeamStatistics::friendlyHitsTaken, &SeatStatistics::friendlyHitsTaken);
+
+		return;
+	}
+
+	CreditSeat(event.author, &SeatStatistics::enemyHits);
+	CreditSeat(event.who, &SeatStatistics::hitByEnemyTeam);
 }
 
+//NOTE: friendly fire is the one killed's to take; a kill across the sides is the killer's
 void GameStatistics::OnTankDied(const TankDiedEvent& event)
 {
-	switch (event.who)
+	if (FactionOf(event.author) == Faction::Neutral)
 	{
-		case Author::Enemy1:
-		case Author::Enemy2:
-		case Author::Enemy3:
-		case Author::Enemy4:
-			Credit(event.author, {.byEnemyTeam = _data.enemyDiedByFriendlyFire,
-								  .byPlayerOne = _data.enemyDiedByPlayerOne,
-								  .byPlayerTwo = _data.enemyDiedByPlayerTwo});
-			break;
-		case Author::Player1:
-			Credit(event.author, {.byEnemyTeam = _data.playerDiedByEnemyTeam,
-								  .byPlayerOne = _data.playerOneDiedByFriendlyFire,
-								  .byPlayerTwo = _data.playerOneDiedByFriendlyFire});
-			break;
-		case Author::Player2:
-			Credit(event.author, {.byEnemyTeam = _data.playerDiedByEnemyTeam,
-								  .byPlayerOne = _data.playerTwoDiedByFriendlyFire,
-								  .byPlayerTwo = _data.playerTwoDiedByFriendlyFire});
-			break;
-		case Author::None:
-		case Author::lastId:
-			break;
+		return;
 	}
+
+	if (IsFriendlyFire(event.author, event.who))
+	{
+		Credit(event.who, &EnemyTeamStatistics::friendlyKillsTaken, &SeatStatistics::friendlyKillsTaken);
+
+		return;
+	}
+
+	Credit(event.author, &EnemyTeamStatistics::playerKills, &SeatStatistics::enemyKills);
 }
 
 void GameStatistics::OnBrickWallDied(const BrickWallDiedEvent& event)
 {
-	Credit(event.author, {.byEnemyTeam = _data.brickWallDiedByEnemyTeam,
-						  .byPlayerOne = _data.brickWallDiedByPlayerOne,
-						  .byPlayerTwo = _data.brickWallDiedByPlayerTwo});
+	Credit(event.author, &EnemyTeamStatistics::brickWallKills, &SeatStatistics::brickWallKills);
 }
 
 void GameStatistics::OnSteelWallDied(const SteelWallDiedEvent& event)
 {
-	Credit(event.author, {.byEnemyTeam = _data.steelWallDiedByEnemyTeam,
-						  .byPlayerOne = _data.steelWallDiedByPlayerOne,
-						  .byPlayerTwo = _data.steelWallDiedByPlayerTwo});
+	Credit(event.author, &EnemyTeamStatistics::steelWallKills, &SeatStatistics::steelWallKills);
 }
 
 void GameStatistics::OnBonusPickup(const StatisticsBonusPickupEvent& event)
 {
-	Credit(event.author, {.byEnemyTeam = _data.bonusPickupByEnemyTeam,
-						  .byPlayerOne = _data.bonusPickupByPlayerOne,
-						  .byPlayerTwo = _data.bonusPickupByPlayerTwo});
+	Credit(event.author, &EnemyTeamStatistics::bonusPickups, &SeatStatistics::bonusPickups);
 }
 
 void GameStatistics::OnBonusDestroyed(const StatisticsBonusDestroyedEvent& event)
 {
-	Credit(event.author, {.byEnemyTeam = _data.bonusDestroyedByEnemyTeam,
-						  .byPlayerOne = _data.bonusDestroyedByPlayerOne,
-						  .byPlayerTwo = _data.bonusDestroyedByPlayerTwo});
+	Credit(event.author, &EnemyTeamStatistics::bonusesDestroyed, &SeatStatistics::bonusesDestroyed);
 }
 
 void GameStatistics::OnBonusExpired(const StatisticsBonusExpiredEvent&)

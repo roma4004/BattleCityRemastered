@@ -151,7 +151,9 @@ Point TextCache::MeasureString(const std::string_view text, const int basePointS
 
 	int pixelWidth{};
 	int pixelHeight{};
-	if (!TTF_GetStringSize(FontForScale(basePointSize, scale), text.data(), text.size(), &pixelWidth, &pixelHeight))
+	//NOTE: SDL_ttf takes length 0 as NUL-terminated and would measure the rest of the buffer
+	const char* const bytes{text.empty() ? "" : text.data()};
+	if (!TTF_GetStringSize(FontForScale(basePointSize, scale), bytes, text.size(), &pixelWidth, &pixelHeight))
 	{
 		return {};
 	}

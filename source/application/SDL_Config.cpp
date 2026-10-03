@@ -4,6 +4,7 @@
 #include "application/GameConfig.h"
 #include "application/WindowConfig.h"
 #include "application/UserInput.h"
+#include "enums/TextureOffset.h"
 #include "enums/WindowSide.h"
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
@@ -13,7 +14,10 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
+#include <expected>
 #include <memory>
+#include <span>
 
 namespace
 {
@@ -41,6 +45,64 @@ std::expected<SurfaceHandle, InitError> LoadSurface(const std::filesystem::path&
 	}
 
 	return surface;
+}
+
+//NOTE: each channel moved most of the way to white - the shading stays, an enemy's gray does not
+void Whiten(SDL_Surface& surface, const SDL_Rect& area)
+{
+	constexpr int kKeptShare{2};
+	constexpr int kShares{5};
+	constexpr std::size_t kBytesPerPixel{4u};
+
+	SDL_LockSurface(&surface);
+	auto* const pixels{static_cast<std::uint8_t*>(surface.pixels)};
+	for (int y{area.y}; y < area.y + area.h; ++y)
+	{
+		for (int x{area.x}; x < area.x + area.w; ++x)
+		{
+			const std::span pixel{pixels + y * surface.pitch + x * static_cast<int>(kBytesPerPixel), kBytesPerPixel};
+			//NOTE: the color key, the atlas's see-through
+			if (pixel[0] == 0u && pixel[1] == 0u && pixel[2] == 1u)
+			{
+				continue;
+			}
+
+			for (std::uint8_t& channel: pixel.first(3u))
+			{
+				channel = static_cast<std::uint8_t>(255 - (255 - channel) * kKeptShare / kShares);
+			}
+		}
+	}
+	SDL_UnlockSurface(&surface);
+}
+
+//NOTE: the sheet's gray quarter is the enemy's - player four gets it whitened, under the sheet where kPlayer4 points
+std::expected<SurfaceHandle, InitError> WithWhiteQuarter(const SurfaceHandle& sheet)
+{
+	constexpr int kQuarter{128};
+	constexpr SDL_Rect gray{.x = static_cast<int>(TextureOffset::kEnemy.x) - 1,
+							.y = static_cast<int>(TextureOffset::kEnemy.y) - 1,
+							.w = kQuarter,
+							.h = kQuarter};
+	constexpr SDL_Rect white{.x = static_cast<int>(TextureOffset::kPlayer4.x) - 1,
+							 .y = static_cast<int>(TextureOffset::kPlayer4.y) - 1,
+							 .w = kQuarter,
+							 .h = kQuarter};
+
+	const SurfaceHandle source{SDL_ConvertSurface(sheet.get(), SDL_PIXELFORMAT_RGBA32)};
+	SurfaceHandle atlas{SDL_CreateSurface(sheet->w, std::max(sheet->h, white.y + white.h), SDL_PIXELFORMAT_RGBA32)};
+	if (source == nullptr || atlas == nullptr
+		|| !SDL_SetSurfaceBlendMode(source.get(), SDL_BLENDMODE_NONE)
+		|| !SDL_FillSurfaceRect(atlas.get(), nullptr, SDL_MapSurfaceRGB(atlas.get(), 0, 0, 1))
+		|| !SDL_BlitSurface(source.get(), nullptr, atlas.get(), nullptr)
+		|| !SDL_BlitSurface(source.get(), &gray, atlas.get(), &white))
+	{
+		return std::unexpected(InitError{.stage = "atlas white quarter", .detail = SDL_GetError()});
+	}
+
+	Whiten(*atlas, white);
+
+	return atlas;
 }
 }// namespace
 
@@ -123,7 +185,7 @@ std::expected<void, InitError> SDL_Config::InitVideo()
 }
 
 //TODO: runtime switch - update Window.vsync too (read every frame); the renderer and its textures survive it
-std::expected<void, InitError> SDL_Config::SetVSync(const int mode)
+std::expected<void, InitError> SDL_Config::SetVSync(const int mode) const
 {
 	if (!SDL_SetRenderVSync(renderer.get(), mode))
 	{
@@ -268,7 +330,7 @@ std::expected<void, InitError> SDL_Config::LoadAtlas()
 {
 	const std::filesystem::path path{projectConfig.ResourcePath("Images.SpriteSheet")};
 
-	auto surface{LoadSurface(path)};
+	auto surface{LoadSurface(path).and_then(WithWhiteQuarter)};
 	if (!surface)
 	{
 		return std::unexpected(surface.error());

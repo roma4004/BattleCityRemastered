@@ -48,7 +48,7 @@ Game::Game(GameConfig& gameConfig, const ProjectConfig& projectConfig, const Win
 	, _simulation{std::make_unique<Simulation>(_events, gameConfig)}
 	, _renderManager{std::make_unique<RenderManager>(_events, gameConfig, sdlConfig)}
 	, _uiRenderer{std::make_unique<UiRenderer>(_events, gameConfig, sdlConfig)}
-	, _scoreBoard{std::make_unique<ScoreBoard>(_events, _simulation->Statistics())}
+	, _scoreBoard{std::make_unique<ScoreBoard>(_events, _simulation->Statistics(), gameConfig)}
 	, _lobbyScreen{std::make_unique<LobbyScreen>(_events, gameConfig)}
 	, _rightSideBar{std::make_unique<RightSideBar>(_events, gameConfig)}
 	, _gameConfig{gameConfig}
@@ -326,4 +326,4 @@ void Game::Run()
 	}
 }
 
-int Game::Result() const { return 0; }
+int Game::Result() { return 0; }

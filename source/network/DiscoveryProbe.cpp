@@ -47,9 +47,11 @@ DiscoveryProbe::DiscoveryProbe(const std::string& host)
 
 std::optional<discovery::Reply> DiscoveryProbe::Poll()
 {
+	//NOTE: one object for every return, or -Wnrvo
+	std::optional<discovery::Reply> newest{};
 	if (!_socket.is_open())
 	{
-		return std::nullopt;
+		return newest;
 	}
 
 	boost::system::error_code ec;
@@ -57,7 +59,6 @@ std::optional<discovery::Reply> DiscoveryProbe::Poll()
 
 	//NOTE: the answer to this probe is not here yet - what is read now is the answer to an earlier one,
 	//which says the same thing, so the freshest datagram in the buffer wins
-	std::optional<discovery::Reply> newest{};
 	for (;;)
 	{
 		udp::endpoint sender{};
@@ -73,12 +74,7 @@ std::optional<discovery::Reply> DiscoveryProbe::Poll()
 		}
 	}
 
-	if (!newest)
-	{
-		return std::nullopt;
-	}
-
-	if (newest->protocolVersion != discovery::kProtocolVersion)
+	if (newest && newest->protocolVersion != discovery::kProtocolVersion)
 	{
 		if (!_isVersionMismatchReported)
 		{
@@ -87,7 +83,7 @@ std::optional<discovery::Reply> DiscoveryProbe::Poll()
 					   + ", this build speaks " + std::to_string(discovery::kProtocolVersion));
 		}
 
-		return std::nullopt;
+		newest.reset();
 	}
 
 	return newest;

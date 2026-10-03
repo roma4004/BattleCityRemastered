@@ -8,7 +8,9 @@
 #include "network/Serializer.h"
 #include "network/WireFrame.h"
 #include "network/commands/CommandBatch.h"
+#include "network/commands/SlotAssignment.h"
 #include "utils/Log.h"
+#include <cstdint>
 #include <string>
 #include <string_view>
 #include <tuple>
@@ -56,11 +58,12 @@ void EmitInput(EventSystem& events, const PlayerSlot slot, const InputSignal sig
 }// namespace
 
 Session::Session(udp::endpoint endpoint, const std::uint32_t connectionId, const std::shared_ptr<EventSystem>& events,
-				 const PlayerSlot slot, const DatagramLink::Clock::time_point now)
+				 const PlayerSlot slot, const std::uint8_t seatCount, const DatagramLink::Clock::time_point now)
 	: PeerLink("Session", events)
 	, _endpoint{std::move(endpoint)}
 	, _link{connectionId, now}
-	, _slot{slot} {}
+	, _slot{slot}
+	, _seatCount{seatCount} {}
 
 void Session::OnCommand(const AnyCommand& command)
 {
@@ -71,7 +74,7 @@ void Session::OnCommand(const AnyCommand& command)
 void Session::Start()
 {
 	CommandBatch assignment;
-	assignment.commands.emplace_back(SlotAssignment{.slot = _slot});
+	assignment.commands.emplace_back(SlotAssignment{.slot = _slot, .seatCount = _seatCount});
 	std::ignore = _link.SendReliable(network::Serialize(assignment));
 }
 

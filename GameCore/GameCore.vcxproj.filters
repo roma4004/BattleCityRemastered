@@ -608,6 +608,9 @@
     <ClInclude Include="..\headers\enums\InputSignal.h">
       <Filter>headers\enums</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\enums\MatchRules.h">
+      <Filter>headers\enums</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\enums\ObstacleType.h">
       <Filter>headers\enums</Filter>
     </ClInclude>

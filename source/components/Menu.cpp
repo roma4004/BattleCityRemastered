@@ -18,8 +18,13 @@ namespace
 constexpr unsigned int kTextColor{0xffffffffu};
 
 //NOTE: the order the modes stand in - the row a click lands on is looked up here
-constexpr std::array kModes{GameMode::OnePlayer, GameMode::TwoPlayers, GameMode::CoopWithBot,
-							GameMode::PlayAsHost, GameMode::PlayAsClient};
+constexpr std::array kModes{GameMode::OnePlayer,
+							GameMode::TwoPlayers,
+							GameMode::CoopWithBot,
+							GameMode::FreeForAll,
+							GameMode::TwoPlayersFreeForAll,
+							GameMode::PlayAsHost,
+							GameMode::PlayAsClient};
 
 UiCell Text(std::string text) { return TextCell(std::move(text), kTextColor); }
 
@@ -32,6 +37,8 @@ UiTable ModesTable()
 	return UiTable{.rows = {UiRow{.cells = {Text("ONE PLAYER")}},
 							UiRow{.cells = {Text("TWO PLAYER")}},
 							UiRow{.cells = {Text("COOP WITH BOT")}},
+							UiRow{.cells = {Text("FREE FOR ALL")}},
+							UiRow{.cells = {Text("2P FREE FOR ALL")}},
 							UiRow{.cells = {Text("PLAY AS HOST")}},
 							UiRow{.cells = {Text("PLAY AS CLIENT")}}}};
 }
@@ -39,18 +46,42 @@ UiTable ModesTable()
 //NOTE: an action, the keys that do it, and for each pad its button as a picture and by name
 UiTable ControlsTable()
 {
-	return UiTable{.rows = {UiRow{.cells = {Text("Controls:"), Text("P1/P2"), Picture(UiIcon::MenuXBoxHome),
-											Text("XBox"), Picture(UiIcon::MenuPS5Home), Text("PS")}},
-							UiRow{.cells = {Text("Pause"), Text("P"), Picture(UiIcon::MenuXBoxView), Text("View"),
-											Picture(UiIcon::MenuPS5Create), Text("Create")}},
-							UiRow{.cells = {Text("Menu"), Text("M"), Picture(UiIcon::MenuXBoxMenu), Text("Menu"),
-											Picture(UiIcon::MenuPS5Options), Text("Options")}},
-							UiRow{.cells = {Text("Swap"), Text("TAB"), Picture(UiIcon::MenuXBoxY), Text("Y"),
-											Picture(UiIcon::MenuPS5Triangle), Text("Triangle")}},
-							UiRow{.cells = {Text("Move"), Text("Arrows/WASD"), Picture(UiIcon::MenuXBoxDpad),
-											Text("D-pad"), Picture(UiIcon::MenuPS5Dpad), Text("D-pad")}},
-							UiRow{.cells = {Text("Fire"), Text("Space/LCtrl"), Picture(UiIcon::MenuXBoxA), Text("A"),
-											Picture(UiIcon::MenuPS5Cross), Text("Cross")}}}};
+	return UiTable{.rows = {UiRow{.cells = {Text("Controls:"),
+											Text("P1/P2"),
+											Picture(UiIcon::MenuXBoxHome),
+											Text("XBox"),
+											Picture(UiIcon::MenuPS5Home),
+											Text("PS")}},
+							UiRow{.cells = {Text("Pause"),
+											Text("P"),
+											Picture(UiIcon::MenuXBoxView),
+											Text("View"),
+											Picture(UiIcon::MenuPS5Create),
+											Text("Create")}},
+							UiRow{.cells = {Text("Menu"),
+											Text("M"),
+											Picture(UiIcon::MenuXBoxMenu),
+											Text("Menu"),
+											Picture(UiIcon::MenuPS5Options),
+											Text("Options")}},
+							UiRow{.cells = {Text("Swap"),
+											Text("TAB"),
+											Picture(UiIcon::MenuXBoxY),
+											Text("Y"),
+											Picture(UiIcon::MenuPS5Triangle),
+											Text("Triangle")}},
+							UiRow{.cells = {Text("Move"),
+											Text("Arrows/WASD"),
+											Picture(UiIcon::MenuXBoxDpad),
+											Text("D-pad"),
+											Picture(UiIcon::MenuPS5Dpad),
+											Text("D-pad")}},
+							UiRow{.cells = {Text("Fire"),
+											Text("Space/LCtrl"),
+											Picture(UiIcon::MenuXBoxA),
+											Text("A"),
+											Picture(UiIcon::MenuPS5Cross),
+											Text("Cross")}}}};
 }
 }//namespace
 

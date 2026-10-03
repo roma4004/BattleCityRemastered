@@ -2,6 +2,9 @@
 
 #include "Endpoints.h"
 #include "NetworkNodeBase.h"
+#include "enums/MatchRules.h"
+#include "enums/PlayerSlot.h"
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 
@@ -12,7 +15,8 @@ class Server;
 class ServerNode final : public NetworkNodeBase
 {
 public:
-	ServerNode(const ServerAddress& address, const std::shared_ptr<EventSystem>& events);
+	ServerNode(const ServerAddress& address, const std::shared_ptr<EventSystem>& events,
+			   std::size_t seatCount = kDefaultSeats, MatchRules rules = MatchRules::Classic);
 
 	~ServerNode() override;
 

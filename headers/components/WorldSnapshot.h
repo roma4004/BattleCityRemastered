@@ -8,6 +8,7 @@
 #include "enums/Direction.h"
 #include "enums/GameState.h"
 #include "enums/ObstacleType.h"
+#include "enums/RespawnGroup.h"
 #include "enums/TankModel.h"
 #include "enums/TankType.h"
 #include "geometry/ObjRectangle.h"
@@ -61,6 +62,6 @@ struct WorldSnapshot final
 	std::vector<BonusSpawnedEvent> bonuses{};
 	std::vector<BonusSpawnedEvent> bonusSpawns{};
 	//NOTE: indexed by RespawnGroup
-	std::array<unsigned short, 3> respawnCounts{};
+	std::array<unsigned short, kRespawnGroupCount> respawnCounts{};
 	StatisticsData statistics{};
 };

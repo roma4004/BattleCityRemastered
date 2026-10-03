@@ -10,7 +10,11 @@ struct MenuReleasedEvent {};
 
 struct PauseReleasedEvent {};
 
-struct TabReleasedEvent {};
+//NOTE: Shift+Tab swaps the second pair of seats
+struct TabReleasedEvent
+{
+	bool isSecondPair{};
+};
 
 struct SetPauseEvent
 {

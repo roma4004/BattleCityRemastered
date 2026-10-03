@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Discovery.h"
+#include "enums/MatchRules.h"
 #include <array>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/address.hpp>
@@ -20,7 +21,8 @@ public:
 	//NOTE: freeSeats is asked at answer time, not captured as a number - the answer is only worth
 	//anything if it describes the server as it is when the probe arrives
 	DiscoveryBeacon(boost::asio::io_context& ioContext, const boost::asio::ip::address& host,
-					std::uint16_t gamePort, std::function<std::uint8_t()> freeSeats);
+					std::uint16_t gamePort, std::uint8_t seats, MatchRules rules,
+					std::function<std::uint8_t()> freeSeats);
 
 	~DiscoveryBeacon();
 
@@ -43,6 +45,8 @@ private:
 	//NOTE: room enough to tell a probe from anything else - a longer datagram is not one either way
 	std::array<char, 16u> _receiveBuffer{};
 	const std::uint16_t _gamePort;
+	const std::uint8_t _seats;
+	const MatchRules _rules;
 	std::function<std::uint8_t()> _freeSeats;
 };
 }//namespace network

@@ -2,6 +2,7 @@
 #include "application/GameConfig.h"
 #include "application/WindowConfig.h"
 #include "application/ProjectConfig.h"
+#include "enums/MatchRules.h"
 #include "enums/WindowSide.h"
 #include "network/Endpoints.h"
 
@@ -80,6 +81,8 @@ TEST_F(CommandLineParserTest, GameModeIsGivenByItsOwnOption)
 {
 	EXPECT_EQ(Parse({"--server"}).gameMode, GameMode::PlayAsHost);
 	EXPECT_EQ(Parse({"--client"}).gameMode, GameMode::PlayAsClient);
+	EXPECT_EQ(Parse({"--ffa"}).gameMode, GameMode::FreeForAll);
+	EXPECT_EQ(Parse({"--2p-ffa"}).gameMode, GameMode::TwoPlayersFreeForAll);
 }
 
 //NOTE: an earlier parser matched by suffix, so every form below quietly passed for a game mode
@@ -388,6 +391,30 @@ TEST(ServerCommandLineTest, AGameOptionIsRefused)
 	{
 		EXPECT_FALSE(ParseServerRaw({arg}).has_value()) << arg;
 	});
+}
+
+// --seats is the server's
+TEST(ServerCommandLineTest, TheSeatCountIsTaken)
+{
+	EXPECT_EQ(ParseServerRaw({"--seats=4"}).value_or(LaunchOptions{}).seats, 4u);
+	EXPECT_FALSE(ParseServerRaw({}).value_or(LaunchOptions{.seats = 3u}).seats.has_value());
+}
+
+// and so are its rules - anything but the two is refused
+TEST(ServerCommandLineTest, TheRulesAreTaken)
+{
+	EXPECT_EQ(ParseServerRaw({"--rules=ffa"}).value_or(LaunchOptions{}).rules, MatchRules::FreeForAll);
+	EXPECT_EQ(ParseServerRaw({"--rules=classic"}).value_or(LaunchOptions{}).rules, MatchRules::Classic);
+	EXPECT_FALSE(ParseServerRaw({"--rules=coop"}).has_value());
+}
+
+// one to four seats only
+TEST(ServerCommandLineTest, ASeatCountOutsideOneToFourIsRefused)
+{
+	for (const char* arg: {"--seats=0", "--seats=5", "--seats=two", "--seats="})
+	{
+		EXPECT_FALSE(ParseServerRaw({arg}).has_value()) << arg;
+	}
 }
 
 // the dedicated server refuses the same malformed address the game does

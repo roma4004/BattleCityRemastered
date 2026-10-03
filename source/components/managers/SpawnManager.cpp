@@ -50,7 +50,7 @@ void SpawnManager::CreateSpawners()
 {
 	_bonusSpawner = std::make_unique<BonusSpawner>(_events, _allObjects, _gameConfig);
 	_obstacleSpawner = std::make_unique<ObstacleSpawner>(_events, _gameConfig);
-	_respawnManager = std::make_unique<RespawnManager>(_events, _gameConfig.gameMode);
+	_respawnManager = std::make_unique<RespawnManager>(_events, _gameConfig);
 	_tankSpawner = std::make_unique<TankSpawner>(_gameConfig, _allObjects, _events, _tankPool);
 }
 

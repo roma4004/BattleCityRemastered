@@ -1,44 +1,50 @@
 #pragma once
 
+#include "enums/PlayerSlot.h"
+#include <array>
+
+//NOTE: what one seat did, and what was done to it
+struct SeatStatistics final
+{
+	unsigned short bulletHits{};
+	unsigned short enemyHits{};
+	unsigned short enemyKills{};
+	unsigned short hitByEnemyTeam{};
+	unsigned short friendlyHitsTaken{};
+	unsigned short friendlyKillsTaken{};
+	unsigned short brickWallKills{};
+	unsigned short steelWallKills{};
+	unsigned short bonusPickups{};
+	unsigned short bonusesDestroyed{};
+
+	[[nodiscard]] bool operator==(const SeatStatistics& rhs) const = default;
+};
+
+//NOTE: the enemy team as a whole
+struct EnemyTeamStatistics final
+{
+	unsigned short bulletHits{};
+	unsigned short playerKills{};
+	unsigned short friendlyHitsTaken{};
+	unsigned short friendlyKillsTaken{};
+	unsigned short brickWallKills{};
+	unsigned short steelWallKills{};
+	unsigned short bonusPickups{};
+	unsigned short bonusesDestroyed{};
+
+	[[nodiscard]] bool operator==(const EnemyTeamStatistics& rhs) const = default;
+};
+
 struct StatisticsData final
 {
-	unsigned short bulletHitByEnemy{};
-	unsigned short bulletHitByPlayerOne{};
-	unsigned short bulletHitByPlayerTwo{};
-
-	unsigned short enemyHitByFriendlyFire{};
-	unsigned short enemyHitByPlayerOne{};
-	unsigned short enemyHitByPlayerTwo{};
-
-	unsigned short playerOneHitFriendlyFire{};
-	unsigned short playerOneHitByEnemyTeam{};
-
-	unsigned short playerTwoHitFriendlyFire{};
-	unsigned short playerTwoHitByEnemyTeam{};
-
-	unsigned short enemyDiedByFriendlyFire{};
-	unsigned short enemyDiedByPlayerOne{};
-	unsigned short enemyDiedByPlayerTwo{};
-
-	unsigned short playerOneDiedByFriendlyFire{};
-	unsigned short playerTwoDiedByFriendlyFire{};
-	unsigned short playerDiedByEnemyTeam{};
-
-	unsigned short brickWallDiedByEnemyTeam{};
-	unsigned short brickWallDiedByPlayerOne{};
-	unsigned short brickWallDiedByPlayerTwo{};
-
-	unsigned short steelWallDiedByEnemyTeam{};
-	unsigned short steelWallDiedByPlayerOne{};
-	unsigned short steelWallDiedByPlayerTwo{};
-
-	unsigned short bonusPickupByEnemyTeam{};
-	unsigned short bonusPickupByPlayerOne{};
-	unsigned short bonusPickupByPlayerTwo{};
-
-	unsigned short bonusDestroyedByEnemyTeam{};
-	unsigned short bonusDestroyedByPlayerOne{};
-	unsigned short bonusDestroyedByPlayerTwo{};
-
+	std::array<SeatStatistics, kSeatCount> seats{};
+	EnemyTeamStatistics enemyTeam{};
 	unsigned short bonusExpired{};
+
+	[[nodiscard]] bool operator==(const StatisticsData& rhs) const = default;
+
+	[[nodiscard]] constexpr const SeatStatistics& Seat(const PlayerSlot slot) const noexcept
+	{
+		return seats[SeatIndex(slot)];
+	}
 };
