@@ -146,6 +146,8 @@ void UserInput::OnPanelRowsPlaced(const PanelRowsPlacedEvent& event)
 	};
 	_panelRows = event.rows | std::views::transform(toRect) | std::ranges::to<std::vector>();
 	_panelSymbolWidth = event.symbolWidth;
+	//NOTE: the numbers may name other rows now - the next move over one tells of it again
+	_hoveredPanelRow.reset();
 }
 
 //NOTE: a new link may hand out another seat

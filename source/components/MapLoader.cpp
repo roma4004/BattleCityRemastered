@@ -2,8 +2,8 @@
 #include "components/WorldGeometry.h"
 #include "enums/BonusType.h"
 #include "enums/TankModel.h"
+#include "utils/TextUtils.h"
 #include <algorithm>
-#include <cctype>
 #include <charconv>
 #include <cstddef>
 #include <expected>
@@ -136,12 +136,11 @@ constexpr std::size_t kMaxListedEnemies{std::numeric_limits<unsigned short>::max
 //NOTE: any case, so "Armor" the way the log spells it reads too; the player's model is no enemy
 [[nodiscard]] std::optional<TankModel> EnemyModelNamed(const std::string_view name)
 {
-	const auto lower = [](const char symbol) { return std::tolower(static_cast<unsigned char>(symbol)); };
 	const auto models{std::views::iota(kFirstTankModelId, kLastEnemyModelId + 1)
 					  | std::views::transform([](const int id) { return static_cast<TankModel>(id); })};
-	const auto found{std::ranges::find_if(models, [name, lower](const TankModel model)
+	const auto found{std::ranges::find_if(models, [name](const TankModel model)
 	{
-		return std::ranges::equal(name, ToString(model), {}, lower, lower);
+		return std::ranges::equal(name, ToString(model), {}, TextUtils::ToLower, TextUtils::ToLower);
 	})};
 	if (found == models.end())
 	{

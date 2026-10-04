@@ -1,8 +1,8 @@
 #include "components/AddressField.h"
 #include "components/events/InputEvents.h"
 #include "network/Endpoints.h"
+#include "utils/TextUtils.h"
 #include <algorithm>
-#include <cctype>
 #include <cstddef>
 #include <iterator>
 #include <optional>
@@ -22,10 +22,6 @@ constexpr std::size_t kIPv6Parts{2};
 constexpr std::size_t kScopePart{1};
 constexpr std::ptrdiff_t kIPv6Groups{8};
 constexpr std::size_t kGroupDigits{4};
-
-[[nodiscard]] bool IsDigit(const char symbol) { return std::isdigit(static_cast<unsigned char>(symbol)) != 0; }
-
-[[nodiscard]] bool IsHexDigit(const char symbol) { return std::isxdigit(static_cast<unsigned char>(symbol)) != 0; }
 
 [[nodiscard]] bool IsOctet(const std::string& part)
 {
@@ -123,11 +119,17 @@ constexpr std::size_t kGroupDigits{4};
 }
 }//namespace
 
-AddressField::AddressField(const AddressFamily family)
+AddressField::AddressField(const AddressFamily family, const AddressInput input)
 	: _row{Row{.parts = std::vector<std::string>(family == AddressFamily::IPv6 ? kIPv6Parts : kOctets + 1)}}
-	, _family{family} {}
+	, _family{family}
+	, _input{input} {}
 
 bool AddressField::IsIPv6() const noexcept { return _family == AddressFamily::IPv6; }
+
+std::size_t AddressField::FirstTypedPart() const noexcept
+{
+	return _input == AddressInput::Picked ? _row.parts.size() - 1 : 0;
+}
 
 void AddressField::Fill(const network::ServerAddress& address, const bool isBracketed)
 {
@@ -209,7 +211,7 @@ void AddressField::Press(const TextKey key)
 
 void AddressField::Focus() { _isColonAdded = false; }
 
-void AddressField::CaretToStart() { _row.StepToStart(0); }
+void AddressField::CaretToStart() { _row.StepToStart(FirstTypedPart()); }
 
 bool AddressField::IsCaretAtStart() const noexcept { return _row.part == 0 && _row.offset == 0; }
 
@@ -225,7 +227,7 @@ void AddressField::TypeIPv4(const char symbol)
 		return;
 	}
 
-	if (!IsDigit(symbol))
+	if (!TextUtils::IsDigit(symbol))
 	{
 		return;
 	}
@@ -355,7 +357,7 @@ void AddressField::TypeIPv6(const char symbol)
 		return;
 	}
 
-	if (!IsHexDigit(symbol))
+	if (!TextUtils::IsHexDigit(symbol))
 	{
 		return;
 	}
@@ -403,7 +405,7 @@ void AddressField::TypeScope(const char symbol)
 		return;
 	}
 
-	if (IsDigit(symbol) && _row.parts.front().size() < AddressRoom(_row.parts))
+	if (TextUtils::IsDigit(symbol) && _row.parts.front().size() < AddressRoom(_row.parts))
 	{
 		_row.parts[kScopePart].insert(_row.offset++, 1, symbol);
 	}
@@ -412,7 +414,7 @@ void AddressField::TypeScope(const char symbol)
 //NOTE: a digit pushes the rest right, or with no room goes over the digit right of the caret
 void AddressField::TypePort(const char symbol)
 {
-	if (!IsDigit(symbol))
+	if (!TextUtils::IsDigit(symbol))
 	{
 		return;
 	}
@@ -471,7 +473,7 @@ void AddressField::Erase()
 		return;
 	}
 
-	if (_row.offset == 0 && _row.part > 0)
+	if (_row.offset == 0 && _row.part > FirstTypedPart())
 	{
 		_row.StepToEnd(_row.part - 1);
 	}
@@ -523,7 +525,7 @@ void AddressField::CaretLeft()
 	{
 		--_row.offset;
 	}
-	else if (_row.part > 0)
+	else if (_row.part > FirstTypedPart())
 	{
 		_row.StepToEnd(_row.part - 1);
 	}
@@ -544,7 +546,7 @@ void AddressField::CaretRight()
 //NOTE: to the start of the word, or of the previous one - octets, IPv6 groups and the port are words
 void AddressField::WordLeft()
 {
-	if (_row.offset == 0 && _row.part > 0)
+	if (_row.offset == 0 && _row.part > FirstTypedPart())
 	{
 		_row.StepToEnd(_row.part - 1);
 	}

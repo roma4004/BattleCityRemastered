@@ -11,6 +11,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <iterator>
+#include <map>
 #include <optional>
 #include <ranges>
 #include <string>
@@ -23,6 +25,7 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <iphlpapi.h>
+#include <stringapiset.h>
 #else //NOTE: Linux
 #include <ifaddrs.h>
 #include <net/if.h>
@@ -30,7 +33,6 @@
 #include <sys/socket.h>
 #include <bit>
 #include <functional>
-#include <map>
 #include <memory>
 #endif //NOTE: Windows / Linux
 
@@ -45,6 +47,8 @@ constexpr unsigned short kWidestBroadcastPrefix{30u};
 
 //NOTE: an interface's address and the length of its network's prefix
 using InterfaceAddress = std::pair<boost::asio::ip::address, unsigned short>;
+//NOTE: the addresses of every interface that is up, by its name
+using Interfaces = std::map<std::string, std::vector<InterfaceAddress>>;
 
 //NOTE: none for an interface address of a kind that is no IP
 std::optional<boost::asio::ip::address> AddressOf(const sockaddr* const raw)
@@ -61,9 +65,22 @@ std::optional<boost::asio::ip::address> AddressOf(const sockaddr* const raw)
 	return endpoint.address();
 }
 
-//NOTE: the addresses of every interface that is up, one list per interface
 #ifdef _WIN32 //NOTE: Windows
-std::vector<std::vector<InterfaceAddress>> InterfaceAddresses()
+//NOTE: Windows names an interface in UTF-16
+std::string Utf8Of(const wchar_t* const wide)
+{
+	//NOTE: the size counts the closing null, which the string keeps past its end
+	const int size{WideCharToMultiByte(CP_UTF8, 0, wide, -1, nullptr, 0, nullptr, nullptr)};
+	std::string text(static_cast<std::size_t>(std::max(size - 1, 0)), '\0');
+	if (!text.empty())
+	{
+		WideCharToMultiByte(CP_UTF8, 0, wide, -1, text.data(), size, nullptr, nullptr);
+	}
+
+	return text;
+}
+
+Interfaces InterfaceAddresses()
 {
 	constexpr ULONG flags{GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER};
 	//NOTE: the size Microsoft suggests starting with - the call says how much it needs when that falls short
@@ -78,7 +95,7 @@ std::vector<std::vector<InterfaceAddress>> InterfaceAddresses()
 		result = GetAdaptersAddresses(AF_UNSPEC, flags, nullptr, adapters, &size);
 	}
 
-	std::vector<std::vector<InterfaceAddress>> interfaces;
+	Interfaces interfaces;
 	if (result != NO_ERROR)
 	{
 		return interfaces;
@@ -91,7 +108,7 @@ std::vector<std::vector<InterfaceAddress>> InterfaceAddresses()
 			continue;
 		}
 
-		std::vector<InterfaceAddress>& addresses{interfaces.emplace_back()};
+		std::vector<InterfaceAddress>& addresses{interfaces[Utf8Of(adapter->FriendlyName)]};
 		for (const IP_ADAPTER_UNICAST_ADDRESS* unicast{adapter->FirstUnicastAddress}; unicast != nullptr;
 			 unicast = unicast->Next)
 		{
@@ -131,16 +148,16 @@ unsigned short PrefixOf(const sockaddr* const mask)
 			std::ranges::fold_left(ones->to_v6().to_bytes() | std::views::transform(bits), 0, std::plus{}));
 }
 
-std::vector<std::vector<InterfaceAddress>> InterfaceAddresses()
+Interfaces InterfaceAddresses()
 {
+	Interfaces byName;
 	ifaddrs* list{nullptr};
 	if (getifaddrs(&list) != 0)
 	{
-		return {};
+		return byName;
 	}
 
 	const std::unique_ptr<ifaddrs, decltype(&freeifaddrs)> owner{list, &freeifaddrs};
-	std::map<std::string, std::vector<InterfaceAddress>> byName;
 	for (const ifaddrs* entry{list}; entry != nullptr; entry = entry->ifa_next)
 	{
 		if ((entry->ifa_flags & IFF_UP) == 0u)
@@ -154,7 +171,7 @@ std::vector<std::vector<InterfaceAddress>> InterfaceAddresses()
 		}
 	}
 
-	return byName | std::views::values | std::ranges::to<std::vector>();
+	return byName;
 }
 #endif //NOTE: Windows / Linux
 
@@ -186,8 +203,8 @@ std::string OfflineAddress()
 	{
 		return address.is_v4() && !address.is_loopback();
 	};
-	const auto ipv4{InterfaceAddresses() | std::views::join | std::views::keys | std::views::filter(isOwnIPv4)
-					| std::ranges::to<std::vector>()};
+	const auto ipv4{InterfaceAddresses() | std::views::values | std::views::join | std::views::keys
+					| std::views::filter(isOwnIPv4) | std::ranges::to<std::vector>()};
 	//NOTE: 169.254/16 is what Windows gives itself when nobody else gives it an address
 	const auto isLinkLocal = [](const boost::asio::ip::address& address)
 	{
@@ -239,12 +256,13 @@ std::string LocalAddress()
 std::string LocalIPv6Address()
 {
 	const auto local{boost::asio::ip::make_address(LocalAddress())};
-	const std::vector<std::vector<InterfaceAddress>> interfaces{InterfaceAddresses()};
-	const auto card{std::ranges::find_if(interfaces, [&local](const std::vector<InterfaceAddress>& addresses)
+	const Interfaces interfaces{InterfaceAddresses()};
+	const auto cards{interfaces | std::views::values};
+	const auto card{std::ranges::find_if(cards, [&local](const std::vector<InterfaceAddress>& addresses)
 	{
 		return std::ranges::contains(addresses | std::views::keys, local);
 	})};
-	if (card == interfaces.end())
+	if (card == cards.end())
 	{
 		return kIPv6Loopback;
 	}
@@ -266,13 +284,30 @@ bool IsThisMachine(const std::string_view host)
 	}
 
 	return address.is_loopback() || address.is_unspecified()
-		   || std::ranges::contains(InterfaceAddresses() | std::views::join | std::views::keys, address);
+		   || std::ranges::contains(InterfaceAddresses() | std::views::values | std::views::join | std::views::keys,
+									address);
+}
+
+std::vector<OwnAddress> OwnAddresses()
+{
+	std::vector<OwnAddress> own{};
+	for (const auto& [name, addresses]: InterfaceAddresses())
+	{
+		std::ranges::transform(addresses | std::views::keys, std::back_inserter(own),
+							   [&name](const boost::asio::ip::address& address)
+							   {
+								   return OwnAddress{.host = address.to_string(), .interfaceName = name};
+							   });
+	}
+
+	return own;
 }
 
 std::vector<std::string> LocalBroadcasts()
 {
-	std::vector<std::string> broadcasts{InterfaceAddresses() | std::views::join | std::views::filter(HasBroadcast)
-										| std::views::transform(BroadcastOf) | std::ranges::to<std::vector>()};
+	std::vector<std::string> broadcasts{InterfaceAddresses() | std::views::values | std::views::join
+										| std::views::filter(HasBroadcast) | std::views::transform(BroadcastOf)
+										| std::ranges::to<std::vector>()};
 	std::ranges::sort(broadcasts);
 	const auto repeats{std::ranges::unique(broadcasts)};
 	broadcasts.erase(repeats.begin(), repeats.end());
@@ -289,8 +324,8 @@ std::optional<std::string> SubnetBroadcast(const std::string_view host)
 		return std::nullopt;
 	}
 
-	const std::vector<std::vector<InterfaceAddress>> interfaces{InterfaceAddresses()};
-	const auto entries{interfaces | std::views::join};
+	const Interfaces interfaces{InterfaceAddresses()};
+	const auto entries{interfaces | std::views::values | std::views::join};
 	const auto own{std::ranges::find_if(entries, [&address](const InterfaceAddress& entry)
 	{
 		return entry.first == address && HasBroadcast(entry);

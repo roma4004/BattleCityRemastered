@@ -15,11 +15,11 @@
 #include "enums/PlayerSlot.h"
 #include "network/DiscoveryScan.h"
 #include "network/Endpoints.h"
+#include "utils/TextUtils.h"
 #include <boost/asio/ip/address.hpp>
 #include <boost/system/error_code.hpp>
 #include <algorithm>
 #include <array>
-#include <cctype>
 #include <chrono>
 #include <cmath>
 #include <cstddef>
@@ -62,6 +62,9 @@ static_assert(2 * kColumnSymbols + kFoundAddressSymbols <= kRowSymbols, "a found
 //NOTE: the up and down triangles in UTF-8 - spelled in bytes, so no compiler reads them in its own code page
 constexpr std::string_view kAscending{"\xE2\x96\xB2"};
 constexpr std::string_view kDescending{"\xE2\x96\xBC"};
+constexpr std::string_view kDropDownMark{kDescending};
+//NOTE: a host row and its list - room for the mark past the longest address
+constexpr std::size_t kOwnRowSymbols{kRowSymbols + 2};
 
 //NOTE: a network match of one would be a local one
 constexpr std::uint8_t kMinNetworkSeats{2u};
@@ -87,6 +90,14 @@ constexpr auto kCaretBlink{1060ms};
 [[nodiscard]] UiCell Address(std::string text, const unsigned int color = kTextColor)
 {
 	return UiCell{.text = std::move(text), .color = color, .symbols = kRowSymbols};
+}
+
+//NOTE: the mark stands past the longest address, so it never moves
+[[nodiscard]] UiCell OwnAddressCell(std::string text)
+{
+	return UiCell{.text = TextUtils::Fitted(std::move(text), kRowSymbols + 1) + std::string{kDropDownMark},
+				  .color = kTextColor,
+				  .symbols = kOwnRowSymbols};
 }
 
 //NOTE: the IPv4 row gets spaces where the IPv6 row has its brackets, so both addresses start in one column
@@ -132,14 +143,18 @@ constexpr auto kCaretBlink{1060ms};
 	keys.rows.insert(std::next(keys.rows.begin()),
 					 isHosting ? UiRow{.cells = {Word("Setting"), Word("Left / Right")}}
 							   : UiRow{.cells = {Word("Sort"), Word("header, Left / Right, Enter")}});
+	if (isHosting)
+	{
+		keys.rows.insert(std::next(keys.rows.begin(), 2),
+						 UiRow{.cells = {Word("Address"), Word("Enter, pick from list")}});
+	}
 
 	return keys;
 }
 
 [[nodiscard]] UiRow SettingRow(const std::string_view name, const std::string& value, const bool isChangeable)
 {
-	std::string text{name};
-	text.resize(kSettingNameSymbols, ' ');
+	const std::string text{TextUtils::Fitted(std::string{name}, kSettingNameSymbols)};
 	if (!isChangeable)
 	{
 		return UiRow{.cells = {Word(text + value, kFullServerColor)}};
@@ -166,21 +181,72 @@ constexpr auto kCaretBlink{1060ms};
 
 [[nodiscard]] std::string ServerLine(const network::FoundServer& server)
 {
-	std::string seats{server.IsFull() ? "FULL"
-									  : std::to_string(PlayersOf(server)) + '/' + std::to_string(server.seats)};
-	seats.resize(kColumnSymbols, ' ');
-	std::string mode{server.rules == MatchRules::FreeForAll ? "FFA" : "CLASSIC"};
-	mode.resize(kColumnSymbols, ' ');
+	const std::string seats{server.IsFull() ? "FULL"
+											: std::to_string(PlayersOf(server)) + '/' + std::to_string(server.seats)};
+	const std::string mode{server.rules == MatchRules::FreeForAll ? "FFA" : "CLASSIC"};
 	const std::string& host{server.address.host};
 
-	return seats + mode + (host.contains(':') ? '[' + host + ']' : host) + ':'
-		   + std::to_string(server.address.port);
+	return TextUtils::Fitted(seats, kColumnSymbols) + TextUtils::Fitted(mode, kColumnSymbols)
+		   + (host.contains(':') ? '[' + host + ']' : host) + ':' + std::to_string(server.address.port);
 }
 
 //NOTE: the players column's order - a server with someone waiting first, then an empty one, a full one last
 [[nodiscard]] int JoinRank(const network::FoundServer& server)
 {
 	return server.IsFull() ? 2 : (server.freeSeats < server.seats ? 0 : 1);
+}
+
+//NOTE: none for what is no address
+[[nodiscard]] std::optional<boost::asio::ip::address> AddressOf(const std::string& host)
+{
+	boost::system::error_code ec;
+	const auto address{boost::asio::ip::make_address(host, ec)};
+
+	return ec ? std::nullopt : std::optional{address};
+}
+
+//NOTE: every network first, this machine alone last, the interfaces between
+[[nodiscard]] int ChoiceRank(const network::OwnAddress& own)
+{
+	const std::optional<boost::asio::ip::address> address{AddressOf(own.host)};
+	if (address && address->is_unspecified())
+	{
+		return 0;
+	}
+
+	return address && address->is_loopback() ? 2 : 1;
+}
+
+[[nodiscard]] std::string ChoiceLabel(const network::OwnAddress& own)
+{
+	const std::optional<boost::asio::ip::address> address{AddressOf(own.host)};
+	if (address && address->is_unspecified())
+	{
+		return "ALL NETWORKS";
+	}
+
+	return address && address->is_loopback() ? "THIS PC ONLY" : own.interfaceName;
+}
+
+//NOTE: a host row's list - its family's addresses, and the one that listens on every network
+[[nodiscard]] std::vector<network::OwnAddress> OwnChoices(const bool isIPv6)
+{
+	std::vector<network::OwnAddress> choices{network::OwnAddress{.host = isIPv6 ? "::" : "0.0.0.0"}};
+	std::ranges::copy_if(network::OwnAddresses(), std::back_inserter(choices),
+						 [isIPv6](const network::OwnAddress& own) { return own.host.contains(':') == isIPv6; });
+	std::ranges::stable_sort(choices, {}, ChoiceRank);
+
+	return choices;
+}
+
+//NOTE: the address where the row has it, the interface past the longest one
+[[nodiscard]] UiRow ChoiceRow(const network::OwnAddress& own, const std::size_t hostSymbols)
+{
+	const std::string text{TextUtils::Fitted(' ' + own.host, 1 + hostSymbols + 2) + ChoiceLabel(own)};
+
+	return UiRow{.cells = {UiCell{.text = TextUtils::Fitted(text, kOwnRowSymbols),
+								  .color = kTextColor,
+								  .symbols = kOwnRowSymbols}}};
 }
 
 //NOTE: as far as the list scrolls - from there its last servers fill the rows
@@ -214,6 +280,10 @@ ServerScreen::ServerScreen(const std::shared_ptr<EventSystem>& events, const net
 	//NOTE: the IPv6 row offers this machine's own address, unless the given one is an IPv6 and takes it
 	_ipv6.Fill(_offeredIPv6, false);
 	Fill(address, false);
+	if (network::IsThisMachine(address.host))
+	{
+		(address.host.contains(':') ? _ownIPv6 : _ownIPv4).Fill(address, true);
+	}
 
 	_subs.push_back(_events->AddListener(this, &ServerScreen::OnMenuShown));
 }
@@ -221,6 +291,7 @@ ServerScreen::ServerScreen(const std::shared_ptr<EventSystem>& events, const net
 void ServerScreen::Open(const GameMode mode)
 {
 	_mode = mode;
+	_dropDown.reset();
 	_rejection = {};
 	_isConfirmHeld = false;
 	_servers.clear();
@@ -240,10 +311,20 @@ void ServerScreen::Open(const GameMode mode)
 		_scan = std::make_unique<network::DiscoveryScan>(network::LocalAddress());
 	}
 
-	OfferAddresses();
+	if (IsHosting())
+	{
+		OfferOwnAddresses();
+	}
+	else
+	{
+		OfferAddresses();
+	}
+
 	//NOTE: the caret starts at the address, only a paste puts it on the port
 	_ipv4.CaretToStart();
 	_ipv6.CaretToStart();
+	_ownIPv4.CaretToStart();
+	_ownIPv6.CaretToStart();
 
 	PickFirst();
 	_servers = Ordered(FakeServers()); //TEMP
@@ -317,6 +398,11 @@ void ServerScreen::OnPreTickUpdate(const PreTickUpdateEvent&)
 
 void ServerScreen::OnTextTyped(const TextTypedEvent& event)
 {
+	if (_dropDown)
+	{
+		return;
+	}
+
 	std::ranges::for_each(event.text, [this](const char symbol) { Type(symbol); });
 	_rejection = {};
 	_caretMoved = std::chrono::steady_clock::now();
@@ -325,8 +411,13 @@ void ServerScreen::OnTextTyped(const TextTypedEvent& event)
 //NOTE: a whole address goes to its own row, anything else is typed in
 void ServerScreen::OnTextPasted(const TextPastedEvent& event)
 {
+	if (_dropDown)
+	{
+		return;
+	}
+
 	std::string text{event.text};
-	std::erase_if(text, [](const char symbol) { return std::isspace(static_cast<unsigned char>(symbol)) != 0; });
+	std::erase_if(text, TextUtils::IsSpace);
 
 	if (const std::optional<network::ServerAddress> address{network::ParseServerAddress(text)})
 	{
@@ -352,6 +443,11 @@ void ServerScreen::OnTextKey(const TextKeyEvent& event)
 		return;
 	}
 
+	if (_dropDown)
+	{
+		return;
+	}
+
 	//NOTE: on a setting or the header the keys that move a caret turn it instead
 	const bool isLeft{event.key == TextKey::CaretLeft || event.key == TextKey::WordLeft};
 	const bool isRight{event.key == TextKey::CaretRight || event.key == TextKey::WordRight};
@@ -371,6 +467,21 @@ void ServerScreen::OnTextKey(const TextKeyEvent& event)
 //NOTE: a click on anything but an address row presses it at once - on the header, the column under it
 void ServerScreen::OnRowClicked(const PanelRowClickedEvent& event)
 {
+	//NOTE: past the list's items is the row it hangs from - a click there takes the list back up
+	if (_dropDown)
+	{
+		if (event.row < _dropDown->choices.size())
+		{
+			PickOwn(event.row);
+		}
+		else
+		{
+			_dropDown.reset();
+		}
+
+		return;
+	}
+
 	const std::optional<Item> item{ItemAt(event.row)};
 	if (!item || !IsPickable(*item))
 	{
@@ -383,7 +494,9 @@ void ServerScreen::OnRowClicked(const PanelRowClickedEvent& event)
 	}
 
 	Pick(*item);
-	if (_focus.line != Line::IPv4 && _focus.line != Line::IPv6)
+	const bool isAddressRow{_focus.line == Line::IPv4 || _focus.line == Line::IPv6};
+	//NOTE: on a host row only the port is typed - a click on the rest of it brings the list down
+	if (!isAddressRow || (IsHosting() && !IsPortAt(event.symbol)))
 	{
 		Press();
 	}
@@ -392,6 +505,16 @@ void ServerScreen::OnRowClicked(const PanelRowClickedEvent& event)
 //NOTE: the pointer picks what it passes over, as in the menu - only a click presses
 void ServerScreen::OnRowHovered(const PanelRowHoveredEvent& event)
 {
+	if (_dropDown)
+	{
+		if (event.row < _dropDown->choices.size())
+		{
+			_dropDown->picked = event.row;
+		}
+
+		return;
+	}
+
 	if (const std::optional<Item> item{ItemAt(event.row)}; item && IsPickable(*item) && *item != _focus)
 	{
 		Pick(*item);
@@ -436,6 +559,13 @@ void ServerScreen::OnPadRight(const MoveRightEvent& event)
 
 void ServerScreen::OnCancelled(const TextInputCancelledEvent&)
 {
+	if (_dropDown)
+	{
+		_dropDown.reset();
+
+		return;
+	}
+
 	Close();
 	_events->EmitEvent(ShowMenuEvent{.isShown = true});
 }
@@ -460,6 +590,13 @@ void ServerScreen::Confirm(const bool isPressed)
 
 void ServerScreen::Press()
 {
+	if (_dropDown)
+	{
+		PickOwn(_dropDown->picked);
+
+		return;
+	}
+
 	if (_focus.line == Line::ServersHeader)
 	{
 		SortBy(_column);
@@ -491,6 +628,13 @@ void ServerScreen::Press()
 		{
 			Choose(_servers[_focus.server].address);
 		}
+
+		return;
+	}
+
+	if (IsHosting() && (_focus.line == Line::IPv4 || _focus.line == Line::IPv6))
+	{
+		OpenDropDown();
 
 		return;
 	}
@@ -757,6 +901,13 @@ void ServerScreen::Pick(const Item& item)
 //NOTE: round and round, past the servers scrolled off the list too
 void ServerScreen::Step(const bool isForward)
 {
+	if (_dropDown)
+	{
+		_dropDown->picked = Turned(_dropDown->picked, _dropDown->choices.size(), isForward);
+
+		return;
+	}
+
 	std::vector<Item> pickable{Lines()};
 	std::erase_if(pickable, [this](const Item& item) { return item.line == Line::Server || !IsPickable(item); });
 	const auto servers{std::views::iota(std::size_t{}, _servers.size())
@@ -781,10 +932,15 @@ AddressField* ServerScreen::FocusedField()
 {
 	if (_focus.line == Line::IPv4)
 	{
-		return &_ipv4;
+		return IsHosting() ? &_ownIPv4 : &_ipv4;
 	}
 
-	return _focus.line == Line::IPv6 ? &_ipv6 : nullptr;
+	if (_focus.line == Line::IPv6)
+	{
+		return IsHosting() ? &_ownIPv6 : &_ipv6;
+	}
+
+	return nullptr;
 }
 
 //NOTE: the address goes to the row of its kind with the caret on the port; the other row keeps its text
@@ -794,8 +950,7 @@ void ServerScreen::Fill(const network::ServerAddress& address, const bool isBrac
 	FocusedField()->Fill(address, isBracketed);
 }
 
-//NOTE: the network may have changed since the rows were given their addresses. A client is offered the host it
-//joined last, in the row of its family; a server listens only on this machine, so it is offered that
+//NOTE: the network may have changed since the rows were given their addresses; the host joined last takes its row
 void ServerScreen::OfferAddresses()
 {
 	const auto offer = [](AddressField& field, network::ServerAddress& offered, std::string host)
@@ -810,12 +965,60 @@ void ServerScreen::OfferAddresses()
 	};
 	const auto lastHostOr = [this](const bool isIPv6, std::string local)
 	{
-		const bool isOffered{!IsHosting() && _lastHost && _lastHost->contains(':') == isIPv6};
+		const bool isOffered{_lastHost && _lastHost->contains(':') == isIPv6};
 
 		return isOffered ? *_lastHost : std::move(local);
 	};
 	offer(_ipv4, _offeredIPv4, lastHostOr(false, network::LocalAddress()));
 	offer(_ipv6, _offeredIPv6, lastHostOr(true, network::LocalIPv6Address()));
+}
+
+//NOTE: a host row keeps its address while this machine has it - one gone with a network gets the machine's own
+void ServerScreen::OfferOwnAddresses()
+{
+	const auto offer = [](AddressField& field, std::string host)
+	{
+		const std::optional<network::ServerAddress> picked{network::ParseServerAddress(field.Text())};
+		if (picked && network::IsThisMachine(picked->host))
+		{
+			return;
+		}
+
+		field.Fill(network::ServerAddress{.host = std::move(host),
+										  .port = picked ? picked->port : network::kAnyFreePort},
+				   true);
+	};
+	offer(_ownIPv4, network::LocalAddress());
+	offer(_ownIPv6, network::LocalIPv6Address());
+}
+
+//NOTE: read anew each time - the bar starts on the address the row has
+void ServerScreen::OpenDropDown()
+{
+	std::vector<network::OwnAddress> choices{OwnChoices(_focus.line == Line::IPv6)};
+	const std::optional<network::ServerAddress> picked{network::ParseServerAddress(FieldOf(_focus.line).Text())};
+	const auto current{std::ranges::find(choices, picked ? picked->host : std::string{}, &network::OwnAddress::host)};
+	const std::size_t at{current == choices.end() ? 0
+												  : static_cast<std::size_t>(std::distance(choices.begin(), current))};
+	_dropDown = DropDown{.choices = std::move(choices), .picked = at};
+}
+
+//NOTE: the port typed stays with the address picked
+void ServerScreen::PickOwn(const std::size_t choice)
+{
+	AddressField& field{*FocusedField()};
+	const std::optional<network::ServerAddress> typed{network::ParseServerAddress(field.Text())};
+	field.Fill(network::ServerAddress{.host = _dropDown->choices[choice].host,
+									  .port = typed ? typed->port : network::kAnyFreePort},
+			   true);
+	_dropDown.reset();
+}
+
+bool ServerScreen::IsPortAt(const std::size_t symbol) const
+{
+	const std::string shown{Padded(FieldOf(_focus.line).Shown(false), _focus.line == Line::IPv4).text};
+
+	return symbol > shown.rfind(':') && symbol < kRowSymbols;
 }
 
 void ServerScreen::Type(const char symbol)
@@ -828,7 +1031,13 @@ void ServerScreen::Type(const char symbol)
 
 const AddressField& ServerScreen::FieldOf(const Line line) const
 {
-	return line == Line::IPv6 || line == Line::ConfirmIPv6 ? _ipv6 : _ipv4;
+	const bool isIPv6{line == Line::IPv6 || line == Line::ConfirmIPv6};
+	if (IsHosting())
+	{
+		return isIPv6 ? _ownIPv6 : _ownIPv4;
+	}
+
+	return isIPv6 ? _ipv6 : _ipv4;
 }
 
 UiRow ServerScreen::LineRow(const Item& item) const
@@ -855,7 +1064,11 @@ UiRow ServerScreen::LineRow(const Item& item) const
 			return UiRow{.cells = {Centered("Connect via IP:")}};
 		case Line::IPv4:
 		case Line::IPv6:
-			return UiRow{.cells = {Address(Padded(FieldOf(item.line).Shown(false), item.line == Line::IPv4).text)}};
+		{
+			std::string shown{Padded(FieldOf(item.line).Shown(false), item.line == Line::IPv4).text};
+
+			return UiRow{.cells = {IsHosting() ? OwnAddressCell(std::move(shown)) : Address(std::move(shown))}};
+		}
 		case Line::ConfirmIPv4:
 		case Line::ConfirmIPv6:
 			return UiRow{.cells = {Button(IsHosting(), item.line == Line::ConfirmIPv6)}};
@@ -884,14 +1097,13 @@ std::string ServerScreen::Header() const
 {
 	const auto title = [this](const Column column)
 	{
-		const std::string_view word{kHeaders[static_cast<std::size_t>(column)]};
-		const bool isSorted{_sort.column == column};
-		std::string text{word};
-		text += isSorted ? (_sort.isDescending ? kDescending : kAscending) : std::string_view{};
-		//NOTE: the arrow is three bytes and one symbol
-		text.append(kColumnSymbols - word.size() - (isSorted ? 1 : 0), ' ');
+		std::string text{kHeaders[static_cast<std::size_t>(column)]};
+		if (_sort.column == column)
+		{
+			text += _sort.isDescending ? kDescending : kAscending;
+		}
 
-		return text;
+		return TextUtils::Fitted(std::move(text), kColumnSymbols);
 	};
 
 	return title(Column::Players) + title(Column::Mode) + title(Column::Address);
@@ -911,7 +1123,7 @@ std::optional<PanelCaret> ServerScreen::Caret(const std::size_t row) const
 						  .alpha = alpha};
 	}
 
-	if (_focus.line != Line::IPv4 && _focus.line != Line::IPv6)
+	if (_dropDown || (_focus.line != Line::IPv4 && _focus.line != Line::IPv6))
 	{
 		return std::nullopt;
 	}
@@ -922,6 +1134,21 @@ std::optional<PanelCaret> ServerScreen::Caret(const std::size_t row) const
 	{
 		return PanelCaret{.row = row, .symbol = symbol, .alpha = alpha};
 	});
+}
+
+std::optional<PanelDropDown> ServerScreen::DropDownAt(const std::size_t row) const
+{
+	if (!_dropDown)
+	{
+		return std::nullopt;
+	}
+
+	const auto hostSymbols = [](const network::OwnAddress& own) { return own.host.size(); };
+	const std::size_t longest{std::ranges::max(_dropDown->choices | std::views::transform(hostSymbols))};
+	const auto choiceRow = [longest](const network::OwnAddress& own) { return ChoiceRow(own, longest); };
+	UiTable items{.rows = _dropDown->choices | std::views::transform(choiceRow) | std::ranges::to<std::vector>()};
+
+	return PanelDropDown{.row = row, .items = std::move(items), .picked = _dropDown->picked};
 }
 
 void ServerScreen::Draw() const
@@ -960,5 +1187,6 @@ void ServerScreen::Draw() const
 			.pick = PanelPick{.table = pickedTable,
 							  .selectedRow = focusRow,
 							  .scroll = scroll,
-							  .caret = Caret(focusRow)}});
+							  .caret = Caret(focusRow),
+							  .dropDown = DropDownAt(focusRow)}});
 }

@@ -116,6 +116,7 @@ set(GAME_CORE_SOURCES
         source/utils/Log.cpp
         source/utils/MathUtils.cpp
         source/utils/ObjectUtils.cpp
+        source/utils/TextUtils.cpp
         source/utils/TimeUtils.cpp
         source/utils/Timer.cpp
         source/utils/UuidUtils.cpp

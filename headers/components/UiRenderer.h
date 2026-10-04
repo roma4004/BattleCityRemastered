@@ -24,6 +24,7 @@ struct RenderSideBarEvent;
 struct RenderPanelTablesEvent;
 struct PanelScroll;
 struct PanelCaret;
+struct PanelDropDown;
 struct RenderDeviceResetEvent;
 class GameConfig;
 
@@ -88,10 +89,12 @@ class UiRenderer final
 	//NOTE: the render scale is the caller's - a run of lines sets it once, see ScopedRenderScale
 	void DrawTableText(const UiTable& table, const UiLayout::Placement& placement, int pointSize, float scale) const;
 	void AnnounceMenuTiles(const UiLayout::Placement& modes) const;
-	void AnnouncePanelRows(const UiLayout::Placement& picked, int rowHeight, int symbolWidth) const;
+	void AnnouncePanelRows(const std::vector<Point>& rows, Point rowSize, int symbolWidth) const;
 	void DrawScrollBar(const UiLayout::Placement& picked, const PanelScroll& scroll, int rowHeight) const;
 	void DrawCaret(const UiTable& table, const UiLayout::Placement& placement, const PanelCaret& caret, int pointSize,
 				   float scale) const;
+	void DrawDropDown(const UiLayout::Placement& picked, const PanelDropDown& dropDown, int pointSize,
+					  float scale) const;
 	[[nodiscard]] SDL_Rect MenuPanelRect(int slide) const;
 	[[nodiscard]] float CurrentRenderScale() const;
 

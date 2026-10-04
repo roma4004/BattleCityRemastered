@@ -6,7 +6,7 @@
       <option name="PLATFORM" value="x64" />
       <option name="CURRENT_LAUNCH_PROFILE" value="Local" />
       <option name="EXE_PATH" value="$(LocalDebuggerCommand)" />
-      <option name="PROGRAM_PARAMETERS" value="--address=127.0.0.1 --port=0 --port-file=server-port.txt" />
+      <option name="PROGRAM_PARAMETERS" value="--port=0 --port-file=server-port.txt" />
       <option name="WORKING_DIRECTORY" value="$(LocalDebuggerWorkingDirectory)" />
       <option name="PASS_PARENT_ENVS" value="1" />
       <option name="USE_EXTERNAL_CONSOLE" value="1" />
@@ -18,7 +18,7 @@
       <option name="PLATFORM" value="x64" />
       <option name="CURRENT_LAUNCH_PROFILE" value="Local" />
       <option name="EXE_PATH" value="$(LocalDebuggerCommand)" />
-      <option name="PROGRAM_PARAMETERS" value="--address=127.0.0.1 --port=0 --port-file=server-port.txt" />
+      <option name="PROGRAM_PARAMETERS" value="--port=0 --port-file=server-port.txt" />
       <option name="WORKING_DIRECTORY" value="$(LocalDebuggerWorkingDirectory)" />
       <option name="PASS_PARENT_ENVS" value="1" />
       <option name="USE_EXTERNAL_CONSOLE" value="1" />
@@ -30,7 +30,7 @@
       <option name="PLATFORM" value="x64" />
       <option name="CURRENT_LAUNCH_PROFILE" value="Local" />
       <option name="EXE_PATH" value="$(LocalDebuggerCommand)" />
-      <option name="PROGRAM_PARAMETERS" value="--address=127.0.0.1 --port=0 --port-file=server-port.txt" />
+      <option name="PROGRAM_PARAMETERS" value="--port=0 --port-file=server-port.txt" />
       <option name="WORKING_DIRECTORY" value="$(LocalDebuggerWorkingDirectory)" />
       <option name="PASS_PARENT_ENVS" value="1" />
       <option name="USE_EXTERNAL_CONSOLE" value="1" />

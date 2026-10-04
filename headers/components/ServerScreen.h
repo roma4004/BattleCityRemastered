@@ -24,6 +24,7 @@ struct MoveLeftEvent;
 struct MoveRightEvent;
 struct MoveUpEvent;
 struct PanelCaret;
+struct PanelDropDown;
 struct PanelRowClickedEvent;
 struct PanelRowHoveredEvent;
 struct PreTickUpdateEvent;
@@ -82,6 +83,13 @@ class ServerScreen final
 		bool isDescending{};
 	};
 
+	//NOTE: a host row's list - its family's addresses this machine has, and the one the bar is on
+	struct DropDown
+	{
+		std::vector<network::OwnAddress> choices{};
+		std::size_t picked{};
+	};
+
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
 	//NOTE: held only while the screen is up - clearing them closes it
@@ -101,6 +109,10 @@ class ServerScreen final
 	std::vector<std::string> _maps{};
 	AddressField _ipv4{AddressFamily::IPv4};
 	AddressField _ipv6{AddressFamily::IPv6};
+	AddressField _ownIPv4{AddressFamily::IPv4, AddressInput::Picked};
+	AddressField _ownIPv6{AddressFamily::IPv6, AddressInput::Picked};
+	//NOTE: only while the focused host row has its list down
+	std::optional<DropDown> _dropDown{};
 	//NOTE: what the rows were given - a row still holding it gets the current offer on opening
 	network::ServerAddress _offeredIPv4{};
 	network::ServerAddress _offeredIPv6{};
@@ -159,11 +171,16 @@ class ServerScreen final
 	[[nodiscard]] const AddressField& FieldOf(Line line) const;
 	void Fill(const network::ServerAddress& address, bool isBracketed);
 	void OfferAddresses();
+	void OfferOwnAddresses();
+	void OpenDropDown();
+	void PickOwn(std::size_t choice);
+	[[nodiscard]] bool IsPortAt(std::size_t symbol) const;
 	void Type(char symbol);
 	//NOTE: one table row a line - a click on row N is a click on Lines()[N]
 	[[nodiscard]] UiRow LineRow(const Item& item) const;
 	[[nodiscard]] std::string Header() const;
 	[[nodiscard]] std::optional<PanelCaret> Caret(std::size_t row) const;
+	[[nodiscard]] std::optional<PanelDropDown> DropDownAt(std::size_t row) const;
 	void Draw() const;
 
 public:

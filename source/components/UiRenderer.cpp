@@ -4,6 +4,7 @@
 #include "components/WorldGeometry.h"
 #include "enums/UiIcon.h"
 #include "utils/MathUtils.h"
+#include "utils/TextUtils.h"
 #include "utils/SdlRenderUtils.h"
 #include "geometry/Point.h"
 #include "application/GameConfig.h"
@@ -17,7 +18,6 @@
 #include <array>
 #include <cstddef>
 #include <functional>
-#include <iterator>
 #include <optional>
 #include <ranges>
 #include <SDL3/SDL_render.h>
@@ -62,6 +62,9 @@ constexpr int kScrollBarWidthShare{4};
 constexpr int kCaretWidthShare{8};
 constexpr SDL_Color kScrollTrackColor{.r = 0xffu, .g = 0xffu, .b = 0xffu, .a = 0x40u};
 constexpr SDL_Color kScrollThumbColor{.r = 0xffu, .g = 0xffu, .b = 0xffu, .a = 0xffu};
+//NOTE: a dropped list hides the rows it hangs over
+constexpr SDL_Color kDropDownColor{.r = 0x10u, .g = 0x10u, .b = 0x10u, .a = 0xf0u};
+constexpr SDL_Color kDropDownPickColor{.r = 0xffu, .g = 0xffu, .b = 0xffu, .a = 0x40u};
 
 //NOTE: one column - fps box, enemy grid, counters and the flag share x and width
 constexpr int kSideBarColumnPadding{55};
@@ -88,16 +91,10 @@ int PanelRowHeight(const int pointSize) { return pointSize * kPanelRowHeight / k
 
 int ScrollBarWidth(const int rowHeight) { return std::max(rowHeight / kScrollBarWidthShare, 2); }
 
-//NOTE: where a UTF-8 text's symbol starts - the bytes continuing one are 10xxxxxx; past the end is the size
-std::size_t ByteOf(const std::string_view text, const std::size_t symbol)
+void FillColored(SDL_Renderer* const renderer, const SDL_Color& color, const SDL_Rect& rect)
 {
-	auto starts{text | std::views::filter([](const char byte)
-	{
-		return (static_cast<unsigned char>(byte) & 0xc0u) != 0x80u;
-	})};
-	const auto at{std::ranges::next(starts.begin(), static_cast<std::ptrdiff_t>(symbol), starts.end())};
-
-	return static_cast<std::size_t>(std::distance(text.begin(), at.base()));
+	SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+	SdlRenderUtils::FillRect(renderer, rect);
 }
 
 //NOTE: glyphs are sized in output pixels, so the logical scale is cancelled around the drawing and
@@ -295,7 +292,11 @@ void UiRenderer::DrawPanelTables(const RenderPanelTablesEvent& event) const
 			DrawScrollBar(picked, *pick->scroll, rowHeight);
 		}
 
-		AnnouncePanelRows(picked, rowHeight, _textCache.MeasureString("0", pointSize, scale).x);
+		if (!pick->dropDown)
+		{
+			AnnouncePanelRows(picked.rows, Point{.x = picked.size.x, .y = rowHeight},
+							  _textCache.MeasureString("0", pointSize, scale).x);
+		}
 	}
 
 	DrawTables(std::views::zip(event.tables, placements), pointSize, scale);
@@ -303,6 +304,11 @@ void UiRenderer::DrawPanelTables(const RenderPanelTablesEvent& event) const
 	if (pick && pick->caret)
 	{
 		DrawCaret(event.tables[pick->table], placements[pick->table], *pick->caret, pointSize, scale);
+	}
+
+	if (pick && pick->dropDown)
+	{
+		DrawDropDown(placements[pick->table], *pick->dropDown, pointSize, scale);
 	}
 }
 
@@ -322,11 +328,11 @@ void UiRenderer::DrawCaret(const UiTable& table, const UiLayout::Placement& plac
 	const UiCell& cell{table.rows[caret.row].cells.front()};
 	const std::string_view text{cell.text};
 	const int height{_textCache.MeasureString(text, pointSize, scale).y};
-	const std::size_t start{ByteOf(text, caret.symbol)};
+	const std::size_t start{TextUtils::ByteOf(text, caret.symbol)};
 	const int before{_textCache.MeasureString(text.substr(0, start), pointSize, scale).x};
 	const int top{placed->pos.y + (placed->size.y - height) / 2};
 	const int thickness{std::max(height / kCaretWidthShare, 1)};
-	const std::string_view under{text.substr(start, ByteOf(text, caret.symbol + caret.symbols) - start)};
+	const std::string_view under{text.substr(start, TextUtils::ByteOf(text, caret.symbol + caret.symbols) - start)};
 	const SDL_Rect bar{caret.symbols == 0
 							   ? SDL_Rect{.x = placed->pos.x + before, .y = top, .w = thickness, .h = height}
 							   : SDL_Rect{.x = placed->pos.x + before,
@@ -360,14 +366,41 @@ void UiRenderer::DrawScrollBar(const UiLayout::Placement& picked, const PanelScr
 						 .w = track.w,
 						 .h = height * static_cast<int>(scroll.shownCount) / total};
 
-	SDL_Renderer* const renderer{_sdlConfig.renderer.get()};
-	const auto fill = [renderer](const SDL_Color& color, const SDL_Rect& rect)
+	FillColored(_sdlConfig.renderer.get(), kScrollTrackColor, track);
+	FillColored(_sdlConfig.renderer.get(), kScrollThumbColor, thumb);
+}
+
+//NOTE: as wide as its table, the picked item on a lighter bar
+void UiRenderer::DrawDropDown(const UiLayout::Placement& picked, const PanelDropDown& dropDown, const int pointSize,
+							  const float scale) const
+{
+	if (dropDown.row >= picked.rows.size())
 	{
-		SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
-		SdlRenderUtils::FillRect(renderer, rect);
-	};
-	fill(kScrollTrackColor, track);
-	fill(kScrollThumbColor, thumb);
+		return;
+	}
+
+	const int rowHeight{PanelRowHeight(pointSize)};
+	const Point anchor{picked.rows[dropDown.row]};
+	const UiLayout::Placement items{UiLayout::Place(dropDown.items, Point{.x = anchor.x, .y = anchor.y + rowHeight},
+													rowHeight, CellMeasurer(pointSize, scale))};
+	const SDL_Rect plate{.x = anchor.x - kMenuRowPadding,
+						 .y = anchor.y + rowHeight,
+						 .w = picked.size.x + kMenuRowPadding * 2,
+						 .h = items.size.y};
+
+	FillColored(_sdlConfig.renderer.get(), kDropDownColor, plate);
+	if (dropDown.picked < items.rows.size())
+	{
+		FillColored(_sdlConfig.renderer.get(), kDropDownPickColor,
+					SDL_Rect{.x = plate.x, .y = items.rows[dropDown.picked].y, .w = plate.w, .h = rowHeight});
+	}
+
+	DrawTables(std::array<PlacedTable, 1>{{{dropDown.items, items}}}, pointSize, scale);
+
+	std::vector<Point> rows{items.rows};
+	rows.push_back(anchor);
+	AnnouncePanelRows(rows, Point{.x = picked.size.x, .y = rowHeight},
+					  _textCache.MeasureString("0", pointSize, scale).x);
 }
 
 void UiRenderer::DrawSideBar(const RenderSideBarEvent& event) const
@@ -563,19 +596,17 @@ void UiRenderer::AnnounceMenuTiles(const UiLayout::Placement& modes) const
 													 .y = kMenuModeRowHeight}});
 }
 
-void UiRenderer::AnnouncePanelRows(const UiLayout::Placement& picked, const int rowHeight,
-								   const int symbolWidth) const
+void UiRenderer::AnnouncePanelRows(const std::vector<Point>& rows, const Point rowSize, const int symbolWidth) const
 {
-	const Point rowSize{.x = picked.size.x, .y = rowHeight};
-	if (picked.rows == _panelRowPlaces && rowSize == _panelRowSize && symbolWidth == _panelSymbolWidth)
+	if (rows == _panelRowPlaces && rowSize == _panelRowSize && symbolWidth == _panelSymbolWidth)
 	{
 		return;
 	}
 
-	_panelRowPlaces = picked.rows;
+	_panelRowPlaces = rows;
 	_panelRowSize = rowSize;
 	_panelSymbolWidth = symbolWidth;
-	_events->EmitEvent(PanelRowsPlacedEvent{.rows = picked.rows, .rowSize = rowSize, .symbolWidth = symbolWidth});
+	_events->EmitEvent(PanelRowsPlacedEvent{.rows = rows, .rowSize = rowSize, .symbolWidth = symbolWidth});
 }
 
 //NOTE: the panel belongs to the field, not to whoever is showing it - all it takes from them is the slide-in

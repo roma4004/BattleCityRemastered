@@ -1,6 +1,6 @@
 #include "components/LevelRotation.h"
+#include "utils/TextUtils.h"
 #include <algorithm>
-#include <cctype>
 #include <filesystem>
 #include <string_view>
 #include <system_error>
@@ -15,7 +15,7 @@ bool IsMapName(const std::string_view name)
 {
 	const auto isAllowed = [](const char symbol)
 	{
-		return std::isalnum(static_cast<unsigned char>(symbol)) != 0 || symbol == '-' || symbol == '_';
+		return TextUtils::IsAlnum(symbol) || symbol == '-' || symbol == '_';
 	};
 
 	return !name.empty() && std::ranges::all_of(name, isAllowed);

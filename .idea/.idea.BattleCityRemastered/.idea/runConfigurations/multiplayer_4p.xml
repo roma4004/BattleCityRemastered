@@ -1,0 +1,10 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="multiplayer 4p" type="CompoundRunConfigurationType">
+    <toRun name="dedicated server (4 seats)" type="CppProject" />
+    <toRun name="client window (1 of 4)" type="CppProject" />
+    <toRun name="client window (2 of 4)" type="CppProject" />
+    <toRun name="client window (3 of 4)" type="CppProject" />
+    <toRun name="client window (4 of 4)" type="CppProject" />
+    <method v="2" />
+  </configuration>
+</component>

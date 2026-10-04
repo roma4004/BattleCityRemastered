@@ -56,6 +56,15 @@ struct PanelCaret
 	std::uint8_t alpha{};
 };
 
+//NOTE: a list hung under a row of the picked table, over the rows below it. While it is down PanelRowsPlacedEvent
+//places its items and then the row it hangs from, not the table's rows
+struct PanelDropDown
+{
+	std::size_t row{};
+	UiTable items{};
+	std::size_t picked{};
+};
+
 //NOTE: the arrow marks the selected row of this table, and its rows' places go out as PanelRowsPlacedEvent
 struct PanelPick
 {
@@ -63,6 +72,7 @@ struct PanelPick
 	std::size_t selectedRow{};
 	std::optional<PanelScroll> scroll{};
 	std::optional<PanelCaret> caret{};
+	std::optional<PanelDropDown> dropDown{};
 };
 
 //NOTE: tables stacked top to bottom in the middle of the panel, each centered across it, one font size for all

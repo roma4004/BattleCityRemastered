@@ -131,3 +131,31 @@ TEST(AddressFieldTest, AFilledAddressPutsTheCaretOnThePort)
 	EXPECT_EQ(shown.text, "10.0.0.6:4001");
 	EXPECT_EQ(shown.caret, shown.text.size());
 }
+
+// a server's own address is picked, not typed - the caret starts on the port and typing goes there
+TEST(AddressFieldTest, APickedAddressStartsTheCaretOnThePort)
+{
+	AddressField field{AddressFamily::IPv4, AddressInput::Picked};
+	field.Fill(network::ServerAddress{.host = "192.168.0.5"}, false);
+
+	field.CaretToStart();
+	field.Type('9');
+
+	EXPECT_EQ(field.Text(), "192.168.0.5:9");
+}
+
+// erasing past the port's start and stepping left of it leave the picked address alone
+TEST(AddressFieldTest, APickedAddressKeepsTheCaretInThePort)
+{
+	AddressField field{AddressFamily::IPv4, AddressInput::Picked};
+	field.Fill(network::ServerAddress{.host = "192.168.0.5", .port = 50}, false);
+
+	for (const TextKey key: {TextKey::Erase, TextKey::Erase, TextKey::Erase, TextKey::CaretLeft, TextKey::WordLeft})
+	{
+		field.Press(key);
+	}
+
+	field.Type('7');
+
+	EXPECT_EQ(field.Text(), "192.168.0.5:7");
+}

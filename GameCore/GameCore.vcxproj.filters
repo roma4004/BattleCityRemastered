@@ -318,6 +318,9 @@
     <ClCompile Include="..\source\utils\ObjectUtils.cpp">
       <Filter>source\utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\utils\TextUtils.cpp">
+      <Filter>source\utils</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\utils\Timer.cpp">
       <Filter>source\utils</Filter>
     </ClCompile>
@@ -855,6 +858,9 @@
       <Filter>headers\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\utils\RandUtils.h">
+      <Filter>headers\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\utils\TextUtils.h">
       <Filter>headers\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\utils\Timer.h">

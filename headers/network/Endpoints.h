@@ -28,6 +28,13 @@ struct ServerAddress final
 	[[nodiscard]] bool operator==(const ServerAddress& rhs) const = default;
 };
 
+//NOTE: an address of this machine and the interface it is on, by the name the system shows
+struct OwnAddress final
+{
+	std::string host{};
+	std::string interfaceName{};
+};
+
 //NOTE: this machine's address another machine can dial - a local network's with no route out, loopback with none
 [[nodiscard]] std::string LocalAddress();
 
@@ -36,6 +43,9 @@ struct ServerAddress final
 
 //NOTE: loopback, every interface, or an address one of them has - a literal only, as in ParseHost
 [[nodiscard]] bool IsThisMachine(std::string_view host);
+
+//NOTE: every address of every interface that is up, loopback among them
+[[nodiscard]] std::vector<OwnAddress> OwnAddresses();
 
 //NOTE: the broadcast address of every IPv4 network this machine is in - 255.255.255.255 leaves by one interface
 [[nodiscard]] std::vector<std::string> LocalBroadcasts();

@@ -15,6 +15,13 @@ enum class AddressFamily : char8_t
 	IPv6
 };
 
+//NOTE: a server's own address is picked from a list - then only its port is typed, and the caret stays in it
+enum class AddressInput : char8_t
+{
+	Typed,
+	Picked
+};
+
 //NOTE: the row as drawn - placeholders in the empty parts, and where the caret stands in it
 struct ShownAddress
 {
@@ -48,12 +55,14 @@ class AddressField final
 
 	Row _row{};
 	AddressFamily _family{};
+	AddressInput _input{};
 	//NOTE: the last colon closed a full group - a colon typed next is the same one
 	bool _isColonAdded{};
 	//NOTE: only drawn - the text never holds the brackets
 	bool _isBracketed{};
 
 	[[nodiscard]] bool IsIPv6() const noexcept;
+	[[nodiscard]] std::size_t FirstTypedPart() const noexcept;
 	void TypeIPv4(char symbol);
 	void TypeIPv6(char symbol);
 	void TypeScope(char symbol);
@@ -73,7 +82,7 @@ public:
 	//NOTE: the IPv6 row at its longest - both rows are drawn small enough to fit it
 	static constexpr std::size_t kLongestShown{std::string_view{"[]:"}.size() + kIPv6Length + kPortDigits};
 
-	explicit AddressField(AddressFamily family);
+	explicit AddressField(AddressFamily family, AddressInput input = AddressInput::Typed);
 
 	//NOTE: the caret goes on the port; only an IPv6 address shows the brackets it was pasted in
 	void Fill(const network::ServerAddress& address, bool isBracketed);
