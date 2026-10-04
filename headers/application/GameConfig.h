@@ -64,10 +64,10 @@ public:
 		return ::IsFreeForAll(gameMode) ? MatchRules::FreeForAll : MatchRules::Classic;
 	}
 	[[nodiscard]] bool IsFreeForAll() const noexcept { return Rules() == MatchRules::FreeForAll; }
-	//NOTE: a free-for-all of several players keeps two bots on the field
+	//NOTE: a free-for-all of two at one keyboard keeps two bots on the field - a host picks how many
 	[[nodiscard]] std::size_t EnemySeats() const noexcept
 	{
-		return IsFreeForAll() && SeatCount() > 1u ? kFreeForAllBots : simultaneousEnemies;
+		return !IsNetworkGame(gameMode) && IsFreeForAll() && SeatCount() > 1u ? kFreeForAllBots : simultaneousEnemies;
 	}
 	[[nodiscard]] UPoint LogicalSize() const noexcept;
 	//NOTE: the match this server runs, as every client is told it

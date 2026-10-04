@@ -418,14 +418,22 @@ TEST(ServerCommandLineTest, TheMapIsTakenByName)
 	}
 }
 
-// and the enemies on the field at once, one to four
-TEST(ServerCommandLineTest, TheEnemiesAtOnceAreTakenFromOneToFour)
+// and the enemies on the field at once, up to four
+TEST(ServerCommandLineTest, TheEnemiesAtOnceAreTakenUpToFour)
 {
 	EXPECT_EQ(ParseServerRaw({"--enemies=1"}).value_or(LaunchOptions{}).enemiesAtOnce, 1u);
-	for (const char* arg: {"--enemies=0", "--enemies=5", "--enemies=x", "--enemies="})
+	for (const char* arg: {"--enemies=5", "--enemies=x", "--enemies="})
 	{
 		EXPECT_FALSE(ParseServerRaw({arg}).has_value()) << arg;
 	}
+}
+
+// none only where the players have somebody to fight - each other, in a free-for-all of two seats or more
+TEST(ServerCommandLineTest, NoEnemiesAreTakenOnlyForAFreeForAllOfTwoSeats)
+{
+	EXPECT_EQ(ParseServerRaw({"--rules=ffa", "--enemies=0"}).value_or(LaunchOptions{}).enemiesAtOnce, 0u);
+	EXPECT_FALSE(ParseServerRaw({"--enemies=0"}).has_value()) << "a classic match went without enemies";
+	EXPECT_FALSE(ParseServerRaw({"--rules=ffa", "--seats=1", "--enemies=0"}).has_value()) << "one seat went alone";
 }
 
 // the bots for the seats nobody took, none to three - one seat is always a player's

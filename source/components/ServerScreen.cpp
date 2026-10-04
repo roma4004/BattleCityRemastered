@@ -735,6 +735,7 @@ void ServerScreen::Change(const bool isForward)
 	else if (_focus.line == Line::Rules)
 	{
 		_match.rules = _match.rules == MatchRules::Classic ? MatchRules::FreeForAll : MatchRules::Classic;
+		_match.enemiesAtOnce = std::max(_match.enemiesAtOnce, FewestEnemies(_match.rules));
 	}
 	else if (_focus.line == Line::Seats)
 	{
@@ -750,8 +751,10 @@ void ServerScreen::Change(const bool isForward)
 	}
 	else if (_focus.line == Line::Enemies)
 	{
-		const std::size_t at{static_cast<std::size_t>(_match.enemiesAtOnce - 1u)};
-		_match.enemiesAtOnce = static_cast<std::uint8_t>(1u + Turned(at, kMaxEnemiesAtOnce, isForward));
+		const std::uint8_t fewest{FewestEnemies(_match.rules)};
+		const std::size_t choices{static_cast<std::size_t>(kMaxEnemiesAtOnce - fewest) + 1u};
+		const std::size_t at{static_cast<std::size_t>(_match.enemiesAtOnce - fewest)};
+		_match.enemiesAtOnce = static_cast<std::uint8_t>(fewest + Turned(at, choices, isForward));
 	}
 	else if (_focus.line == Line::Bots)
 	{
@@ -891,12 +894,11 @@ bool ServerScreen::IsPickable(const Item& item) const
 			return false;
 		case Line::Server:
 			return item.server < _servers.size();
-		case Line::Enemies:
-			return _match.rules == MatchRules::Classic;
 		case Line::ServersHeader:
 		case Line::Rules:
 		case Line::Seats:
 		case Line::Map:
+		case Line::Enemies:
 		case Line::Bots:
 		case Line::Start:
 		case Line::Refresh:
@@ -1132,8 +1134,7 @@ UiRow ServerScreen::LineRow(const Item& item) const
 		case Line::Map:
 			return SettingRow("MAP", _match.map, true);
 		case Line::Enemies:
-			return IsPickable(item) ? SettingRow("ENEMIES", std::to_string(_match.enemiesAtOnce), true)
-									: SettingRow("ENEMIES", std::to_string(kFreeForAllBots), false);
+			return SettingRow("ENEMIES", std::to_string(_match.enemiesAtOnce), true);
 		case Line::Bots:
 			return SettingRow("BOTS", std::to_string(_match.bots), true);
 		case Line::Start:

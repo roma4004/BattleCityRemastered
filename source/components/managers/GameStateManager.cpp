@@ -21,6 +21,7 @@ GameStateManager::GameStateManager(const std::shared_ptr<EventSystem>& events, c
 	: _events{events}
 	, _seatCount{match.seats}
 	, _bots{std::min(match.bots, MaxBots(match.seats))}
+	, _fewestToStart{match.enemiesAtOnce > 0u ? 1u : 2u}
 	, _isStartingAtOnce{match.isStartingAtOnce}
 {
 	Subscribe();
@@ -109,7 +110,8 @@ bool GameStateManager::IsReadyToStart() const noexcept
 	const std::size_t players{_readySeats.count()};
 	const bool isEveryoneInReady{(_seatedSeats & ~_readySeats).none()};
 
-	return players > 0u && isEveryoneInReady && (_isStartingAtOnce || players + _bots >= _seatCount);
+	return players > 0u && isEveryoneInReady && players + _bots >= _fewestToStart
+		   && (_isStartingAtOnce || players + _bots >= _seatCount);
 }
 
 //NOTE: the bots take the top seats, so a player joining later sits in an empty one before taking a bot's

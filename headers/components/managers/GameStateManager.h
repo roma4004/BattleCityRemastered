@@ -59,6 +59,8 @@ class GameStateManager final
 	//NOTE: the match starts once this many are ready, the bots counted in
 	std::size_t _seatCount{};
 	std::size_t _bots{};
+	//NOTE: two with no enemies - one alone would have nobody to fight
+	std::size_t _fewestToStart{};
 	bool _isStartingAtOnce{};
 	bool _isDemo{};
 	bool _isPaused{};

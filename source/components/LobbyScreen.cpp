@@ -264,10 +264,9 @@ void LobbyScreen::Draw() const
 		const bool isClassic{_match->rules == MatchRules::Classic};
 		lines.rows.push_back(Line(std::string{isClassic ? "CLASSIC" : "FREE FOR ALL"} + ", "
 								  + std::to_string(_match->seats) + " SEATS, MAP " + _match->map));
-		if (isClassic)
-		{
-			lines.rows.push_back(Line(std::to_string(_match->enemiesAtOnce) + " ENEMIES AT ONCE"));
-		}
+		const std::size_t enemies{_match->enemiesAtOnce};
+		lines.rows.push_back(
+				Line(enemies > 0u ? std::to_string(enemies) + " ENEMIES AT ONCE" : "NO ENEMIES, TWO TO START"));
 
 		lines.rows.push_back(Line(std::to_string(_match->bots) + " BOTS, "
 								  + (_match->isStartingAtOnce ? "STARTS AT ONCE" : "STARTS WHEN FULL")));

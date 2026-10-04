@@ -471,6 +471,32 @@ TEST_F(GameStateTest, TheBotsCountTowardsAFullMatch)
 	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
 }
 
+// with no enemies the players have only each other - a match starting at once still waits for a second one
+TEST_F(GameStateTest, AMatchWithNoEnemiesWaitsForASecondPlayer)
+{
+	_stateManager = std::make_unique<GameStateManager>(
+			_events, MatchSettings{.seats = 4u, .enemiesAtOnce = 0u, .isStartingAtOnce = true});
+	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
+
+	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P1});
+	ASSERT_EQ(GameState::Lobby, _stateManager->GetState()) << "the match started with one player and nobody to fight";
+
+	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P2});
+	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
+}
+
+// a bot in a seat is somebody to fight too
+TEST_F(GameStateTest, ABotInASeatIsTheSecondAMatchWithNoEnemiesWaitsFor)
+{
+	_stateManager = std::make_unique<GameStateManager>(
+			_events, MatchSettings{.seats = 2u, .enemiesAtOnce = 0u, .bots = 1u, .isStartingAtOnce = true});
+	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
+
+	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P1});
+
+	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
+}
+
 //NOTE: the top ones - a player joining later sits in an empty seat before taking a bot's
 TEST_F(GameStateTest, TheBotsTakeTheTopSeatsNobodyTook)
 {

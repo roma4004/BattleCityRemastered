@@ -173,11 +173,12 @@ TEST_F(TankSpawnerTest, AFourSeatHostMatchSeatsFourPlayers)
 	EXPECT_EQ(_allObjects.size(), 8u);
 }
 
-// a host told to play free-for-all sets every tank against every other and keeps two bots on the field
+// a host told to play free-for-all sets every tank against every other and keeps the bots it picked on the field
 TEST_F(TankSpawnerTest, AFreeForAllHostPutsEveryTankOnItsOwn)
 {
 	_gameConfig.networkSeats = 4u;
 	_gameConfig.networkRules = MatchRules::FreeForAll;
+	_gameConfig.simultaneousEnemies = 2u;
 	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
 	_events->EmitEvent(RespawnTanksEvent{});

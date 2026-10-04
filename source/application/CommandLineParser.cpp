@@ -252,10 +252,10 @@ std::expected<LaunchOptions, ArgError> CommandLineParser::ParseServer(const int 
 			std::size_t enemies{};
 			const auto* const last{value.data() + value.size()};
 			if (const auto [ptr, error] = std::from_chars(value.data(), last, enemies);
-				error != std::errc{} || ptr != last || enemies == 0u || enemies > kMaxEnemiesAtOnce)
+				error != std::errc{} || ptr != last || enemies > kMaxEnemiesAtOnce)
 			{
 				return std::unexpected(
-						ArgError{.arg = std::string{arg}, .reason = "expected --enemies=1 to --enemies=4"});
+						ArgError{.arg = std::string{arg}, .reason = "expected --enemies=0 to --enemies=4"});
 			}
 
 			launchOptions.enemiesAtOnce = enemies;
@@ -322,6 +322,14 @@ std::expected<LaunchOptions, ArgError> CommandLineParser::ParseServer(const int 
 			return std::unexpected(ArgError{.arg = std::string{arg},
 											.reason = "expected --port=NUMBER or --port=auto"});
 		}
+	}
+
+	//NOTE: with no enemies the players fight each other - classic has them on one side, and one seat has no rival
+	if (launchOptions.enemiesAtOnce == 0u
+		&& (launchOptions.rules != MatchRules::FreeForAll || launchOptions.seats.value_or(kDefaultSeats) < 2u))
+	{
+		return std::unexpected(
+				ArgError{.arg = "--enemies=0", .reason = "no enemies takes --rules=ffa and two seats at least"});
 	}
 
 	return launchOptions;

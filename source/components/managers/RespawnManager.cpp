@@ -103,7 +103,7 @@ void RespawnManager::OnBonusTankApplied(const BonusTankAppliedEvent& event) { On
 //NOTE: the reset before it counted the default - a map that says how many enemies it has overrides it
 void RespawnManager::OnEnemyLineupLoaded(const EnemyLineupLoadedEvent& event)
 {
-	if (!event.count)
+	if (!event.count || _enemySeats == 0u)
 	{
 		return;
 	}
@@ -129,7 +129,8 @@ void RespawnManager::SetEnemyNeedRespawn()
 
 void RespawnManager::ResetRespawnStat(const bool keepsPlayerLives)
 {
-	_respawnCount[static_cast<std::size_t>(RespawnGroup::ENEMY_ALL)] = kUnlistedEnemies;
+	//NOTE: with no seat to come in by, no enemy is owed - the players fight to the last one standing
+	_respawnCount[static_cast<std::size_t>(RespawnGroup::ENEMY_ALL)] = _enemySeats > 0u ? kUnlistedEnemies : 0u;
 	if (!keepsPlayerLives)
 	{
 		std::ranges::for_each(kSlots, [this](const PlayerSlot slot)

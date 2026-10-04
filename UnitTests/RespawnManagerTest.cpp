@@ -592,6 +592,39 @@ TEST_F(RespawnManagerTest, InAFreeForAllTheOneLeftAloneWins)
 	EXPECT_EQ(finished, GameState::Won);
 }
 
+// with no enemies the map's list never comes - the last player standing wins
+TEST_F(RespawnManagerTest, AFreeForAllWithNoEnemiesIsWonByTheLastPlayerStanding)
+{
+	std::optional<Uuid> seatTwo{};
+	std::optional<GameState> finished{};
+	std::vector<EventSubscription> subs{};
+	subs.push_back(_events->AddListener([&seatTwo](const RespawnTankEvent& event)
+	{
+		if (event.type == TankType::PLAYER2)
+		{
+			seatTwo = event.uuid;
+		}
+	}));
+	subs.push_back(_events->AddListener([&finished](const GameFinishedEvent& event) { finished = event.state; }));
+	_gameConfig.networkRules = MatchRules::FreeForAll;
+	_gameConfig.simultaneousEnemies = 0u;
+	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
+	_events->EmitEvent(SeatsFilledEvent{
+			.holders = {SeatHolder::Player, SeatHolder::Player, SeatHolder::Empty, SeatHolder::Empty}});
+	_events->EmitEvent(GameResetEvent{});
+	_events->EmitEvent(EnemyLineupLoadedEvent{.count = 20u});
+
+	for ([[maybe_unused]] const int life: std::views::iota(0, 3))
+	{
+		seatTwo.reset();
+		_events->EmitEvent(RespawnTanksEvent{});
+		ASSERT_TRUE(seatTwo.has_value());
+		_events->EmitEvent(TankDiedEvent{.who = Author::Player2, .uuid = *seatTwo});
+	}
+
+	EXPECT_EQ(finished, GameState::Won);
+}
+
 //NOTE: the starting lives come back only for a bot's losses - a player who left with none comes back with none
 TEST_F(RespawnManagerTest, APlayerWhoLeftWithNoLivesComesBackWithNone)
 {
