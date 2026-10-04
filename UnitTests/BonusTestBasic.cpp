@@ -112,7 +112,7 @@ protected:
 // driving onto the bonus takes it off the field
 TEST_F(BonusTest, BonusPickUp)
 {
-	CreatePlayer({.x = 0.0, .y = 0.0});
+	CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
 	_bonusSpawner->SpawnRandomBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize});
 
 	constexpr bool isPressed{true};
@@ -219,7 +219,7 @@ TEST_F(BonusTest, TimerNotPickUpEnemyCanMove)
 // the helmet turns the next bullet away
 TEST_F(BonusTest, HelmetPickUpAndBulletCantDamageTank)
 {
-	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
+	const auto player{CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN)};
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
 
@@ -258,7 +258,7 @@ TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 // the grenade empties the health of every enemy on the field
 TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 {
-	CreatePlayer({.x = 0.0, .y = 0.0});
+	CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
 
@@ -300,7 +300,7 @@ TEST_F(BonusTest, TankPickUpExtraLife)
 		respawnActual = event.respawnCount;
 	})};
 
-	CreatePlayer({.x = 0.0, .y = 0.0});
+	CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
 
@@ -340,7 +340,7 @@ TEST_F(BonusTest, TankNotPickUpTierTheSame)
 // a star is one tier
 TEST_F(BonusTest, StarPickUpTierIncrease)
 {
-	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
+	const auto player{CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN)};
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
 
@@ -372,7 +372,7 @@ TEST_F(BonusTest, StarNotPickUpTierTheSame)
 // any bonus heals the tank that picked it up, and there is no ceiling - a whole tank grows past its spawn health
 TEST_F(BonusTest, PickUpHealsAWholeTankAboveItsSpawnHealth)
 {
-	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
+	const auto player{CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN)};
 	const int spawnHealth{player->GetHealth()};
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
@@ -387,7 +387,7 @@ TEST_F(BonusTest, PickUpHealsAWholeTankAboveItsSpawnHealth)
 // the shovel turns the eagle's brick wall into steel
 TEST_F(BonusTest, ShovelPickUpByPlayerThenFortressWallTurnIntoSteelWall)
 {
-	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
+	const auto player{CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN)};
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
 
@@ -484,7 +484,7 @@ TEST_F(BonusTest, ShipPickUpCanCrossWater)
 // the super star is worth two tiers in one pickup
 TEST_F(BonusTest, SuperStarPickUpTierIncreaseTwice)
 {
-	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
+	const auto player{CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN)};
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
 

@@ -29,8 +29,6 @@ struct UiCell final
 	Point offset{};
 	//NOTE: a word this many symbols wide - a shorter one leaves the rest empty
 	std::size_t symbols{};
-	//NOTE: drawn small enough to fit this many symbols in that width
-	std::size_t fitSymbols{};
 
 	[[nodiscard]] bool operator==(const UiCell& rhs) const = default;
 };

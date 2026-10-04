@@ -45,7 +45,6 @@ void InputProviderForMenu::OnShowMenu(const ShowMenuEvent& event)
 	}
 }
 
-//TODO: change direction without move (one turn before move)
 void InputProviderForMenu::OnMenuShown(const MenuShownEvent& event)
 {
 	//NOTE: neither owns the pause here - a demo runs behind an open menu, a lobby is not running at all

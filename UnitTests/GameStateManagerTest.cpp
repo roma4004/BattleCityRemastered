@@ -411,7 +411,7 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithThreeDeath)
 // the player takes the extra-life tank first, so it takes four deaths instead of three
 TEST_F(GameStateManagerTest, PlayerTeamLoseWithExtraLifeDeath)
 {
-	const auto player{CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::UP)};
+	const auto player{CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN)};
 
 	bool isGameLose{};
 	constexpr bool isPressed{true};

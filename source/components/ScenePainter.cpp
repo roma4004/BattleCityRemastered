@@ -14,9 +14,9 @@
 #include <vector>
 
 ScenePainter::ScenePainter(const std::shared_ptr<EventSystem>& events,
-						   const std::vector<std::shared_ptr<BaseObj>>& world, const TextureManager& textures)
+						   const std::vector<std::shared_ptr<BaseObj>>& allObjects, const TextureManager& textures)
 	: _events{events}
-	, _world{world}
+	, _allObjects{allObjects}
 	, _textures{textures}
 {
 	Subscribe();
@@ -49,7 +49,7 @@ void ScenePainter::Read()
 {
 	std::ranges::for_each(_layers, [](std::vector<Sprite>& layer) { layer.clear(); });
 	_healthBars.clear();
-	for (const std::shared_ptr<BaseObj>& object: _world)
+	for (const std::shared_ptr<BaseObj>& object: _allObjects)
 	{
 		if (!ObjectUtils::IsAlive(object.get()))
 		{

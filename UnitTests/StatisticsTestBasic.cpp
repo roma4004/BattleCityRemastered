@@ -543,7 +543,7 @@ TEST_F(StatisticsTest, BonusNotPickUpByEnemyNotCount)
 // player one is driven down onto the bonus and the pickup is credited to that seat alone
 TEST_F(StatisticsTest, BonusPickUpByPlayerOneCount)
 {
-	CreatePlayer({.x = 0.0, .y = 0.0});
+	CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
 
 	_bonusSpawner->SpawnRandomBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize});
 	constexpr bool isPressed{true};
@@ -583,7 +583,7 @@ TEST_F(StatisticsTest, BonusNotPickUpByPlayerOneNotCount)
 // the second seat does the same, with its own keys and its own counter
 TEST_F(StatisticsTest, BonusPickUpByPlayerTwoCount)
 {
-	CreatePlayer({.x = _tankSize + 1.0, .y = 0.0}, Author::Player2);
+	CreatePlayer({.x = _tankSize + 1.0, .y = 0.0}, Author::Player2, Direction::DOWN);
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP2), MoveDownEvent{.isPressed = isPressed});
 

@@ -20,7 +20,7 @@ class ScenePainter final
 {
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
-	const std::vector<std::shared_ptr<BaseObj>>& _world;
+	const std::vector<std::shared_ptr<BaseObj>>& _allObjects;
 	const TextureManager& _textures;
 	//NOTE: by DrawLayer, refilled every frame - kept only for the capacity
 	std::array<std::vector<Sprite>, kDrawLayerCount> _layers{};
@@ -35,6 +35,6 @@ class ScenePainter final
 	void Paint(DrawLayer layer) const;
 
 public:
-	ScenePainter(const std::shared_ptr<EventSystem>& events, const std::vector<std::shared_ptr<BaseObj>>& world,
+	ScenePainter(const std::shared_ptr<EventSystem>& events, const std::vector<std::shared_ptr<BaseObj>>& allObjects,
 				 const TextureManager& textures);
 };

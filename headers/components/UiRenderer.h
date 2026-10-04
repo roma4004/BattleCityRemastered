@@ -82,7 +82,6 @@ class UiRenderer final
 	void DrawIcon(UiIcon icon, SDL_Rect dstRect) const;
 	//NOTE: what a table needs to become places: a word is as wide as the font makes it, a picture as Icon says
 	[[nodiscard]] UiLayout::Measure CellMeasurer(int pointSize, float scale) const;
-	[[nodiscard]] int CellPointSize(const UiCell& cell, int pointSize, float scale) const;
 	//NOTE: every picture first, then every word under one render scale - each change of it breaks the batch
 	void DrawTables(const auto& placedTables, int pointSize, float scale) const;
 	void DrawTablePictures(const UiTable& table, const UiLayout::Placement& placement) const;

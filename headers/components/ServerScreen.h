@@ -49,10 +49,8 @@ class ServerScreen final
 		Map,
 		Enemies,
 		AddressCaption,
-		IPv4Caption,
 		IPv4,
 		ConfirmIPv4,
-		IPv6Caption,
 		IPv6,
 		ConfirmIPv6,
 		Error

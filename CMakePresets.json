@@ -71,6 +71,46 @@
       "cacheVariables": {
         "CMAKE_CXX_FLAGS": "-fsanitize=undefined -fsanitize-trap=undefined"
       }
+    },
+    {
+      "name": "Debug-Linux",
+      "displayName": "Debug-Linux",
+      "description": "GCC on Linux, WSL2 included, debug. SDL3 is a console build - a bare WSL has no X11 or Wayland headers, and what is checked there, the tests and the server, needs no window. The game itself is Windows only for now: ServerProcess runs the server in a job object.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/cmake/${presetName}",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++",
+        "SDL_UNIX_CONSOLE_BUILD": "ON"
+      }
+    },
+    {
+      "name": "Asan-Linux",
+      "displayName": "Asan-Linux",
+      "description": "Debug-Linux + AddressSanitizer and UBSan with their runtimes - MinGW ships none, so this is where they run. Recoverable, so a whole run by hand reports every error; the test preset halts instead, which is what fails a test.",
+      "inherits": "Debug-Linux",
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fsanitize-recover=address -fno-omit-frame-pointer",
+        "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address,undefined -fsanitize-recover=address -fno-omit-frame-pointer",
+        "CMAKE_SHARED_LINKER_FLAGS": "-fsanitize=address,undefined -fsanitize-recover=address -fno-omit-frame-pointer"
+      }
+    },
+    {
+      "name": "Tsan-Linux",
+      "displayName": "Tsan-Linux",
+      "description": "Debug-Linux + ThreadSanitizer - the network suites are what it is for.",
+      "inherits": "Debug-Linux",
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": "-fsanitize=thread -fno-omit-frame-pointer",
+        "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=thread -fno-omit-frame-pointer",
+        "CMAKE_SHARED_LINKER_FLAGS": "-fsanitize=thread -fno-omit-frame-pointer"
+      }
     }
   ],
   "buildPresets": [
@@ -101,6 +141,21 @@
     {
       "name": "UbsanTrap-Clang",
       "configurePreset": "UbsanTrap-Clang"
+    },
+    {
+      "name": "Debug-Linux",
+      "configurePreset": "Debug-Linux",
+      "targets": ["UnitTests", "BattleCityServer", "game_assets"]
+    },
+    {
+      "name": "Asan-Linux",
+      "configurePreset": "Asan-Linux",
+      "targets": ["UnitTests", "game_assets"]
+    },
+    {
+      "name": "Tsan-Linux",
+      "configurePreset": "Tsan-Linux",
+      "targets": ["UnitTests", "game_assets"]
     }
   ],
   "testPresets": [
@@ -135,6 +190,34 @@
     {
       "name": "UbsanTrap-Clang",
       "configurePreset": "UbsanTrap-Clang",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "Debug-Linux",
+      "configurePreset": "Debug-Linux",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "Asan-Linux",
+      "configurePreset": "Asan-Linux",
+      "environment": {
+        "ASAN_OPTIONS": "detect_leaks=1:detect_stack_use_after_return=1:strict_init_order=1:check_initialization_order=1",
+        "UBSAN_OPTIONS": "print_stacktrace=1:halt_on_error=1"
+      },
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "Tsan-Linux",
+      "configurePreset": "Tsan-Linux",
+      "environment": {
+        "TSAN_OPTIONS": "second_deadlock_stack=1:history_size=7"
+      },
       "output": {
         "outputOnFailure": true
       }

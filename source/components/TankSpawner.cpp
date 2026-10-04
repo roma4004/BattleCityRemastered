@@ -485,7 +485,6 @@ void TankSpawner::RespawnEnemyTanks(const TankType type, const Uuid uuid, const 
 	}
 }
 
-//TODO: write unit test for bot change direction if faced obstacle
 std::optional<ObjRectangle> TankSpawner::GetPlayerRandomPosX(const PlayerSlot slot) const
 {
 	const auto battleFieldSizeX{static_cast<double>(_gameConfig.battlefieldSize.x)};

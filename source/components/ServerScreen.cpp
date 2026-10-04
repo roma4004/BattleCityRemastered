@@ -50,8 +50,8 @@ constexpr std::string_view kNotThisMachine{"NOT THIS PC'S ADDRESS"};
 //NOTE: rows kept for the list, so a found server does not push the address down
 constexpr std::size_t kListRows{5};
 
-//NOTE: a little wider than the longest hint
-constexpr std::size_t kRowSymbols{40};
+//NOTE: as wide as the longest typed address, so it is drawn at the size of the rest
+constexpr std::size_t kRowSymbols{AddressField::kLongestShown};
 //NOTE: in the order of ServerScreen::Column
 constexpr std::array<std::string_view, 3> kHeaders{"PLAYERS", "MODE", "ADDRESS"};
 //NOTE: the players and the mode - "PLAYERS" with its sort arrow, or "CLASSIC", and a gap
@@ -89,12 +89,20 @@ constexpr auto kCaretBlink{1060ms};
 	return UiCell{.text = std::move(text), .color = color, .symbols = kRowSymbols};
 }
 
-[[nodiscard]] UiCell Typed(std::string text)
+//NOTE: the IPv4 row gets spaces where the IPv6 row has its brackets, so both addresses start in one column
+[[nodiscard]] ShownAddress Padded(ShownAddress shown, const bool isIPv4)
 {
-	return UiCell{.text = std::move(text),
-				  .color = kTextColor,
-				  .symbols = kRowSymbols,
-				  .fitSymbols = AddressField::kLongestShown};
+	if (!isIPv4)
+	{
+		return shown;
+	}
+
+	const std::size_t port{shown.text.rfind(':')};
+	shown.text.insert(port, 1, ' ');
+	shown.text.insert(0, 1, ' ');
+	shown.caret = shown.caret.transform([port](const std::size_t symbol) { return symbol + (symbol > port ? 2 : 1); });
+
+	return shown;
 }
 
 [[nodiscard]] UiCell Centered(std::string text)
@@ -651,10 +659,8 @@ std::vector<ServerScreen::Item> ServerScreen::Lines() const
 		lines.push_back(Item{.line = Line::Gap});
 	}
 
-	lines.push_back(Item{.line = Line::IPv4Caption});
 	lines.push_back(Item{.line = Line::IPv4});
 	lines.push_back(Item{.line = Line::ConfirmIPv4});
-	lines.push_back(Item{.line = Line::IPv6Caption});
 	lines.push_back(Item{.line = Line::IPv6});
 	lines.push_back(Item{.line = Line::ConfirmIPv6});
 	//NOTE: kept empty too, so an error does not move the hints
@@ -671,8 +677,6 @@ bool ServerScreen::IsPickable(const Item& item) const
 		case Line::NoServers:
 		case Line::Gap:
 		case Line::AddressCaption:
-		case Line::IPv4Caption:
-		case Line::IPv6Caption:
 		case Line::Error:
 			return false;
 		case Line::Server:
@@ -827,13 +831,9 @@ UiRow ServerScreen::LineRow(const Item& item) const
 			return UiRow{};
 		case Line::AddressCaption:
 			return UiRow{.cells = {Centered("Connect via IP:")}};
-		case Line::IPv4Caption:
-			return UiRow{.cells = {Word("IPv4:")}};
-		case Line::IPv6Caption:
-			return UiRow{.cells = {Word("IPv6:")}};
 		case Line::IPv4:
 		case Line::IPv6:
-			return UiRow{.cells = {Typed(FieldOf(item.line).Shown(false).text)}};
+			return UiRow{.cells = {Address(Padded(FieldOf(item.line).Shown(false), item.line == Line::IPv4).text)}};
 		case Line::ConfirmIPv4:
 		case Line::ConfirmIPv6:
 			return UiRow{.cells = {Button(IsHosting(), item.line == Line::ConfirmIPv6)}};
@@ -890,7 +890,9 @@ std::optional<PanelCaret> ServerScreen::Caret(const std::size_t row) const
 		return std::nullopt;
 	}
 
-	return FieldOf(_focus.line).Shown(true).caret.transform([row, alpha](const std::size_t symbol)
+	const ShownAddress shown{Padded(FieldOf(_focus.line).Shown(true), _focus.line == Line::IPv4)};
+
+	return shown.caret.transform([row, alpha](const std::size_t symbol)
 	{
 		return PanelCaret{.row = row, .symbol = symbol, .alpha = alpha};
 	});

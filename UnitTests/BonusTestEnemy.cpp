@@ -109,7 +109,7 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressSteelWallHide)
 	const auto enemyBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN)};
 
 	_allObjects.reserve(4);
-	CreatePlayer({.x = _tankSize * 2.0, .y = _tankSize * 2.0}, Author::Player1, Direction::UP);
+	CreatePlayer({.x = _tankSize * 2.0, .y = _tankSize * 2.0}, Author::Player1, Direction::DOWN);
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
 

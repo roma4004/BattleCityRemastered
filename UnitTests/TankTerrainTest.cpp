@@ -186,7 +186,8 @@ TEST_F(TankTerrainTest, TheTankSlidesDiagonallyWhenTurningWhileDrifting)
 	ASSERT_DOUBLE_EQ(xBeforeTurn, 0.0);
 
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveRightEvent{.isPressed = true});
-	Tick();
+	//NOTE: the first frame only turns the hull
+	Tick(2);
 
 	EXPECT_EQ(tank->GetDirection(), Direction::RIGHT);
 	EXPECT_GT(tank->GetPos().x, xBeforeTurn);

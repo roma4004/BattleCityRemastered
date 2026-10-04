@@ -365,17 +365,22 @@ void Tank::TickUpdate(const double deltaTime)
 	const Direction oldDir{_dir};
 
 	const std::optional<Direction> chosen{_inputProvider->ChooseDirection(*this, deltaTime)};
-	_drivingTo = chosen;
+	//NOTE: a turn takes the whole frame - a tap only aims the hull, the move starts on the next one
+	const bool isTurn{chosen && *chosen != _dir};
+	_drivingTo = isTurn ? std::nullopt : chosen;
 	bool isMove{};
-	if (chosen)
+	if (isTurn)
 	{
 		SetDirection(*chosen);
+	}
+	else if (chosen)
+	{
 		ShoveAhead(*chosen, _speed * deltaTime);
 		isMove = _moveBeh->Move(*chosen, deltaTime, _allObjects, outCollisions);
 	}
 
 	//NOTE: only when a move was actually attempted - a player pressing nothing is not blocked
-	if (chosen && !isMove)
+	if (_drivingTo && !isMove)
 	{
 		if (const std::optional<Direction> revised{_inputProvider->ReviseWhenMoveBlocked(*this, deltaTime)})
 		{

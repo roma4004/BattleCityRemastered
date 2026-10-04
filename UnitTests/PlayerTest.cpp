@@ -105,7 +105,7 @@ TEST_F(PlayerTest, TankMoveInSideScreenUp)
 TEST_F(PlayerTest, TankMoveInSideScreenLeft)
 {
 	const auto windowWidth{static_cast<double>(_gameConfig.battlefieldSize.x)};
-	const auto player{CreatePlayer({.x = windowWidth - _tankSize, .y = 0.0})};
+	const auto player{CreatePlayer({.x = windowWidth - _tankSize, .y = 0.0}, Author::Player1, Direction::LEFT)};
 
 	const FPoint startPos{player->GetPos()};
 
@@ -121,7 +121,7 @@ TEST_F(PlayerTest, TankMoveInSideScreenLeft)
 // and down
 TEST_F(PlayerTest, TankMoveInSideScreenDown)
 {
-	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
+	const auto player{CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN)};
 
 	const FPoint startPos{player->GetPos()};
 
@@ -137,7 +137,7 @@ TEST_F(PlayerTest, TankMoveInSideScreenDown)
 // and right - four directions, one rule
 TEST_F(PlayerTest, TankMoveInSideScreenRight)
 {
-	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
+	const auto player{CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::RIGHT)};
 
 	const FPoint startPos{player->GetPos()};
 
@@ -549,7 +549,7 @@ TEST_F(PlayerTest, PointBlankShotDamagesTheShooter)
 // The driver holds its own keyed subscriptions, so it has to go quiet with the tank
 TEST_F(PlayerTest, APlayerTankIgnoresKeysPressedWhileDeactivated)
 {
-	const auto player{CreatePlayer({.x = _tankSize * 2.0, .y = _tankSize * 2.0})};
+	const auto player{CreatePlayer({.x = _tankSize * 2.0, .y = _tankSize * 2.0}, Author::Player1, Direction::DOWN)};
 
 	player->Deactivate();
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = true});
@@ -565,4 +565,21 @@ TEST_F(PlayerTest, APlayerTankIgnoresKeysPressedWhileDeactivated)
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_NE(player->GetPos(), before);
+}
+
+// A tap on a new direction spends its frame on the turn, and the hull sets off on the next one
+TEST_F(PlayerTest, ATapOnANewDirectionOnlyTurnsTheHull)
+{
+	const auto player{CreatePlayer({.x = _tankSize * 2.0, .y = _tankSize * 2.0})};
+	const FPoint before{player->GetPos()};
+
+	_events->EmitEvent(Key(InputChannel::LocalP1), MoveRightEvent{.isPressed = true});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_EQ(player->GetDirection(), Direction::RIGHT);
+	EXPECT_EQ(player->GetPos(), before);
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_GT(player->GetPos().x, before.x);
 }

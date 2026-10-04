@@ -321,10 +321,9 @@ void UiRenderer::DrawCaret(const UiTable& table, const UiLayout::Placement& plac
 
 	const UiCell& cell{table.rows[caret.row].cells.front()};
 	const std::string_view text{cell.text};
-	const int size{CellPointSize(cell, pointSize, scale)};
-	const int height{_textCache.MeasureString(text, size, scale).y};
+	const int height{_textCache.MeasureString(text, pointSize, scale).y};
 	const std::size_t start{ByteOf(text, caret.symbol)};
-	const int before{_textCache.MeasureString(text.substr(0, start), size, scale).x};
+	const int before{_textCache.MeasureString(text.substr(0, start), pointSize, scale).x};
 	const int top{placed->pos.y + (placed->size.y - height) / 2};
 	const int thickness{std::max(height / kCaretWidthShare, 1)};
 	const std::string_view under{text.substr(start, ByteOf(text, caret.symbol + caret.symbols) - start)};
@@ -332,7 +331,7 @@ void UiRenderer::DrawCaret(const UiTable& table, const UiLayout::Placement& plac
 							   ? SDL_Rect{.x = placed->pos.x + before, .y = top, .w = thickness, .h = height}
 							   : SDL_Rect{.x = placed->pos.x + before,
 										  .y = top + height - thickness,
-										  .w = _textCache.MeasureString(under, size, scale).x,
+										  .w = _textCache.MeasureString(under, pointSize, scale).x,
 										  .h = thickness}};
 
 	SDL_Renderer* const renderer{_sdlConfig.renderer.get()};
@@ -508,24 +507,6 @@ UiLayout::Measure UiRenderer::CellMeasurer(const int pointSize, const float scal
 	};
 }
 
-//NOTE: measured on zeros, not on the text, so every cell asking for the same symbols gets the same size
-int UiRenderer::CellPointSize(const UiCell& cell, const int pointSize, const float scale) const
-{
-	if (cell.fitSymbols <= cell.symbols)
-	{
-		return pointSize;
-	}
-
-	const int width{_textCache.MeasureString(std::string(cell.symbols, '0'), pointSize, scale).x};
-	const std::string widest(cell.fitSymbols, '0');
-	const auto goesIn = [this, &widest, width, scale](const int size)
-	{
-		return _textCache.MeasureString(widest, size, scale).x <= width;
-	};
-
-	return UiLayout::FitPointSize(kFitMinPointSize, pointSize, goesIn);
-}
-
 void UiRenderer::DrawTablePictures(const UiTable& table, const UiLayout::Placement& placement) const
 {
 	for (const UiLayout::PlacedCell& placed: placement.cells)
@@ -554,18 +535,15 @@ void UiRenderer::DrawTableText(const UiTable& table, const UiLayout::Placement& 
 			continue;
 		}
 
-		const int size{CellPointSize(cell, pointSize, scale)};
 		const TextCache::CachedText* cached{
-				_textCache.Acquire(cell.text, SdlRenderUtils::IntToColor(cell.color), size, scale)};
+				_textCache.Acquire(cell.text, SdlRenderUtils::IntToColor(cell.color), pointSize, scale)};
 		if (cached == nullptr)
 		{
 			continue;
 		}
 
-		//NOTE: a word drawn smaller stands in the middle of its row
-		const int inset{size == pointSize ? 0 : (placed.size.y - cached->height) / 2};
 		TTF_DrawRendererText(cached->text.get(), static_cast<float>(placed.pos.x) * scale,
-							 static_cast<float>(placed.pos.y + inset) * scale);
+							 static_cast<float>(placed.pos.y) * scale);
 	}
 }
 
