@@ -118,6 +118,8 @@ void TankSpawner::Subscribe()
 	if (IsHost(_gameMode))
 	{
 		_subs.push_back(_events->AddListener(this, &TankSpawner::OnWorldSnapshotRequested));
+		_subs.push_back(_events->AddListener(this, &TankSpawner::OnSeatsFilled));
+		_subs.push_back(_events->AddListener(this, &TankSpawner::OnSeatHolderChanged));
 	}
 
 	//NOTE: a tank mid-spawn is not an object yet, so the grenade cannot reach it the way it reaches
@@ -296,6 +298,69 @@ void TankSpawner::OnWorldSnapshotReceived(const WorldSnapshotReceivedEvent& even
 	{
 		OnTankRespawned(spawn);
 	});
+}
+
+void TankSpawner::OnSeatsFilled(const SeatsFilledEvent& event)
+{
+	for (const PlayerSlot slot: kSlots)
+	{
+		_botSeats.set(SeatIndex(slot), event.holders[SeatIndex(slot)] == SeatHolder::Bot);
+	}
+
+	//NOTE: the one who earned it is not in - whoever takes the seat later starts afresh, not on a stranger's tier
+	std::erase_if(_nextLevelLoadouts, [&event](const NextLevelLoadout& loadout)
+	{
+		return event.holders[SeatIndex(*SlotOf(loadout.type))] != SeatHolder::Player;
+	});
+}
+
+//NOTE: the tank changes hands where it stands, its health and tier with it - from the bot or to the bot
+void TankSpawner::OnSeatHolderChanged(const SeatHolderChangedEvent& event)
+{
+	const bool isBotTaking{event.to == SeatHolder::Bot};
+	_botSeats.set(SeatIndex(event.slot), isBotTaking);
+	if (event.from == SeatHolder::Empty || event.from == event.to)
+	{
+		return;
+	}
+
+	const TankType from{event.from == SeatHolder::Bot ? CoopTankOf(event.slot) : PlayerTankOf(event.slot)};
+	const auto leftTank = [from](const std::shared_ptr<BaseObj>& object) -> Tank*
+	{
+		auto* const tank{dynamic_cast<Tank*>(object.get())};
+
+		return tank != nullptr && ObjectUtils::IsAlive(tank) && tank->_type == from ? tank : nullptr;
+	};
+	const auto tanks{_allObjects | std::views::transform(leftTank)};
+	const auto found{std::ranges::find_if(tanks, [](const Tank* const tank) { return tank != nullptr; })};
+	Tank* const standing{found == tanks.end() ? nullptr : *found};
+
+	//NOTE: given up to nobody - off the field without a death, so nobody scores it and nothing bursts
+	if (event.to == SeatHolder::Empty)
+	{
+		if (const auto spawn{std::ranges::find(_delayedSpawns, from, &DelayedTankSpawn::type)};
+			spawn != _delayedSpawns.end())
+		{
+			DropDelayedSpawn(spawn->uuid);
+		}
+
+		if (standing != nullptr)
+		{
+			standing->SetIsAlive(false);
+		}
+
+		return;
+	}
+
+	const TankType to{isBotTaking ? CoopTankOf(event.slot) : PlayerTankOf(event.slot)};
+	const auto isLeft = [from](const DelayedTankSpawn& spawn) { return spawn.type == from; };
+	std::ranges::for_each(_delayedSpawns | std::views::filter(isLeft),
+						  [to](DelayedTankSpawn& spawn) { spawn.type = to; });
+
+	if (standing != nullptr)
+	{
+		standing->Handover(to, MakeDriver(to));
+	}
 }
 
 void TankSpawner::Reset(const GameResetEvent& event)
@@ -525,23 +590,23 @@ void TankSpawner::RespawnPlayerTeam(const TankType type, const Uuid uuid,
 		return;
 	}
 
-	//NOTE: the demo is the phase where nobody sits down - every seat goes to a bot
-	const bool isDemo{_gameConfig.gameState == GameState::Demo};
-	if (!isDemo && (!UsesCoopBots(_gameMode) || slot == PlayerSlot::P1))
+	//NOTE: asked for as the player's seat - who drives it is the authority's call, a client spawns what it is told
+	const TankType spawned{IsAuthority(_gameMode) && IsBotSeat(slot) ? CoopTankOf(slot) : type};
+	SpawnPlayer(*spawnRect, uuid, spawned);
+	if (IsHost(_gameMode))
 	{
-		SpawnPlayer(*spawnRect, uuid, type);
-		if (IsHost(_gameMode))
-		{
-			_events->EmitEvent(TankRespawnedEvent{.type = type,
-												  .model = TankModel::Player,
-												  .uuid = uuid,
-												  .pos = FPoint{.x = spawnRect->x, .y = spawnRect->y}});
-		}
+		_events->EmitEvent(TankRespawnedEvent{.type = spawned,
+											  .model = TankModel::Player,
+											  .uuid = uuid,
+											  .pos = FPoint{.x = spawnRect->x, .y = spawnRect->y}});
 	}
-	else if (UsesCoopBots(_gameMode))
-	{
-		SpawnPlayer(*spawnRect, uuid, CoopTankOf(slot));
-	}
+}
+
+//NOTE: the demo is the phase where nobody sits down - every seat goes to a bot
+bool TankSpawner::IsBotSeat(const PlayerSlot slot) const
+{
+	return _gameConfig.gameState == GameState::Demo || (UsesCoopBots(_gameMode) && slot != PlayerSlot::P1)
+		   || _botSeats.test(SeatIndex(slot));
 }
 
 void TankSpawner::RespawnTank(const TankType type, const Uuid uuid, const std::optional<ObjRectangle> rect,

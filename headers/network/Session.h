@@ -43,6 +43,8 @@ public:
 
 	//NOTE: owed on ready and after a dropped backlog - paid with a snapshot in place of the next frame
 	[[nodiscard]] bool IsSnapshotOwed() const { return _isSnapshotOwed.load(std::memory_order_acquire); }
+	//NOTE: a seat changed hands - everyone is sent the field the way the one who took it is
+	void OweSnapshot() { _isSnapshotOwed.store(true, std::memory_order_release); }
 	void ClearSnapshotDebt() { _isSnapshotOwed.store(false, std::memory_order_release); }
 
 	[[nodiscard]] const udp::endpoint& Endpoint() const { return _endpoint; }
@@ -90,6 +92,7 @@ private:
 	void Handle(const BonusStatus&) const {}
 	void Handle(const SlotAssignment&) const {}
 	void Handle(const WorldSnapshot&) const {}
+	void Handle(const AbsenceChange&) const {}
 
 	void Lose();
 

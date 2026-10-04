@@ -11,6 +11,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 enum class GameMode : char8_t;
@@ -48,6 +49,8 @@ class ServerScreen final
 		Seats,
 		Map,
 		Enemies,
+		Bots,
+		Start,
 		AddressCaption,
 		IPv4,
 		ConfirmIPv4,
@@ -98,9 +101,11 @@ class ServerScreen final
 	std::vector<std::string> _maps{};
 	AddressField _ipv4{AddressFamily::IPv4};
 	AddressField _ipv6{AddressFamily::IPv6};
-	//NOTE: what the rows were given - a row still holding it gets this machine's current address on opening
+	//NOTE: what the rows were given - a row still holding it gets the current offer on opening
 	network::ServerAddress _offeredIPv4{};
 	network::ServerAddress _offeredIPv6{};
+	//NOTE: the host this game last joined - a client is offered it in place of this machine
+	std::optional<std::string> _lastHost{};
 	Item _focus{};
 	GameMode _mode{};
 	//NOTE: why the last confirm went nowhere - empty when it did not
@@ -153,7 +158,7 @@ class ServerScreen final
 	//NOTE: the row a typed line or its button belongs to
 	[[nodiscard]] const AddressField& FieldOf(Line line) const;
 	void Fill(const network::ServerAddress& address, bool isBracketed);
-	void OfferLocalAddresses();
+	void OfferAddresses();
 	void Type(char symbol);
 	//NOTE: one table row a line - a click on row N is a click on Lines()[N]
 	[[nodiscard]] UiRow LineRow(const Item& item) const;
@@ -162,7 +167,9 @@ class ServerScreen final
 	void Draw() const;
 
 public:
-	ServerScreen(const std::shared_ptr<EventSystem>& events, const network::ServerAddress& address);
+	ServerScreen(const std::shared_ptr<EventSystem>& events, const network::ServerAddress& address,
+				 std::optional<std::string> lastHost);
 
 	void Open(GameMode mode);
+	void RememberHost(std::string host) { _lastHost = std::move(host); }
 };

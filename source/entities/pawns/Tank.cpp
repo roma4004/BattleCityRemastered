@@ -120,6 +120,15 @@ void Tank::Reset(const TankResetProperty& resetProperty, std::unique_ptr<IInputP
 	_isAlive = true;
 }
 
+//NOTE: the tank is in the world, so the new driver goes on the bus at once
+void Tank::Handover(const TankType type, std::unique_ptr<IInputProvider> driver)
+{
+	_inputProvider->Disable();
+	_inputProvider = std::move(driver);
+	_inputProvider->Enable();
+	_type = type;
+}
+
 void Tank::OnBonusTimerReApplyOnSpawn(const BonusTimerReApplyOnSpawnEvent& event)
 {
 	if (event.isEnabled)

@@ -1,4 +1,5 @@
 #include "network/Session.h"
+#include "enums/Absence.h"
 #include "enums/InputChannel.h"
 #include "enums/InputSignal.h"
 #include "components/EventSystem.h"
@@ -77,6 +78,8 @@ void Session::Start()
 	CommandBatch assignment;
 	assignment.commands.emplace_back(SlotAssignment{.slot = _slot, .match = _match});
 	std::ignore = _link.SendReliable(network::Serialize(assignment));
+
+	_commandQueue.Enqueue([this] { _events->EmitEvent(ServerClientSeatedEvent{.slot = _slot}); });
 }
 
 void Session::Receive(const std::string_view datagram, const DatagramLink::Clock::time_point now)
@@ -180,6 +183,15 @@ void Session::Handle(const SignalEvent& command)
 				break;
 			case ClientSignal::NextLevel:
 				_events->EmitEvent(NextLevelRequestedEvent{});
+				break;
+			case ClientSignal::WorldSynced:
+				_events->EmitEvent(ServerClientSyncedEvent{.slot = _slot});
+				break;
+			case ClientSignal::AbsenceContinue:
+				_events->EmitEvent(AbsenceChosenEvent{.choice = AbsenceChoice::Continue});
+				break;
+			case ClientSignal::AbsenceBot:
+				_events->EmitEvent(AbsenceChosenEvent{.choice = AbsenceChoice::Bot});
 				break;
 		}
 	});

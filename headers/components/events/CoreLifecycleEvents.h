@@ -2,12 +2,15 @@
 
 #include "components/MatchSettings.h"
 #include "geometry/Point.h"
+#include "enums/Absence.h"
 #include "enums/DisconnectReason.h"
 #include "enums/GameState.h"
 #include "enums/PlayerSlot.h"
 #include "enums/TankModel.h"
+#include <array>
 #include <cstddef>
 #include <optional>
+#include <string>
 #include <vector>
 
 struct ServerInClientReadyToStartGameEvent
@@ -53,6 +56,45 @@ struct PlayerSlotAssignedEvent
 struct ServerClientLostEvent
 {
 	PlayerSlot slot;
+};
+
+//NOTE: a client got its seat - it is not ready yet, but a match starting at once still waits for it
+struct ServerClientSeatedEvent
+{
+	PlayerSlot slot;
+};
+
+//NOTE: the client has the field the server sent it, and the match may go on
+struct ServerClientSyncedEvent
+{
+	PlayerSlot slot;
+};
+
+//NOTE: who sits where as a network match starts - the reset that follows spawns by it
+struct SeatsFilledEvent
+{
+	std::array<SeatHolder, kSeatCount> holders{};
+};
+
+//NOTE: a seat of a running match changed hands - a player sat down in it, or the one who left gave it up to a bot
+//or to nobody
+struct SeatHolderChangedEvent
+{
+	PlayerSlot slot;
+	SeatHolder from{};
+	SeatHolder to{SeatHolder::Player};
+};
+
+//NOTE: who left the running match and who is back since - while any seat says so, the match is held
+struct AbsenceChangedEvent
+{
+	std::array<Absence, kSeatCount> seats{};
+};
+
+//NOTE: a player still in answers the panel - on the server, whoever sent it
+struct AbsenceChosenEvent
+{
+	AbsenceChoice choice;
 };
 
 struct GameStateChangedToEvent
@@ -133,6 +175,8 @@ struct MapLoadedEvent
 	std::size_t cols;
 	std::size_t rows;
 	unsigned short stage{};
+	//NOTE: the file's name without .map - what a client joining later is told it plays on
+	std::string name{};
 };
 
 //NOTE: read on the host only - a client gets each model with its tank and the count with the snapshot

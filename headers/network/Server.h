@@ -4,6 +4,7 @@
 #include "DiscoveryBeacon.h"
 #include "Endpoints.h"
 #include "ReplicationPublisher.h"
+#include "SeatHistory.h"
 #include "Session.h"
 #include "WireFrame.h"
 #include "components/EventSystem.h"
@@ -26,7 +27,9 @@
 #include <string_view>
 #include <vector>
 
+struct MapLoadedEvent;
 struct NetworkEndFrameEvent;
+struct SeatHolderChangedEvent;
 struct ServerStatusRequestedEvent;
 struct ServerPlayersRequestedEvent;
 struct ServerKickRequestedEvent;
@@ -59,7 +62,8 @@ private:
 	void Receive();
 	void OnDatagram(std::string_view datagram, Clock::time_point now);
 
-	//NOTE: the seat is whatever FindFreeSlot has left - the order clients arrive in is the order they sit
+	//NOTE: the seat is the one FindFreeSlot picks - the order clients arrive in is the order they sit, unless
+	//one sat here before
 	void Seat(const udp::endpoint& endpoint, std::uint32_t connectionId, std::string_view hello,
 			  Clock::time_point now);
 
@@ -76,12 +80,14 @@ private:
 
 	//NOTE: called with _sessionsMutex held - the search and the session that takes the seat have to
 	//be one step, or two clients arriving back to back get the same one
-	[[nodiscard]] std::optional<PlayerSlot> FindFreeSlot() const;
+	[[nodiscard]] std::optional<PlayerSlot> FindFreeSlot(const udp::endpoint& endpoint) const;
 
 	//NOTE: what the beacon answers with, so it is taken under the mutex like any other read of the seats
 	[[nodiscard]] std::uint8_t CountFreeSlots() const;
 
 	void OnNetworkEndFrame(const NetworkEndFrameEvent&);
+	void OnMapLoaded(const MapLoadedEvent& event);
+	void OnSeatHolderChanged(const SeatHolderChangedEvent&) const;
 
 	//NOTE: nullptr outside a match - a lobby has no field to catch up with
 	[[nodiscard]] std::shared_ptr<const WireFrame> TakeWorldSnapshot() const;
@@ -97,8 +103,9 @@ private:
 	//no acceptor to close, so the socket stays bound and the hello is turned away
 	std::atomic_bool _isAccepting{true};
 	const uint16_t _boundPort;
-	//NOTE: its seats held to one to four - every client is told the match as it is played
-	const MatchSettings _match;
+	//NOTE: its seats held to one to four - every client is told the match as it is played, the map it is on
+	//now included, so it is written under _sessionsMutex
+	MatchSettings _match;
 	//NOTE: after _boundPort - it answers with that number, so it may not be built before there is one
 	DiscoveryBeacon _beacon;
 	boost::asio::steady_timer _tickTimer;
@@ -109,6 +116,8 @@ private:
 	std::vector<EventSubscription> _subs{};
 
 	std::vector<std::shared_ptr<Session>> _sessions;
+	//NOTE: written where a seat is taken, under _sessionsMutex as well
+	SeatHistory _seatHistory;
 	mutable std::mutex _sessionsMutex;
 
 	//NOTE: set once the goodbyes are out - the socket closes when every one is acked or the linger runs out

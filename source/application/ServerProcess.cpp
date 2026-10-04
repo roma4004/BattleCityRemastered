@@ -28,7 +28,8 @@ std::string ChildArguments(const network::ServerAddress& address, const MatchSet
 
 	return " --address=" + address.host + " --port=" + std::to_string(address.port) + " --port-file="
 		   + kPortFileName + " --seats=" + std::to_string(match.seats) + " --rules=" + rules + " --map=" + match.map
-		   + " --enemies=" + std::to_string(match.enemiesAtOnce);
+		   + " --enemies=" + std::to_string(match.enemiesAtOnce) + " --bots=" + std::to_string(match.bots)
+		   + " --start=" + (match.isStartingAtOnce ? "now" : "full");
 }
 
 std::optional<std::uint16_t> ReadPortFile(const std::filesystem::path& path)

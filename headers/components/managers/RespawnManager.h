@@ -2,6 +2,7 @@
 
 #include "components/EventSystem.h"
 #include "enums/Author.h"
+#include "enums/PlayerSlot.h"
 #include "enums/RespawnGroup.h"
 #include "utils/Uuid.h"
 #include <array>
@@ -22,6 +23,8 @@ struct PlayersBaseFinishedEvent;
 struct RespawnTanksEvent;
 struct BonusTankAppliedEvent;
 struct TankRespawnedEvent;
+struct SeatsFilledEvent;
+struct SeatHolderChangedEvent;
 struct WorldSnapshotRequestedEvent;
 struct WorldSnapshotReceivedEvent;
 class EventSystem;
@@ -47,6 +50,8 @@ class RespawnManager final
 	GameMode _gameMode{};
 	bool _isFreeForAll{};
 	std::size_t _seatCount{};
+	//NOTE: an empty seat spawns nothing - a network match says who sits where as it starts
+	std::array<SeatHolder, kSeatCount> _holders{};
 	std::size_t _enemySeats{};
 	unsigned short _enemiesSpawnCount{};
 	unsigned short _enemiesDeathCount{};
@@ -58,6 +63,9 @@ class RespawnManager final
 	void OnTankRespawned(const TankRespawnedEvent& event);
 	void OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const;
 	void OnWorldSnapshotReceived(const WorldSnapshotReceivedEvent& event);
+	void OnSeatsFilled(const SeatsFilledEvent& event);
+	void OnSeatHolderChanged(const SeatHolderChangedEvent& event);
+	void Vacate(SpawnSlot& seat);
 
 	void Subscribe();
 	void OnGameReset(const GameResetEvent& event);

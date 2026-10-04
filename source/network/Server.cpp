@@ -34,10 +34,11 @@
 
 namespace
 {
-//NOTE: one to four seats, whatever the launch asked for
+//NOTE: one to four seats, whatever the launch asked for, and a bot short of filling them all
 MatchSettings Seated(MatchSettings match)
 {
 	match.seats = std::clamp(match.seats, std::uint8_t{1}, static_cast<std::uint8_t>(kSeatCount));
+	match.bots = std::min(match.bots, MaxBots(match.seats));
 
 	return match;
 }
@@ -65,6 +66,8 @@ Server::Server(boost::asio::io_context& ioContext, const ServerAddress& address,
 	ScheduleTick();
 
 	_subs.push_back(_events->AddListener(this, &Server::OnNetworkEndFrame));
+	_subs.push_back(_events->AddListener(this, &Server::OnMapLoaded));
+	_subs.push_back(_events->AddListener(this, &Server::OnSeatHolderChanged));
 	_subs.push_back(_events->AddListener(this, &Server::OnStatusRequested));
 	_subs.push_back(_events->AddListener(this, &Server::OnPlayersRequested));
 	_subs.push_back(_events->AddListener(this, &Server::OnKickRequested));
@@ -223,7 +226,7 @@ void Server::Seat(const udp::endpoint& endpoint, const std::uint32_t connectionI
 	}
 
 	std::unique_lock lock{_sessionsMutex};
-	const auto slot{FindFreeSlot()};
+	const auto slot{FindFreeSlot(endpoint)};
 	if (!slot)
 	{
 		lock.unlock();
@@ -233,6 +236,7 @@ void Server::Seat(const udp::endpoint& endpoint, const std::uint32_t connectionI
 
 	const auto session{std::make_shared<Session>(endpoint, connectionId, _events, *slot, _match, now)};
 	_sessions.emplace_back(session);
+	_seatHistory.Seat(*slot, endpoint);
 	lock.unlock();
 
 	session->Start();
@@ -396,6 +400,20 @@ void Server::OnNetworkEndFrame(const NetworkEndFrameEvent&)
 	}
 }
 
+//NOTE: the next level is played on a map the launch never named
+void Server::OnMapLoaded(const MapLoadedEvent& event)
+{
+	const std::scoped_lock lock{_sessionsMutex};
+	_match.map = event.name;
+}
+
+//NOTE: everyone, not only the one who sat down - the seat's lives may have been given back, and only the
+//field says so. The match is held while it goes out, so nobody sees it jump
+void Server::OnSeatHolderChanged(const SeatHolderChangedEvent&) const
+{
+	std::ranges::for_each(CopySessions(), [](const std::shared_ptr<Session>& session) { session->OweSnapshot(); });
+}
+
 std::shared_ptr<const WireFrame> Server::TakeWorldSnapshot() const
 {
 	CommandBatch batch;
@@ -417,23 +435,21 @@ std::vector<std::shared_ptr<Session>> Server::CopySessions() const
 	return _sessions;
 }
 
-std::optional<PlayerSlot> Server::FindFreeSlot() const
+std::optional<PlayerSlot> Server::FindFreeSlot(const udp::endpoint& endpoint) const
 {
-	for (const PlayerSlot slot: kSlots | std::views::take(_match.seats))
+	//NOTE: a finished session gives its seat up at once - a client dialling back takes it before the sweep
+	const auto isFree = [this](const PlayerSlot slot)
 	{
-		//NOTE: a finished session gives its seat up at once - a client dialling back takes it before the sweep
-		const auto holdsSlot = [slot](const std::shared_ptr<Session>& session)
+		return std::ranges::none_of(_sessions, [slot](const std::shared_ptr<Session>& session)
 		{
 			return !session->IsFinished() && session->GetSlot() == slot;
-		};
+		});
+	};
 
-		if (!std::ranges::any_of(_sessions, holdsSlot))
-		{
-			return slot;
-		}
-	}
+	const auto freeSeats{kSlots | std::views::take(_match.seats) | std::views::filter(isFree)
+						 | std::ranges::to<std::vector>()};
 
-	return std::nullopt;
+	return _seatHistory.Choose(freeSeats, endpoint);
 }
 
 void Server::CleanupDeadSessions()

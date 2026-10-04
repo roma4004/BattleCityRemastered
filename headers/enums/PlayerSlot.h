@@ -21,6 +21,14 @@ inline constexpr std::size_t kSeatCount{kSlots.size()};
 //NOTE: unless the host says otherwise
 inline constexpr std::size_t kDefaultSeats{2u};
 
+//NOTE: who drives a seat of a network match - an empty one waits for a player to join
+enum class SeatHolder : char8_t
+{
+	Empty,
+	Player,
+	Bot
+};
+
 [[nodiscard]] constexpr std::size_t SeatIndex(const PlayerSlot slot) noexcept { return static_cast<std::size_t>(slot); }
 
 //NOTE: the devices pair up - Tab swaps the first two seats, Shift+Tab the other two

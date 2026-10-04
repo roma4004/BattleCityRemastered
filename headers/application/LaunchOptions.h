@@ -33,4 +33,8 @@ struct LaunchOptions final
 	std::optional<std::string> mapName{};
 	//NOTE: server only - how many enemies the field holds at once
 	std::optional<std::size_t> enemiesAtOnce{};
+	//NOTE: server only - how many of the seats nobody took bots fill
+	std::optional<std::size_t> bots{};
+	//NOTE: server only - start with whoever is in instead of waiting for every seat
+	std::optional<bool> isStartingAtOnce{};
 };

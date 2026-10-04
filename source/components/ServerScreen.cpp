@@ -204,10 +204,12 @@ std::vector<network::FoundServer> FakeServers()
 }
 }//namespace
 
-ServerScreen::ServerScreen(const std::shared_ptr<EventSystem>& events, const network::ServerAddress& address)
+ServerScreen::ServerScreen(const std::shared_ptr<EventSystem>& events, const network::ServerAddress& address,
+						   std::optional<std::string> lastHost)
 	: _events{events}
 	, _offeredIPv4{address}
 	, _offeredIPv6{.host = network::LocalIPv6Address(), .port = address.port}
+	, _lastHost{std::move(lastHost)}
 {
 	//NOTE: the IPv6 row offers this machine's own address, unless the given one is an IPv6 and takes it
 	_ipv6.Fill(_offeredIPv6, false);
@@ -238,7 +240,7 @@ void ServerScreen::Open(const GameMode mode)
 		_scan = std::make_unique<network::DiscoveryScan>(network::LocalAddress());
 	}
 
-	OfferLocalAddresses();
+	OfferAddresses();
 	//NOTE: the caret starts at the address, only a paste puts it on the port
 	_ipv4.CaretToStart();
 	_ipv6.CaretToStart();
@@ -522,7 +524,7 @@ void ServerScreen::Choose(const network::ServerAddress& address)
 bool ServerScreen::IsTurnable(const Line line) noexcept
 {
 	return line == Line::ServersHeader || line == Line::Rules || line == Line::Seats || line == Line::Map
-		   || line == Line::Enemies;
+		   || line == Line::Enemies || line == Line::Bots || line == Line::Start;
 }
 
 //NOTE: round and round, the way the list is stepped through
@@ -542,6 +544,7 @@ void ServerScreen::Change(const bool isForward)
 		const std::size_t choices{kSeatCount - kMinNetworkSeats + 1u};
 		const std::size_t at{static_cast<std::size_t>(_match.seats - kMinNetworkSeats)};
 		_match.seats = static_cast<std::uint8_t>(kMinNetworkSeats + Turned(at, choices, isForward));
+		_match.bots = std::min(_match.bots, MaxBots(_match.seats));
 	}
 	else if (_focus.line == Line::Map && !_maps.empty())
 	{
@@ -552,6 +555,14 @@ void ServerScreen::Change(const bool isForward)
 	{
 		const std::size_t at{static_cast<std::size_t>(_match.enemiesAtOnce - 1u)};
 		_match.enemiesAtOnce = static_cast<std::uint8_t>(1u + Turned(at, kMaxEnemiesAtOnce, isForward));
+	}
+	else if (_focus.line == Line::Bots)
+	{
+		_match.bots = static_cast<std::uint8_t>(Turned(_match.bots, MaxBots(_match.seats) + 1u, isForward));
+	}
+	else if (_focus.line == Line::Start)
+	{
+		_match.isStartingAtOnce = !_match.isStartingAtOnce;
 	}
 }
 
@@ -656,6 +667,8 @@ std::vector<ServerScreen::Item> ServerScreen::Lines() const
 		lines.push_back(Item{.line = Line::Seats});
 		lines.push_back(Item{.line = Line::Map});
 		lines.push_back(Item{.line = Line::Enemies});
+		lines.push_back(Item{.line = Line::Bots});
+		lines.push_back(Item{.line = Line::Start});
 		lines.push_back(Item{.line = Line::Gap});
 	}
 
@@ -687,6 +700,8 @@ bool ServerScreen::IsPickable(const Item& item) const
 		case Line::Rules:
 		case Line::Seats:
 		case Line::Map:
+		case Line::Bots:
+		case Line::Start:
 		case Line::Refresh:
 		case Line::IPv4:
 		case Line::ConfirmIPv4:
@@ -779,8 +794,9 @@ void ServerScreen::Fill(const network::ServerAddress& address, const bool isBrac
 	FocusedField()->Fill(address, isBracketed);
 }
 
-//NOTE: the network may have changed since the rows were given their addresses
-void ServerScreen::OfferLocalAddresses()
+//NOTE: the network may have changed since the rows were given their addresses. A client is offered the host it
+//joined last, in the row of its family; a server listens only on this machine, so it is offered that
+void ServerScreen::OfferAddresses()
 {
 	const auto offer = [](AddressField& field, network::ServerAddress& offered, std::string host)
 	{
@@ -792,8 +808,14 @@ void ServerScreen::OfferLocalAddresses()
 		offered.host = std::move(host);
 		field.Fill(offered, false);
 	};
-	offer(_ipv4, _offeredIPv4, network::LocalAddress());
-	offer(_ipv6, _offeredIPv6, network::LocalIPv6Address());
+	const auto lastHostOr = [this](const bool isIPv6, std::string local)
+	{
+		const bool isOffered{!IsHosting() && _lastHost && _lastHost->contains(':') == isIPv6};
+
+		return isOffered ? *_lastHost : std::move(local);
+	};
+	offer(_ipv4, _offeredIPv4, lastHostOr(false, network::LocalAddress()));
+	offer(_ipv6, _offeredIPv6, lastHostOr(true, network::LocalIPv6Address()));
 }
 
 void ServerScreen::Type(const char symbol)
@@ -846,6 +868,10 @@ UiRow ServerScreen::LineRow(const Item& item) const
 		case Line::Enemies:
 			return IsPickable(item) ? SettingRow("ENEMIES", std::to_string(_match.enemiesAtOnce), true)
 									: SettingRow("ENEMIES", std::to_string(kFreeForAllBots), false);
+		case Line::Bots:
+			return SettingRow("BOTS", std::to_string(_match.bots), true);
+		case Line::Start:
+			return SettingRow("START", _match.isStartingAtOnce ? "AT ONCE" : "WHEN FULL", true);
 		case Line::Error:
 			break;
 	}

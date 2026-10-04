@@ -22,5 +22,7 @@ MatchSettings GameConfig::HostedMatch() const
 	return MatchSettings{.rules = networkRules,
 						 .seats = static_cast<std::uint8_t>(networkSeats),
 						 .map = std::filesystem::path{mapPath}.stem().string(),
-						 .enemiesAtOnce = static_cast<std::uint8_t>(simultaneousEnemies)};
+						 .enemiesAtOnce = static_cast<std::uint8_t>(simultaneousEnemies),
+						 .bots = static_cast<std::uint8_t>(networkBots),
+						 .isStartingAtOnce = isStartingAtOnce};
 }

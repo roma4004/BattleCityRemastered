@@ -428,6 +428,25 @@ TEST(ServerCommandLineTest, TheEnemiesAtOnceAreTakenFromOneToFour)
 	}
 }
 
+// the bots for the seats nobody took, none to three - one seat is always a player's
+TEST(ServerCommandLineTest, TheBotsAreTakenFromNoneToThree)
+{
+	EXPECT_EQ(ParseServerRaw({"--bots=0"}).value_or(LaunchOptions{}).bots, 0u);
+	EXPECT_EQ(ParseServerRaw({"--bots=3"}).value_or(LaunchOptions{}).bots, 3u);
+	for (const char* arg: {"--bots=4", "--bots=-1", "--bots=x", "--bots="})
+	{
+		EXPECT_FALSE(ParseServerRaw({arg}).has_value()) << arg;
+	}
+}
+
+// and whether the match waits for every seat or starts with whoever is in
+TEST(ServerCommandLineTest, TheStartIsTaken)
+{
+	EXPECT_EQ(ParseServerRaw({"--start=now"}).value_or(LaunchOptions{}).isStartingAtOnce, true);
+	EXPECT_EQ(ParseServerRaw({"--start=full"}).value_or(LaunchOptions{}).isStartingAtOnce, false);
+	EXPECT_FALSE(ParseServerRaw({"--start=later"}).has_value());
+}
+
 // one to four seats only
 TEST(ServerCommandLineTest, ASeatCountOutsideOneToFourIsRefused)
 {

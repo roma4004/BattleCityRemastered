@@ -26,6 +26,13 @@ struct PauseStatusEvent
 	bool isPaused;
 };
 
+//NOTE: a client joining a running match is catching up, or a player left it and the rest have not said what
+//to do - the match stands still whatever the players ask for
+struct MatchHoldChangedEvent
+{
+	bool isHeld;
+};
+
 struct PauseRequestedEvent
 {
 	bool isPaused;

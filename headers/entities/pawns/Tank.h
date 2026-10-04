@@ -60,6 +60,9 @@ class Tank final : public Pawn
 	void ShoveAhead(Direction dir, double step);
 	void ApplyFreshLoadout();
 
+	//NOTE: a seat changing hands in a running match - the hull keeps its health and its tier, only the driver changes
+	void Handover(TankType type, std::unique_ptr<IInputProvider> driver);
+
 	void SubscribeAsClient() override;
 	void SubscribeBonus();
 	void OnBonusTimerReApplyOnSpawn(const BonusTimerReApplyOnSpawnEvent& event);

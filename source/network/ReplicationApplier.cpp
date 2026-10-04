@@ -191,7 +191,13 @@ void ReplicationApplier::Emit(const WorldSnapshot& command) const
 	}
 
 	_events->EmitEvent(WorldSnapshotReceivedEvent{.snapshot = command});
+	_events->EmitEvent(AbsenceChangedEvent{.seats = command.absence});
 	_events->EmitEvent(SetPauseEvent{.isPaused = command.phase == GameState::Paused});
+}
+
+void ReplicationApplier::Emit(const AbsenceChange& command) const
+{
+	_events->EmitEvent(AbsenceChangedEvent{.seats = command.seats});
 }
 
 void ReplicationApplier::Emit(const BonusStatus& command) const

@@ -1,9 +1,11 @@
 #pragma once
 
 #include "components/EventSystem.h"
+#include "enums/PlayerSlot.h"
 #include "geometry/ObjRectangle.h"
 #include "utils/Timer.h"
 #include "utils/Uuid.h"
+#include <bitset>
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
@@ -18,7 +20,6 @@ enum class Faction : char8_t;
 enum class TankModel : char8_t;
 enum class TankType : char8_t;
 enum class GameMode : char8_t;
-enum class PlayerSlot : std::uint8_t;
 struct PawnProperty;
 struct BonusEffectProperty;
 struct EnemyLineupLoadedEvent;
@@ -26,6 +27,8 @@ struct GameResetEvent;
 struct NextLevelRequestedEvent;
 struct PostTickUpdateEvent;
 struct RespawnTankEvent;
+struct SeatsFilledEvent;
+struct SeatHolderChangedEvent;
 struct SpawnAnimationFinishedEvent;
 struct TankRespawnedEvent;
 struct TankSpawnCompletedEvent;
@@ -81,6 +84,8 @@ class TankSpawner final
 	//NOTE: the models of the map's first enemies and how far down them the enemies have come - past, they are rolled
 	std::vector<TankModel> _enemyLineup{};
 	std::size_t _enemiesChosen{};
+	//NOTE: the seats a network match gave to bots - a player joining takes one over
+	std::bitset<kSeatCount> _botSeats{};
 
 	void Subscribe();
 	void OnRespawnTank(const RespawnTankEvent& event);
@@ -94,6 +99,8 @@ class TankSpawner final
 	void OnTankDied(const TankDiedEvent& event);
 	void OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const;
 	void OnWorldSnapshotReceived(const WorldSnapshotReceivedEvent& event);
+	void OnSeatsFilled(const SeatsFilledEvent& event);
+	void OnSeatHolderChanged(const SeatHolderChangedEvent& event);
 
 	void Reset(const GameResetEvent& event);
 
@@ -134,6 +141,7 @@ class TankSpawner final
 	void RespawnEnemyTanks(TankType type, Uuid uuid, std::optional<ObjRectangle> rect = std::nullopt,
 						   std::optional<TankModel> model = std::nullopt);
 	[[nodiscard]] std::optional<ObjRectangle> GetPlayerRandomPosX(PlayerSlot slot) const;
+	[[nodiscard]] bool IsBotSeat(PlayerSlot slot) const;
 	void RespawnPlayerTeam(TankType type, Uuid uuid, std::optional<ObjRectangle> rect = std::nullopt);
 	void RespawnTank(TankType type, Uuid uuid, std::optional<ObjRectangle> rect = std::nullopt,
 					 std::optional<TankModel> model = std::nullopt);

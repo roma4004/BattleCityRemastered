@@ -99,6 +99,9 @@
     <ClCompile Include="..\source\application\GameConfig.cpp">
       <Filter>source\application</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\application\PauseSwitch.cpp">
+      <Filter>source\application</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\application\ProjectConfig.cpp">
       <Filter>source\application</Filter>
     </ClCompile>
@@ -288,6 +291,9 @@
     <ClCompile Include="..\source\network\ReplicationPublisher.cpp">
       <Filter>source\network</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\network\SeatHistory.cpp">
+      <Filter>source\network</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\network\Serializer.cpp">
       <Filter>source\network</Filter>
     </ClCompile>
@@ -336,6 +342,9 @@
       <Filter>headers\application</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\application\LaunchOptions.h">
+      <Filter>headers\application</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\application\PauseSwitch.h">
       <Filter>headers\application</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\application\ProjectConfig.h">
@@ -587,6 +596,9 @@
     <ClInclude Include="..\headers\entities\TankModelSpec.h">
       <Filter>headers\entities</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\enums\Absence.h">
+      <Filter>headers\enums</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\enums\AnimationType.h">
       <Filter>headers\enums</Filter>
     </ClInclude>
@@ -698,6 +710,9 @@
     <ClInclude Include="..\headers\network\ClientNode.h">
       <Filter>headers\network</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\network\commands\AbsenceChange.h">
+      <Filter>headers\network\commands</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\network\commands\AnyCommand.h">
       <Filter>headers\network\commands</Filter>
     </ClInclude>
@@ -798,6 +813,9 @@
       <Filter>headers\network</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\ReplicationPublisher.h">
+      <Filter>headers\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\SeatHistory.h">
       <Filter>headers\network</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\Serializer.h">

@@ -23,9 +23,11 @@ port_file=server-port.txt
 rm -f "$port_file"
 # the match the server starts: --seats 1 to 4, --rules classic or ffa, --map a file in Resources/Maps
 # without .map, --enemies at once 1 to 4 in classic only; BattleCityServer --help lists every option
+# --bots fill the seats nobody took, up to one fewer than the seats; --start=now starts with
+# whoever is in, full waits for every seat, and a player joining later takes over a bot
 # stdin from /dev/null - its console reader would get a background job stopped by the terminal
 ./BattleCityServer $address --port="$port" --port-file="$port_file" \
-	--seats=2 --rules=classic --map=level1 --enemies=4 < /dev/null &
+	--seats=2 --rules=classic --map=level1 --enemies=4 --bots=0 --start=full < /dev/null &
 server_pid=$!
 # nothing owns the server here the way the game does, so take it down with this script
 trap 'kill "$server_pid" 2>/dev/null' EXIT INT TERM

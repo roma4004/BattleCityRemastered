@@ -11,6 +11,7 @@
 #include "components/events/StatisticsEvents.h"
 #include "components/events/TimingEvents.h"
 #include "components/WorldSnapshot.h"
+#include "enums/Absence.h"
 #include "enums/MatchRules.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
@@ -141,6 +142,41 @@ protected:
 
 			return true;
 		}, kRebindTimeout);
+	}
+
+	//NOTE: a bare link on one socket - a ClientNode would open a socket of its own for every connection
+	[[nodiscard]] std::optional<PlayerSlot> Dial(boost::asio::ip::udp::socket& socket,
+												 const std::uint32_t connectionId) const
+	{
+		network::DatagramLink link{connectionId, network::DatagramLink::Clock::now()};
+		std::optional<PlayerSlot> seat{};
+		std::ignore = PumpUntil([&link, &socket, &seat]
+		{
+			const auto now{network::DatagramLink::Clock::now()};
+			for (const std::string& datagram: link.TakeDatagrams(now))
+			{
+				socket.send(boost::asio::buffer(datagram));
+			}
+
+			std::array<char, network::DatagramLink::kMaxDatagramSize> buffer{};
+			boost::system::error_code ec;
+			const std::size_t size{socket.receive(boost::asio::buffer(buffer), 0, ec)};
+			const auto arrivals{ec ? std::nullopt : link.Receive(std::string_view{buffer.data(), size}, now)};
+			for (const std::string& message: arrivals ? arrivals->messages : std::vector<std::string>{})
+			{
+				for (const auto& command: network::Deserialize(message)->commands)
+				{
+					if (const auto* assignment{std::get_if<network::commands::SlotAssignment>(&command)})
+					{
+						seat = assignment->slot;
+					}
+				}
+			}
+
+			return seat.has_value();
+		});
+
+		return seat;
 	}
 
 	static constexpr auto kWaitTimeout{5s};
@@ -769,7 +805,12 @@ TEST_F(NetworkTest, AThreeSeatServerSeatsAThirdClientAndTellsItTheMatch)
 	const EventSubscription thirdSub{_thirdClientEvents->AddListener(
 			[&third](const PlayerSlotAssignedEvent& e) { third = e; })};
 
-	const MatchSettings match{.rules = MatchRules::FreeForAll, .seats = 3u, .map = "level2", .enemiesAtOnce = 1u};
+	const MatchSettings match{.rules = MatchRules::FreeForAll,
+							  .seats = 3u,
+							  .map = "level2",
+							  .enemiesAtOnce = 1u,
+							  .bots = 2u,
+							  .isStartingAtOnce = true};
 	const auto server{std::make_unique<network::commands::ServerNode>(network::ServerAddress{.port = 0},
 																	  _serverEvents, match)};
 	const uint16_t port{server->GetBoundPort()};
@@ -938,46 +979,12 @@ TEST_F(NetworkTest, AClientDialingAgainFromTheSameAddressTakesItsSeatBack)
 	socket.connect({boost::asio::ip::make_address("127.0.0.1"), server->GetBoundPort()});
 	socket.non_blocking(true);
 
-	//NOTE: a bare link on one socket - a ClientNode would open a socket of its own for every connection
-	const auto dial = [this, &socket](const std::uint32_t connectionId)
-	{
-		network::DatagramLink link{connectionId, network::DatagramLink::Clock::now()};
-		std::optional<PlayerSlot> seat{};
-		std::ignore = PumpUntil([&link, &socket, &seat]
-		{
-			const auto now{network::DatagramLink::Clock::now()};
-			for (const std::string& datagram: link.TakeDatagrams(now))
-			{
-				socket.send(boost::asio::buffer(datagram));
-			}
-
-			std::array<char, network::DatagramLink::kMaxDatagramSize> buffer{};
-			boost::system::error_code ec;
-			const std::size_t size{socket.receive(boost::asio::buffer(buffer), 0, ec)};
-			const auto arrivals{ec ? std::nullopt : link.Receive(std::string_view{buffer.data(), size}, now)};
-			for (const std::string& message: arrivals ? arrivals->messages : std::vector<std::string>{})
-			{
-				for (const auto& command: network::Deserialize(message)->commands)
-				{
-					if (const auto* assignment{std::get_if<network::commands::SlotAssignment>(&command)})
-					{
-						seat = assignment->slot;
-					}
-				}
-			}
-
-			return seat.has_value();
-		});
-
-		return seat;
-	};
-
-	ASSERT_EQ(dial(1u), PlayerSlot::P1);
+	ASSERT_EQ(Dial(socket, 1u), PlayerSlot::P1);
 	const auto secondClient{std::make_unique<network::commands::ClientNode>(
 			network::ServerAddress{.port = server->GetBoundPort()}, _secondClientEvents)};
 	ASSERT_TRUE(PumpUntil([&secondSeat] { return secondSeat.has_value(); }));
 
-	EXPECT_EQ(dial(2u), PlayerSlot::P1) << "the new connection was refused a seat its own old one held";
+	EXPECT_EQ(Dial(socket, 2u), PlayerSlot::P1) << "the new connection was refused a seat its own old one held";
 	ASSERT_TRUE(PumpUntil([&lost] { return lost.has_value(); })) << "the replaced connection was never let go";
 	EXPECT_EQ(*lost, PlayerSlot::P1);
 }
@@ -1114,4 +1121,158 @@ TEST_F(NetworkTest, ATurnedAwayHelloIsNoConnection)
 	EXPECT_EQ(DisconnectReason::ServerFull, *refusal);
 	EXPECT_EQ(0, linksUp) << "a turned-away client told its own side the link was up";
 	EXPECT_FALSE(client->IsConnected()) << "a turned-away client counts itself seated";
+}
+
+// a client is announced as it gets its seat, before it is ready - a match starting at once waits for it
+TEST_F(NetworkTest, TheServerSaysAClientSatDownBeforeItIsReady)
+{
+	std::optional<PlayerSlot> seated{};
+	const EventSubscription seatedSub{_serverEvents->AddListener([&seated](const ServerClientSeatedEvent& event)
+	{
+		seated = event.slot;
+	})};
+
+	const auto server{MakeServer()};
+	const auto client{MakeClient(server->GetBoundPort())};
+
+	ASSERT_TRUE(PumpUntil([&seated] { return seated.has_value(); })) << "the server never said the client sat down";
+	EXPECT_EQ(*seated, PlayerSlot::P1);
+}
+
+// a client answers the field it was sent - the server holds a joined match until it does
+TEST_F(NetworkTest, AClientAnswersTheFieldOnceItHasIt)
+{
+	std::optional<PlayerSlot> synced{};
+	std::vector<EventSubscription> subs{};
+	subs.push_back(_serverEvents->AddListener([](const WorldSnapshotRequestedEvent& event)
+	{
+		event.snapshot.phase = GameState::Playing;
+	}));
+	subs.push_back(_serverEvents->AddListener([&synced](const ServerClientSyncedEvent& event)
+	{
+		synced = event.slot;
+	}));
+	subs.push_back(AnnounceReadyOnConnect());
+
+	const auto server{MakeServer()};
+	const auto client{MakeClient(server->GetBoundPort())};
+
+	ASSERT_TRUE(PumpUntil([&synced] { return synced.has_value(); })) << "the client never said the field reached it";
+	EXPECT_EQ(*synced, PlayerSlot::P1);
+}
+
+// a seat changing hands sends every client the field, not only the one who sat down
+TEST_F(NetworkTest, ASeatTakenInARunningMatchSendsEveryoneTheField)
+{
+	std::optional<PlayerSlot> firstSeat{};
+	std::optional<PlayerSlot> secondSeat{};
+	bool isFirstSent{};
+	bool isSecondSent{};
+	std::vector<EventSubscription> subs{};
+	subs.push_back(_serverEvents->AddListener([](const WorldSnapshotRequestedEvent& event)
+	{
+		event.snapshot.phase = GameState::Playing;
+	}));
+	subs.push_back(_clientEvents->AddListener([&firstSeat](const PlayerSlotAssignedEvent& e) { firstSeat = e.slot; }));
+	subs.push_back(_secondClientEvents->AddListener(
+			[&secondSeat](const PlayerSlotAssignedEvent& e) { secondSeat = e.slot; }));
+	subs.push_back(_clientEvents->AddListener([&isFirstSent](const WorldSnapshotReceivedEvent&)
+	{
+		isFirstSent = true;
+	}));
+	subs.push_back(_secondClientEvents->AddListener(
+			[&isSecondSent](const WorldSnapshotReceivedEvent&) { isSecondSent = true; }));
+
+	const auto server{MakeServer()};
+	const uint16_t port{server->GetBoundPort()};
+	const auto client{MakeClient(port)};
+	const auto secondClient{std::make_unique<network::commands::ClientNode>(network::ServerAddress{.port = port},
+																			_secondClientEvents)};
+	ASSERT_TRUE(PumpUntil([&firstSeat, &secondSeat] { return firstSeat && secondSeat; }));
+	ASSERT_FALSE(isFirstSent || isSecondSent) << "the control failed - nobody readied, nobody is owed the field";
+
+	_serverEvents->EmitEvent(SeatHolderChangedEvent{.slot = PlayerSlot::P2, .from = SeatHolder::Bot});
+
+	EXPECT_TRUE(PumpUntil([&isFirstSent, &isSecondSent] { return isFirstSent && isSecondSent; }));
+}
+
+//NOTE: the next level is played on a map the launch never named - a client joining then is told the one it is on
+TEST_F(NetworkTest, AClientSeatedAfterTheMapChangedIsToldTheNewOne)
+{
+	std::optional<PlayerSlotAssignedEvent> assigned{};
+	const EventSubscription assignedSub{_clientEvents->AddListener(
+			[&assigned](const PlayerSlotAssignedEvent& e) { assigned = e; })};
+
+	const auto server{std::make_unique<network::commands::ServerNode>(network::ServerAddress{.port = 0},
+																	  _serverEvents, MatchSettings{.map = "level1"})};
+	_serverEvents->EmitEvent(MapLoadedEvent{.cols = 52u, .rows = 52u, .stage = 2u, .name = "level2"});
+	const auto client{MakeClient(server->GetBoundPort())};
+
+	ASSERT_TRUE(PumpUntil([&assigned] { return assigned.has_value(); })) << "the client was told no seat";
+	EXPECT_EQ(assigned->match.map, "level2");
+}
+
+// who left goes out to the clients like a phase does - the panel is drawn from it
+TEST_F(NetworkTest, TheClientsAreToldWhoLeft)
+{
+	const auto server{MakeServer()};
+	const auto client{MakeClient(server->GetBoundPort())};
+	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
+
+	std::optional<AbsenceChangedEvent> told{};
+	const EventSubscription toldSub{_clientEvents->AddListener([&told](const AbsenceChangedEvent& event)
+	{
+		told = event;
+	})};
+	constexpr std::array sent{Absence::None, Absence::Left, Absence::None, Absence::Back};
+	_serverEvents->EmitEvent(AbsenceChangedEvent{.seats = sent});
+
+	ASSERT_TRUE(PumpUntil([&told] { return told.has_value(); }));
+	EXPECT_EQ(told->seats, sent);
+}
+
+// and each answer reaches the server as the one it was
+TEST_F(NetworkTest, EveryAnswerAboutWhoLeftReachesTheServer)
+{
+	const auto server{MakeServer()};
+	const auto client{MakeClient(server->GetBoundPort())};
+	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
+
+	std::vector<AbsenceChoice> heard{};
+	const EventSubscription heardSub{_serverEvents->AddListener([&heard](const AbsenceChosenEvent& event)
+	{
+		heard.push_back(event.choice);
+	})};
+	const std::vector sent{AbsenceChoice::Continue, AbsenceChoice::Bot};
+	for (const AbsenceChoice choice: sent)
+	{
+		_clientEvents->EmitEvent(AbsenceChosenEvent{.choice = choice});
+	}
+
+	ASSERT_TRUE(PumpUntil([&heard, &sent] { return heard.size() == sent.size(); }));
+	EXPECT_EQ(heard, sent);
+}
+
+// a client dialling back gets the seat it held, not the first free one - the one who left comes back to its own tank
+TEST_F(NetworkTest, AClientDialingAgainGetsItsOwnSeatOverAnEarlierFreeOne)
+{
+	bool isGoodbyeHeard{};
+	const EventSubscription goodbyeSub{_serverEvents->AddListener([&isGoodbyeHeard](const ServerInDisconnectEvent&)
+	{
+		isGoodbyeHeard = true;
+	})};
+
+	const auto server{MakeServer()};
+	auto client{MakeClient(server->GetBoundPort())};
+	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
+	boost::asio::io_context ioContext;
+	boost::asio::ip::udp::socket socket{ioContext, boost::asio::ip::udp::v4()};
+	socket.connect({boost::asio::ip::make_address("127.0.0.1"), server->GetBoundPort()});
+	socket.non_blocking(true);
+	ASSERT_EQ(Dial(socket, 1u), PlayerSlot::P2);
+
+	client.reset();
+	ASSERT_TRUE(PumpUntil([&isGoodbyeHeard] { return isGoodbyeHeard; })) << "the first seat was never let go";
+
+	EXPECT_EQ(Dial(socket, 2u), PlayerSlot::P2) << "the client came back to the first free seat, not its own";
 }

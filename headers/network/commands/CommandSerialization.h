@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AbsenceChange.h"
 #include "BonusSpawn.h"
 #include "BonusSpawnComplete.h"
 #include "BonusStatus.h"
@@ -36,6 +37,12 @@ namespace ser20
 {
 //NOTE: every command in one place, so a command header stays plain data and ser20 reaches only
 //this file and the Serializer.
+
+template<class Archive>
+void serialize(Archive& ar, network::commands::AbsenceChange& cmd, const unsigned int /*version*/)
+{
+	ar & cmd.seats;
+}
 
 template<class Archive>
 void serialize(Archive& ar, network::commands::BonusSpawn& cmd, const unsigned int /*version*/)
@@ -125,6 +132,8 @@ void serialize(Archive& ar, MatchSettings& match, const unsigned int /*version*/
 	ar & match.seats;
 	ar & match.map;
 	ar & match.enemiesAtOnce;
+	ar & match.bots;
+	ar & match.isStartingAtOnce;
 }
 
 template<class Archive>
@@ -279,6 +288,7 @@ void serialize(Archive& ar, MapLoadedEvent& map, const unsigned int /*version*/)
 	ar & map.cols;
 	ar & map.rows;
 	ar & map.stage;
+	ar & map.name;
 }
 
 template<class Archive>
@@ -294,6 +304,7 @@ void serialize(Archive& ar, WorldSnapshot& snapshot, const unsigned int /*versio
 	ar & snapshot.bonusSpawns;
 	ar & snapshot.respawnCounts;
 	ar & snapshot.statistics;
+	ar & snapshot.absence;
 }
 
 template<class Archive>

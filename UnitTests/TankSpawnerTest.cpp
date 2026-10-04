@@ -14,6 +14,7 @@
 #include "components/events/SpawnEvents.h"
 #include "components/events/TimingEvents.h"
 #include "components/TankSpawner.h"
+#include "components/WorldSnapshot.h"
 #include "components/managers/RespawnManager.h"
 #include "entities/BaseObj.h"
 #include "enums/Author.h"
@@ -22,6 +23,7 @@
 #include "enums/GameMode.h"
 #include "enums/InputChannel.h"
 #include "enums/MatchRules.h"
+#include "enums/PlayerSlot.h"
 #include "enums/TankModel.h"
 #include "enums/TankType.h"
 #include "utils/ColliderUtils.h"
@@ -607,4 +609,150 @@ TEST_F(TankSpawnerTest, TwoPlayersFreeForAllStartsWithTwoPlayersAndTwoBots)
 	_events->EmitEvent(RespawnTanksEvent{});
 
 	EXPECT_EQ(_allObjects.size(), 4u);
+}
+
+// a seat the match gave to a bot gets a coop tank, and the clients are told it is one
+TEST_F(TankSpawnerTest, AHostSeatsABotWhereTheMatchSaysAndTellsTheClients)
+{
+	std::vector<TankType> told{};
+	const EventSubscription toldSub{_events->AddListener([&told](const TankRespawnedEvent& event)
+	{
+		if (SlotOf(event.type))
+		{
+			told.push_back(event.type);
+		}
+	})};
+	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
+	_events->EmitEvent(SeatsFilledEvent{
+			.holders = {SeatHolder::Player, SeatHolder::Bot, SeatHolder::Empty, SeatHolder::Empty}});
+	_events->EmitEvent(GameResetEvent{});
+
+	_events->EmitEvent(RespawnTanksEvent{});
+
+	EXPECT_EQ(told, (std::vector{TankType::PLAYER1, TankType::COOP2}));
+}
+
+// the player who takes a bot's seat drives on the tank the bot left, where it stands
+TEST_F(TankSpawnerTest, APlayerTakingOverABotDrivesItsTankWhereItStands)
+{
+	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
+	_events->EmitEvent(SeatsFilledEvent{
+			.holders = {SeatHolder::Player, SeatHolder::Bot, SeatHolder::Empty, SeatHolder::Empty}});
+	_events->EmitEvent(GameResetEvent{});
+	_events->EmitEvent(RespawnTankEvent{.type = TankType::PLAYER2, .uuid = UuidUtils::GetRandomUuid()});
+	ASSERT_EQ(_allObjects.size(), 1u);
+	const std::shared_ptr<BaseObj> tank{_allObjects.front()};
+	const Uuid uuid{tank->GetUuid()};
+
+	_events->EmitEvent(SeatHolderChangedEvent{.slot = PlayerSlot::P2, .from = SeatHolder::Bot});
+	const FPoint standing{tank->GetPos()};
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = 1.0 / 60.0});
+	ASSERT_EQ(standing, tank->GetPos()) << "the bot still drives the seat it gave up";
+
+	_events->EmitEvent(Key(InputChannel::RemoteP2), MoveUpEvent{.isPressed = true});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = 1.0 / 60.0});
+	EXPECT_NE(standing, tank->GetPos()) << "the newcomer's keys do not reach the tank";
+	EXPECT_EQ(uuid, tank->GetUuid());
+
+	WorldSnapshot field{};
+	_events->EmitEvent(WorldSnapshotRequestedEvent{.snapshot = field});
+	ASSERT_EQ(field.tanks.size(), 1u);
+	EXPECT_EQ(field.tanks.front().type, TankType::PLAYER2) << "the newcomer would be sent the seat as a bot's";
+}
+
+// the player who carried a tier left between the levels - whoever takes the seat afterwards starts afresh
+TEST_F(TankSpawnerTest, ATierCarriedForASeatThatWentToABotIsNotHandedOn)
+{
+	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
+	_events->EmitEvent(SeatsFilledEvent{
+			.holders = {SeatHolder::Player, SeatHolder::Player, SeatHolder::Empty, SeatHolder::Empty}});
+	_events->EmitEvent(GameResetEvent{});
+	_events->EmitEvent(RespawnTankEvent{.type = TankType::PLAYER2, .uuid = UuidUtils::GetRandomUuid()});
+	_events->EmitEvent(Key(Author::Player2), BonusStarPickupEvent{});
+	ASSERT_EQ(_allObjects.size(), 1u);
+	ASSERT_EQ(std::dynamic_pointer_cast<Tank>(_allObjects.front())->GetTier(), 2u);
+	_events->EmitEvent(NextLevelRequestedEvent{});
+
+	_events->EmitEvent(SeatsFilledEvent{
+			.holders = {SeatHolder::Player, SeatHolder::Bot, SeatHolder::Empty, SeatHolder::Empty}});
+	_events->EmitEvent(GameResetEvent{.keepsPlayerProgress = true});
+	_allObjects.clear();
+	_events->EmitEvent(SeatHolderChangedEvent{.slot = PlayerSlot::P2, .from = SeatHolder::Bot});
+	_events->EmitEvent(RespawnTankEvent{.type = TankType::PLAYER2, .uuid = UuidUtils::GetRandomUuid()});
+
+	ASSERT_EQ(_allObjects.size(), 1u);
+	EXPECT_EQ(std::dynamic_pointer_cast<Tank>(_allObjects.front())->GetTier(), 1u)
+			<< "the newcomer drove off on the tier of the player who left";
+}
+
+// a bot taking over from a player who left drives the tank left standing, and the seat's next tank is a bot's
+TEST_F(TankSpawnerTest, ABotTakingOverFromAPlayerWhoLeftDrivesItsTank)
+{
+	std::vector<TankType> told{};
+	const EventSubscription toldSub{_events->AddListener([&told](const TankRespawnedEvent& event)
+	{
+		told.push_back(event.type);
+	})};
+	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
+	_events->EmitEvent(SeatsFilledEvent{
+			.holders = {SeatHolder::Player, SeatHolder::Player, SeatHolder::Empty, SeatHolder::Empty}});
+	_events->EmitEvent(GameResetEvent{});
+	_events->EmitEvent(RespawnTankEvent{.type = TankType::PLAYER2, .uuid = UuidUtils::GetRandomUuid()});
+	ASSERT_EQ(_allObjects.size(), 1u);
+	const auto tank{std::dynamic_pointer_cast<Tank>(_allObjects.front())};
+
+	_events->EmitEvent(SeatHolderChangedEvent{.slot = PlayerSlot::P2, .from = SeatHolder::Player,
+											  .to = SeatHolder::Bot});
+
+	WorldSnapshot field{};
+	_events->EmitEvent(WorldSnapshotRequestedEvent{.snapshot = field});
+	ASSERT_EQ(field.tanks.size(), 1u);
+	EXPECT_EQ(field.tanks.front().uuid, tank->GetUuid());
+	EXPECT_EQ(field.tanks.front().type, TankType::COOP2) << "the clients would be sent the seat as a player's";
+
+	told.clear();
+	_events->EmitEvent(RespawnTankEvent{.type = TankType::PLAYER2, .uuid = UuidUtils::GetRandomUuid()});
+	EXPECT_EQ(told, std::vector{TankType::COOP2}) << "the seat's next tank waits for a player who is not there";
+}
+
+// a seat given up to nobody takes its tank off the field - no death, so nobody scores it and nothing bursts
+TEST_F(TankSpawnerTest, ASeatGivenUpToNobodyTakesItsTankOffWithoutADeath)
+{
+	bool isDeathTold{};
+	const EventSubscription deathSub{_events->AddListener([&isDeathTold](const TankDiedEvent&)
+	{
+		isDeathTold = true;
+	})};
+	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
+	_events->EmitEvent(SeatsFilledEvent{
+			.holders = {SeatHolder::Player, SeatHolder::Player, SeatHolder::Empty, SeatHolder::Empty}});
+	_events->EmitEvent(GameResetEvent{});
+	_events->EmitEvent(RespawnTankEvent{.type = TankType::PLAYER2, .uuid = UuidUtils::GetRandomUuid()});
+	ASSERT_EQ(_allObjects.size(), 1u);
+	const std::shared_ptr<BaseObj> tank{_allObjects.front()};
+
+	_events->EmitEvent(SeatHolderChangedEvent{.slot = PlayerSlot::P2, .from = SeatHolder::Player,
+											  .to = SeatHolder::Empty});
+
+	EXPECT_FALSE(tank->GetIsAlive()) << "the tank of the one who left still stands";
+	EXPECT_FALSE(isDeathTold) << "taking the tank off was told as a death";
+}
+
+// nor does a tank of that seat still in its burst land afterwards
+TEST_F(TankSpawnerTest, ASeatGivenUpToNobodyNeverLandsTheTankItWasSpawning)
+{
+	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
+	_events->EmitEvent(SeatsFilledEvent{
+			.holders = {SeatHolder::Player, SeatHolder::Player, SeatHolder::Empty, SeatHolder::Empty}});
+	_events->EmitEvent(GameResetEvent{});
+	_instantSpawnAnimationSubs.clear();
+	const Uuid uuid{UuidUtils::GetRandomUuid()};
+	_events->EmitEvent(RespawnTankEvent{.type = TankType::PLAYER2, .uuid = uuid});
+	ASSERT_TRUE(_allObjects.empty()) << "the control failed - the tank landed with no burst to wait for";
+
+	_events->EmitEvent(SeatHolderChangedEvent{.slot = PlayerSlot::P2, .from = SeatHolder::Player,
+											  .to = SeatHolder::Empty});
+	_events->EmitEvent(SpawnAnimationFinishedEvent{.uuid = uuid});
+
+	EXPECT_TRUE(_allObjects.empty()) << "the seat given up landed a tank";
 }

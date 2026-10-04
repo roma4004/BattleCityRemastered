@@ -3,11 +3,13 @@
 #include "components/StatisticsData.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/SpawnEvents.h"
+#include "enums/Absence.h"
 #include "enums/Author.h"
 #include "enums/Delivery.h"
 #include "enums/Direction.h"
 #include "enums/GameState.h"
 #include "enums/ObstacleType.h"
+#include "enums/PlayerSlot.h"
 #include "enums/RespawnGroup.h"
 #include "enums/TankModel.h"
 #include "enums/TankType.h"
@@ -64,4 +66,6 @@ struct WorldSnapshot final
 	//NOTE: indexed by RespawnGroup
 	std::array<unsigned short, kRespawnGroupCount> respawnCounts{};
 	StatisticsData statistics{};
+	//NOTE: a newcomer to a held match is shown why it is held
+	std::array<Absence, kSeatCount> absence{};
 };

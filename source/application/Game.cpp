@@ -39,7 +39,7 @@ namespace
 constexpr auto kPublishedPortPollStep{std::chrono::milliseconds{250}};
 }//namespace
 
-Game::Game(GameConfig& gameConfig, const ProjectConfig& projectConfig, const WindowConfig& windowConfig,
+Game::Game(GameConfig& gameConfig, ProjectConfig& projectConfig, const WindowConfig& windowConfig,
 		   SDL_Config& sdlConfig, const LaunchOptions& launchOptions)
 	: _events{std::make_shared<EventSystem>()}
 	, _menu{std::make_unique<Menu>(_events, gameConfig)}
@@ -54,6 +54,7 @@ Game::Game(GameConfig& gameConfig, const ProjectConfig& projectConfig, const Win
 	, _lobbyScreen{std::make_unique<LobbyScreen>(_events, gameConfig)}
 	, _rightSideBar{std::make_unique<RightSideBar>(_events, gameConfig)}
 	, _gameConfig{gameConfig}
+	, _projectConfig{projectConfig}
 	, _selectedGameMode{GameMode::OnePlayer}
 	, _isAddressNamedByArguments{launchOptions.serverHost.has_value()}
 	, _isPortNamed{gameConfig.serverAddress.port != network::kAnyFreePort}
@@ -64,7 +65,9 @@ Game::Game(GameConfig& gameConfig, const ProjectConfig& projectConfig, const Win
 		_gameConfig.serverAddress.host = network::LocalAddress();
 	}
 
-	_serverScreen = std::make_unique<ServerScreen>(_events, _gameConfig.serverAddress);
+	_serverScreen = std::make_unique<ServerScreen>(
+			_events, _gameConfig.serverAddress,
+			network::ParseHost(projectConfig.LastConnectAddress()));
 
 	Subscribe();
 
@@ -261,6 +264,17 @@ void Game::OnConnectedToHost(const ClientConnectedToHostEvent&)
 {
 	_isDialingPublishedPort = false;
 	_portProbe.reset();
+
+	//NOTE: our own child's server is no host to come back to
+	if (_serverProcess)
+	{
+		return;
+	}
+
+	const std::string& host{_gameConfig.serverAddress.host};
+	_serverScreen->RememberHost(host);
+	_projectConfig.SetLastConnectAddress(host);
+	_projectConfig.Save();
 }
 
 void Game::OnSelectedGameModeChangedTo(const SelectedGameModeChangedToEvent& event) { _selectedGameMode = event.mode; }

@@ -25,6 +25,7 @@
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/BulletResetProperty.h"
 #include "entities/pawns/Tank.h"
+#include "enums/Absence.h"
 #include "enums/Author.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
@@ -42,8 +43,10 @@
 #include "utils/Uuid.h"
 #include "gtest/gtest.h"
 #include <algorithm>
+#include <array>
 #include <map>
 #include <memory>
+#include <optional>
 #include <variant>
 #include <vector>
 
@@ -359,4 +362,17 @@ TEST_F(WorldSnapshotTest, ASnapshotReplacesTheFieldTheClientHadInsteadOfAddingTo
 	Replicate();
 
 	EXPECT_TRUE(stale.expired()) << "the client kept a wall the host never had";
+}
+
+// a client joining a match held for a player who left is shown why it stands
+TEST_F(WorldSnapshotTest, ANewcomerToAHeldMatchIsShownWhoLeft)
+{
+	std::optional<AbsenceChangedEvent> shown{};
+	_subs.push_back(_clientEvents->AddListener([&shown](const AbsenceChangedEvent& event) { shown = event; }));
+	_serverEvents->EmitEvent(ServerClientLostEvent{.slot = PlayerSlot::P2});
+
+	Replicate();
+
+	ASSERT_TRUE(shown.has_value());
+	EXPECT_EQ(shown->seats, (std::array{Absence::None, Absence::Left, Absence::None, Absence::None}));
 }

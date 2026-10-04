@@ -45,6 +45,7 @@ set(GAME_CORE_SOURCES
         source/application/GameConfig.cpp
         source/application/WindowConfig.cpp
         source/application/ProjectConfig.cpp
+        source/application/PauseSwitch.cpp
         source/application/Simulation.cpp
         source/behavior/MoveLikeBulletBeh.cpp
         source/behavior/MoveLikeTankBeh.cpp
@@ -106,6 +107,7 @@ set(GAME_CORE_SOURCES
         source/network/ReplicationApplier.cpp
         source/network/ReplicationBindings.cpp
         source/network/ReplicationPublisher.cpp
+        source/network/SeatHistory.cpp
         source/network/Server.cpp
         source/network/Session.cpp
         source/network/ServerNode.cpp
@@ -163,6 +165,7 @@ set(UNIT_TESTS_SOURCES
         UnitTests/ScoreBoardTest.cpp
         UnitTests/StatisticsTestAdvanced.cpp
         UnitTests/SeatAssignmentTest.cpp
+        UnitTests/SeatHistoryTest.cpp
         UnitTests/SessionTest.cpp
         UnitTests/SimulationStepTest.cpp
         UnitTests/StatisticsTestBasic.cpp

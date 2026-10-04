@@ -34,9 +34,11 @@ ProjectConfig::ProjectConfig(std::filesystem::path filePath, const bool skipIni)
 	}
 }
 
-ProjectConfig::~ProjectConfig()
+ProjectConfig::~ProjectConfig() { Save(); }
+
+//NOTE: _loadError means an unparseable file is there, and saving would overwrite it with the defaults
+void ProjectConfig::Save() const
 {
-	//NOTE: _loadError means an unparseable file is there, and saving would overwrite it with the defaults
 	if (!_skipIniLoad && !_loadError)
 	{
 		SaveIni(_filePath);
@@ -89,6 +91,7 @@ void ProjectConfig::DefaultInitIni()
 
 		Set("Control.swap", false);
 		Set("Gamepad.deadZone", 8000);
+		Set("Network.LastConnectAddress", "");
 
 		Set("Fonts.BattleCity", "Resources/Fonts/PressStart2P-vaV7.ttf");
 		Set("Images.Logo", "Resources/Images/Title.png");

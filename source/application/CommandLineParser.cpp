@@ -263,6 +263,36 @@ std::expected<LaunchOptions, ArgError> CommandLineParser::ParseServer(const int 
 			continue;
 		}
 
+		if (arg.starts_with("--bots="))
+		{
+			const std::string_view value{arg.substr(std::string_view{"--bots="}.size())};
+			std::size_t bots{};
+			const auto* const last{value.data() + value.size()};
+			if (const auto [ptr, error] = std::from_chars(value.data(), last, bots);
+				error != std::errc{} || ptr != last || bots >= kSeatCount)
+			{
+				return std::unexpected(ArgError{.arg = std::string{arg}, .reason = "expected --bots=0 to --bots=3"});
+			}
+
+			launchOptions.bots = bots;
+
+			continue;
+		}
+
+		if (arg.starts_with("--start="))
+		{
+			const std::string_view value{arg.substr(std::string_view{"--start="}.size())};
+			if (value != "now" && value != "full")
+			{
+				return std::unexpected(
+						ArgError{.arg = std::string{arg}, .reason = "expected --start=now or --start=full"});
+			}
+
+			launchOptions.isStartingAtOnce = value == "now";
+
+			continue;
+		}
+
 		if (!arg.starts_with("--port="))
 		{
 			return std::unexpected(ArgError{.arg = std::string{arg}, .reason = "unknown option, --help lists them"});

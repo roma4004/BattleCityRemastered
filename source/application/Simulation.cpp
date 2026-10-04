@@ -37,7 +37,7 @@ constexpr double kMaxCatchUpSteps{4.0};
 
 Simulation::Simulation(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig)
 	: _events{events}
-	, _stateManager{std::make_unique<GameStateManager>(events, gameConfig.networkSeats)}
+	, _stateManager{std::make_unique<GameStateManager>(events, gameConfig.HostedMatch())}
 	, _animationManager{std::make_unique<AnimationManager>(events)}
 	, _statistics{std::make_unique<GameStatistics>(events)}
 	, _worldScaleManager{std::make_unique<WorldScaleManager>(events, gameConfig)}

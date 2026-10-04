@@ -33,6 +33,10 @@ inline constexpr std::array kServerUsage{"--address=IP           what to listen 
 										 "--rules=classic|ffa    classic or free for all; left out, classic",
 										 "--map=NAME             first map, a file in Resources/Maps without .map",
 										 "--enemies=N            enemies at once in classic, 1 to 4; left out, 4",
+										 "--bots=N               bots in the seats nobody took, up to one fewer than "
+										 "the seats; left out, 0",
+										 "--start=now|full       now starts with whoever is in, full waits for every "
+										 "seat; left out, full",
 										 "--help                 this text"};
 
 class CommandLineParser final

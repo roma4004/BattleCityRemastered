@@ -1,6 +1,7 @@
 #include "application/CommandLineParser.h"
 #include "application/ConsoleCommand.h"
 #include "application/GameConfig.h"
+#include "application/PauseSwitch.h"
 #include "application/ProjectConfig.h"
 #include "application/ServerConsole.h"
 #include "application/Simulation.h"
@@ -34,33 +35,6 @@ namespace
 std::atomic_bool isStopRequested{};
 
 extern "C" void OnStopSignal(int) { isStopRequested.store(true, std::memory_order_relaxed); }
-
-//NOTE: in the game the pause belongs to the menu, and there is no menu here - so a console command and a
-//client's request would reach nothing. Everything downstream waits on PauseStatusEvent, this is what says it
-class PauseSwitch final
-{
-public:
-	explicit PauseSwitch(const std::shared_ptr<EventSystem>& events)
-		: _events{events}
-		, _setPauseSub{events->AddListener(this, &PauseSwitch::OnSetPause)} {}
-
-private:
-	void OnSetPause(const SetPauseEvent& event)
-	{
-		if (_isPaused == event.isPaused)
-		{
-			return;
-		}
-
-		_isPaused = event.isPaused;
-		_events->EmitEvent(PauseStatusEvent{.isPaused = _isPaused});
-	}
-
-	std::shared_ptr<EventSystem> _events;
-	EventSubscription _setPauseSub;
-	bool _isPaused{};
-};
-
 
 //NOTE: said only when a name did not work out - a listing nobody asked for is noise, and one that comes
 //with the complaint is the answer to the question the complaint raises
@@ -233,6 +207,8 @@ int main(const int argc, char* argv[])
 	gameConfig.networkSeats = launchOptions->seats.value_or(gameConfig.networkSeats);
 	gameConfig.networkRules = launchOptions->rules.value_or(gameConfig.networkRules);
 	gameConfig.simultaneousEnemies = launchOptions->enemiesAtOnce.value_or(gameConfig.simultaneousEnemies);
+	gameConfig.networkBots = launchOptions->bots.value_or(gameConfig.networkBots);
+	gameConfig.isStartingAtOnce = launchOptions->isStartingAtOnce.value_or(gameConfig.isStartingAtOnce);
 	if (launchOptions->mapName)
 	{
 		gameConfig.mapPath = MapPathForName(*launchOptions->mapName);

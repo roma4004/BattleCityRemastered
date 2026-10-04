@@ -32,6 +32,9 @@ public:
 	MatchRules networkRules{};
 	//NOTE: how many enemies the field holds at once
 	std::size_t simultaneousEnemies{4u};
+	//NOTE: the server's - the seats nobody took that bots fill, and whether the match waits for the rest
+	std::size_t networkBots{};
+	bool isStartingAtOnce{};
 
 	[[nodiscard]] bool IsAuthority() const noexcept { return ::IsAuthority(gameMode); }
 	[[nodiscard]] bool IsClient() const noexcept { return ::IsClient(gameMode); }

@@ -10,6 +10,7 @@
 #include "components/WorldSnapshot.h"
 #include "enums/Author.h"
 #include "enums/GameMode.h"
+#include "enums/GameState.h"
 #include "enums/RespawnGroup.h"
 #include "enums/TankType.h"
 #include "utils/UuidUtils.h"
@@ -27,6 +28,8 @@ namespace
 //NOTE: a map that does not say how many enemies it has sends this many
 constexpr unsigned short kUnlistedEnemies{20u};
 
+constexpr unsigned short kStartingLives{3u};
+
 bool IsEnemyGroup(const RespawnGroup group) noexcept { return group == RespawnGroup::ENEMY_ALL; }
 
 [[nodiscard]] constexpr std::size_t GroupIndex(const PlayerSlot slot) noexcept
@@ -42,6 +45,8 @@ RespawnManager::RespawnManager(const std::shared_ptr<EventSystem>& events, const
 	, _seatCount{gameConfig.SeatCount()}
 	, _enemySeats{gameConfig.EnemySeats()}
 {
+	std::ranges::fill(_holders | std::views::take(_seatCount), SeatHolder::Player);
+
 	for (const TankType enemy: {TankType::ENEMY1, TankType::ENEMY2, TankType::ENEMY3, TankType::ENEMY4})
 	{
 		_slots.push_back(
@@ -77,6 +82,8 @@ void RespawnManager::Subscribe()
 	if (IsHost(_gameMode))
 	{
 		_subs.push_back(_events->AddListener(this, &RespawnManager::OnWorldSnapshotRequested));
+		_subs.push_back(_events->AddListener(this, &RespawnManager::OnSeatsFilled));
+		_subs.push_back(_events->AddListener(this, &RespawnManager::OnSeatHolderChanged));
 	}
 
 	ResetSpawn();
@@ -125,7 +132,10 @@ void RespawnManager::ResetRespawnStat(const bool keepsPlayerLives)
 	_respawnCount[static_cast<std::size_t>(RespawnGroup::ENEMY_ALL)] = kUnlistedEnemies;
 	if (!keepsPlayerLives)
 	{
-		std::ranges::for_each(kSlots, [this](const PlayerSlot slot) { _respawnCount[GroupIndex(slot)] = 3u; });
+		std::ranges::for_each(kSlots, [this](const PlayerSlot slot)
+		{
+			_respawnCount[GroupIndex(slot)] = kStartingLives;
+		});
 	}
 
 	for (SpawnSlot& slot: _slots)
@@ -155,12 +165,13 @@ void RespawnManager::ResetSpawn(const bool keepsPlayerLives)
 	}
 }
 
-//NOTE: only the seats this match has
+//NOTE: only the seats somebody sits in
 void RespawnManager::SetPlayerNeedRespawn()
 {
-	for (const PlayerSlot slot: kSlots | std::views::take(_seatCount))
+	for (const PlayerSlot slot: kSlots)
 	{
-		std::ranges::find(_slots, PlayerTankOf(slot), &SpawnSlot::type)->isAvailable = true;
+		std::ranges::find(_slots, PlayerTankOf(slot), &SpawnSlot::type)->isAvailable =
+				_holders[SeatIndex(slot)] != SeatHolder::Empty;
 	}
 }
 
@@ -201,17 +212,64 @@ void RespawnManager::OnBonusTank(const Author author)
 	}
 }
 
+//NOTE: a coop bot spends a life of the seat it sits in, the way the host counts it
 void RespawnManager::OnTankRespawned(const TankRespawnedEvent& event)
 {
-	//NOTE: a coop bot spends no life of the seat it sits in
-	const TankType type{event.type};
-	if (!SlotOf(type))
+	const std::optional<PlayerSlot> slot{SlotOf(event.type)};
+	ChangeRespawnCount(-1, slot ? GroupOf(*slot) : RespawnGroup::ENEMY_ALL);
+}
+
+//NOTE: told before the reset that spawns by it
+void RespawnManager::OnSeatsFilled(const SeatsFilledEvent& event) { _holders = event.holders; }
+
+//NOTE: whoever sat down gets a tank while the seat has a life left - a seat whose bot spent every life is given
+//the starting ones back, while a player coming back finds the seat as it was left, and so does a bot taking over
+void RespawnManager::OnSeatHolderChanged(const SeatHolderChangedEvent& event)
+{
+	_holders[SeatIndex(event.slot)] = event.to;
+	SpawnSlot& seat{*std::ranges::find(_slots, PlayerTankOf(event.slot), &SpawnSlot::type)};
+	if (event.to == SeatHolder::Empty)
 	{
-		ChangeRespawnCount(-1, RespawnGroup::ENEMY_ALL);
+		Vacate(seat);
+
+		return;
 	}
-	else if (IsPlayerTank(type))
+
+	if (event.from == SeatHolder::Player || seat.isOnField || seat.isAvailable)
 	{
-		ChangeRespawnCount(-1, GroupOf(*SlotOf(type)));
+		return;
+	}
+
+	const std::size_t group{GroupIndex(event.slot)};
+	if (event.from == SeatHolder::Bot && _respawnCount[group] == 0u)
+	{
+		_respawnCount[group] = kStartingLives;
+		_events->EmitEvent(RespawnCountChangedToEvent{.group = seat.group, .respawnCount = _respawnCount[group]});
+	}
+
+	seat.isAvailable = _respawnCount[group] > 0u;
+}
+
+//NOTE: the tank of a seat given up is taken off the field, not killed - its life goes back to the seat for the one
+//who comes back, and the match ends here only if that leaves nobody to play it
+void RespawnManager::Vacate(SpawnSlot& seat)
+{
+	if (seat.isOnField)
+	{
+		--_playersSpawnCount;
+		ChangeRespawnCount(1, seat.group);
+	}
+
+	seat.isOnField = false;
+	seat.isAvailable = false;
+
+	if (PlayersStillIn() == 0u)
+	{
+		_events->EmitEvent(GameFinishedEvent{.state = GameState::Over});
+	}
+	else if (_isFreeForAll && AreEnemiesGone() && PlayersStillIn() == 1u)
+	{
+		_events->EmitEvent(GameFinishedEvent{.state = GameState::Won});
 	}
 }
 

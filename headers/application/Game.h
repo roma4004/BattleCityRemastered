@@ -42,7 +42,7 @@ class DiscoveryProbe;
 class Game final
 {
 public:
-	Game(GameConfig& gameConfig, const ProjectConfig& projectConfig, const WindowConfig& windowConfig,
+	Game(GameConfig& gameConfig, ProjectConfig& projectConfig, const WindowConfig& windowConfig,
 		 SDL_Config& sdlConfig, const LaunchOptions& launchOptions);
 	~Game();
 
@@ -95,6 +95,8 @@ private:
 	std::vector<EventSubscription> _subs{};
 
 	GameConfig& _gameConfig;
+	//NOTE: the host joined is written into it the moment the link is up
+	ProjectConfig& _projectConfig;
 
 	GameMode _selectedGameMode{};
 

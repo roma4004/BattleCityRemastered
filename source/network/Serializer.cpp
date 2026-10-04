@@ -31,6 +31,7 @@ constexpr const char* NameOf(const commands::SignalEvent&) { return "SignalEvent
 constexpr const char* NameOf(const commands::SlotAssignment&) { return "SlotAssignment"; }
 constexpr const char* NameOf(const commands::Disconnect&) { return "Disconnect"; }
 constexpr const char* NameOf(const WorldSnapshot&) { return "WorldSnapshot"; }
+constexpr const char* NameOf(const commands::AbsenceChange&) { return "AbsenceChange"; }
 
 std::string Describe(const commands::CommandBatch& batch)
 {

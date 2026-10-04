@@ -96,6 +96,9 @@
     <ClCompile Include="NetworkTest.cpp">
       <Filter></Filter>
     </ClCompile>
+    <ClCompile Include="SeatHistoryTest.cpp">
+      <Filter></Filter>
+    </ClCompile>
     <ClCompile Include="NextLevelFlowTest.cpp">
     <Filter></Filter>
     </ClCompile>

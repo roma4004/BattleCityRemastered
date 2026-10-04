@@ -1,5 +1,7 @@
 #include "network/ReplicationBindings.h"
 #include "network/ReplicationPublisher.h"
+#include "enums/Absence.h"
+#include "enums/ClientSignal.h"
 #include "enums/InputChannel.h"
 #include "enums/InputSignal.h"
 #include "components/EventSystem.h"
@@ -83,6 +85,19 @@ void BindHostBonus(ReplicationPublisher& out)
 	});
 }
 
+[[nodiscard]] ClientSignal SignalOf(const AbsenceChoice choice) noexcept
+{
+	switch (choice)
+	{
+		case AbsenceChoice::Continue:
+			return ClientSignal::AbsenceContinue;
+		case AbsenceChoice::Bot:
+			return ClientSignal::AbsenceBot;
+	}
+
+	return ClientSignal::AbsenceContinue;
+}
+
 template<class EventT>
 [[nodiscard]] EventSubscription BindKey(ReplicationPublisher& out, EventSystem& events, const InputChannel channel,
 										const InputSignal action)
@@ -100,6 +115,7 @@ void BindHostReplication(ReplicationPublisher& out)
 		return KeyStateChange{.action = InputSignal::PauseStatus, .isPressed = e.isPaused};
 	});
 	out.Bind<GameStateChangedToEvent>([](const auto& e) { return GameStateChange{.state = e.state}; });
+	out.Bind<AbsenceChangedEvent>([](const auto& e) { return AbsenceChange{.seats = e.seats}; });
 
 	out.Bind<PosChangedEvent>([](const auto& e)
 	{
@@ -154,6 +170,11 @@ void BindClientReplication(ReplicationPublisher& out)
 	{
 		return SignalEvent{.signal = ClientSignal::NextLevel};
 	});
+	out.Bind<WorldSnapshotReceivedEvent>([](const auto&)
+	{
+		return SignalEvent{.signal = ClientSignal::WorldSynced};
+	});
+	out.Bind<AbsenceChosenEvent>([](const auto& e) { return SignalEvent{.signal = SignalOf(e.choice)}; });
 	out.Bind<PauseRequestedEvent>([](const auto& e)
 	{
 		return KeyStateChange{.action = InputSignal::PauseRequest, .isPressed = e.isPaused};

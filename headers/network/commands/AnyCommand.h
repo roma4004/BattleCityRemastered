@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AbsenceChange.h"
 #include "BonusSpawn.h"
 #include "BonusSpawnComplete.h"
 #include "BonusStatus.h"
@@ -31,7 +32,7 @@ using AnyCommand = std::variant<
 	BonusSpawn, BonusStatus, Despawn, GameStateChange, HealthChange,
 	KeyStateChange, ObstacleSpawn, PositionChange, RespawnTank, SignalEvent, StatisticsChange, TankShot,
 	TankSpawnComplete, Disconnect, BonusSpawnComplete, TierChange, SlotAssignment, WorldSnapshot,
-	TankSpawnMoved>;
+	TankSpawnMoved, AbsenceChange>;
 
 //NOTE: a Latest command is replaced per entity on its way out, so it has to say which entity that is
 template<class CommandT>

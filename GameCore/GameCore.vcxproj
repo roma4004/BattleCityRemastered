@@ -169,6 +169,7 @@
     <ClCompile Include="..\source\application\GameConfig.cpp" />
     <ClCompile Include="..\source\application\WindowConfig.cpp" />
     <ClCompile Include="..\source\application\ProjectConfig.cpp" />
+    <ClCompile Include="..\source\application\PauseSwitch.cpp" />
     <ClCompile Include="..\source\application\Simulation.cpp" />
     <ClCompile Include="..\source\behavior\MoveLikeBulletBeh.cpp" />
     <ClCompile Include="..\source\behavior\MoveLikeTankBeh.cpp" />
@@ -230,6 +231,7 @@
     <ClCompile Include="..\source\network\ReplicationApplier.cpp" />
     <ClCompile Include="..\source\network\ReplicationBindings.cpp" />
     <ClCompile Include="..\source\network\ReplicationPublisher.cpp" />
+    <ClCompile Include="..\source\network\SeatHistory.cpp" />
     <ClCompile Include="..\source\network\Server.cpp" />
     <ClCompile Include="..\source\network\Session.cpp" />
     <ClCompile Include="..\source\network\ServerNode.cpp" />
@@ -251,6 +253,7 @@
     <ClInclude Include="..\headers\application\WindowConfig.h" />
     <ClInclude Include="..\headers\application\ProjectConfig.h" />
     <ClInclude Include="..\headers\application\LaunchOptions.h" />
+    <ClInclude Include="..\headers\application\PauseSwitch.h" />
     <ClInclude Include="..\headers\application\Simulation.h" />
     <ClInclude Include="..\headers\behavior\MoveLikeBulletBeh.h" />
     <ClInclude Include="..\headers\behavior\MoveLikeTankBeh.h" />
@@ -337,6 +340,7 @@
     <ClInclude Include="..\headers\enums\AnimationType.h" />
     <ClInclude Include="..\headers\enums\Author.h" />
     <ClInclude Include="..\headers\enums\BonusType.h" />
+    <ClInclude Include="..\headers\enums\Absence.h" />
     <ClInclude Include="..\headers\enums\ClientSignal.h" />
     <ClInclude Include="..\headers\enums\Delivery.h" />
     <ClInclude Include="..\headers\enums\DespawnReason.h" />
@@ -374,6 +378,7 @@
     <ClInclude Include="..\headers\network\DiscoveryBeacon.h" />
     <ClInclude Include="..\headers\network\DiscoveryProbe.h" />
     <ClInclude Include="..\headers\network\DiscoveryScan.h" />
+    <ClInclude Include="..\headers\network\SeatHistory.h" />
     <ClInclude Include="..\headers\network\NetworkNodeBase.h" />
     <ClInclude Include="..\headers\network\PeerLink.h" />
     <ClInclude Include="..\headers\network\commands\AnyCommand.h" />
@@ -392,6 +397,7 @@
     <ClInclude Include="..\headers\network\commands\RespawnTank.h" />
     <ClInclude Include="..\headers\network\commands\SignalEvent.h" />
     <ClInclude Include="..\headers\network\commands\SlotAssignment.h" />
+    <ClInclude Include="..\headers\network\commands\AbsenceChange.h" />
     <ClInclude Include="..\headers\network\commands\StatisticsChange.h" />
     <ClInclude Include="..\headers\network\commands\TankShot.h" />
     <ClInclude Include="..\headers\network\commands\TankSpawnComplete.h" />

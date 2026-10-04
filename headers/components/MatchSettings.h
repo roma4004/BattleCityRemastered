@@ -19,6 +19,16 @@ struct MatchSettings final
 	std::string map{"level1"};
 	//NOTE: classic only - a free-for-all of several players keeps two bots on the field
 	std::uint8_t enemiesAtOnce{kMaxEnemiesAtOnce};
+	//NOTE: how many of the seats nobody took bots fill - at most all but one, and a player joining takes a bot's over
+	std::uint8_t bots{};
+	//NOTE: the match starts with whoever is in, and the rest join it running
+	bool isStartingAtOnce{};
 
 	[[nodiscard]] bool operator==(const MatchSettings& rhs) const = default;
 };
+
+//NOTE: one seat is always the host's own
+[[nodiscard]] constexpr std::uint8_t MaxBots(const std::uint8_t seats) noexcept
+{
+	return seats > 0u ? static_cast<std::uint8_t>(seats - 1u) : std::uint8_t{};
+}
