@@ -177,7 +177,7 @@ void Tank::SubscribeAsClient()
 void Tank::OnTankShot(const TankShotEvent& event)
 {
 	SetDirection(event.dir);
-	Shot(event.bulletUuid, event.damage);
+	_shootingBeh->Mirror(event.bulletUuid, event.damage);
 }
 
 void Tank::OnBonusHelmetApplied(const BonusHelmetAppliedEvent& event) { OnBonusHelmet(event.isActive); }
@@ -421,16 +421,19 @@ void Tank::TickUpdate(const double deltaTime)
 	}
 }
 
-void Tank::Shot(const std::optional<Uuid> withUuid, const std::optional<unsigned int> withDamage)
+void Tank::Shot()
 {
-	const ShotResult shot{_shootingBeh->Shot(withUuid, withDamage)};
+	const std::vector<ShotResult> shots{_shootingBeh->Volley(_allObjects)};
 
 	if (_gameConfig.IsHost())
 	{
-		_events->EmitEvent(TankShotEvent{.who = _author,
-										 .dir = GetDirection(),
-										 .bulletUuid = shot.uuid,
-										 .damage = shot.damage});
+		std::ranges::for_each(shots, [this](const ShotResult& shot)
+		{
+			_events->EmitEvent(TankShotEvent{.who = _author,
+											 .dir = GetDirection(),
+											 .bulletUuid = shot.uuid,
+											 .damage = shot.damage});
+		});
 	}
 
 	_shootTimer.Reset();
@@ -493,17 +496,18 @@ void Tank::ApplyTier(const unsigned short tier)
 	_tier = std::clamp(tier, kMinTier, kMaxTier);
 
 	const auto steps{static_cast<double>(_tier - kMinTier)};
+	const auto shellSteps{static_cast<double>(std::min(_tier, kLastShellTier) - kMinTier)};
 	const double faster{1.0 + kTierStep.speedShare * steps};
 	const BulletCaliber base{BaseCaliber()};
 
 	_speed = SpeedOf(_model, _gameConfig.tankSpeed) * faster;
 	_caliber.speed = base.speed * faster;
-	_caliber.damage = MathUtils::RoundTo<unsigned int>(base.damage * (1.0 + kTierStep.damageShare * steps));
-	_caliber.health = MathUtils::RoundTo<int>(base.health * (1.0 + kTierStep.damageShare * steps));
-	_caliber.damageRadius = base.damageRadius * (1.0 + kTierStep.blastShare * steps);
+	_caliber.damage = MathUtils::RoundTo<unsigned int>(base.damage * (1.0 + kTierStep.damageShare * shellSteps));
+	_caliber.health = MathUtils::RoundTo<int>(base.health * (1.0 + kTierStep.damageShare * shellSteps));
+	_caliber.damageRadius = base.damageRadius * (1.0 + kTierStep.blastShare * shellSteps);
 	_caliber.tier = _tier;
 	_shootTimer.cooldown = std::chrono::round<std::chrono::milliseconds>(
-			ReloadOf(_model, kBaseReload) * (1.0 - kTierStep.reloadShare * steps));
+			ReloadOf(_model, kBaseReload) * (1.0 - kTierStep.reloadShare * shellSteps));
 }
 
 void Tank::Upgrade(const unsigned short tiers)

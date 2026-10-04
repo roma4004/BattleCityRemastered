@@ -98,9 +98,11 @@ class Tank final : public Pawn
 	static constexpr unsigned short kStarTiers{1u};
 	static constexpr unsigned short kCaliberTiers{3u};
 
-	//NOTE: the top tier itself, not the last one that may still be upgraded - three stars reach it
+	//NOTE: the top tier itself, not the last one that may still be upgraded - six stars reach it
 	static constexpr unsigned short kMinTier{1u};
-	static constexpr unsigned short kMaxTier{4u};
+	static constexpr unsigned short kMaxTier{7u};
+	//NOTE: past it a star adds shells to the volley instead - a harder shell would be multiplied by their number
+	static constexpr unsigned short kLastShellTier{3u};
 	//NOTE: any bonus heals the tank that picked it up, with no ceiling - the surplus rides on to the next level
 	static constexpr int kPickupHeal{50};
 
@@ -128,7 +130,7 @@ protected:
 
 	BonusEffectProperty _effects{};
 
-	void Shot(std::optional<Uuid> withUuid = std::nullopt, std::optional<unsigned int> withDamage = std::nullopt);
+	void Shot();
 
 	void HandleBonusPickUp(BaseObj& object);
 	void OnPosChanged(const PosChangedEvent& event) override;

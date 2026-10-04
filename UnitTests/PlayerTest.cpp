@@ -19,7 +19,9 @@
 #include "enums/InputChannel.h"
 #include "geometry/Point.h"
 #include "gtest/gtest.h"
+#include <cstddef>
 #include <memory>
+#include <ranges>
 
 // the player seat end to end: a key is pressed on the P1 channel, one tick runs, and the tank is asked where it stands
 class PlayerTest : public testing::Test// NOLINT(clang-diagnostic-padded)
@@ -64,11 +66,11 @@ protected:
 	void TearDown() override {}
 
 	std::shared_ptr<Tank> CreatePlayer(const FPoint pos, const Author author = Author::Player1,
-									   const Direction dir = Direction::UP)
+									   const Direction dir = Direction::UP, const unsigned short tier = 1u)
 	{
 		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _gameConfig.tankSize, .h = _gameConfig.tankSize};
 		auto player{TestUtils::CreatePlayer(rect, _tankHealth, author, _allObjects, _events, dir, _tankPool,
-											_gameConfig)};
+											_gameConfig, tier)};
 
 		return player;
 	}
@@ -544,6 +546,71 @@ TEST_F(PlayerTest, PointBlankShotDamagesTheShooter)
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_LT(player->GetHealth(), startHealth) << "own blast did not reach the shooter";
+}
+
+// the top tier fires three rows of three at once, and none of them wider than the hull - where the tank gets
+//through, its volley does too
+TEST_F(PlayerTest, TheTopTierFiresAVolleyAsWideAsTheHull)
+{
+	const auto windowWidth{static_cast<double>(_gameConfig.battlefieldSize.x)};
+	const auto windowHeight{static_cast<double>(_gameConfig.battlefieldSize.y)};
+	const auto player{CreatePlayer({.x = windowWidth / 2.0, .y = windowHeight / 2.0}, Author::Player1,
+								   Direction::UP, 7u)};
+	const std::size_t before{_allObjects.size()};
+
+	_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = true});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	ASSERT_EQ(_allObjects.size(), before + 9u);
+	const ObjRectangle hull{player->GetRect()};
+	for (const std::shared_ptr<BaseObj>& shell: _allObjects | std::views::drop(before))
+	{
+		EXPECT_GE(shell->GetRect().x, hull.x);
+		EXPECT_LE(shell->GetRect().Right(), hull.Right());
+	}
+}
+
+// the lead shell goes off at the edge of the field, and the one behind it flies on through that blast
+TEST_F(PlayerTest, AShellOfTheVolleySurvivesTheBlastOfTheOneAhead)
+{
+	CreatePlayer({.x = _tankSize * 2.0, .y = _tankSize * 2.0}, Author::Player1, Direction::UP, 4u);
+	const std::size_t before{_allObjects.size()};
+
+	_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = true});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = false});
+
+	ASSERT_EQ(_allObjects.size(), before + 2u);
+	const std::shared_ptr<BaseObj> behind{_allObjects[before]};
+	const std::shared_ptr<BaseObj> ahead{_allObjects[before + 1u]};
+	ASSERT_LT(ahead->GetRect().y, behind->GetRect().y);
+
+	for (int frame{}; frame < 60 && ahead->GetIsAlive(); ++frame)
+	{
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	}
+
+	ASSERT_FALSE(ahead->GetIsAlive()) << "the lead shell never reached the edge";
+	EXPECT_TRUE(behind->GetIsAlive()) << "the blast of the lead shell took the one behind it";
+}
+
+// point blank only the first row goes off - a row born past the wall would be a shot through it
+TEST_F(PlayerTest, APointBlankVolleyFiresOnlyItsFirstRow)
+{
+	const auto windowWidth{static_cast<double>(_gameConfig.battlefieldSize.x)};
+	const auto windowHeight{static_cast<double>(_gameConfig.battlefieldSize.y)};
+	const auto player{CreatePlayer({.x = windowWidth / 2.0, .y = windowHeight / 2.0}, Author::Player1,
+								   Direction::LEFT, 4u)};
+	SpawnObstacleArea({.x = player->GetRect().x - _gridSize - 12.0,
+					   .y = player->GetRect().y,
+					   .w = _gridSize,
+					   .h = _tankSize}, ObstacleType::Brick);
+	const std::size_t before{_allObjects.size()};
+
+	_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = true});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_EQ(_allObjects.size(), before + 1u);
 }
 
 // The driver holds its own keyed subscriptions, so it has to go quiet with the tank

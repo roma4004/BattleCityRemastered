@@ -70,6 +70,8 @@ Uuid Bullet::GetUuid() const
 	return _uuid;
 }
 
+Uuid Bullet::GetAuthorUuid() const noexcept { return _authorUuid; }
+
 void Bullet::Reset(const BulletResetProperty& resetProperty)
 {
 	_rect = resetProperty.rect;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "utils/Uuid.h"
 #include <memory>
 
 class BaseObj;
@@ -15,6 +16,8 @@ public:
 	[[nodiscard]] static bool IsAlly(const BaseObj& self, const BaseObj& other);
 	[[nodiscard]] static bool IsBonus(const BaseObj& object);
 	[[nodiscard]] static const Bullet* AsBullet(const BaseObj& object);
+	//NOTE: a shell that tank fired - one volley flies as a whole, so its shells pass through each other
+	[[nodiscard]] static bool IsShellOf(const BaseObj& object, const Uuid& shooter);
 	[[nodiscard]] static bool IsFortress(const BaseObj& object);
 	[[nodiscard]] static bool IsWall(const BaseObj& object);
 

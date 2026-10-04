@@ -85,7 +85,7 @@ TEST_F(TankHealTest, APickupHealIsReported)
 //NOTE: a maxed tank returns early from the star handler - the heal must not hang on the tier going up
 TEST_F(TankHealTest, AMaxedTankStillHealsOnAStar)
 {
-	const auto player{CreatePlayer(4u)};
+	const auto player{CreatePlayer(7u)};
 	const int healthBefore{player->GetHealth()};
 
 	DriveIntoBonus(BonusType::Star);

@@ -57,6 +57,7 @@ bool MoveLikeBulletBeh::IsInTheWay(const BaseObj* const object, const ObjRectang
 {
 	return ObjectUtils::IsAlive(object)
 		   && !IsSelfOrAuthor(*object)
+		   && !ObjectUtils::IsShellOf(*object, _authorUuid)
 		   && ColliderUtils::IsCollide(nextPosRect, object->GetRect())
 		   && !object->GetIsPenetrable();
 }
@@ -110,10 +111,12 @@ std::vector<BaseObj*> MoveLikeBulletBeh::GetCircleCollisionObjects(
 {
 	const Circle circle{.center = blowCenter, .radius = _caliber.damageRadius};
 
+	//NOTE: the shooter's own tank is hit as ever - only the shells flying with this one are spared
 	auto collisions{objects | std::views::filter([this, &circle](const std::shared_ptr<BaseObj>& obj)
 	{
 		return ObjectUtils::IsAlive(obj.get())
 			   && obj->GetUuid() != _uuid
+			   && !ObjectUtils::IsShellOf(*obj, _authorUuid)
 			   && ColliderUtils::IsCollide(circle, obj->GetRect());
 	})};
 

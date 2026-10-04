@@ -1,5 +1,6 @@
 #include "utils/Log.h"
 #include <chrono>
+#include <ctime>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -83,7 +84,12 @@ std::string Log::TimeStamp()
 	const auto ms{std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000};
 
 	std::tm timeInfo{};
+#ifdef _WIN32 //NOTE: Windows
 	localtime_s(&timeInfo, &nowTime);
+#else //NOTE: Linux
+	//NOTE: POSIX spells it localtime_r, arguments the other way round - glibc has no localtime_s
+	localtime_r(&nowTime, &timeInfo);
+#endif //NOTE: Windows / Linux
 
 	std::ostringstream stream;
 	stream << '[' << std::put_time(&timeInfo, "%H:%M:%S") << '.' << std::setfill('0') << std::setw(3) << ms.count()

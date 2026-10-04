@@ -34,6 +34,13 @@ const Bullet* ObjectUtils::AsBullet(const BaseObj& object)
 	return dynamic_cast<const Bullet*>(&object);
 }
 
+bool ObjectUtils::IsShellOf(const BaseObj& object, const Uuid& shooter)
+{
+	const Bullet* const bullet{AsBullet(object)};
+
+	return bullet != nullptr && shooter != Uuid{} && bullet->GetAuthorUuid() == shooter;
+}
+
 bool ObjectUtils::IsFortress(const BaseObj& object)
 {
 	return dynamic_cast<const IFortress*>(&object) != nullptr;

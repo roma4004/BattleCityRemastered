@@ -6,9 +6,12 @@
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
 #include "components/events/SpawnEvents.h"
+#include "entities/BaseObj.h"
 #include "entities/BulletCaliber.h"
+#include "utils/ColliderUtils.h"
 #include "utils/DirectionUtils.h"
 #include "utils/MathUtils.h"
+#include "utils/ObjectUtils.h"
 #include "utils/RandUtils.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/BulletResetProperty.h"
@@ -18,6 +21,8 @@
 #include <memory>
 #include <optional>
 #include <random>
+#include <tuple>
+#include <vector>
 
 ShootingBeh::ShootingBeh(ObjRectangle& rect, Direction& dir, Uuid& uuid, Author& author,
 						 const std::shared_ptr<BulletPool>& bulletPool,
@@ -31,6 +36,24 @@ ShootingBeh::ShootingBeh(ObjRectangle& rect, Direction& dir, Uuid& uuid, Author&
 	, _caliber{caliber}
 	, _bulletPool{bulletPool}
 	, _events{events} {}
+
+ShootingBeh::VolleyShape ShootingBeh::ShapeOf(const unsigned short tier) noexcept
+{
+	switch (tier)
+	{
+		case 4u:
+			return VolleyShape{.depth = 2, .width = 1};
+		case 5u:
+			return VolleyShape{.depth = 2, .width = 2};
+		case 6u:
+			return VolleyShape{.depth = 3, .width = 2};
+		case 7u:
+			//NOTE: three abreast is as wide as the hull - where a tank gets through, its volley does too
+			return VolleyShape{.depth = 3, .width = 3};
+		default:
+			return VolleyShape{.depth = 1, .width = 1};
+	}
+}
 
 //NOTE: comes back at {-1, -1} when the muzzle would land off the field
 ObjRectangle ShootingBeh::GetBulletStartRect() const
@@ -94,14 +117,21 @@ BulletCaliber ShootingBeh::CaliberOfShot(const std::optional<unsigned int> damag
 	return shot;
 }
 
-ShotResult ShootingBeh::Shot(const std::optional<Uuid> uuid, const std::optional<unsigned int> damage)
+bool ShootingBeh::IsClear(const ObjRectangle& path, const std::vector<std::shared_ptr<BaseObj>>& objects) const
 {
-	const ObjRectangle rect{GetBulletStartRect()};
-	if (rect.x < 0.0 || rect.y < 0.0)
+	return std::ranges::none_of(objects, [this, &path](const std::shared_ptr<BaseObj>& object)
 	{
-		return ShotResult{};
-	}
+		return ObjectUtils::IsAlive(object.get())
+			   && object->GetUuid() != _uuid
+			   && !ObjectUtils::IsShellOf(*object, _uuid)
+			   && !object->GetIsPenetrable()
+			   && ColliderUtils::IsCollide(path, object->GetRect());
+	});
+}
 
+ShotResult ShootingBeh::SpawnShell(const ObjRectangle& rect, const std::optional<Uuid> uuid,
+								   const std::optional<unsigned int> damage) const
+{
 	const BulletCaliber caliber{CaliberOfShot(damage)};
 
 	const BulletResetProperty bulletResetProperty{
@@ -120,4 +150,50 @@ ShotResult ShootingBeh::Shot(const std::optional<Uuid> uuid, const std::optional
 	_events->EmitEvent(AddToSpawnQueueEvent{.obj = bullet});
 
 	return ShotResult{.uuid = bullet->GetUuid(), .damage = caliber.damage};
+}
+
+//NOTE: the first row stands at the muzzle whatever is there, as a single shell always did - so point blank
+//only that row goes off, and every row past it needs the cell before it clear
+std::vector<ShotResult> ShootingBeh::Volley(const std::vector<std::shared_ptr<BaseObj>>& objects)
+{
+	std::vector<ShotResult> shots{};
+	const ObjRectangle muzzle{GetBulletStartRect()};
+	if (muzzle.x < 0.0 || muzzle.y < 0.0)
+	{
+		return shots;
+	}
+
+	const auto [depth, width]{ShapeOf(_caliber.tier)};
+	const double step{_gameConfig.gridOffset};
+	const Direction across{DirectionUtils::Laterals(_direction).back()};
+	for (int column{}; column < width; ++column)
+	{
+		ObjRectangle at{DirectionUtils::Moved(muzzle, (column - (width - 1) / 2.0) * step, across)};
+		shots.push_back(SpawnShell(at, std::nullopt, std::nullopt));
+
+		for (int row{1}; row < depth; ++row)
+		{
+			if (!DirectionUtils::FitsBeforeEdge(at, _gameConfig.battlefieldSize, step, _direction)
+				|| !IsClear(DirectionUtils::Swept(at, step, _direction), objects))
+			{
+				break;
+			}
+
+			at = DirectionUtils::Moved(at, step, _direction);
+			shots.push_back(SpawnShell(at, std::nullopt, std::nullopt));
+		}
+	}
+
+	return shots;
+}
+
+void ShootingBeh::Mirror(const Uuid uuid, const unsigned int damage)
+{
+	const ObjRectangle rect{GetBulletStartRect()};
+	if (rect.x < 0.0 || rect.y < 0.0)
+	{
+		return;
+	}
+
+	std::ignore = SpawnShell(rect, uuid, damage);
 }

@@ -57,6 +57,8 @@ public:
 
 	[[nodiscard]] Uuid GetUuid() const override;
 
+	[[nodiscard]] Uuid GetAuthorUuid() const noexcept;
+
 	[[nodiscard]] unsigned int GetTier() const noexcept;
 
 	void DealDamage(const std::vector<BaseObj*>& objectList);
