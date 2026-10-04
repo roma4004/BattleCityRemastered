@@ -72,6 +72,8 @@ Server::Server(boost::asio::io_context& ioContext, const ServerAddress& address,
 	_subs.push_back(_events->AddListener(this, &Server::OnPlayersRequested));
 	_subs.push_back(_events->AddListener(this, &Server::OnKickRequested));
 	_subs.push_back(_events->AddListener(this, &Server::OnAcceptingChanged));
+	_subs.push_back(_events->AddListener(this, &Server::OnPortForwardingChanged));
+	_subs.push_back(_events->AddListener(this, &Server::OnClientSeated));
 }
 
 Server::~Server()// NOLINT(bugprone-exception-escape) - cancel() throws only on an error the timer service never sets
@@ -359,6 +361,21 @@ void Server::OnAcceptingChanged(const ServerAcceptingChangedEvent& event)
 	_isAccepting.store(event.isAccepting, std::memory_order_release);
 
 	Log::Info(event.isAccepting ? "taking new clients" : "not taking new clients");
+}
+
+void Server::OnPortForwardingChanged(const PortForwardingChangedEvent& event)
+{
+	_portForwarding = PortForwardingChange{.state = event.state, .host = event.host, .port = event.port};
+	_replicationOut.Publish(*_portForwarding);
+}
+
+//NOTE: to everyone again rather than to the one alone - the frame is shared, and the rest already have it
+void Server::OnClientSeated(const ServerClientSeatedEvent&)
+{
+	if (_portForwarding)
+	{
+		_replicationOut.Publish(*_portForwarding);
+	}
 }
 
 //NOTE: a snapshot goes out in place of the frame, never beside it - it already holds everything the frame says

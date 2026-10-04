@@ -37,4 +37,8 @@ struct LaunchOptions final
 	std::optional<std::size_t> bots{};
 	//NOTE: server only - start with whoever is in instead of waiting for every seat
 	std::optional<bool> isStartingAtOnce{};
+	//NOTE: server only - open the port on the router through UPnP, for players from the internet
+	bool isPortForwarded{};
+	//NOTE: server only - the named event the game that started it sets to have it wind down
+	std::optional<std::string> stopEventName{};
 };

@@ -53,7 +53,9 @@
   <ItemGroup>
     <ClCompile Include="..\source\server_main.cpp" />
     <ClCompile Include="..\source\application\ServerConsole.cpp" />
+    <ClCompile Include="..\source\application\ServerStop.cpp" />
     <ClInclude Include="..\headers\application\ServerConsole.h" />
+    <ClInclude Include="..\headers\application\ServerStop.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GameCore\GameCore.vcxproj">

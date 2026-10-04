@@ -93,6 +93,7 @@ private:
 	void Handle(const SlotAssignment&) const {}
 	void Handle(const WorldSnapshot&) const {}
 	void Handle(const AbsenceChange&) const {}
+	void Handle(const PortForwardingChange&) const {}
 
 	void Lose();
 

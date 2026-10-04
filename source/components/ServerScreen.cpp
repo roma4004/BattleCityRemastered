@@ -15,6 +15,7 @@
 #include "enums/PlayerSlot.h"
 #include "network/DiscoveryScan.h"
 #include "network/Endpoints.h"
+#include "network/PublicAddressProbe.h"
 #include "utils/TextUtils.h"
 #include <boost/asio/ip/address.hpp>
 #include <boost/system/error_code.hpp>
@@ -65,6 +66,13 @@ constexpr std::string_view kDescending{"\xE2\x96\xBC"};
 constexpr std::string_view kDropDownMark{kDescending};
 //NOTE: a host row and its list - room for the mark past the longest address
 constexpr std::size_t kOwnRowSymbols{kRowSymbols + 2};
+//NOTE: where a host reached through the router listens - every network
+constexpr std::string_view kEveryIPv4Network{"0.0.0.0"};
+constexpr std::string_view kInternet{"INTERNET"};
+//NOTE: the list's order - every network first, this machine alone last, the interfaces and the internet between
+constexpr int kEveryNetworkRank{0};
+constexpr int kInterfaceRank{1};
+constexpr int kThisPcOnlyRank{2};
 
 //NOTE: a network match of one would be a local one
 constexpr std::uint8_t kMinNetworkSeats{2u};
@@ -205,16 +213,15 @@ constexpr auto kCaretBlink{1060ms};
 	return ec ? std::nullopt : std::optional{address};
 }
 
-//NOTE: every network first, this machine alone last, the interfaces between
 [[nodiscard]] int ChoiceRank(const network::OwnAddress& own)
 {
 	const std::optional<boost::asio::ip::address> address{AddressOf(own.host)};
 	if (address && address->is_unspecified())
 	{
-		return 0;
+		return kEveryNetworkRank;
 	}
 
-	return address && address->is_loopback() ? 2 : 1;
+	return address && address->is_loopback() ? kThisPcOnlyRank : kInterfaceRank;
 }
 
 [[nodiscard]] std::string ChoiceLabel(const network::OwnAddress& own)
@@ -228,13 +235,22 @@ constexpr auto kCaretBlink{1060ms};
 	return address && address->is_loopback() ? "THIS PC ONLY" : own.interfaceName;
 }
 
-//NOTE: a host row's list - its family's addresses, and the one that listens on every network
-[[nodiscard]] std::vector<network::OwnAddress> OwnChoices(const bool isIPv6)
+//NOTE: a host row's list - its family's addresses, the one that listens on every network, and for IPv4 the
+//router's on the internet. A machine the internet sees by its own address needs no router to pass anything on
+[[nodiscard]] std::vector<network::OwnAddress> OwnChoices(const bool isIPv6,
+														 const std::optional<std::string>& publicHost)
 {
-	std::vector<network::OwnAddress> choices{network::OwnAddress{.host = isIPv6 ? "::" : "0.0.0.0"}};
+	std::vector<network::OwnAddress> choices{
+			network::OwnAddress{.host = isIPv6 ? "::" : std::string{kEveryIPv4Network}}};
 	std::ranges::copy_if(network::OwnAddresses(), std::back_inserter(choices),
 						 [isIPv6](const network::OwnAddress& own) { return own.host.contains(':') == isIPv6; });
 	std::ranges::stable_sort(choices, {}, ChoiceRank);
+
+	if (!isIPv6 && publicHost && !network::IsThisMachine(*publicHost))
+	{
+		const auto thisPcOnly{std::ranges::find(choices, kThisPcOnlyRank, ChoiceRank)};
+		choices.insert(thisPcOnly, network::OwnAddress{.host = *publicHost, .interfaceName = std::string{kInternet}});
+	}
 
 	return choices;
 }
@@ -304,6 +320,11 @@ void ServerScreen::Open(const GameMode mode)
 		if (!_maps.empty() && !std::ranges::contains(_maps, _match.map))
 		{
 			_match.map = _maps.front();
+		}
+
+		if (!_publicHost && !_publicProbe)
+		{
+			_publicProbe = std::make_unique<network::PublicAddressProbe>();
 		}
 	}
 	else
@@ -380,6 +401,8 @@ void ServerScreen::OnMenuShown(const MenuShownEvent& event)
 
 void ServerScreen::OnPreTickUpdate(const PreTickUpdateEvent&)
 {
+	PollPublicAddress();
+
 	if (!_scan || !_scan->Poll())
 	{
 		return;
@@ -626,7 +649,7 @@ void ServerScreen::Press()
 		//NOTE: a full server is scrolled through, not joined
 		if (IsPickable(_focus) && !_servers[_focus.server].IsFull())
 		{
-			Choose(_servers[_focus.server].address);
+			Choose(_servers[_focus.server].address, false);
 		}
 
 		return;
@@ -647,6 +670,15 @@ void ServerScreen::Press()
 		return;
 	}
 
+	//NOTE: no interface has the router's address - the server listens on every network, and the router is asked
+	//to pass the port on
+	if (IsHosting() && IsPublic(address->host))
+	{
+		Choose(network::ServerAddress{.host = std::string{kEveryIPv4Network}, .port = address->port}, true);
+
+		return;
+	}
+
 	//NOTE: a server listens only on an address this machine has
 	if (IsHosting() && !network::IsThisMachine(address->host))
 	{
@@ -655,14 +687,35 @@ void ServerScreen::Press()
 		return;
 	}
 
-	Choose(*address);
+	Choose(*address, false);
 }
 
-void ServerScreen::Choose(const network::ServerAddress& address)
+void ServerScreen::Choose(const network::ServerAddress& address, const bool isPortForwarded)
 {
 	const GameMode mode{_mode};
 	Close();
-	_events->EmitEvent(ServerAddressChosenEvent{.mode = mode, .address = address, .match = _match});
+	_events->EmitEvent(ServerAddressChosenEvent{
+			.mode = mode, .address = address, .match = _match, .isPortForwarded = isPortForwarded});
+}
+
+//NOTE: dropped with its answer, or once nobody answered - the next opening asks again then
+void ServerScreen::PollPublicAddress()
+{
+	if (!_publicProbe)
+	{
+		return;
+	}
+
+	_publicHost = _publicProbe->Poll();
+	if (!_publicProbe->IsAsking())
+	{
+		_publicProbe.reset();
+	}
+}
+
+bool ServerScreen::IsPublic(const std::string_view host) const
+{
+	return _publicHost && host == *_publicHost && !network::IsThisMachine(host);
 }
 
 bool ServerScreen::IsTurnable(const Line line) noexcept
@@ -976,10 +1029,10 @@ void ServerScreen::OfferAddresses()
 //NOTE: a host row keeps its address while this machine has it - one gone with a network gets the machine's own
 void ServerScreen::OfferOwnAddresses()
 {
-	const auto offer = [](AddressField& field, std::string host)
+	const auto offer = [this](AddressField& field, std::string host)
 	{
 		const std::optional<network::ServerAddress> picked{network::ParseServerAddress(field.Text())};
-		if (picked && network::IsThisMachine(picked->host))
+		if (picked && (network::IsThisMachine(picked->host) || IsPublic(picked->host)))
 		{
 			return;
 		}
@@ -995,7 +1048,7 @@ void ServerScreen::OfferOwnAddresses()
 //NOTE: read anew each time - the bar starts on the address the row has
 void ServerScreen::OpenDropDown()
 {
-	std::vector<network::OwnAddress> choices{OwnChoices(_focus.line == Line::IPv6)};
+	std::vector<network::OwnAddress> choices{OwnChoices(_focus.line == Line::IPv6, _publicHost)};
 	const std::optional<network::ServerAddress> picked{network::ParseServerAddress(FieldOf(_focus.line).Text())};
 	const auto current{std::ranges::find(choices, picked ? picked->host : std::string{}, &network::OwnAddress::host)};
 	const std::size_t at{current == choices.end() ? 0

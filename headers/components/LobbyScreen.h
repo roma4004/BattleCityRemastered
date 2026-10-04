@@ -1,6 +1,7 @@
 #pragma once
 
 #include "components/EventSystem.h"
+#include "components/events/CoreLifecycleEvents.h"
 #include "components/MatchSettings.h"
 #include "enums/Absence.h"
 #include "enums/PlayerSlot.h"
@@ -44,6 +45,8 @@ class LobbyScreen final
 	bool _isServerFull{};
 	//NOTE: what the host picked - every seat is shown it, only the host could change it
 	std::optional<MatchSettings> _match{};
+	//NOTE: what a friend from the internet dials, once the server asked the router - or why nobody gets in
+	std::optional<PortForwardingChangedEvent> _portForwarding{};
 	std::array<Absence, kSeatCount> _absence{};
 	//NOTE: an index into Choices()
 	std::size_t _pick{};
@@ -57,6 +60,7 @@ class LobbyScreen final
 	void OnRefusedOrLost(const ClientInDisconnectEvent& event);
 	void OnConnectedToHost(const ClientConnectedToHostEvent&);
 	void OnSlotAssigned(const PlayerSlotAssignedEvent& event);
+	void OnPortForwardingChanged(const PortForwardingChangedEvent& event);
 	void OnAbsenceChanged(const AbsenceChangedEvent& event);
 	void OnDrawUserInterface(const DrawUserInterfaceEvent&) const;
 

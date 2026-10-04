@@ -4,6 +4,7 @@
 #include "application/PauseSwitch.h"
 #include "application/ProjectConfig.h"
 #include "application/ServerConsole.h"
+#include "application/ServerStop.h"
 #include "application/Simulation.h"
 #include "components/EventSystem.h"
 #include "components/events/CoreLifecycleEvents.h"
@@ -16,11 +17,10 @@
 #include "enums/GameMode.h"
 #include "enums/GameState.h"
 #include "network/Endpoints.h"
+#include "network/PortMapping.h"
 #include "utils/Log.h"
 #include <algorithm>
-#include <atomic>
 #include <chrono>
-#include <csignal>
 #include <cstdint>
 #include <fstream>
 #include <iostream>
@@ -32,10 +32,6 @@
 
 namespace
 {
-std::atomic_bool isStopRequested{};
-
-extern "C" void OnStopSignal(int) { isStopRequested.store(true, std::memory_order_relaxed); }
-
 //NOTE: said only when a name did not work out - a listing nobody asked for is noise, and one that comes
 //with the complaint is the answer to the question the complaint raises
 std::string KnownMaps()
@@ -85,13 +81,14 @@ std::string KnownMaps()
 //NOTE: what the console asks for, done on the game thread between frames; a restart goes the way a player's does
 struct ConsoleCommandHandler final
 {
+	ServerStop& stop;
 	EventSystem& events;
 	//NOTE: not const any more - /map is the one command that writes the world it describes
 	GameConfig& gameConfig;
 	const FramePerSecondManager& fpsManager;
 	std::chrono::steady_clock::time_point startedAt;
 
-	void operator()(const ExitCommand&) const { isStopRequested.store(true, std::memory_order_relaxed); }
+	void operator()(const ExitCommand&) const { stop.Request(); }
 	void operator()(const RestartCommand&) const { events.EmitEvent(ServerInRestartRequestedEvent{}); }
 	void operator()(const PlayersCommand&) const { events.EmitEvent(ServerPlayersRequestedEvent{}); }
 
@@ -174,9 +171,6 @@ int main(const int argc, char* argv[])
 	Log::SetFile(true);
 	Log::SetLevel(Log::Level::Normal);
 
-	std::signal(SIGINT, OnStopSignal);
-	std::signal(SIGTERM, OnStopSignal);
-
 	const auto launchOptions{CommandLineParser::ParseServer(argc, argv)};
 	if (!launchOptions)
 	{
@@ -192,6 +186,9 @@ int main(const int argc, char* argv[])
 
 		return 0;
 	}
+
+	//NOTE: before anything that winds down - it goes last, and a closed console window waits for it
+	ServerStop stop{launchOptions->stopEventName};
 
 	const ProjectConfig projectConfig{ProjectConfig::DefaultFilePath()};
 	if (const auto& configError{projectConfig.LoadError()})
@@ -247,18 +244,33 @@ int main(const int argc, char* argv[])
 	Log::Info("server listening on " + gameConfig.serverAddress.host + ':' + std::to_string(boundPort)
 			  + ", ctrl+c or /exit to stop, /help for the rest");
 
+	//NOTE: the port known only now is the one opened - and it is closed again before the server goes
+	const std::unique_ptr<network::PortMapping> portMapping{
+			launchOptions->isPortForwarded
+					? std::make_unique<network::PortMapping>(gameConfig.serverAddress.host, boundPort)
+					: nullptr};
+
 	ServerConsole console;
-	const ConsoleCommandHandler handler{.events = *events,
+	const ConsoleCommandHandler handler{.stop = stop,
+										.events = *events,
 										.gameConfig = gameConfig,
 										.fpsManager = fpsManager,
 										.startedAt = std::chrono::steady_clock::now()};
 
-	while (!isStopRequested.load(std::memory_order_relaxed))
+	while (!stop.IsRequested())
 	{
 		std::ranges::for_each(console.TakeLines(), [&handler](const std::string& line)
 		{
 			ApplyConsoleLine(line, handler);
 		});
+
+		if (portMapping)
+		{
+			if (const auto change{portMapping->Poll()})
+			{
+				events->EmitEvent(*change);
+			}
+		}
 
 		simulation.Tick();
 

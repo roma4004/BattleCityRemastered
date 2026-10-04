@@ -102,6 +102,7 @@ private:
 
 	//NOTE: what the server screen picked - a restart starts the server for it again
 	MatchSettings _hostedMatch{};
+	bool _isPortForwarded{};
 	//NOTE: an address on the command line skips the server screen
 	bool _isAddressNamedByArguments{};
 	//NOTE: a port named on the command line or the server screen beats a published one - for a client only

@@ -7,6 +7,7 @@
 #include "SeatHistory.h"
 #include "Session.h"
 #include "WireFrame.h"
+#include "commands/PortForwardingChange.h"
 #include "components/EventSystem.h"
 #include "components/MatchSettings.h"
 #include "enums/DisconnectReason.h"
@@ -29,6 +30,8 @@
 
 struct MapLoadedEvent;
 struct NetworkEndFrameEvent;
+struct PortForwardingChangedEvent;
+struct ServerClientSeatedEvent;
 struct SeatHolderChangedEvent;
 struct ServerStatusRequestedEvent;
 struct ServerPlayersRequestedEvent;
@@ -97,6 +100,8 @@ private:
 	void OnPlayersRequested(const ServerPlayersRequestedEvent&) const;
 	void OnKickRequested(const ServerKickRequestedEvent& event) const;
 	void OnAcceptingChanged(const ServerAcceptingChangedEvent& event);
+	void OnPortForwardingChanged(const PortForwardingChangedEvent& event);
+	void OnClientSeated(const ServerClientSeatedEvent&);
 
 	udp::socket _socket;
 	//NOTE: written by the console on the game thread, read where a hello lands on the network one - UDP has
@@ -119,6 +124,9 @@ private:
 	//NOTE: written where a seat is taken, under _sessionsMutex as well
 	SeatHistory _seatHistory;
 	mutable std::mutex _sessionsMutex;
+
+	//NOTE: what the router said last - told again to whoever sits down after. Both sides of it are on the game thread
+	std::optional<PortForwardingChange> _portForwarding{};
 
 	//NOTE: set once the goodbyes are out - the socket closes when every one is acked or the linger runs out
 	std::function<void()> _onClosed{};

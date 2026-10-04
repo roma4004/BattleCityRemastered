@@ -12,6 +12,7 @@
 #include "enums/InputChannel.h"
 #include "enums/MatchRules.h"
 #include "enums/PlayerSlot.h"
+#include "enums/PortForwarding.h"
 #include <algorithm>
 #include <cstddef>
 #include <iterator>
@@ -40,6 +41,29 @@ UiRow Line(std::string text) { return UiRow{.cells = {TextCell(std::move(text), 
 
 	return "";
 }
+
+//NOTE: what the host tells a friend from the internet - or why nobody gets in from there
+[[nodiscard]] std::vector<UiRow> ForwardingLines(const PortForwardingChangedEvent& forwarding)
+{
+	const std::string port{std::to_string(forwarding.port)};
+	switch (forwarding.state)
+	{
+		case PortForwarding::Opening:
+			return {Line("OPENING THE PORT ON THE ROUTER")};
+		case PortForwarding::Open:
+			return {Line("FROM THE INTERNET:"), Line(forwarding.host + ':' + port)};
+		case PortForwarding::NoRouter:
+			return {Line("NO UPNP ON THE ROUTER,"), Line("FORWARD UDP PORT " + port + " BY HAND")};
+		case PortForwarding::Refused:
+			return {Line("THE ROUTER REFUSED UDP PORT " + port)};
+		case PortForwarding::BehindProvider:
+			return {Line("BEHIND THE PROVIDER'S NAT,"), Line("NOT REACHABLE FROM THE INTERNET")};
+		case PortForwarding::lastId:
+			break;
+	}
+
+	return {};
+}
 }//namespace
 
 LobbyScreen::LobbyScreen(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig)
@@ -57,6 +81,7 @@ void LobbyScreen::Subscribe()
 	_subs.push_back(_events->AddListener(this, &LobbyScreen::OnRefusedOrLost));
 	_subs.push_back(_events->AddListener(this, &LobbyScreen::OnConnectedToHost));
 	_subs.push_back(_events->AddListener(this, &LobbyScreen::OnSlotAssigned));
+	_subs.push_back(_events->AddListener(this, &LobbyScreen::OnPortForwardingChanged));
 	_subs.push_back(_events->AddListener(this, &LobbyScreen::OnAbsenceChanged));
 }
 
@@ -84,11 +109,19 @@ void LobbyScreen::OnRefusedOrLost(const ClientInDisconnectEvent& event)
 {
 	_isServerFull = event.reason == DisconnectReason::ServerFull;
 	_match.reset();
+	_portForwarding.reset();
 }
 
 void LobbyScreen::OnConnectedToHost(const ClientConnectedToHostEvent&) { _isServerFull = false; }
 
-void LobbyScreen::OnSlotAssigned(const PlayerSlotAssignedEvent& event) { _match = event.match; }
+//NOTE: a new seat is a new server, maybe one that opens no port - it says again what it has after the seat
+void LobbyScreen::OnSlotAssigned(const PlayerSlotAssignedEvent& event)
+{
+	_match = event.match;
+	_portForwarding.reset();
+}
+
+void LobbyScreen::OnPortForwardingChanged(const PortForwardingChangedEvent& event) { _portForwarding = event; }
 
 //NOTE: the pick goes back to the top - the choices left may be fewer
 void LobbyScreen::OnAbsenceChanged(const AbsenceChangedEvent& event)
@@ -238,6 +271,11 @@ void LobbyScreen::Draw() const
 
 		lines.rows.push_back(Line(std::to_string(_match->bots) + " BOTS, "
 								  + (_match->isStartingAtOnce ? "STARTS AT ONCE" : "STARTS WHEN FULL")));
+	}
+
+	if (_portForwarding)
+	{
+		std::ranges::copy(ForwardingLines(*_portForwarding), std::back_inserter(lines.rows));
 	}
 
 	lines.rows.push_back(Line("PRESS M FOR MENU"));

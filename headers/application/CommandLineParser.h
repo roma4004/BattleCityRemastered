@@ -37,6 +37,10 @@ inline constexpr std::array kServerUsage{"--address=IP           what to listen 
 										 "the seats; left out, 0",
 										 "--start=now|full       now starts with whoever is in, full waits for every "
 										 "seat; left out, full",
+										 "--upnp                 open the port on the router through UPnP, for players "
+										 "from the internet",
+										 "--stop-event=NAME      Windows: wind down once this named event is set "
+										 "- what the game passes the server it starts",
 										 "--help                 this text"};
 
 class CommandLineParser final

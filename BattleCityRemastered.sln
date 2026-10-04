@@ -10,6 +10,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BattleCityRemastered", "Bat
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GameCore", "GameCore\GameCore.vcxproj", "{6A1F9C3D-2E57-4B8A-9D10-4F7C2A8B5E91}"
+	ProjectSection(ProjectDependencies) = postProject
+		{8CB6C892-B341-4B4D-90C6-14D48E95B92C} = {8CB6C892-B341-4B4D-90C6-14D48E95B92C}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GamePlatform", "GamePlatform\GamePlatform.vcxproj", "{3F2B7D14-6C48-4A9E-B512-8E0D5A37C4F2}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -41,6 +44,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SDL3_image.VisualC", "SDL3W
 	ProjectSection(ProjectDependencies) = postProject
 		{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68} = {81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "miniupnpc.VisualC", "SDL3Wrappers\miniupnpc\miniupnpc.vcxproj", "{8CB6C892-B341-4B4D-90C6-14D48E95B92C}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SDL3_mixer.VisualC", "SDL3Wrappers\SDL3_mixer\SDL_mixer.vcxproj", "{F7E944B3-0815-40CD-B3E4-90B2A15B0E33}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -144,6 +149,16 @@ Global
 		{3F2B7D14-6C48-4A9E-B512-8E0D5A37C4F2}.Release|x86.Build.0 = Release|Win32
 		{3F2B7D14-6C48-4A9E-B512-8E0D5A37C4F2}.Debug-ASan|x64.ActiveCfg = Debug-ASan|x64
 		{3F2B7D14-6C48-4A9E-B512-8E0D5A37C4F2}.Debug-ASan|x64.Build.0 = Debug-ASan|x64
+		{8CB6C892-B341-4B4D-90C6-14D48E95B92C}.Debug|x64.ActiveCfg = Debug|x64
+		{8CB6C892-B341-4B4D-90C6-14D48E95B92C}.Debug|x64.Build.0 = Debug|x64
+		{8CB6C892-B341-4B4D-90C6-14D48E95B92C}.Debug|x86.ActiveCfg = Debug|Win32
+		{8CB6C892-B341-4B4D-90C6-14D48E95B92C}.Debug|x86.Build.0 = Debug|Win32
+		{8CB6C892-B341-4B4D-90C6-14D48E95B92C}.Release|x64.ActiveCfg = Release|x64
+		{8CB6C892-B341-4B4D-90C6-14D48E95B92C}.Release|x64.Build.0 = Release|x64
+		{8CB6C892-B341-4B4D-90C6-14D48E95B92C}.Release|x86.ActiveCfg = Release|Win32
+		{8CB6C892-B341-4B4D-90C6-14D48E95B92C}.Release|x86.Build.0 = Release|Win32
+		{8CB6C892-B341-4B4D-90C6-14D48E95B92C}.Debug-ASan|x64.ActiveCfg = Debug|x64
+		{8CB6C892-B341-4B4D-90C6-14D48E95B92C}.Debug-ASan|x64.Build.0 = Debug|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -6,9 +6,11 @@
 #include "enums/DisconnectReason.h"
 #include "enums/GameState.h"
 #include "enums/PlayerSlot.h"
+#include "enums/PortForwarding.h"
 #include "enums/TankModel.h"
 #include <array>
 #include <cstddef>
+#include <cstdint>
 #include <optional>
 #include <string>
 #include <vector>
@@ -50,6 +52,14 @@ struct PlayerSlotAssignedEvent
 	PlayerSlot slot;
 	//NOTE: the match the host was started for - its seat count, and what the lobby shows
 	MatchSettings match{};
+};
+
+//NOTE: the server's port on the router, as the server tells every seat - the address a friend dials from the internet
+struct PortForwardingChangedEvent
+{
+	PortForwarding state{};
+	std::string host{};
+	std::uint16_t port{};
 };
 
 //NOTE: the link dropped without a goodbye - an announced leave is ServerInDisconnectEvent

@@ -4,6 +4,7 @@
 #include "network/Endpoints.h"
 #include "utils/Log.h"
 #include <charconv>
+#include <chrono>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
@@ -13,23 +14,38 @@
 #include <system_error>
 #include <windows.h>
 
+using namespace std::chrono_literals;
+
 namespace
 {
 constexpr auto kServerExeName{L"BattleCityServer.exe"};
+//NOTE: a server winding down tells its players goodbye and closes its port on the router - a router that does not
+//answer is not waited for longer than this, and the job kills the server then
+constexpr auto kStopPatience{3s};
 //NOTE: relative, so the name on the command line stays ASCII whatever the install path is - the child
 //runs with the exe's folder as its working directory. Two games hosting at once would share it, and the
 //second one would read the first one's port - a lobby is what fixes that, not a longer name
 constexpr auto kPortFileName{"server-port.txt"};
 
+//NOTE: unique to this game and this start - two games hosting at once, or one hosting again, never share one
+[[nodiscard]] std::string StopEventName()
+{
+	static unsigned int starts{};
+
+	return "Local\\BattleCityServer.stop." + std::to_string(GetCurrentProcessId()) + '.' + std::to_string(++starts);
+}
+
 //NOTE: what the child reads back - the host stays a bare literal, the port is its own word, the map a bare name
-std::string ChildArguments(const network::ServerAddress& address, const MatchSettings& match)
+std::string ChildArguments(const network::ServerAddress& address, const MatchSettings& match,
+						   const bool isPortForwarded, const std::string& stopEventName)
 {
 	const std::string rules{match.rules == MatchRules::FreeForAll ? "ffa" : "classic"};
 
 	return " --address=" + address.host + " --port=" + std::to_string(address.port) + " --port-file="
 		   + kPortFileName + " --seats=" + std::to_string(match.seats) + " --rules=" + rules + " --map=" + match.map
 		   + " --enemies=" + std::to_string(match.enemiesAtOnce) + " --bots=" + std::to_string(match.bots)
-		   + " --start=" + (match.isStartingAtOnce ? "now" : "full");
+		   + " --start=" + (match.isStartingAtOnce ? "now" : "full") + (isPortForwarded ? " --upnp" : "")
+		   + " --stop-event=" + stopEventName;
 }
 
 std::optional<std::uint16_t> ReadPortFile(const std::filesystem::path& path)
@@ -88,9 +104,13 @@ struct ServerProcess::Process
 	HANDLE job{nullptr};
 	HANDLE process{nullptr};
 	HANDLE thread{nullptr};
+	//NOTE: set to have the child wind down by itself
+	HANDLE stopEvent{nullptr};
 
 	~Process()
 	{
+		Stop();
+
 		//NOTE: the job first - closing it is what kills the child; the other two only observe it
 		if (job != nullptr)
 		{
@@ -106,6 +126,26 @@ struct ServerProcess::Process
 		{
 			CloseHandle(process);
 		}
+
+		if (stopEvent != nullptr)
+		{
+			CloseHandle(stopEvent);
+		}
+	}
+
+	//NOTE: asked first and killed only past the patience - a killed server leaves its port open on the router
+	void Stop() const
+	{
+		if (process == nullptr || stopEvent == nullptr || SetEvent(stopEvent) == 0)
+		{
+			return;
+		}
+
+		const auto patience{static_cast<DWORD>(std::chrono::milliseconds{kStopPatience}.count())};
+		if (WaitForSingleObject(process, patience) == WAIT_TIMEOUT)
+		{
+			Log::Error("ServerProcess: BattleCityServer did not stop in time and is killed");
+		}
 	}
 };
 
@@ -113,7 +153,8 @@ ServerProcess::ServerProcess() = default;
 
 ServerProcess::~ServerProcess() = default;
 
-bool ServerProcess::Start(const network::ServerAddress& address, const MatchSettings& match)
+bool ServerProcess::Start(const network::ServerAddress& address, const MatchSettings& match,
+						  const bool isPortForwarded)
 {
 	if (IsRunning())
 	{
@@ -135,6 +176,15 @@ bool ServerProcess::Start(const network::ServerAddress& address, const MatchSett
 
 	auto process{std::make_unique<Process>()};
 
+	const std::string stopEventName{StopEventName()};
+	process->stopEvent = CreateEventA(nullptr, TRUE, FALSE, stopEventName.c_str());
+	if (process->stopEvent == nullptr)
+	{
+		Log::Error("ServerProcess: " + LastErrorText("CreateEvent"));
+
+		return false;
+	}
+
 	process->job = CreateJobObjectW(nullptr, nullptr);
 	if (process->job == nullptr)
 	{
@@ -154,7 +204,7 @@ bool ServerProcess::Start(const network::ServerAddress& address, const MatchSett
 	}
 
 	//NOTE: CreateProcess writes into this buffer, so it cannot be a literal
-	const std::string argument{ChildArguments(address, match)};
+	const std::string argument{ChildArguments(address, match, isPortForwarded, stopEventName)};
 	std::wstring commandLine{L"\"" + exe.wstring() + L"\"" + std::wstring(argument.begin(), argument.end())};
 
 	STARTUPINFOW startup{};

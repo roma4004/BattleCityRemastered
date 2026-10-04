@@ -40,7 +40,7 @@ foreach(dir ${SDL3_SUBMODULES})
     add_subdirectory(${dir} SYSTEM)
 endforeach()
 
-# The only vendored library that still warns, and SYSTEM cannot reach it: SYSTEM quiets a dependency's
+# One of two vendored libraries still warning, and SYSTEM cannot reach it: SYSTEM quiets a dependency's
 # headers in *our* TUs, while these come from harfbuzz compiling its own .cc, which carries no -W of
 # ours. Two sources: hb.hh raises -Wall/-Wextra itself via pragma, and clang defaults add
 # -Wnontrivial-memcall.
@@ -76,6 +76,20 @@ add_subdirectory(ThirdParty/ser20 SYSTEM)
 # without this the map is corrupted by concurrent inserts. Must stay on for every consumer: the
 # macro changes the layout of StaticObject::LockGuard.
 target_compile_definitions(ser20 PUBLIC SER20_THREAD_SAFE=1)
+
+# --- miniupnpc --- (UPnP IGD client, the server opens its port on the router with it; only the miniupnpc/
+# subdirectory of the miniupnp repository is a library, the daemons next to it are never configured)
+set(UPNPC_BUILD_STATIC ON  CACHE BOOL "" FORCE)
+set(UPNPC_BUILD_SHARED OFF CACHE BOOL "" FORCE)
+set(UPNPC_BUILD_TESTS  OFF CACHE BOOL "" FORCE)
+set(UPNPC_BUILD_SAMPLE OFF CACHE BOOL "" FORCE)
+set(UPNPC_NO_INSTALL   ON  CACHE BOOL "" FORCE)
+add_subdirectory(ThirdParty/miniupnp/miniupnpc SYSTEM)
+# its own .c files, as with harfbuzz above: glibc's const-correct strstr/strchr make two of them warn
+# (-Wdiscarded-qualifiers), and the library raises -Wall itself
+if (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID MATCHES "Clang")
+    target_compile_options(libminiupnpc-static PRIVATE -w)
+endif ()
 
 # --- googletest (shared submodule with .sln/UnitTests.vcxproj) ---
 set(BUILD_GMOCK   OFF CACHE BOOL "Build gmock"   FORCE)

@@ -166,3 +166,6 @@
 [submodule "ThirdParty/SDL3_mixer"]
 	path = ThirdParty/SDL3_mixer
 	url = https://github.com/libsdl-org/SDL_mixer.git
+[submodule "ThirdParty/miniupnp"]
+	path = ThirdParty/miniupnp
+	url = https://github.com/miniupnp/miniupnp.git

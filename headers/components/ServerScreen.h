@@ -5,6 +5,7 @@
 #include "components/MatchSettings.h"
 #include "network/DiscoveryScan.h"
 #include "network/Endpoints.h"
+#include "network/PublicAddressProbe.h"
 #include <chrono>
 #include <cstddef>
 #include <memory>
@@ -118,6 +119,10 @@ class ServerScreen final
 	network::ServerAddress _offeredIPv6{};
 	//NOTE: the host this game last joined - a client is offered it in place of this machine
 	std::optional<std::string> _lastHost{};
+	//NOTE: what the internet sees this machine as - asked while hosting, until somebody answers
+	std::unique_ptr<network::PublicAddressProbe> _publicProbe{nullptr};
+	//NOTE: the router's address on the internet - the host's IPv4 list offers it once known
+	std::optional<std::string> _publicHost{};
 	Item _focus{};
 	GameMode _mode{};
 	//NOTE: why the last confirm went nowhere - empty when it did not
@@ -148,7 +153,10 @@ class ServerScreen final
 	void Close();
 	void Confirm(bool isPressed);
 	void Press();
-	void Choose(const network::ServerAddress& address);
+	void Choose(const network::ServerAddress& address, bool isPortForwarded);
+	void PollPublicAddress();
+	//NOTE: the router's address, which no interface has
+	[[nodiscard]] bool IsPublic(std::string_view host) const;
 
 	//NOTE: Left and Right turn a setting's value and the header's column, not a caret
 	[[nodiscard]] static bool IsTurnable(Line line) noexcept;

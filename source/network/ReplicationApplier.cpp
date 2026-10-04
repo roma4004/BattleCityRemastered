@@ -12,6 +12,7 @@
 #include "enums/BonusType.h"
 #include "enums/GameState.h"
 #include "enums/InputSignal.h"
+#include "enums/PortForwarding.h"
 #include "enums/StatisticsType.h"
 #include "utils/Log.h"
 #include <algorithm>
@@ -198,6 +199,20 @@ void ReplicationApplier::Emit(const WorldSnapshot& command) const
 void ReplicationApplier::Emit(const AbsenceChange& command) const
 {
 	_events->EmitEvent(AbsenceChangedEvent{.seats = command.seats});
+}
+
+void ReplicationApplier::Emit(const PortForwardingChange& command) const
+{
+	//NOTE: the lobby picks its words by the state, so a wire byte outside the enum is stopped where it enters
+	if (command.state >= PortForwarding::lastId)
+	{
+		Log::Error("ReplicationApplier: port forwarding state " + std::to_string(static_cast<int>(command.state))
+				   + " is unknown");
+
+		return;
+	}
+
+	_events->EmitEvent(PortForwardingChangedEvent{.state = command.state, .host = command.host, .port = command.port});
 }
 
 void ReplicationApplier::Emit(const BonusStatus& command) const

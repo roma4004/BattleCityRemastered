@@ -20,6 +20,7 @@ need_submodule(SUBMODULES_RECURSIVE ThirdParty/googletest/CMakeLists.txt ThirdPa
 # mpg123, fluidsynth with its test soundfonts, ...) is never configured - don't clone it either.
 need_submodule(SUBMODULES_FLAT ThirdParty/SDL3_image/CMakeLists.txt ThirdParty/SDL3_image)
 need_submodule(SUBMODULES_FLAT ThirdParty/SDL3_mixer/CMakeLists.txt ThirdParty/SDL3_mixer)
+need_submodule(SUBMODULES_FLAT ThirdParty/miniupnp/miniupnpc/CMakeLists.txt ThirdParty/miniupnp)
 
 function(fetch_submodules recurse)
     if (NOT ARGN)

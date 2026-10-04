@@ -279,6 +279,24 @@ std::expected<LaunchOptions, ArgError> CommandLineParser::ParseServer(const int 
 			continue;
 		}
 
+		if (arg == "--upnp")
+		{
+			launchOptions.isPortForwarded = true;
+
+			continue;
+		}
+
+		if (arg.starts_with("--stop-event="))
+		{
+			launchOptions.stopEventName = std::string{arg.substr(std::string_view{"--stop-event="}.size())};
+			if (launchOptions.stopEventName->empty())
+			{
+				return std::unexpected(ArgError{.arg = std::string{arg}, .reason = "expected --stop-event=NAME"});
+			}
+
+			continue;
+		}
+
 		if (arg.starts_with("--start="))
 		{
 			const std::string_view value{arg.substr(std::string_view{"--start="}.size())};

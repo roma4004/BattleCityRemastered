@@ -104,7 +104,10 @@ set(GAME_CORE_SOURCES
         source/network/Endpoints.cpp
         source/network/NetworkNodeBase.cpp
         source/network/PeerLink.cpp
+        source/network/PortMapping.cpp
+        source/network/PublicAddressProbe.cpp
         source/network/ReplicationApplier.cpp
+        source/network/Router.cpp
         source/network/ReplicationBindings.cpp
         source/network/ReplicationPublisher.cpp
         source/network/SeatHistory.cpp
@@ -194,6 +197,8 @@ target_link_libraries(GameCore PUBLIC
         ser20::ser20
         ${PLATFORM_NETWORK_LIBS}
 )
+#NOTE: Router.cpp finds the router with it, PortMapping.cpp opens the server's port on it
+target_link_libraries(GameCore PRIVATE miniupnpc::miniupnpc)
 
 #NOTE: without this, include order picks win_thread or posix_thread per TU, and the timer thread is
 # started as one and joined as the other - SIGSEGV in ~ClientNode. MSVC has no pthreads at all.
@@ -212,10 +217,15 @@ target_link_libraries(GamePlatform PUBLIC
 add_executable(${PROJECT_NAME} source/main.cpp)
 #NOTE: GameCore alone, exactly like UnitTests - SDL cannot reach BattleCityServer by
 #construction, and the console is all the output it has
-add_executable(BattleCityServer source/server_main.cpp source/application/ServerConsole.cpp)
+add_executable(BattleCityServer source/server_main.cpp source/application/ServerConsole.cpp
+        source/application/ServerStop.cpp)
 add_executable(UnitTests ${UNIT_TESTS_SOURCES})
 
 target_include_directories(UnitTests PRIVATE headers)
+#NOTE: a real server and client per test, every command type instantiated - past COFF's 65k sections under MSVC
+if (MSVC)
+    set_source_files_properties(UnitTests/NetworkTest.cpp PROPERTIES COMPILE_OPTIONS /bigobj)
+endif ()
 target_link_libraries(UnitTests PRIVATE project_warnings GameCore gtest gtest_main)
 
 include(GoogleTest)

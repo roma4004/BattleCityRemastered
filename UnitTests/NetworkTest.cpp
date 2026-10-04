@@ -21,6 +21,7 @@
 #include "enums/InputChannel.h"
 #include "enums/ObstacleType.h"
 #include "enums/PlayerSlot.h"
+#include "enums/PortForwarding.h"
 #include "enums/TankType.h"
 #include "network/ClientNode.h"
 #include "network/DatagramLink.h"
@@ -1229,6 +1230,46 @@ TEST_F(NetworkTest, TheClientsAreToldWhoLeft)
 
 	ASSERT_TRUE(PumpUntil([&told] { return told.has_value(); }));
 	EXPECT_EQ(told->seats, sent);
+}
+
+// what the router said about the server's port goes out to the clients - the lobby gives a friend the way in from it
+TEST_F(NetworkTest, TheClientsAreToldWhereTheInternetReachesTheServer)
+{
+	const auto server{MakeServer()};
+	const auto client{MakeClient(server->GetBoundPort())};
+	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
+
+	std::optional<PortForwardingChangedEvent> told{};
+	const EventSubscription toldSub{_clientEvents->AddListener([&told](const PortForwardingChangedEvent& event)
+	{
+		told = event;
+	})};
+	_serverEvents->EmitEvent(
+			PortForwardingChangedEvent{.state = PortForwarding::Open, .host = "203.0.113.7", .port = 5000u});
+
+	ASSERT_TRUE(PumpUntil([&told] { return told.has_value(); }));
+	EXPECT_EQ(told->state, PortForwarding::Open);
+	EXPECT_EQ(told->host, "203.0.113.7");
+	EXPECT_EQ(told->port, 5000u);
+}
+
+// a client that sits down after the router answered is told it all the same
+TEST_F(NetworkTest, AClientSeatedAfterTheRouterAnsweredIsToldTheWayIn)
+{
+	std::optional<PortForwardingChangedEvent> told{};
+	const EventSubscription toldSub{_clientEvents->AddListener([&told](const PortForwardingChangedEvent& event)
+	{
+		told = event;
+	})};
+
+	const auto server{MakeServer()};
+	_serverEvents->EmitEvent(PortForwardingChangedEvent{.state = PortForwarding::Refused, .port = 5000u});
+	Pump();
+	const auto client{MakeClient(server->GetBoundPort())};
+
+	ASSERT_TRUE(PumpUntil([&told] { return told.has_value(); }));
+	EXPECT_EQ(told->state, PortForwarding::Refused);
+	EXPECT_EQ(told->port, 5000u);
 }
 
 // and each answer reaches the server as the one it was

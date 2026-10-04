@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Local static-build copy of ThirdParty/miniupnp/miniupnpc/msvc/miniupnpc.vcxproj: paths rewritten to point back into the submodule, x64 added, the DLL configurations and the resource file dropped, the runtime switched to the static CRT the rest of the solution uses. miniupnpcstrings.h is the copy next to this file instead of the upstream VBScript's output. Do not edit the vendor submodule itself. -->
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectName>miniupnpc</ProjectName>
+    <ProjectGuid>{8CB6C892-B341-4B4D-90C6-14D48E95B92C}</ProjectGuid>
+    <RootNamespace>miniupnpc</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>$(DefaultPlatformToolset)</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>$(DefaultPlatformToolset)</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <!-- this folder first, for miniupnpcstrings.h -->
+      <AdditionalIncludeDirectories>$(ProjectDir);$(RepoRoot)ThirdParty\miniupnp\miniupnpc\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>MINIUPNP_STATICLIB;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <WarningLevel>Level3</WarningLevel>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PrecompiledHeader />
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\ThirdParty\miniupnp\miniupnpc\src\addr_is_reserved.c" />
+    <ClCompile Include="..\..\ThirdParty\miniupnp\miniupnpc\src\connecthostport.c" />
+    <ClCompile Include="..\..\ThirdParty\miniupnp\miniupnpc\src\igd_desc_parse.c" />
+    <ClCompile Include="..\..\ThirdParty\miniupnp\miniupnpc\src\minisoap.c" />
+    <ClCompile Include="..\..\ThirdParty\miniupnp\miniupnpc\src\minissdpc.c" />
+    <ClCompile Include="..\..\ThirdParty\miniupnp\miniupnpc\src\miniupnpc.c" />
+    <ClCompile Include="..\..\ThirdParty\miniupnp\miniupnpc\src\miniwget.c" />
+    <ClCompile Include="..\..\ThirdParty\miniupnp\miniupnpc\src\minixml.c" />
+    <ClCompile Include="..\..\ThirdParty\miniupnp\miniupnpc\src\portlistingparse.c" />
+    <ClCompile Include="..\..\ThirdParty\miniupnp\miniupnpc\src\receivedata.c" />
+    <ClCompile Include="..\..\ThirdParty\miniupnp\miniupnpc\src\upnpcommands.c" />
+    <ClCompile Include="..\..\ThirdParty\miniupnp\miniupnpc\src\upnpdev.c" />
+    <ClCompile Include="..\..\ThirdParty\miniupnp\miniupnpc\src\upnperrors.c" />
+    <ClCompile Include="..\..\ThirdParty\miniupnp\miniupnpc\src\upnpreplyparse.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="miniupnpcstrings.h" />
+    <ClInclude Include="..\..\ThirdParty\miniupnp\miniupnpc\include\igd_desc_parse.h" />
+    <ClInclude Include="..\..\ThirdParty\miniupnp\miniupnpc\include\miniupnpc.h" />
+    <ClInclude Include="..\..\ThirdParty\miniupnp\miniupnpc\include\miniupnpc_declspec.h" />
+    <ClInclude Include="..\..\ThirdParty\miniupnp\miniupnpc\include\miniupnpctypes.h" />
+    <ClInclude Include="..\..\ThirdParty\miniupnp\miniupnpc\include\miniwget.h" />
+    <ClInclude Include="..\..\ThirdParty\miniupnp\miniupnpc\include\portlistingparse.h" />
+    <ClInclude Include="..\..\ThirdParty\miniupnp\miniupnpc\include\upnpcommands.h" />
+    <ClInclude Include="..\..\ThirdParty\miniupnp\miniupnpc\include\upnpdev.h" />
+    <ClInclude Include="..\..\ThirdParty\miniupnp\miniupnpc\include\upnperrors.h" />
+    <ClInclude Include="..\..\ThirdParty\miniupnp\miniupnpc\include\upnpreplyparse.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

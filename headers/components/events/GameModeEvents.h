@@ -26,4 +26,6 @@ struct ServerAddressChosenEvent
 	network::ServerAddress address;
 	//NOTE: read when hosting - the server is started for this match
 	MatchSettings match{};
+	//NOTE: hosting for the internet - the server asks the router to pass its port on
+	bool isPortForwarded{};
 };

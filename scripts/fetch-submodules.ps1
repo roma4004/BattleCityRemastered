@@ -18,7 +18,8 @@ $recursiveGroups = @(
 # mpg123, fluidsynth with its test soundfonts - ~760 MB) is never configured. Don't clone it either.
 $flatGroups = @(
     @{ Marker = 'ThirdParty/SDL3_image/CMakeLists.txt'; Paths = @('ThirdParty/SDL3_image') },
-    @{ Marker = 'ThirdParty/SDL3_mixer/CMakeLists.txt'; Paths = @('ThirdParty/SDL3_mixer') }
+    @{ Marker = 'ThirdParty/SDL3_mixer/CMakeLists.txt'; Paths = @('ThirdParty/SDL3_mixer') },
+    @{ Marker = 'ThirdParty/miniupnp/miniupnpc/CMakeLists.txt'; Paths = @('ThirdParty/miniupnp') }
 )
 
 # Collected first, then fetched in one pass per pool: the groups are independent, and a separate

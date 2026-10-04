@@ -39,6 +39,7 @@ private:
 	void Emit(const SlotAssignment& command) const;
 	void Emit(const WorldSnapshot& command) const;
 	void Emit(const AbsenceChange& command) const;
+	void Emit(const PortForwardingChange& command) const;
 
 	//NOTE: the host-bound half of the wire - both peers share one AnyCommand, so these reach a client
 	//only if it is talking to itself

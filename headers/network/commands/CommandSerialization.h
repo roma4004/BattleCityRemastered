@@ -10,6 +10,7 @@
 #include "HealthChange.h"
 #include "KeyStateChange.h"
 #include "ObstacleSpawn.h"
+#include "PortForwardingChange.h"
 #include "PositionChange.h"
 #include "RespawnTank.h"
 #include "SignalEvent.h"
@@ -100,6 +101,14 @@ void serialize(Archive& ar, network::commands::ObstacleSpawn& cmd, const unsigne
 	ar & cmd.pos;
 	ar & cmd.obstacleType;
 	ar & cmd.uuid;
+}
+
+template<class Archive>
+void serialize(Archive& ar, network::commands::PortForwardingChange& cmd, const unsigned int /*version*/)
+{
+	ar & cmd.state;
+	ar & cmd.host;
+	ar & cmd.port;
 }
 
 template<class Archive>

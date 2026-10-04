@@ -15,7 +15,7 @@ inline constexpr std::string_view kReplyTag{"BC!2"};
 
 //NOTE: bumped whenever AnyCommand or the link header changes shape - an old client that dialled a new
 //server would break on the first batch, and the reply is the last place it can still be told
-inline constexpr std::uint16_t kProtocolVersion{3};
+inline constexpr std::uint16_t kProtocolVersion{4};
 
 struct Reply final
 {

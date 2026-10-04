@@ -86,6 +86,30 @@ protected:
 };
 
 
+// a star grows an enemy as it grows a player - the volley of the higher tiers comes with it
+TEST_F(BonusTestEnemy, StarPickUpByEnemyRaisesItsTier)
+{
+	const auto enemyBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN)};
+	const unsigned int tier{enemyBot->GetTier()};
+
+	_bonusSpawner->SpawnBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize}, BonusType::Star);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_EQ(enemyBot->GetTier(), tier + 1u);
+}
+
+// and so does the caliber, three tiers at once
+TEST_F(BonusTestEnemy, CaliberPickUpByEnemyRaisesItsTierByThree)
+{
+	const auto enemyBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN)};
+	const unsigned int tier{enemyBot->GetTier()};
+
+	_bonusSpawner->SpawnBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize}, BonusType::Caliber);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_EQ(enemyBot->GetTier(), tier + 3u);
+}
+
 // the wall is brick when the enemy takes the shovel
 TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressBricWallkHide)
 {

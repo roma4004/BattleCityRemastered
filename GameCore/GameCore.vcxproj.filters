@@ -282,6 +282,12 @@
     <ClCompile Include="..\source\network\PeerLink.cpp">
       <Filter>source\network</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\network\PortMapping.cpp">
+      <Filter>source\network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\network\PublicAddressProbe.cpp">
+      <Filter>source\network</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\network\ReplicationApplier.cpp">
       <Filter>source\network</Filter>
     </ClCompile>
@@ -289,6 +295,9 @@
       <Filter>source\network</Filter>
     </ClCompile>
     <ClCompile Include="..\source\network\ReplicationPublisher.cpp">
+      <Filter>source\network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\network\Router.cpp">
       <Filter>source\network</Filter>
     </ClCompile>
     <ClCompile Include="..\source\network\SeatHistory.cpp">
@@ -653,6 +662,9 @@
     <ClInclude Include="..\headers\enums\PlayerSlot.h">
       <Filter>headers\enums</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\enums\PortForwarding.h">
+      <Filter>headers\enums</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\enums\RespawnGroup.h">
       <Filter>headers\enums</Filter>
     </ClInclude>
@@ -755,6 +767,9 @@
     <ClInclude Include="..\headers\network\commands\PointSerialization.h">
       <Filter>headers\network\commands</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\network\commands\PortForwardingChange.h">
+      <Filter>headers\network\commands</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\network\commands\PositionChange.h">
       <Filter>headers\network\commands</Filter>
     </ClInclude>
@@ -809,6 +824,12 @@
     <ClInclude Include="..\headers\network\PeerLink.h">
       <Filter>headers\network</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\network\PortMapping.h">
+      <Filter>headers\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\PublicAddressProbe.h">
+      <Filter>headers\network</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\network\ReplicationApplier.h">
       <Filter>headers\network</Filter>
     </ClInclude>
@@ -816,6 +837,9 @@
       <Filter>headers\network</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\ReplicationPublisher.h">
+      <Filter>headers\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\Router.h">
       <Filter>headers\network</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\SeatHistory.h">
@@ -831,6 +855,9 @@
       <Filter>headers\network</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\Session.h">
+      <Filter>headers\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\Stun.h">
       <Filter>headers\network</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\WireFrame.h">

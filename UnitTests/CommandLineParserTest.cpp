@@ -447,6 +447,14 @@ TEST(ServerCommandLineTest, TheStartIsTaken)
 	EXPECT_FALSE(ParseServerRaw({"--start=later"}).has_value());
 }
 
+// the port is opened on the router only when asked - a server for a LAN party has no business with the router
+TEST(ServerCommandLineTest, TheRouterIsAskedOnlyWithUpnp)
+{
+	EXPECT_TRUE(ParseServerRaw({"--upnp"}).value_or(LaunchOptions{}).isPortForwarded);
+	EXPECT_FALSE(ParseServerRaw({"--port=4000"}).value_or(LaunchOptions{.isPortForwarded = true}).isPortForwarded);
+	EXPECT_FALSE(ParseServerRaw({"--upnp=yes"}).has_value());
+}
+
 // one to four seats only
 TEST(ServerCommandLineTest, ASeatCountOutsideOneToFourIsRefused)
 {
