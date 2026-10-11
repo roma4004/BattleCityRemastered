@@ -113,6 +113,7 @@ void Tank::Reset(const TankResetProperty& resetProperty, std::unique_ptr<IInputP
 	_author = SeatOf(_type);
 	_faction = FactionOf(_author, _gameConfig.Rules());
 	_tier = 1u;
+	_isPendingGrowth = false;
 
 	ApplyFreshLoadout();
 	ApplyTier(resetProperty.tier);
@@ -217,6 +218,7 @@ void Tank::SubscribeAsClient()
 	_subs.push_back(_events->AddListener(Key(_author), this, &Tank::OnTankShot));
 	_subs.push_back(_events->AddListener(Key(_author), this, &Tank::OnBonusHelmetApplied));
 	_subs.push_back(_events->AddListener(Key(_uuid), this, &Tank::OnTierChanged));
+	_subs.push_back(_events->AddListener(Key(_uuid), this, &Tank::OnTankGrew));
 	_subs.push_back(_events->AddListener(Key(_author), this, &Tank::OnBonusShipApplied));
 }
 
@@ -228,7 +230,12 @@ void Tank::OnTankShot(const TankShotEvent& event)
 
 void Tank::OnBonusHelmetApplied(const BonusHelmetAppliedEvent& event) { OnBonusHelmet(event.isActive); }
 
-void Tank::OnTierChanged(const TierChangedEvent& event) { _tier = event.tier; }
+void Tank::OnTierChanged(const TierChangedEvent& event)
+{
+	_tier = event.tier;
+}
+
+void Tank::OnTankGrew(const TankGrewEvent& event) { _rect = event.rect; }
 
 void Tank::OnBonusShipApplied(const BonusShipAppliedEvent&) { OnBonusShip(); }
 
@@ -255,7 +262,7 @@ void Tank::OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) co
 	event.snapshot.tanks.push_back(TankSnapshot{.type = _type,
 												.model = _model,
 												.uuid = _uuid,
-												.pos = GetPos(),
+												.rect = _rect,
 												.dir = _dir,
 												.health = GetHealth(),
 												.tier = _tier,
@@ -402,6 +409,8 @@ void Tank::ShoveAhead(const Direction dir, const double step)
 //NOTE: the same loop whoever drives - the driver only answers where to go and whether to fire
 void Tank::TickUpdate(const double deltaTime)
 {
+	GrowIfPending();
+
 	if (_shootTimer.isActive && _shootTimer.IsCooldownFinish())
 	{
 		_shootTimer.isActive = false;
@@ -562,11 +571,35 @@ void Tank::Upgrade(const unsigned short tiers)
 	}
 
 	ApplyTier(static_cast<unsigned short>(_tier + tiers));
-
 	if (_gameConfig.IsHost())
 	{
 		_events->EmitEvent(TierChangedEvent{.tier = _tier, .uuid = _uuid});
 	}
+
+	_isPendingGrowth = SizeOf(_model, _tier, _gameConfig) > _rect.w;
+	GrowIfPending();
+}
+
+void Tank::GrowIfPending()
+{
+	if (!_isPendingGrowth || !_tankMoveBeh->TryGrow(SizeOf(_model, _tier, _gameConfig), _allObjects))
+	{
+		return;
+	}
+
+	_isPendingGrowth = false;
+	if (_gameConfig.IsHost())
+	{
+		_events->EmitEvent(TankGrewEvent{.rect = _rect, .uuid = _uuid});
+	}
+}
+
+double Tank::SizeOf(const TankModel model, const unsigned short tier, const GameConfig& gameConfig)
+{
+	const auto steps{static_cast<double>(std::clamp(tier, kMinTier, kMaxTier) - kMinTier)};
+	const double side{gameConfig.tankSize * SpecOf(model).sizeFactor * (1.0 + kTierStep.sizeShare * steps)};
+
+	return std::min(side, gameConfig.gridOffset * static_cast<double>(WorldGeometry::kMaxTankCellSpan));
 }
 
 void Tank::OnBonusStar() { Upgrade(kStarTiers); }

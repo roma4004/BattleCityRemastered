@@ -112,8 +112,8 @@ public:
 
 	[[nodiscard]] bool TryRestartMatch() const;
 
-	//NOTE: separate from EndNetworkFrame because drawing goes between them
+	//NOTE: separate from SendNetworkFrame because drawing goes between them
 	void Tick();
 
-	void EndNetworkFrame() const;
+	void SendNetworkFrame() const;
 };

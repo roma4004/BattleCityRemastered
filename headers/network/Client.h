@@ -22,8 +22,8 @@
 #include <string_view>
 #include <vector>
 
-struct NetworkEndFrameEvent;
 struct PlayerSlotAssignedEvent;
+struct SendNetworkFrameEvent;
 class EventSystem;
 
 namespace network::commands
@@ -59,7 +59,7 @@ private:
 	void Transmit(Clock::time_point now);
 	void CloseSocket();
 
-	void OnNetworkEndFrame(const NetworkEndFrameEvent&);
+	void OnSendNetworkFrame(const SendNetworkFrameEvent&);
 	void OnSlotAssigned(const PlayerSlotAssignedEvent& event);
 
 	//NOTE: the only command Client reads itself - the rest are the applier's, and this one is not a

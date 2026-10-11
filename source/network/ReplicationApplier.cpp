@@ -60,6 +60,11 @@ void ReplicationApplier::Emit(const TierChange& command) const
 					   TierChangedEvent{.tier = command.tier, .uuid = command.uuid});
 }
 
+void ReplicationApplier::Emit(const TankGrew& command) const
+{
+	_events->EmitEvent(Key(command.uuid), TankGrewEvent{.rect = command.rect, .uuid = command.uuid});
+}
+
 void ReplicationApplier::Emit(const Despawn& command) const
 {
 	_events->EmitEvent(Key(command.uuid),
@@ -70,6 +75,7 @@ void ReplicationApplier::Emit(const RespawnTank& command) const
 {
 	_events->EmitEvent(TankRespawnedEvent{.type = command.tankType,
 										  .model = command.model,
+										  .tier = command.tier,
 										  .uuid = command.uuid,
 										  .pos = command.pos});
 }

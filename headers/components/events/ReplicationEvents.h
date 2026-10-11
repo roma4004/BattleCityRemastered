@@ -1,5 +1,6 @@
 #pragma once
 
+#include "geometry/ObjRectangle.h"
 #include "geometry/Point.h"
 #include "enums/Author.h"
 #include "enums/Direction.h"
@@ -33,6 +34,12 @@ struct HealthChangedEvent
 struct TierChangedEvent
 {
 	unsigned short tier;
+	Uuid uuid;
+};
+
+struct TankGrewEvent
+{
+	ObjRectangle rect;
 	Uuid uuid;
 };
 

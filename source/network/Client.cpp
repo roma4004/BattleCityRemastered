@@ -355,7 +355,7 @@ void Client::Shutdown(const DisconnectReason reason, std::function<void()> onClo
 
 void Client::Subscribe()
 {
-	_subs.push_back(_events->AddListener(this, &Client::OnNetworkEndFrame));
+	_subs.push_back(_events->AddListener(this, &Client::OnSendNetworkFrame));
 	_subs.push_back(_events->AddListener(this, &Client::OnSlotAssigned));
 }
 
@@ -365,7 +365,7 @@ void Client::OnSlotAssigned(const PlayerSlotAssignedEvent& event)
 }
 
 //NOTE: nothing is banked without a link - keys pressed while reconnecting would reach the new one as a burst
-void Client::OnNetworkEndFrame(const NetworkEndFrameEvent&)
+void Client::OnSendNetworkFrame(const SendNetworkFrameEvent&)
 {
 	const auto frame{_replicationOut.TakeFrame()};
 	if (!frame)

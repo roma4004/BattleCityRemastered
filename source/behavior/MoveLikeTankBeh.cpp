@@ -8,10 +8,13 @@
 #include "utils/DirectionUtils.h"
 #include "utils/ObjectUtils.h"
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <memory>
 #include <optional>
+#include <ranges>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 MoveLikeTankBeh::MoveLikeTankBeh(ObjRectangle& rect, double& speed, Uuid& uuid, BonusEffectProperty& effects,
@@ -132,6 +135,81 @@ bool MoveLikeTankBeh::NudgeIntoGap(const Direction dir, const double step,
 	}
 
 	return false;
+}
+
+std::vector<double> MoveLikeTankBeh::GrowthShifts(const bool isXAxis, const double side,
+												  const std::vector<const BaseObj*>& near) const
+{
+	const auto [from, to]{_rect.SpanOn(isXAxis)};
+	const double growth{side - (to - from)};
+	const UPoint field{_gameConfig.battlefieldSize};
+	const auto fieldSize{static_cast<double>(isXAxis ? field.x : field.y)};
+
+	//NOTE: the field's own edges stand in the way as much as a wall does
+	std::vector<double> shifts{growth / 2.0, 0.0, growth, from, from + side - fieldSize};
+	for (const BaseObj* const object: near)
+	{
+		const auto [low, high]{object->GetRect().SpanOn(isXAxis)};
+		shifts.push_back(from - high);
+		shifts.push_back(from + side - low);
+	}
+
+	std::erase_if(shifts, [growth](const double shift) { return shift < 0.0 || shift > growth; });
+
+	return shifts;
+}
+
+bool MoveLikeTankBeh::TryGrow(const double side, const std::vector<std::shared_ptr<BaseObj>>& objects)
+{
+	const double growth{side - _rect.w};
+	if (growth <= 0.0)
+	{
+		return false;
+	}
+
+	const ObjRectangle reach{.x = _rect.x - growth, .y = _rect.y - growth, .w = side + growth, .h = side + growth};
+	std::vector<const BaseObj*> near{};
+	for (const std::shared_ptr<BaseObj>& object: objects)
+	{
+		if (IsBlocking(object.get(), reach))
+		{
+			near.push_back(object.get());
+		}
+	}
+
+	const UPoint field{_gameConfig.battlefieldSize};
+	const auto grownAt = [this, side](const auto& shift)
+	{
+		const auto [shiftX, shiftY]{shift};
+
+		return ObjRectangle{.x = _rect.x - shiftX, .y = _rect.y - shiftY, .w = side, .h = side};
+	};
+	const auto isRoom = [this, &near, field](const ObjRectangle& grown)
+	{
+		const auto isInTheWay = [this, &grown](const BaseObj* const object) { return IsBlocking(object, grown); };
+
+		return ColliderUtils::IsInside(grown, field) && std::ranges::none_of(near, isInTheWay);
+	};
+
+	const ObjRectangle centered{grownAt(std::pair{growth / 2.0, growth / 2.0})};
+	const auto shiftFromCenter = [&centered](const ObjRectangle& grown)
+	{
+		return std::abs(grown.x - centered.x) + std::abs(grown.y - centered.y);
+	};
+
+	const std::vector<double> shiftsX{GrowthShifts(true, side, near)};
+	const std::vector<double> shiftsY{GrowthShifts(false, side, near)};
+	auto rooms{std::views::cartesian_product(shiftsX, shiftsY) | std::views::transform(grownAt)
+			   | std::views::filter(isRoom)};
+	const auto best{std::ranges::min_element(rooms, {}, shiftFromCenter)};
+	if (best == rooms.end())
+	{
+		return false;
+	}
+
+	_rect = *best;
+
+	return true;
 }
 
 std::vector<BaseObj*> MoveLikeTankBeh::BlockersAhead(

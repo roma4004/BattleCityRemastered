@@ -136,7 +136,7 @@ void BindHostReplication(ReplicationPublisher& out)
 	});
 	out.Bind<TankRespawnedEvent>([](const auto& e)
 	{
-		return RespawnTank{.tankType = e.type, .model = e.model, .uuid = e.uuid, .pos = e.pos};
+		return RespawnTank{.tankType = e.type, .model = e.model, .tier = e.tier, .uuid = e.uuid, .pos = e.pos};
 	});
 	out.Bind<ObstacleSpawnedEvent>([](const auto& e)
 	{
@@ -152,6 +152,7 @@ void BindHostReplication(ReplicationPublisher& out)
 	{
 		return TierChange{.tier = e.tier, .uuid = e.uuid};
 	});
+	out.Bind<TankGrewEvent>([](const auto& e) { return TankGrew{.rect = e.rect, .uuid = e.uuid}; });
 
 	BindHostStatistics(out);
 	BindHostBonus(out);

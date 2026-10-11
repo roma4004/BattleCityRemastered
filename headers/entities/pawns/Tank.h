@@ -21,6 +21,7 @@ struct PosChangedEvent;
 struct BonusTimerReApplyOnSpawnEvent;
 struct TankShotEvent;
 struct TierChangedEvent;
+struct TankGrewEvent;
 struct BonusHelmetAppliedEvent;
 struct BonusShipAppliedEvent;
 struct BonusTimerStatusChangeEvent;
@@ -51,6 +52,7 @@ class Tank final : public Pawn
 	TankModel _model{};
 	//NOTE: where the driver asked to go on the last tick, empty when it asked for nothing at all
 	std::optional<Direction> _drivingTo{};
+	bool _isPendingGrowth{};
 
 	void EmitMoved();
 
@@ -68,6 +70,7 @@ class Tank final : public Pawn
 	void OnTankShot(const TankShotEvent& event);
 	void OnBonusHelmetApplied(const BonusHelmetAppliedEvent& event);
 	void OnTierChanged(const TierChangedEvent& event);
+	void OnTankGrew(const TankGrewEvent& event);
 	void OnBonusShipApplied(const BonusShipAppliedEvent&);
 	void OnBonusHelmetStatusChange(const BonusHelmetStatusChangeEvent& event);
 	void OnBonusStarPickup(const BonusStarPickupEvent& event);
@@ -87,13 +90,15 @@ class Tank final : public Pawn
 		double damageShare{};
 		double blastShare{};
 		double reloadShare{};
+		double sizeShare{};
 	};
 
 	//NOTE: the numbers the player's tank used to gain per star, read back as shares of its own base
 	static constexpr TierGrowth kTierStep{.speedShare = 0.10,
 										  .damageShare = 1.0,
 										  .blastShare = 0.25,
-										  .reloadShare = 0.30};
+										  .reloadShare = 0.30,
+										  .sizeShare = 1.0 / 9.0};
 
 	//NOTE: star and caliber differ only in how far they carry a tank along the same four tiers
 	static constexpr unsigned short kStarTiers{1u};
@@ -108,6 +113,8 @@ class Tank final : public Pawn
 	static constexpr int kPickupHeal{50};
 
 	void Upgrade(unsigned short tiers);
+	//NOTE: the tier's size waits for room - grown into a wall the tank could not drive off it
+	void GrowIfPending();
 
 	//NOTE: the model's own numbers, before a single tier has been earned
 	[[nodiscard]] BulletCaliber BaseCaliber() const;
@@ -159,6 +166,8 @@ public:
 
 	//NOTE: back into service from the pool - everything a previous life could have changed
 	void Reset(const TankResetProperty& resetProperty, std::unique_ptr<IInputProvider> driver);
+
+	[[nodiscard]] static double SizeOf(TankModel model, unsigned short tier, const GameConfig& gameConfig);
 
 	[[nodiscard]] unsigned int GetTier() const noexcept;
 	[[nodiscard]] TankModel GetModel() const noexcept;

@@ -635,25 +635,7 @@ SDL_Rect UiRenderer::MenuPanelRect(const int slide) const
 					.h = static_cast<int>(window.y) - kPanelTopInset - kPanelSideInset};
 }
 
-float UiRenderer::CurrentRenderScale() const
-{
-	//NOTE: SDL_GetRenderScale misses the logical presentation - the letterbox rect maps a logical pixel to the window
-	int logicalWidth{};
-	int logicalHeight{};
-	SDL_RendererLogicalPresentation mode{SDL_LOGICAL_PRESENTATION_DISABLED};
-	SDL_FRect presentation{};
-	if (!SDL_GetRenderLogicalPresentation(_sdlConfig.renderer.get(), &logicalWidth, &logicalHeight, &mode)
-		|| mode == SDL_LOGICAL_PRESENTATION_DISABLED
-		|| logicalWidth <= 0
-		|| !SDL_GetRenderLogicalPresentationRect(_sdlConfig.renderer.get(), &presentation))
-	{
-		return 1.f;
-	}
-
-	const float scale{presentation.w / static_cast<float>(logicalWidth)};
-
-	return scale > 0.f ? scale : 1.f;
-}
+float UiRenderer::CurrentRenderScale() const { return SdlRenderUtils::LogicalScale(_sdlConfig.renderer.get()).x; }
 
 SDL_Rect UiRenderer::CenteredInField(const int width, const int height, const double middleShare) const
 {

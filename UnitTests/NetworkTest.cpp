@@ -1,3 +1,4 @@
+#include "geometry/ObjRectangle.h"
 #include "geometry/Point.h"
 #include "components/EventSystem.h"
 #include "components/MatchSettings.h"
@@ -81,10 +82,10 @@ protected:
 		_clientEvents->EmitEvent(PreTickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 		_secondClientEvents->EmitEvent(PreTickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 		_thirdClientEvents->EmitEvent(PreTickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-		_serverEvents->EmitEvent(NetworkEndFrameEvent{});
-		_clientEvents->EmitEvent(NetworkEndFrameEvent{});
-		_secondClientEvents->EmitEvent(NetworkEndFrameEvent{});
-		_thirdClientEvents->EmitEvent(NetworkEndFrameEvent{});
+		_serverEvents->EmitEvent(SendNetworkFrameEvent{});
+		_clientEvents->EmitEvent(SendNetworkFrameEvent{});
+		_secondClientEvents->EmitEvent(SendNetworkFrameEvent{});
+		_thirdClientEvents->EmitEvent(SendNetworkFrameEvent{});
 	}
 
 	//NOTE: listeners fire from the drain Pump does, so on this thread - a captured variable is enough
@@ -396,6 +397,26 @@ TEST_F(NetworkTest, TierEventReplication)
 
 	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
 	EXPECT_EQ(tierOrigin, *received);
+}
+
+TEST_F(NetworkTest, TankGrewEventReplication)
+{
+	const auto server{MakeServer()};
+	const auto client{MakeClient(server->GetBoundPort())};
+	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
+
+	constexpr ObjRectangle grown{.x = 98.0, .y = 96.0, .w = 40.0, .h = 40.0};
+
+	std::optional<ObjRectangle> received{};
+	auto grewSub{_clientEvents->AddListener(Key(_uuid),
+											[&received](const TankGrewEvent& event) { received = event.rect; })};
+
+	_serverEvents->EmitEvent(TankGrewEvent{.rect = grown, .uuid = _uuid});
+
+	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
+	EXPECT_DOUBLE_EQ(received->x, grown.x);
+	EXPECT_DOUBLE_EQ(received->y, grown.y);
+	EXPECT_DOUBLE_EQ(received->w, grown.w);
 }
 
 //NOTE: no payload of its own - under test is that its alternative reaches the right seat

@@ -29,7 +29,7 @@
 #include <vector>
 
 struct MapLoadedEvent;
-struct NetworkEndFrameEvent;
+struct SendNetworkFrameEvent;
 struct PortForwardingChangedEvent;
 struct ServerClientSeatedEvent;
 struct SeatHolderChangedEvent;
@@ -88,7 +88,7 @@ private:
 	//NOTE: what the beacon answers with, so it is taken under the mutex like any other read of the seats
 	[[nodiscard]] std::uint8_t CountFreeSlots() const;
 
-	void OnNetworkEndFrame(const NetworkEndFrameEvent&);
+	void OnSendNetworkFrame(const SendNetworkFrameEvent&);
 	void OnMapLoaded(const MapLoadedEvent& event);
 	void OnSeatHolderChanged(const SeatHolderChangedEvent&) const;
 

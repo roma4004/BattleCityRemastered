@@ -65,7 +65,7 @@ Server::Server(boost::asio::io_context& ioContext, const ServerAddress& address,
 	Receive();
 	ScheduleTick();
 
-	_subs.push_back(_events->AddListener(this, &Server::OnNetworkEndFrame));
+	_subs.push_back(_events->AddListener(this, &Server::OnSendNetworkFrame));
 	_subs.push_back(_events->AddListener(this, &Server::OnMapLoaded));
 	_subs.push_back(_events->AddListener(this, &Server::OnSeatHolderChanged));
 	_subs.push_back(_events->AddListener(this, &Server::OnStatusRequested));
@@ -380,7 +380,7 @@ void Server::OnClientSeated(const ServerClientSeatedEvent&)
 }
 
 //NOTE: a snapshot goes out in place of the frame, never beside it - it already holds everything the frame says
-void Server::OnNetworkEndFrame(const NetworkEndFrameEvent&)
+void Server::OnSendNetworkFrame(const SendNetworkFrameEvent&)
 {
 	CleanupDeadSessions();
 

@@ -1,6 +1,8 @@
 #include "utils/SdlRenderUtils.h"
 #include "geometry/ObjRectangle.h"
 #include "geometry/Point.h"
+#include <cmath>
+#include <SDL3/SDL_rect.h>
 #include <SDL3/SDL_render.h>
 
 SDL_FRect SdlRenderUtils::ToFRect(const SDL_Rect& rect)
@@ -36,6 +38,40 @@ unsigned int SdlRenderUtils::ColorToInt(const SDL_Color& color)
 {
 	//NOTE: Uint8 promotes to int and 255 << 24 lands on the sign bit - the widening keeps it unsigned
 	return (Uint32{color.a} << 24u) | (Uint32{color.r} << 16u) | (Uint32{color.g} << 8u) | Uint32{color.b};
+}
+
+SDL_FPoint SdlRenderUtils::LogicalScale(SDL_Renderer* const renderer)
+{
+	int logicalWidth{};
+	int logicalHeight{};
+	SDL_RendererLogicalPresentation mode{SDL_LOGICAL_PRESENTATION_DISABLED};
+	SDL_FRect presentation{};
+	if (!SDL_GetRenderLogicalPresentation(renderer, &logicalWidth, &logicalHeight, &mode)
+		|| mode == SDL_LOGICAL_PRESENTATION_DISABLED
+		|| logicalWidth <= 0
+		|| logicalHeight <= 0
+		|| !SDL_GetRenderLogicalPresentationRect(renderer, &presentation)
+		|| presentation.w <= 0.f
+		|| presentation.h <= 0.f)
+	{
+		return SDL_FPoint{.x = 1.f, .y = 1.f};
+	}
+
+	return SDL_FPoint{.x = presentation.w / static_cast<float>(logicalWidth),
+					  .y = presentation.h / static_cast<float>(logicalHeight)};
+}
+
+SDL_FRect SdlRenderUtils::SnapToWindowPixels(SDL_Renderer* const renderer, const SDL_FRect& rect)
+{
+	const auto [scaleX, scaleY]{LogicalScale(renderer)};
+	const auto snap = [](const float logical, const float scale) { return std::round(logical * scale) / scale; };
+	const float left{snap(rect.x, scaleX)};
+	const float top{snap(rect.y, scaleY)};
+
+	return SDL_FRect{.x = left,
+					 .y = top,
+					 .w = snap(rect.x + rect.w, scaleX) - left,
+					 .h = snap(rect.y + rect.h, scaleY) - top};
 }
 
 void SdlRenderUtils::FillRect(SDL_Renderer* const renderer, const SDL_Rect& rect)

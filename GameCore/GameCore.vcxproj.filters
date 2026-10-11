@@ -800,6 +800,9 @@
     <ClInclude Include="..\headers\network\commands\StatisticsChange.h">
       <Filter>headers\network\commands</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\network\commands\TankGrew.h">
+      <Filter>headers\network\commands</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\network\commands\TankShot.h">
       <Filter>headers\network\commands</Filter>
     </ClInclude>

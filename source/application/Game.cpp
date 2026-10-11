@@ -332,7 +332,7 @@ void Game::Run()
 
 			_userInterface->Draw();
 
-			_simulation->EndNetworkFrame();
+			_simulation->SendNetworkFrame();
 
 			_events->EmitEvent(PresentFrameEvent{});
 

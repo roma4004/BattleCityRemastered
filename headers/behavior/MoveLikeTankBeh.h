@@ -38,6 +38,9 @@ class MoveLikeTankBeh final : public IMoveBeh
 									const std::vector<std::shared_ptr<BaseObj>>& objects,
 									const std::vector<BaseObj*>& blockers);
 
+	[[nodiscard]] std::vector<double> GrowthShifts(bool isXAxis, double side,
+												   const std::vector<const BaseObj*>& near) const;
+
 public:
 	MoveLikeTankBeh(ObjRectangle& rect, double& speed, Uuid& uuid, BonusEffectProperty& effects,
 					const GameConfig& gameConfig);
@@ -58,4 +61,6 @@ public:
 	[[nodiscard]] std::vector<Direction> GetFreePathSides(
 			double deltaTime, std::optional<Direction> excludeDirection,
 			const std::vector<std::shared_ptr<BaseObj>>& objects) const;
+	//NOTE: grows where nothing stands, shifted off a wall beside it; with no room the hull stays as it was
+	[[nodiscard]] bool TryGrow(double side, const std::vector<std::shared_ptr<BaseObj>>& objects);
 };

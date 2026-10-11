@@ -62,7 +62,7 @@ protected:
 	}
 };
 
-// health and speed are the base figures scaled by the model the tank was rolled as, whichever one that was
+// health, speed and size are the base figures scaled by the model the tank was rolled as, whichever one that was
 TEST_F(TankModelTest, AnEnemyIsBuiltToTheNumbersOfItsModel)
 {
 	_events->EmitEvent(RespawnTanksEvent{});
@@ -80,6 +80,7 @@ TEST_F(TankModelTest, AnEnemyIsBuiltToTheNumbersOfItsModel)
 		const TankModel model{tank->GetModel()};
 		EXPECT_EQ(tank->GetHealth(), HealthOf(model, _gameConfig.tankHealth)) << ToString(model);
 		EXPECT_DOUBLE_EQ(tank->GetSpeed(), SpeedOf(model, _gameConfig.tankSpeed)) << ToString(model);
+		EXPECT_DOUBLE_EQ(tank->GetRect().w, Tank::SizeOf(model, 1u, _gameConfig)) << ToString(model);
 	}
 }
 
@@ -114,6 +115,7 @@ TEST_F(TankModelTest, AMirroredSpawnIsBuiltToTheModelTheHostRolled)
 	ASSERT_EQ(tanks.size(), 1u);
 	EXPECT_EQ(tanks.front()->GetModel(), TankModel::Armor);
 	EXPECT_EQ(tanks.front()->GetHealth(), HealthOf(TankModel::Armor, _gameConfig.tankHealth));
+	EXPECT_DOUBLE_EQ(tanks.front()->GetRect().w, Tank::SizeOf(TankModel::Armor, 1u, _gameConfig));
 }
 
 // the map's list decides the models, enemy by enemy in its order

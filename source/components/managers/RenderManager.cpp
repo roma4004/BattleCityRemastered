@@ -250,7 +250,8 @@ void RenderManager::DrawTexture(const RenderTextureEvent& event) const
 {
 	auto [angle, flip] = GetRotateAndAngleAndFlip(event.dir);
 	const SDL_FRect src{SdlRenderUtils::ToFRect(SdlRenderUtils::RectToSdlRect(event.textureRect))};
-	const SDL_FRect dst{SdlRenderUtils::ToFRect(SdlRenderUtils::RectToSdlRect(event.destRect))};
+	const SDL_FRect dst{SdlRenderUtils::SnapToWindowPixels(
+			_sdlConfig.renderer.get(), SdlRenderUtils::ToFRect(SdlRenderUtils::RectToSdlRect(event.destRect)))};
 	SDL_Texture* atlas{_sdlConfig.atlasTexture.get()};
 
 	if (event.color != 0u)

@@ -1,6 +1,7 @@
 #include "utils/ColliderUtils.h"
 #include "geometry/Circle.h"
 #include "geometry/ObjRectangle.h"
+#include "geometry/Point.h"
 #include <algorithm>
 #include <cmath>
 
@@ -29,4 +30,11 @@ bool ColliderUtils::IsCollide(const Circle& circle, const ObjRectangle& rect) no
 	const double deltaY{circle.center.y - std::max(rect.y, std::min(circle.center.y, rect.Bottom()))};
 
 	return (deltaX * deltaX + deltaY * deltaY) < (circle.radius * circle.radius);
+}
+
+bool ColliderUtils::IsInside(const ObjRectangle& rect, const UPoint area) noexcept
+{
+	return rect.x > -kTouchTolerance && rect.y > -kTouchTolerance
+		   && rect.Right() < static_cast<double>(area.x) + kTouchTolerance
+		   && rect.Bottom() < static_cast<double>(area.y) + kTouchTolerance;
 }

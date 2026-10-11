@@ -16,6 +16,7 @@ constexpr const char* NameOf(const commands::PositionChange&) { return "Position
 constexpr const char* NameOf(const commands::TankShot&) { return "TankShot"; }
 constexpr const char* NameOf(const commands::HealthChange&) { return "HealthChange"; }
 constexpr const char* NameOf(const commands::TierChange&) { return "TierChange"; }
+constexpr const char* NameOf(const commands::TankGrew&) { return "TankGrew"; }
 constexpr const char* NameOf(const commands::Despawn&) { return "Despawn"; }
 constexpr const char* NameOf(const commands::StatisticsChange&) { return "StatisticsChange"; }
 constexpr const char* NameOf(const commands::KeyStateChange&) { return "KeyStateChange"; }

@@ -283,7 +283,7 @@ int main(const int argc, char* argv[])
 
 		simulation.Tick();
 
-		simulation.EndNetworkFrame();
+		simulation.SendNetworkFrame();
 
 		events->EmitEvent(CalculateActualFpsEvent{});
 	}

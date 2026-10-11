@@ -14,6 +14,7 @@ struct RespawnTank final
 
 	TankType tankType{};
 	TankModel model{};
+	unsigned short tier{1u};
 	Uuid uuid{};
 	FPoint pos{};
 };

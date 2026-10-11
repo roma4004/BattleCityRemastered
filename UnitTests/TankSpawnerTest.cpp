@@ -31,9 +31,12 @@
 #include "gtest/gtest.h"
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <memory>
 #include <optional>
 #include <string_view>
+
+using namespace std::chrono_literals;
 
 class TankSpawnerTest : public testing::Test
 {
@@ -599,6 +602,27 @@ TEST_F(TankSpawnerTest, AnEnemyLeavesItsQuarterOnlyWhenNothingFitsInIt)
 	_events->EmitEvent(RespawnTanksEvent{});
 
 	EXPECT_EQ(CountTanksInTopRow(), 4u) << "the seat whose quarter was walled off never came up";
+}
+
+// the cooldown is spent by a tank that came up, not by a look at a front with no room on it
+TEST_F(TankSpawnerTest, AnEnemyComesUpTheMomentTheFrontClears)
+{
+	_gameConfig.enemySpawnCooldown = 1h;
+	_events->EmitEvent(GameResetEvent{});
+
+	std::vector<std::shared_ptr<BaseObj>> front{};
+	for (double x{0.0}; x < static_cast<double>(_gameConfig.battlefieldSize.x); x += _gameConfig.gridOffset)
+	{
+		front.push_back(SpawnObstacle(FPoint{.x = x, .y = 0.0}, ObstacleType::Steel));
+	}
+
+	_events->EmitEvent(RespawnTanksEvent{});
+	ASSERT_EQ(CountTanksInTopRow(), 0u);
+
+	std::ranges::for_each(front, [](const std::shared_ptr<BaseObj>& wall) { wall->SetIsAlive(false); });
+	_events->EmitEvent(RespawnTanksEvent{});
+
+	EXPECT_EQ(CountTanksInTopRow(), 1u) << "the front cleared and the enemy still sat out a cooldown nobody spent";
 }
 
 // 2P free-for-all keeps two bots on the field, not four

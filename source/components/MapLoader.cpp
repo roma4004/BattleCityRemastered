@@ -93,12 +93,12 @@ constexpr std::size_t kMaxListedEnemies{std::numeric_limits<unsigned short>::max
 	return blocked;
 }
 
-//NOTE: what TankSpawner asks of the world - does a tank-sized square fit anywhere in this strip. Without
+//NOTE: what TankSpawner asks of the world - does the biggest tank's square fit anywhere in this strip. Without
 //one the spawner waits for a spot that never comes
 [[nodiscard]] bool HasTankWideOpening(const MapData& map, const std::vector<bool>& blocked,
 									  const std::size_t firstRow)
 {
-	constexpr std::size_t span{WorldGeometry::kTankCellSpan};
+	constexpr std::size_t span{WorldGeometry::kMaxTankCellSpan};
 
 	auto isFree = [&map, &blocked, firstRow](const std::size_t col)
 	{
@@ -371,12 +371,12 @@ std::expected<MapData, MapError> MapLoader::Parse(const std::string_view text, s
 
 std::expected<void, MapError> MapLoader::Validate(const MapData& map, std::filesystem::path path)
 {
-	constexpr std::size_t span{WorldGeometry::kTankCellSpan};
+	constexpr std::size_t span{WorldGeometry::kMaxTankCellSpan};
 	if (map.cols < span || map.rows < span)
 	{
 		return std::unexpected(MapError{.path = std::move(path),
 										.reason = "the map is " + std::to_string(map.cols) + " x " +
-												  std::to_string(map.rows) + " cells, and a tank alone is "
+												  std::to_string(map.rows) + " cells, and the biggest tank alone is "
 												  + std::to_string(span) + " across"});
 	}
 

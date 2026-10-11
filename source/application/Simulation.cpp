@@ -284,10 +284,10 @@ void Simulation::Tick()
 	_events->EmitEvent(PostTickUpdateEvent{.deltaTime = _deltaTime});
 }
 
-void Simulation::EndNetworkFrame() const
+void Simulation::SendNetworkFrame() const
 {
 	if (IsNetworkGame(_gameConfig.gameMode))
 	{
-		_events->EmitEvent(NetworkEndFrameEvent{});
+		_events->EmitEvent(SendNetworkFrameEvent{});
 	}
 }

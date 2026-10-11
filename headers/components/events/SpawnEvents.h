@@ -42,8 +42,8 @@ struct RespawnCountChangedToEvent
 struct TankRespawnedEvent
 {
 	TankType type;
-	//NOTE: rolled by the authority alone - a client that rolled its own would mirror a different tank
 	TankModel model;
+	unsigned short tier{1u};
 	Uuid uuid;
 	FPoint pos;
 };

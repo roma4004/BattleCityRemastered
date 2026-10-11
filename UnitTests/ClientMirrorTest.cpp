@@ -79,6 +79,26 @@ TEST_F(ClientMirrorTest, AClientTakesHealthOffTheWireInsteadOfHealingItself)
 	EXPECT_EQ(enemy->GetHealth(), _tankHealth + _bonusHeal);
 }
 
+//NOTE: the host holds the growth back until there is room, so the tier alone must not grow the mirror
+TEST_F(ClientMirrorTest, AMirroredTankGrowsOnlyWhenTheHostSaysItGrew)
+{
+	const auto enemy{CreateBot({.x = 100.0, .y = 100.0}, Author::Enemy1)};
+	const double before{enemy->GetRect().w};
+
+	_events->EmitEvent(Key(enemy->GetUuid()), TierChangedEvent{.tier = 2u, .uuid = enemy->GetUuid()});
+
+	EXPECT_DOUBLE_EQ(enemy->GetRect().w, before) << "the mirror grew where the host had no room";
+
+	const double side{Tank::SizeOf(enemy->GetModel(), 2u, _gameConfig)};
+	const ObjRectangle grown{.x = 98.0, .y = 96.0, .w = side, .h = side};
+	_events->EmitEvent(Key(enemy->GetUuid()), TankGrewEvent{.rect = grown, .uuid = enemy->GetUuid()});
+
+	const ObjRectangle hull{enemy->GetRect()};
+	EXPECT_DOUBLE_EQ(hull.w, side);
+	EXPECT_DOUBLE_EQ(hull.x, grown.x);
+	EXPECT_DOUBLE_EQ(hull.y, grown.y);
+}
+
 //NOTE: the burst only draws here - what puts the bonus on the field is the server saying it settled
 TEST_F(ClientMirrorTest, ABonusLandsWhenTheServerSaysItSettled)
 {

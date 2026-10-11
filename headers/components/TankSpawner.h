@@ -126,21 +126,21 @@ class TankSpawner final
 
 	//NOTE: the rolled point first, then the grid outwards from it - obstacles sit on the grid, so a spot
 	//off it that fits covers at least one more cell than the aligned one beside it and finds nothing new
-	[[nodiscard]] std::optional<ObjRectangle> FindSpawnSpot(double minX, double maxX, double y,
-															double preferredX) const;
+	[[nodiscard]] std::optional<ObjRectangle> FindSpawnSpot(double minX, double maxX, double y, double preferredX,
+															double side) const;
 
-	[[nodiscard]] std::optional<ObjRectangle> GetEnemyRandomPosX(TankType type) const;
+	[[nodiscard]] std::optional<ObjRectangle> GetEnemyRandomPosX(TankType type, double side) const;
 	[[nodiscard]] bool SpawnEnemy(ObjRectangle rect, Uuid uuid, TankType type, TankModel model);
 	void SpawnPlayer(ObjRectangle rect, Uuid uuid, TankType type);
 
 	void DelayedSpawnStart(ObjRectangle rect, Uuid uuid, TankType type, TankModel model);
 	[[nodiscard]] std::unique_ptr<IInputProvider> MakeDriver(TankType type) const;
 
-	[[nodiscard]] TankModel NextEnemyModel();
+	[[nodiscard]] TankModel UpcomingEnemyModel() const;
 	//NOTE: an empty model is the lineup's next - it arrives filled only where the authority already chose it
-	void RespawnEnemyTanks(TankType type, Uuid uuid, std::optional<ObjRectangle> rect = std::nullopt,
+	bool RespawnEnemyTanks(TankType type, Uuid uuid, std::optional<ObjRectangle> rect = std::nullopt,
 						   std::optional<TankModel> model = std::nullopt);
-	[[nodiscard]] std::optional<ObjRectangle> GetPlayerRandomPosX(PlayerSlot slot) const;
+	[[nodiscard]] std::optional<ObjRectangle> GetPlayerRandomPosX(PlayerSlot slot, double side) const;
 	[[nodiscard]] bool IsBotSeat(PlayerSlot slot) const;
 	void RespawnPlayerTeam(TankType type, Uuid uuid, std::optional<ObjRectangle> rect = std::nullopt);
 	void RespawnTank(TankType type, Uuid uuid, std::optional<ObjRectangle> rect = std::nullopt,

@@ -14,6 +14,7 @@
 #include "enums/Author.h"
 #include "enums/GameMode.h"
 #include "enums/RespawnGroup.h"
+#include "geometry/ObjRectangle.h"
 #include "gtest/gtest.h"
 #include <algorithm>
 #include <filesystem>
@@ -184,6 +185,22 @@ TEST_F(LevelProgressionTest, TheTierRidesOnToTheNextLevel)
 
 	ASSERT_NE(PlayerOne(), nullptr);
 	EXPECT_EQ(PlayerOne()->GetTier(), 2u);
+}
+
+// the tank lands as big as the tier it carries makes it, and its spot is cut to that - all of it on the field
+TEST_F(LevelProgressionTest, ATankCarryingATierLandsGrownAndWhollyOnTheField)
+{
+	const double ungrown{PlayerOne()->GetRect().w};
+	_events->EmitEvent(Key(Author::Player1), BonusStarPickupEvent{});
+	_events->EmitEvent(Key(Author::Player1), BonusStarPickupEvent{});
+	_events->EmitEvent(Key(Author::Player1), BonusStarPickupEvent{});
+	_events->EmitEvent(NextLevelRequestedEvent{});
+	StartMatch(GameResetEvent{.keepsPlayerProgress = true});
+
+	ASSERT_NE(PlayerOne(), nullptr);
+	const ObjRectangle hull{PlayerOne()->GetRect()};
+	EXPECT_GT(hull.w, ungrown);
+	EXPECT_LE(hull.Bottom(), static_cast<double>(_gameConfig.battlefieldSize.y));
 }
 
 // it rides once: dying on the new level costs the tier, the way it always did

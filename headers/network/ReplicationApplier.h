@@ -25,6 +25,7 @@ private:
 	void Emit(const TankShot& command) const;
 	void Emit(const HealthChange& command) const;
 	void Emit(const TierChange& command) const;
+	void Emit(const TankGrew& command) const;
 	void Emit(const Despawn& command) const;
 	void Emit(const RespawnTank& command) const;
 	void Emit(const ObstacleSpawn& command) const;

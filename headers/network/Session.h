@@ -83,6 +83,7 @@ private:
 	void Handle(const TankShot&) const {}
 	void Handle(const HealthChange&) const {}
 	void Handle(const TierChange&) const {}
+	void Handle(const TankGrew&) const {}
 	void Handle(const Despawn&) const {}
 	void Handle(const RespawnTank&) const {}
 	void Handle(const ObstacleSpawn&) const {}

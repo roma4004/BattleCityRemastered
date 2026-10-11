@@ -15,6 +15,9 @@ public:
 	[[nodiscard]] static SDL_Rect RectOf(Point pos, Point size);
 	[[nodiscard]] static SDL_Color IntToColor(unsigned int color);
 	[[nodiscard]] static unsigned int ColorToInt(const SDL_Color& color);
+	//NOTE: SDL_GetRenderScale misses the logical presentation - the letterbox rect maps a logical pixel to the window
+	[[nodiscard]] static SDL_FPoint LogicalScale(SDL_Renderer* renderer);
+	[[nodiscard]] static SDL_FRect SnapToWindowPixels(SDL_Renderer* renderer, const SDL_FRect& rect);
 	static void FillRect(SDL_Renderer* renderer, const SDL_Rect& rect);
 	static void RenderCopy(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect dstRect);
 	static void RenderCopyWithClipping(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect srcRect,

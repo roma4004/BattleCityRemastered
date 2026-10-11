@@ -8,9 +8,9 @@ struct WorldGeometry
 {
 	//NOTE: a cell is a quarter of a classic brick block, which is what lets a wall crumble by quarters
 	static constexpr double kCellSize{12.0};
-	//NOTE: a tank is three quarters of a brick block - narrower than the corridors it drives, and the gap
-	//a map has to leave at its edges for anything to spawn
+	//NOTE: three quarters of a brick block - the eagle, a bonus and the player's tank before its first star
 	static constexpr std::size_t kTankCellSpan{3u};
+	static constexpr std::size_t kMaxTankCellSpan{4u};
 	//NOTE: how thick the map draws the wall around the eagle - the spawner cuts the seats around it,
 	//so the number has to match the .map file
 	static constexpr std::size_t kFortressRingCells{2u};

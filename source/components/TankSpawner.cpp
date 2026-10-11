@@ -66,12 +66,6 @@ namespace
 	return candidates;
 }
 
-[[nodiscard]] bool IsInsideField(const ObjRectangle& rect, const UPoint battlefieldSize)
-{
-	return rect.x >= 0.0 && rect.y >= 0.0 && rect.Right() <= static_cast<double>(battlefieldSize.x)
-		   && rect.Bottom() <= static_cast<double>(battlefieldSize.y);
-}
-
 //NOTE: an even roll over the enemy models - for every enemy past the end of the map's list
 [[nodiscard]] TankModel RollEnemyModel()
 {
@@ -159,9 +153,9 @@ void TankSpawner::OnSpawnAnimationFinished(const SpawnAnimationFinishedEvent& ev
 
 void TankSpawner::OnTankRespawned(const TankRespawnedEvent& event)
 {
-	const double tankSize{_gameConfig.tankSize};
-	OnClientRespawn(event.type, event.uuid,
-					ObjRectangle{.x = event.pos.x, .y = event.pos.y, .w = tankSize, .h = tankSize}, event.model);
+	const double side{Tank::SizeOf(event.model, event.tier, _gameConfig)};
+	OnClientRespawn(event.type, event.uuid, ObjRectangle{.x = event.pos.x, .y = event.pos.y, .w = side, .h = side},
+					event.model);
 }
 
 void TankSpawner::OnTankSpawnCompleted(const TankSpawnCompletedEvent& event)
@@ -268,7 +262,7 @@ std::optional<ObjRectangle> TankSpawner::RoomOutOfTheWay(const DelayedTankSpawn&
 
 	const auto isRoom = [this, &spawn](const ObjRectangle& square)
 	{
-		return IsInsideField(square, _gameConfig.battlefieldSize) && IsSpawnSpotFree(square, spawn.uuid);
+		return ColliderUtils::IsInside(square, _gameConfig.battlefieldSize) && IsSpawnSpotFree(square, spawn.uuid);
 	};
 	const auto found{std::ranges::find_if(squares, isRoom)};
 
@@ -284,6 +278,7 @@ void TankSpawner::OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& ev
 						   {
 							   return TankRespawnedEvent{.type = spawn.type,
 														 .model = spawn.model,
+														 .tier = spawn.tier,
 														 .uuid = spawn.uuid,
 														 .pos = FPoint{.x = spawn.rect.x, .y = spawn.rect.y}};
 						   });
@@ -382,11 +377,9 @@ void TankSpawner::OnEnemyLineupLoaded(const EnemyLineupLoadedEvent& event)
 	_enemiesChosen = 0u;
 }
 
-TankModel TankSpawner::NextEnemyModel()
+TankModel TankSpawner::UpcomingEnemyModel() const
 {
-	const std::size_t next{_enemiesChosen++};
-
-	return next < _enemyLineup.size() ? _enemyLineup[next] : RollEnemyModel();
+	return _enemiesChosen < _enemyLineup.size() ? _enemyLineup[_enemiesChosen] : RollEnemyModel();
 }
 
 //NOTE: asked of the field while it still stands - the reset that empties it comes a phase later, and
@@ -463,12 +456,11 @@ bool TankSpawner::IsSpawnSpotFree(const ObjRectangle& rect, const Uuid ignoredSp
 }
 
 std::optional<ObjRectangle> TankSpawner::FindSpawnSpot(const double minX, const double maxX, const double y,
-													   const double preferredX) const
+													   const double preferredX, const double side) const
 {
-	const double tankSize{_gameConfig.tankSize};
-	auto isFree = [this, y, tankSize](const double x)
+	auto isFree = [this, y, side](const double x)
 	{
-		return IsSpawnSpotFree(ObjRectangle{.x = x, .y = y, .w = tankSize, .h = tankSize});
+		return IsSpawnSpotFree(ObjRectangle{.x = x, .y = y, .w = side, .h = side});
 	};
 
 	const std::vector<double> candidates{SpawnCandidates(minX, maxX, preferredX, _gameConfig.gridOffset)};
@@ -478,32 +470,31 @@ std::optional<ObjRectangle> TankSpawner::FindSpawnSpot(const double minX, const 
 		return std::nullopt;
 	}
 
-	return ObjRectangle{.x = *found, .y = y, .w = tankSize, .h = tankSize};
+	return ObjRectangle{.x = *found, .y = y, .w = side, .h = side};
 }
 
-std::optional<ObjRectangle> TankSpawner::GetEnemyRandomPosX(const TankType type) const
+std::optional<ObjRectangle> TankSpawner::GetEnemyRandomPosX(const TankType type, const double side) const
 {
 	if (type > TankType::ENEMY4)
 	{
 		return std::nullopt;
 	}
 
-	const double tankSize{_gameConfig.tankSize};
 	const auto battleFieldSizeX{static_cast<double>(_gameConfig.battlefieldSize.x)};
 	const double quarterWidth{battleFieldSizeX / 4.0};
-	const double lastX{battleFieldSizeX - tankSize};
+	const double lastX{battleFieldSizeX - side};
 
 	//NOTE: the whole hull inside a seat's quarter, so no two seats overlap; too narrow a field falls back to the front
 	const auto quarter{static_cast<double>(type)};
 	const double minX{quarter * quarterWidth};
-	const double maxX{std::max(minX, minX + quarterWidth - tankSize)};
+	const double maxX{std::max(minX, minX + quarterWidth - side)};
 
 	const std::uniform_real_distribution<double> distRandX{minX, maxX};
 	const double randomX{RandUtils::GetRandNumber(distRandX)};
 
 	//NOTE: the whole front only once its own quarter is full - no tank at all is worse than one out of place
-	return FindSpawnSpot(minX, maxX, 0.0, randomX)
-		   .or_else([this, lastX, randomX] { return FindSpawnSpot(0.0, lastX, 0.0, randomX); });
+	return FindSpawnSpot(minX, maxX, 0.0, randomX, side)
+		   .or_else([this, lastX, randomX, side] { return FindSpawnSpot(0.0, lastX, 0.0, randomX, side); });
 }
 
 bool TankSpawner::SpawnEnemy(const ObjRectangle rect, const Uuid uuid, const TankType type, const TankModel model)
@@ -530,16 +521,22 @@ void TankSpawner::SpawnPlayer(const ObjRectangle rect, const Uuid uuid, const Ta
 	DelayedSpawnStart(rect, uuid, type, TankModel::Player);
 }
 
-void TankSpawner::RespawnEnemyTanks(const TankType type, const Uuid uuid, const std::optional<ObjRectangle> rect,
+bool TankSpawner::RespawnEnemyTanks(const TankType type, const Uuid uuid, const std::optional<ObjRectangle> rect,
 									const std::optional<TankModel> model)
 {
-	const std::optional<ObjRectangle> spawnRect{rect.has_value() ? rect : GetEnemyRandomPosX(type)};
+	const TankModel spawnModel{model.has_value() ? *model : UpcomingEnemyModel()};
+	const double side{Tank::SizeOf(spawnModel, 1u, _gameConfig)};
+	const std::optional<ObjRectangle> spawnRect{rect.has_value() ? rect : GetEnemyRandomPosX(type, side)};
 	if (!spawnRect)
 	{
-		return;
+		return false;
 	}
 
-	const TankModel spawnModel{model.has_value() ? *model : NextEnemyModel()};
+	if (!model.has_value())
+	{
+		++_enemiesChosen;
+	}
+
 	const bool isSuccessSpawn{SpawnEnemy(*spawnRect, uuid, type, spawnModel)};
 	if (isSuccessSpawn && IsHost(_gameMode))
 	{
@@ -548,13 +545,14 @@ void TankSpawner::RespawnEnemyTanks(const TankType type, const Uuid uuid, const 
 											  .uuid = uuid,
 											  .pos = FPoint{.x = spawnRect->x, .y = spawnRect->y}});
 	}
+
+	return isSuccessSpawn;
 }
 
-std::optional<ObjRectangle> TankSpawner::GetPlayerRandomPosX(const PlayerSlot slot) const
+std::optional<ObjRectangle> TankSpawner::GetPlayerRandomPosX(const PlayerSlot slot, const double side) const
 {
 	const auto battleFieldSizeX{static_cast<double>(_gameConfig.battlefieldSize.x)};
 	const auto battleFieldSizeY{static_cast<double>(_gameConfig.battlefieldSize.y)};
-	const double tankSize{_gameConfig.tankSize};
 
 	//NOTE: the seats stand either side of the fortress, so the ranges are cut around it - the eagle plus its
 	//ring of walls, from the middle of the field outwards
@@ -564,8 +562,8 @@ std::optional<ObjRectangle> TankSpawner::GetPlayerRandomPosX(const PlayerSlot sl
 	const double middle{battleFieldSizeX / 2.0};
 
 	const bool isLeft{slot == PlayerSlot::P1 || slot == PlayerSlot::P3};
-	auto [minX, maxX]{isLeft ? std::pair{0.0, middle - fortressHalfWidth - tankSize}
-							 : std::pair{middle + fortressHalfWidth, battleFieldSizeX - tankSize}};
+	auto [minX, maxX]{isLeft ? std::pair{0.0, middle - fortressHalfWidth - side}
+							 : std::pair{middle + fortressHalfWidth, battleFieldSizeX - side}};
 	//NOTE: past two seats each side splits, the first pair next to the fortress
 	if (_gameConfig.SeatCount() > 2u)
 	{
@@ -577,26 +575,29 @@ std::optional<ObjRectangle> TankSpawner::GetPlayerRandomPosX(const PlayerSlot sl
 	const std::uniform_real_distribution distRandId{minX, maxX};
 	const double randomX{RandUtils::GetRandNumber(distRandId)};
 
-	return FindSpawnSpot(minX, maxX, battleFieldSizeY - tankSize, randomX);
+	return FindSpawnSpot(minX, maxX, battleFieldSizeY - side, randomX, side);
 }
 
 void TankSpawner::RespawnPlayerTeam(const TankType type, const Uuid uuid,
 									const std::optional<ObjRectangle> rect)
 {
 	const PlayerSlot slot{*SlotOf(type)};
-	const std::optional<ObjRectangle> spawnRect{rect.has_value() ? rect : GetPlayerRandomPosX(slot)};
+	//NOTE: asked for as the player's seat - who drives it is the authority's call, a client spawns what it is told
+	const TankType spawned{IsAuthority(_gameMode) && IsBotSeat(slot) ? CoopTankOf(slot) : type};
+	const unsigned short tier{LoadoutOf(spawned).tier};
+	const std::optional<ObjRectangle> spawnRect{
+			rect.has_value() ? rect : GetPlayerRandomPosX(slot, Tank::SizeOf(TankModel::Player, tier, _gameConfig))};
 	if (!spawnRect)
 	{
 		return;
 	}
 
-	//NOTE: asked for as the player's seat - who drives it is the authority's call, a client spawns what it is told
-	const TankType spawned{IsAuthority(_gameMode) && IsBotSeat(slot) ? CoopTankOf(slot) : type};
 	SpawnPlayer(*spawnRect, uuid, spawned);
 	if (IsHost(_gameMode))
 	{
 		_events->EmitEvent(TankRespawnedEvent{.type = spawned,
 											  .model = TankModel::Player,
+											  .tier = tier,
 											  .uuid = uuid,
 											  .pos = FPoint{.x = spawnRect->x, .y = spawnRect->y}});
 	}
@@ -624,10 +625,9 @@ void TankSpawner::RespawnTank(const TankType type, const Uuid uuid, const std::o
 			{
 				RespawnEnemyTanks(type, uuid, rect, model);
 			}
-			else if (_enemySpawnTimer.IsCooldownFinish())
+			else if (_enemySpawnTimer.IsCooldownFinish() && RespawnEnemyTanks(type, uuid, rect, model))
 			{
 				_enemySpawnTimer.Reset();
-				RespawnEnemyTanks(type, uuid, rect, model);
 			}
 			break;
 		}
@@ -764,16 +764,15 @@ void TankSpawner::DelayedSpawnWith(const DelayedTankSpawn& params)
 //NOTE: a tank already on the host's field lands at once - its burst is long over there
 void TankSpawner::RestoreTank(const TankSnapshot& tank)
 {
-	const double tankSize{_gameConfig.tankSize};
-	const ObjRectangle rect{.x = tank.pos.x, .y = tank.pos.y, .w = tankSize, .h = tankSize};
 	DelayedSpawnWith(DelayedTankSpawn{.uuid = tank.uuid,
 									  .type = tank.type,
 									  .model = tank.model,
-									  .rect = rect,
+									  .rect = tank.rect,
 									  .health = tank.health});
 
 	const Author seat{SeatOf(tank.type)};
-	_events->EmitEvent(Key(tank.uuid), PosChangedEvent{.pos = tank.pos, .dir = tank.dir, .uuid = tank.uuid});
+	const FPoint pos{.x = tank.rect.x, .y = tank.rect.y};
+	_events->EmitEvent(Key(tank.uuid), PosChangedEvent{.pos = pos, .dir = tank.dir, .uuid = tank.uuid});
 	_events->EmitEvent(Key(tank.uuid), TierChangedEvent{.tier = tank.tier, .uuid = tank.uuid});
 	//NOTE: always sent - a landing tank switches its helmet on, and only this says whether it still wears it
 	_events->EmitEvent(Key(seat), BonusHelmetAppliedEvent{.author = seat, .isActive = tank.isHelmetActive});

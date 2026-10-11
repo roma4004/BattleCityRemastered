@@ -413,6 +413,7 @@
     <ClInclude Include="..\headers\network\commands\SlotAssignment.h" />
     <ClInclude Include="..\headers\network\commands\AbsenceChange.h" />
     <ClInclude Include="..\headers\network\commands\StatisticsChange.h" />
+    <ClInclude Include="..\headers\network\commands\TankGrew.h" />
     <ClInclude Include="..\headers\network\commands\TankShot.h" />
     <ClInclude Include="..\headers\network\commands\TankSpawnComplete.h" />
     <ClInclude Include="..\headers\network\commands\TankSpawnMoved.h" />

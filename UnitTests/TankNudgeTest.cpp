@@ -4,6 +4,7 @@
 #include "components/EventSystem.h"
 #include "components/ObstacleSpawner.h"
 #include "components/TankPool.h"
+#include "components/events/BonusPickupEvents.h"
 #include "components/events/InputEvents.h"
 #include "components/events/TimingEvents.h"
 #include "entities/BaseObj.h"
@@ -12,8 +13,10 @@
 #include "enums/Direction.h"
 #include "enums/InputChannel.h"
 #include "enums/ObstacleType.h"
+#include "geometry/ObjRectangle.h"
 #include "utils/ColliderUtils.h"
 #include "gtest/gtest.h"
+#include <algorithm>
 #include <memory>
 #include <vector>
 
@@ -156,6 +159,47 @@ TEST_F(TankNudgeTest, AnOpeningOfExactlyOneTankTakesTheTank)
 
 	EXPECT_DOUBLE_EQ(player->GetRect().x, gapStart);
 	EXPECT_GT(player->GetRect().y, kWallY);
+}
+
+// a star grows the tank, and standing on a wall it grows away from it - grown into the wall it would be stuck there
+TEST_F(TankNudgeTest, AStarGrowsTheTankAwayFromTheWallItStandsOn)
+{
+	BuildWall(0.0, TankSize() * 3.0);
+	const auto player{CreatePlayer({.x = TankSize(), .y = kWallY - TankSize()})};
+
+	_events->EmitEvent(Key(Author::Player1), BonusStarPickupEvent{});
+
+	const ObjRectangle hull{player->GetRect()};
+	const auto isInside = [&player, &hull](const std::shared_ptr<BaseObj>& object)
+	{
+		return object != player && ColliderUtils::IsCollide(hull, object->GetRect());
+	};
+	EXPECT_GT(hull.w, TankSize());
+	EXPECT_TRUE(std::ranges::none_of(_allObjects, isInside));
+}
+
+// a star picked up in an opening cut to the tank's width - grown into the walls it could not drive out of them
+TEST_F(TankNudgeTest, AStarInATightOpeningGrowsTheTankOnceItIsOut)
+{
+	const double gapStart{TankSize() * 2.0};
+	BuildWall(0.0, gapStart);
+	BuildWall(gapStart + TankSize(), TankSize() * 2.0);
+	const auto player{CreatePlayer({.x = gapStart, .y = kWallY - Cell()})};
+
+	_events->EmitEvent(Key(Author::Player1), BonusStarPickupEvent{});
+
+	EXPECT_GT(player->GetTier(), 1u) << "the model has to change at once, only the size waits";
+	EXPECT_DOUBLE_EQ(player->GetRect().w, TankSize()) << "the tank grew into the walls on both sides";
+
+	Drive(Direction::DOWN, 120);
+
+	const ObjRectangle hull{player->GetRect()};
+	const auto isInside = [&player, &hull](const std::shared_ptr<BaseObj>& object)
+	{
+		return object != player && ColliderUtils::IsCollide(hull, object->GetRect());
+	};
+	EXPECT_GT(hull.w, TankSize()) << "out in the open the tank still waits for room";
+	EXPECT_TRUE(std::ranges::none_of(_allObjects, isInside));
 }
 
 // the point of the blast radius: one shot into a wall has to leave a hole the shooter fits through

@@ -153,7 +153,7 @@ struct FrameStartEvent {};
 
 struct PresentFrameEvent {};
 
-struct NetworkEndFrameEvent {};
+struct SendNetworkFrameEvent {};
 
 struct CalculateActualFpsEvent {};
 

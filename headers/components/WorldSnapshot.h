@@ -24,7 +24,7 @@ struct TankSnapshot final
 	TankType type{};
 	TankModel model{};
 	Uuid uuid{};
-	FPoint pos{};
+	ObjRectangle rect{};
 	Direction dir{};
 	int health{};
 	unsigned short tier{};
