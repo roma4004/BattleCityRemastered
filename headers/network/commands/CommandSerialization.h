@@ -11,6 +11,7 @@
 #include "KeyStateChange.h"
 #include "ObstacleSpawn.h"
 #include "PortForwardingChange.h"
+#include "SeatHoldersChange.h"
 #include "PositionChange.h"
 #include "RespawnTank.h"
 #include "SignalEvent.h"
@@ -109,6 +110,12 @@ void serialize(Archive& ar, network::commands::PortForwardingChange& cmd, const 
 	ar & cmd.state;
 	ar & cmd.host;
 	ar & cmd.port;
+}
+
+template<class Archive>
+void serialize(Archive& ar, network::commands::SeatHoldersChange& cmd, const unsigned int /*version*/)
+{
+	ar & cmd.holders;
 }
 
 template<class Archive>

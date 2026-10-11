@@ -4,6 +4,7 @@
 #include "behavior/MoveLikeTankBeh.h"
 #include "behavior/ShootingBeh.h"
 #include "components/BulletPool.h"
+#include "components/Sprite.h"
 #include "components/EventSystem.h"
 #include "components/events/SpawnEvents.h"
 #include "components/events/AnimationRenderEvents.h"
@@ -20,18 +21,22 @@
 #include "geometry/Point.h"
 #include "enums/Author.h"
 #include "enums/Direction.h"
+#include "enums/DrawLayer.h"
 #include "enums/GameMode.h"
 #include "enums/TankType.h"
 #include "enums/Terrain.h"
+#include "enums/TextureType.h"
 #include "interfaces/IInputProvider.h"
 #include "interfaces/IMoveBeh.h"
 #include "interfaces/IPickupableBonus.h"
 #include "utils/ColliderUtils.h"
 #include "utils/DirectionUtils.h"
 #include "utils/MathUtils.h"
+#include "utils/TimeUtils.h"
 #include "enums/Faction.h"
 #include <algorithm>
 #include <chrono>
+#include <optional>
 #include <ranges>
 
 using namespace std::chrono_literals;
@@ -147,8 +152,6 @@ void Tank::Subscribe()
 {
 	Pawn::Subscribe();
 
-	_subs.push_back(_events->AddListener(this, &Tank::OnPostDraw));
-
 	if (_gameConfig.IsClient())
 	{
 		SubscribeAsClient();
@@ -165,14 +168,48 @@ void Tank::Subscribe()
 	}
 }
 
-void Tank::OnPostDraw(const PostDrawEvent&) const
+std::optional<Sprite> Tank::Look() const
+{
+	constexpr unsigned int stepsPerFrame{2u};
+	constexpr unsigned int frames{2u};
+
+	return Sprite{.layer = DrawLayer::World,
+				  .rect = _rect,
+				  .dir = _dir,
+				  .texture = TextureType::Tank,
+				  .author = _author,
+				  .model = _model,
+				  .tier = _tier,
+				  .frame = static_cast<int>(_trackSteps / stepsPerFrame % frames)};
+}
+
+//NOTE: the shimmer runs on the game clock, so a pause holds it
+std::optional<Sprite> Tank::Cover() const
+{
+	if (!_effects.isHelmetActive)
+	{
+		return std::nullopt;
+	}
+
+	constexpr auto shimmerStep{std::chrono::milliseconds{333}};
+	constexpr long long frames{2};
+	const long long shimmer{TimeUtils::Now().time_since_epoch() / shimmerStep};
+
+	return Sprite{.layer = DrawLayer::Effects,
+				  .rect = _rect,
+				  .texture = TextureType::Helmet,
+				  .frame = static_cast<int>(shimmer % frames)};
+}
+
+//NOTE: none under a helmet or in a bush - the bush is meant to hide the tank, and the bar would give it away
+std::optional<int> Tank::ShownHealth() const
 {
 	if (_effects.isHelmetActive || _effects.isTouchTheBushes)
 	{
-		return;
+		return std::nullopt;
 	}
 
-	_events->EmitEvent(RenderHealthBarEvent{.rect = GetRect(), .health = GetHealth()});
+	return GetHealth();
 }
 
 void Tank::SubscribeAsClient()
@@ -246,10 +283,10 @@ std::vector<Direction> Tank::GetFreePathSides(const double deltaTime,
 	return _tankMoveBeh->GetFreePathSides(deltaTime, excludeDirection, _allObjects);
 }
 
-void Tank::EmitMoved() const
+void Tank::EmitMoved()
 {
 	const FPoint pos{GetPos()};
-	_events->EmitEvent(AnimationTankUpdateEvent{.author = _author, .pos = pos, .dir = _dir, .tier = _tier});
+	++_trackSteps;
 
 	if (_gameConfig.IsHost())
 	{
@@ -484,8 +521,6 @@ void Tank::OnBonusHelmet(const bool isActive)
 {
 	_effects.isHelmetActive = isActive;
 
-	_events->EmitEvent(AnimationBonusHelmetChangeEvent{.author = _author, .isEnable = isActive});
-
 	if (_gameConfig.IsHost())
 	{
 		_events->EmitEvent(BonusHelmetAppliedEvent{.author = _author, .isActive = isActive});
@@ -561,7 +596,7 @@ void Tank::EmitDamageStatistics(const Author author)
 void Tank::EmitDeathStatistics(const Author author)
 {
 	_events->EmitEvent(TankDiedEvent{.who = _author, .uuid = _uuid, .author = author});
-	_events->EmitEvent(AnimationCreateTankExplosionEvent{.rect = _rect, .author = _author});
+	_events->EmitEvent(AnimationCreateTankExplosionEvent{.rect = _rect});
 
 	if (_gameConfig.IsHost())
 	{
@@ -573,7 +608,7 @@ void Tank::OnDespawned(const DespawnedEvent& event)
 {
 	Pawn::OnDespawned(event);
 
-	_events->EmitEvent(AnimationCreateTankExplosionEvent{.rect = _rect, .author = _author});
+	_events->EmitEvent(AnimationCreateTankExplosionEvent{.rect = _rect});
 }
 
 void Tank::HandleBonusPickUp(BaseObj& object)
@@ -594,11 +629,8 @@ void Tank::OnPosChanged(const PosChangedEvent& event)
 
 	_effects.isTouchTheBushes = IsTouchBush();
 
-	//NOTE: the client's only move, so the track animation has to advance from here
-	_events->EmitEvent(AnimationTankUpdateEvent{.author = _author,
-												.pos = event.pos,
-												.dir = event.dir,
-												.tier = _tier});
+	//NOTE: the client's only move, so the track turns from here
+	++_trackSteps;
 }
 
 bool Tank::IsTouchBush() const

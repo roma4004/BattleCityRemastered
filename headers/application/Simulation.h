@@ -99,6 +99,8 @@ public:
 
 	[[nodiscard]] const GameStatistics& Statistics() const;
 	[[nodiscard]] const std::vector<std::shared_ptr<BaseObj>>& World() const;
+	[[nodiscard]] const AnimationManager& Animations() const;
+	[[nodiscard]] const GameStateManager& State() const;
 
 	//NOTE: drops the link only, so a caller can act between the old link going and the new one arriving
 	void LeaveGameMode();

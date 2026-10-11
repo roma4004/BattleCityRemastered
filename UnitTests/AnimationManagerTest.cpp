@@ -2,10 +2,12 @@
 #include "components/ObstacleSpawner.h"
 #include "application/GameConfig.h"
 #include "application/ProjectConfig.h"
+#include "components/AnimatedObjects.h"
 #include "components/BulletPool.h"
 #include "components/TankPool.h"
 #include "components/EventSystem.h"
 #include "components/ScenePainter.h"
+#include "components/Sprite.h"
 #include "components/TankSpawner.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "components/events/BonusPickupEvents.h"
@@ -24,8 +26,10 @@
 #include "entities/pawns/Tank.h"
 #include "enums/AnimationType.h"
 #include "enums/Direction.h"
+#include "enums/DrawLayer.h"
 #include "enums/GameMode.h"
 #include "enums/TextureOffset.h"
+#include "enums/TextureType.h"
 #include "utils/MathUtils.h"
 #include "utils/Uuid.h"
 #include "utils/UuidUtils.h"
@@ -55,10 +59,7 @@ protected:
 	std::optional<AnimationCreateTankExplosionEvent> _tankExplosion{};
 	std::optional<AnimationCreateTankSpawnEvent> _tankSpawn{};
 	std::optional<AnimationCreateWaterEvent> _water{};
-	std::optional<AnimationBonusHelmetChangeEvent> _helmet{};
 
-	std::optional<int> _frame{};
-	std::vector<AnimationType> _drawn{};
 	std::optional<Uuid> _finished{};
 
 	BulletCaliber _caliber{.speed = 300.0, .damage = 1u, .damageRadius = 12.0, .tier = 1u, .size{.x = 6.0, .y = 5.0}};
@@ -94,16 +95,7 @@ protected:
 			_tankSpawn = event;
 		}));
 		_subs.push_back(_events->AddListener([this](const AnimationCreateWaterEvent& event) { _water = event; }));
-		_subs.push_back(_events->AddListener([this](const AnimationBonusHelmetChangeEvent& event)
-		{
-			_helmet = event;
-		}));
 
-		_subs.push_back(_events->AddListener([this](const DrawAnimationEvent& event)
-		{
-			_frame = event.frame;
-			_drawn.push_back(event.type);
-		}));
 		_subs.push_back(_events->AddListener([this](const SpawnAnimationFinishedEvent& event)
 		{
 			_finished = event.uuid;
@@ -118,9 +110,13 @@ protected:
 		}
 	}
 
-	[[nodiscard]] bool WasDrawn(const AnimationType type) const
+	//NOTE: a disposed burst keeps its slot, but nobody paints it
+	[[nodiscard]] bool IsPlaying(const AnimationType type) const
 	{
-		return std::ranges::find(_drawn, type) != _drawn.end();
+		return std::ranges::any_of(_animations->OnLayer(DrawLayer::Effects), [type](const AnimatedObject& animation)
+		{
+			return animation.type == type && !animation.markToDispose;
+		});
 	}
 
 	std::shared_ptr<Tank> CreatePlayer(const FPoint pos)
@@ -182,7 +178,6 @@ TEST_F(AnimationManagerTest, TankExplodesWhereItDied)
 	tank->TakeDamage(static_cast<unsigned int>(tank->GetHealth()), Author::Enemy1);
 
 	ASSERT_TRUE(_tankExplosion.has_value());
-	EXPECT_EQ(_tankExplosion->author, Author::Player1);
 	EXPECT_EQ(_tankExplosion->rect.x, tank->GetRect().x);
 	EXPECT_EQ(_tankExplosion->rect.y, tank->GetRect().y);
 }
@@ -228,13 +223,14 @@ TEST_F(AnimationManagerTest, HelmetPickupTurnsTheShieldOnAndOff)
 
 	_events->EmitEvent(Key(Author::Player1), BonusHelmetStatusChangeEvent{.isActive = true});
 
-	ASSERT_TRUE(_helmet.has_value());
-	EXPECT_EQ(_helmet->author, Author::Player1);
-	EXPECT_TRUE(_helmet->isEnable);
+	const std::optional<Sprite> shield{tank->Cover()};
+	ASSERT_TRUE(shield.has_value());
+	EXPECT_EQ(shield->texture, TextureType::Helmet);
+	EXPECT_EQ(shield->rect.x, tank->GetRect().x);
 
 	_events->EmitEvent(Key(Author::Player1), BonusHelmetStatusChangeEvent{.isActive = false});
 
-	EXPECT_FALSE(_helmet->isEnable);
+	EXPECT_FALSE(tank->Cover().has_value());
 }
 
 // --- the clock: water never ends, so it is always there to be asked its frame
@@ -243,41 +239,34 @@ TEST_F(AnimationManagerTest, HelmetPickupTurnsTheShieldOnAndOff)
 TEST_F(AnimationManagerTest, FrameAdvancesWhileRunning)
 {
 	_events->EmitEvent(AnimationCreateWaterEvent{.rect = _rect});
-	_events->EmitEvent(DrawEvent{});
-	ASSERT_TRUE(_frame.has_value());
-	const int startFrame{*_frame};
+	ASSERT_EQ(_animations->OnLayer(DrawLayer::Ground).size(), 1u);
+	const int startFrame{_animations->OnLayer(DrawLayer::Ground).front().currentFrameIndex};
 
 	RunTicks(_ticksPerFrame);
 
-	_events->EmitEvent(DrawEvent{});
-
-	EXPECT_NE(*_frame, startFrame);
+	EXPECT_NE(_animations->OnLayer(DrawLayer::Ground).front().currentFrameIndex, startFrame);
 }
 
 // stand still under a pause
 TEST_F(AnimationManagerTest, FrameStandsStillWhilePaused)
 {
 	_events->EmitEvent(AnimationCreateWaterEvent{.rect = _rect});
-	_events->EmitEvent(DrawEvent{});
-	ASSERT_TRUE(_frame.has_value());
-	const int startFrame{*_frame};
+	ASSERT_EQ(_animations->OnLayer(DrawLayer::Ground).size(), 1u);
+	const int startFrame{_animations->OnLayer(DrawLayer::Ground).front().currentFrameIndex};
 
 	_events->EmitEvent(PauseStatusEvent{.isPaused = true});
 
 	RunTicks(_ticksPerFrame * 3);
 
-	_events->EmitEvent(DrawEvent{});
-
-	EXPECT_EQ(*_frame, startFrame);
+	EXPECT_EQ(_animations->OnLayer(DrawLayer::Ground).front().currentFrameIndex, startFrame);
 }
 
 // and pick up again afterwards, rather than catching up on what was missed
 TEST_F(AnimationManagerTest, FrameResumesAfterUnpause)
 {
 	_events->EmitEvent(AnimationCreateWaterEvent{.rect = _rect});
-	_events->EmitEvent(DrawEvent{});
-	ASSERT_TRUE(_frame.has_value());
-	const int startFrame{*_frame};
+	ASSERT_EQ(_animations->OnLayer(DrawLayer::Ground).size(), 1u);
+	const int startFrame{_animations->OnLayer(DrawLayer::Ground).front().currentFrameIndex};
 
 	_events->EmitEvent(PauseStatusEvent{.isPaused = true});
 	RunTicks(1);
@@ -285,9 +274,7 @@ TEST_F(AnimationManagerTest, FrameResumesAfterUnpause)
 
 	RunTicks(_ticksPerFrame);
 
-	_events->EmitEvent(DrawEvent{});
-
-	EXPECT_NE(*_frame, startFrame);
+	EXPECT_NE(_animations->OnLayer(DrawLayer::Ground).front().currentFrameIndex, startFrame);
 }
 
 // --- the spawn burst doubles as the countdown, so its last frame is what lands the tank
@@ -333,16 +320,13 @@ TEST_F(AnimationManagerTest, AnEndlessTankBurstPlaysUntilTheTankLands)
 	_events->EmitEvent(AnimationCreateTankSpawnEvent{.rect = _rect, .uuid = _burstUuid, .isEndless = true});
 
 	RunTicks(_ticksPerBurst);
-	_events->EmitEvent(PostDrawEvent{});
 
 	EXPECT_FALSE(_finished.has_value());
-	EXPECT_TRUE(WasDrawn(AnimationType::Tank_Spawn));
+	EXPECT_TRUE(IsPlaying(AnimationType::Tank_Spawn));
 
-	_drawn.clear();
 	_events->EmitEvent(TankSpawnCompletedEvent{.uuid = _burstUuid});
-	_events->EmitEvent(PostDrawEvent{});
 
-	EXPECT_FALSE(WasDrawn(AnimationType::Tank_Spawn));
+	EXPECT_FALSE(IsPlaying(AnimationType::Tank_Spawn));
 }
 
 // the same for a bonus
@@ -351,16 +335,13 @@ TEST_F(AnimationManagerTest, AnEndlessBonusBurstPlaysUntilTheBonusLands)
 	_events->EmitEvent(AnimationCreateBonusSpawnEvent{.rect = _rect, .uuid = _burstUuid, .isEndless = true});
 
 	RunTicks(_ticksPerBurst * 2);
-	_events->EmitEvent(PostDrawEvent{});
 
 	EXPECT_FALSE(_finished.has_value());
-	EXPECT_TRUE(WasDrawn(AnimationType::Bonus_Spawn));
+	EXPECT_TRUE(IsPlaying(AnimationType::Bonus_Spawn));
 
-	_drawn.clear();
 	_events->EmitEvent(BonusSpawnCompletedEvent{.uuid = _burstUuid});
-	_events->EmitEvent(PostDrawEvent{});
 
-	EXPECT_FALSE(WasDrawn(AnimationType::Bonus_Spawn));
+	EXPECT_FALSE(IsPlaying(AnimationType::Bonus_Spawn));
 }
 
 //NOTE: a finished burst's slot is reused - a client that watched the demo first must not inherit its end
@@ -377,54 +358,45 @@ TEST_F(AnimationManagerTest, AnEndlessBurstInAReusedSlotStaysEndless)
 	EXPECT_FALSE(_finished.has_value());
 }
 
-// --- the phase is the layer, and inside one phase the paint order is subscription order
+// --- the painter paints layer by layer, whatever order the parts were built in
 
-// an explosion is painted after the world
-TEST_F(AnimationManagerTest, AnExplosionIsDrawnInThePostDrawPhase)
+// water under the wall standing beside it, a blast over the wall, the bush over the blast - cover is meant to hide
+TEST_F(AnimationManagerTest, TheLayersArePaintedGroundWorldEffectsCover)
 {
-	_events->EmitEvent(AnimationCreateBulletExplosionEvent{.rect = _rect});
-
-	_events->EmitEvent(DrawEvent{});
-	EXPECT_FALSE(WasDrawn(AnimationType::Bullet_Explosion));
-
-	_events->EmitEvent(PostDrawEvent{});
-	EXPECT_TRUE(WasDrawn(AnimationType::Bullet_Explosion));
-}
-
-// Water is terrain, not an overlay - it stays in the main phase, under whatever stands on it
-TEST_F(AnimationManagerTest, WaterStaysInTheMainDrawPhase)
-{
-	_events->EmitEvent(AnimationCreateWaterEvent{.rect = _rect});
-
-	_events->EmitEvent(DrawEvent{});
-
-	EXPECT_TRUE(WasDrawn(AnimationType::Water_Flow));
-}
-
-// The scene painter is built after the manager, as the game builds them, so the water paints under the walls
-TEST_F(AnimationManagerTest, WaterIsPaintedBeforeAWallOfTheSamePhase)
-{
+	const auto isAt = [](const RenderTextureEvent& event, const ObjRectangle& atlas)
+	{
+		return MathUtils::AreEqualAbsolute(event.textureRect.x, atlas.x)
+			   && MathUtils::AreEqualAbsolute(event.textureRect.y, atlas.y);
+	};
 	std::vector<std::string_view> painted{};
-	const EventSubscription animationSub{_events->AddListener([&painted](const DrawAnimationEvent&)
+	const EventSubscription paintSub{_events->AddListener([&painted, &isAt](const RenderTextureEvent& event)
 	{
-		painted.emplace_back("water");
-	})};
-	const EventSubscription wallSub{_events->AddListener([&painted](const RenderTextureEvent& event)
-	{
-		if (MathUtils::AreEqualAbsolute(event.textureRect.x, TextureOffset::kBrick.x)
-			&& MathUtils::AreEqualAbsolute(event.textureRect.y, TextureOffset::kBrick.y))
+		if (isAt(event, TextureOffset::kWater))
+		{
+			painted.emplace_back("water");
+		}
+		else if (isAt(event, TextureOffset::kBrick))
 		{
 			painted.emplace_back("wall");
 		}
+		else if (isAt(event, TextureOffset::kBulletExplosion))
+		{
+			painted.emplace_back("blast");
+		}
+		else if (isAt(event, TextureOffset::kBush))
+		{
+			painted.emplace_back("bush");
+		}
 	})};
 	const TextureManager textures{_events};
-	const ScenePainter painter{_events, _allObjects, textures};
+	ScenePainter painter{_events, _allObjects, *_animations, textures};
 
-	_events->EmitEvent(AnimationCreateWaterEvent{.rect = _rect});
+	SpawnObstacle(_rect, ObstacleType::Bush);
+	_events->EmitEvent(AnimationCreateBulletExplosionEvent{.rect = _rect});
 	SpawnObstacle(_rect, ObstacleType::Brick);
+	_events->EmitEvent(AnimationCreateWaterEvent{.rect = _rect});
 
-	_events->EmitEvent(PreDrawEvent{});
-	_events->EmitEvent(DrawEvent{});
+	painter.Paint();
 
-	EXPECT_EQ(painted, (std::vector<std::string_view>{"water", "wall"}));
+	EXPECT_EQ(painted, (std::vector<std::string_view>{"water", "wall", "blast", "bush"}));
 }

@@ -11,9 +11,14 @@ enum class PortForwarding : char8_t
 	NoRouter,
 	//NOTE: the router said no - the port is taken by another machine, or nobody may open one
 	Refused,
-	//NOTE: the router's own outside address is not the internet's - a provider's NAT (CGNAT) or a second router
-	//stands between, and a port opened here stays closed from outside
+	//NOTE: a provider's NAT (CGNAT) stands between the router and the internet - the port stays closed from outside
 	BehindProvider,
+	//NOTE: was open, and the router would not keep it so - asked again until it does
+	Lost,
+	//NOTE: open behind another router - the host passes the port on there by hand, to this router's outside address
+	BehindRouter,
+	//NOTE: nothing came of asking for a while - still asked, and whatever comes later replaces this
+	NoAnswer,
 
 	lastId
 };

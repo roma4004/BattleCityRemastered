@@ -6,6 +6,7 @@
 #include "network/DiscoveryScan.h"
 #include "network/Endpoints.h"
 #include "network/PublicAddressProbe.h"
+#include "network/RouterProbe.h"
 #include <chrono>
 #include <cstddef>
 #include <memory>
@@ -16,7 +17,6 @@
 #include <vector>
 
 enum class GameMode : char8_t;
-struct DrawUserInterfaceEvent;
 struct EnterEvent;
 struct FireEvent;
 struct MenuShownEvent;
@@ -34,6 +34,7 @@ struct TextKeyEvent;
 struct TextPastedEvent;
 struct TextTypedEvent;
 struct UiRow;
+struct UiTable;
 class EventSystem;
 
 //NOTE: where a network game is created or joined; what is typed outlives the screen
@@ -123,6 +124,11 @@ class ServerScreen final
 	std::unique_ptr<network::PublicAddressProbe> _publicProbe{nullptr};
 	//NOTE: the router's address on the internet - the host's IPv4 list offers it once known
 	std::optional<std::string> _publicHost{};
+	std::unique_ptr<network::RouterProbe> _routerProbe{nullptr};
+	//NOTE: what the last search found - the server is handed it, and the host told what to do when it lets nobody in
+	std::optional<network::FoundRouter> _router{};
+	//NOTE: the way in left when the router lets nobody in - read on opening
+	bool _hasInternetIPv6{};
 	Item _focus{};
 	GameMode _mode{};
 	//NOTE: why the last confirm went nowhere - empty when it did not
@@ -146,7 +152,6 @@ class ServerScreen final
 	void OnPadLeft(const MoveLeftEvent& event);
 	void OnPadRight(const MoveRightEvent& event);
 	void OnCancelled(const TextInputCancelledEvent&);
-	void OnDrawUserInterface(const DrawUserInterfaceEvent&) const;
 
 	[[nodiscard]] bool IsOpen() const noexcept;
 	[[nodiscard]] bool IsHosting() const noexcept;
@@ -155,6 +160,7 @@ class ServerScreen final
 	void Press();
 	void Choose(const network::ServerAddress& address, bool isPortForwarded);
 	void PollPublicAddress();
+	void PollRouter();
 	//NOTE: the router's address, which no interface has
 	[[nodiscard]] bool IsPublic(std::string_view host) const;
 
@@ -189,12 +195,15 @@ class ServerScreen final
 	[[nodiscard]] std::string Header() const;
 	[[nodiscard]] std::optional<PanelCaret> Caret(std::size_t row) const;
 	[[nodiscard]] std::optional<PanelDropDown> DropDownAt(std::size_t row) const;
-	void Draw() const;
+	[[nodiscard]] UiTable Advice() const;
 
 public:
 	ServerScreen(const std::shared_ptr<EventSystem>& events, const network::ServerAddress& address,
 				 std::optional<std::string> lastHost);
 
 	void Open(GameMode mode);
+	//NOTE: back from a server that could not listen - the host picks another port
+	void ReportPortTaken();
 	void RememberHost(std::string host) { _lastHost = std::move(host); }
+	void Draw() const;
 };

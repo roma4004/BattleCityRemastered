@@ -1,6 +1,7 @@
 #include "network/PortMapping.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "enums/PortForwarding.h"
+#include "enums/RouterState.h"
 #include "network/Endpoints.h"
 #include "network/PublicAddressProbe.h"
 #include "network/Router.h"
@@ -37,9 +38,13 @@ constexpr auto kLease{20min};
 constexpr int kOnlyPermanentLeases{725};
 //NOTE: a port kept for good needs no renewal - asked again once a day all the same, in case the router forgot it
 constexpr auto kPermanentRenewStep{24h};
+//NOTE: a refused renewal is asked again this often - the lease still holds, and a restarted router takes it at once
+constexpr auto kRefusedRenewStep{30s};
 constexpr auto kInternetPollStep{50ms};
 //NOTE: a router lists every mapping of every machine behind it - a long list is not walked to its end
 constexpr int kMappingsRead{128};
+//NOTE: a router found before answers in a fraction of a second, a search with nothing answering takes eight
+constexpr auto kAnswerPatience{10s};
 
 [[nodiscard]] bool IsEveryNetwork(const std::string& host)
 {
@@ -73,10 +78,10 @@ constexpr int kMappingsRead{128};
 //NOTE: what a server of ours left open before - killed outright, or on a router that keeps a port for good. Only
 //ours by the description, only to this machine, and only a port nobody here listens on: a second server on this
 //machine keeps its own. Read whole before anything goes, since a removal renumbers the list
-void CloseLeftovers(const network::Router& router, const std::string& client)
+void CloseLeftovers(const network::Router& router, const std::string& client, const std::stop_token& stop)
 {
 	std::vector<std::string> leftovers{};
-	for (int index{}; index < kMappingsRead; ++index)
+	for (int index{}; index < kMappingsRead && !stop.stop_requested(); ++index)
 	{
 		std::array<char, 6> externalPort{};
 		std::array<char, 16> internalClient{};
@@ -106,9 +111,31 @@ void CloseLeftovers(const network::Router& router, const std::string& client)
 
 	for (const std::string& port: leftovers)
 	{
+		if (stop.stop_requested())
+		{
+			return;
+		}
+
 		std::ignore = UPNP_DeletePortMapping(router.ControlUrl(), router.ServiceType(), port.c_str(), "UDP", nullptr);
 		Log::Info("UPnP: UDP port " + port + ", left open on the router by an earlier server, is closed");
 	}
+}
+
+//NOTE: a known one gone silent is searched for anew - a restarted router may tell its description on another port
+[[nodiscard]] std::unique_ptr<const network::Router> FindRouter(const std::string& descriptionUrl)
+{
+	if (!descriptionUrl.empty())
+	{
+		auto known{std::make_unique<const network::Router>(descriptionUrl)};
+		if (known->GetState() != RouterState::Silent)
+		{
+			return known;
+		}
+
+		Log::Info("UPnP: the router found before no longer answers at " + descriptionUrl + " - searched for anew");
+	}
+
+	return std::make_unique<const network::Router>();
 }
 
 //NOTE: miniupnpc names the codes it knows and returns nothing for the rest
@@ -122,9 +149,11 @@ void CloseLeftovers(const network::Router& router, const std::string& client)
 
 namespace network
 {
-PortMapping::PortMapping(std::string host, const std::uint16_t port)
+PortMapping::PortMapping(std::string host, const std::uint16_t port, std::string routerUrl)
 	: _host{std::move(host)}
 	, _port{port}
+	, _routerUrl{std::move(routerUrl)}
+	, _answerDue{std::chrono::steady_clock::now() + kAnswerPatience}
 	, _publicProbe{std::make_unique<PublicAddressProbe>()}
 	, _change{PortForwardingChangedEvent{.state = PortForwarding::Opening, .port = port}}
 	, _worker{[this](const std::stop_token& stop) { Forward(stop); }}
@@ -136,6 +165,14 @@ PortMapping::~PortMapping() = default;
 std::optional<PortForwardingChangedEvent> PortMapping::Poll()
 {
 	const std::scoped_lock lock{_mutex};
+	if (!_isAnswered && std::chrono::steady_clock::now() >= _answerDue)
+	{
+		_isAnswered = true;
+		Log::Info("UPnP: no answer from the router in "
+				  + std::to_string(std::chrono::seconds{kAnswerPatience}.count()) + "s - still asked");
+
+		return PortForwardingChangedEvent{.state = PortForwarding::NoAnswer, .port = _port};
+	}
 
 	return std::exchange(_change, std::nullopt);
 }
@@ -169,8 +206,15 @@ void PortMapping::Forward(const std::stop_token& stop)
 {
 	const std::string port{std::to_string(_port)};
 
-	const Router router{};
-	if (router.GetState() == Router::State::Silent)
+	const auto found{FindRouter(_routerUrl)};
+	const Router& router{*found};
+	//NOTE: whatever it said - what follows is quick, or waits on the internet and not on the router
+	{
+		const std::scoped_lock lock{_mutex};
+		_isAnswered = true;
+	}
+
+	if (router.GetState() == RouterState::Silent)
 	{
 		Log::Info("UPnP: no router answered - UDP port " + port + " has to be forwarded on it by hand");
 		Report(PortForwarding::NoRouter);
@@ -178,7 +222,7 @@ void PortMapping::Forward(const std::stop_token& stop)
 		return;
 	}
 
-	if (router.GetState() == Router::State::Offline)
+	if (router.GetState() == RouterState::Offline)
 	{
 		Log::Info("UPnP: nothing on the network is a router connected to the internet - UDP port " + port
 				  + " has to be forwarded by hand");
@@ -187,10 +231,11 @@ void PortMapping::Forward(const std::stop_token& stop)
 		return;
 	}
 
-	if (router.GetState() == Router::State::BehindProvider)
+	if (router.GetState() == RouterState::BehindProvider)
 	{
 		Log::Info("UPnP: the router's outside address " + router.OutsideAddress()
-				  + " is a private one - another NAT stands between it and the internet, nobody gets in from there");
+				  + " is a provider's one - its NAT stands between the router and the internet, nobody gets in from "
+					"there");
 		Report(PortForwarding::BehindProvider);
 
 		return;
@@ -212,7 +257,11 @@ void PortMapping::Forward(const std::stop_token& stop)
 								   client.c_str(), kDescription, "UDP", nullptr, lease.c_str());
 	};
 
-	CloseLeftovers(router, client);
+	CloseLeftovers(router, client, stop);
+	if (stop.stop_requested())
+	{
+		return;
+	}
 
 	int result{open()};
 	if (result == kOnlyPermanentLeases)
@@ -229,26 +278,61 @@ void PortMapping::Forward(const std::stop_token& stop)
 		return;
 	}
 
-	//NOTE: the router's own address is checked against what the internet sees, and stands in when nobody answered
-	if (const std::optional<std::string> seen{AskInternet(stop)}; seen && *seen != router.OutsideAddress())
+	//NOTE: the internet's view is checked against the router's own address - behind another router it sees that one's
+	const std::optional<std::string> seen{router.GetState() == RouterState::Online ? AskInternet(stop) : std::nullopt};
+	const bool isBehindProvider{seen && *seen != router.OutsideAddress()};
+	if (router.GetState() == RouterState::BehindRouter)
+	{
+		Log::Info("UPnP: UDP port " + port + " is open on the router, but another router stands in front of it - "
+				  "the port has to be forwarded on that one to " + router.OutsideAddress() + " by hand");
+	}
+	else if (isBehindProvider)
 	{
 		Log::Info("UPnP: the router says it is " + router.OutsideAddress() + " on the internet, but the internet sees "
 				  + *seen + " - a provider's NAT stands between, nobody gets in from there");
-		Report(PortForwarding::BehindProvider);
 	}
 	else
 	{
 		Log::Info("UPnP: UDP port " + port + " is open on the router, the internet reaches this server at "
 				  + router.OutsideAddress() + ':' + port);
-		Report(PortForwarding::Open, router.OutsideAddress());
 	}
 
-	while (Sleep(stop, isPermanent ? kPermanentRenewStep : kLease / 2))
+	//NOTE: said again once a refused renewal goes through
+	const auto reportOpen = [this, &router, isBehindProvider]
 	{
-		if (const int renewed{open()}; renewed != UPNPCOMMAND_SUCCESS)
+		if (router.GetState() == RouterState::BehindRouter)
 		{
-			Log::Error("UPnP: the router did not renew UDP port " + port + " - " + ErrorText(renewed));
+			Report(PortForwarding::BehindRouter, router.OutsideAddress());
 		}
+		else if (isBehindProvider)
+		{
+			Report(PortForwarding::BehindProvider);
+		}
+		else
+		{
+			Report(PortForwarding::Open, router.OutsideAddress());
+		}
+	};
+	reportOpen();
+
+	const std::chrono::milliseconds renewStep{isPermanent ? kPermanentRenewStep : kLease / 2};
+	bool isRenewalRefused{};
+	while (Sleep(stop, isRenewalRefused ? kRefusedRenewStep : renewStep))
+	{
+		const int renewed{open()};
+		if (renewed != UPNPCOMMAND_SUCCESS && !isRenewalRefused)
+		{
+			Log::Error("UPnP: the router did not renew UDP port " + port + " - " + ErrorText(renewed)
+					   + ", asked again until it does");
+			Report(PortForwarding::Lost);
+		}
+		else if (renewed == UPNPCOMMAND_SUCCESS && isRenewalRefused)
+		{
+			Log::Info("UPnP: the router forwards UDP port " + port + " again");
+			reportOpen();
+		}
+
+		isRenewalRefused = renewed != UPNPCOMMAND_SUCCESS;
 	}
 
 	std::ignore = UPNP_DeletePortMapping(router.ControlUrl(), router.ServiceType(), port.c_str(), "UDP", nullptr);

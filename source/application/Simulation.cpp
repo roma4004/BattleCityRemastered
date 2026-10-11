@@ -69,6 +69,10 @@ void Simulation::Subscribe()
 
 const std::vector<std::shared_ptr<BaseObj>>& Simulation::World() const { return _spawnManager->World(); }
 
+const AnimationManager& Simulation::Animations() const { return *_animationManager; }
+
+const GameStateManager& Simulation::State() const { return *_stateManager; }
+
 const GameStatistics& Simulation::Statistics() const { return *_statistics; }
 
 void Simulation::OnDeltaTime(const DeltaTimeEvent& event) { _deltaTime = event.deltaTime; }

@@ -20,6 +20,12 @@ struct ServerInClientReadyToStartGameEvent
 	PlayerSlot slot;
 };
 
+ //NOTE: a client pressed a key that drives a tank - a player watching the bot in their seat takes the tank with it
+struct ServerInTankCommandEvent
+{
+	PlayerSlot slot;
+};
+
 struct ServerInRestartRequestedEvent {};
 
 //NOTE: only a deliberate leave produces these - a dropped link never does
@@ -95,6 +101,12 @@ struct SeatHolderChangedEvent
 	SeatHolder to{SeatHolder::Player};
 };
 
+//NOTE: who holds every seat, as the host tells the clients
+struct SeatHoldersAnnouncedEvent
+{
+	std::array<SeatHolder, kSeatCount> holders{};
+};
+
 //NOTE: who left the running match and who is back since - while any seat says so, the match is held
 struct AbsenceChangedEvent
 {
@@ -138,18 +150,6 @@ struct ClientOutReadyToPlayEvent {};
 struct ClientOutRestartMatchEvent {};
 
 struct FrameStartEvent {};
-
-struct PreDrawEvent {};
-
-struct DrawEvent {};
-
-struct PostDrawEvent {};
-
-struct PreDrawUserInterfaceEvent {};
-
-struct DrawUserInterfaceEvent {};
-
-struct PostDrawUserInterfaceEvent {};
 
 struct PresentFrameEvent {};
 

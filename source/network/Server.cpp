@@ -271,6 +271,7 @@ void Server::Tick()
 	{
 		session->LoseIfSilent(now);
 		Transmit(*session, now);
+		session->UpdateWoundDown(now);
 	}
 
 	const auto isDrained = [](const std::shared_ptr<Session>& session) { return session->IsDrained(); };
@@ -471,13 +472,9 @@ std::optional<PlayerSlot> Server::FindFreeSlot(const udp::endpoint& endpoint) co
 
 void Server::CleanupDeadSessions()
 {
-	//NOTE: a finished session is not dead while its goodbye is unread, or while its own is still in flight -
-	//that datagram leaves on the tick. Silence is the backstop for a peer that stopped acking
-	const auto now{Clock::now()};
-	const auto isDead = [now](const std::shared_ptr<Session>& session)
+	const auto isDead = [](const std::shared_ptr<Session>& session)
 	{
-		return session->IsFinished() && !session->HasPendingCommands()
-			   && (session->IsDrained() || session->IsSilent(now));
+		return session->IsWoundDown() && !session->HasPendingCommands();
 	};
 
 	const std::scoped_lock lock{_sessionsMutex};

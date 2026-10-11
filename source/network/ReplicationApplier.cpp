@@ -201,6 +201,11 @@ void ReplicationApplier::Emit(const AbsenceChange& command) const
 	_events->EmitEvent(AbsenceChangedEvent{.seats = command.seats});
 }
 
+void ReplicationApplier::Emit(const SeatHoldersChange& command) const
+{
+	_events->EmitEvent(SeatHoldersAnnouncedEvent{.holders = command.holders});
+}
+
 void ReplicationApplier::Emit(const PortForwardingChange& command) const
 {
 	//NOTE: the lobby picks its words by the state, so a wire byte outside the enum is stopped where it enters

@@ -748,10 +748,6 @@ void TankSpawner::DelayedSpawnWith(const DelayedTankSpawn& params)
 			_tankPool->SpawnTank(resetProperty, MakeDriver(params.type))})
 	{
 		_events->EmitEvent(AddToSpawnQueueEvent{.obj = tank});
-		_events->EmitEvent(AnimationCreateTankMoveEvent{.rect = params.rect,
-														.author = SeatOf(params.type),
-														.model = params.model,
-														.tier = params.tier});
 
 		//NOTE: ahead of the effects - their status travels as its own command, and the client has to
 		//have built the tank before one arrives for it

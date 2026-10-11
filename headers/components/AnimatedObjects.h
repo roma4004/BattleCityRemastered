@@ -1,14 +1,12 @@
 #pragma once
 
 #include "../entities/BaseObj.h"
-#include "enums/Author.h"
-#include "enums/TankModel.h"
 #include "utils/Uuid.h"
 
 enum class Direction : char8_t;
 enum class AnimationType : char8_t;
 
-//NOTE: an animation that runs until something disposes of it - tracks, water, the helmet halo
+//NOTE: runs until something disposes of it - the water, a client's spawn burst
 inline constexpr int kEndlessAnimation{0};
 
 class AnimatedObject final
@@ -26,8 +24,4 @@ public:
 	AnimationType type{};
 	bool markToDispose{};
 	int scale{};
-	Author author{};
-	//NOTE: read by the tank animations alone - the others are drawn from the type and ignore it
-	TankModel model{};
-	unsigned short tier{1u};
 };

@@ -13,6 +13,7 @@
 #include "PortForwardingChange.h"
 #include "PositionChange.h"
 #include "RespawnTank.h"
+#include "SeatHoldersChange.h"
 #include "SignalEvent.h"
 #include "SlotAssignment.h"
 #include "StatisticsChange.h"
@@ -33,7 +34,7 @@ using AnyCommand = std::variant<
 	BonusSpawn, BonusStatus, Despawn, GameStateChange, HealthChange,
 	KeyStateChange, ObstacleSpawn, PositionChange, RespawnTank, SignalEvent, StatisticsChange, TankShot,
 	TankSpawnComplete, Disconnect, BonusSpawnComplete, TierChange, SlotAssignment, WorldSnapshot,
-	TankSpawnMoved, AbsenceChange, PortForwardingChange>;
+	TankSpawnMoved, AbsenceChange, PortForwardingChange, SeatHoldersChange>;
 
 //NOTE: a Latest command is replaced per entity on its way out, so it has to say which entity that is
 template<class CommandT>

@@ -38,8 +38,12 @@ public:
 	}
 	[[nodiscard]] std::chrono::steady_clock::time_point ConnectedAt() const noexcept { return _connectedAt; }
 
-	//NOTE: the cue to drop this session, and the only field the game thread reads without a lock
+	//NOTE: the cue to drop this session - the game thread reads it without a lock, as it does IsWoundDown
 	[[nodiscard]] bool IsFinished() const noexcept { return _isFinished.load(std::memory_order_acquire); }
+	//NOTE: finished, and nothing of it left in flight - the goodbyes both ways read, or the peer gone silent
+	[[nodiscard]] bool IsWoundDown() const noexcept { return _isWoundDown.load(std::memory_order_acquire); }
+	//NOTE: on the network thread, the link's only one - the game thread is handed the answer, not the link
+	void UpdateWoundDown(DatagramLink::Clock::time_point now);
 
 	//NOTE: owed on ready and after a dropped backlog - paid with a snapshot in place of the next frame
 	[[nodiscard]] bool IsSnapshotOwed() const { return _isSnapshotOwed.load(std::memory_order_acquire); }
@@ -50,7 +54,6 @@ public:
 	[[nodiscard]] const udp::endpoint& Endpoint() const { return _endpoint; }
 	[[nodiscard]] std::uint32_t ConnectionId() const { return _link.ConnectionId(); }
 	[[nodiscard]] bool IsDrained() const { return _link.IsDrained(); }
-	[[nodiscard]] bool IsSilent(DatagramLink::Clock::time_point now) const { return _link.IsSilent(now); }
 
 	void Start();
 	void Receive(std::string_view datagram, DatagramLink::Clock::time_point now);
@@ -94,6 +97,7 @@ private:
 	void Handle(const WorldSnapshot&) const {}
 	void Handle(const AbsenceChange&) const {}
 	void Handle(const PortForwardingChange&) const {}
+	void Handle(const SeatHoldersChange&) const {}
 
 	void Lose();
 
@@ -111,6 +115,7 @@ private:
 	const std::chrono::steady_clock::time_point _connectedAt{std::chrono::steady_clock::now()};
 	bool _isPeerGone{};
 	std::atomic_bool _isFinished{};
+	std::atomic_bool _isWoundDown{};
 	std::atomic_bool _isSnapshotOwed{};
 };
 }//namespace network::commands

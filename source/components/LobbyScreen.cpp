@@ -58,6 +58,13 @@ UiRow Line(std::string text) { return UiRow{.cells = {TextCell(std::move(text), 
 			return {Line("THE ROUTER REFUSED UDP PORT " + port)};
 		case PortForwarding::BehindProvider:
 			return {Line("BEHIND THE PROVIDER'S NAT,"), Line("NOT REACHABLE FROM THE INTERNET")};
+		case PortForwarding::Lost:
+			return {Line("THE ROUTER STOPPED FORWARDING"), Line("UDP PORT " + port)};
+		case PortForwarding::BehindRouter:
+			return {Line("ANOTHER ROUTER IN FRONT: ON IT,"),
+					Line("FORWARD UDP PORT " + port + " TO " + forwarding.host)};
+		case PortForwarding::NoAnswer:
+			return {Line("THE ROUTER DOES NOT ANSWER,"), Line("FORWARD UDP PORT " + port + " BY HAND")};
 		case PortForwarding::lastId:
 			break;
 	}
@@ -130,8 +137,6 @@ void LobbyScreen::OnAbsenceChanged(const AbsenceChangedEvent& event)
 	_pick = 0u;
 	Display();
 }
-
-void LobbyScreen::OnDrawUserInterface(const DrawUserInterfaceEvent&) const { Draw(); }
 
 //NOTE: a click answers at once, as in the server screen
 void LobbyScreen::OnRowClicked(const PanelRowClickedEvent& event)
@@ -212,8 +217,7 @@ void LobbyScreen::Choose(const std::size_t pick) const
 void LobbyScreen::Display()
 {
 	const bool isCovered{_isMenuShown || _isServerScreenShown};
-	const bool isShown{(_isLobby || IsAsking()) && !isCovered};
-	_drawSub = isShown ? _events->AddListener(this, &LobbyScreen::OnDrawUserInterface) : EventSubscription{};
+	_isShown = (_isLobby || IsAsking()) && !isCovered;
 
 	const bool isTakingAnswers{IsAsking() && !isCovered};
 	if (isTakingAnswers == !_choiceSubs.empty())
@@ -241,6 +245,11 @@ void LobbyScreen::Display()
 
 void LobbyScreen::Draw() const
 {
+	if (!_isShown)
+	{
+		return;
+	}
+
 	_events->EmitEvent(RenderMenuBackgroundEvent{});
 	if (!_isLobby)
 	{
@@ -268,7 +277,7 @@ void LobbyScreen::Draw() const
 		lines.rows.push_back(
 				Line(enemies > 0u ? std::to_string(enemies) + " ENEMIES AT ONCE" : "NO ENEMIES, TWO TO START"));
 
-		lines.rows.push_back(Line(std::to_string(_match->bots) + " BOTS, "
+		lines.rows.push_back(Line(std::to_string(_match->bots) + (isClassic ? " COOP BOTS, " : " OPPONENT BOTS, ")
 								  + (_match->isStartingAtOnce ? "STARTS AT ONCE" : "STARTS WHEN FULL")));
 	}
 

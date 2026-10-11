@@ -25,7 +25,6 @@ void FramePerSecondManager::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &FramePerSecondManager::CountFpsAndDeltaTime));
 	_subs.push_back(_events->AddListener(this, &FramePerSecondManager::OnFrameStart));
-	_subs.push_back(_events->AddListener(this, &FramePerSecondManager::OnPostDrawUserInterface));
 }
 
 void FramePerSecondManager::OnFrameStart(const FrameStartEvent&)
@@ -33,7 +32,7 @@ void FramePerSecondManager::OnFrameStart(const FrameStartEvent&)
 	_startFrameTime = std::chrono::high_resolution_clock::now();
 }
 
-void FramePerSecondManager::OnPostDrawUserInterface(const PostDrawUserInterfaceEvent&) const
+void FramePerSecondManager::Draw() const
 {
 	_events->EmitEvent(RenderFPSEvent{.fps = _lastDisplayedFps});
 }

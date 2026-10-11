@@ -7,7 +7,6 @@
 
 struct CalculateActualFpsEvent;
 struct FrameStartEvent;
-struct PostDrawUserInterfaceEvent;
 class EventSystem;
 class ProjectConfig;
 
@@ -32,7 +31,6 @@ class FramePerSecondManager final
 
 	void Subscribe();
 	void OnFrameStart(const FrameStartEvent&);
-	void OnPostDrawUserInterface(const PostDrawUserInterfaceEvent&) const;
 
 	void CountFpsAndDeltaTime(const CalculateActualFpsEvent&);
 
@@ -41,4 +39,5 @@ public:
 						  bool isVsyncAvailable);
 
 	[[nodiscard]] unsigned int ActualFps() const noexcept { return _lastDisplayedFps; }
+	void Draw() const;
 };

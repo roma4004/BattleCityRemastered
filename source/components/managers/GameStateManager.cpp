@@ -3,13 +3,11 @@
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/GameModeEvents.h"
 #include "components/events/InputEvents.h"
-#include "components/events/RenderUIEvents.h"
 #include "components/events/ReplicationEvents.h"
 #include "components/MatchSettings.h"
 #include "components/WorldSnapshot.h"
 #include "enums/Absence.h"
 #include "enums/GameMode.h"
-#include "enums/UiIcon.h"
 #include "enums/PlayerSlot.h"
 #include <algorithm>
 #include <cstddef>
@@ -32,14 +30,12 @@ void GameStateManager::Subscribe()
 	_subs.push_back(_events->AddListener(this, &GameStateManager::OnGameModeApplied));
 	_subs.push_back(_events->AddListener(this, &GameStateManager::OnDemoStarted));
 	_subs.push_back(_events->AddListener(this, &GameStateManager::OnPauseStatus));
-	_subs.push_back(_events->AddListener(this, &GameStateManager::Draw));
-	_subs.push_back(_events->AddListener(this, &GameStateManager::DrawOverScoreBoard));
-	_subs.push_back(_events->AddListener(this, &GameStateManager::OnScoreBoardShown));
 	_subs.push_back(_events->AddListener(this, &GameStateManager::Reset));
 	_subs.push_back(_events->AddListener(this, &GameStateManager::OnGameFinished));
 	_subs.push_back(_events->AddListener(this, &GameStateManager::OnMapLoadFailed));
 
 	_subs.push_back(_events->AddListener(this, &GameStateManager::OnClientReady));
+	_subs.push_back(_events->AddListener(this, &GameStateManager::OnTankCommand));
 	_subs.push_back(_events->AddListener(this, &GameStateManager::OnRestartRequested));
 	_subs.push_back(_events->AddListener(this, &GameStateManager::OnMatchRestartRequested));
 	_subs.push_back(_events->AddListener(this, &GameStateManager::OnHostPhase));
@@ -114,7 +110,7 @@ bool GameStateManager::IsReadyToStart() const noexcept
 		   && (_isStartingAtOnce || players + _bots >= _seatCount);
 }
 
-//NOTE: the bots take the top seats, so a player joining later sits in an empty one before taking a bot's
+//NOTE: bots fill empty seats from the top, so a later joiner sits in a free one first; the rest take players' seats
 void GameStateManager::FillSeats()
 {
 	std::size_t botsLeft{_bots};
@@ -135,14 +131,30 @@ void GameStateManager::FillSeats()
 		}
 	}
 
+	const auto isWatchable = [this](const std::size_t seat)
+	{
+		return _holders[seat] == SeatHolder::Player && !_drivenSeats.test(seat);
+	};
+	std::ranges::for_each(std::views::iota(std::size_t{}, _seatCount) | std::views::reverse
+								  | std::views::filter(isWatchable) | std::views::take(botsLeft),
+						  [this](const std::size_t seat) { _holders[seat] = SeatHolder::Bot; });
+	std::ranges::for_each(std::views::iota(std::size_t{}, kSeatCount), [this](const std::size_t seat)
+	{
+		_drivenSeats.set(seat, _drivenSeats.test(seat) || _holders[seat] == SeatHolder::Player);
+	});
+
 	_events->EmitEvent(SeatsFilledEvent{.holders = _holders});
+	AnnounceHolders();
 }
+
+void GameStateManager::AnnounceHolders() const { _events->EmitEvent(SeatHoldersAnnouncedEvent{.holders = _holders}); }
 
 void GameStateManager::OnGameModeApplied(const GameModeAppliedEvent& event)
 {
 	_gameMode = event.mode;
 	ForgetSeats();
 	_seatedSeats.reset();
+	_drivenSeats.reset();
 	_holders.fill(SeatHolder::Empty);
 	_isDemo = false;
 
@@ -197,12 +209,18 @@ void GameStateManager::TakeSeat(const PlayerSlot slot)
 	}
 }
 
-//NOTE: the seat goes to the player whoever held it, and the match waits for the field to reach the newcomer
+//NOTE: a seat nobody held is the newcomer's at once, a bot's stays the bot's until their first command
 void GameStateManager::JoinRunningMatch(const PlayerSlot slot)
 {
 	const std::size_t seat{SeatIndex(slot)};
-	const SeatHolder from{std::exchange(_holders[seat], SeatHolder::Player)};
-	_events->EmitEvent(SeatHolderChangedEvent{.slot = slot, .from = from});
+	if (_holders[seat] != SeatHolder::Bot)
+	{
+		const SeatHolder from{std::exchange(_holders[seat], SeatHolder::Player)};
+		_events->EmitEvent(SeatHolderChangedEvent{.slot = slot, .from = from});
+		_drivenSeats.set(seat);
+	}
+
+	AnnounceHolders();
 
 	//NOTE: back while the others are still asked about it - the match goes on once one of them says so
 	if (_absence[seat] != Absence::None)
@@ -228,6 +246,7 @@ void GameStateManager::FreeSeat(const PlayerSlot slot)
 	_readySeats.reset(seat);
 	_seatedSeats.reset(seat);
 	_syncingSeats.reset(seat);
+	_drivenSeats.reset(seat);
 
 	if (!IsNetworkGame(_gameMode))
 	{
@@ -312,6 +331,8 @@ void GameStateManager::HandAbsentSeatsTo(const SeatHolder to)
 		const SeatHolder from{std::exchange(_holders[SeatIndex(slot)], to)};
 		_events->EmitEvent(SeatHolderChangedEvent{.slot = slot, .from = from, .to = to});
 	}
+
+	AnnounceHolders();
 }
 
 //NOTE: waiting takes no answer - the panel standing is the wait. The first answer decides: a later one finds
@@ -347,6 +368,25 @@ void GameStateManager::LoseHost()
 }
 
 void GameStateManager::OnClientReady(const ServerInClientReadyToStartGameEvent& event) { TakeSeat(event.slot); }
+
+//NOTE: the tank changes hands where it stands, and the match waits for the field saying so to reach the one taking it
+void GameStateManager::OnTankCommand(const ServerInTankCommandEvent& event)
+{
+	const std::size_t seat{SeatIndex(event.slot)};
+	const bool isWatching{_readySeats.test(seat) && !_syncingSeats.test(seat) && _holders[seat] == SeatHolder::Bot};
+	if (_state != GameState::Playing || !isWatching)
+	{
+		return;
+	}
+
+	_holders[seat] = SeatHolder::Player;
+	_drivenSeats.set(seat);
+	_events->EmitEvent(SeatHolderChangedEvent{.slot = event.slot, .from = SeatHolder::Bot});
+	AnnounceHolders();
+
+	_syncingSeats.set(seat);
+	UpdateHold();
+}
 
 //NOTE: announced rather than set - a local match is already Playing, and SetState would see no change
 //and leave the finished board on the screen
@@ -396,35 +436,12 @@ void GameStateManager::OnWorldSnapshotRequested(const WorldSnapshotRequestedEven
 	event.snapshot.absence = _absence;
 }
 
-void GameStateManager::OnScoreBoardShown(const ScoreBoardShownEvent& event)
-{
-	_isScoreBoardShown = event.isShown;
-}
-
 //NOTE: not under the panel asking about the one who left - the panel says why the match stands
 bool GameStateManager::IsPauseShown() const
 {
 	const bool isPaused{_state == GameState::Paused || (_isPaused && (IsInMatch(_state) || _state == GameState::Demo))};
 
 	return isPaused && !HasAbsence();
-}
-
-//NOTE: the pause only - the end of a match is the scoreboard's, which shows its plate on itself or in the field
-void GameStateManager::Draw(const PreDrawUserInterfaceEvent&) const
-{
-	if (IsPauseShown() && !_isScoreBoardShown)
-	{
-		_events->EmitEvent(RenderPlateEvent{.plate = UiIcon::PlatePause});
-	}
-}
-
-//NOTE: after the board, not before - its see-through panel would lay the statistics over the plate
-void GameStateManager::DrawOverScoreBoard(const PostDrawUserInterfaceEvent&) const
-{
-	if (IsPauseShown() && _isScoreBoardShown)
-	{
-		_events->EmitEvent(RenderPlateEvent{.plate = UiIcon::PlatePause});
-	}
 }
 
 void GameStateManager::Reset(const GameResetEvent&)

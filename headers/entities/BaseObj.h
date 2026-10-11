@@ -40,8 +40,10 @@ public:
 	//NOTE: entering and leaving the world; called on a fully built object, so the virtual call reaches the leaf
 	virtual void Activate() {}
 	virtual void Deactivate() {}
-	//NOTE: none while an animation paints it - a tank, the water
+	//NOTE: none while an animation paints it - the water
 	[[nodiscard]] virtual std::optional<Sprite> Look() const = 0;
+	//NOTE: what is painted over the object on a layer of its own - a tank's helmet
+	[[nodiscard]] virtual std::optional<Sprite> Cover() const;
 	[[nodiscard]] virtual std::optional<int> ShownHealth() const { return std::nullopt; }
 
 	[[nodiscard]] FPoint GetPos() const noexcept;

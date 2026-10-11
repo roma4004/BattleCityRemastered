@@ -101,11 +101,12 @@ void ScoreBoard::OnRespawnCountChangedTo(const RespawnCountChangedToEvent& event
 	_respawnCounts[static_cast<std::size_t>(event.group)] = event.respawnCount;
 }
 
-void ScoreBoard::OnDrawUserInterface(const DrawUserInterfaceEvent&) const { Draw(); }
-
-void ScoreBoard::OnPreDrawUserInterface(const PreDrawUserInterfaceEvent&) const
+void ScoreBoard::DrawPlate() const
 {
-	_events->EmitEvent(RenderPlateEvent{.plate = Plate()});
+	if (_isFinished && !_isScoreBoardShown)
+	{
+		_events->EmitEvent(RenderPlateEvent{.plate = Plate()});
+	}
 }
 
 UiIcon ScoreBoard::Plate() const { return _isWon ? UiIcon::PlateGameWon : UiIcon::PlateGameOver; }
@@ -139,6 +140,11 @@ void ScoreBoard::OnGameStateChangedTo(const GameStateChangedToEvent& event)
 
 void ScoreBoard::Draw() const
 {
+	if (!_isScoreBoardShown)
+	{
+		return;
+	}
+
 	_events->EmitEvent(RenderMenuBackgroundEvent{});
 	RenderStatistics();
 }
@@ -196,23 +202,8 @@ void ScoreBoard::DisplayScore(const bool isShown)
 	}
 
 	_isScoreBoardShown = isShown;
-
-	if (_isScoreBoardShown)
-	{
-		_drawSub = _events->AddListener(this, &ScoreBoard::OnDrawUserInterface);
-	}
-	else
-	{
-		_drawSub = EventSubscription{};
-	}
-
 	_enterSub = _isScoreBoardShown && _isWon ? _events->AddListener(this, &ScoreBoard::OnEnter)
 												 : EventSubscription{};
-	_plateSub = _isFinished && !_isScoreBoardShown
-						? _events->AddListener(this, &ScoreBoard::OnPreDrawUserInterface)
-						: EventSubscription{};
-
-	_events->EmitEvent(ScoreBoardShownEvent{.isShown = isShown});
 }
 
 //NOTE: on the release, and the offer is taken down with it - a held key would ask for a level per frame,

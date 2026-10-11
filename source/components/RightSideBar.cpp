@@ -5,11 +5,13 @@
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/RenderUIEvents.h"
 #include "components/UiTable.h"
+#include "enums/GameState.h"
 #include "enums/PlayerSlot.h"
 #include "enums/RespawnGroup.h"
 #include "enums/UiIcon.h"
 #include "geometry/Point.h"
 #include <cstddef>
+#include <optional>
 #include <ranges>
 #include <string>
 #include <vector>
@@ -38,16 +40,15 @@ RightSideBar::RightSideBar(const std::shared_ptr<EventSystem>& events, const Gam
 
 void RightSideBar::Subscribe()
 {
-	_subs.push_back(_events->AddListener(this, &RightSideBar::OnDrawUserInterface));
 	_subs.push_back(_events->AddListener(this, &RightSideBar::OnRespawnCountChangedTo));
 	_subs.push_back(_events->AddListener(this, &RightSideBar::OnMapLoaded));
+	_subs.push_back(_events->AddListener(this, &RightSideBar::OnSeatHoldersAnnounced));
 }
-
-void RightSideBar::OnDrawUserInterface(const DrawUserInterfaceEvent&) const { Draw(); }
 
 void RightSideBar::Draw() const
 {
-	_events->EmitEvent(RenderSideBarEvent{.enemies = EnemiesTable(), .counters = CountersTable()});
+	_events->EmitEvent(
+			RenderSideBarEvent{.enemies = EnemiesTable(), .counters = CountersTable(), .hint = HintTable()});
 }
 
 UiTable RightSideBar::EnemiesTable() const
@@ -61,7 +62,7 @@ UiTable RightSideBar::EnemiesTable() const
 						   | std::ranges::to<std::vector>()};
 }
 
-//NOTE: a row per seat, the flag moves up; past two seats they are text - the atlas pictures only two
+//NOTE: a row per seat, text past two - the atlas pictures only two; the hint takes the flag's place, no room for both
 UiTable RightSideBar::CountersTable() const
 {
 	const auto livesOf = [this](const PlayerSlot slot)
@@ -84,9 +85,31 @@ UiTable RightSideBar::CountersTable() const
 		table.rows.push_back(UiRow{.cells = {Counter(picture, livesOf(slot), kLivesNumberOffset)}});
 	}
 
-	table.rows.push_back(UiRow{.cells = {Counter(UiIcon::SideBarStageFlag, _stageNumber, kStageNumberOffset)}});
+	if (!IsWatching())
+	{
+		table.rows.push_back(UiRow{.cells = {Counter(UiIcon::SideBarStageFlag, _stageNumber, kStageNumberOffset)}});
+	}
 
 	return table;
+}
+
+bool RightSideBar::IsWatching() const
+{
+	const std::optional<PlayerSlot>& own{_gameConfig.ownSlot};
+
+	return _gameConfig.IsClient() && own && IsInMatch(_gameConfig.gameState)
+		   && _holders[SeatIndex(*own)] == SeatHolder::Bot;
+}
+
+UiTable RightSideBar::HintTable() const
+{
+	if (!IsWatching())
+	{
+		return UiTable{};
+	}
+
+	return UiTable{.rows = {UiRow{.cells = {TextCell("MOVE OR FIRE", kCounterColor, UiAlign::Centered)}},
+							UiRow{.cells = {TextCell("TO PLAY", kCounterColor, UiAlign::Centered)}}}};
 }
 
 void RightSideBar::OnRespawnCountChangedTo(const RespawnCountChangedToEvent& event)
@@ -95,3 +118,5 @@ void RightSideBar::OnRespawnCountChangedTo(const RespawnCountChangedToEvent& eve
 }
 
 void RightSideBar::OnMapLoaded(const MapLoadedEvent& event) { _stageNumber = event.stage; }
+
+void RightSideBar::OnSeatHoldersAnnounced(const SeatHoldersAnnouncedEvent& event) { _holders = event.holders; }

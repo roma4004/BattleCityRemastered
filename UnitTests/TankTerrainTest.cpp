@@ -78,60 +78,38 @@ TEST_F(TankTerrainTest, HealthBarIsDrawnOnPlainGround)
 {
 	const std::shared_ptr<Tank> tank{SpawnPlayerAt({.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize})};
 
-	bool isHealthBarDrawn{};
-	auto healthBarSub{_events->AddListener([&isHealthBarDrawn](const RenderHealthBarEvent&)
-	{
-		isHealthBarDrawn = true;
-	})};
-
 	Tick();
-	_events->EmitEvent(PostDrawEvent{});
 
-	EXPECT_TRUE(isHealthBarDrawn);
+	EXPECT_TRUE(tank->ShownHealth().has_value());
 	EXPECT_EQ(tank->GetDirection(), Direction::DOWN);
 }
 
 // put the tank inside a bush: no bar, so a hidden tank is not given away by its own health
 TEST_F(TankTerrainTest, HealthBarIsHiddenWhileTheTankStandsInABush)
 {
-	SpawnPlayerAt({.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize});
+	const std::shared_ptr<Tank> tank{SpawnPlayerAt({.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize})};
 	SpawnObstacle(FPoint{.x = 0.0, .y = 0.0}, ObstacleType::Bush);
 
-	bool isHealthBarDrawn{};
-	auto healthBarSub{_events->AddListener([&isHealthBarDrawn](const RenderHealthBarEvent&)
-	{
-		isHealthBarDrawn = true;
-	})};
-
 	Tick();
-	_events->EmitEvent(PostDrawEvent{});
 
-	EXPECT_FALSE(isHealthBarDrawn);
+	EXPECT_FALSE(tank->ShownHealth().has_value());
 }
 
 // burn the bush out from under a standing tank: the bar is back on the next frame
 TEST_F(TankTerrainTest, HealthBarComesBackOnceTheBushIsGone)
 {
-	SpawnPlayerAt({.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize});
+	const std::shared_ptr<Tank> tank{SpawnPlayerAt({.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize})};
 	//NOTE: one cell under the tank is all it takes to stand in a bush, and it is the one popped below
 	SpawnObstacle(FPoint{.x = 0.0, .y = 0.0}, ObstacleType::Bush);
 
-	bool isHealthBarDrawn{};
-	auto healthBarSub{_events->AddListener([&isHealthBarDrawn](const RenderHealthBarEvent&)
-	{
-		isHealthBarDrawn = true;
-	})};
-
 	Tick();
-	_events->EmitEvent(PostDrawEvent{});
-	ASSERT_FALSE(isHealthBarDrawn);
+	ASSERT_FALSE(tank->ShownHealth().has_value());
 
 	_allObjects.pop_back();// the bush burned down
 
 	Tick();
-	_events->EmitEvent(PostDrawEvent{});
 
-	EXPECT_TRUE(isHealthBarDrawn);
+	EXPECT_TRUE(tank->ShownHealth().has_value());
 }
 
 //NOTE: on plain ground the tank is where the key left it - this is the control for the ice test below

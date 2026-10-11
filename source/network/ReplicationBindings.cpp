@@ -116,6 +116,7 @@ void BindHostReplication(ReplicationPublisher& out)
 	});
 	out.Bind<GameStateChangedToEvent>([](const auto& e) { return GameStateChange{.state = e.state}; });
 	out.Bind<AbsenceChangedEvent>([](const auto& e) { return AbsenceChange{.seats = e.seats}; });
+	out.Bind<SeatHoldersAnnouncedEvent>([](const auto& e) { return SeatHoldersChange{.holders = e.holders}; });
 
 	out.Bind<PosChangedEvent>([](const auto& e)
 	{

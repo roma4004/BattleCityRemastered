@@ -57,6 +57,25 @@ void EmitInput(EventSystem& events, const PlayerSlot slot, const InputSignal sig
 
 	Log::Error("Session: unhandled input signal " + std::to_string(static_cast<int>(signal)));
 }
+
+//NOTE: a switch for the same reason - a signal added to the enum has to say whether it takes the tank from a bot
+[[nodiscard]] bool IsTankCommand(const InputSignal signal)
+{
+	switch (signal)
+	{
+		case InputSignal::MoveUp:
+		case InputSignal::MoveDown:
+		case InputSignal::MoveLeft:
+		case InputSignal::MoveRight:
+		case InputSignal::Fire:
+			return true;
+		case InputSignal::PauseRequest:
+		case InputSignal::PauseStatus:
+			return false;
+	}
+
+	return false;
+}
 }// namespace
 
 Session::Session(udp::endpoint endpoint, const std::uint32_t connectionId, const std::shared_ptr<EventSystem>& events,
@@ -117,6 +136,12 @@ void Session::LoseIfSilent(const DatagramLink::Clock::time_point now)
 	{
 		Lose();
 	}
+}
+
+void Session::UpdateWoundDown(const DatagramLink::Clock::time_point now)
+{
+	const bool isWoundDown{IsFinished() && (_link.IsDrained() || _link.IsSilent(now))};
+	_isWoundDown.store(isWoundDown, std::memory_order_release);
 }
 
 void Session::Supersede() { Lose(); }
@@ -197,9 +222,18 @@ void Session::Handle(const SignalEvent& command)
 	});
 }
 
+//NOTE: the tank is taken before the key goes on, so the key that takes it drives it as well
 void Session::Handle(const KeyStateChange& command)
 {
-	_commandQueue.Enqueue([this, cmd = command] { EmitInput(*_events, _slot, cmd.action, cmd.isPressed); });
+	_commandQueue.Enqueue([this, cmd = command]
+	{
+		if (cmd.isPressed && IsTankCommand(cmd.action))
+		{
+			_events->EmitEvent(ServerInTankCommandEvent{.slot = _slot});
+		}
+
+		EmitInput(*_events, _slot, cmd.action, cmd.isPressed);
+	});
 }
 
 void Session::ReleaseSeatKeys() const

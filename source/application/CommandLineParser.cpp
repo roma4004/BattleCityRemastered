@@ -269,9 +269,9 @@ std::expected<LaunchOptions, ArgError> CommandLineParser::ParseServer(const int 
 			std::size_t bots{};
 			const auto* const last{value.data() + value.size()};
 			if (const auto [ptr, error] = std::from_chars(value.data(), last, bots);
-				error != std::errc{} || ptr != last || bots >= kSeatCount)
+				error != std::errc{} || ptr != last || bots > kSeatCount)
 			{
-				return std::unexpected(ArgError{.arg = std::string{arg}, .reason = "expected --bots=0 to --bots=3"});
+				return std::unexpected(ArgError{.arg = std::string{arg}, .reason = "expected --bots=0 to --bots=4"});
 			}
 
 			launchOptions.bots = bots;
@@ -282,6 +282,21 @@ std::expected<LaunchOptions, ArgError> CommandLineParser::ParseServer(const int 
 		if (arg == "--upnp")
 		{
 			launchOptions.isPortForwarded = true;
+
+			continue;
+		}
+
+		//NOTE: miniupnpc reads a router's description over plain HTTP only
+		if (arg.starts_with("--upnp="))
+		{
+			std::string url{arg.substr(std::string_view{"--upnp="}.size())};
+			if (!url.starts_with("http://"))
+			{
+				return std::unexpected(ArgError{.arg = std::string{arg}, .reason = "expected --upnp=http://..."});
+			}
+
+			launchOptions.isPortForwarded = true;
+			launchOptions.routerUrl = std::move(url);
 
 			continue;
 		}

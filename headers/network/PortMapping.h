@@ -23,8 +23,8 @@ class PublicAddressProbe;
 class PortMapping final
 {
 public:
-	//NOTE: a server listening on every network is forwarded to this machine's address on the router's one
-	PortMapping(std::string host, std::uint16_t port);
+	//NOTE: a server on every network is forwarded to this machine's address; an empty routerUrl means a search
+	PortMapping(std::string host, std::uint16_t port, std::string routerUrl);
 
 	~PortMapping();
 
@@ -46,12 +46,16 @@ private:
 
 	const std::string _host;
 	const std::uint16_t _port;
+	const std::string _routerUrl;
+	//NOTE: past it with no word from the router, the host is told it does not answer
+	const std::chrono::steady_clock::time_point _answerDue;
 	//NOTE: built at once, so the servers' names resolve while the router is looked for. Only the thread touches it
 	//afterwards
 	std::unique_ptr<PublicAddressProbe> _publicProbe;
 	std::mutex _mutex;
 	std::condition_variable_any _wake;
 	std::optional<PortForwardingChangedEvent> _change{};
+	bool _isAnswered{};
 	//NOTE: last, so it is joined before anything it touches goes
 	std::jthread _worker{};
 };

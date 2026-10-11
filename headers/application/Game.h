@@ -4,6 +4,7 @@
 #include "components/MatchSettings.h"
 #include <chrono>
 #include <memory>
+#include <string>
 #include <vector>
 
 enum class GameMode : char8_t;
@@ -31,6 +32,7 @@ class ScenePainter;
 class TextureManager;
 class UiRenderer;
 class UserInput;
+class UserInterface;
 class WindowConfig;
 
 namespace network
@@ -83,7 +85,6 @@ private:
 	std::unique_ptr<UserInput> _userInput{nullptr};
 	std::unique_ptr<FramePerSecondManager> _fpsManager{nullptr};
 	std::unique_ptr<Simulation> _simulation{nullptr};
-	//NOTE: after the simulation - its animations paint first in every phase
 	std::unique_ptr<ScenePainter> _scenePainter{nullptr};
 	std::unique_ptr<RenderManager> _renderManager{nullptr};
 	std::unique_ptr<UiRenderer> _uiRenderer{nullptr};
@@ -91,6 +92,8 @@ private:
 	std::unique_ptr<LobbyScreen> _lobbyScreen{nullptr};
 	std::unique_ptr<RightSideBar> _rightSideBar{nullptr};
 	std::unique_ptr<ServerScreen> _serverScreen{nullptr};
+	//NOTE: last - it draws every part above
+	std::unique_ptr<UserInterface> _userInterface{nullptr};
 
 	std::vector<EventSubscription> _subs{};
 
@@ -103,6 +106,7 @@ private:
 	//NOTE: what the server screen picked - a restart starts the server for it again
 	MatchSettings _hostedMatch{};
 	bool _isPortForwarded{};
+	std::string _routerUrl{};
 	//NOTE: an address on the command line skips the server screen
 	bool _isAddressNamedByArguments{};
 	//NOTE: a port named on the command line or the server screen beats a published one - for a client only

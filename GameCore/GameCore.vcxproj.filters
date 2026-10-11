@@ -216,6 +216,9 @@
     <ClCompile Include="..\source\components\UiLayout.cpp">
       <Filter>source\components</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\components\UserInterface.cpp">
+      <Filter>source\components</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\components\WorldGeometry.cpp">
       <Filter>source\components</Filter>
     </ClCompile>
@@ -298,6 +301,9 @@
       <Filter>source\network</Filter>
     </ClCompile>
     <ClCompile Include="..\source\network\Router.cpp">
+      <Filter>source\network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\network\RouterProbe.cpp">
       <Filter>source\network</Filter>
     </ClCompile>
     <ClCompile Include="..\source\network\SeatHistory.cpp">
@@ -536,6 +542,9 @@
     <ClInclude Include="..\headers\components\UiTable.h">
       <Filter>headers\components</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\components\UserInterface.h">
+      <Filter>headers\components</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\components\WorldGeometry.h">
       <Filter>headers\components</Filter>
     </ClInclude>
@@ -668,6 +677,9 @@
     <ClInclude Include="..\headers\enums\RespawnGroup.h">
       <Filter>headers\enums</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\enums\RouterState.h">
+      <Filter>headers\enums</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\enums\StatisticsType.h">
       <Filter>headers\enums</Filter>
     </ClInclude>
@@ -776,6 +788,9 @@
     <ClInclude Include="..\headers\network\commands\RespawnTank.h">
       <Filter>headers\network\commands</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\network\commands\SeatHoldersChange.h">
+      <Filter>headers\network\commands</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\network\commands\SignalEvent.h">
       <Filter>headers\network\commands</Filter>
     </ClInclude>
@@ -840,6 +855,9 @@
       <Filter>headers\network</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\Router.h">
+      <Filter>headers\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\RouterProbe.h">
       <Filter>headers\network</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\SeatHistory.h">

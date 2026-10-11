@@ -39,6 +39,8 @@ struct LaunchOptions final
 	std::optional<bool> isStartingAtOnce{};
 	//NOTE: server only - open the port on the router through UPnP, for players from the internet
 	bool isPortForwarded{};
+	//NOTE: server only - the router a search found before, asked at once instead of looked for
+	std::optional<std::string> routerUrl{};
 	//NOTE: server only - the named event the game that started it sets to have it wind down
 	std::optional<std::string> stopEventName{};
 };

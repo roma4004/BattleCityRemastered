@@ -1,10 +1,10 @@
 #include "application/ServerProcess.h"
+#include "application/CommandLineParser.h"
 #include "components/MatchSettings.h"
 #include "enums/MatchRules.h"
 #include "network/Endpoints.h"
 #include "utils/Log.h"
 #include <charconv>
-#include <chrono>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
@@ -12,40 +12,53 @@
 #include <optional>
 #include <string>
 #include <system_error>
+#include <vector>
+#ifdef _WIN32
 #include <windows.h>
-
-using namespace std::chrono_literals;
+#else
+#include <cerrno>
+#include <csignal>
+#include <cstdlib>
+#include <fcntl.h>
+#include <sys/prctl.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <thread>
+#include <unistd.h>
+#endif
 
 namespace
 {
+#ifdef _WIN32
 constexpr auto kServerExeName{L"BattleCityServer.exe"};
-//NOTE: a server winding down tells its players goodbye and closes its port on the router - a router that does not
-//answer is not waited for longer than this, and the job kills the server then
-constexpr auto kStopPatience{3s};
+#else
+constexpr auto kServerExeName{"BattleCityServer"};
+#endif
 //NOTE: relative, so the name on the command line stays ASCII whatever the install path is - the child
 //runs with the exe's folder as its working directory. Two games hosting at once would share it, and the
 //second one would read the first one's port - a lobby is what fixes that, not a longer name
 constexpr auto kPortFileName{"server-port.txt"};
 
-//NOTE: unique to this game and this start - two games hosting at once, or one hosting again, never share one
-[[nodiscard]] std::string StopEventName()
-{
-	static unsigned int starts{};
-
-	return "Local\\BattleCityServer.stop." + std::to_string(GetCurrentProcessId()) + '.' + std::to_string(++starts);
-}
-
 //NOTE: what the child reads back - the host stays a bare literal, the port is its own word, the map a bare name
-std::string ChildArguments(const network::ServerAddress& address, const MatchSettings& match,
-						   const bool isPortForwarded, const std::string& stopEventName)
+std::vector<std::string> ChildArguments(const network::ServerAddress& address, const MatchSettings& match,
+										const bool isPortForwarded, const std::string& routerUrl)
 {
 	const std::string rules{match.rules == MatchRules::FreeForAll ? "ffa" : "classic"};
+	std::vector<std::string> arguments{"--address=" + address.host,
+									   "--port=" + std::to_string(address.port),
+									   std::string{"--port-file="} + kPortFileName,
+									   "--seats=" + std::to_string(match.seats),
+									   "--rules=" + rules,
+									   "--map=" + match.map,
+									   "--enemies=" + std::to_string(match.enemiesAtOnce),
+									   "--bots=" + std::to_string(match.bots),
+									   std::string{"--start="} + (match.isStartingAtOnce ? "now" : "full")};
+	if (isPortForwarded)
+	{
+		arguments.push_back(routerUrl.empty() ? "--upnp" : "--upnp=" + routerUrl);
+	}
 
-	return " --address=" + address.host + " --port=" + std::to_string(address.port) + " --port-file="
-		   + kPortFileName + " --seats=" + std::to_string(match.seats) + " --rules=" + rules + " --map=" + match.map
-		   + " --enemies=" + std::to_string(match.enemiesAtOnce) + " --bots=" + std::to_string(match.bots)
-		   + " --start=" + (match.isStartingAtOnce ? "now" : "full") + (isPortForwarded ? " --upnp" : "")
-		   + " --stop-event=" + stopEventName;
+	return arguments;
 }
 
 std::optional<std::uint16_t> ReadPortFile(const std::filesystem::path& path)
@@ -69,6 +82,15 @@ std::optional<std::uint16_t> ReadPortFile(const std::filesystem::path& path)
 	return static_cast<std::uint16_t>(port);
 }
 
+#ifdef _WIN32
+//NOTE: unique to this game and this start - two games hosting at once, or one hosting again, never share one
+[[nodiscard]] std::string StopEventName()
+{
+	static unsigned int starts{};
+
+	return "Local\\BattleCityServer.stop." + std::to_string(GetCurrentProcessId()) + '.' + std::to_string(++starts);
+}
+
 [[nodiscard]] std::string LastErrorText(const char* what)
 {
 	return std::string(what) + " failed with " + std::to_string(GetLastError());
@@ -88,6 +110,21 @@ std::optional<std::uint16_t> ReadPortFile(const std::filesystem::path& path)
 
 	return std::filesystem::path(self).replace_filename(kServerExeName);
 }
+#else
+[[nodiscard]] std::string ErrnoText(const char* what)
+{
+	return std::string(what) + " failed: " + std::system_category().message(errno);
+}
+
+//NOTE: our own directory, not the working one - a debugger starts the game from anywhere
+[[nodiscard]] std::filesystem::path ServerExePath()
+{
+	std::error_code ec;
+	const std::filesystem::path self{std::filesystem::read_symlink("/proc/self/exe", ec)};
+
+	return ec ? std::filesystem::path{} : self.parent_path() / kServerExeName;
+}
+#endif
 
 //NOTE: next to our own exe, never the working directory - the child is started there and writes the
 //name relative to it, and a debugger starts the game from wherever it likes
@@ -99,6 +136,7 @@ std::optional<std::uint16_t> ReadPortFile(const std::filesystem::path& path)
 }
 }//namespace
 
+#ifdef _WIN32
 struct ServerProcess::Process
 {
 	HANDLE job{nullptr};
@@ -111,7 +149,7 @@ struct ServerProcess::Process
 	{
 		Stop();
 
-		//NOTE: the job first - closing it is what kills the child; the other two only observe it
+		//NOTE: the job first - closing it kills a child that was not let go; the other two only observe it
 		if (job != nullptr)
 		{
 			CloseHandle(job);
@@ -133,7 +171,7 @@ struct ServerProcess::Process
 		}
 	}
 
-	//NOTE: asked first and killed only past the patience - a killed server leaves its port open on the router
+	//NOTE: asked to wind down and let out of the job - the game does not wait for it; killed when it cannot be asked
 	void Stop() const
 	{
 		if (process == nullptr || stopEvent == nullptr || SetEvent(stopEvent) == 0)
@@ -141,10 +179,10 @@ struct ServerProcess::Process
 			return;
 		}
 
-		const auto patience{static_cast<DWORD>(std::chrono::milliseconds{kStopPatience}.count())};
-		if (WaitForSingleObject(process, patience) == WAIT_TIMEOUT)
+		JOBOBJECT_EXTENDED_LIMIT_INFORMATION limits{};
+		if (SetInformationJobObject(job, JobObjectExtendedLimitInformation, &limits, sizeof(limits)) == 0)
 		{
-			Log::Error("ServerProcess: BattleCityServer did not stop in time and is killed");
+			Log::Error("ServerProcess: " + LastErrorText("SetInformationJobObject") + ", the server is killed");
 		}
 	}
 };
@@ -154,7 +192,7 @@ ServerProcess::ServerProcess() = default;
 ServerProcess::~ServerProcess() = default;
 
 bool ServerProcess::Start(const network::ServerAddress& address, const MatchSettings& match,
-						  const bool isPortForwarded)
+						  const bool isPortForwarded, const std::string& routerUrl)
 {
 	if (IsRunning())
 	{
@@ -204,7 +242,13 @@ bool ServerProcess::Start(const network::ServerAddress& address, const MatchSett
 	}
 
 	//NOTE: CreateProcess writes into this buffer, so it cannot be a literal
-	const std::string argument{ChildArguments(address, match, isPortForwarded, stopEventName)};
+	std::string argument{};
+	for (const std::string& word: ChildArguments(address, match, isPortForwarded, routerUrl))
+	{
+		argument += ' ' + word;
+	}
+
+	argument += " --stop-event=" + stopEventName;
 	std::wstring commandLine{L"\"" + exe.wstring() + L"\"" + std::wstring(argument.begin(), argument.end())};
 
 	STARTUPINFOW startup{};
@@ -244,11 +288,6 @@ bool ServerProcess::Start(const network::ServerAddress& address, const MatchSett
 	return true;
 }
 
-std::optional<std::uint16_t> ServerProcess::PublishedPort()
-{
-	return ReadPortFile(PortFilePath());
-}
-
 bool ServerProcess::IsRunning() const
 {
 	if (!_process || _process->process == nullptr)
@@ -257,4 +296,148 @@ bool ServerProcess::IsRunning() const
 	}
 
 	return WaitForSingleObject(_process->process, 0u) == WAIT_TIMEOUT;
+}
+
+bool ServerProcess::CouldNotListen() const
+{
+	DWORD code{};
+
+	return _process && _process->process != nullptr && GetExitCodeProcess(_process->process, &code) != 0
+		   && code == static_cast<DWORD>(kServerExitCannotListen);
+}
+#else
+struct ServerProcess::Process
+{
+	pid_t pid{};
+	//NOTE: what it exited with, once reaped - a child is reaped once and asked about more often than that
+	std::optional<int> status{};
+
+	~Process() { Stop(); }
+
+	//NOTE: asked, not waited for - the server winds down by itself. Reaped off the game thread, or it stays a zombie
+	void Stop() const
+	{
+		if (status || kill(pid, SIGTERM) != 0)
+		{
+			return;
+		}
+
+		std::thread{[child = pid] { waitpid(child, nullptr, 0); }}.detach();
+	}
+
+	[[nodiscard]] bool IsRunning()
+	{
+		if (status)
+		{
+			return false;
+		}
+
+		int code{};
+		if (waitpid(pid, &code, WNOHANG) != pid)
+		{
+			return true;
+		}
+
+		status = code;
+
+		return false;
+	}
+};
+
+ServerProcess::ServerProcess() = default;
+
+ServerProcess::~ServerProcess() = default;
+
+bool ServerProcess::Start(const network::ServerAddress& address, const MatchSettings& match,
+						  const bool isPortForwarded, const std::string& routerUrl)
+{
+	if (IsRunning())
+	{
+		return true;
+	}
+
+	const std::filesystem::path exe{ServerExePath()};
+	std::error_code ec;
+	if (exe.empty() || !std::filesystem::exists(exe, ec))
+	{
+		Log::Error("ServerProcess: " + exe.string() + " is not next to the game exe");
+
+		return false;
+	}
+
+	//NOTE: gone before the child starts, so what turns up later is this run's port and not the last one's
+	const std::filesystem::path portFile{PortFilePath()};
+	std::filesystem::remove(portFile, ec);
+
+	//NOTE: built before the fork - between it and exec the child may only make calls that allocate nothing
+	const std::string program{exe.string()};
+	const std::string directory{exe.parent_path().string()};
+	std::vector<std::string> words{ChildArguments(address, match, isPortForwarded, routerUrl)};
+	words.insert(words.begin(), program);
+	std::vector<char*> argv{};
+	for (std::string& word: words)
+	{
+		argv.push_back(word.data());
+	}
+
+	argv.push_back(nullptr);
+
+	const pid_t parent{getpid()};
+	const pid_t pid{fork()};
+	if (pid < 0)
+	{
+		Log::Error("ServerProcess: " + ErrnoText("fork"));
+
+		return false;
+	}
+
+	if (pid == 0)
+	{
+		//NOTE: the game gone, killed or crashed, the server is told as the game would tell it - it winds down and
+		//closes its port. Tied to the thread that forked, and that is the game's main one, which lives to the end
+		prctl(PR_SET_PDEATHSIG, SIGTERM);
+		if (getppid() != parent)
+		{
+			_exit(EXIT_FAILURE);
+		}
+
+		//NOTE: the game's own terminal input is not the server's - its console would wait on it to the end
+		if (const int nothing{open("/dev/null", O_RDONLY)}; nothing >= 0)
+		{
+			dup2(nothing, STDIN_FILENO);
+			close(nothing);
+		}
+
+		if (chdir(directory.c_str()) == 0)
+		{
+			execv(program.c_str(), argv.data());
+		}
+
+		_exit(EXIT_FAILURE);
+	}
+
+	_process = std::make_unique<Process>(Process{.pid = pid});
+	Log::Info("ServerProcess: started BattleCityServer");
+
+	return true;
+}
+
+bool ServerProcess::IsRunning() const { return _process && _process->IsRunning(); }
+
+bool ServerProcess::CouldNotListen() const
+{
+	if (!_process || _process->IsRunning())
+	{
+		return false;
+	}
+
+	const std::optional<int>& status{_process->status};
+
+	return status && WIFEXITED(*status) && WEXITSTATUS(*status) == kServerExitCannotListen;
+}
+#endif
+
+std::optional<std::uint16_t> ServerProcess::PublishedPort()
+{
+	return ReadPortFile(PortFilePath());
 }

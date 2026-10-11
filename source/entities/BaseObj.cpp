@@ -1,4 +1,5 @@
 #include "entities/BaseObj.h"
+#include "components/Sprite.h"
 #include "geometry/Point.h"
 #include "entities/BaseObjProperty.h"
 
@@ -18,6 +19,8 @@ const ObjRectangle& BaseObj::GetRect() const { return _rect; }
 Uuid BaseObj::GetUuid() const { return _uuid; }
 
 void BaseObj::SetId(const Uuid uuid) { _uuid = uuid; }
+
+std::optional<Sprite> BaseObj::Cover() const { return std::nullopt; }
 
 Faction BaseObj::GetFaction() const noexcept { return _faction; }
 

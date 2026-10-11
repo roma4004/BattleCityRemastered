@@ -75,7 +75,7 @@
     {
       "name": "Debug-Linux",
       "displayName": "Debug-Linux",
-      "description": "GCC on Linux, WSL2 included, debug. SDL3 is a console build - a bare WSL has no X11 or Wayland headers, and what is checked there, the tests and the server, needs no window. The game itself is Windows only for now: ServerProcess runs the server in a job object.",
+      "description": "GCC on Linux, WSL2 included, debug. SDL3 is a console build - a bare WSL has no X11 or Wayland headers, and what is checked there, the tests and the server, needs no window. The game with a window is Game-Linux.",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/cmake/${presetName}",
       "condition": {
@@ -99,6 +99,24 @@
         "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fsanitize-recover=address -fno-omit-frame-pointer",
         "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address,undefined -fsanitize-recover=address -fno-omit-frame-pointer",
         "CMAKE_SHARED_LINKER_FLAGS": "-fsanitize=address,undefined -fsanitize-recover=address -fno-omit-frame-pointer"
+      }
+    },
+    {
+      "name": "Game-Linux",
+      "displayName": "Game-Linux",
+      "description": "Debug-Linux with a window - the game itself, run under WSLg. SDL needs the X11, Wayland, ALSA and GL development packages, which a bare WSL lacks.",
+      "inherits": "Debug-Linux",
+      "cacheVariables": {
+        "SDL_UNIX_CONSOLE_BUILD": "OFF"
+      }
+    },
+    {
+      "name": "Coverage-Linux",
+      "displayName": "Coverage-Linux",
+      "description": "Debug-Linux + gcov instrumentation on our own targets (ENABLE_COVERAGE); report with gcovr, as Coverage-MinGW.",
+      "inherits": "Debug-Linux",
+      "cacheVariables": {
+        "ENABLE_COVERAGE": "ON"
       }
     },
     {
@@ -150,6 +168,16 @@
     {
       "name": "Asan-Linux",
       "configurePreset": "Asan-Linux",
+      "targets": ["UnitTests", "game_assets"]
+    },
+    {
+      "name": "Game-Linux",
+      "configurePreset": "Game-Linux",
+      "targets": ["BattleCityRemastered", "BattleCityServer", "game_assets"]
+    },
+    {
+      "name": "Coverage-Linux",
+      "configurePreset": "Coverage-Linux",
       "targets": ["UnitTests", "game_assets"]
     },
     {
@@ -208,6 +236,13 @@
         "ASAN_OPTIONS": "detect_leaks=1:detect_stack_use_after_return=1:strict_init_order=1:check_initialization_order=1",
         "UBSAN_OPTIONS": "print_stacktrace=1:halt_on_error=1"
       },
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "Coverage-Linux",
+      "configurePreset": "Coverage-Linux",
       "output": {
         "outputOnFailure": true
       }

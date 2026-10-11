@@ -4,7 +4,6 @@
 #include "components/ScoreBoard.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/GameModeEvents.h"
-#include "components/events/RenderUIEvents.h"
 #include "components/managers/GameStateManager.h"
 #include "enums/GameMode.h"
 #include "enums/GameState.h"
@@ -20,9 +19,7 @@ protected:
 	std::unique_ptr<GameStatistics> _statistics{nullptr};
 	std::unique_ptr<GameStateManager> _stateManager{nullptr};
 	std::unique_ptr<ScoreBoard> _scoreBoard{nullptr};
-	EventSubscription _shownSub{};
 	GameConfig _gameConfig{};
-	bool _isScoreShown{};
 
 	void SetUp() override
 	{
@@ -30,11 +27,6 @@ protected:
 		_statistics = std::make_unique<GameStatistics>(_events);
 		_stateManager = std::make_unique<GameStateManager>(_events);
 		_scoreBoard = std::make_unique<ScoreBoard>(_events, *_statistics, _gameConfig);
-
-		_shownSub = _events->AddListener([this](const ScoreBoardShownEvent& event)
-		{
-			_isScoreShown = event.isShown;
-		});
 	}
 };
 
@@ -42,11 +34,11 @@ protected:
 TEST_F(ScoreBoardTest, GameOverShowsScore)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::OnePlayer});
-	ASSERT_FALSE(_isScoreShown);
+	ASSERT_FALSE(_scoreBoard->IsShown());
 
 	_events->EmitEvent(GameFinishedEvent{.state = GameState::Over});
 
-	EXPECT_TRUE(_isScoreShown);
+	EXPECT_TRUE(_scoreBoard->IsShown());
 }
 
 // and won - the board goes up either way
@@ -55,7 +47,7 @@ TEST_F(ScoreBoardTest, GameWonShowsScore)
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::OnePlayer});
 	_events->EmitEvent(GameFinishedEvent{.state = GameState::Won});
 
-	EXPECT_TRUE(_isScoreShown);
+	EXPECT_TRUE(_scoreBoard->IsShown());
 }
 
 //NOTE: a client never runs the win check, so the phase arriving from the server is all it has to go on
@@ -63,11 +55,11 @@ TEST_F(ScoreBoardTest, HostAnnouncedGameOverShowsScoreOnClient)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsClient});
 	_events->EmitEvent(HostPhaseAnnouncedEvent{.phase = GameState::Playing});
-	ASSERT_FALSE(_isScoreShown);
+	ASSERT_FALSE(_scoreBoard->IsShown());
 
 	_events->EmitEvent(HostPhaseAnnouncedEvent{.phase = GameState::Over});
 
-	EXPECT_TRUE(_isScoreShown);
+	EXPECT_TRUE(_scoreBoard->IsShown());
 }
 
 // the board is up on the client, then the server announces Playing again: it comes down
@@ -75,11 +67,11 @@ TEST_F(ScoreBoardTest, NextMatchHidesScore)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsClient});
 	_events->EmitEvent(HostPhaseAnnouncedEvent{.phase = GameState::Over});
-	ASSERT_TRUE(_isScoreShown);
+	ASSERT_TRUE(_scoreBoard->IsShown());
 
 	_events->EmitEvent(HostPhaseAnnouncedEvent{.phase = GameState::Playing});
 
-	EXPECT_FALSE(_isScoreShown);
+	EXPECT_FALSE(_scoreBoard->IsShown());
 }
 
 // the attract demo ends the same way, but nobody was playing - no board
@@ -90,5 +82,5 @@ TEST_F(ScoreBoardTest, DemoKeepsScoreHidden)
 
 	_events->EmitEvent(GameFinishedEvent{.state = GameState::Over});
 
-	EXPECT_FALSE(_isScoreShown);
+	EXPECT_FALSE(_scoreBoard->IsShown());
 }

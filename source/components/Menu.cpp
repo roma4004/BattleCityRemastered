@@ -100,12 +100,16 @@ void Menu::Subscribe()
 	_subs.push_back(_events->AddListener(this, &Menu::OnMenuShown));
 }
 
-void Menu::OnDrawUserInterface(const DrawUserInterfaceEvent&) { Draw(); }
 void Menu::OnSelectedGameModeChangedTo(const SelectedGameModeChangedToEvent& event) { _selectedGameMode = event.mode; }
 void Menu::OnMenuShown(const MenuShownEvent& event) { DisplayMenu(event.isShown); }
 
 void Menu::Draw()
 {
+	if (!_isMenuShown)
+	{
+		return;
+	}
+
 	if (_slide > 0)
 	{
 		constexpr int slideStep{3};
@@ -130,13 +134,4 @@ int Menu::SelectedRow() const
 void Menu::DisplayMenu(const bool isShown)
 {
 	_isMenuShown = isShown;
-
-	if (_isMenuShown)
-	{
-		_drawSub = _events->AddListener(this, &Menu::OnDrawUserInterface);
-	}
-	else
-	{
-		_drawSub = EventSubscription{};
-	}
 }

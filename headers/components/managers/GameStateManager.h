@@ -14,15 +14,13 @@
 #include <vector>
 
 struct PauseStatusEvent;
-struct PreDrawUserInterfaceEvent;
-struct PostDrawUserInterfaceEvent;
-struct ScoreBoardShownEvent;
 struct GameResetEvent;
 struct GameModeAppliedEvent;
 struct DemoStartedEvent;
 struct GameFinishedEvent;
 struct MapLoadFailedEvent;
 struct ServerInClientReadyToStartGameEvent;
+struct ServerInTankCommandEvent;
 struct ServerInRestartRequestedEvent;
 struct MatchRestartRequestedEvent;
 struct HostPhaseAnnouncedEvent;
@@ -51,6 +49,8 @@ class GameStateManager final
 	std::bitset<kSeatCount> _seatedSeats{};
 	//NOTE: joined a running match and not yet holding the field it was sent
 	std::bitset<kSeatCount> _syncingSeats{};
+	//NOTE: their players have driven the seat's tank - a bot left over at the next level never takes it back
+	std::bitset<kSeatCount> _drivenSeats{};
 	std::array<SeatHolder, kSeatCount> _holders{};
 	//NOTE: written by the host, mirrored by a client - the pause plate gives way to the panel asking about it
 	std::array<Absence, kSeatCount> _absence{};
@@ -64,7 +64,6 @@ class GameStateManager final
 	bool _isStartingAtOnce{};
 	bool _isDemo{};
 	bool _isPaused{};
-	bool _isScoreBoardShown{};
 
 	void Subscribe();
 	void SetState(GameState state);
@@ -73,6 +72,7 @@ class GameStateManager final
 	[[nodiscard]] GameState IdleStateForMode() const;
 	[[nodiscard]] bool IsReadyToStart() const noexcept;
 	void FillSeats();
+	void AnnounceHolders() const;
 
 	void OnGameModeApplied(const GameModeAppliedEvent& event);
 	void OnDemoStarted(const DemoStartedEvent&);
@@ -80,6 +80,7 @@ class GameStateManager final
 	void OnGameFinished(const GameFinishedEvent& event);
 	void OnMapLoadFailed(const MapLoadFailedEvent&);
 	void OnClientReady(const ServerInClientReadyToStartGameEvent& event);
+	void OnTankCommand(const ServerInTankCommandEvent& event);
 	void OnRestartRequested(const ServerInRestartRequestedEvent&);
 	void OnMatchRestartRequested(const MatchRestartRequestedEvent&);
 	void OnHostPhase(const HostPhaseAnnouncedEvent& event);
@@ -106,14 +107,11 @@ class GameStateManager final
 	void OnAbsenceChanged(const AbsenceChangedEvent& event);
 	void LoseHost();
 
-	void OnScoreBoardShown(const ScoreBoardShownEvent& event);
-	[[nodiscard]] bool IsPauseShown() const;
-	void Draw(const PreDrawUserInterfaceEvent&) const;
-	void DrawOverScoreBoard(const PostDrawUserInterfaceEvent&) const;
 	void Reset(const GameResetEvent&);
 
 public:
 	explicit GameStateManager(const std::shared_ptr<EventSystem>& events, const MatchSettings& match = {});
 
 	[[nodiscard]] GameState GetState() const noexcept { return _state; }
+	[[nodiscard]] bool IsPauseShown() const;
 };

@@ -20,4 +20,7 @@ enum class TextureType : char8_t
 	BonusShovel,
 	BonusCaliber,
 	BonusShip,
+
+	Tank,
+	Helmet,
 };

@@ -19,7 +19,6 @@ struct UPoint;
 struct TankResetProperty;
 struct PosChangedEvent;
 struct BonusTimerReApplyOnSpawnEvent;
-struct PostDrawEvent;
 struct TankShotEvent;
 struct TierChangedEvent;
 struct BonusHelmetAppliedEvent;
@@ -53,7 +52,7 @@ class Tank final : public Pawn
 	//NOTE: where the driver asked to go on the last tick, empty when it asked for nothing at all
 	std::optional<Direction> _drivingTo{};
 
-	void EmitMoved() const;
+	void EmitMoved();
 
 	//NOTE: a tank ahead gives way instead of standing like a wall - it is shoved along our own heading
 	//before we move, and what is left of the room is all our own step gets
@@ -66,7 +65,6 @@ class Tank final : public Pawn
 	void SubscribeAsClient() override;
 	void SubscribeBonus();
 	void OnBonusTimerReApplyOnSpawn(const BonusTimerReApplyOnSpawnEvent& event);
-	void OnPostDraw(const PostDrawEvent&) const;
 	void OnTankShot(const TankShotEvent& event);
 	void OnBonusHelmetApplied(const BonusHelmetAppliedEvent& event);
 	void OnTierChanged(const TierChangedEvent& event);
@@ -132,6 +130,7 @@ protected:
 	void TickUpdate(double deltaTime) override;
 
 	BonusEffectProperty _effects{};
+	unsigned int _trackSteps{};
 
 	void Shot();
 
@@ -154,7 +153,9 @@ public:
 
 	void TakeDamage(unsigned int damage, Author author) override;
 
-	[[nodiscard]] std::optional<Sprite> Look() const override { return std::nullopt; }
+	[[nodiscard]] std::optional<Sprite> Look() const override;
+	[[nodiscard]] std::optional<Sprite> Cover() const override;
+	[[nodiscard]] std::optional<int> ShownHealth() const override;
 
 	//NOTE: back into service from the pool - everything a previous life could have changed
 	void Reset(const TankResetProperty& resetProperty, std::unique_ptr<IInputProvider> driver);

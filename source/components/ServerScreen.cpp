@@ -13,11 +13,14 @@
 #include "enums/InputChannel.h"
 #include "enums/MatchRules.h"
 #include "enums/PlayerSlot.h"
+#include "enums/RouterState.h"
 #include "network/DiscoveryScan.h"
 #include "network/Endpoints.h"
 #include "network/PublicAddressProbe.h"
+#include "network/RouterProbe.h"
 #include "utils/TextUtils.h"
 #include <boost/asio/ip/address.hpp>
+#include <boost/asio/ip/address_v6.hpp>
 #include <boost/system/error_code.hpp>
 #include <algorithm>
 #include <array>
@@ -47,6 +50,7 @@ constexpr unsigned int kFullServerColor{0xffa0a0a0u};
 constexpr unsigned int kErrorColor{0xffff0000u};
 constexpr std::string_view kNotAnAddress{"NOT AN ADDRESS"};
 constexpr std::string_view kNotThisMachine{"NOT THIS PC'S ADDRESS"};
+constexpr std::string_view kPortTaken{"THE PORT IS IN USE"};
 
 //NOTE: rows kept for the list, so a found server does not push the address down
 constexpr std::size_t kListRows{5};
@@ -76,8 +80,10 @@ constexpr int kThisPcOnlyRank{2};
 
 //NOTE: a network match of one would be a local one
 constexpr std::uint8_t kMinNetworkSeats{2u};
-//NOTE: a setting's name, then its value between the arrows that say left and right turn it
-constexpr std::size_t kSettingNameSymbols{10};
+//NOTE: a setting's name before its value between the arrows - room for an indented "OPPONENT BOTS"
+constexpr std::size_t kSettingNameSymbols{16};
+//NOTE: the most the advice under the host rows takes - kept whole when empty, so the keys below never move
+constexpr std::size_t kAdviceRows{4};
 
 //NOTE: a terminal caret's period, fading instead of switching
 constexpr auto kCaretBlink{1060ms};
@@ -265,6 +271,60 @@ constexpr auto kCaretBlink{1060ms};
 								  .symbols = kOwnRowSymbols}}};
 }
 
+//NOTE: an IPv6 the internet routes to - neither the link's own nor a site's (fc00::/7)
+[[nodiscard]] bool IsInternetIPv6(const std::string& host)
+{
+	const std::optional<boost::asio::ip::address> address{AddressOf(host)};
+	if (!address || !address->is_v6())
+	{
+		return false;
+	}
+
+	const boost::asio::ip::address_v6 ipv6{address->to_v6()};
+
+	return !ipv6.is_loopback() && !ipv6.is_unspecified() && !ipv6.is_link_local()
+		   && (ipv6.to_bytes().front() & 0xFEu) != 0xFCu;
+}
+
+//NOTE: what the host does by hand when the router lets nobody in - a port left to the OS changes, so it is typed in
+[[nodiscard]] std::vector<std::string> AdviceLines(const network::FoundRouter& router, const std::string& publicHost,
+												   const std::uint16_t port, const bool hasInternetIPv6)
+{
+	const std::string ipv6{hasInternetIPv6 ? "OR HOST ON IPv6" : ""};
+	const auto forward = [port, &ipv6](std::string problem, const std::string& to)
+	{
+		if (port == network::kAnyFreePort)
+		{
+			return std::vector<std::string>{std::move(problem), "A UDP PORT TO " + to + " AND TYPE IT",
+											"ABOVE - AUTO PICKS ANOTHER EACH TIME", ipv6};
+		}
+
+		return std::vector<std::string>{std::move(problem), "UDP PORT " + std::to_string(port) + " TO " + to, ipv6};
+	};
+
+	switch (router.state)
+	{
+		case RouterState::Silent:
+		case RouterState::Offline:
+			return forward("NO UPNP ON THE ROUTER: FORWARD ON IT", router.insideAddress);
+		case RouterState::BehindRouter:
+			return forward("A ROUTER IN FRONT OF YOURS: FORWARD ON IT", router.outsideAddress);
+		case RouterState::Online:
+			//NOTE: the internet seeing another address than the router's own is a provider's NAT between them
+			if (router.outsideAddress == publicHost)
+			{
+				return {};
+			}
+
+			break;
+		case RouterState::BehindProvider:
+			break;
+	}
+
+	return {"THE PROVIDER'S NAT STANDS IN FRONT:", "NOBODY GETS IN FROM THE INTERNET",
+			hasInternetIPv6 ? "HOST ON IPv6 INSTEAD" : ""};
+}
+
 //NOTE: as far as the list scrolls - from there its last servers fill the rows
 [[nodiscard]] constexpr std::size_t LastFirstShown(const std::size_t servers) noexcept
 {
@@ -322,10 +382,18 @@ void ServerScreen::Open(const GameMode mode)
 			_match.map = _maps.front();
 		}
 
-		if (!_publicHost && !_publicProbe)
+		//NOTE: asked again on every opening - a laptop taken to another network is seen at its new address
+		if (!_publicProbe)
 		{
 			_publicProbe = std::make_unique<network::PublicAddressProbe>();
 		}
+
+		if (!_routerProbe)
+		{
+			_routerProbe = std::make_unique<network::RouterProbe>();
+		}
+
+		_hasInternetIPv6 = std::ranges::any_of(network::OwnAddresses(), IsInternetIPv6, &network::OwnAddress::host);
 	}
 	else
 	{
@@ -358,7 +426,6 @@ void ServerScreen::Open(const GameMode mode)
 	_openSubs.push_back(_events->AddListener(this, &ServerScreen::OnRowHovered));
 	_openSubs.push_back(_events->AddListener(this, &ServerScreen::OnEnter));
 	_openSubs.push_back(_events->AddListener(this, &ServerScreen::OnCancelled));
-	_openSubs.push_back(_events->AddListener(this, &ServerScreen::OnDrawUserInterface));
 	//NOTE: a pad cannot type, but it can pick a server, turn a setting and confirm
 	for (const InputChannel channel: kSlots | std::views::transform(LocalInput))
 	{
@@ -372,6 +439,12 @@ void ServerScreen::Open(const GameMode mode)
 	//NOTE: announced first - the menu hidden for the screen then leaves the pause alone
 	_events->EmitEvent(ServerScreenShownEvent{.isShown = true});
 	_events->EmitEvent(ShowMenuEvent{.isShown = false});
+}
+
+void ServerScreen::ReportPortTaken()
+{
+	Open(GameMode::PlayAsHost);
+	_rejection = kPortTaken;
 }
 
 bool ServerScreen::IsOpen() const noexcept { return !_openSubs.empty(); }
@@ -402,6 +475,7 @@ void ServerScreen::OnMenuShown(const MenuShownEvent& event)
 void ServerScreen::OnPreTickUpdate(const PreTickUpdateEvent&)
 {
 	PollPublicAddress();
+	PollRouter();
 
 	if (!_scan || !_scan->Poll())
 	{
@@ -593,8 +667,6 @@ void ServerScreen::OnCancelled(const TextInputCancelledEvent&)
 	_events->EmitEvent(ShowMenuEvent{.isShown = true});
 }
 
-void ServerScreen::OnDrawUserInterface(const DrawUserInterfaceEvent&) const { Draw(); }
-
 void ServerScreen::Confirm(const bool isPressed)
 {
 	if (isPressed)
@@ -694,11 +766,14 @@ void ServerScreen::Choose(const network::ServerAddress& address, const bool isPo
 {
 	const GameMode mode{_mode};
 	Close();
-	_events->EmitEvent(ServerAddressChosenEvent{
-			.mode = mode, .address = address, .match = _match, .isPortForwarded = isPortForwarded});
+	_events->EmitEvent(ServerAddressChosenEvent{.mode = mode,
+												.address = address,
+												.match = _match,
+												.isPortForwarded = isPortForwarded,
+												.routerUrl = _router ? _router->descriptionUrl : std::string{}});
 }
 
-//NOTE: dropped with its answer, or once nobody answered - the next opening asks again then
+//NOTE: the last answer stands while the next one is asked; nobody answering means no internet now
 void ServerScreen::PollPublicAddress()
 {
 	if (!_publicProbe)
@@ -706,10 +781,29 @@ void ServerScreen::PollPublicAddress()
 		return;
 	}
 
-	_publicHost = _publicProbe->Poll();
+	if (auto seen{_publicProbe->Poll()}; seen || !_publicProbe->IsAsking())
+	{
+		_publicHost = std::move(seen);
+	}
+
 	if (!_publicProbe->IsAsking())
 	{
 		_publicProbe.reset();
+	}
+}
+
+//NOTE: the last answer stands while the next search runs
+void ServerScreen::PollRouter()
+{
+	if (!_routerProbe)
+	{
+		return;
+	}
+
+	if (std::optional<network::FoundRouter> found{_routerProbe->Poll()})
+	{
+		_router = std::move(found);
+		_routerProbe.reset();
 	}
 }
 
@@ -735,7 +829,7 @@ void ServerScreen::Change(const bool isForward)
 	else if (_focus.line == Line::Rules)
 	{
 		_match.rules = _match.rules == MatchRules::Classic ? MatchRules::FreeForAll : MatchRules::Classic;
-		_match.enemiesAtOnce = std::max(_match.enemiesAtOnce, FewestEnemies(_match.rules));
+		_match.enemiesAtOnce = DefaultEnemies(_match.rules);
 	}
 	else if (_focus.line == Line::Seats)
 	{
@@ -865,9 +959,9 @@ std::vector<ServerScreen::Item> ServerScreen::Lines() const
 	{
 		lines.push_back(Item{.line = Line::Rules});
 		lines.push_back(Item{.line = Line::Seats});
+		lines.push_back(Item{.line = Line::Bots});
 		lines.push_back(Item{.line = Line::Map});
 		lines.push_back(Item{.line = Line::Enemies});
-		lines.push_back(Item{.line = Line::Bots});
 		lines.push_back(Item{.line = Line::Start});
 		lines.push_back(Item{.line = Line::Gap});
 	}
@@ -1135,8 +1229,10 @@ UiRow ServerScreen::LineRow(const Item& item) const
 			return SettingRow("MAP", _match.map, true);
 		case Line::Enemies:
 			return SettingRow("ENEMIES", std::to_string(_match.enemiesAtOnce), true);
+		//NOTE: indented under SEATS - so many of them go to bots
 		case Line::Bots:
-			return SettingRow("BOTS", std::to_string(_match.bots), true);
+			return SettingRow(_match.rules == MatchRules::FreeForAll ? "  OPPONENT BOTS" : "  COOP BOTS",
+							  std::to_string(_match.bots), true);
 		case Line::Start:
 			return SettingRow("START", _match.isStartingAtOnce ? "AT ONCE" : "WHEN FULL", true);
 		case Line::Error:
@@ -1205,8 +1301,32 @@ std::optional<PanelDropDown> ServerScreen::DropDownAt(const std::size_t row) con
 	return PanelDropDown{.row = row, .items = std::move(items), .picked = _dropDown->picked};
 }
 
+//NOTE: only for a host picked for the internet - and said before CREATE ON, so the port can be forwarded meanwhile
+UiTable ServerScreen::Advice() const
+{
+	UiTable advice{.rows = std::vector<UiRow>(kAdviceRows)};
+	const std::optional<network::ServerAddress> picked{network::ParseServerAddress(_ownIPv4.Text())};
+	if (!picked || !IsPublic(picked->host) || !_router)
+	{
+		return advice;
+	}
+
+	const std::vector<std::string> lines{AdviceLines(*_router, *_publicHost, picked->port, _hasInternetIPv6)};
+	std::ranges::transform(lines, advice.rows.begin(), [](std::string line)
+	{
+		return UiRow{.cells = {Word(std::move(line))}};
+	});
+
+	return advice;
+}
+
 void ServerScreen::Draw() const
 {
+	if (!IsOpen())
+	{
+		return;
+	}
+
 	const std::vector<Item> lines{Lines()};
 	UiTable picked{.rows = lines | std::views::transform([this](const Item& item) { return LineRow(item); })
 						   | std::ranges::to<std::vector>()};
@@ -1220,6 +1340,11 @@ void ServerScreen::Draw() const
 
 	const std::size_t pickedTable{tables.size()};
 	tables.push_back(std::move(picked));
+	if (IsHosting())
+	{
+		tables.push_back(Advice());
+	}
+
 	tables.push_back(Keys(IsHosting()));
 
 	//NOTE: sent for a short list too - the bar's room is kept, so the block does not move as servers come

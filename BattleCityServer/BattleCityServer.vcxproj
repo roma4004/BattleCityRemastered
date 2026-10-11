@@ -54,8 +54,10 @@
     <ClCompile Include="..\source\server_main.cpp" />
     <ClCompile Include="..\source\application\ServerConsole.cpp" />
     <ClCompile Include="..\source\application\ServerStop.cpp" />
+    <ClCompile Include="..\source\application\PortClaim.cpp" />
     <ClInclude Include="..\headers\application\ServerConsole.h" />
     <ClInclude Include="..\headers\application\ServerStop.h" />
+    <ClInclude Include="..\headers\application\PortClaim.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GameCore\GameCore.vcxproj">

@@ -8,8 +8,6 @@
 
 enum class UiIcon : char8_t;
 struct RespawnCountChangedToEvent;
-struct DrawUserInterfaceEvent;
-struct PreDrawUserInterfaceEvent;
 struct EnterEvent;
 struct MenuShownEvent;
 struct GameStateChangedToEvent;
@@ -23,8 +21,6 @@ class ScoreBoard final
 	const GameStatistics& _statistics;
 	const GameConfig& _gameConfig;
 	std::vector<EventSubscription> _subs{};
-	// Toggled at runtime by DisplayScore(), where _subs is filled once at construction and stays
-	EventSubscription _drawSub{};
 
 	bool _isScoreBoardShown{};
 	//NOTE: the match is over - its plate stands on the board, or in the field when there is no board
@@ -34,7 +30,6 @@ class ScoreBoard final
 	bool _isWon{};
 	// Held only while the offer is on screen, so Enter means the next level and nothing else
 	EventSubscription _enterSub{};
-	EventSubscription _plateSub{};
 
 	//NOTE: indexed by RespawnGroup
 	std::array<unsigned short, kRespawnGroupCount> _respawnCounts{};
@@ -42,8 +37,6 @@ class ScoreBoard final
 	void Subscribe();
 
 	void OnRespawnCountChangedTo(const RespawnCountChangedToEvent& event);
-	void OnDrawUserInterface(const DrawUserInterfaceEvent&) const;
-	void OnPreDrawUserInterface(const PreDrawUserInterfaceEvent&) const;
 	void OnMenuShown(const MenuShownEvent& event);
 	void OnGameStateChangedTo(const GameStateChangedToEvent& event);
 	void OnEnter(const EnterEvent& event);
@@ -53,9 +46,12 @@ class ScoreBoard final
 
 	void DisplayScore(bool isShown);
 
-	void Draw() const;
-
 public:
 	ScoreBoard(const std::shared_ptr<EventSystem>& events, const GameStatistics& statistics,
 			   const GameConfig& gameConfig);
+
+	[[nodiscard]] bool IsShown() const noexcept { return _isScoreBoardShown; }
+	void Draw() const;
+	//NOTE: the end of a match nobody shows the board for - the demo's, under the field's own plate
+	void DrawPlate() const;
 };

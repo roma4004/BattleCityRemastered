@@ -2,6 +2,7 @@
 #include "application/ConsoleCommand.h"
 #include "application/GameConfig.h"
 #include "application/PauseSwitch.h"
+#include "application/PortClaim.h"
 #include "application/ProjectConfig.h"
 #include "application/ServerConsole.h"
 #include "application/ServerStop.h"
@@ -14,6 +15,7 @@
 #include "components/LevelRotation.h"
 #include "components/MapData.h"
 #include "components/MapLoader.h"
+#include "components/MatchSettings.h"
 #include "enums/GameMode.h"
 #include "enums/GameState.h"
 #include "network/Endpoints.h"
@@ -203,7 +205,7 @@ int main(const int argc, char* argv[])
 	gameConfig.serverAddress.port = launchOptions->serverPort.value_or(gameConfig.serverAddress.port);
 	gameConfig.networkSeats = launchOptions->seats.value_or(gameConfig.networkSeats);
 	gameConfig.networkRules = launchOptions->rules.value_or(gameConfig.networkRules);
-	gameConfig.simultaneousEnemies = launchOptions->enemiesAtOnce.value_or(gameConfig.simultaneousEnemies);
+	gameConfig.simultaneousEnemies = launchOptions->enemiesAtOnce.value_or(DefaultEnemies(gameConfig.networkRules));
 	gameConfig.networkBots = launchOptions->bots.value_or(gameConfig.networkBots);
 	gameConfig.isStartingAtOnce = launchOptions->isStartingAtOnce.value_or(gameConfig.isStartingAtOnce);
 	if (launchOptions->mapName)
@@ -214,6 +216,9 @@ int main(const int argc, char* argv[])
 			return 1;
 		}
 	}
+
+	//NOTE: held until the port on the router is closed again - a server started on this port meanwhile waits for it
+	PortClaim portClaim{gameConfig.serverAddress.port};
 
 	const auto events{std::make_shared<EventSystem>()};
 	const PauseSwitch pauseSwitch{events};
@@ -231,8 +236,11 @@ int main(const int argc, char* argv[])
 		Log::Error("server: cannot listen on " + gameConfig.serverAddress.host + ':'
 				   + std::to_string(gameConfig.serverAddress.port) + " - not this machine's address, or a port in use");
 
-		return 1;
+		return kServerExitCannotListen;
 	}
+
+	//NOTE: before anybody is told the port - nobody joins until the server before on it has closed it on the router
+	portClaim.Take(boundPort);
 	if (launchOptions->portFilePath && !WriteBoundPort(*launchOptions->portFilePath, boundPort))
 	{
 		Log::Error("server: could not write the port to " + *launchOptions->portFilePath
@@ -247,7 +255,8 @@ int main(const int argc, char* argv[])
 	//NOTE: the port known only now is the one opened - and it is closed again before the server goes
 	const std::unique_ptr<network::PortMapping> portMapping{
 			launchOptions->isPortForwarded
-					? std::make_unique<network::PortMapping>(gameConfig.serverAddress.host, boundPort)
+					? std::make_unique<network::PortMapping>(gameConfig.serverAddress.host, boundPort,
+															 launchOptions->routerUrl.value_or(""))
 					: nullptr};
 
 	ServerConsole console;
@@ -278,6 +287,9 @@ int main(const int argc, char* argv[])
 
 		events->EmitEvent(CalculateActualFpsEvent{});
 	}
+
+	//NOTE: before the port on the router closes - the players from the internet would not hear the goodbye after
+	simulation.LeaveGameMode();
 
 	Log::Info("server stopped");
 

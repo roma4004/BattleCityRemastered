@@ -1,25 +1,31 @@
 #include "application/ServerStop.h"
 #include "utils/Log.h"
 #include <atomic>
-#include <csignal>
-#include <optional>
-#include <string>
-#ifdef _WIN32
 #include <chrono>
+#include <csignal>
+#include <cstdlib>
+#include <optional>
+#include <stop_token>
+#include <string>
 #include <thread>
+#ifdef _WIN32
 #include <windows.h>
 #endif
 
+using namespace std::chrono_literals;
+
 namespace
 {
+//NOTE: plenty for the goodbye and the port on the router - past it a router that does not answer is not waited for
+constexpr auto kWindDownPatience{10s};
+constexpr auto kWatchStep{50ms};
+
 std::atomic_bool isRequested{};
 std::atomic_bool isWoundDown{};
 
 extern "C" void OnStopSignal(int) { isRequested.store(true, std::memory_order_relaxed); }
 
 #ifdef _WIN32
-using namespace std::chrono_literals;
-
 //NOTE: Windows gives a closing console five seconds, then ends the process - the wind-down gets a little less
 constexpr auto kClosePatience{4500ms};
 constexpr auto kClosePollStep{10ms};
@@ -62,7 +68,8 @@ ServerStop::ServerStop(const std::optional<std::string>& eventName)
 		if (_event == nullptr)
 		{
 			Log::Error("server: no stop event " + *eventName + " (" + std::to_string(GetLastError())
-					   + "), the game that started it can only kill it");
+					   + "), and the game that started it could not stop it - stopping at once");
+			Request();
 		}
 	}
 #else
@@ -71,10 +78,16 @@ ServerStop::ServerStop(const std::optional<std::string>& eventName)
 		Log::Error("server: --stop-event is a Windows one, ignored");
 	}
 #endif
+
+	_watchdog = std::jthread{[this](const std::stop_token& stop) { CutShortIfHung(stop); }};
 }
 
 ServerStop::~ServerStop()
 {
+	//NOTE: first, while the event it reads is still open
+	_watchdog.request_stop();
+	_watchdog.join();
+
 #ifdef _WIN32
 	if (_event != nullptr)
 	{
@@ -99,4 +112,26 @@ bool ServerStop::IsRequested() const
 #else
 	return false;
 #endif
+}
+
+void ServerStop::CutShortIfHung(const std::stop_token& stop) const
+{
+	std::optional<std::chrono::steady_clock::time_point> deadline{};
+	while (!stop.stop_requested())
+	{
+		const auto now{std::chrono::steady_clock::now()};
+		if (!deadline && IsRequested())
+		{
+			deadline = now + kWindDownPatience;
+		}
+
+		if (deadline && now >= *deadline)
+		{
+			Log::Error("server: not wound down in " + std::to_string(std::chrono::seconds{kWindDownPatience}.count())
+					   + " s, ended outright");
+			std::_Exit(EXIT_FAILURE);
+		}
+
+		std::this_thread::sleep_for(kWatchStep);
+	}
 }

@@ -24,11 +24,6 @@ struct ShowMenuEvent
 	bool isShown;
 };
 
-struct ScoreBoardShownEvent
-{
-	bool isShown;
-};
-
 //NOTE: how far below its resting place the panel still is - only the menu slides in
 struct RenderMenuBackgroundEvent
 {
@@ -123,6 +118,8 @@ struct RenderSideBarEvent
 {
 	UiTable enemies{};
 	UiTable counters{};
+	//NOTE: under the counters, across the whole bar - what a player watching the bot in their seat is told
+	UiTable hint{};
 };
 
 struct RenderFPSEvent

@@ -79,6 +79,8 @@ constexpr int kReserveColumnGap{1};
 constexpr Point kSideBarEnemyTankSize{.x = 30, .y = 25};
 constexpr Point kSideBarLivesSize{.x = kSideBarItemWidth, .y = 70};
 constexpr Point kSideBarStageSize{.x = kSideBarItemWidth, .y = 95};
+//NOTE: the medium font is a glyph as wide as its size - thirteen of them would not fit across the bar
+constexpr int kSideBarHintPointSize{12};
 
 constexpr double kPausePlateShare{0.40};
 constexpr double kGameOverPlateShare{0.27};
@@ -421,6 +423,17 @@ void UiRenderer::DrawSideBar(const RenderSideBarEvent& event) const
 
 	DrawTables(std::array<PlacedTable, 2>{{{event.enemies, enemies}, {event.counters, counters}}},
 			   SDL_Config::kFontSizePtMedium, scale);
+
+	if (event.hint.rows.empty())
+	{
+		return;
+	}
+
+	const Point hintAt{.x = frame.x - kSideBarColumnPadding, .y = countersAt.y + counters.size.y + kReserveGapBelow};
+	const UiLayout::Placement hint{UiLayout::CenteredAcross(
+			UiLayout::Place(event.hint, hintAt, 0, CellMeasurer(kSideBarHintPointSize, scale)), hintAt,
+			static_cast<int>(WorldGeometry::kSideBarWidth))};
+	DrawTables(std::array<PlacedTable, 1>{{{event.hint, hint}}}, kSideBarHintPointSize, scale);
 }
 
 void UiRenderer::RenderFPS(const RenderFPSEvent& event) const

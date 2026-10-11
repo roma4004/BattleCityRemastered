@@ -79,7 +79,6 @@ protected:
 	std::vector<Uuid> _hostBonusSpawns{};
 	std::map<RespawnGroup, unsigned short> _hostLives{};
 	std::map<RespawnGroup, unsigned short> _clientLives{};
-	std::map<Author, bool> _clientHelmets{};
 	std::vector<EventSubscription> _subs{};
 
 	void SetUp() override
@@ -119,10 +118,6 @@ protected:
 		_subs.push_back(_clientEvents->AddListener([this](const RespawnCountChangedToEvent& event)
 		{
 			_clientLives.insert_or_assign(event.group, event.respawnCount);
-		}));
-		_subs.push_back(_clientEvents->AddListener([this](const AnimationBonusHelmetChangeEvent& event)
-		{
-			_clientHelmets.insert_or_assign(event.author, event.isEnable);
 		}));
 
 		_serverEvents->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
@@ -266,18 +261,22 @@ TEST_F(WorldSnapshotTest, ALandedTankKeepsItsPositionDirectionHealthTierAndHelme
 	EXPECT_EQ(client->GetHealth(), host->GetHealth());
 	EXPECT_EQ(client->GetTier(), 2u);
 	EXPECT_EQ(client->GetAuthor(), Author::Player1);
-	EXPECT_TRUE(_clientHelmets.at(Author::Player1));
+	EXPECT_TRUE(client->Cover().has_value()) << "the helmet did not come with the tank";
 }
 
-//NOTE: a landing tank puts its helmet on, so a helmet already gone on the host has to be taken off again
+// a helmet already gone on the host is off on the client too
 TEST_F(WorldSnapshotTest, AHelmetThatRanOutOnTheHostIsOffOnTheClient)
 {
 	Land(TankType::ENEMY2);
+	const std::shared_ptr<Tank> host{HostTank(TankType::ENEMY2)};
+	ASSERT_NE(host, nullptr);
+	ASSERT_FALSE(host->Cover().has_value());
 
 	Replicate();
 
-	ASSERT_TRUE(_clientHelmets.contains(Author::Enemy2));
-	EXPECT_FALSE(_clientHelmets.at(Author::Enemy2));
+	const auto client{std::dynamic_pointer_cast<Tank>(ClientObject(host->GetUuid()))};
+	ASSERT_NE(client, nullptr);
+	EXPECT_FALSE(client->Cover().has_value());
 }
 
 // one still in its spawn flash on the host keeps flashing until the host reports it landed

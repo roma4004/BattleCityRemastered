@@ -33,16 +33,19 @@ inline constexpr std::array kServerUsage{"--address=IP           what to listen 
 										 "--rules=classic|ffa    classic or free for all; left out, classic",
 										 "--map=NAME             first map, a file in Resources/Maps without .map",
 										 "--enemies=N            enemies at once, 1 to 4 - 0 in a free-for-all of two "
-										 "seats or more; left out, 4",
-										 "--bots=N               bots in the seats nobody took, up to one fewer than "
-										 "the seats; left out, 0",
+										 "seats or more; left out, 4, or 2 in a free-for-all",
+										 "--bots=N               seats bots hold, up to all of them - the empty ones "
+										 "first; left out, 0",
 										 "--start=now|full       now starts with whoever is in, full waits for every "
 										 "seat; left out, full",
-										 "--upnp                 open the port on the router through UPnP, for players "
-										 "from the internet",
+										 "--upnp[=URL]           open the port on the router through UPnP, for players "
+										 "from the internet; URL is the router's description a search found before",
 										 "--stop-event=NAME      Windows: wind down once this named event is set "
 										 "- what the game passes the server it starts",
 										 "--help                 this text"};
+
+//NOTE: the game that started the server has checked the address, so this exit tells the host the port is taken
+inline constexpr int kServerExitCannotListen{2};
 
 class CommandLineParser final
 {

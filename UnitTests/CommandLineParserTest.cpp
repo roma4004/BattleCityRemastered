@@ -436,12 +436,12 @@ TEST(ServerCommandLineTest, NoEnemiesAreTakenOnlyForAFreeForAllOfTwoSeats)
 	EXPECT_FALSE(ParseServerRaw({"--rules=ffa", "--seats=1", "--enemies=0"}).has_value()) << "one seat went alone";
 }
 
-// the bots for the seats nobody took, none to three - one seat is always a player's
-TEST(ServerCommandLineTest, TheBotsAreTakenFromNoneToThree)
+// none to four - every seat may go to a bot
+TEST(ServerCommandLineTest, TheBotsAreTakenFromNoneToFour)
 {
 	EXPECT_EQ(ParseServerRaw({"--bots=0"}).value_or(LaunchOptions{}).bots, 0u);
-	EXPECT_EQ(ParseServerRaw({"--bots=3"}).value_or(LaunchOptions{}).bots, 3u);
-	for (const char* arg: {"--bots=4", "--bots=-1", "--bots=x", "--bots="})
+	EXPECT_EQ(ParseServerRaw({"--bots=4"}).value_or(LaunchOptions{}).bots, 4u);
+	for (const char* arg: {"--bots=5", "--bots=-1", "--bots=x", "--bots="})
 	{
 		EXPECT_FALSE(ParseServerRaw({arg}).has_value()) << arg;
 	}

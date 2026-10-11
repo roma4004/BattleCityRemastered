@@ -21,6 +21,7 @@
 #include "components/managers/FramePerSecondManager.h"
 #include "components/managers/RenderManager.h"
 #include "components/ScenePainter.h"
+#include "components/UserInterface.h"
 #include "components/managers/TextureManager.h"
 #include "enums/GameMode.h"
 #include "network/DiscoveryProbe.h"
@@ -47,7 +48,8 @@ Game::Game(GameConfig& gameConfig, ProjectConfig& projectConfig, const WindowCon
 	, _userInput{std::make_unique<UserInput>(_events, windowConfig, sdlConfig, projectConfig.GamepadDeadZone())}
 	, _fpsManager{std::make_unique<FramePerSecondManager>(_events, projectConfig, true)}
 	, _simulation{std::make_unique<Simulation>(_events, gameConfig)}
-	, _scenePainter{std::make_unique<ScenePainter>(_events, _simulation->World(), *_textureManager)}
+	, _scenePainter{std::make_unique<ScenePainter>(_events, _simulation->World(), _simulation->Animations(),
+													*_textureManager)}
 	, _renderManager{std::make_unique<RenderManager>(_events, gameConfig, sdlConfig)}
 	, _uiRenderer{std::make_unique<UiRenderer>(_events, gameConfig, sdlConfig)}
 	, _scoreBoard{std::make_unique<ScoreBoard>(_events, _simulation->Statistics(), gameConfig)}
@@ -68,6 +70,8 @@ Game::Game(GameConfig& gameConfig, ProjectConfig& projectConfig, const WindowCon
 	_serverScreen = std::make_unique<ServerScreen>(
 			_events, _gameConfig.serverAddress,
 			network::ParseHost(projectConfig.LastConnectAddress()));
+	_userInterface = std::make_unique<UserInterface>(_events, _simulation->State(), *_scoreBoard, *_rightSideBar,
+													 *_lobbyScreen, *_serverScreen, *_menu, *_fpsManager);
 
 	Subscribe();
 
@@ -119,6 +123,7 @@ void Game::OnServerAddressChosen(const ServerAddressChosenEvent& event)
 	_gameConfig.serverAddress = event.address;
 	_hostedMatch = event.match;
 	_isPortForwarded = event.isPortForwarded;
+	_routerUrl = event.routerUrl;
 	_isPortNamed = event.address.port != network::kAnyFreePort;
 	//NOTE: a server still up was started on the address before; the link goes first, as in EnterGameMode
 	_simulation->LeaveGameMode();
@@ -149,7 +154,7 @@ void Game::EnterGameMode(const GameMode mode)
 		_serverProcess = std::make_unique<ServerProcess>();
 	}
 
-	if (!_serverProcess->Start(_gameConfig.serverAddress, _hostedMatch, _isPortForwarded))
+	if (!_serverProcess->Start(_gameConfig.serverAddress, _hostedMatch, _isPortForwarded, _routerUrl))
 	{
 		AbandonHosting();
 
@@ -206,7 +211,12 @@ void Game::PollPublishedPort()
 	if (_serverProcess && !_serverProcess->IsRunning())
 	{
 		Log::Error("ServerProcess: BattleCityServer exited before the game joined it");
+		const bool isPortTaken{_serverProcess->CouldNotListen()};
 		AbandonHosting();
+		if (isPortTaken)
+		{
+			_serverScreen->ReportPortTaken();
+		}
 
 		return;
 	}
@@ -318,14 +328,9 @@ void Game::Run()
 
 			_simulation->Tick();
 
-			_events->EmitEvent(PreDrawEvent{});
-			_events->EmitEvent(DrawEvent{});
-			_events->EmitEvent(PostDrawEvent{});
-			//TODO: optimize draw call with separated layer for brick, create image layer with all level brick, then when brick die replace it spot on layer with black rectangle
+			_scenePainter->Paint();
 
-			_events->EmitEvent(PreDrawUserInterfaceEvent{});
-			_events->EmitEvent(DrawUserInterfaceEvent{});
-			_events->EmitEvent(PostDrawUserInterfaceEvent{});
+			_userInterface->Draw();
 
 			_simulation->EndNetworkFrame();
 

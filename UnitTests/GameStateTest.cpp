@@ -515,8 +515,8 @@ TEST_F(GameStateTest, TheBotsTakeTheTopSeatsNobodyTook)
 	EXPECT_EQ(filled->holders, (std::array{SeatHolder::Player, SeatHolder::Empty, SeatHolder::Bot, SeatHolder::Bot}));
 }
 
-// a bot fills a seat only when nobody is in it
-TEST_F(GameStateTest, NoBotSitsWhereAPlayerIs)
+// a bot sits where a player is only once the empty seats run out - the top player's seat first
+TEST_F(GameStateTest, TheBotsLeftOverTakeTheTopPlayersSeat)
 {
 	std::optional<SeatsFilledEvent> filled{};
 	const EventSubscription filledSub{_events->AddListener([&filled](const SeatsFilledEvent& event)
@@ -532,11 +532,34 @@ TEST_F(GameStateTest, NoBotSitsWhereAPlayerIs)
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P4});
 
 	ASSERT_TRUE(filled.has_value());
-	EXPECT_EQ(filled->holders, (std::array{SeatHolder::Player, SeatHolder::Bot, SeatHolder::Bot, SeatHolder::Player}));
+	EXPECT_EQ(filled->holders, (std::array{SeatHolder::Player, SeatHolder::Bot, SeatHolder::Bot, SeatHolder::Bot}));
 }
 
-// a player joining a running match is put in the seat a bot held, and the bot is told to give it up
-TEST_F(GameStateTest, AJoinTakesTheSeatOverFromItsBot)
+// a player who took their tank keeps it at the next level - the bot left over does not take it back
+TEST_F(GameStateTest, ATankTakenFromABotStaysWithItsPlayerAtTheNextLevel)
+{
+	std::optional<SeatsFilledEvent> filled{};
+	const EventSubscription filledSub{_events->AddListener([&filled](const SeatsFilledEvent& event)
+	{
+		filled = event;
+	})};
+	_stateManager = std::make_unique<GameStateManager>(
+			_events, MatchSettings{.seats = 2u, .bots = 2u, .isStartingAtOnce = true});
+	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
+	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P1});
+	ASSERT_TRUE(filled.has_value());
+	ASSERT_EQ(filled->holders[SeatIndex(PlayerSlot::P1)], SeatHolder::Bot) << "the second bot left the player alone";
+	_events->EmitEvent(ServerInTankCommandEvent{.slot = PlayerSlot::P1});
+	_events->EmitEvent(ServerClientSyncedEvent{.slot = PlayerSlot::P1});
+
+	_events->EmitEvent(ServerInRestartRequestedEvent{});
+	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P1});
+
+	EXPECT_EQ(filled->holders, (std::array{SeatHolder::Player, SeatHolder::Bot, SeatHolder::Empty, SeatHolder::Empty}));
+}
+
+// a player joining a running match watches the bot in their seat, and takes the tank with their first command
+TEST_F(GameStateTest, AJoinTakesTheTankFromItsBotOnTheFirstCommand)
 {
 	std::optional<SeatHolderChangedEvent> taken{};
 	const EventSubscription takenSub{_events->AddListener([&taken](const SeatHolderChangedEvent& event)
@@ -552,6 +575,10 @@ TEST_F(GameStateTest, AJoinTakesTheSeatOverFromItsBot)
 	_matchStarts = 0;
 
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P2});
+	_events->EmitEvent(ServerClientSyncedEvent{.slot = PlayerSlot::P2});
+	ASSERT_FALSE(taken.has_value()) << "the tank was taken before the newcomer gave it a command";
+
+	_events->EmitEvent(ServerInTankCommandEvent{.slot = PlayerSlot::P2});
 
 	ASSERT_TRUE(taken.has_value());
 	EXPECT_EQ(taken->slot, PlayerSlot::P2);
@@ -782,8 +809,8 @@ TEST_F(GameStateTest, TheOneBackIsShownAndTheMatchWaitsForAnAnswer)
 	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
 }
 
-// a bot takes over the seat of the one who left, and gives it back when the player returns
-TEST_F(GameStateTest, ABotTakesOverTheSeatOfTheOneWhoLeftUntilItsPlayerIsBack)
+// a bot takes over the seat of the one who left, and gives it back to the player's first command once they return
+TEST_F(GameStateTest, ABotHoldsTheSeatOfTheOneWhoLeftUntilTheirFirstCommandBack)
 {
 	const PauseSwitch pauseSwitch{_events};
 	std::vector<SeatHolderChangedEvent> taken{};
@@ -805,6 +832,10 @@ TEST_F(GameStateTest, ABotTakesOverTheSeatOfTheOneWhoLeftUntilItsPlayerIsBack)
 	ASSERT_EQ(GameState::Playing, _stateManager->GetState());
 
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P2});
+	_events->EmitEvent(ServerClientSyncedEvent{.slot = PlayerSlot::P2});
+	ASSERT_EQ(taken.size(), 1u) << "the bot gave the seat up before its player gave a command";
+
+	_events->EmitEvent(ServerInTankCommandEvent{.slot = PlayerSlot::P2});
 
 	ASSERT_EQ(taken.size(), 2u);
 	EXPECT_EQ(taken.back().from, SeatHolder::Bot);

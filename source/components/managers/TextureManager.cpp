@@ -2,6 +2,7 @@
 #include "enums/AnimationType.h"
 #include "enums/TextureOffset.h"
 #include "enums/TextureType.h"
+#include "components/AnimatedObjects.h"
 #include "components/EventSystem.h"
 #include "components/Sprite.h"
 #include "components/events/AnimationRenderEvents.h"
@@ -51,6 +52,9 @@ ObjRectangle GetTextureRect(const TextureType texture)
 			return TextureOffset::kBonusCaliber;
 		case TextureType::BonusShip:
 			return TextureOffset::kBonusShip;
+		case TextureType::Helmet:
+			return TextureOffset::kHelmetEffect;
+		case TextureType::Tank:
 		case TextureType::None:
 			break;
 	}
@@ -96,27 +100,25 @@ ObjRectangle GetTankTextureRect(const Author author, const TankModel model, cons
 
 	return QuarterOf(author).transform(shiftedDown).value_or(ObjRectangle{});
 }
+
+ObjRectangle AtlasRectOf(const Sprite& sprite)
+{
+	ObjRectangle rect{sprite.texture == TextureType::Tank ? GetTankTextureRect(sprite.author, sprite.model, sprite.tier)
+														  : GetTextureRect(sprite.texture)};
+	rect.x += sprite.frame * kAtlasCellSize;
+
+	return rect;
+}
 }//namespace
 
 TextureManager::TextureManager(const std::shared_ptr<EventSystem>& events)
-	: _events{events}
-{
-	Subscribe();
-}
+	: _events{events} {}
 
-void TextureManager::Subscribe()
-{
-	_subs.push_back(_events->AddListener(this, &TextureManager::DrawAnimation));
-}
-
-TextureManager::AtlasFrames TextureManager::GetAnimFrames(const AnimationType type, const Author author,
-														  const TankModel model, const unsigned short tier,
-														  const ObjRectangle rect, ObjRectangle& destRect)
+TextureManager::AtlasFrames TextureManager::GetAnimFrames(const AnimationType type, const ObjRectangle rect,
+														  ObjRectangle& destRect)
 {
 	switch (type)
 	{
-		case AnimationType::Tank_Move:
-			return AtlasFrames{.first = GetTankTextureRect(author, model, tier)};
 		case AnimationType::Water_Flow:
 			//NOTE: the water frames sit to the left of the offset, so they are walked backwards
 			return AtlasFrames{.first = TextureOffset::kWater, .step = -1};
@@ -137,8 +139,6 @@ TextureManager::AtlasFrames TextureManager::GetAnimFrames(const AnimationType ty
 
 			return AtlasFrames{.first = lastFrame, .step = -1};
 		}
-		case AnimationType::Helmet_Effect:
-			return AtlasFrames{.first = TextureOffset::kHelmetEffect};
 		case AnimationType::Count:
 			break;
 	}
@@ -151,7 +151,7 @@ TextureManager::AtlasFrames TextureManager::GetAnimFrames(const AnimationType ty
 void TextureManager::Draw(const Sprite& sprite) const
 {
 	const ObjRectangle destRect{sprite.rect};
-	const ObjRectangle textureRect{GetTextureRect(sprite.texture)};
+	const ObjRectangle textureRect{AtlasRectOf(sprite)};
 	if (constexpr ObjRectangle defaultSdlRect{};
 		MathUtils::AreEqualAbsolute(textureRect.x, defaultSdlRect.x)
 		&& MathUtils::AreEqualAbsolute(textureRect.y, defaultSdlRect.y)
@@ -198,12 +198,12 @@ void TextureManager::DrawRim(const ObjRectangle& textureRect, const ObjRectangle
 	emitSlice(kBonusBoxWidth - thickness, 0.0, thickness, kBonusBoxHeight);
 }
 
-void TextureManager::DrawAnimation(const DrawAnimationEvent& event) const
+void TextureManager::Draw(const AnimatedObject& animation) const
 {
-	const auto& [rect, dir, frame, scale, type, author, model, tier] = event;
+	const ObjRectangle& rect{animation.rect};
 	ObjRectangle destRect{rect};
-	auto [textureRect, step] = GetAnimFrames(type, author, model, tier, rect, destRect);
-	textureRect.x += static_cast<double>(frame * scale * step);
+	auto [textureRect, step] = GetAnimFrames(animation.type, rect, destRect);
+	textureRect.x += static_cast<double>(animation.currentFrameIndex * animation.scale * step);
 	if (constexpr ObjRectangle defaultSdlRect{};
 		MathUtils::AreEqualAbsolute(textureRect.x, defaultSdlRect.x)
 		&& MathUtils::AreEqualAbsolute(textureRect.y, defaultSdlRect.y)
@@ -213,5 +213,5 @@ void TextureManager::DrawAnimation(const DrawAnimationEvent& event) const
 		_events->EmitEvent(RenderColorTextureEvent{.rect = rect});
 	}
 
-	_events->EmitEvent(RenderTextureEvent{.textureRect = textureRect, .destRect = destRect, .dir = dir});
+	_events->EmitEvent(RenderTextureEvent{.textureRect = textureRect, .destRect = destRect, .dir = animation.dir});
 }

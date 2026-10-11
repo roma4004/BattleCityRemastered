@@ -3,6 +3,7 @@
 #include "components/MatchSettings.h"
 #include "enums/GameMode.h"
 #include "network/Endpoints.h"
+#include <string>
 
 struct GameModeChangedToEvent
 {
@@ -28,4 +29,6 @@ struct ServerAddressChosenEvent
 	MatchSettings match{};
 	//NOTE: hosting for the internet - the server asks the router to pass its port on
 	bool isPortForwarded{};
+	//NOTE: the router the screen found meanwhile, so the server asks it at once; empty, and the server looks for one
+	std::string routerUrl{};
 };

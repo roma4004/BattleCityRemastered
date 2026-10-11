@@ -67,6 +67,7 @@ set(GAME_CORE_SOURCES
         source/components/AddressField.cpp
         source/components/ServerScreen.cpp
         source/components/ScenePainter.cpp
+        source/components/UserInterface.cpp
         source/components/ScoreBoard.cpp
         source/components/TankPool.cpp
         source/components/TankSpawner.cpp
@@ -108,6 +109,7 @@ set(GAME_CORE_SOURCES
         source/network/PublicAddressProbe.cpp
         source/network/ReplicationApplier.cpp
         source/network/Router.cpp
+        source/network/RouterProbe.cpp
         source/network/ReplicationBindings.cpp
         source/network/ReplicationPublisher.cpp
         source/network/SeatHistory.cpp
@@ -218,7 +220,7 @@ add_executable(${PROJECT_NAME} source/main.cpp)
 #NOTE: GameCore alone, exactly like UnitTests - SDL cannot reach BattleCityServer by
 #construction, and the console is all the output it has
 add_executable(BattleCityServer source/server_main.cpp source/application/ServerConsole.cpp
-        source/application/ServerStop.cpp)
+        source/application/ServerStop.cpp source/application/PortClaim.cpp)
 add_executable(UnitTests ${UNIT_TESTS_SOURCES})
 
 target_include_directories(UnitTests PRIVATE headers)

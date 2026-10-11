@@ -11,7 +11,6 @@
 #include <optional>
 #include <vector>
 
-struct DrawUserInterfaceEvent;
 struct GameStateChangedToEvent;
 struct ClientInDisconnectEvent;
 struct ClientConnectedToHostEvent;
@@ -33,13 +32,13 @@ class LobbyScreen final
 {
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
-	EventSubscription _drawSub{};
 	//NOTE: held only while the panel asks - clearing them stops the answers
 	std::vector<EventSubscription> _choiceSubs{};
 
 	const GameConfig& _gameConfig;
 
 	bool _isLobby{};
+	bool _isShown{};
 	bool _isMenuShown{};
 	bool _isServerScreenShown{};
 	bool _isServerFull{};
@@ -62,7 +61,6 @@ class LobbyScreen final
 	void OnSlotAssigned(const PlayerSlotAssignedEvent& event);
 	void OnPortForwardingChanged(const PortForwardingChangedEvent& event);
 	void OnAbsenceChanged(const AbsenceChangedEvent& event);
-	void OnDrawUserInterface(const DrawUserInterfaceEvent&) const;
 
 	void OnRowClicked(const PanelRowClickedEvent& event);
 	void OnRowHovered(const PanelRowHoveredEvent& event);
@@ -77,9 +75,10 @@ class LobbyScreen final
 	void Choose(std::size_t pick) const;
 
 	void Display();
-	void Draw() const;
 	void DrawAbsence() const;
 
 public:
 	LobbyScreen(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig);
+
+	void Draw() const;
 };

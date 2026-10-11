@@ -106,12 +106,12 @@ void ProjectConfig::DefaultInitIni()
 		Set("Images.PS5_Options", "Resources/Images/PS5_Buttons/Options.png");
 		Set("Images.PS5_Triangle", "Resources/Images/PS5_Buttons/Triangle.png");
 
-		Set("Images.XBox_D-Pad", "Resources/Images/XBox_Buttons/D-Pad.png");
-		Set("Images.XBox_Home", "Resources/Images/XBox_Buttons/Home.png");
-		Set("Images.XBox_Menu", "Resources/Images/XBox_Buttons/Menu.png");
-		Set("Images.XBox_View", "Resources/Images/XBox_Buttons/View.png");
-		Set("Images.XBox_A", "Resources/Images/XBox_Buttons/A.png");
-		Set("Images.XBox_Y", "Resources/Images/XBox_Buttons/Y.png");
+		Set("Images.XBox_D-Pad", "Resources/Images/Xbox_Buttons/D-Pad.png");
+		Set("Images.XBox_Home", "Resources/Images/Xbox_Buttons/Home.png");
+		Set("Images.XBox_Menu", "Resources/Images/Xbox_Buttons/Menu.png");
+		Set("Images.XBox_View", "Resources/Images/Xbox_Buttons/View.png");
+		Set("Images.XBox_A", "Resources/Images/Xbox_Buttons/A.png");
+		Set("Images.XBox_Y", "Resources/Images/Xbox_Buttons/Y.png");
 	}
 	catch (const boost::property_tree::ptree_bad_data& err)
 	{
