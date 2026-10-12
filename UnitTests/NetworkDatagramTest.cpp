@@ -11,7 +11,7 @@
 using namespace std::chrono_literals;
 
 // Both ends of one link, and a wire that is nothing but this test - it drops, repeats and reorders by hand
-class DatagramLinkTest : public testing::Test
+class NetworkDatagramTest : public testing::Test
 {
 protected:
 	using Clock = network::DatagramLink::Clock;
@@ -38,7 +38,7 @@ protected:
 };
 
 // the plain case - what was put in comes out on the other side
-TEST_F(DatagramLinkTest, AMessageArrivesWhole)
+TEST_F(NetworkDatagramTest, AMessageArrivesWhole)
 {
 	ASSERT_TRUE(_host.SendReliable("hello"));
 
@@ -48,7 +48,7 @@ TEST_F(DatagramLinkTest, AMessageArrivesWhole)
 }
 
 // the same datagram handed over twice is delivered once
-TEST_F(DatagramLinkTest, ADuplicatedDatagramDeliversOnce)
+TEST_F(NetworkDatagramTest, ADuplicatedDatagramDeliversOnce)
 {
 	ASSERT_TRUE(_host.SendReliable("hello"));
 	const auto datagrams{_host.TakeDatagrams(_now)};
@@ -60,7 +60,7 @@ TEST_F(DatagramLinkTest, ADuplicatedDatagramDeliversOnce)
 }
 
 // a lost one waits out the timeout before it is repeated, not the next tick
-TEST_F(DatagramLinkTest, ALostDatagramIsSentAgainOnlyOnceTheRetransmitTimeoutPasses)
+TEST_F(NetworkDatagramTest, ALostDatagramIsSentAgainOnlyOnceTheRetransmitTimeoutPasses)
 {
 	ASSERT_TRUE(_host.SendReliable("hello"));
 	std::ignore = _host.TakeDatagrams(_now);
@@ -76,7 +76,7 @@ TEST_F(DatagramLinkTest, ALostDatagramIsSentAgainOnlyOnceTheRetransmitTimeoutPas
 }
 
 // and an acknowledged one is never repeated at all
-TEST_F(DatagramLinkTest, AnAcknowledgedMessageIsNotSentAgain)
+TEST_F(NetworkDatagramTest, AnAcknowledgedMessageIsNotSentAgain)
 {
 	ASSERT_TRUE(_host.SendReliable("hello"));
 	Carry(_host.TakeDatagrams(_now), _client);
@@ -90,7 +90,7 @@ TEST_F(DatagramLinkTest, AnAcknowledgedMessageIsNotSentAgain)
 }
 
 // datagrams arriving out of order are handed up in the order they were sent
-TEST_F(DatagramLinkTest, ReorderedDatagramsDeliverInTheOrderSent)
+TEST_F(NetworkDatagramTest, ReorderedDatagramsDeliverInTheOrderSent)
 {
 	ASSERT_TRUE(_host.SendReliable("first"));
 	const auto first{_host.TakeDatagrams(_now)};
@@ -105,7 +105,7 @@ TEST_F(DatagramLinkTest, ReorderedDatagramsDeliverInTheOrderSent)
 }
 
 // a message too big for one datagram travels in pieces and arrives whole
-TEST_F(DatagramLinkTest, AMessageLargerThanADatagramIsSplitAndPutBackTogether)
+TEST_F(NetworkDatagramTest, AMessageLargerThanADatagramIsSplitAndPutBackTogether)
 {
 	std::string snapshot(5000u, '\0');
 	std::ranges::generate(snapshot, [i = 0]() mutable { return static_cast<char>(i++ % 251); });
@@ -126,7 +126,7 @@ TEST_F(DatagramLinkTest, AMessageLargerThanADatagramIsSplitAndPutBackTogether)
 }
 
 // of several values of one entity only the newest leaves
-TEST_F(DatagramLinkTest, OnlyTheNewestValueOfAnEntityGoesOut)
+TEST_F(NetworkDatagramTest, OnlyTheNewestValueOfAnEntityGoesOut)
 {
 	_host.SendLatest(_tank, "old");
 	_host.SendLatest(_tank, "new");
@@ -137,7 +137,7 @@ TEST_F(DatagramLinkTest, OnlyTheNewestValueOfAnEntityGoesOut)
 }
 
 // and one arriving after a newer one is dropped on the far side
-TEST_F(DatagramLinkTest, AnOutdatedValueArrivingLateIsDropped)
+TEST_F(NetworkDatagramTest, AnOutdatedValueArrivingLateIsDropped)
 {
 	_host.SendLatest(_tank, "old");
 	const auto old{_host.TakeDatagrams(_now)};
@@ -151,7 +151,7 @@ TEST_F(DatagramLinkTest, AnOutdatedValueArrivingLateIsDropped)
 }
 
 //NOTE: a tank that stopped sends no further position, so the last one lost would leave it standing elsewhere
-TEST_F(DatagramLinkTest, ALostValueIsSentAgainWhileItIsStillTheNewest)
+TEST_F(NetworkDatagramTest, ALostValueIsSentAgainWhileItIsStillTheNewest)
 {
 	_host.SendLatest(_tank, "stopped");
 	std::ignore = _host.TakeDatagrams(_now);
@@ -163,7 +163,7 @@ TEST_F(DatagramLinkTest, ALostValueIsSentAgainWhileItIsStillTheNewest)
 }
 
 // and dropped instead once something has
-TEST_F(DatagramLinkTest, ALostValueAlreadyReplacedIsNeverSentAgain)
+TEST_F(NetworkDatagramTest, ALostValueAlreadyReplacedIsNeverSentAgain)
 {
 	_host.SendLatest(_tank, "old");
 	std::ignore = _host.TakeDatagrams(_now);
@@ -178,7 +178,7 @@ TEST_F(DatagramLinkTest, ALostValueAlreadyReplacedIsNeverSentAgain)
 }
 
 //NOTE: a settled entity is forgotten, so the ack for a late copy of its old value may arrive after a new one
-TEST_F(DatagramLinkTest, ALateAckForAnOlderValueDoesNotSettleTheNewestOne)
+TEST_F(NetworkDatagramTest, ALateAckForAnOlderValueDoesNotSettleTheNewestOne)
 {
 	_host.SendLatest(_tank, "old");
 	const auto first{_host.TakeDatagrams(_now)};
@@ -200,7 +200,7 @@ TEST_F(DatagramLinkTest, ALateAckForAnOlderValueDoesNotSettleTheNewestOne)
 }
 
 //NOTE: a tank the snapshot put in place would be moved back to where it stood before the snapshot was taken
-TEST_F(DatagramLinkTest, AValueSentBeforeASnapshotAndArrivingAfterItIsDropped)
+TEST_F(NetworkDatagramTest, AValueSentBeforeASnapshotAndArrivingAfterItIsDropped)
 {
 	_host.SendLatest(_tank, "before");
 	const auto late{_host.TakeDatagrams(_now)};
@@ -214,7 +214,7 @@ TEST_F(DatagramLinkTest, AValueSentBeforeASnapshotAndArrivingAfterItIsDropped)
 }
 
 //NOTE: applied at once, the value would be wiped by the snapshot still on its way
-TEST_F(DatagramLinkTest, AValueArrivingAheadOfItsSnapshotIsHandedOverRightAfterIt)
+TEST_F(NetworkDatagramTest, AValueArrivingAheadOfItsSnapshotIsHandedOverRightAfterIt)
 {
 	ASSERT_TRUE(_host.SendSnapshot("snapshot"));
 	const auto snapshot{_host.TakeDatagrams(_now)};
@@ -231,7 +231,7 @@ TEST_F(DatagramLinkTest, AValueArrivingAheadOfItsSnapshotIsHandedOverRightAfterI
 }
 
 // a snapshot carries the field, so the values it already contains are dropped
-TEST_F(DatagramLinkTest, ASnapshotRetiresTheValuesItAlreadyHolds)
+TEST_F(NetworkDatagramTest, ASnapshotRetiresTheValuesItAlreadyHolds)
 {
 	_host.SendLatest(_tank, "unacked");
 	std::ignore = _host.TakeDatagrams(_now);
@@ -248,7 +248,7 @@ TEST_F(DatagramLinkTest, ASnapshotRetiresTheValuesItAlreadyHolds)
 }
 
 // and a value waiting for a snapshot that never arrived is handed over with the next one
-TEST_F(DatagramLinkTest, AValueWaitingForASnapshotThatNeverCameGoesWithTheNextOne)
+TEST_F(NetworkDatagramTest, AValueWaitingForASnapshotThatNeverCameGoesWithTheNextOne)
 {
 	ASSERT_TRUE(_host.SendSnapshot("snapshot that is dropped"));
 	std::ignore = _host.TakeDatagrams(_now);
@@ -272,7 +272,7 @@ TEST_F(DatagramLinkTest, AValueWaitingForASnapshotThatNeverCameGoesWithTheNextOn
 }
 
 // a peer that stopped acking is not sent the tail it missed - it is dropped, and the snapshot replacing it comes first
-TEST_F(DatagramLinkTest, ABacklogPastTheLimitIsDroppedAndThePeerSkipsToTheNextMessage)
+TEST_F(NetworkDatagramTest, ABacklogPastTheLimitIsDroppedAndThePeerSkipsToTheNextMessage)
 {
 	for (std::size_t i = 0u; i < network::DatagramLink::kMaxBacklog; ++i)
 	{
@@ -290,7 +290,7 @@ TEST_F(DatagramLinkTest, ABacklogPastTheLimitIsDroppedAndThePeerSkipsToTheNextMe
 }
 
 // a peer with nothing to say still sends heartbeats, so silence means a real loss
-TEST_F(DatagramLinkTest, AQuietPeerKeptAliveByHeartbeatsIsNotSilent)
+TEST_F(NetworkDatagramTest, AQuietPeerKeptAliveByHeartbeatsIsNotSilent)
 {
 	for (auto elapsed{0ms}; elapsed < 3s; elapsed += 100ms)
 	{
@@ -305,7 +305,7 @@ TEST_F(DatagramLinkTest, AQuietPeerKeptAliveByHeartbeatsIsNotSilent)
 }
 
 // and a datagram from another connection is ignored instead of being read as ours
-TEST_F(DatagramLinkTest, ADatagramOfAnotherConnectionIsIgnored)
+TEST_F(NetworkDatagramTest, ADatagramOfAnotherConnectionIsIgnored)
 {
 	network::DatagramLink stranger{8u, _now};
 	ASSERT_TRUE(stranger.SendReliable("not yours"));

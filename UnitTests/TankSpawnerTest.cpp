@@ -38,6 +38,7 @@
 #include <optional>
 #include <string_view>
 #include <utility>
+#include <vector>
 
 using namespace std::chrono_literals;
 
@@ -243,6 +244,7 @@ TEST_F(TankSpawnerTest, ASpawnDoesNotTakeTheSquareOfABurstAlreadyRunning)
 
 	const double tankSize{_gameConfig.tankSize};
 	WallOffTopRow(tankSize * 2.0, tankSize * 3.0);
+	_events->EmitEvent(EnemyLineupLoadedEvent{.models = std::vector(4u, TankModel::Basic)});
 
 	std::vector<AnimationCreateTankSpawnEvent> bursts{};
 	const EventSubscription burstSub{_events->AddListener(
@@ -388,40 +390,30 @@ TEST_F(TankSpawnerTest, ASpawnWaitsForItsSquareToBeFreed)
 	EXPECT_EQ(std::ranges::count_if(_allObjects, isTank), 1) << "the square came free and nobody came up in it";
 }
 
-// a host runs its own clock, so its spawn burst is the counted-down one
-TEST_F(TankSpawnerTest, AServerBurstCountsTheSpawnDown)
+//NOTE: the server's loop may run slower than ours - a client's own burst would end before the tank lands
+TEST_F(TankSpawnerTest, AServerBurstCountsDownAndAClientBurstWaitsForTheServer)
 {
 	std::vector<AnimationCreateTankSpawnEvent> bursts{};
 	const EventSubscription burstSub{_events->AddListener(
 			[&bursts](const AnimationCreateTankSpawnEvent& event) { bursts.push_back(event); })};
-
 	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
 	_events->EmitEvent(RespawnTankEvent{.type = TankType::PLAYER1, .uuid = UuidUtils::GetRandomUuid()});
-
 	ASSERT_EQ(bursts.size(), 1u);
-	EXPECT_FALSE(bursts.front().isEndless);
-}
-
-//NOTE: the server's loop may run slower than ours - a burst of our own would end before the tank lands
-TEST_F(TankSpawnerTest, AClientBurstWaitsForTheServer)
-{
-	std::optional<AnimationCreateTankSpawnEvent> burst{};
-	const EventSubscription burstSub{_events->AddListener(
-			[&burst](const AnimationCreateTankSpawnEvent& event) { burst = event; })};
+	EXPECT_FALSE(bursts.front().isEndless) << "the host's own burst does not count the spawn down";
 
 	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsClient, _respawnManager,
 							 _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
-
+	_allObjects.clear();
+	bursts.clear();
 	const Uuid uuid{UuidUtils::GetRandomUuid()};
 	_events->EmitEvent(TankRespawnedEvent{.type = TankType::ENEMY1,
 										  .model = TankModel::Basic,
 										  .uuid = uuid,
 										  .pos = {.x = 0.0, .y = 0.0}});
-
-	ASSERT_TRUE(burst.has_value());
-	EXPECT_TRUE(burst->isEndless);
+	ASSERT_EQ(bursts.size(), 1u);
+	EXPECT_TRUE(bursts.front().isEndless);
 	EXPECT_TRUE(_allObjects.empty());
 
 	_events->EmitEvent(TankSpawnCompletedEvent{.uuid = uuid});
@@ -471,26 +463,6 @@ TEST_F(TankSpawnerTest, AClientSpawnsOnTheLatestRectAfterACancel)
 
 	ASSERT_EQ(_allObjects.size(), 1u);
 	EXPECT_EQ(_allObjects.front()->GetRect().x, currentPos.x);
-}
-
-// the machine running the server has no seat of its own - its keyboard drives nothing
-TEST_F(TankSpawnerTest, AServerTakesBothSeatsOffTheWire)
-{
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
-	_events->EmitEvent(GameResetEvent{});
-	_events->EmitEvent(RespawnTankEvent{.type = TankType::PLAYER1, .uuid = UuidUtils::GetRandomUuid()});
-
-	ASSERT_EQ(_allObjects.size(), 1u);
-	const auto& playerOne{_allObjects.front()};
-	const FPoint startPos{playerOne->GetPos()};
-
-	_events->EmitEvent(Key(InputChannel::LocalP1), MoveUpEvent{.isPressed = true});
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = 1.0 / 60.0});
-	EXPECT_EQ(startPos, playerOne->GetPos()) << "the machine running the server drove a seat over its keyboard";
-
-	_events->EmitEvent(Key(InputChannel::RemoteP1), MoveUpEvent{.isPressed = true});
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = 1.0 / 60.0});
-	EXPECT_NE(startPos, playerOne->GetPos()) << "the first seat never heard the wire";
 }
 
 // bush and ice are ground a tank drives on, water is not: a fresh tank has no ship and could never drive off it

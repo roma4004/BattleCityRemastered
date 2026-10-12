@@ -23,7 +23,7 @@
 #include <optional>
 #include <vector>
 
-class ClientMirrorTest : public testing::Test
+class NetworkClientMirrorTest : public testing::Test
 {
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
@@ -64,7 +64,7 @@ protected:
 };
 
 //NOTE: the server sends health as an absolute value - applying the heal here too would land it twice
-TEST_F(ClientMirrorTest, AClientTakesHealthOffTheWireInsteadOfHealingItself)
+TEST_F(NetworkClientMirrorTest, AClientTakesHealthOffTheWireInsteadOfHealingItself)
 {
 	const auto enemy{CreateBot({.x = 100.0, .y = 100.0}, Author::Enemy1)};
 
@@ -80,7 +80,7 @@ TEST_F(ClientMirrorTest, AClientTakesHealthOffTheWireInsteadOfHealingItself)
 }
 
 //NOTE: the host holds the growth back until there is room, so the tier alone must not grow the mirror
-TEST_F(ClientMirrorTest, AMirroredTankGrowsOnlyWhenTheHostSaysItGrew)
+TEST_F(NetworkClientMirrorTest, AMirroredTankGrowsOnlyWhenTheHostSaysItGrew)
 {
 	const auto enemy{CreateBot({.x = 100.0, .y = 100.0}, Author::Enemy1)};
 	const double before{enemy->GetRect().w};
@@ -100,7 +100,7 @@ TEST_F(ClientMirrorTest, AMirroredTankGrowsOnlyWhenTheHostSaysItGrew)
 }
 
 //NOTE: the burst only draws here - what puts the bonus on the field is the server saying it settled
-TEST_F(ClientMirrorTest, ABonusLandsWhenTheServerSaysItSettled)
+TEST_F(NetworkClientMirrorTest, ABonusLandsWhenTheServerSaysItSettled)
 {
 	const Uuid uuid{UuidUtils::GetRandomUuid()};
 
@@ -115,7 +115,7 @@ TEST_F(ClientMirrorTest, ABonusLandsWhenTheServerSaysItSettled)
 }
 
 //NOTE: the server's loop may run slower than ours - a burst of our own would end before the bonus lands
-TEST_F(ClientMirrorTest, AClientBonusBurstWaitsForTheServer)
+TEST_F(NetworkClientMirrorTest, AClientBonusBurstWaitsForTheServer)
 {
 	std::optional<AnimationCreateBonusSpawnEvent> burst{};
 	const EventSubscription burstSub{_events->AddListener(
@@ -129,7 +129,7 @@ TEST_F(ClientMirrorTest, AClientBonusBurstWaitsForTheServer)
 }
 
 //NOTE: a bonus picked up mid-burst is never completed by the server, so no ghost is left behind
-TEST_F(ClientMirrorTest, ABonusRetiredDuringItsBurstNeverLands)
+TEST_F(NetworkClientMirrorTest, ABonusRetiredDuringItsBurstNeverLands)
 {
 	const Uuid uuid{UuidUtils::GetRandomUuid()};
 
@@ -141,7 +141,7 @@ TEST_F(ClientMirrorTest, ABonusRetiredDuringItsBurstNeverLands)
 }
 
 // two bonuses bursting at once: the host's word lands one of them and leaves the other waiting
-TEST_F(ClientMirrorTest, CompletingOneBonusLeavesTheOtherPending)
+TEST_F(NetworkClientMirrorTest, CompletingOneBonusLeavesTheOtherPending)
 {
 	const Uuid settled{UuidUtils::GetRandomUuid()};
 	const Uuid pending{UuidUtils::GetRandomUuid()};
@@ -153,7 +153,7 @@ TEST_F(ClientMirrorTest, CompletingOneBonusLeavesTheOtherPending)
 	EXPECT_EQ(_allObjects.size(), 1u);
 }
 
-TEST_F(ClientMirrorTest, AMirroredShotKeepsTheDamageTheHostRolled)
+TEST_F(NetworkClientMirrorTest, AMirroredShotKeepsTheDamageTheHostRolled)
 {
 	CreateBot({.x = 100.0, .y = 100.0}, Author::Enemy1);
 	constexpr unsigned int hostRolled{7u};

@@ -51,7 +51,7 @@
 #include <vector>
 
 // The host's field crosses the wire as one command onto a client that has seen none of it
-class WorldSnapshotTest : public testing::Test
+class NetworkWorldSnapshotTest : public testing::Test
 {
 protected:
 	std::shared_ptr<EventSystem> _serverEvents{std::make_shared<EventSystem>()};
@@ -142,11 +142,6 @@ protected:
 		queue.ProcessAll();
 	}
 
-	void Land(const TankType type) const
-	{
-		_serverEvents->EmitEvent(SpawnAnimationFinishedEvent{.uuid = _hostTankSpawns.at(type)});
-	}
-
 	[[nodiscard]] std::shared_ptr<Tank> HostTank(const TankType type) const
 	{
 		const Uuid uuid{_hostTankSpawns.at(type)};
@@ -167,28 +162,8 @@ protected:
 	}
 };
 
-// the snapshot carries the phase, so a client joining mid-match lands in the one being played
-TEST_F(WorldSnapshotTest, ThePhaseComesFromTheHost)
-{
-	Replicate();
-
-	EXPECT_EQ(_clientStateManager->GetState(), GameState::Playing);
-}
-
-// a client never opens the map file - only the snapshot tells it the field's width, or it draws over its side bar
-TEST_F(WorldSnapshotTest, TheFieldsSizeComesFromTheHost)
-{
-	_serverEvents->EmitEvent(MapLoadedEvent{.cols = 61u, .rows = 50u});
-	ASSERT_NE(_clientConfig.battlefieldSize, _hostConfig.battlefieldSize)
-			<< "the control failed - the client already had the host's field size";
-
-	Replicate();
-
-	EXPECT_EQ(_clientConfig.battlefieldSize, _hostConfig.battlefieldSize);
-}
-
-// nor which stage it is - the client only shows the host's count
-TEST_F(WorldSnapshotTest, TheStageNumberComesFromTheHost)
+// a client never opens the map file - it takes the phase, field size and stage, on a field replaced, not laid over
+TEST_F(NetworkWorldSnapshotTest, TheClientLandsInTheHostsMatch)
 {
 	unsigned short clientStage{};
 	_subs.push_back(_clientEvents->AddListener([&clientStage](const MapLoadedEvent& event)
@@ -196,23 +171,35 @@ TEST_F(WorldSnapshotTest, TheStageNumberComesFromTheHost)
 		clientStage = event.stage;
 	}));
 	_serverEvents->EmitEvent(MapLoadedEvent{.cols = 61u, .rows = 50u, .stage = 3u});
+	_clientEvents->EmitEvent(
+			ObstacleSpawnedEvent{.pos = {.x = 48.0, .y = 48.0}, .type = ObstacleType::Brick, .uuid = {}});
+	ASSERT_EQ(_clientSpawned.size(), 1u);
+	const std::weak_ptr<BaseObj> stale{_clientSpawned.front()};
+	ASSERT_NE(_clientConfig.battlefieldSize, _hostConfig.battlefieldSize) << "the client already had the host's size";
 
 	Replicate();
 
+	EXPECT_EQ(_clientStateManager->GetState(), GameState::Playing);
+	EXPECT_EQ(_clientConfig.battlefieldSize, _hostConfig.battlefieldSize) << "the field overlaps the side bar";
 	EXPECT_EQ(clientStage, 3u);
+	EXPECT_TRUE(stale.expired()) << "the client kept a wall the host never had";
 }
 
-// what the host has already lost is not in the snapshot, so the client does not build it
-TEST_F(WorldSnapshotTest, AWallDestroyedOnTheHostIsNotRebuiltOnTheClient)
+// an obstacle arrives as it stands on the host: a wall it lost is not rebuilt, a wounded eagle is as wounded
+TEST_F(NetworkWorldSnapshotTest, ObstaclesArriveAsTheyStand)
 {
 	const double cell{_hostConfig.gridOffset};
 	_serverEvents->EmitEvent(SpawnObstacleEvent{.rect = {.x = 0.0, .y = 300.0, .w = cell, .h = cell},
 											  .type = ObstacleType::Brick});
 	_serverEvents->EmitEvent(SpawnObstacleEvent{.rect = {.x = cell, .y = 300.0, .w = cell, .h = cell},
 											  .type = ObstacleType::Steel});
-	const std::shared_ptr<BaseObj> shot{_hostObjects.at(_hostObjects.size() - 2u)};
-	const std::shared_ptr<BaseObj> standing{_hostObjects.back()};
+	_serverEvents->EmitEvent(SpawnObstacleEvent{.rect = {.x = 0.0, .y = 400.0, .w = cell, .h = cell},
+											  .type = ObstacleType::Eagle});
+	const std::shared_ptr<BaseObj> shot{_hostObjects.at(_hostObjects.size() - 3u)};
+	const std::shared_ptr<BaseObj> standing{_hostObjects.at(_hostObjects.size() - 2u)};
+	const std::shared_ptr<BaseObj> eagle{_hostObjects.back()};
 	shot->TakeDamage(shot->GetHealth(), Author::Player1);
+	eagle->TakeDamage(1u, Author::Enemy1);
 	_serverEvents->EmitEvent(PostTickUpdateEvent{});
 
 	Replicate();
@@ -222,34 +209,26 @@ TEST_F(WorldSnapshotTest, AWallDestroyedOnTheHostIsNotRebuiltOnTheClient)
 	ASSERT_NE(steel, nullptr);
 	EXPECT_EQ(steel->GetPos(), standing->GetPos());
 	EXPECT_FALSE(steel->GetIsDestructible());
+	const auto clientEagle{ClientObject(eagle->GetUuid())};
+	ASSERT_NE(clientEagle, nullptr);
+	EXPECT_EQ(clientEagle->GetHealth(), eagle->GetHealth());
 }
 
-// a wounded obstacle arrives as wounded as it stands on the host - the eagle's bar reads the same number
-TEST_F(WorldSnapshotTest, AWoundedObstacleArrivesWounded)
+// a landed tank arrives whole - place, facing, health, tier, shield; a flashing one lands on the host's word
+TEST_F(NetworkWorldSnapshotTest, TanksArriveAsTheyStand)
 {
-	const double cell{_hostConfig.gridOffset};
-	_serverEvents->EmitEvent(SpawnObstacleEvent{.rect = {.x = 0.0, .y = 300.0, .w = cell, .h = cell},
-											  .type = ObstacleType::Eagle});
-	const std::shared_ptr<BaseObj> eagle{_hostObjects.back()};
-	eagle->TakeDamage(1u, Author::Enemy1);
-
-	Replicate();
-
-	const auto client{ClientObject(eagle->GetUuid())};
-	ASSERT_NE(client, nullptr);
-	EXPECT_EQ(eagle->GetHealth(), client->GetHealth());
-}
-
-// a tank arrives whole: where it stands, where it faces, its health, its tier and its shield
-TEST_F(WorldSnapshotTest, ALandedTankKeepsItsPositionDirectionHealthTierAndHelmet)
-{
-	Land(TankType::PLAYER1);
+	_serverEvents->EmitEvent(SpawnAnimationFinishedEvent{.uuid = _hostTankSpawns.at(TankType::PLAYER1)});
+	_serverEvents->EmitEvent(SpawnAnimationFinishedEvent{.uuid = _hostTankSpawns.at(TankType::ENEMY2)});
 	const std::shared_ptr<Tank> host{HostTank(TankType::PLAYER1)};
+	const std::shared_ptr<Tank> bare{HostTank(TankType::ENEMY2)};
 	ASSERT_NE(host, nullptr);
+	ASSERT_NE(bare, nullptr);
+	ASSERT_FALSE(bare->Cover().has_value());
 	host->SetDirection(Direction::LEFT);
 	host->TakeDamage(15u, Author::Enemy1);
 	_serverEvents->EmitEvent(Key(Author::Player1), BonusStarPickupEvent{});
 	_serverEvents->EmitEvent(Key(Author::Player1), BonusHelmetStatusChangeEvent{.isActive = true});
+	const Uuid bursting{_hostTankSpawns.at(TankType::PLAYER2)};
 
 	Replicate();
 
@@ -261,58 +240,25 @@ TEST_F(WorldSnapshotTest, ALandedTankKeepsItsPositionDirectionHealthTierAndHelme
 	EXPECT_EQ(client->GetTier(), 2u);
 	EXPECT_EQ(client->GetAuthor(), Author::Player1);
 	EXPECT_TRUE(client->Cover().has_value()) << "the helmet did not come with the tank";
-}
-
-// a helmet already gone on the host is off on the client too
-TEST_F(WorldSnapshotTest, AHelmetThatRanOutOnTheHostIsOffOnTheClient)
-{
-	Land(TankType::ENEMY2);
-	const std::shared_ptr<Tank> host{HostTank(TankType::ENEMY2)};
-	ASSERT_NE(host, nullptr);
-	ASSERT_FALSE(host->Cover().has_value());
-
-	Replicate();
-
-	const auto client{std::dynamic_pointer_cast<Tank>(ClientObject(host->GetUuid()))};
-	ASSERT_NE(client, nullptr);
-	EXPECT_FALSE(client->Cover().has_value());
-}
-
-// one still in its spawn flash on the host keeps flashing until the host reports it landed
-TEST_F(WorldSnapshotTest, ATankStillBurstingOnTheHostLandsOnlyWhenTheHostSaysSo)
-{
-	const Uuid bursting{_hostTankSpawns.at(TankType::PLAYER2)};
-
-	Replicate();
-	ASSERT_EQ(ClientObject(bursting), nullptr);
+	const auto clientBare{std::dynamic_pointer_cast<Tank>(ClientObject(bare->GetUuid()))};
+	ASSERT_NE(clientBare, nullptr);
+	EXPECT_FALSE(clientBare->Cover().has_value()) << "a helmet gone on the host is on on the client";
+	ASSERT_EQ(ClientObject(bursting), nullptr) << "a tank still flashing on the host landed on its own";
 
 	_clientEvents->EmitEvent(TankSpawnCompletedEvent{.uuid = bursting});
 
 	EXPECT_NE(ClientObject(bursting), nullptr);
 }
 
-//NOTE: the shooter is no use here - it may be dead already, or turned away from its own bullet
-TEST_F(WorldSnapshotTest, ABulletInFlightIsRebuiltWhereItIsNowhereNearItsShooter)
+// a bullet is rebuilt where it flies, not by its shooter; a settled bonus is placed, a pending one waits for the host
+TEST_F(NetworkWorldSnapshotTest, BulletsAndBonusesArriveAsTheyStand)
 {
 	const BulletResetProperty property{.rect = {.x = 200.0, .y = 250.0, .w = 9.0, .h = 9.0},
 									   .dir = Direction::RIGHT,
 									   .health = 1,
 									   .author = Author::Enemy3};
-	const std::shared_ptr<Bullet> host{_hostBulletPool->SpawnBullet(property)};
-	_serverEvents->EmitEvent(AddToSpawnQueueEvent{.obj = host});
-
-	Replicate();
-
-	const auto client{std::dynamic_pointer_cast<Bullet>(ClientObject(host->GetUuid()))};
-	ASSERT_NE(client, nullptr);
-	EXPECT_EQ(client->GetPos(), host->GetPos());
-	EXPECT_EQ(client->GetDirection(), Direction::RIGHT);
-	EXPECT_EQ(client->GetAuthor(), Author::Enemy3);
-}
-
-// the same for a bonus: the settled one is placed, the pending one waits
-TEST_F(WorldSnapshotTest, ASettledBonusLandsAndAPendingOneWaitsForTheHost)
-{
+	const std::shared_ptr<Bullet> bullet{_hostBulletPool->SpawnBullet(property)};
+	_serverEvents->EmitEvent(AddToSpawnQueueEvent{.obj = bullet});
 	const double size{static_cast<double>(_hostConfig.bonusSize)};
 	_hostBonusSpawner->SpawnBonus({.x = 100.0, .y = 400.0, .w = size, .h = size}, BonusType::Star, {}, true);
 	_hostBonusSpawner->SpawnBonus({.x = 300.0, .y = 400.0, .w = size, .h = size}, BonusType::Ship);
@@ -322,20 +268,29 @@ TEST_F(WorldSnapshotTest, ASettledBonusLandsAndAPendingOneWaitsForTheHost)
 
 	Replicate();
 
+	const auto clientBullet{std::dynamic_pointer_cast<Bullet>(ClientObject(bullet->GetUuid()))};
+	ASSERT_NE(clientBullet, nullptr);
+	EXPECT_EQ(clientBullet->GetPos(), bullet->GetPos());
+	EXPECT_EQ(clientBullet->GetDirection(), Direction::RIGHT);
+	EXPECT_EQ(clientBullet->GetAuthor(), Author::Enemy3);
 	const auto bonus{std::dynamic_pointer_cast<Bonus>(ClientObject(settled))};
 	ASSERT_NE(bonus, nullptr);
 	EXPECT_TRUE(bonus->GetIsSuper());
 	ASSERT_EQ(ClientObject(pending), nullptr);
 
 	_clientEvents->EmitEvent(BonusSpawnCompletedEvent{.uuid = pending});
+
 	EXPECT_NE(ClientObject(pending), nullptr);
 }
 
-//NOTE: taken over, not recounted - the client never saw the spawns and hits that made these numbers
-TEST_F(WorldSnapshotTest, TheScoreAndTheLivesAreTakenOverAsTheyStand)
+// the score, the lives and who left are taken over as they stand - the client never saw what made them
+TEST_F(NetworkWorldSnapshotTest, TheScoreLivesAndAbsenceAreTakenOver)
 {
+	std::optional<AbsenceChangedEvent> shown{};
+	_subs.push_back(_clientEvents->AddListener([&shown](const AbsenceChangedEvent& event) { shown = event; }));
 	_serverEvents->EmitEvent(BrickWallDiedEvent{.author = Author::Player2});
 	_serverEvents->EmitEvent(StatisticsTankHitEvent{.who = Author::Enemy1, .author = Author::Player1});
+	_serverEvents->EmitEvent(ServerClientLostEvent{.slot = PlayerSlot::P2});
 	ASSERT_EQ(_hostLives.at(RespawnGroup::ENEMY_ALL), 16u);
 
 	Replicate();
@@ -347,30 +302,6 @@ TEST_F(WorldSnapshotTest, TheScoreAndTheLivesAreTakenOverAsTheyStand)
 	{
 		EXPECT_EQ(_clientLives.at(group), lives) << static_cast<int>(group);
 	}
-}
-
-// a second snapshot replaces the field rather than laying another one over it
-TEST_F(WorldSnapshotTest, ASnapshotReplacesTheFieldTheClientHadInsteadOfAddingToIt)
-{
-	_clientEvents->EmitEvent(
-			ObstacleSpawnedEvent{.pos = {.x = 48.0, .y = 48.0}, .type = ObstacleType::Brick, .uuid = {}});
-	ASSERT_EQ(_clientSpawned.size(), 1u);
-	const std::weak_ptr<BaseObj> stale{_clientSpawned.front()};
-
-	Replicate();
-
-	EXPECT_TRUE(stale.expired()) << "the client kept a wall the host never had";
-}
-
-// a client joining a match held for a player who left is shown why it stands
-TEST_F(WorldSnapshotTest, ANewcomerToAHeldMatchIsShownWhoLeft)
-{
-	std::optional<AbsenceChangedEvent> shown{};
-	_subs.push_back(_clientEvents->AddListener([&shown](const AbsenceChangedEvent& event) { shown = event; }));
-	_serverEvents->EmitEvent(ServerClientLostEvent{.slot = PlayerSlot::P2});
-
-	Replicate();
-
-	ASSERT_TRUE(shown.has_value());
+	ASSERT_TRUE(shown.has_value()) << "a newcomer to a held match is not shown who left";
 	EXPECT_EQ(shown->seats, (std::array{Absence::None, Absence::Left, Absence::None, Absence::None}));
 }

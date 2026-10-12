@@ -129,47 +129,26 @@ set(GAME_CORE_SOURCES
 )
 
 set(UNIT_TESTS_SOURCES
-        UnitTests/AnimationManagerTest.cpp
-        UnitTests/BonusTestBasic.cpp
-        UnitTests/BonusTestDestroy.cpp
-        UnitTests/BonusTestEnemy.cpp
+        UnitTests/BonusTest.cpp
         UnitTests/BotsTest.cpp
         UnitTests/LevelProgressionTest.cpp
         UnitTests/MapTest.cpp
-        UnitTests/MatchStartTest.cpp
-        UnitTests/BulletsTestAdvanced.cpp
-        UnitTests/BulletsTestBasic.cpp
-        UnitTests/ClientHandshakeTest.cpp
-        UnitTests/DatagramLinkTest.cpp
-        UnitTests/DiscoveryTest.cpp
-        UnitTests/CommandLineParserTest.cpp
-        UnitTests/AddressFieldTest.cpp
-        UnitTests/ConsoleCommandTest.cpp
-        UnitTests/ProjectConfigTest.cpp
-        UnitTests/DeadObjectFilterTest.cpp
-        UnitTests/GamepadDirectionTest.cpp
-        UnitTests/GameStateManagerTest.cpp
+        UnitTests/BulletTest.cpp
+        UnitTests/NetworkClientHandshakeTest.cpp
+        UnitTests/NetworkDiscoveryTest.cpp
+        UnitTests/InputTest.cpp
         UnitTests/GameStateTest.cpp
-        UnitTests/ClientMirrorTest.cpp
-        UnitTests/TankHealTest.cpp
-        UnitTests/TankNudgeTest.cpp
-        UnitTests/TankModelTest.cpp
-        UnitTests/TankShoveTest.cpp
-        UnitTests/TankTerrainTest.cpp
-        UnitTests/MenuInputTest.cpp
+        UnitTests/NetworkGameStateTest.cpp
+        UnitTests/NetworkClientMirrorTest.cpp
+        UnitTests/TankTest.cpp
+        UnitTests/NetworkDatagramTest.cpp
         UnitTests/NetworkTest.cpp
-        UnitTests/NextLevelFlowTest.cpp
-        UnitTests/PauseSyncTest.cpp
-        UnitTests/PlayerTest.cpp
         UnitTests/RespawnManagerTest.cpp
         UnitTests/ScoreBoardTest.cpp
-        UnitTests/SeatAssignmentTest.cpp
-        UnitTests/SeatHistoryTest.cpp
-        UnitTests/SessionTest.cpp
         UnitTests/SimulationStepTest.cpp
-        UnitTests/StatisticsTestBasic.cpp
+        UnitTests/StatisticsTest.cpp
         UnitTests/TankSpawnerTest.cpp
-        UnitTests/WorldSnapshotTest.cpp
+        UnitTests/NetworkWorldSnapshotTest.cpp
         UnitTests/TestUtils.cpp
 )
 

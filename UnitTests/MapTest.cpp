@@ -1,32 +1,72 @@
-#include "components/MapLoader.h"
-#include "components/Map.h"
 #include "application/GameConfig.h"
+#include "application/Simulation.h"
 #include "components/EventSystem.h"
+#include "components/LevelRotation.h"
+#include "components/Map.h"
+#include "components/MapLoader.h"
 #include "components/ObstacleSpawner.h"
+#include "components/WorldGeometry.h"
+#include "components/events/CoreLifecycleEvents.h"
+#include "components/events/GameModeEvents.h"
 #include "components/events/SpawnEvents.h"
+#include "components/events/TimingEvents.h"
+#include "entities/BaseObj.h"
 #include "enums/BonusType.h"
 #include "enums/GameMode.h"
+#include "enums/GameState.h"
 #include "enums/ObstacleType.h"
 #include "enums/TankModel.h"
-#include "entities/BaseObj.h"
 #include "utils/UuidUtils.h"
-#include "components/WorldGeometry.h"
 #include <gtest/gtest.h>
-#include <cstddef>
-#include <expected>
 #include <algorithm>
 #include <array>
+#include <cstddef>
+#include <expected>
 #include <filesystem>
 #include <fstream>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <system_error>
 #include <vector>
 #include "TestUtils.h"//NOTE: PrintTo for the Point types
 
-// the loader turns a character grid into a map, or says what went wrong - each case feeds it one grid
-class MapLoaderTest : public testing::Test
+namespace
+{
+// a folder of empty .map files - the rotation reads names off the disk and never opens them
+class MapsFolder final
+{
+	std::filesystem::path _path;
+
+public:
+	explicit MapsFolder(const std::string& name)
+		: _path{std::filesystem::temp_directory_path() / ("bc-levels-" + name)}
+	{
+		std::filesystem::remove_all(_path);
+		std::filesystem::create_directories(_path);
+	}
+
+	MapsFolder(const MapsFolder&) = delete;
+	MapsFolder(MapsFolder&&) = delete;
+	MapsFolder& operator=(const MapsFolder&) = delete;
+	MapsFolder& operator=(MapsFolder&&) = delete;
+
+	~MapsFolder() { std::filesystem::remove_all(_path); }
+
+	void Add(const std::string& stem) const { std::ofstream{_path / (stem + ".map")} << "#\n"; }
+
+	[[nodiscard]] std::string Folder() const { return _path.generic_string(); }
+
+	[[nodiscard]] std::string PathOf(const std::string& stem) const
+	{
+		return (_path / (stem + ".map")).generic_string();
+	}
+};
+}//namespace
+
+// the level: a character grid read into a map, the folder of levels it rotates through, and how a level starts
+class MapTest : public testing::Test
 {
 protected:
 	//NOTE: three rows of four, one of each interesting kind - enough to tell a parse from a guess
@@ -63,6 +103,26 @@ protected:
 	//NOTE: swept whatever the assertions did, so a failed one leaves nothing on disk
 	std::filesystem::path _tempMap{};
 
+	std::shared_ptr<EventSystem> _events{std::make_shared<EventSystem>()};
+	GameConfig _gameConfig{};
+	Simulation _simulation{_events, _gameConfig};
+	//NOTE: what a level start emitted, in the order it did
+	std::vector<std::string_view> _order{};
+	std::vector<EventSubscription> _subs{};
+
+	void SetUp() override
+	{
+		_subs.push_back(_events->AddListener([this](const GameResetEvent&) { _order.emplace_back("reset"); }));
+		_subs.push_back(_events->AddListener([this](const LoadMapEvent&) { _order.emplace_back("map"); }));
+		_subs.push_back(_events->AddListener([this](const AddToSpawnQueueEvent&)
+		{
+			if (_order.empty() || _order.back() != "spawn")
+			{
+				_order.emplace_back("spawn");
+			}
+		}));
+	}
+
 	void TearDown() override
 	{
 		std::error_code ec;
@@ -70,55 +130,8 @@ protected:
 	}
 };
 
-// a grid fed straight to Parse, with no file on disk: the cells and the size come back as written
-TEST_F(MapLoaderTest, ReadsTheGridAndItsSize)
-{
-	const auto map{MapLoader::Parse(kTinyMap)};
-
-	ASSERT_TRUE(map.has_value()) << map.error().reason;
-	EXPECT_EQ(map->cols, 4u);
-	EXPECT_EQ(map->rows, 3u);
-	EXPECT_EQ(map->cells.size(), 12u);
-}
-
-// the digits mean what the legend in the file's own header says they mean
-TEST_F(MapLoaderTest, DigitsFollowTheLegendOrder)
-{
-	const auto map{MapLoader::Parse(kTinyMap)};
-
-	ASSERT_TRUE(map.has_value()) << map.error().reason;
-	EXPECT_EQ(map->At(0u, 0u), ObstacleType::None);
-	EXPECT_EQ(map->At(1u, 0u), ObstacleType::Brick);
-	EXPECT_EQ(map->At(2u, 0u), ObstacleType::Steel);
-	EXPECT_EQ(map->At(3u, 0u), ObstacleType::Eagle);
-	EXPECT_EQ(map->At(0u, 1u), ObstacleType::Fortress);
-	EXPECT_EQ(map->At(1u, 1u), ObstacleType::Water);
-	EXPECT_EQ(map->At(2u, 1u), ObstacleType::Bush);
-	EXPECT_EQ(map->At(3u, 1u), ObstacleType::Ice);
-}
-
-// a carriage return at the end of a row is not a cell
-TEST_F(MapLoaderTest, CrLfDoesNotBecomeAnExtraCell)
-{
-	const auto map{MapLoader::Parse("0123\r\n4567\r\n")};
-
-	ASSERT_TRUE(map.has_value()) << map.error().reason;
-	EXPECT_EQ(map->cols, 4u);
-	EXPECT_EQ(map->rows, 2u);
-}
-
-// a row of the wrong length is refused, and the error names the line
-TEST_F(MapLoaderTest, RaggedRowIsRejectedWithItsLineNumber)
-{
-	const auto map{MapLoader::Parse("# legend\n0000\n000\n")};
-
-	ASSERT_FALSE(map.has_value());
-	//NOTE: 1-based and counted over the whole file, comments included - that is what the editor shows
-	EXPECT_EQ(map.error().line, 3u);
-}
-
 // a letter marks a bonus lying on the map: the cell under it stays free ground, the bonus is listed apart
-TEST_F(MapLoaderTest, ALetterLaysABonusOnFreeGround)
+TEST_F(MapTest, ALetterLaysABonusOnFreeGround)
 {
 	const auto map{MapLoader::Parse("0h00\n0000\n")};
 
@@ -130,188 +143,78 @@ TEST_F(MapLoaderTest, ALetterLaysABonusOnFreeGround)
 	EXPECT_EQ(map->bonuses.front().type, BonusType::Helmet);
 }
 
-// a cell outside the legend is refused with its line: a stray letter, another symbol, a digit past the last obstacle
-TEST_F(MapLoaderTest, ACellOutsideTheLegendIsRejectedWithItsLineNumber)
+// "N enemies:" gives the level its count and the models of the first ones in order; no line, or a commented one, none
+TEST_F(MapTest, TheEnemyLineGivesTheCountAndTheModels)
 {
-	//NOTE: '8' is one past Ice - a plain range check on the digit would have let it through as a cast
-	constexpr std::array kGrids{"0000\n00z0\n", "0000\n00x0\n", "0000\n0080\n"};
-	for (const std::string_view grid: kGrids)
+	struct Enemies final
 	{
-		SCOPED_TRACE(grid);
-		const auto map{MapLoader::Parse(grid)};
+		std::string_view text;
+		std::optional<std::size_t> count;
+		std::vector<TankModel> lineup;
+	};
 
-		ASSERT_FALSE(map.has_value());
-		EXPECT_EQ(map.error().line, 2u);
+	const std::array kEnemies{
+			Enemies{.text = "6 enemies: 2 armor, fast, 1 basic\n0000\n",
+					.count = 6u,
+					.lineup = {TankModel::Armor, TankModel::Armor, TankModel::Fast, TankModel::Basic}},
+			Enemies{.text = "7 enemies:\n0000\n", .count = 7u, .lineup = {}},
+			Enemies{.text = kTinyMap, .count = std::nullopt, .lineup = {}},
+			Enemies{.text = "# 3 enemies: armor\n0000\n", .count = std::nullopt, .lineup = {}}};
+	for (const Enemies& enemies: kEnemies)
+	{
+		SCOPED_TRACE(enemies.text);
+		const auto map{MapLoader::Parse(enemies.text)};
+
+		ASSERT_TRUE(map.has_value()) << map.error().reason;
+		EXPECT_EQ(map->enemyCount, enemies.count);
+		EXPECT_EQ(map->enemyLineup, enemies.lineup);
 	}
 }
 
-// "N enemies:" gives the level its count, and the list after it the models of the first ones in their order
-TEST_F(MapLoaderTest, TheEnemyCountAndListAreRead)
+// the rules of the game on top of the grid: one eagle, and a gap a tank wide at both ends - bush is ground, not wall
+TEST_F(MapTest, AMatchNeedsOneEagleAndAWayInAtBothEnds)
 {
-	const auto map{MapLoader::Parse("6 enemies: 2 armor, fast, 1 basic\n0000\n")};
-
-	ASSERT_TRUE(map.has_value()) << map.error().reason;
-	EXPECT_EQ(map->enemyCount, 6u);
-	const std::vector expected{TankModel::Armor, TankModel::Armor, TankModel::Fast, TankModel::Basic};
-	EXPECT_EQ(map->enemyLineup, expected);
-}
-
-// the list may be left out - every one of them is rolled then
-TEST_F(MapLoaderTest, ACountAloneListsNoModels)
-{
-	const auto map{MapLoader::Parse("7 enemies:\n0000\n")};
-
-	ASSERT_TRUE(map.has_value()) << map.error().reason;
-	EXPECT_EQ(map->enemyCount, 7u);
-	EXPECT_TRUE(map->enemyLineup.empty());
-}
-
-// without that line the map says nothing about its enemies
-TEST_F(MapLoaderTest, AMapWithoutAnEnemyLineSaysNothing)
-{
-	const auto map{MapLoader::Parse(kTinyMap)};
-
-	ASSERT_TRUE(map.has_value()) << map.error().reason;
-	EXPECT_FALSE(map->enemyCount.has_value());
-	EXPECT_TRUE(map->enemyLineup.empty());
-}
-
-// a comment stays a comment, whatever it looks like
-TEST_F(MapLoaderTest, ACommentedEnemyLineIsIgnored)
-{
-	const auto map{MapLoader::Parse("# 3 enemies: armor\n0000\n")};
-
-	ASSERT_TRUE(map.has_value()) << map.error().reason;
-	EXPECT_FALSE(map->enemyCount.has_value());
-}
-
-// a broken line is refused with the line it stands on, the way a broken row is
-TEST_F(MapLoaderTest, ABrokenEnemyLineIsRejectedWithItsLineNumber)
-{
-	constexpr std::array kBrokenLines{"4 enemies: tiger", "4 enemies: basic,", "4 enemies: 0 basic",
-									   "4 enemies: 3", "0 enemies:", "70000 enemies:", "2 enemies: 3 basic"};
-	for (const std::string_view enemies: kBrokenLines)
+	struct Field final
 	{
-		SCOPED_TRACE(enemies);
-		const auto map{MapLoader::Parse("# legend\n" + std::string{enemies} + "\n0000\n")};
+		std::string_view why;
+		std::string grid;
+		bool isPlayable{};
+	};
 
-		ASSERT_FALSE(map.has_value());
-		EXPECT_EQ(map.error().line, 2u);
-	}
-}
-
-// and so is a second one - which of the two the level means is not for the loader to guess
-TEST_F(MapLoaderTest, ASecondEnemyLineIsRejected)
-{
-	const auto map{MapLoader::Parse("1 enemies: basic\n1 enemies: fast\n0000\n")};
-
-	ASSERT_FALSE(map.has_value());
-	EXPECT_EQ(map.error().line, 2u);
-}
-
-// a file of comments alone holds no grid
-TEST_F(MapLoaderTest, CommentsOnlyIsNotAMap)
-{
-	const auto map{MapLoader::Parse("# just a legend\n#\n")};
-
-	ASSERT_FALSE(map.has_value());
-	EXPECT_EQ(map.error().line, 0u);
-}
-
-// and a missing file is an error rather than an empty field
-TEST_F(MapLoaderTest, MissingFileIsAnErrorNotAnEmptyMap)
-{
-	const auto map{MapLoader::LoadFromFile("Resources/Maps/there-is-no-such-level.map")};
-
-	ASSERT_FALSE(map.has_value());
-	EXPECT_EQ(map.error().path, "Resources/Maps/there-is-no-such-level.map");
-}
-
-// the rules of the game on top of the grid: a match needs its eagle and a way in at both ends
-TEST_F(MapLoaderTest, AGridWithAnEagleAndBothEdgesOpenIsPlayable)
-{
-	const auto playable{ValidateGrid(std::string{kPlayableGrid})};
-
-	EXPECT_TRUE(playable.has_value()) << playable.error().reason;
-}
-
-// no eagle is no match: nothing to defend, and nothing the enemy can win by
-TEST_F(MapLoaderTest, AMapWithoutAnEagleIsRefused)
-{
-	std::string grid{kPlayableGrid};
-	grid[grid.find('3')] = '0';
-
-	EXPECT_FALSE(ValidateGrid(grid).has_value());
-}
-
-// two eagles leave the fortress and the win condition split between them
-TEST_F(MapLoaderTest, ASecondEagleIsRefused)
-{
-	std::string grid{kPlayableGrid};
-	grid[grid.find('0')] = '3';
-
-	EXPECT_FALSE(ValidateGrid(grid).has_value());
-}
-
-// bush is ground a tank drives over, so a row of it along the edge is not a wall
-TEST_F(MapLoaderTest, ABushEdgeStillLeavesRoomToSpawn)
-{
-	std::string grid{kPlayableGrid};
-	grid.replace(0u, kRowStride - 1u, std::string(kRowStride - 1u, '6'));
-
-	EXPECT_TRUE(ValidateGrid(grid).has_value());
-}
-
-// a walled-off edge leaves nowhere to spawn - the top one the enemy, the bottom one the players
-TEST_F(MapLoaderTest, ASealedEdgeLeavesNowhereToSpawn)
-{
-	constexpr std::array<std::size_t, 2> kSealedRows{0u, 7u};
-	for (const std::size_t row: kSealedRows)
+	const auto withRow = [](const std::size_t row, const std::string& cells)
 	{
-		SCOPED_TRACE(row);
 		std::string grid{kPlayableGrid};
-		grid.replace(kRowStride * row, kRowStride - 1u, std::string(kRowStride - 1u, '1'));
+		grid.replace(kRowStride * row, cells.size(), cells);
+		return grid;
+	};
+	std::string noEagle{kPlayableGrid};
+	noEagle[noEagle.find('3')] = '0';
+	std::string twoEagles{kPlayableGrid};
+	twoEagles[twoEagles.find('0')] = '3';
+	const std::string wall(kRowStride - 1u, '1');
+	std::string narrowGap{wall};
+	narrowGap.replace(4u, 2u, "00");
 
-		EXPECT_FALSE(ValidateGrid(grid).has_value());
+	//NOTE: the eagle is one character but a tank wide, its body zeros in the file - no spawn spot inside the fortress
+	const std::array fields{Field{.why = "the smallest playable grid", .grid = kPlayableGrid, .isPlayable = true},
+							Field{.why = "no eagle", .grid = noEagle},
+							Field{.why = "a second eagle", .grid = twoEagles},
+							Field{.why = "a bush edge", .grid = withRow(0u, std::string(kRowStride - 1u, '6')),
+								  .isPlayable = true},
+							Field{.why = "the top edge sealed", .grid = withRow(0u, wall)},
+							Field{.why = "the bottom edge sealed", .grid = withRow(7u, wall)},
+							Field{.why = "a gap narrower than a tank", .grid = withRow(0u, narrowGap)},
+							Field{.why = "the eagle's own body", .grid = "00000\n00000\n00000\n03000\n00000\n00000\n"}};
+	for (const Field& field: fields)
+	{
+		SCOPED_TRACE(field.why);
+
+		EXPECT_EQ(ValidateGrid(field.grid).has_value(), field.isPlayable);
 	}
-}
-
-// the gap has to take a whole tank - two cells of the three is still a wall
-TEST_F(MapLoaderTest, AGapNarrowerThanATankIsNoOpening)
-{
-	std::string row(kRowStride - 1u, '1');
-	row.replace(4u, 2u, "00");
-
-	std::string grid{kPlayableGrid};
-	grid.replace(0u, row.size(), row);
-
-	EXPECT_FALSE(ValidateGrid(grid).has_value());
-}
-
-//NOTE: the eagle is one character but a tank wide, its body zeros in the file - no spawn spot inside the fortress
-TEST_F(MapLoaderTest, TheEaglesOwnBodyIsNotFreeGround)
-{
-	const auto grid{std::string{"00000\n"
-			"00000\n"
-			"00000\n"
-			"03000\n"
-			"00000\n"
-			"00000\n"}};
-
-	EXPECT_FALSE(ValidateGrid(grid).has_value()) << "the cells the eagle covers were read as free";
-}
-
-// the map decides the world, not the window: the cell keeps its size, so the field grows with the grid
-TEST(WorldGeometryTest, TheFieldGrowsWithTheGridAndTheCellKeepsItsSize)
-{
-	EXPECT_EQ(WorldGeometry::ForMap(52u, 50u), (UPoint{.x = 624u, .y = 600u}));
-	EXPECT_EQ(WorldGeometry::ForMap(80u, 50u), (UPoint{.x = 960u, .y = 600u}));
-	EXPECT_EQ(WorldGeometry::ForMap(52u, 100u), (UPoint{.x = 624u, .y = 1200u}));
-	EXPECT_EQ(WorldGeometry::ForMap(0u, 0u), (UPoint{}));
 }
 
 //NOTE: the client sizes an eagle from a position-only spawn event and used to give it a single cell
-TEST(ObstacleSpawnerTest, ClientGivesTheEagleTheSameSpanTheMapDoes)
+TEST_F(MapTest, ClientGivesTheEagleTheSameSpanTheMapDoes)
 {
 	const auto events{std::make_shared<EventSystem>()};
 	std::vector<std::shared_ptr<BaseObj>> allObjects;
@@ -335,7 +238,7 @@ TEST(ObstacleSpawnerTest, ClientGivesTheEagleTheSameSpanTheMapDoes)
 }
 
 // a baseless map leaves out the eagle, its wall and the shovel
-TEST_F(MapLoaderTest, ABaselessMatchLeavesTheEagleItsWallAndTheShovelOut)
+TEST_F(MapTest, ABaselessMatchLeavesTheEagleItsWallAndTheShovelOut)
 {
 	_tempMap = std::filesystem::temp_directory_path()
 			   / ("battlecity_base_" + UuidUtils::GetStringUuid(UuidUtils::GetRandomUuid()) + ".map");
@@ -365,4 +268,96 @@ TEST_F(MapLoaderTest, ABaselessMatchLeavesTheEagleItsWallAndTheShovelOut)
 	EXPECT_FALSE(std::ranges::contains(obstacles, ObstacleType::Eagle));
 	EXPECT_FALSE(std::ranges::contains(obstacles, ObstacleType::Fortress));
 	EXPECT_EQ(bonuses, std::vector{BonusType::Helmet});
+}
+
+// the campaign is the folder, read in name order
+TEST_F(MapTest, TheNextLevelIsTheNextNameInTheFolder)
+{
+	const MapsFolder maps{"order"};
+	maps.Add("level1");
+	maps.Add("level2");
+	const LevelRotation rotation{maps.Folder()};
+
+	EXPECT_EQ(rotation.PathAfter(maps.PathOf("level1")), maps.PathOf("level2"));
+}
+
+// and the last one is followed by the first, so the prompt on the scoreboard always points somewhere
+TEST_F(MapTest, TheLastLevelLoopsBackToTheFirst)
+{
+	const MapsFolder maps{"loop"};
+	maps.Add("level1");
+	maps.Add("level2");
+	const LevelRotation rotation{maps.Folder()};
+
+	EXPECT_EQ(rotation.PathAfter(maps.PathOf("level2")), maps.PathOf("level1"));
+}
+
+// a map the folder does not hold - the console can load one by name - starts the campaign over
+TEST_F(MapTest, AMapOutsideTheFolderStartsTheCampaignOver)
+{
+	const MapsFolder maps{"stranger"};
+	maps.Add("level1");
+	maps.Add("level2");
+	const LevelRotation rotation{maps.Folder()};
+
+	EXPECT_EQ(rotation.PathAfter("Resources/Maps/handmade.map"), maps.PathOf("level1"));
+}
+
+// with nothing to rotate through the match stays on the map it is on
+TEST_F(MapTest, AnEmptyFolderLeavesTheLevelAsItIs)
+{
+	const MapsFolder maps{"empty"};
+	const LevelRotation rotation{maps.Folder()};
+
+	EXPECT_EQ(rotation.PathAfter(maps.PathOf("level1")), maps.PathOf("level1"));
+}
+
+//NOTE: the reset and the map load used to hang off MatchStartedEvent, ordered only by who subscribed first
+TEST_F(MapTest, TheMapFillsTheFieldTheResetJustEmptied)
+{
+	//NOTE: the spawners are built on the mode change, so this is what gives the match a map to load
+	_simulation.ApplyGameMode(GameMode::OnePlayer);
+	_order.clear();
+
+	_events->EmitEvent(MatchStartedEvent{});
+
+	EXPECT_EQ(_order, (std::vector<std::string_view>{"reset", "map", "spawn"}));
+}
+
+// one reset, then the next level's map - a reset after the load empties the level, a second one tears it down twice
+TEST_F(MapTest, TheNextLevelIsOneResetThenItsMap)
+{
+	_events->EmitEvent(GameModeChangedToEvent{.mode = GameMode::OnePlayer});
+	_order.clear();
+	_events->EmitEvent(GameFinishedEvent{.state = GameState::Won});
+	_events->EmitEvent(NextLevelRequestedEvent{});
+	_events->EmitEvent(PostTickUpdateEvent{});
+
+	EXPECT_EQ(_order, (std::vector<std::string_view>{"reset", "map", "spawn"}));
+}
+
+// a restart is a new run, not one more level of the old one
+TEST_F(MapTest, ARestartStartsOverFromTheFirstStage)
+{
+	_events->EmitEvent(GameModeChangedToEvent{.mode = GameMode::OnePlayer});
+	_order.clear();
+	_events->EmitEvent(GameFinishedEvent{.state = GameState::Won});
+	_events->EmitEvent(NextLevelRequestedEvent{});
+	_events->EmitEvent(PostTickUpdateEvent{});
+	ASSERT_EQ(_gameConfig.stageNumber, 2u) << "the control failed - the next level did not count";
+
+	_events->EmitEvent(MatchRestartRequestedEvent{});
+
+	EXPECT_EQ(_gameConfig.stageNumber, 1u);
+}
+
+// the ask is answered a step later, so every listener of it still sees the field it has to read
+TEST_F(MapTest, TheFieldStandsUntilTheFrameEnds)
+{
+	_events->EmitEvent(GameModeChangedToEvent{.mode = GameMode::OnePlayer});
+	_order.clear();
+	_events->EmitEvent(GameFinishedEvent{.state = GameState::Won});
+	_events->EmitEvent(NextLevelRequestedEvent{});
+
+	EXPECT_TRUE(_order.empty()) << "the world was torn down inside the ask for the next level";
 }

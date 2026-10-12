@@ -16,6 +16,7 @@
 #include "entities/obstacles/SteelWall.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/Tank.h"
+#include "enums/Author.h"
 #include "enums/Direction.h"
 #include "enums/InputChannel.h"
 #include "enums/ObstacleType.h"
@@ -25,6 +26,8 @@
 #include <array>
 #include <chrono>
 #include <memory>
+#include <optional>
+#include <string_view>
 #include <utility>
 
 // every case: a target, a bullet a step short of it, one tick, the counter that pair owns - one hit is the kill
@@ -191,39 +194,36 @@ TEST_F(StatisticsTest, AThirdSeatScoresIntoItsOwnColumn)
 	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).enemyHits, 0u);
 }
 
-// the counter is about bullets meeting bullets - a wall the shot destroys has a row of its own
-TEST_F(StatisticsTest, BulletIntoBrickWallIsNotABulletHit)
+// the counter is about bullets touching bullets - touching a wall, broken or not, or the field's edge is no bullet hit
+TEST_F(StatisticsTest, ABulletTouchingAnythingButABulletIsNoBulletHit)
 {
-	const auto wall{SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _caliber.size.y + 1}, ObstacleType::Brick)};
-	_caliber.damage = wall->GetHealth();
-	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player1);
+	struct Touch final
+	{
+		std::string_view why;
+		std::optional<ObstacleType> wall;
+		Direction dir{};
+	};
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	constexpr std::array kTouches{
+			Touch{.why = "a brick it brings down", .wall = ObstacleType::Brick, .dir = Direction::DOWN},
+			Touch{.why = "steel that swallows it", .wall = ObstacleType::Steel, .dir = Direction::DOWN},
+			Touch{.why = "the edge of the field", .wall = std::nullopt, .dir = Direction::UP}};
+	for (const Touch& touch: kTouches)
+	{
+		SCOPED_TRACE(touch.why);
+		_events->EmitEvent(GameResetEvent{});
+		_allObjects.clear();
+		if (touch.wall.has_value())
+		{
+			const auto wall{SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _caliber.size.y + 1}, *touch.wall)};
+			_caliber.damage = wall->GetHealth();
+		}
+		CreateBullet({.x = 0.0, .y = touch.dir == Direction::UP ? 0.0 : _tankSize}, touch.dir, Author::Player1);
 
-	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).bulletHits, 0u);
-	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).brickWallKills, 1u);
-}
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-// a shot the wall swallows whole is nobody's hit either
-TEST_F(StatisticsTest, BulletIntoSteelWallIsNotABulletHit)
-{
-	SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _caliber.size.y + 1}, ObstacleType::Steel);
-	CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, Author::Player1);
-
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-
-	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).bulletHits, 0u);
-	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).steelWallKills, 0u);
-}
-
-// and the shot that flies off the field is not one either - that was the bug
-TEST_F(StatisticsTest, BulletIntoFieldEdgeIsNotABulletHit)
-{
-	CreateBullet({.x = 0.0, .y = 0.0}, Direction::UP, Author::Player1);
-
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-
-	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).bulletHits, 0u);
+		EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).bulletHits, 0u);
+	}
 }
 
 // a wall a shot brings down is counted to whoever fired it, brick and steel apart - steel gives only to a tier 3 shot
@@ -327,38 +327,29 @@ TEST_F(StatisticsTest, BulletsMeetingCreditBothAuthors)
 	}
 }
 
-// two bonuses dropped in front of a bot, one of them under it - only that one is taken
-TEST_F(StatisticsTest, BonusPickUpByEnemyCount)
+// a pickup is counted to whoever took it - a bot to the enemy team's shared column, a player to that seat's own
+TEST_F(StatisticsTest, ABonusPickupIsCountedToItsTaker)
 {
-	CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
-
-	_bonusSpawner->SpawnRandomBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize});
-	_bonusSpawner->SpawnRandomBonus({.x = _tankSize + 1.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize});
-
-	EXPECT_EQ(_statistics->GetData().enemyTeam.bonusPickups, 0u);
-	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).bonusPickups, 0u);
-	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P2).bonusPickups, 0u);
-
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-
-	EXPECT_EQ(_statistics->GetData().enemyTeam.bonusPickups, 1u);
-	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).bonusPickups, 0u);
-	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P2).bonusPickups, 0u);
-}
-
-// a player driven down onto the bonus has the pickup credited to that seat alone, each seat with its own keys
-TEST_F(StatisticsTest, BonusPickUpBySeatIsCountedToThatSeat)
-{
-	const std::array placements{std::pair{PlayerSlot::P1, 0.0}, std::pair{PlayerSlot::P2, (_tankSize + 1.0) * 2.0}};
-	for (const auto& [seat, x]: placements)
+	const std::array takers{std::pair{Author::Enemy1, 0.0}, std::pair{Author::Player1, (_tankSize + 1.0) * 2.0},
+							std::pair{Author::Player2, (_tankSize + 1.0) * 4.0}};
+	for (const auto& [author, x]: takers)
 	{
-		SCOPED_TRACE(ToString(seat));
+		SCOPED_TRACE(static_cast<int>(author));
+		_events->EmitEvent(GameResetEvent{});
+		_allObjects.clear();
 		StatisticsData expected{_statistics->GetData()};
-		++expected.seats[SeatIndex(seat)].bonusPickups;
-		CreatePlayer({.x = x, .y = 0.0}, AuthorOf(seat), Direction::DOWN);
+		const std::optional<PlayerSlot> seat{SlotOf(author)};
+		++(seat.has_value() ? expected.seats[SeatIndex(*seat)].bonusPickups : expected.enemyTeam.bonusPickups);
+		if (seat.has_value())
+		{
+			CreatePlayer({.x = x, .y = 0.0}, author, Direction::DOWN);
+			_events->EmitEvent(Key(LocalInput(*seat)), MoveDownEvent{.isPressed = true});
+		}
+		else
+		{
+			CreateBot({.x = x, .y = 0.0}, author, Direction::DOWN);
+		}
 		_bonusSpawner->SpawnRandomBonus({.x = x, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize});
-		constexpr bool isPressed{true};
-		_events->EmitEvent(Key(LocalInput(seat)), MoveDownEvent{.isPressed = isPressed});
 
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 

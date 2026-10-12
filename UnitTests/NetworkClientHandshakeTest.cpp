@@ -12,7 +12,7 @@
 #include <string>
 #include <vector>
 
-class ClientHandshakeTest : public testing::Test
+class NetworkClientHandshakeTest : public testing::Test
 {
 protected:
 	std::shared_ptr<EventSystem> _events{std::make_shared<EventSystem>()};
@@ -48,7 +48,7 @@ protected:
 };
 
 //NOTE: the server answers a ready with the whole world, which a reset after the ready would erase
-TEST_F(ClientHandshakeTest, TheReadyFollowsTheWorldReset)
+TEST_F(NetworkClientHandshakeTest, TheReadyFollowsTheWorldReset)
 {
 	_simulation.ApplyGameMode(GameMode::PlayAsClient);
 	Frame();
@@ -61,7 +61,7 @@ TEST_F(ClientHandshakeTest, TheReadyFollowsTheWorldReset)
 }
 
 //NOTE: the announcement would be dropped, and the client would sit out the match it asked for
-TEST_F(ClientHandshakeTest, NothingIsAnnouncedBeforeTheLinkIsUp)
+TEST_F(NetworkClientHandshakeTest, NothingIsAnnouncedBeforeTheLinkIsUp)
 {
 	_simulation.ApplyGameMode(GameMode::PlayAsClient);
 	Frame();
@@ -71,7 +71,7 @@ TEST_F(ClientHandshakeTest, NothingIsAnnouncedBeforeTheLinkIsUp)
 }
 
 //NOTE: the server counts readies - two from one client fill both seats and start a match alone
-TEST_F(ClientHandshakeTest, TheLinkArrivingWithTheLobbyStillAnnouncesOnce)
+TEST_F(NetworkClientHandshakeTest, TheLinkArrivingWithTheLobbyStillAnnouncesOnce)
 {
 	_simulation.ApplyGameMode(GameMode::PlayAsClient);
 	_events->EmitEvent(ClientConnectedToHostEvent{});
@@ -82,7 +82,7 @@ TEST_F(ClientHandshakeTest, TheLinkArrivingWithTheLobbyStillAnnouncesOnce)
 }
 
 // a connected client hearing the lobby readies again, so a restarted match does not wait for it forever
-TEST_F(ClientHandshakeTest, TheServersLobbyMakesAConnectedClientReportAgain)
+TEST_F(NetworkClientHandshakeTest, TheServersLobbyMakesAConnectedClientReportAgain)
 {
 	_simulation.ApplyGameMode(GameMode::PlayAsClient);
 	_events->EmitEvent(ClientConnectedToHostEvent{});
@@ -98,7 +98,7 @@ TEST_F(ClientHandshakeTest, TheServersLobbyMakesAConnectedClientReportAgain)
 }
 
 //NOTE: a lost link leaves the phase in the lobby, and announcing into it would only be dropped
-TEST_F(ClientHandshakeTest, ALostLinkStopsTheAnnouncements)
+TEST_F(NetworkClientHandshakeTest, ALostLinkStopsTheAnnouncements)
 {
 	_simulation.ApplyGameMode(GameMode::PlayAsClient);
 	_events->EmitEvent(ClientConnectedToHostEvent{});
@@ -112,7 +112,7 @@ TEST_F(ClientHandshakeTest, ALostLinkStopsTheAnnouncements)
 }
 
 //NOTE: a host lost without a goodbye leaves the field stale - the client asks again, only once the link is back
-TEST_F(ClientHandshakeTest, AHostLostWithoutAGoodbyeIsAskedAgainOnceTheLinkIsBack)
+TEST_F(NetworkClientHandshakeTest, AHostLostWithoutAGoodbyeIsAskedAgainOnceTheLinkIsBack)
 {
 	_simulation.ApplyGameMode(GameMode::PlayAsClient);
 	_events->EmitEvent(ClientConnectedToHostEvent{});

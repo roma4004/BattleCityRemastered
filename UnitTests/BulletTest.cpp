@@ -8,6 +8,7 @@
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/TimingEvents.h"
 #include "entities/obstacles/BrickWall.h"
+#include "entities/obstacles/BushTile.h"
 #include "entities/obstacles/SteelWall.h"
 #include "entities/obstacles/WaterTile.h"
 #include "entities/BulletCaliber.h"
@@ -377,4 +378,104 @@ TEST_F(BulletTest, BulletDamagefortressWall)
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_GT(fortressWallHealth, fortressWall->GetHealth());
+}
+
+// a bush never stops a bullet - it burns in a blast on something solid, and only from tier three
+TEST_F(BulletTest, ABushBurnsInABlastOnlyFromTierThree)
+{
+	struct Blast final
+	{
+		unsigned short tier{};
+		bool isBushStanding{};
+	};
+
+	constexpr std::array kBlasts{Blast{.tier = 2u, .isBushStanding = true}, Blast{.tier = 3u, .isBushStanding = false}};
+	for (const Blast& blast: kBlasts)
+	{
+		SCOPED_TRACE(blast.tier);
+		_events->EmitEvent(GameResetEvent{});
+		_allObjects.clear();
+		_caliber.tier = blast.tier;
+		CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
+
+		const auto wall{SpawnObstacle(ObjRectangle{.x = 0.0, .y = 20.0, .w = _gridSize, .h = 4.0},
+									  ObstacleType::Brick)};
+		const auto bush{SpawnObstacle(ObjRectangle{.x = 0.0, .y = 26.0, .w = _gridSize, .h = _gridSize},
+									  ObstacleType::Bush)};
+
+		const unsigned int wallHealth{wall->GetHealth()};
+		for (int frame = 0; frame < 20 && wall->GetHealth() == wallHealth; ++frame)
+		{
+			_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		}
+
+		EXPECT_GT(wallHealth, wall->GetHealth());
+		EXPECT_EQ(bush->GetIsAlive(), blast.isBushStanding);
+	}
+}
+
+// Nothing solid behind it, so the shot flies on and the bush is never in a blast at all
+TEST_F(BulletTest, TierThreeFliesThroughABushWithoutBurningIt)
+{
+	_caliber.tier = 3u;
+	CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
+
+	const auto bush{SpawnObstacle(ObjRectangle{.x = 0.0, .y = 20.0, .w = _gridSize, .h = _gridSize},
+								  ObstacleType::Bush)};
+
+	for (int frame = 0; frame < 10; ++frame)
+	{
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	}
+
+	EXPECT_TRUE(bush->GetIsAlive());
+}
+
+// a tier-three blast burns a bush and digs steel, but the water or ice beside the wall comes through untouched
+TEST_F(BulletTest, WaterAndIceSurviveABlastThatBurnsABush)
+{
+	_caliber.tier = 3u;
+	constexpr std::array kTerrains{ObstacleType::Water, ObstacleType::Ice};
+	for (const ObstacleType terrain: kTerrains)
+	{
+		SCOPED_TRACE(static_cast<int>(terrain));
+		_events->EmitEvent(GameResetEvent{});
+		_allObjects.clear();
+		CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
+
+		const auto wall{SpawnObstacle(ObjRectangle{.x = 0.0, .y = 20.0, .w = _gridSize, .h = 4.0},
+									  ObstacleType::Brick)};
+		const auto tile{SpawnObstacle(ObjRectangle{.x = 0.0, .y = 26.0, .w = _gridSize, .h = _gridSize}, terrain)};
+
+		const unsigned int wallHealth{wall->GetHealth()};
+		for (int frame{0}; frame < 20 && wall->GetHealth() == wallHealth; ++frame)
+		{
+			_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		}
+
+		EXPECT_GT(wallHealth, wall->GetHealth()) << "the shot never reached the wall";
+		EXPECT_TRUE(tile->GetIsAlive());
+	}
+}
+
+// water and ice are terrain a bullet flies over: the shot crosses the tile and leaves it be
+TEST_F(BulletTest, ABulletFliesOverWaterAndIce)
+{
+	constexpr std::array kTerrains{ObstacleType::Water, ObstacleType::Ice};
+	for (const ObstacleType terrain: kTerrains)
+	{
+		SCOPED_TRACE(static_cast<int>(terrain));
+		_events->EmitEvent(GameResetEvent{});
+		_allObjects.clear();
+		const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};
+
+		const auto tile{SpawnObstacle(ObjRectangle{.x = 0.0, .y = 6.0, .w = _gridSize, .h = _gridSize}, terrain)};
+		const unsigned int tileHealth{tile->GetHealth()};
+
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+		EXPECT_TRUE(bullet->GetIsAlive()) << "the terrain stopped the bullet";
+		EXPECT_EQ(tileHealth, tile->GetHealth());
+		EXPECT_GT(bullet->GetRect().y, 0.0) << "the bullet did not move";
+	}
 }

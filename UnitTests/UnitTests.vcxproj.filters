@@ -21,52 +21,28 @@
     <ClCompile Include="..\ThirdParty\googletest\googletest\src\gtest-all.cc">
       <Filter>ThirdParty\googletest\googletest\src</Filter>
     </ClCompile>
-    <ClCompile Include="BonusTestBasic.cpp">
-      <Filter></Filter>
-    </ClCompile>
-    <ClCompile Include="BonusTestDestroy.cpp">
-      <Filter></Filter>
-    </ClCompile>
-    <ClCompile Include="BonusTestEnemy.cpp">
+    <ClCompile Include="BonusTest.cpp">
       <Filter></Filter>
     </ClCompile>
     <ClCompile Include="BotsTest.cpp">
       <Filter></Filter>
     </ClCompile>
-    <ClCompile Include="BulletsTestAdvanced.cpp">
+    <ClCompile Include="BulletTest.cpp">
       <Filter></Filter>
     </ClCompile>
-    <ClCompile Include="BulletsTestBasic.cpp">
+    <ClCompile Include="NetworkClientHandshakeTest.cpp">
       <Filter></Filter>
     </ClCompile>
-    <ClCompile Include="ClientHandshakeTest.cpp">
-      <Filter></Filter>
-    </ClCompile>
-    <ClCompile Include="ProjectConfigTest.cpp">
-      <Filter></Filter>
-    </ClCompile>
-    <ClCompile Include="SeatAssignmentTest.cpp">
+    <ClCompile Include="InputTest.cpp">
       <Filter></Filter>
     </ClCompile>
     <ClCompile Include="ScoreBoardTest.cpp">
       <Filter></Filter>
     </ClCompile>
-    <ClCompile Include="MatchStartTest.cpp">
-      <Filter></Filter>
-    </ClCompile>
-    <ClCompile Include="CommandLineParserTest.cpp">
-      <Filter></Filter>
-    </ClCompile>
-    <ClCompile Include="AddressFieldTest.cpp">
-      <Filter></Filter>
-    </ClCompile>
-    <ClCompile Include="DeadObjectFilterTest.cpp">
-      <Filter></Filter>
-    </ClCompile>
-    <ClCompile Include="GameStateManagerTest.cpp">
-      <Filter></Filter>
-    </ClCompile>
     <ClCompile Include="GameStateTest.cpp">
+      <Filter></Filter>
+    </ClCompile>
+    <ClCompile Include="NetworkGameStateTest.cpp">
       <Filter></Filter>
     </ClCompile>
     <ClCompile Include="LevelProgressionTest.cpp">
@@ -75,43 +51,25 @@
     <ClCompile Include="MapTest.cpp">
       <Filter></Filter>
     </ClCompile>
-    <ClCompile Include="TankModelTest.cpp">
+    <ClCompile Include="TankTest.cpp">
       <Filter></Filter>
     </ClCompile>
-    <ClCompile Include="TankShoveTest.cpp">
+    <ClCompile Include="NetworkDatagramTest.cpp">
       <Filter></Filter>
     </ClCompile>
     <ClCompile Include="NetworkTest.cpp">
       <Filter></Filter>
     </ClCompile>
-    <ClCompile Include="SeatHistoryTest.cpp">
-      <Filter></Filter>
-    </ClCompile>
-    <ClCompile Include="NextLevelFlowTest.cpp">
-    <Filter></Filter>
-    </ClCompile>
-    <ClCompile Include="PauseSyncTest.cpp">
-      <Filter></Filter>
-    </ClCompile>
-    <ClCompile Include="PlayerTest.cpp">
-      <Filter></Filter>
-    </ClCompile>
     <ClCompile Include="RespawnManagerTest.cpp">
       <Filter></Filter>
     </ClCompile>
-    <ClCompile Include="StatisticsTestBasic.cpp">
+    <ClCompile Include="StatisticsTest.cpp">
       <Filter></Filter>
     </ClCompile>
     <ClCompile Include="TankSpawnerTest.cpp">
       <Filter></Filter>
     </ClCompile>
-    <ClCompile Include="WorldSnapshotTest.cpp">
-      <Filter></Filter>
-    </ClCompile>
-    <ClCompile Include="DatagramLinkTest.cpp">
-      <Filter></Filter>
-    </ClCompile>
-    <ClCompile Include="SessionTest.cpp">
+    <ClCompile Include="NetworkWorldSnapshotTest.cpp">
       <Filter></Filter>
     </ClCompile>
     <ClCompile Include="TestUtils.cpp">

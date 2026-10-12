@@ -23,81 +23,6 @@
 #include <string>
 #include <vector>
 
-namespace
-{
-// a folder of empty .map files - the rotation reads names off the disk and never opens them
-class MapsFolder final
-{
-	std::filesystem::path _path;
-
-public:
-	explicit MapsFolder(const std::string& name)
-		: _path{std::filesystem::temp_directory_path() / ("bc-levels-" + name)}
-	{
-		std::filesystem::remove_all(_path);
-		std::filesystem::create_directories(_path);
-	}
-
-	MapsFolder(const MapsFolder&) = delete;
-	MapsFolder(MapsFolder&&) = delete;
-	MapsFolder& operator=(const MapsFolder&) = delete;
-	MapsFolder& operator=(MapsFolder&&) = delete;
-
-	~MapsFolder() { std::filesystem::remove_all(_path); }
-
-	void Add(const std::string& stem) const { std::ofstream{_path / (stem + ".map")} << "#\n"; }
-
-	[[nodiscard]] std::string Folder() const { return _path.generic_string(); }
-
-	[[nodiscard]] std::string PathOf(const std::string& stem) const
-	{
-		return (_path / (stem + ".map")).generic_string();
-	}
-};
-}//namespace
-
-// the campaign is the folder, read in name order
-TEST(LevelRotationTest, TheNextLevelIsTheNextNameInTheFolder)
-{
-	const MapsFolder maps{"order"};
-	maps.Add("level1");
-	maps.Add("level2");
-	const LevelRotation rotation{maps.Folder()};
-
-	EXPECT_EQ(rotation.PathAfter(maps.PathOf("level1")), maps.PathOf("level2"));
-}
-
-// and the last one is followed by the first, so the prompt on the scoreboard always points somewhere
-TEST(LevelRotationTest, TheLastLevelLoopsBackToTheFirst)
-{
-	const MapsFolder maps{"loop"};
-	maps.Add("level1");
-	maps.Add("level2");
-	const LevelRotation rotation{maps.Folder()};
-
-	EXPECT_EQ(rotation.PathAfter(maps.PathOf("level2")), maps.PathOf("level1"));
-}
-
-// a map the folder does not hold - the console can load one by name - starts the campaign over
-TEST(LevelRotationTest, AMapOutsideTheFolderStartsTheCampaignOver)
-{
-	const MapsFolder maps{"stranger"};
-	maps.Add("level1");
-	maps.Add("level2");
-	const LevelRotation rotation{maps.Folder()};
-
-	EXPECT_EQ(rotation.PathAfter("Resources/Maps/handmade.map"), maps.PathOf("level1"));
-}
-
-// with nothing to rotate through the match stays on the map it is on
-TEST(LevelRotationTest, AnEmptyFolderLeavesTheLevelAsItIs)
-{
-	const MapsFolder maps{"empty"};
-	const LevelRotation rotation{maps.Folder()};
-
-	EXPECT_EQ(rotation.PathAfter(maps.PathOf("level1")), maps.PathOf("level1"));
-}
-
 // a won map hands the player on: tier and lives left ride along, the enemies and their count are the new map's
 class LevelProgressionTest : public testing::Test
 {
@@ -243,46 +168,35 @@ TEST_F(LevelProgressionTest, AWoundedTankStartsTheNextLevelWhole)
 	EXPECT_EQ(PlayerOne()->GetHealth(), spawnHealth);
 }
 
-// a client builds the tank from its model alone, so the host reports the health the tank brought along
-TEST_F(LevelProgressionTest, TheHostReportsTheCarriedHealth)
+// a client builds the tank from its model alone, so the host reports the health and the tier the tank brought along
+TEST_F(LevelProgressionTest, TheHostReportsWhatTheTankCarried)
 {
 	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
 	StartMatch(GameResetEvent{});
 	PlayerOne()->Heal(1);
-	const unsigned int carried{PlayerOne()->GetHealth()};
-	std::vector<HealthChangedEvent> reported;
-	const EventSubscription reportSub{_events->AddListener([&reported](const HealthChangedEvent& event)
-	{
-		reported.push_back(event);
-	})};
-
-	_events->EmitEvent(NextLevelRequestedEvent{});
-	StartMatch(GameResetEvent{.keepsPlayerProgress = true});
-
-	const auto report{std::ranges::find(reported, PlayerOne()->GetUuid(), &HealthChangedEvent::uuid)};
-	ASSERT_NE(report, reported.end());
-	EXPECT_EQ(report->health, carried);
-}
-
-// and the tier - the client's tank is built at the first one
-TEST_F(LevelProgressionTest, TheHostReportsTheCarriedTier)
-{
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
-	StartMatch(GameResetEvent{});
 	_events->EmitEvent(Key(Author::Player1), BonusStarPickupEvent{});
-	const unsigned int carried{PlayerOne()->GetTier()};
-	std::vector<TierChangedEvent> reported;
-	const EventSubscription reportSub{_events->AddListener([&reported](const TierChangedEvent& event)
+	const unsigned int health{PlayerOne()->GetHealth()};
+	const unsigned int tier{PlayerOne()->GetTier()};
+	std::vector<HealthChangedEvent> healths;
+	std::vector<TierChangedEvent> tiers;
+	const EventSubscription healthSub{_events->AddListener([&healths](const HealthChangedEvent& event)
 	{
-		reported.push_back(event);
+		healths.push_back(event);
+	})};
+	const EventSubscription tierSub{_events->AddListener([&tiers](const TierChangedEvent& event)
+	{
+		tiers.push_back(event);
 	})};
 
 	_events->EmitEvent(NextLevelRequestedEvent{});
 	StartMatch(GameResetEvent{.keepsPlayerProgress = true});
 
-	const auto report{std::ranges::find(reported, PlayerOne()->GetUuid(), &TierChangedEvent::uuid)};
-	ASSERT_NE(report, reported.end());
-	EXPECT_EQ(report->tier, carried);
+	const auto healthReport{std::ranges::find(healths, PlayerOne()->GetUuid(), &HealthChangedEvent::uuid)};
+	ASSERT_NE(healthReport, healths.end());
+	EXPECT_EQ(healthReport->health, health);
+	const auto tierReport{std::ranges::find(tiers, PlayerOne()->GetUuid(), &TierChangedEvent::uuid)};
+	ASSERT_NE(tierReport, tiers.end());
+	EXPECT_EQ(tierReport->tier, tier);
 }
 
 // lives travel too: one is spent whenever a tank takes the field, so the next level spends the next of three

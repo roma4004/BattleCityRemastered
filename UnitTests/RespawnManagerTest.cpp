@@ -2,13 +2,16 @@
 #include "application/GameConfig.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
+#include "components/BonusSpawner.h"
 #include "components/events/SpawnEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/ObjectLifecycleEvents.h"
 #include "components/TankSpawner.h"
 #include "components/managers/RespawnManager.h"
 #include "entities/pawns/Tank.h"
+#include "entities/bonuses/Bonus.h"
 #include "enums/Author.h"
+#include "enums/BonusType.h"
 #include "enums/Faction.h"
 #include "enums/GameMode.h"
 #include "enums/GameState.h"
@@ -40,6 +43,9 @@ protected:
 	GameConfig _gameConfig{};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	EventSubscription _spawnQueueSub{};
+	std::unique_ptr<BonusSpawner> _bonusSpawner{nullptr};
+	std::optional<GameState> _result{};
+	EventSubscription _resultSub{};
 
 	void SetUp() override
 	{
@@ -47,10 +53,12 @@ protected:
 		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, _allObjects);
 		_allObjects.reserve(6u);
 		const auto bulletPool{std::make_shared<BulletPool>(_events, _allObjects, _gameConfig)};
+		_bonusSpawner = std::make_unique<BonusSpawner>(_events, _allObjects, _gameConfig);
 		TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, _gameConfig.gameMode, _respawnManager,
 								 _tankSpawner);
 		_events->EmitEvent(GameResetEvent{});
 		_instantSpawnAnimationSubs = TestUtils::WireInstantSpawnAnimations(_events);
+		_resultSub = _events->AddListener([this](const GameFinishedEvent& event) { _result = event.state; });
 	}
 
 	void TearDown() override {}
@@ -66,29 +74,49 @@ protected:
 			}
 		});
 	}
+
+	//NOTE: the first tank of the side dies and leaves the field - one death at a time, as a match has them
+	void KillOne(const Faction side)
+	{
+		const auto tank{std::ranges::find(_allObjects, side, &BaseObj::GetFaction)};
+		ASSERT_NE(tank, _allObjects.end()) << "nobody of that side on the field";
+
+		_events->EmitEvent(TankDiedEvent{.uuid = (*tank)->GetUuid()});
+		_allObjects.erase(tank);
+	}
+
+	void TakeAnExtraLife(const Author author)
+	{
+		_bonusSpawner->SpawnBonus({.w = _gameConfig.tankSize, .h = _gameConfig.tankSize}, BonusType::Tank);
+		const auto bonus{std::dynamic_pointer_cast<Bonus>(_allObjects.back())};
+		ASSERT_NE(bonus, nullptr);
+		bonus->PickUpBonus(author);
+		_allObjects.pop_back();
+	}
 };
 
-// a map that says how many enemies it has sets the count, whatever its list holds
-TEST_F(RespawnManagerTest, TheMapsEnemyCountSetsTheEnemyCount)
+// a map that says how many enemies it has sets the count, whatever its list holds - one that does not keeps twenty
+TEST_F(RespawnManagerTest, TheMapsEnemyCountOrTwenty)
 {
+	struct Lineup final
+	{
+		EnemyLineupLoadedEvent loaded;
+		unsigned short enemies{};
+	};
+
 	unsigned short enemiesLeft{};
 	const EventSubscription countSub{WatchEnemiesLeft(enemiesLeft)};
+	const std::array lineups{Lineup{.loaded = {.count = 3u, .models = {TankModel::Armor}}, .enemies = 3u},
+							 Lineup{.loaded = {}, .enemies = 20u}};
+	for (const Lineup& lineup: lineups)
+	{
+		SCOPED_TRACE(lineup.enemies);
+		_events->EmitEvent(GameResetEvent{});
 
-	_events->EmitEvent(EnemyLineupLoadedEvent{.count = 3u, .models = {TankModel::Armor}});
+		_events->EmitEvent(lineup.loaded);
 
-	EXPECT_EQ(enemiesLeft, 3u);
-}
-
-// one that does not say keeps the twenty the reset counted
-TEST_F(RespawnManagerTest, AMapWithoutAnEnemyCountSendsTwenty)
-{
-	unsigned short enemiesLeft{};
-	const EventSubscription countSub{WatchEnemiesLeft(enemiesLeft)};
-
-	_events->EmitEvent(GameResetEvent{});
-	_events->EmitEvent(EnemyLineupLoadedEvent{});
-
-	EXPECT_EQ(enemiesLeft, 20u);
+		EXPECT_EQ(enemiesLeft, lineup.enemies);
+	}
 }
 
 // fewer enemies than seats put no more tanks on the field than there are
@@ -170,6 +198,80 @@ TEST_F(RespawnManagerTest, RunningOutOfLivesStopsAtNothing)
 
 		EXPECT_EQ(0u, livesLeft);
 	}
+}
+
+// the enemy pool emptied wins the match: twenty enemies, and one more if an enemy took an extra life
+TEST_F(RespawnManagerTest, AnEmptiedEnemyPoolWins)
+{
+	struct Pool final
+	{
+		bool extraLife{};
+		int kills{};
+	};
+
+	constexpr std::array kPools{Pool{.extraLife = false, .kills = 20}, Pool{.extraLife = true, .kills = 21}};
+	for (const Pool& pool: kPools)
+	{
+		SCOPED_TRACE(pool.kills);
+		_events->EmitEvent(GameResetEvent{});
+		_allObjects.clear();
+		_result.reset();
+		if (pool.extraLife)
+		{
+			TakeAnExtraLife(Author::Enemy1);
+		}
+
+		//NOTE: the field is topped up before every death, so each one is a tank the match really put down
+		for (int kill{}; kill < pool.kills; ++kill)
+		{
+			ASSERT_FALSE(_result.has_value()) << "won with enemies left";
+			_events->EmitEvent(RespawnTanksEvent{});
+			KillOne(Faction::EnemyTeam);
+		}
+
+		EXPECT_EQ(_result, GameState::Won);
+	}
+}
+
+// the player's last life spent loses the match - three of them
+TEST_F(RespawnManagerTest, ThePlayersLastLifeSpentLoses)
+{
+	for (int life{}; life < 3; ++life)
+	{
+		ASSERT_FALSE(_result.has_value()) << "the match ended with a life left";
+		_events->EmitEvent(RespawnTanksEvent{});
+		KillOne(Faction::PlayerTeam);
+	}
+
+	EXPECT_EQ(_result, GameState::Over);
+}
+
+// the eagle falling takes every life left at once, so the player's next death loses the match
+TEST_F(RespawnManagerTest, AFallenEagleLosesWithTheNextDeath)
+{
+	_events->EmitEvent(RespawnTanksEvent{});
+	_events->EmitEvent(PlayersBaseFinishedEvent{});
+	ASSERT_FALSE(_result.has_value()) << "the match ended before the player's tank was gone";
+
+	KillOne(Faction::PlayerTeam);
+
+	EXPECT_EQ(_result, GameState::Over);
+}
+
+// a life picked up after the eagle fell buys exactly one more death, not a return to three
+TEST_F(RespawnManagerTest, ALifeTakenAfterTheEagleFellBuysOneMoreDeath)
+{
+	_events->EmitEvent(RespawnTanksEvent{});
+	_events->EmitEvent(PlayersBaseFinishedEvent{});
+	TakeAnExtraLife(Author::Player1);
+
+	KillOne(Faction::PlayerTeam);
+	ASSERT_FALSE(_result.has_value()) << "the extra life bought nothing";
+
+	_events->EmitEvent(RespawnTanksEvent{});
+	KillOne(Faction::PlayerTeam);
+
+	EXPECT_EQ(_result, GameState::Over);
 }
 
 // 2P free-for-all is won by the last player standing, not by clearing the bots

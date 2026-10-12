@@ -184,95 +184,139 @@ protected:
 	static constexpr auto kRebindTimeout{1500ms};
 };
 
-
-// a tank's position crosses the wire and arrives keyed on the same uuid
-TEST_F(NetworkTest, PosEventReplication)
+// what the host emits comes out on the client as the same event, keyed the same and whole - a crossed wire swaps them
+TEST_F(NetworkTest, EveryReplicatedEventArrivesAsItself)
 {
 	const auto server{MakeServer()};
 	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
-	constexpr FPoint posOrigin{.x = 42.0, .y = 42.0};
-	constexpr auto directionOrigin{Direction::UP};
+	constexpr FPoint pos{.x = 42.0, .y = 42.0};
+	constexpr ObjRectangle grown{.x = 98.0, .y = 96.0, .w = 40.0, .h = 40.0};
+	constexpr std::array kTankTypes{TankType::PLAYER1, TankType::PLAYER2, TankType::ENEMY1,
+									TankType::ENEMY2, TankType::ENEMY3, TankType::ENEMY4};
 
-	std::optional<PosChangedEvent> received{};
-	auto posSub{_clientEvents->AddListener(Key(_uuid),
-										   [&received](const PosChangedEvent& event) { received = event; })};
+	std::optional<PosChangedEvent> moved{};
+	std::optional<TankShotEvent> shot{};
+	std::optional<HealthChangedEvent> health{};
+	std::vector<DespawnedEvent> despawned{};
+	std::optional<BonusSpawnedEvent> bonus{};
+	std::optional<BonusSpawnCompletedEvent> bonusLanded{};
+	std::optional<BonusHelmetAppliedEvent> helmet{};
+	std::optional<BonusShipAppliedEvent> ship{};
+	std::optional<BonusTankAppliedEvent> extraLife{};
+	std::optional<TierChangedEvent> tier{};
+	std::optional<TankGrewEvent> grew{};
+	std::vector<TankRespawnedEvent> respawned{};
+	std::optional<StatisticsBulletHitEvent> bulletHit{};
+	std::optional<StatisticsTankHitEvent> tankHit{};
+	std::optional<TankDiedEvent> tankDied{};
+	std::optional<BrickWallDiedEvent> brickDied{};
+	std::optional<SteelWallDiedEvent> steelDied{};
+	std::optional<StatisticsBonusPickupEvent> bonusPickup{};
+	std::optional<StatisticsBonusDestroyedEvent> bonusDestroyed{};
+	bool bonusExpired{};
 
-	_serverEvents->EmitEvent(
-			PosChangedEvent{.pos = posOrigin, .dir = directionOrigin, .uuid = _uuid});
+	std::vector<EventSubscription> subs{};
+	subs.push_back(_clientEvents->AddListener(Key(_uuid), [&moved](const PosChangedEvent& e) { moved = e; }));
+	subs.push_back(_clientEvents->AddListener(Key(Author::Player1), [&shot](const TankShotEvent& e) { shot = e; }));
+	subs.push_back(_clientEvents->AddListener(Key(_uuid), [&health](const HealthChangedEvent& e) { health = e; }));
+	subs.push_back(_clientEvents->AddListener(Key(_uuid),
+											  [&despawned](const DespawnedEvent& e) { despawned.push_back(e); }));
+	subs.push_back(_clientEvents->AddListener([&bonus](const BonusSpawnedEvent& e) { bonus = e; }));
+	subs.push_back(_clientEvents->AddListener([&bonusLanded](const BonusSpawnCompletedEvent& e) { bonusLanded = e; }));
+	subs.push_back(_clientEvents->AddListener(Key(Author::Player1),
+											  [&helmet](const BonusHelmetAppliedEvent& e) { helmet = e; }));
+	subs.push_back(_clientEvents->AddListener(Key(Author::Player1),
+											  [&ship](const BonusShipAppliedEvent& e) { ship = e; }));
+	subs.push_back(_clientEvents->AddListener([&extraLife](const BonusTankAppliedEvent& e) { extraLife = e; }));
+	subs.push_back(_clientEvents->AddListener(Key(_uuid), [&tier](const TierChangedEvent& e) { tier = e; }));
+	subs.push_back(_clientEvents->AddListener(Key(_uuid), [&grew](const TankGrewEvent& e) { grew = e; }));
+	subs.push_back(_clientEvents->AddListener([&respawned](const TankRespawnedEvent& e) { respawned.push_back(e); }));
+	subs.push_back(_clientEvents->AddListener([&bulletHit](const StatisticsBulletHitEvent& e) { bulletHit = e; }));
+	subs.push_back(_clientEvents->AddListener([&tankHit](const StatisticsTankHitEvent& e) { tankHit = e; }));
+	subs.push_back(_clientEvents->AddListener([&tankDied](const TankDiedEvent& e) { tankDied = e; }));
+	subs.push_back(_clientEvents->AddListener([&brickDied](const BrickWallDiedEvent& e) { brickDied = e; }));
+	subs.push_back(_clientEvents->AddListener([&steelDied](const SteelWallDiedEvent& e) { steelDied = e; }));
+	subs.push_back(_clientEvents->AddListener(
+			[&bonusPickup](const StatisticsBonusPickupEvent& e) { bonusPickup = e; }));
+	subs.push_back(_clientEvents->AddListener(
+			[&bonusDestroyed](const StatisticsBonusDestroyedEvent& e) { bonusDestroyed = e; }));
+	subs.push_back(_clientEvents->AddListener(
+			[&bonusExpired](const StatisticsBonusExpiredEvent&) { bonusExpired = true; }));
 
-	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
-	const auto& event{received.value()};
-	EXPECT_EQ(posOrigin, event.pos);
-	EXPECT_EQ(directionOrigin, event.dir);
-}
-
-// so does a shot, with the direction it was fired in
-TEST_F(NetworkTest, ShotEventReplication)
-{
-	const auto server{MakeServer()};
-	const auto client{MakeClient(server->GetBoundPort())};
-	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
-
-	constexpr auto direction{Direction::UP};
-	constexpr auto who{Author::Player1};
-
-	std::optional<TankShotEvent> received{};
-	auto shotSub{_clientEvents->AddListener(Key(who),
-											[&received](const TankShotEvent& event) { received = event; })};
-
-	_serverEvents->EmitEvent(TankShotEvent{.who = who, .dir = direction, .bulletUuid = _uuid});
-
-	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
-	const auto& event{received.value()};
-	EXPECT_EQ(direction, event.dir);
-	EXPECT_EQ(_uuid, event.bulletUuid);
-}
-
-// and a health change
-TEST_F(NetworkTest, HealthEventReplication)
-{
-	const auto server{MakeServer()};
-	const auto client{MakeClient(server->GetBoundPort())};
-	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
-
-	constexpr unsigned int healthOrigin{42};
-
-	std::optional<unsigned int> received{};
-	auto healthSub{_clientEvents->AddListener(Key(_uuid),
-											  [&received](const HealthChangedEvent& event)
-											  {
-												  received = event.health;
-											  })};
-
-	_serverEvents->EmitEvent(HealthChangedEvent{.health = healthOrigin, .uuid = _uuid});
-
-	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
-	EXPECT_EQ(healthOrigin, *received);
-}
-
-//NOTE: two despawns - a destroyed bullet and a picked-up bonus travel the same command
-TEST_F(NetworkTest, DespawnEventReplication)
-{
-	const auto server{MakeServer()};
-	const auto client{MakeClient(server->GetBoundPort())};
-	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
-
-	std::vector<DespawnedEvent> received{};
-	auto despawnSub{_clientEvents->AddListener(Key(_uuid),
-											   [&received](const DespawnedEvent& event)
-											   {
-												   received.push_back(event);
-											   })};
-
+	_serverEvents->EmitEvent(PosChangedEvent{.pos = pos, .dir = Direction::UP, .uuid = _uuid});
+	_serverEvents->EmitEvent(TankShotEvent{.who = Author::Player1, .dir = Direction::LEFT, .bulletUuid = _uuid});
+	_serverEvents->EmitEvent(HealthChangedEvent{.health = 42u, .uuid = _uuid});
+	//NOTE: two despawns - a destroyed bullet and a picked-up bonus travel the same command
 	_serverEvents->EmitEvent(DespawnedEvent{.uuid = _uuid, .reason = DespawnReason::Destroyed});
 	_serverEvents->EmitEvent(DespawnedEvent{.uuid = _uuid, .reason = DespawnReason::PickedUp});
+	_serverEvents->EmitEvent(BonusSpawnedEvent{.pos = pos, .type = BonusType::Timer, .uuid = _uuid, .isSuper = true});
+	_serverEvents->EmitEvent(BonusSpawnCompletedEvent{.uuid = _uuid});
+	//NOTE: three effects share BonusStatus, told apart by bonusType - a swap lands the wrong effect on the wrong seat
+	_serverEvents->EmitEvent(BonusHelmetAppliedEvent{.author = Author::Player1, .isActive = true});
+	_serverEvents->EmitEvent(BonusShipAppliedEvent{.author = Author::Player1});
+	_serverEvents->EmitEvent(BonusTankAppliedEvent{.author = Author::Player2});
+	//NOTE: the tier travels as a result on its own command - the client sets it rather than replaying the upgrade
+	_serverEvents->EmitEvent(TierChangedEvent{.tier = 4u, .uuid = _uuid});
+	_serverEvents->EmitEvent(TankGrewEvent{.rect = grown, .uuid = _uuid});
+	for (const TankType type: kTankTypes)
+	{
+		_serverEvents->EmitEvent(
+				TankRespawnedEvent{.type = type, .model = TankModel::Basic, .uuid = _uuid, .pos = pos});
+	}
+	//NOTE: eleven local types share one StatisticsChange - each case has its own author, or a crossed wire would hide
+	_serverEvents->EmitEvent(StatisticsBulletHitEvent{.author = Author::Player3});
+	_serverEvents->EmitEvent(StatisticsTankHitEvent{.who = Author::Player1, .author = Author::Enemy1});
+	_serverEvents->EmitEvent(TankDiedEvent{.who = Author::Player2, .uuid = _uuid, .author = Author::Enemy2});
+	_serverEvents->EmitEvent(BrickWallDiedEvent{.author = Author::Enemy3});
+	_serverEvents->EmitEvent(SteelWallDiedEvent{.author = Author::Enemy4});
+	_serverEvents->EmitEvent(StatisticsBonusPickupEvent{.author = Author::Player1});
+	_serverEvents->EmitEvent(StatisticsBonusDestroyedEvent{.author = Author::Player2});
+	_serverEvents->EmitEvent(StatisticsBonusExpiredEvent{});
 
-	ASSERT_TRUE(PumpUntil([&received] { return received.size() == 2u; }));
-	EXPECT_EQ(_uuid, received[0].uuid);
-	EXPECT_EQ(DespawnReason::Destroyed, received[0].reason);
-	EXPECT_EQ(DespawnReason::PickedUp, received[1].reason);
+	ASSERT_TRUE(PumpUntil([&]
+	{
+		return moved && shot && health && despawned.size() == 2u && bonus && bonusLanded && helmet && ship && extraLife
+			   && tier && grew && respawned.size() == kTankTypes.size() && bulletHit && tankHit && tankDied && brickDied
+			   && steelDied && bonusPickup && bonusDestroyed && bonusExpired;
+	}));
+
+	EXPECT_EQ(moved->pos, pos);
+	EXPECT_EQ(moved->dir, Direction::UP);
+	EXPECT_EQ(shot->dir, Direction::LEFT);
+	EXPECT_EQ(shot->bulletUuid, _uuid);
+	EXPECT_EQ(health->health, 42u);
+	EXPECT_EQ(despawned[0].reason, DespawnReason::Destroyed);
+	EXPECT_EQ(despawned[1].reason, DespawnReason::PickedUp);
+	EXPECT_EQ(bonus->pos, pos);
+	EXPECT_EQ(bonus->type, BonusType::Timer);
+	EXPECT_EQ(bonus->uuid, _uuid);
+	EXPECT_TRUE(bonus->isSuper);
+	EXPECT_EQ(bonusLanded->uuid, _uuid);
+	EXPECT_TRUE(helmet->isActive);
+	EXPECT_EQ(ship->author, Author::Player1);
+	EXPECT_EQ(extraLife->author, Author::Player2);
+	EXPECT_EQ(tier->tier, 4u);
+	EXPECT_DOUBLE_EQ(grew->rect.x, grown.x);
+	EXPECT_DOUBLE_EQ(grew->rect.y, grown.y);
+	EXPECT_DOUBLE_EQ(grew->rect.w, grown.w);
+	for (std::size_t i{}; i < kTankTypes.size(); ++i)
+	{
+		EXPECT_EQ(respawned[i].type, kTankTypes[i]);
+		EXPECT_EQ(respawned[i].uuid, _uuid);
+		EXPECT_EQ(respawned[i].pos, pos);
+	}
+	EXPECT_EQ(bulletHit->author, Author::Player3);
+	EXPECT_EQ(tankHit->who, Author::Player1);
+	EXPECT_EQ(tankHit->author, Author::Enemy1);
+	EXPECT_EQ(tankDied->who, Author::Player2);
+	EXPECT_EQ(tankDied->uuid, _uuid);
+	EXPECT_EQ(tankDied->author, Author::Enemy2);
+	EXPECT_EQ(brickDied->author, Author::Enemy3);
+	EXPECT_EQ(steelDied->author, Author::Enemy4);
+	EXPECT_EQ(bonusPickup->author, Author::Player1);
+	EXPECT_EQ(bonusDestroyed->author, Author::Player2);
 }
 
 // one of the four things a client may ask for: the pause travels the other way and stops the host
@@ -294,109 +338,6 @@ TEST_F(NetworkTest, PauseRequestFromClientPausesTheServer)
 	_clientEvents->EmitEvent(PauseRequestedEvent{.isPaused = false});
 
 	EXPECT_TRUE(PumpUntil([&isServerPaused] { return !isServerPaused; }));
-}
-
-// a bonus appearing on the host appears on the client with its place and kind
-TEST_F(NetworkTest, BonusSpawnEventReplication)
-{
-	const auto server{MakeServer()};
-	const auto client{MakeClient(server->GetBoundPort())};
-	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
-
-	constexpr FPoint pos{.x = 42.0, .y = 42.0};
-	constexpr auto type{BonusType::Timer};
-
-	std::optional<BonusSpawnedEvent> received{};
-	auto bonusSpawnSub{_clientEvents->AddListener(
-			[&received](const BonusSpawnedEvent& event) { received = event; })};
-
-	_serverEvents->EmitEvent(BonusSpawnedEvent{.pos = pos, .type = type, .uuid = _uuid, .isSuper = true});
-
-	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
-	const auto& event{received.value()};
-	EXPECT_EQ(pos, event.pos);
-	EXPECT_EQ(type, event.type);
-	EXPECT_EQ(_uuid, event.uuid);
-	EXPECT_TRUE(event.isSuper);
-}
-
-//NOTE: what makes the bonus real on the client - its own burst only draws
-TEST_F(NetworkTest, BonusSpawnCompleteEventReplication)
-{
-	const auto server{MakeServer()};
-	const auto client{MakeClient(server->GetBoundPort())};
-	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
-
-	std::optional<Uuid> received{};
-	auto bonusSpawnCompleteSub{_clientEvents->AddListener(
-			[&received](const BonusSpawnCompletedEvent& event) { received = event.uuid; })};
-
-	_serverEvents->EmitEvent(BonusSpawnCompletedEvent{.uuid = _uuid});
-
-	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
-	EXPECT_EQ(_uuid, *received);
-}
-
-// an effect switching on for a seat arrives keyed on that seat
-TEST_F(NetworkTest, BonusStatusEventReplication)
-{
-	const auto server{MakeServer()};
-	const auto client{MakeClient(server->GetBoundPort())};
-	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
-
-	constexpr auto authorOrigin{Author::Player1};
-	constexpr bool isActiveOrigin{true};
-
-	std::optional<bool> received{};
-	auto bonusStatusSub{_clientEvents->AddListener(Key(authorOrigin),
-												   [&received](const BonusHelmetAppliedEvent& event)
-												   {
-													   received = event.isActive;
-												   })};
-
-	_serverEvents->EmitEvent(BonusHelmetAppliedEvent{.author = authorOrigin, .isActive = isActiveOrigin});
-
-	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
-	EXPECT_EQ(isActiveOrigin, *received);
-}
-
-//NOTE: the tier travels as a result on its own command - the client sets it rather than replaying the upgrade
-TEST_F(NetworkTest, TierEventReplication)
-{
-	const auto server{MakeServer()};
-	const auto client{MakeClient(server->GetBoundPort())};
-	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
-
-	constexpr unsigned short tierOrigin{4u};
-
-	std::optional<unsigned short> received{};
-	auto tierSub{_clientEvents->AddListener(Key(_uuid),
-											[&received](const TierChangedEvent& event) { received = event.tier; })};
-
-	_serverEvents->EmitEvent(TierChangedEvent{.tier = tierOrigin, .uuid = _uuid});
-
-	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
-	EXPECT_EQ(tierOrigin, *received);
-}
-
-TEST_F(NetworkTest, TankGrewEventReplication)
-{
-	const auto server{MakeServer()};
-	const auto client{MakeClient(server->GetBoundPort())};
-	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
-
-	constexpr ObjRectangle grown{.x = 98.0, .y = 96.0, .w = 40.0, .h = 40.0};
-
-	std::optional<ObjRectangle> received{};
-	auto grewSub{_clientEvents->AddListener(Key(_uuid),
-											[&received](const TankGrewEvent& event) { received = event.rect; })};
-
-	_serverEvents->EmitEvent(TankGrewEvent{.rect = grown, .uuid = _uuid});
-
-	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
-	EXPECT_DOUBLE_EQ(received->x, grown.x);
-	EXPECT_DOUBLE_EQ(received->y, grown.y);
-	EXPECT_DOUBLE_EQ(received->w, grown.w);
 }
 
 //NOTE: a whole map in one batch - one frame, and every command has to come out of it in order
@@ -435,46 +376,6 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 		ASSERT_EQ(sent[i], received[i].pos) << "obstacle " << i << " arrived out of order or damaged";
 		ASSERT_EQ(obstacleType, received[i].type);
 		ASSERT_EQ(_uuid, received[i].uuid);
-	}
-}
-
-// every tank type respawns on the client where the host put it
-TEST_F(NetworkTest, RespawnTankEventReplication)
-{
-	const auto server{MakeServer()};
-	const auto client{MakeClient(server->GetBoundPort())};
-	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
-
-	constexpr std::array tankTypes{
-			TankType::PLAYER1,
-			TankType::PLAYER2,
-			TankType::ENEMY1,
-			TankType::ENEMY2,
-			TankType::ENEMY3,
-			TankType::ENEMY4
-	};
-
-	constexpr FPoint posOrigin{.x = 12.0, .y = 34.0};
-	constexpr size_t expectedCount{tankTypes.size()};
-
-	std::vector<TankRespawnedEvent> received{};
-	auto respawnTankSub{_clientEvents->AddListener(
-			[&received](const TankRespawnedEvent& event) { received.push_back(event); })};
-
-	for (const auto tankType: tankTypes)
-	{
-		_serverEvents->EmitEvent(TankRespawnedEvent{.type = tankType,
-													.model = TankModel::Basic,
-													.uuid = _uuid,
-													.pos = posOrigin});
-	}
-
-	ASSERT_TRUE(PumpUntil([&received] { return received.size() == expectedCount; }));
-	for (size_t i = 0u; i < tankTypes.size(); ++i)
-	{
-		EXPECT_EQ(tankTypes[i], received[i].type);
-		EXPECT_EQ(_uuid, received[i].uuid);
-		EXPECT_EQ(posOrigin, received[i].pos);
 	}
 }
 
@@ -605,33 +506,6 @@ TEST_F(NetworkTest, ClientQuitTellsHostWhy)
 	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); })) << "host never got the client's goodbye";
 	EXPECT_EQ(DisconnectReason::PlayerQuit, *received);
 	EXPECT_FALSE(clientLost) << "the silence after the goodbye was reported as a second, silent drop";
-}
-
-// three effects share BonusStatus, told apart by bonusType - a swap would land the wrong effect on the wrong seat
-TEST_F(NetworkTest, ShipAndTankEffectsKeepTheirOwnEventAcrossTheWire)
-{
-	const auto server{MakeServer()};
-	const auto client{MakeClient(server->GetBoundPort())};
-	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
-
-	constexpr auto shipSeat{Author::Player1};
-	constexpr auto tankSeat{Author::Player2};
-
-	std::optional<Author> ship{};
-	std::optional<Author> tank{};
-
-	std::vector<EventSubscription> subs{};
-	subs.push_back(_clientEvents->AddListener(Key(shipSeat),
-											  [&ship](const BonusShipAppliedEvent& event) { ship = event.author; }));
-	subs.push_back(_clientEvents->AddListener(
-			[&tank](const BonusTankAppliedEvent& event) { tank = event.author; }));
-
-	_serverEvents->EmitEvent(BonusShipAppliedEvent{.author = shipSeat});
-	_serverEvents->EmitEvent(BonusTankAppliedEvent{.author = tankSeat});
-
-	ASSERT_TRUE(PumpUntil([&ship, &tank] { return ship.has_value() && tank.has_value(); }));
-	EXPECT_EQ(shipSeat, *ship);
-	EXPECT_EQ(tankSeat, *tank);
 }
 
 // the seat given on connect is all that ties a key to a tank - the server reads whose press it is off the session
@@ -936,62 +810,6 @@ TEST_F(NetworkTest, AClientDialingAgainFromTheSameAddressTakesItsSeatBack)
 	EXPECT_EQ(Dial(socket, 2u), PlayerSlot::P1) << "the new connection was refused a seat its own old one held";
 	ASSERT_TRUE(PumpUntil([&lost] { return lost.has_value(); })) << "the replaced connection was never let go";
 	EXPECT_EQ(*lost, PlayerSlot::P1);
-}
-
-// eleven local types share one StatisticsChange - each case has its own author, or a crossed wire would hide
-TEST_F(NetworkTest, EveryStatisticsTypeKeepsItsOwnEventAcrossTheWire)
-{
-	const auto server{MakeServer()};
-	const auto client{MakeClient(server->GetBoundPort())};
-	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
-
-	std::optional<StatisticsBulletHitEvent> bulletHit{};
-	std::optional<StatisticsTankHitEvent> tankHit{};
-	std::optional<TankDiedEvent> tankDied{};
-	std::optional<BrickWallDiedEvent> brickDied{};
-	std::optional<SteelWallDiedEvent> steelDied{};
-	std::optional<StatisticsBonusPickupEvent> bonusPickup{};
-	std::optional<StatisticsBonusDestroyedEvent> bonusDestroyed{};
-	bool bonusExpired{};
-
-	std::vector<EventSubscription> subs{};
-	subs.push_back(_clientEvents->AddListener([&bulletHit](const StatisticsBulletHitEvent& e) { bulletHit = e; }));
-	subs.push_back(_clientEvents->AddListener([&tankHit](const StatisticsTankHitEvent& e) { tankHit = e; }));
-	subs.push_back(_clientEvents->AddListener([&tankDied](const TankDiedEvent& e) { tankDied = e; }));
-	subs.push_back(_clientEvents->AddListener([&brickDied](const BrickWallDiedEvent& e) { brickDied = e; }));
-	subs.push_back(_clientEvents->AddListener([&steelDied](const SteelWallDiedEvent& e) { steelDied = e; }));
-	subs.push_back(_clientEvents->AddListener(
-			[&bonusPickup](const StatisticsBonusPickupEvent& e) { bonusPickup = e; }));
-	subs.push_back(_clientEvents->AddListener(
-			[&bonusDestroyed](const StatisticsBonusDestroyedEvent& e) { bonusDestroyed = e; }));
-	subs.push_back(_clientEvents->AddListener(
-			[&bonusExpired](const StatisticsBonusExpiredEvent&) { bonusExpired = true; }));
-
-	_serverEvents->EmitEvent(StatisticsBulletHitEvent{.author = Author::Player3});
-	_serverEvents->EmitEvent(StatisticsTankHitEvent{.who = Author::Player1, .author = Author::Enemy1});
-	_serverEvents->EmitEvent(TankDiedEvent{.who = Author::Player2, .uuid = _uuid, .author = Author::Enemy2});
-	_serverEvents->EmitEvent(BrickWallDiedEvent{.author = Author::Enemy3});
-	_serverEvents->EmitEvent(SteelWallDiedEvent{.author = Author::Enemy4});
-	_serverEvents->EmitEvent(StatisticsBonusPickupEvent{.author = Author::Player1});
-	_serverEvents->EmitEvent(StatisticsBonusDestroyedEvent{.author = Author::Player2});
-	_serverEvents->EmitEvent(StatisticsBonusExpiredEvent{});
-
-	ASSERT_TRUE(PumpUntil([&]
-	{
-		return bulletHit && tankHit && tankDied && brickDied && steelDied && bonusPickup && bonusDestroyed
-			   && bonusExpired;
-	}));
-
-	EXPECT_EQ(Author::Player3, bulletHit.value().author);
-	EXPECT_EQ(Author::Player1, tankHit.value().who);
-	EXPECT_EQ(Author::Enemy1, tankHit.value().author);
-	EXPECT_EQ(Author::Player2, tankDied.value().who);
-	EXPECT_EQ(_uuid, tankDied.value().uuid);
-	EXPECT_EQ(Author::Enemy2, tankDied.value().author);
-	EXPECT_EQ(Author::Enemy3, brickDied.value().author);
-	EXPECT_EQ(Author::Enemy4, steelDied.value().author);
-	EXPECT_EQ(Author::Player1, bonusPickup.value().author);
-	EXPECT_EQ(Author::Player2, bonusDestroyed.value().author);
 }
 
 //NOTE: a kicked client that dialled straight back would sit in the seat it was sent away from

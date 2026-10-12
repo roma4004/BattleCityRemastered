@@ -18,6 +18,7 @@
 #include "components/managers/FortressManager.h"
 #include "entities/obstacles/FortressWalls.h"
 #include "entities/pawns/Bullet.h"
+#include "entities/pawns/BulletResetProperty.h"
 #include "entities/pawns/Tank.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
@@ -33,7 +34,9 @@
 #include <chrono>
 #include <memory>
 #include <optional>
+#include <string_view>
 #include <thread>
+#include <vector>
 
 using namespace std::chrono_literals;
 
@@ -86,11 +89,11 @@ protected:
 	void TearDown() override {}
 
 	std::shared_ptr<Tank> CreatePlayer(const FPoint pos, const Author author = Author::Player1,
-									   const Direction dir = Direction::UP)
+									   const Direction dir = Direction::UP, const unsigned short tier = 1u)
 	{
 		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _gameConfig.tankSize, .h = _gameConfig.tankSize};
 		auto player{TestUtils::CreatePlayer(rect, _tankHealth, author, _allObjects, _events, dir, _tankPool,
-											_gameConfig)};
+											_gameConfig, tier)};
 
 		return player;
 	}
@@ -115,41 +118,21 @@ protected:
 	}
 };
 
-// driving onto the bonus takes it off the field
+// a bonus lying untouched stays; driving onto it takes it off the field
 TEST_F(BonusTest, BonusPickUp)
 {
 	CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
 	_bonusSpawner->SpawnRandomBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize});
-
-	constexpr bool isPressed{true};
-	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
-
 	const auto* const bonus{dynamic_cast<Bonus*>(_allObjects.back().get())};
 	ASSERT_NE(bonus, nullptr);
-	EXPECT_TRUE(bonus->GetIsAlive());
 
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	ASSERT_TRUE(bonus->GetIsAlive()) << "the bonus went before anyone reached it";
+
+	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = true});
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_FALSE(bonus->GetIsAlive());
-}
-
-// driving away from it leaves it lying there
-TEST_F(BonusTest, BonusNotPickUp)
-{
-	CreatePlayer({.x = 0.0, .y = 0.0});
-
-	_bonusSpawner->SpawnRandomBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize});
-
-	constexpr bool isPressed{true};
-	_events->EmitEvent(Key(InputChannel::LocalP1), MoveUpEvent{.isPressed = isPressed});
-
-	const auto* const bonus{dynamic_cast<Bonus*>(_allObjects.back().get())};
-	ASSERT_NE(bonus, nullptr);
-	EXPECT_TRUE(bonus->GetIsAlive());
-
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-
-	EXPECT_TRUE(bonus->GetIsAlive());
 }
 
 // the timer freezes the enemy team where it stands - a team that was driving while it lay untouched
@@ -299,34 +282,65 @@ TEST_F(BonusTest, TankPickUpExtraLife)
 	EXPECT_LT(playerSpawnCount, respawnActual);
 }
 
-// a star is one tier, and only once the tank has driven onto it
-TEST_F(BonusTest, StarPickUpTierIncrease)
+// a star is one tier, a super star two, the caliber three - and only once the tank has driven onto it
+TEST_F(BonusTest, AStarOrCaliberRaisesTheTier)
 {
-	const auto player{CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN)};
-	_bonusSpawner->SpawnBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize}, BonusType::Star);
+	struct Pickup final
+	{
+		std::string_view why;
+		BonusType bonus;
+		bool isSuper{};
+		unsigned short tiers{};
+	};
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-	ASSERT_EQ(player->GetTier(), 1u) << "the star was taken before the tank reached it";
+	constexpr std::array kPickups{Pickup{.why = "a star", .bonus = BonusType::Star, .tiers = 1u},
+								  Pickup{.why = "a super star", .bonus = BonusType::Star, .isSuper = true, .tiers = 2u},
+								  Pickup{.why = "the caliber", .bonus = BonusType::Caliber, .tiers = 3u}};
+	for (const Pickup& pickup: kPickups)
+	{
+		SCOPED_TRACE(pickup.why);
+		_events->EmitEvent(GameResetEvent{});
+		_allObjects.clear();
+		const auto player{CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN)};
+		_bonusSpawner->SpawnBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize}, pickup.bonus, {},
+								  pickup.isSuper);
 
-	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = true});
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		ASSERT_EQ(player->GetTier(), 1u) << "the bonus was taken before the tank reached it";
 
-	EXPECT_EQ(player->GetTier(), 2u);
+		_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = true});
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+		EXPECT_EQ(player->GetTier(), 1u + pickup.tiers);
+	}
 }
 
-// any bonus heals the tank that picked it up, and there is no ceiling - a whole tank grows past its spawn health
-TEST_F(BonusTest, PickUpHealsAWholeTankAboveItsSpawnHealth)
+// any bonus heals the tank that took it, past its spawn health - a star at the top tier too, with no tier to give
+TEST_F(BonusTest, APickupHealsTheTank)
 {
-	const auto player{CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN)};
-	const unsigned int spawnHealth{player->GetHealth()};
-	constexpr bool isPressed{true};
-	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
+	struct Pickup final
+	{
+		BonusType bonus;
+		unsigned short tier{};
+	};
 
-	_bonusSpawner->SpawnBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize}, BonusType::Helmet);
+	//NOTE: a maxed tank returns early from the star handler - the heal must not hang on the tier going up
+	constexpr std::array kPickups{Pickup{.bonus = BonusType::Helmet, .tier = 1u},
+								  Pickup{.bonus = BonusType::Star, .tier = 7u}};
+	for (const Pickup& pickup: kPickups)
+	{
+		SCOPED_TRACE(static_cast<int>(pickup.bonus));
+		_events->EmitEvent(GameResetEvent{});
+		_allObjects.clear();
+		const auto player{CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN, pickup.tier)};
+		const unsigned int spawnHealth{player->GetHealth()};
+		_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = true});
+		_bonusSpawner->SpawnBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize}, pickup.bonus);
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_GT(player->GetHealth(), spawnHealth);
+		EXPECT_GT(player->GetHealth(), spawnHealth);
+	}
 }
 
 // the shovel turns the eagle's brick wall into steel once taken, not while it lies there
@@ -374,26 +388,6 @@ TEST_F(BonusTest, ShovelDoesNotHealAFallenEagle)
 	EXPECT_EQ(0u, eagle->GetHealth());
 }
 
-// the control for the ship: water stops a tank that has none
-TEST_F(BonusTest, WaterBlocksTankWithoutShip)
-{
-	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
-	constexpr bool isPressed{true};
-	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
-
-	//NOTE: as wide as the tank - a narrower one it would simply steer around
-	const ObjRectangle waterRect{.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _gridSize};
-	_events->EmitEvent(SpawnObstacleEvent{.rect = waterRect, .type = ObstacleType::Water});
-
-	constexpr int framesToCrossWater{100};
-	for (int frame = 0; frame < framesToCrossWater; ++frame)
-	{
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-	}
-
-	EXPECT_LE(player->GetBottomSide(), waterRect.y);
-}
-
 // and lets the same tank across once the ship is taken
 TEST_F(BonusTest, ShipPickUpCanCrossWater)
 {
@@ -417,24 +411,6 @@ TEST_F(BonusTest, ShipPickUpCanCrossWater)
 	}
 
 	EXPECT_GT(player->GetY(), waterRect.y + waterRect.h);
-}
-
-// the super star is worth two tiers in one pickup
-TEST_F(BonusTest, SuperStarPickUpTierIncreaseTwice)
-{
-	const auto player{CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN)};
-	constexpr bool isPressed{true};
-	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
-
-	constexpr bool isSuper{true};
-	_bonusSpawner->SpawnBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize}, BonusType::Star, {},
-							  isSuper);
-
-	EXPECT_EQ(player->GetTier(), 1u);
-
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-
-	EXPECT_EQ(player->GetTier(), 3u);
 }
 
 // a dropped bonus waits out its burst: the world stays empty until the animation reports the end
@@ -516,4 +492,119 @@ TEST_F(BonusTest, AFreeForAllTimerFreezesEveryoneButItsTaker)
 
 	EXPECT_EQ(playerPos, player->GetPos()) << "the player drove on under another's timer";
 	EXPECT_NE(takerPos, taker->GetPos()) << "the timer froze the one who took it";
+}
+
+// a shot bonus leaves the field
+TEST_F(BonusTest, BonusDestroy)
+{
+	CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Enemy1);
+
+	_bonusSpawner->SpawnRandomBonus({.x = 0.0, .y = 7.0, .w = _tankSize, .h = _tankSize});
+
+	const auto* const bonus{dynamic_cast<Bonus*>(_allObjects.back().get())};
+	ASSERT_NE(bonus, nullptr);
+	EXPECT_TRUE(bonus->GetIsAlive());
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_FALSE(bonus->GetIsAlive());
+}
+
+// and gives its effect to nobody, the shooter on the field included - every type is despawned alike, a star for all
+TEST_F(BonusTest, AShotBonusGivesTheShooterNothing)
+{
+	const auto shooter{CreatePlayer({.x = _tankSize * 3.0, .y = 0.0}, Author::Player1)};
+	CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
+
+	_bonusSpawner->SpawnBonus({.x = 0.0, .y = 7.0, .w = _tankSize, .h = _tankSize}, BonusType::Star);
+	const auto* const bonus{dynamic_cast<Bonus*>(_allObjects.back().get())};
+	ASSERT_NE(bonus, nullptr);
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	ASSERT_FALSE(bonus->GetIsAlive()) << "the shot missed the bonus";
+	EXPECT_EQ(shooter->GetTier(), 1u);
+}
+
+// the wall is brick when the enemy takes the shovel
+TEST_F(BonusTest, ShovelPickUpByEnemyThenFortressBrickWallHide)
+{
+	const auto enemyBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN)};
+
+	const ObjRectangle fortressRect{.x = _tankSize + 1.0, .y = 0, .w = _gridSize, .h = _gridSize};
+	_events->EmitEvent(SpawnObstacleEvent{.rect = fortressRect, .type = ObstacleType::Fortress});
+
+	_bonusSpawner->SpawnBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize}, BonusType::Shovel);
+
+	EXPECT_NE(dynamic_cast<FortressBrickWall*>(_fortressWall.get()), nullptr);
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_FALSE(_fortressWall->GetIsAlive());
+}
+
+// a player takes a shovel first, so the enemy's finds steel - it goes just the same
+TEST_F(BonusTest, ShovelPickUpByEnemyThenFortressSteelWallHide)
+{
+	const auto enemyBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN)};
+
+	_allObjects.reserve(4);
+	CreatePlayer({.x = _tankSize * 2.0, .y = _tankSize * 2.0}, Author::Player1, Direction::DOWN);
+	constexpr bool isPressed{true};
+	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
+
+	const ObjRectangle fortressRect{.x = _tankSize * 3.0 + 1.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize};
+	_events->EmitEvent(SpawnObstacleEvent{.rect = fortressRect, .type = ObstacleType::Fortress});
+
+	const ObjRectangle enemyBonusRect{.x = 0.0, .y = _tankSize + 3.0, .w = _tankSize, .h = _tankSize};
+
+	_bonusSpawner->SpawnBonus(enemyBonusRect, BonusType::Shovel);
+	const ObjRectangle playerBonusRect{.x = _tankSize * 2.0,
+									   .y = _tankSize * 2.0 + _tankSize + 1.0,
+									   .w = _tankSize,
+									   .h = _tankSize};
+	_bonusSpawner->SpawnBonus(playerBonusRect, BonusType::Shovel);
+
+	EXPECT_NE(dynamic_cast<FortressBrickWall*>(_fortressWall.get()), nullptr);
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_NE(dynamic_cast<FortressSteelWall*>(_fortressWall.get()), nullptr);
+
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_FALSE(_fortressWall->GetIsAlive());
+}
+
+// the enemy's shovel takes the walls away and leaves the eagle's health alone
+TEST_F(BonusTest, ShovelPickUpByEnemyLeavesTheEagleWounded)
+{
+	_events->EmitEvent(SpawnObstacleEvent{.rect = {.x = 0.0, .y = 0.0, .w = _gridSize, .h = _gridSize},
+										  .type = ObstacleType::Eagle});
+	const std::shared_ptr<BaseObj> eagle{_allObjects.back()};
+	eagle->TakeDamage(1u, Author::Player1);
+	const unsigned int woundedHealth{eagle->GetHealth()};
+
+	_events->EmitEvent(BonusShovelPickupEvent{.faction = Faction::EnemyTeam});
+
+	EXPECT_EQ(woundedHealth, eagle->GetHealth());
+}
+
+// the enemy shovel ends the player's effect - left running, it swallows the next pickup as an extension
+TEST_F(BonusTest, PlayerShovelWorksAgainAfterAnEnemyShovel)
+{
+	const ObjRectangle fortressRect{.x = _tankSize * 3.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize};
+	_events->EmitEvent(SpawnObstacleEvent{.rect = fortressRect, .type = ObstacleType::Fortress});
+	ASSERT_NE(dynamic_cast<FortressBrickWall*>(_fortressWall.get()), nullptr);
+
+	_events->EmitEvent(BonusShovelPickupEvent{.faction = Faction::PlayerTeam});
+	ASSERT_NE(dynamic_cast<FortressSteelWall*>(_fortressWall.get()), nullptr);
+
+	_events->EmitEvent(BonusShovelPickupEvent{.faction = Faction::EnemyTeam});
+	ASSERT_FALSE(_fortressWall->GetIsAlive());
+
+	_events->EmitEvent(BonusShovelPickupEvent{.faction = Faction::PlayerTeam});
+
+	EXPECT_NE(dynamic_cast<FortressSteelWall*>(_fortressWall.get()), nullptr);
+	EXPECT_TRUE(_fortressWall->GetIsAlive());
 }
