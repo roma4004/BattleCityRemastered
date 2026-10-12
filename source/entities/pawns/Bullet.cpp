@@ -62,7 +62,7 @@ void Bullet::OnDespawned(const DespawnedEvent& event)
 
 std::optional<Sprite> Bullet::Look() const
 {
-	return Sprite{.layer = kLayer, .rect = _rect, .dir = _dir, .texture = TextureType::Bullet};
+	return Sprite{.rect = _rect, .layer = kLayer, .dir = _dir, .texture = TextureType::Bullet};
 }
 
 Uuid Bullet::GetUuid() const

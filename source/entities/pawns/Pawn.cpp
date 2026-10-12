@@ -13,10 +13,10 @@ Pawn::Pawn(PawnProperty pawnProperty, const GameConfig& gameConfig, const Collis
 	: BaseObj{pawnProperty.baseObjProperty, collision}
 	, _speed{pawnProperty.speed}
 	, _tier{pawnProperty.tier}
-	, _allObjects{pawnProperty.allObjects}
-	, _events{std::move(pawnProperty.events)}
 	, _dir{pawnProperty.dir}
 	, _author{pawnProperty.author}
+	, _allObjects{pawnProperty.allObjects}
+	, _events{std::move(pawnProperty.events)}
 	, _gameConfig{gameConfig}
 {
 	if (_uuid == UuidUtils::GetNilUuid())

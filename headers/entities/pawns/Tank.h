@@ -126,6 +126,8 @@ class Tank final : public Pawn
 	void OnBonusShip();
 
 protected:
+	BonusEffectProperty _effects{};
+	unsigned int _trackSteps{};
 	BulletCaliber _caliber{};
 	Timer _shootTimer{};
 
@@ -135,9 +137,6 @@ protected:
 
 	void Subscribe() override;
 	void TickUpdate(double deltaTime) override;
-
-	BonusEffectProperty _effects{};
-	unsigned int _trackSteps{};
 
 	void Shot();
 

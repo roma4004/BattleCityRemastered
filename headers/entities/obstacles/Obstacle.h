@@ -32,10 +32,10 @@ protected:
 	//NOTE: empty, not pure - only the eagle has something to hear
 	virtual void Subscribe();
 	virtual void OnDespawned(const DespawnedEvent& event);
+	ObstacleType _obstacleType{};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
 	const GameConfig& _gameConfig;
-	ObstacleType _obstacleType{};
 
 	void EmitDeathStatistics(Author author) override = 0;
 

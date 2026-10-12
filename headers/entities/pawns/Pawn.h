@@ -43,11 +43,11 @@ public:
 protected:
 	double _speed{};
 	unsigned short _tier{1u};
+	Direction _dir{};
+	Author _author{};
 	const std::vector<std::shared_ptr<BaseObj>>& _allObjects;
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::unique_ptr<IMoveBeh> _moveBeh{nullptr};
-	Direction _dir{};
-	Author _author{};
 	const GameConfig& _gameConfig;
 
 	std::vector<EventSubscription> _subs{};

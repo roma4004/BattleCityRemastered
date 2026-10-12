@@ -208,8 +208,8 @@ namespace
 
 std::optional<Sprite> Bonus::Look() const
 {
-	return Sprite{.layer = kLayer,
-				  .rect = _rect,
+	return Sprite{.rect = _rect,
+				  .layer = kLayer,
 				  .dir = Direction::UP,
 				  .texture = TextureOf(_bonusType),
 				  .rimColor = _isSuper ? SuperRimColor() : 0u};

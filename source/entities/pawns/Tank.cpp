@@ -174,8 +174,8 @@ std::optional<Sprite> Tank::Look() const
 	constexpr unsigned int stepsPerFrame{2u};
 	constexpr unsigned int frames{2u};
 
-	return Sprite{.layer = DrawLayer::World,
-				  .rect = _rect,
+	return Sprite{.rect = _rect,
+				  .layer = DrawLayer::World,
 				  .dir = _dir,
 				  .texture = TextureType::Tank,
 				  .author = _author,
@@ -196,8 +196,8 @@ std::optional<Sprite> Tank::Cover() const
 	constexpr long long frames{2};
 	const long long shimmer{TimeUtils::Now().time_since_epoch() / shimmerStep};
 
-	return Sprite{.layer = DrawLayer::Effects,
-				  .rect = _rect,
+	return Sprite{.rect = _rect,
+				  .layer = DrawLayer::Effects,
 				  .texture = TextureType::Helmet,
 				  .frame = static_cast<int>(shimmer % frames)};
 }

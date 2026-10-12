@@ -50,9 +50,9 @@ Obstacle::Obstacle(const ObjRectangle rect, const unsigned int health, const std
 	: BaseObj{BaseObjProperty{.rect = rect, .health = health, .uuid = uuid, .faction = Faction::Neutral},
 			  collision}
 	, _layer{layer}
+	, _obstacleType(obstacleType)
 	, _events(events)
 	, _gameConfig{gameConfig}
-	, _obstacleType(obstacleType)
 {}
 
 void Obstacle::Activate()
@@ -95,7 +95,7 @@ void Obstacle::OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event
 
 std::optional<Sprite> Obstacle::Look() const
 {
-	return Sprite{.layer = _layer, .rect = _rect, .dir = Direction::UP, .texture = TextureOf(_obstacleType)};
+	return Sprite{.rect = _rect, .layer = _layer, .dir = Direction::UP, .texture = TextureOf(_obstacleType)};
 }
 
 void Obstacle::TakeDamage(const unsigned int damage, const Author author)
