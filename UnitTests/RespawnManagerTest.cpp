@@ -21,10 +21,12 @@
 #include "utils/UuidUtils.h"
 #include "gtest/gtest.h"
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <memory>
 #include <optional>
 #include <ranges>
+#include <tuple>
 #include <vector>
 
 // who is owed a respawn and how many lives are left: a death is announced and the counter of that seat is read
@@ -104,238 +106,70 @@ TEST_F(RespawnManagerTest, FewerEnemiesThanSeatsFillNoMoreSeatsThanThereAre)
 	EXPECT_EQ(enemiesSent, 2u);
 }
 
-// a dead bot takes one off the enemy team's count
-TEST_F(RespawnManagerTest, EnemyDiedRespawnCount)
+// a death takes one off its own group - the enemy team's count, or the seat's
+TEST_F(RespawnManagerTest, ADeathTakesALifeOffItsGroup)
 {
-	constexpr unsigned short respawnOriginal{20u};
-	unsigned short respawnActual{20u};
-	auto respawnSub{_events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
+	constexpr std::array kGroups{std::tuple{RespawnGroup::ENEMY_ALL, GameMode::OnePlayer, 20u},
+								 std::tuple{RespawnGroup::PLAYER1, GameMode::OnePlayer, 3u},
+								 std::tuple{RespawnGroup::PLAYER2, GameMode::TwoPlayers, 3u}};
+	for (const auto& [group, mode, lives]: kGroups)
 	{
-		if (event.group == RespawnGroup::ENEMY_ALL)
-		{
-			respawnActual = event.respawnCount;
-		}
-	})};
+		SCOPED_TRACE(static_cast<int>(group));
+		unsigned int livesLeft{lives};
+		const EventSubscription livesSub{_events->AddListener(
+				[&livesLeft, group](const RespawnCountChangedToEvent& event)
+				{
+					if (event.group == group)
+					{
+						livesLeft = event.respawnCount;
+					}
+				})};
+		_allObjects.clear();
+		TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, mode, _respawnManager, _tankSpawner);
+		_events->EmitEvent(GameResetEvent{});
 
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
-	_events->EmitEvent(GameResetEvent{});
-	_events->EmitEvent(RespawnTanksEvent{});
-	_events->EmitEvent(TankDiedEvent{.uuid = _allObjects.back()->GetUuid()});
-	_allObjects.pop_back();
-
-	EXPECT_GT(respawnOriginal, respawnActual);
-
-}
-
-// a dead player one off its own
-TEST_F(RespawnManagerTest, PlayerOneDiedRespawnCount)
-{
-	constexpr unsigned short respawnOriginal{3u};
-	unsigned short respawnActual{3u};
-	auto respawnSub{_events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
-	{
-		if (event.group == RespawnGroup::PLAYER1)
-		{
-			respawnActual = event.respawnCount;
-		}
-	})};
-
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
-	_events->EmitEvent(GameResetEvent{});
-	_events->EmitEvent(RespawnTanksEvent{});
-	_events->EmitEvent(TankDiedEvent{.uuid = _allObjects.back()->GetUuid()});
-	_allObjects.pop_back();
-
-	EXPECT_GT(respawnOriginal, respawnActual);
-
-}
-
-// and player two off the second seat's
-TEST_F(RespawnManagerTest, PlayerTwoDiedRespawnCount)
-{
-	constexpr unsigned short respawnOriginal{3u};
-	unsigned short respawnActual{3u};
-	auto respawnSub{_events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
-	{
-		if (event.group == RespawnGroup::PLAYER2)
-		{
-			respawnActual = event.respawnCount;
-		}
-	})};
-
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::TwoPlayers, _respawnManager, _tankSpawner);
-	_events->EmitEvent(GameResetEvent{});
-	_events->EmitEvent(RespawnTanksEvent{});
-	_events->EmitEvent(TankDiedEvent{.uuid = _allObjects.back()->GetUuid()});
-	_allObjects.pop_back();
-
-	EXPECT_GT(respawnOriginal, respawnActual);
-
-}
-
-// spending the last enemy life empties the count
-TEST_F(RespawnManagerTest, EnemyRunOutRespawnPoints)
-{
-	constexpr unsigned short respawnOriginal{20u};
-	unsigned short respawnActual{20u};
-	auto respawnSub{_events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
-	{
-		if (event.group == RespawnGroup::ENEMY_ALL)
-		{
-			respawnActual = event.respawnCount;
-		}
-	})};
-
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
-	_events->EmitEvent(GameResetEvent{});
-	for (unsigned short i = 0u; i < respawnOriginal; ++i)
-	{
 		_events->EmitEvent(RespawnTanksEvent{});
 		_events->EmitEvent(TankDiedEvent{.uuid = _allObjects.back()->GetUuid()});
 		_allObjects.pop_back();
+
+		EXPECT_GT(lives, livesLeft);
 	}
-
-	EXPECT_EQ(0u, respawnActual);
-
 }
 
-// the same for player one
-TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPoints)
+// dying past the last life leaves the count at nothing rather than wrapping around
+TEST_F(RespawnManagerTest, RunningOutOfLivesStopsAtNothing)
 {
-	constexpr unsigned short respawnOriginal{3u};
-	unsigned short respawnActual{3u};
-	auto respawnSub{_events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
+	constexpr std::array kGroups{std::tuple{RespawnGroup::ENEMY_ALL, GameMode::OnePlayer, 20u},
+								 std::tuple{RespawnGroup::PLAYER1, GameMode::OnePlayer, 3u},
+								 std::tuple{RespawnGroup::PLAYER2, GameMode::TwoPlayers, 3u}};
+	for (const auto& [group, mode, lives]: kGroups)
 	{
-		if (event.group == RespawnGroup::PLAYER1)
-		{
-			respawnActual = event.respawnCount;
-		}
-	})};
+		SCOPED_TRACE(static_cast<int>(group));
+		unsigned int livesLeft{lives};
+		const EventSubscription livesSub{_events->AddListener(
+				[&livesLeft, group](const RespawnCountChangedToEvent& event)
+				{
+					if (event.group == group)
+					{
+						livesLeft = event.respawnCount;
+					}
+				})};
+		_allObjects.clear();
+		TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, mode, _respawnManager, _tankSpawner);
+		_events->EmitEvent(GameResetEvent{});
 
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
-	_events->EmitEvent(GameResetEvent{});
-	for (unsigned short i = 0u; i < respawnOriginal; ++i)
-	{
-		_events->EmitEvent(RespawnTanksEvent{});
-		_events->EmitEvent(TankDiedEvent{.uuid = _allObjects.back()->GetUuid()});
-		_allObjects.pop_back();
+		for (unsigned int death{}; death <= lives; ++death)
+		{
+			_events->EmitEvent(RespawnTanksEvent{});
+			if (!_allObjects.empty())
+			{
+				_events->EmitEvent(TankDiedEvent{.uuid = _allObjects.back()->GetUuid()});
+				_allObjects.pop_back();
+			}
+		}
+
+		EXPECT_EQ(0u, livesLeft);
 	}
-
-	EXPECT_EQ(0u, respawnActual);
-
-}
-
-// and for player two
-TEST_F(RespawnManagerTest, PlayerTwoRunOutRespawnPoints)
-{
-	constexpr unsigned short respawnOriginal{3u};
-	unsigned short respawnActual{3u};
-	auto respawnSub{_events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
-	{
-		if (event.group == RespawnGroup::PLAYER2)
-		{
-			respawnActual = event.respawnCount;
-		}
-	})};
-
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::TwoPlayers, _respawnManager, _tankSpawner);
-	_events->EmitEvent(GameResetEvent{});
-	for (unsigned short i = 0u; i < respawnOriginal; ++i)
-	{
-		_events->EmitEvent(RespawnTanksEvent{});
-		_events->EmitEvent(TankDiedEvent{.uuid = _allObjects.back()->GetUuid()});
-		_allObjects.pop_back();
-	}
-
-	EXPECT_EQ(0u, respawnActual);
-
-}
-
-// dying again past that leaves the count at nothing rather than wrapping around
-TEST_F(RespawnManagerTest, EnemyRunOutRespawnPointsAndTryMore)
-{
-	constexpr unsigned short respawnOriginal{21u};
-	unsigned short respawnActual{21u};
-	auto respawnSub{_events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
-	{
-		if (event.group == RespawnGroup::ENEMY_ALL)
-		{
-			respawnActual = event.respawnCount;
-		}
-	})};
-
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
-	_events->EmitEvent(GameResetEvent{});
-	for (unsigned short i = 0u; i < respawnOriginal; ++i)
-	{
-		_events->EmitEvent(RespawnTanksEvent{});
-		if (!_allObjects.empty())
-		{
-			_events->EmitEvent(TankDiedEvent{.uuid = _allObjects.back()->GetUuid()});
-			_allObjects.pop_back();
-		}
-	}
-
-	EXPECT_EQ(0u, respawnActual);
-
-}
-
-// the same for the first seat
-TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPointsAndTryMore)
-{
-	constexpr unsigned short respawnOriginal{4u};
-	unsigned short respawnActual{3u};
-	auto respawnSub{_events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
-	{
-		if (event.group == RespawnGroup::PLAYER1)
-		{
-			respawnActual = event.respawnCount;
-		}
-	})};
-
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
-	_events->EmitEvent(GameResetEvent{});
-	for (unsigned short i = 0u; i < respawnOriginal; ++i)
-	{
-		_events->EmitEvent(RespawnTanksEvent{});
-		if (!_allObjects.empty())
-		{
-			_events->EmitEvent(TankDiedEvent{.uuid = _allObjects.back()->GetUuid()});
-			_allObjects.pop_back();
-		}
-	}
-
-	EXPECT_EQ(0u, respawnActual);
-
-}
-
-// and for the second
-TEST_F(RespawnManagerTest, PlayerTwoRunOutRespawnPointsAndTryMore)
-{
-	constexpr unsigned short respawnOriginal{4u};
-	unsigned short respawnActual{3u};
-	auto respawnSub{_events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
-	{
-		if (event.group == RespawnGroup::PLAYER2)
-		{
-			respawnActual = event.respawnCount;
-		}
-	})};
-
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::TwoPlayers, _respawnManager, _tankSpawner);
-	_events->EmitEvent(GameResetEvent{});
-	for (unsigned short i = 0u; i < respawnOriginal; ++i)
-	{
-		_events->EmitEvent(RespawnTanksEvent{});
-		if (!_allObjects.empty())
-		{
-			_events->EmitEvent(TankDiedEvent{.uuid = _allObjects.back()->GetUuid()});
-			_allObjects.pop_back();
-		}
-	}
-
-	EXPECT_EQ(0u, respawnActual);
-
 }
 
 // 2P free-for-all is won by the last player standing, not by clearing the bots

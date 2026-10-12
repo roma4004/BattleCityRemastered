@@ -35,5 +35,3 @@ void TimeUtils::SetPaused(const bool isPaused)
 		gameClock.pausedTotal += clock::now() - gameClock.pauseStartedAt;
 	}
 }
-
-bool TimeUtils::IsPaused() noexcept { return gameClock.isPaused; }

@@ -47,7 +47,7 @@ struct AnimationCreateBulletExplosionEvent
 struct RenderHealthBarEvent
 {
 	ObjRectangle rect;
-	int health;
+	unsigned int health;
 };
 
 struct RenderTextureEvent

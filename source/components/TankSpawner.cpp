@@ -416,7 +416,7 @@ TankSpawner::NextLevelLoadout TankSpawner::LoadoutOf(const TankType type) const
 
 //NOTE: the tier and the health ride in with the reset property, the ship is a pickup nobody picked up - and
 //the client hears none of it, so the host says it out loud once the tank is there
-void TankSpawner::SpendLoadout(const Uuid uuid, const TankType type, const int health)
+void TankSpawner::SpendLoadout(const Uuid uuid, const TankType type, const unsigned int health)
 {
 	const auto found{std::ranges::find(_nextLevelLoadouts, type, &NextLevelLoadout::type)};
 	if (found == _nextLevelLoadouts.end())
@@ -671,7 +671,7 @@ void TankSpawner::DelayedSpawnStart(const ObjRectangle rect, const Uuid uuid, co
 {
 	const NextLevelLoadout loadout{LoadoutOf(type)};
 	//NOTE: a wounded tank starts the level whole, a healed one keeps what it gained above that
-	const int health{std::max(loadout.health, HealthOf(model, _gameConfig.tankHealth))};
+	const unsigned int health{std::max(loadout.health, HealthOf(model, _gameConfig.tankHealth))};
 	_delayedSpawns.push_back(DelayedTankSpawn{.uuid = uuid,
 											  .type = type,
 											  .model = model,

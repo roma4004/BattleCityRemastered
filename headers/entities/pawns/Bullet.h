@@ -30,7 +30,7 @@ class Bullet final : public Pawn
 	void Reset(const BulletResetProperty& resetProperty);
 	void OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const;
 	[[nodiscard]] bool CanBreak(const BaseObj& target) const noexcept;
-	[[nodiscard]] bool SinkIntoWall(double deltaTime, const std::vector<BaseObj*>& blast);
+	[[nodiscard]] bool PenetrateWall(double deltaTime, const std::vector<BaseObj*>& blast);
 	//NOTE: whether it met another shell - one that did is spent by the meeting, not burnt out by itself
 	[[nodiscard]] bool Blast(const std::vector<BaseObj*>& objectList);
 

@@ -21,8 +21,7 @@
 #include <memory>
 #include <vector>
 
-//NOTE: a dead object is still in _allObjects until PostTickUpdate, so within one tick everything
-//walking the container meets corpses - these check that nothing acts on one twice
+//NOTE: a dead object stays in _allObjects until PostTickUpdate - nothing may act on a corpse twice
 class DeadObjectFilterTest : public testing::Test// NOLINT(clang-diagnostic-padded)
 {
 protected:
@@ -38,7 +37,7 @@ protected:
 	Uuid _uuid{};
 	double _tankSize{};
 	double _deltaTimeOneFrame{1.0 / 60.0};
-	int _tankHealth{1};
+	unsigned int _tankHealth{1};
 	EventSubscription _spawnQueueSub{};
 
 	void SetUp() override
@@ -55,7 +54,8 @@ protected:
 		_allObjects.reserve(8);
 	}
 
-	std::shared_ptr<Tank> CreatePlayer(const FPoint pos, const Author author, const Direction dir, const int health)
+	std::shared_ptr<Tank> CreatePlayer(const FPoint pos, const Author author, const Direction dir,
+									   const unsigned int health)
 	{
 		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _gameConfig.tankSize, .h = _gameConfig.tankSize};
 		auto player{TestUtils::CreatePlayer(rect, health, author, _allObjects, _events, dir, _tankPool, _gameConfig)};
@@ -78,8 +78,7 @@ protected:
 	}
 };
 
-// two players step onto the same bonus in one tick: it dies once and reports a single pickup, not
-// one per tank that reached it
+// two players step onto one bonus in the same tick: it dies once and reports a single pickup
 TEST_F(DeadObjectFilterTest, BonusIsPickedUpOncePerFrame)
 {
 	int pickups{};
@@ -106,8 +105,7 @@ TEST_F(DeadObjectFilterTest, BonusIsPickedUpOncePerFrame)
 	EXPECT_EQ(1, pickups);
 }
 
-// a one-cell wall takes a bullet from each side in the same tick: one death event, health stops at
-// zero instead of going negative
+// a one-cell wall hit from both sides in one tick: one death event, health stops at zero
 TEST_F(DeadObjectFilterTest, BrickWallHitByTwoBulletsDiesOnce)
 {
 	int deaths{};
@@ -115,7 +113,7 @@ TEST_F(DeadObjectFilterTest, BrickWallHitByTwoBulletsDiesOnce)
 
 	const double cell{_gameConfig.gridOffset};
 	const auto wall{SpawnObstacle(FPoint{.x = 100.0, .y = 100.0}, ObstacleType::Brick)};
-	_caliber.damage = static_cast<unsigned int>(wall->GetHealth());
+	_caliber.damage = wall->GetHealth();
 
 	CreateBullet({.x = 100.0 - _caliber.size.x, .y = 103.0}, Direction::RIGHT, Author::Player1);
 	CreateBullet({.x = 100.0 + cell, .y = 103.0}, Direction::LEFT, Author::Player1);
@@ -123,12 +121,11 @@ TEST_F(DeadObjectFilterTest, BrickWallHitByTwoBulletsDiesOnce)
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_FALSE(wall->GetIsAlive());
-	EXPECT_EQ(0, wall->GetHealth());
+	EXPECT_EQ(0u, wall->GetHealth());
 	EXPECT_EQ(1, deaths);
 }
 
-// two enemy bullets reach a one-health player in the same tick: he dies once, the second bullet finds
-// a corpse and is not counted
+// two enemy bullets reach a one-health player in one tick: one death, the second bullet finds a corpse
 TEST_F(DeadObjectFilterTest, TankKilledThisFrameTakesNoSecondHit)
 {
 	int deaths{};
@@ -142,6 +139,6 @@ TEST_F(DeadObjectFilterTest, TankKilledThisFrameTakesNoSecondHit)
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_FALSE(player->GetIsAlive());
-	EXPECT_EQ(0, player->GetHealth());
+	EXPECT_EQ(0u, player->GetHealth());
 	EXPECT_EQ(1, deaths);
 }

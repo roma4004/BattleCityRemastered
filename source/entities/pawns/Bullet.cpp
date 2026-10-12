@@ -90,7 +90,7 @@ void Bullet::TickUpdate(const double deltaTime)
 {
 	std::vector<BaseObj*> outCollisions;
 	const bool isMove{_moveBeh->Move(_dir, deltaTime, _allObjects, outCollisions)};
-	if (!isMove && !SinkIntoWall(deltaTime, outCollisions))
+	if (!isMove && !PenetrateWall(deltaTime, outCollisions))
 	{
 		DealDamage(outCollisions);
 		outCollisions.clear();
@@ -114,8 +114,13 @@ unsigned int Bullet::GetTier() const noexcept { return _caliber.tier; }
 bool Bullet::CanBreak(const BaseObj& target) const noexcept { return target.GetIsDestructible() || _caliber.tier > 2u; }
 
 //NOTE: a layer of wall costs the shell its toughest quarter, and a shell that cannot pay detonates against it
-bool Bullet::SinkIntoWall(const double deltaTime, const std::vector<BaseObj*>& blast)
+bool Bullet::PenetrateWall(const double deltaTime, const std::vector<BaseObj*>& blast)
 {
+	if (!_caliber.penetratesWalls)
+	{
+		return false;
+	}
+
 	const std::vector<BaseObj*> contacts{_bulletMoveBeh->GetContacts(_dir, deltaTime, _allObjects)};
 	const bool isWall{!contacts.empty() && std::ranges::all_of(contacts, [this](const BaseObj* const contact)
 	{
@@ -126,13 +131,13 @@ bool Bullet::SinkIntoWall(const double deltaTime, const std::vector<BaseObj*>& b
 		return false;
 	}
 
-	const int cost{std::ranges::max(contacts | std::views::transform(&BaseObj::GetHealth))};
+	const unsigned int cost{std::ranges::max(contacts | std::views::transform(&BaseObj::GetHealth))};
 	if (GetHealth() <= cost)
 	{
 		return false;
 	}
 
-	TakeDamage(static_cast<unsigned int>(cost), Author::None);
+	TakeDamage(cost, Author::None);
 	//NOTE: the whole blast and not a shell-wide slot - one shot has to leave a hole the shooter fits through
 	std::ignore = Blast(blast);
 	//NOTE: a shell met inside the wall may have finished this one - it goes off where it stopped all the same
@@ -150,7 +155,7 @@ void Bullet::DealDamage(const std::vector<BaseObj*>& objectList)
 	{
 		//NOTE: burns itself out where it stopped; BaseObj's skips Pawn's HealthChangedEvent, and nobody
 		//shot it down, so no hit goes out with it
-		BaseObj::TakeDamage(static_cast<unsigned int>(GetHealth()), _author);
+		BaseObj::TakeDamage(GetHealth(), _author);
 	}
 
 	_events->EmitEvent(AnimationCreateBulletExplosionEvent{.rect = _rect});
@@ -172,12 +177,14 @@ bool Bullet::Blast(const std::vector<BaseObj*>& objectList)
 			continue;
 		}
 
+		const auto* otherBullet{ObjectUtils::AsBullet(*target)};
+		//NOTE: shells meet with their whole stock - the damage is the one a tank takes
+		const unsigned int hit{otherBullet == nullptr ? _caliber.damage : _caliber.health};
 		if (CanBreak(*target))
 		{
-			target->TakeDamage(_caliber.damage, _author);
+			target->TakeDamage(hit, _author);
 		}
 
-		const auto* otherBullet{ObjectUtils::AsBullet(*target)};
 		if (otherBullet == nullptr)
 		{
 			continue;
@@ -186,7 +193,7 @@ bool Bullet::Blast(const std::vector<BaseObj*>& objectList)
 		isBulletHitBullet = true;
 		//NOTE: this one was shot down just as much as it shot the other down - a hit each
 		_events->EmitEvent(StatisticsBulletHitEvent{.author = otherBullet->GetAuthor()});
-		TakeDamage(otherBullet->GetDamage(), otherBullet->GetAuthor());
+		TakeDamage(otherBullet->_caliber.health, otherBullet->GetAuthor());
 	}
 
 	//NOTE: the counter is about bullets meeting bullets - a wall, a tank and the edge of the field are

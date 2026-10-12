@@ -330,19 +330,27 @@ constexpr auto kCaretBlink{1060ms};
 {
 	return servers - std::min(servers, kListRows);
 }
-//TEMP: fake servers for a visual check of the scrolled list, after the real ones - not for commit
+
+//NOTE: a debugging switch - made-up servers after the real ones, a scrolled list without a LAN full of hosts
+constexpr bool kAreFakeServersShown{false};
+
 std::vector<network::FoundServer> FakeServers()
 {
-	constexpr MatchRules ffa{MatchRules::FreeForAll};
-	return {{.address = {.host = "255.255.255.255", .port = 65535}, .seats = 2, .freeSeats = 1},
-			{.address = {.host = "172.16.254.1", .port = 65535}, .seats = 4, .freeSeats = 4, .rules = ffa},
-			{.address = {.host = "192.168.0.10", .port = 50001}, .seats = 2, .freeSeats = 2},
-			{.address = {.host = "255.255.255.254", .port = 65534}, .seats = 2, .freeSeats = 0},
-			{.address = {.host = "10.20.30.40", .port = 65535}, .seats = 3, .freeSeats = 1, .rules = ffa},
-			{.address = {.host = "255.255.255.253", .port = 65534}, .seats = 4, .freeSeats = 0, .rules = ffa},
-			{.address = {.host = "10.0.0.6", .port = 4001}, .seats = 2, .freeSeats = 0},
-			{.address = {.host = "192.168.100.200", .port = 5000}, .seats = 4, .freeSeats = 2},
-			{.address = {.host = "192.168.0.14", .port = 50005}, .seats = 2, .freeSeats = 1}};
+	if constexpr (kAreFakeServersShown)
+	{
+		constexpr MatchRules ffa{MatchRules::FreeForAll};
+		return {{.address = {.host = "255.255.255.255", .port = 65535}, .seats = 2, .freeSeats = 1},
+				{.address = {.host = "172.16.254.1", .port = 65535}, .seats = 4, .freeSeats = 4, .rules = ffa},
+				{.address = {.host = "192.168.0.10", .port = 50001}, .seats = 2, .freeSeats = 2},
+				{.address = {.host = "255.255.255.254", .port = 65534}, .seats = 2, .freeSeats = 0},
+				{.address = {.host = "10.20.30.40", .port = 65535}, .seats = 3, .freeSeats = 1, .rules = ffa},
+				{.address = {.host = "255.255.255.253", .port = 65534}, .seats = 4, .freeSeats = 0, .rules = ffa},
+				{.address = {.host = "10.0.0.6", .port = 4001}, .seats = 2, .freeSeats = 0},
+				{.address = {.host = "192.168.100.200", .port = 5000}, .seats = 4, .freeSeats = 2},
+				{.address = {.host = "192.168.0.14", .port = 50005}, .seats = 2, .freeSeats = 1}};
+	}
+
+	return {};
 }
 }//namespace
 
@@ -416,7 +424,7 @@ void ServerScreen::Open(const GameMode mode)
 	_ownIPv6.CaretToStart();
 
 	PickFirst();
-	_servers = Ordered(FakeServers()); //TEMP
+	_servers = Ordered(FakeServers());
 
 	_openSubs.push_back(_events->AddListener(this, &ServerScreen::OnPreTickUpdate));
 	_openSubs.push_back(_events->AddListener(this, &ServerScreen::OnTextTyped));
@@ -482,9 +490,9 @@ void ServerScreen::OnPreTickUpdate(const PreTickUpdateEvent&)
 		return;
 	}
 
-	const bool wasEmpty{_servers.size() == FakeServers().size()}; //TEMP: _servers.empty()
+	const bool wasEmpty{_servers.size() == FakeServers().size()};
 	std::vector<network::FoundServer> servers{_scan->Servers()};
-	std::ranges::copy(FakeServers(), std::back_inserter(servers)); //TEMP
+	std::ranges::copy(FakeServers(), std::back_inserter(servers));
 	Arrange(std::move(servers));
 	//NOTE: the first servers found take the focus they would have had at opening, unless it has moved since
 	if (wasEmpty && _focus == Item{.line = Line::IPv4} && _ipv4.IsCaretAtStart())

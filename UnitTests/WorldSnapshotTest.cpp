@@ -175,8 +175,7 @@ TEST_F(WorldSnapshotTest, ThePhaseComesFromTheHost)
 	EXPECT_EQ(_clientStateManager->GetState(), GameState::Playing);
 }
 
-// A client never opens the map file, so the snapshot is the only thing that can tell it how wide the
-// field is - and a client that guesses draws the map over its own side bar
+// a client never opens the map file - only the snapshot tells it the field's width, or it draws over its side bar
 TEST_F(WorldSnapshotTest, TheFieldsSizeComesFromTheHost)
 {
 	_serverEvents->EmitEvent(MapLoadedEvent{.cols = 61u, .rows = 50u});
@@ -213,7 +212,7 @@ TEST_F(WorldSnapshotTest, AWallDestroyedOnTheHostIsNotRebuiltOnTheClient)
 											  .type = ObstacleType::Steel});
 	const std::shared_ptr<BaseObj> shot{_hostObjects.at(_hostObjects.size() - 2u)};
 	const std::shared_ptr<BaseObj> standing{_hostObjects.back()};
-	shot->TakeDamage(static_cast<unsigned int>(shot->GetHealth()), Author::Player1);
+	shot->TakeDamage(shot->GetHealth(), Author::Player1);
 	_serverEvents->EmitEvent(PostTickUpdateEvent{});
 
 	Replicate();

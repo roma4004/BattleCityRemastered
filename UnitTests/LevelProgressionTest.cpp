@@ -98,8 +98,7 @@ TEST(LevelRotationTest, AnEmptyFolderLeavesTheLevelAsItIs)
 	EXPECT_EQ(rotation.PathAfter(maps.PathOf("level1")), maps.PathOf("level1"));
 }
 
-// a won map hands the player on to the next one: the tier its stars earned and the lives it has left
-// ride along, while the enemies and their count are the new map's own
+// a won map hands the player on: tier and lives left ride along, the enemies and their count are the new map's
 class LevelProgressionTest : public testing::Test
 {
 protected:
@@ -137,8 +136,7 @@ protected:
 		StartMatch(GameResetEvent{});
 	}
 
-	//NOTE: the world is swept by SpawnManager in the game and by hand here - what is left over would
-	//answer the search for the tank the new level spawned
+	//NOTE: swept by hand here, by SpawnManager in the game - leftovers would answer the search for the new tank
 	void StartMatch(const GameResetEvent& reset)
 	{
 		_events->EmitEvent(reset);
@@ -222,7 +220,7 @@ TEST_F(LevelProgressionTest, TheLoadoutIsSpentOnTheFirstSpawnOfTheLevel)
 // the health rides along as well - whatever the bonuses healed above the spawn health is kept
 TEST_F(LevelProgressionTest, TheHealthRidesOnToTheNextLevel)
 {
-	const int spawnHealth{PlayerOne()->GetHealth()};
+	const unsigned int spawnHealth{PlayerOne()->GetHealth()};
 	PlayerOne()->Heal(1);
 
 	_events->EmitEvent(NextLevelRequestedEvent{});
@@ -235,7 +233,7 @@ TEST_F(LevelProgressionTest, TheHealthRidesOnToTheNextLevel)
 // but never less than that: a wounded tank starts the next level whole
 TEST_F(LevelProgressionTest, AWoundedTankStartsTheNextLevelWhole)
 {
-	const int spawnHealth{PlayerOne()->GetHealth()};
+	const unsigned int spawnHealth{PlayerOne()->GetHealth()};
 	PlayerOne()->TakeDamage(1u, Author::Enemy1);
 
 	_events->EmitEvent(NextLevelRequestedEvent{});
@@ -251,7 +249,7 @@ TEST_F(LevelProgressionTest, TheHostReportsTheCarriedHealth)
 	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
 	StartMatch(GameResetEvent{});
 	PlayerOne()->Heal(1);
-	const int carried{PlayerOne()->GetHealth()};
+	const unsigned int carried{PlayerOne()->GetHealth()};
 	std::vector<HealthChangedEvent> reported;
 	const EventSubscription reportSub{_events->AddListener([&reported](const HealthChangedEvent& event)
 	{
@@ -287,9 +285,8 @@ TEST_F(LevelProgressionTest, TheHostReportsTheCarriedTier)
 	EXPECT_EQ(report->tier, carried);
 }
 
-// lives are the other half of what travels: one is spent whenever a tank takes the field, so a level
-// change spends the next of the same three, while a restart hands out three again
-TEST_F(LevelProgressionTest, TheLivesLeftRideOnToTheNextLevelAndARestartGivesThemBack)
+// lives travel too: one is spent whenever a tank takes the field, so the next level spends the next of three
+TEST_F(LevelProgressionTest, TheLivesLeftRideOnToTheNextLevel)
 {
 	const unsigned short afterFirstSpawn{_playerOneLives};
 
@@ -297,6 +294,15 @@ TEST_F(LevelProgressionTest, TheLivesLeftRideOnToTheNextLevelAndARestartGivesThe
 	StartMatch(GameResetEvent{.keepsPlayerProgress = true});
 
 	EXPECT_LT(_playerOneLives, afterFirstSpawn) << "the new level handed out a fresh set of lives";
+}
+
+// while a restart hands out three again, whatever the run spent
+TEST_F(LevelProgressionTest, ARestartGivesTheLivesBack)
+{
+	const unsigned short afterFirstSpawn{_playerOneLives};
+	_events->EmitEvent(NextLevelRequestedEvent{});
+	StartMatch(GameResetEvent{.keepsPlayerProgress = true});
+	ASSERT_LT(_playerOneLives, afterFirstSpawn);
 
 	StartMatch(GameResetEvent{});
 

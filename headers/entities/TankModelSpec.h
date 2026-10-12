@@ -16,7 +16,7 @@ struct TankModelSpec final
 	double bulletSpeedFactor{1.0};
 	//NOTE: the heavier the hull, the slower and the harder its shell - the two always move apart
 	double damageFactor{1.0};
-	//NOTE: of the shell's own health - how deep it sinks into a wall, so a harder hit need not dig deeper
+	//NOTE: of the shell's own health - how deep it penetrates a wall, so a harder hit need not dig deeper
 	double shellHealthFactor{1.0};
 	//NOTE: of the blast the geometry asks for - a light shell alone no longer opens a passage, the tier grows it
 	double blastFactor{1.0};
@@ -24,8 +24,9 @@ struct TankModelSpec final
 	double shellCaliberFactor{1.0};
 	double shellLengthFactor{1.0};
 	//NOTE: of the player's reload, above one is slower - every enemy's is, which keeps a field of four playable
-	double reloadFactor{1.0};
+	double reloadCooldownFactor{1.0};
 	double sizeFactor{1.0};
+	unsigned short brickPenetrationTier{2};
 };
 
 //NOTE: the original's four types, told apart by hull speed, shell speed, armor and reload
@@ -43,7 +44,7 @@ struct TankModelSpec final
 								 .blastFactor = 0.8,
 								 .shellCaliberFactor = 0.6,
 								 .shellLengthFactor = 0.8,
-								 .reloadFactor = 3.6,
+								 .reloadCooldownFactor = 3.6,
 								 .sizeFactor = 5.0 / 6.0};
 		case TankModel::Power:
 			return TankModelSpec{.spriteRow = 2,
@@ -51,7 +52,7 @@ struct TankModelSpec final
 								 .damageFactor = 0.5,
 								 .blastFactor = 1.3,
 								 .shellLengthFactor = 1.2,
-								 .reloadFactor = 2.1};
+								 .reloadCooldownFactor = 2.1};
 		case TankModel::Armor:
 			return TankModelSpec{.spriteRow = 3,
 								 .speedFactor = 0.7,
@@ -62,8 +63,9 @@ struct TankModelSpec final
 								 .blastFactor = 2.0,
 								 .shellCaliberFactor = 1.4,
 								 .shellLengthFactor = 1.6,
-								 .reloadFactor = 3.0,
-								 .sizeFactor = 4.0 / 3.0};
+								 .reloadCooldownFactor = 3.0,
+								 .sizeFactor = 4.0 / 3.0,
+								 .brickPenetrationTier = 1};
 		//NOTE: the yardstick - every figure of GameConfig is this tank's, so all its shares are one
 		case TankModel::Player:
 			return TankModelSpec{};
@@ -77,7 +79,7 @@ struct TankModelSpec final
 						 .bulletSpeedFactor = 1.2,
 						 .damageFactor = 1.0 / 3.0,
 						 .shellHealthFactor = 2.0 / 3.0,
-						 .reloadFactor = 3.0,
+						 .reloadCooldownFactor = 3.0,
 						 .sizeFactor = 11.0 / 12.0};
 }
 
@@ -100,9 +102,9 @@ inline constexpr int kPlayerTierRows{4};
 }
 
 //NOTE: rounded, not truncated - a share of the base health has no business landing a point below it
-[[nodiscard]] constexpr int HealthOf(const TankModel model, const int baseHealth) noexcept
+[[nodiscard]] constexpr unsigned int HealthOf(const TankModel model, const unsigned int baseHealth) noexcept
 {
-	return MathUtils::RoundTo<int>(baseHealth * SpecOf(model).healthFactor);
+	return MathUtils::RoundTo<unsigned int>(baseHealth * SpecOf(model).healthFactor);
 }
 
 //NOTE: rounded for the same reason as the health - a share of the base is the nearest point, not the one below
@@ -111,9 +113,9 @@ inline constexpr int kPlayerTierRows{4};
 	return MathUtils::RoundTo<unsigned int>(baseDamage * SpecOf(model).damageFactor);
 }
 
-[[nodiscard]] constexpr int ShellHealthOf(const TankModel model, const int baseHealth) noexcept
+[[nodiscard]] constexpr unsigned int ShellHealthOf(const TankModel model, const unsigned int baseHealth) noexcept
 {
-	return MathUtils::RoundTo<int>(baseHealth * SpecOf(model).shellHealthFactor);
+	return MathUtils::RoundTo<unsigned int>(baseHealth * SpecOf(model).shellHealthFactor);
 }
 
 [[nodiscard]] constexpr double BlastOf(const TankModel model, const double baseRadius) noexcept
@@ -133,5 +135,5 @@ inline constexpr int kPlayerTierRows{4};
 [[nodiscard]] constexpr std::chrono::milliseconds ReloadOf(const TankModel model,
 														   const std::chrono::milliseconds seatReload) noexcept
 {
-	return std::chrono::round<std::chrono::milliseconds>(seatReload * SpecOf(model).reloadFactor);
+	return std::chrono::round<std::chrono::milliseconds>(seatReload * SpecOf(model).reloadCooldownFactor);
 }

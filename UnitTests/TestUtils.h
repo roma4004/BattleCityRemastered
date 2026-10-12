@@ -112,8 +112,7 @@ public:
 		}
 	}
 
-	//NOTE: the game never builds an obstacle itself - it asks, and ObstacleSpawner builds and activates it.
-	//The rectangle overload is for cases whose geometry is the subject
+	//NOTE: the game never builds an obstacle itself, ObstacleSpawner does; the rect overload is for geometry cases
 	[[nodiscard]] static std::shared_ptr<BaseObj> SpawnObstacle(const std::shared_ptr<EventSystem>& events,
 																const std::vector<std::shared_ptr<BaseObj>>& allObjects,
 																const ObjRectangle rect, const ObstacleType type)
@@ -133,22 +132,21 @@ public:
 		return SpawnObstacle(events, allObjects, ObjRectangle{.x = pos.x, .y = pos.y, .w = side, .h = side}, type);
 	}
 
-	//NOTE: tanks and bullets come from the pools through the spawn queue - one built by hand checks a path
-	//the game never walks. One tank either way: the two helpers differ only in who takes the wheel
+	//NOTE: tanks come from the pools through the spawn queue, as in the game; the helpers differ only in the driver
 	[[nodiscard]] static std::shared_ptr<Tank> CreateBot(
-			ObjRectangle rect, int health, Author author,
+			ObjRectangle rect, unsigned int health, Author author,
 			const std::vector<std::shared_ptr<BaseObj>>& allObjects, const std::shared_ptr<EventSystem>& events,
 			Direction dir, const std::shared_ptr<TankPool>& tankPool, const GameConfig& gameConfig,
 			unsigned short tier = 1u, TankModel model = TankModel::Basic);
 
 	[[nodiscard]] static std::shared_ptr<Tank> CreatePlayer(
-			ObjRectangle rect, int health, Author author,
+			ObjRectangle rect, unsigned int health, Author author,
 			const std::vector<std::shared_ptr<BaseObj>>& allObjects, const std::shared_ptr<EventSystem>& events,
 			Direction dir, const std::shared_ptr<TankPool>& tankPool, const GameConfig& gameConfig,
 			unsigned short tier = 1u, TankModel model = TankModel::Player);
 
 	[[nodiscard]] static std::shared_ptr<Bullet> CreateBullet(
-			ObjRectangle rect, int health, const std::shared_ptr<BulletPool>& bulletPool,
+			ObjRectangle rect, unsigned int health, const std::shared_ptr<BulletPool>& bulletPool,
 			const std::shared_ptr<EventSystem>& events, const BulletCaliber& caliber, Direction dir,
 			Author author, const Uuid& authorUuid = {});
 };

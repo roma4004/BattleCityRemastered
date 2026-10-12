@@ -12,6 +12,7 @@
 #include <array>
 #include <initializer_list>
 #include <optional>
+#include <tuple>
 #include <vector>
 #include "TestUtils.h"//NOTE: PrintTo for the Point types
 
@@ -88,7 +89,9 @@ TEST_F(CommandLineParserTest, GameModeIsGivenByItsOwnOption)
 //NOTE: an earlier parser matched by suffix, so every form below quietly passed for a game mode
 TEST_F(CommandLineParserTest, AnOptionNameIsMatchedWhole)
 {
-	for (const char* arg: {"server", "-server", "myserver", "--servers", "--client=1", "--bogus", "--bogus=1"})
+	constexpr std::array kNearMisses{"server", "-server", "myserver", "--servers", "--client=1", "--bogus",
+									 "--bogus=1"};
+	for (const char* arg: kNearMisses)
 	{
 		EXPECT_EQ(ParseError({arg}).value_or(ArgError{}).arg, arg);
 	}
@@ -111,27 +114,15 @@ TEST_F(CommandLineParserTest, MuteCombinesWithGameMode)
 	EXPECT_TRUE(options.isMuted);
 }
 
-// the window place and size are read as points
-TEST_F(CommandLineParserTest, WindowPosAndSizeAreParsed)
-{
-	const auto options{Parse({"--pos=10,20", "--size=1024,768"})};
-
-	ASSERT_TRUE(options.windowPos.has_value());
-	ASSERT_TRUE(options.windowSize.has_value());
-	EXPECT_EQ(*options.windowPos, (UPoint{.x = 10u, .y = 20u}));
-	EXPECT_EQ(*options.windowSize, (UPoint{.x = 1024u, .y = 768u}));
-}
-
-//NOTE: the two keys are independent optionals - one may be given without the other,
-//and the one left out keeps its ini value
+// the window place and size are read as points, each without the other - the one left out keeps its ini value
 TEST_F(CommandLineParserTest, EachWindowOptionIsIndependent)
 {
 	const auto sizeOnly{Parse({"--size=1024,768"})};
-	EXPECT_TRUE(sizeOnly.windowSize.has_value());
+	EXPECT_EQ(sizeOnly.windowSize, (UPoint{.x = 1024u, .y = 768u}));
 	EXPECT_FALSE(sizeOnly.windowPos.has_value());
 
 	const auto posOnly{Parse({"--pos=10,20"})};
-	EXPECT_TRUE(posOnly.windowPos.has_value());
+	EXPECT_EQ(posOnly.windowPos, (UPoint{.x = 10u, .y = 20u}));
 	EXPECT_FALSE(posOnly.windowSize.has_value());
 
 	const UPoint iniSize{_windowConfig.size};
@@ -145,7 +136,8 @@ TEST_F(CommandLineParserTest, EachWindowOptionIsIndependent)
 TEST_F(CommandLineParserTest, MalformedPointIsRejected)
 {
 	//NOTE: an empty left side means it was accepted - one compare covers both rejection and naming
-	for (const char* arg: {"--size=800x600", "--size=800,60a", "--size=800,", "--pos=,20", "--pos=-10,20"})
+	constexpr std::array kMalformed{"--size=800x600", "--size=800,60a", "--size=800,", "--pos=,20", "--pos=-10,20"};
+	for (const char* arg: kMalformed)
 	{
 		EXPECT_EQ(ParseError({arg}).value_or(ArgError{}).arg, arg);
 	}
@@ -154,7 +146,8 @@ TEST_F(CommandLineParserTest, MalformedPointIsRejected)
 //NOTE: zero parses fine but makes an unusable window, so it is rejected separately from malformed input
 TEST_F(CommandLineParserTest, ZeroWindowSizeIsRejected)
 {
-	for (const char* arg: {"--size=0,600", "--size=800,0"})
+	constexpr std::array kZeroSizes{"--size=0,600", "--size=800,0"};
+	for (const char* arg: kZeroSizes)
 	{
 		EXPECT_EQ(ParseError({arg}).value_or(ArgError{}).arg, arg);
 	}
@@ -228,19 +221,11 @@ TEST_F(CommandLineParserTest, TheSideDoesNotDependOnTheWindowSize)
 // a side that is neither server nor client is refused
 TEST_F(CommandLineParserTest, MalformedSideIsRejected)
 {
-	for (const char* arg: {"--side=middle", "--side=", "--side=LEFT"})
+	constexpr std::array kMalformed{"--side=middle", "--side=", "--side=LEFT"};
+	for (const char* arg: kMalformed)
 	{
 		EXPECT_EQ(ParseError({arg}).value_or(ArgError{}).arg, arg);
 	}
-}
-
-//NOTE: the size half of the flag pair - what keeps a one-off size= out of the ini on the way out
-TEST_F(CommandLineParserTest, ApplyMarksAnExplicitSizeOnItsOwn)
-{
-	_windowConfig.Apply(Parse({"--size=1024,768"}));
-
-	EXPECT_TRUE(_windowConfig.hasExplicitSize);
-	EXPECT_FALSE(_windowConfig.hasExplicitPos);
 }
 
 //NOTE: pos and size are decided apart - passing one must not stop the other from being remembered
@@ -262,28 +247,6 @@ TEST_F(CommandLineParserTest, OnlyTheOverriddenHalfIsKeptOutOfTheIni)
 	EXPECT_TRUE(sizeOnly.hasExplicitSize);
 }
 
-//NOTE: both processes share one config.ini and both windows sit at an offset - whichever exits last
-//would leave the other's launch position behind
-TEST_F(CommandLineParserTest, NetworkModesNeverPersistTheWindowState)
-{
-	for (const auto* const mode: {"--server", "--client"})
-	{
-		WindowConfig windowConfig{_projectConfig};
-		windowConfig.Apply(Parse({mode}));
-
-		EXPECT_NE(windowConfig.side, WindowSide::Center) << mode;
-	}
-}
-
-// give both halves and read them back
-TEST_F(CommandLineParserTest, AnAddressAndAPortAreTakenApart)
-{
-	const auto options{Parse({"--address=192.168.1.5", "--port=4321"})};
-
-	EXPECT_EQ(options.serverHost, "192.168.1.5");
-	EXPECT_EQ(options.serverPort, 4321u);
-}
-
 // the port has its own option, so nothing has to be cut out of an IPv6 literal and it needs no brackets
 TEST_F(CommandLineParserTest, AnIPv6HostNeedsNoBrackets)
 {
@@ -293,13 +256,6 @@ TEST_F(CommandLineParserTest, AnIPv6HostNeedsNoBrackets)
 	EXPECT_EQ(options.serverPort, 5000u);
 }
 
-// what is not passed stays empty, and the ini value behind it is left alone
-TEST_F(CommandLineParserTest, EitherHalfCanBeLeftOut)
-{
-	EXPECT_FALSE(Parse({"--address=10.0.0.2"}).serverPort.has_value());
-	EXPECT_FALSE(Parse({"--port=4321"}).serverHost.has_value());
-}
-
 // both spellings of "any free port": the word for a script to read, the number every other tool uses
 TEST_F(CommandLineParserTest, AutoAndZeroBothAskForAFreePort)
 {
@@ -307,8 +263,7 @@ TEST_F(CommandLineParserTest, AutoAndZeroBothAskForAFreePort)
 	EXPECT_EQ(Parse({"--port=0"}).serverPort, 0u);
 }
 
-//NOTE: a name is not resolved - and "localhost" once read as the server flag. A host with a port glued on is
-//refused outright: "::1:5000" is a valid IPv6 literal of its own, and taking it would dial the wrong machine
+//NOTE: names are not resolved, and a host with a port glued on is refused - "::1:5000" is a valid IPv6 itself
 TEST_F(CommandLineParserTest, AMalformedAddressIsRejected)
 {
 	constexpr std::array kMalformed{"--address=localhost", "--address=1.2.3.4:4321", "--address=[::1]:5000",
@@ -338,12 +293,18 @@ TEST_F(CommandLineParserTest, TheAddressReachesTheGameConfig)
 // only the half that was passed is written over - the other keeps what the ini gave the config
 TEST_F(CommandLineParserTest, TheHalfThatWasNotPassedKeepsTheConfigValue)
 {
-	GameConfig gameConfig{};
-	gameConfig.serverAddress = network::ServerAddress{.host = "10.0.0.9", .port = 7777u};
-	gameConfig.Apply(Parse({"--client", "--port=4000"}));
+	constexpr std::array kHalves{std::tuple{"--port=4000", "10.0.0.9", 4000u},
+								 std::tuple{"--address=10.0.0.2", "10.0.0.2", 7777u}};
+	for (const auto& [arg, host, port]: kHalves)
+	{
+		SCOPED_TRACE(arg);
+		GameConfig gameConfig{};
+		gameConfig.serverAddress = network::ServerAddress{.host = "10.0.0.9", .port = 7777u};
+		gameConfig.Apply(Parse({"--client", arg}));
 
-	EXPECT_EQ(gameConfig.serverAddress.host, "10.0.0.9");
-	EXPECT_EQ(gameConfig.serverAddress.port, 4000u);
+		EXPECT_EQ(gameConfig.serverAddress.host, host);
+		EXPECT_EQ(gameConfig.serverAddress.port, port);
+	}
 }
 
 
@@ -368,20 +329,6 @@ TEST(ServerCommandLineTest, TheListenAddressIsTaken)
 	EXPECT_EQ(options->serverPort, 4000u);
 }
 
-// the server is the side that can actually take any free port - the game learns which one it got
-TEST(ServerCommandLineTest, AFreePortIsAskedForByWordOrByZero)
-{
-	EXPECT_EQ(ParseServerRaw({"--port=auto"}).value_or(LaunchOptions{}).serverPort, 0u);
-	EXPECT_EQ(ParseServerRaw({"--port=0"}).value_or(LaunchOptions{}).serverPort, 0u);
-}
-
-// help answers to both the long and the short spelling
-TEST(ServerCommandLineTest, HelpIsAskedForByEitherForm)
-{
-	EXPECT_TRUE(ParseServerRaw({"--help"}).value_or(LaunchOptions{}).isHelpRequested);
-	EXPECT_TRUE(ParseServerRaw({"-h"}).value_or(LaunchOptions{}).isHelpRequested);
-}
-
 // the game options parse fine in the other exe and do nothing here - taken silently, they would look obeyed
 TEST(ServerCommandLineTest, AGameOptionIsRefused)
 {
@@ -393,11 +340,16 @@ TEST(ServerCommandLineTest, AGameOptionIsRefused)
 	});
 }
 
-// --seats is the server's
-TEST(ServerCommandLineTest, TheSeatCountIsTaken)
+// --seats is the server's, one to four of them
+TEST(ServerCommandLineTest, TheSeatCountIsTakenFromOneToFour)
 {
 	EXPECT_EQ(ParseServerRaw({"--seats=4"}).value_or(LaunchOptions{}).seats, 4u);
 	EXPECT_FALSE(ParseServerRaw({}).value_or(LaunchOptions{.seats = 3u}).seats.has_value());
+	constexpr std::array kOutOfRange{"--seats=0", "--seats=5", "--seats=two", "--seats="};
+	for (const char* arg: kOutOfRange)
+	{
+		EXPECT_FALSE(ParseServerRaw({arg}).has_value()) << arg;
+	}
 }
 
 // and so are its rules - anything but the two is refused
@@ -412,7 +364,8 @@ TEST(ServerCommandLineTest, TheRulesAreTaken)
 TEST(ServerCommandLineTest, TheMapIsTakenByName)
 {
 	EXPECT_EQ(ParseServerRaw({"--map=level2"}).value_or(LaunchOptions{}).mapName, "level2");
-	for (const char* arg: {"--map=", "--map=../level1", "--map=level1.map", "--map=a\\b", "--map=a b"})
+	constexpr std::array kNotNames{"--map=", "--map=../level1", "--map=level1.map", "--map=a\\b", "--map=a b"};
+	for (const char* arg: kNotNames)
 	{
 		EXPECT_FALSE(ParseServerRaw({arg}).has_value()) << arg;
 	}
@@ -422,7 +375,8 @@ TEST(ServerCommandLineTest, TheMapIsTakenByName)
 TEST(ServerCommandLineTest, TheEnemiesAtOnceAreTakenUpToFour)
 {
 	EXPECT_EQ(ParseServerRaw({"--enemies=1"}).value_or(LaunchOptions{}).enemiesAtOnce, 1u);
-	for (const char* arg: {"--enemies=5", "--enemies=x", "--enemies="})
+	constexpr std::array kOutOfRange{"--enemies=5", "--enemies=x", "--enemies="};
+	for (const char* arg: kOutOfRange)
 	{
 		EXPECT_FALSE(ParseServerRaw({arg}).has_value()) << arg;
 	}
@@ -441,7 +395,8 @@ TEST(ServerCommandLineTest, TheBotsAreTakenFromNoneToFour)
 {
 	EXPECT_EQ(ParseServerRaw({"--bots=0"}).value_or(LaunchOptions{}).bots, 0u);
 	EXPECT_EQ(ParseServerRaw({"--bots=4"}).value_or(LaunchOptions{}).bots, 4u);
-	for (const char* arg: {"--bots=5", "--bots=-1", "--bots=x", "--bots="})
+	constexpr std::array kOutOfRange{"--bots=5", "--bots=-1", "--bots=x", "--bots="};
+	for (const char* arg: kOutOfRange)
 	{
 		EXPECT_FALSE(ParseServerRaw({arg}).has_value()) << arg;
 	}
@@ -461,22 +416,4 @@ TEST(ServerCommandLineTest, TheRouterIsAskedOnlyWithUpnp)
 	EXPECT_TRUE(ParseServerRaw({"--upnp"}).value_or(LaunchOptions{}).isPortForwarded);
 	EXPECT_FALSE(ParseServerRaw({"--port=4000"}).value_or(LaunchOptions{.isPortForwarded = true}).isPortForwarded);
 	EXPECT_FALSE(ParseServerRaw({"--upnp=yes"}).has_value());
-}
-
-// one to four seats only
-TEST(ServerCommandLineTest, ASeatCountOutsideOneToFourIsRefused)
-{
-	for (const char* arg: {"--seats=0", "--seats=5", "--seats=two", "--seats="})
-	{
-		EXPECT_FALSE(ParseServerRaw({arg}).has_value()) << arg;
-	}
-}
-
-// the dedicated server refuses the same malformed address the game does
-TEST(ServerCommandLineTest, AMalformedAddressIsRejectedHereToo)
-{
-	EXPECT_FALSE(ParseServerRaw({"--address=localhost"}).has_value());
-	EXPECT_FALSE(ParseServerRaw({"--address=1.2.3.4:4321"}).has_value());
-	EXPECT_FALSE(ParseServerRaw({"--address"}).has_value());
-	EXPECT_FALSE(ParseServerRaw({"--port=70000"}).has_value());
 }

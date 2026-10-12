@@ -55,7 +55,6 @@
     <ClCompile Include="BonusTestDestroy.cpp" />
     <ClCompile Include="BonusTestEnemy.cpp" />
     <ClCompile Include="BotsTest.cpp" />
-    <ClCompile Include="BulletPoolTest.cpp" />
     <ClCompile Include="MapTest.cpp" />
     <ClCompile Include="MatchStartTest.cpp" />
     <ClCompile Include="BulletsTestAdvanced.cpp" />
@@ -65,13 +64,9 @@
     <ClCompile Include="DatagramLinkTest.cpp" />
     <ClCompile Include="DiscoveryTest.cpp" />
     <ClCompile Include="CommandLineParserTest.cpp" />
-    <ClCompile Include="EndpointsTest.cpp" />
     <ClCompile Include="AddressFieldTest.cpp" />
-    <ClCompile Include="CoopBotTest.cpp" />
     <ClCompile Include="DeadObjectFilterTest.cpp" />
-    <ClCompile Include="DirectionUtilsTest.cpp" />
     <ClCompile Include="GamepadDirectionTest.cpp" />
-    <ClCompile Include="EnemyBotTest.cpp" />
     <ClCompile Include="GameStateManagerTest.cpp" />
     <ClCompile Include="GameStateTest.cpp" />
     <ClCompile Include="LevelProgressionTest.cpp" />
@@ -80,7 +75,6 @@
     <ClCompile Include="TankNudgeTest.cpp" />
     <ClCompile Include="TankModelTest.cpp" />
     <ClCompile Include="TankShoveTest.cpp" />
-    <ClCompile Include="TankPoolTest.cpp" />
     <ClCompile Include="TankTerrainTest.cpp" />
     <ClCompile Include="MenuInputTest.cpp" />
     <ClCompile Include="NetworkTest.cpp">
@@ -94,13 +88,11 @@
     <ClCompile Include="RespawnManagerTest.cpp" />
     <ClCompile Include="ScoreBoardTest.cpp" />
     <ClCompile Include="SeatHistoryTest.cpp" />
-    <ClCompile Include="StatisticsTestAdvanced.cpp" />
     <ClCompile Include="SeatAssignmentTest.cpp" />
     <ClCompile Include="SessionTest.cpp" />
     <ClCompile Include="SimulationStepTest.cpp" />
     <ClCompile Include="StatisticsTestBasic.cpp" />
     <ClCompile Include="TankSpawnerTest.cpp" />
-    <ClCompile Include="TimeUtilsTest.cpp" />
     <ClCompile Include="WorldSnapshotTest.cpp" />
     <ClCompile Include="TestUtils.cpp" />
     <ClCompile Include="..\ThirdParty\googletest\googletest\src\gtest-all.cc" />

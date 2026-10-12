@@ -5,6 +5,7 @@
 #include "application/GameConfig.h"
 #include "application/ProjectConfig.h"
 #include "components/EventSystem.h"
+#include "components/events/CoreLifecycleEvents.h"
 #include "components/events/TimingEvents.h"
 #include "entities/obstacles/BrickWall.h"
 #include "entities/obstacles/BushTile.h"
@@ -12,6 +13,7 @@
 #include "entities/pawns/Bullet.h"
 #include "enums/Direction.h"
 #include "gtest/gtest.h"
+#include <array>
 #include <memory>
 
 class BulletTestAdvanced : public testing::Test// NOLINT(clang-diagnostic-padded)
@@ -56,68 +58,36 @@ protected:
 	}
 };
 
-// steel gives to a tier 2 shot, which the basic suite only sees bounce off
-TEST_F(BulletTestAdvanced, BulletTier2CanDestroySteelWall)
+// the blast is centered where the bullet stopped, so the wall behind stays out of reach at 30 and 144 fps alike
+TEST_F(BulletTestAdvanced, BlastSparesTheWallBehindAtAnyFrameRate)
 {
-	const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};
-
-	const ObjRectangle wallRect{.x = 0.0, .y = _caliber.size.y + 1, .w = _gridSize, .h = _gridSize};
-	const auto steelWall{SpawnObstacle(wallRect, ObstacleType::Steel)};
-
-	steelWall->SetHealth(1);
-	ASSERT_EQ(steelWall->GetHealth(), 1);
-	ASSERT_EQ(bullet->GetTier(), 3u);
-
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-
-	EXPECT_EQ(steelWall->GetHealth(), 0);
-}
-
-// The blast is centered where the bullet stopped, so a shot digs the same depth at any frame rate:
-// the wall behind the one that was hit stays out of reach at 30 and at 144 frames per second alike
-TEST_F(BulletTestAdvanced, BlastSparesTheWallBehindAtThirtyFps)
-{
-	CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
-
-	const auto nearWall{SpawnObstacle(ObjRectangle{.x = 0.0, .y = 20.0, .w = _gridSize, .h = 4.0},
-									  ObstacleType::Brick)};
-	const auto farWall{SpawnObstacle(ObjRectangle{.x = 0.0, .y = 34.0, .w = _gridSize, .h = 4.0}, ObstacleType::Brick)};
-
-	const int nearWallHealth{nearWall->GetHealth()};
-	const int farWallHealth{farWall->GetHealth()};
-
-	for (int frame = 0; frame < 20 && nearWall->GetHealth() == nearWallHealth; ++frame)
+	constexpr std::array kFrameRates{30.0, 144.0};
+	for (const double fps: kFrameRates)
 	{
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = 1.0 / 30.0});
-	}
+		SCOPED_TRACE(fps);
+		_events->EmitEvent(GameResetEvent{});
+		_allObjects.clear();
+		CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
 
-	EXPECT_GT(nearWallHealth, nearWall->GetHealth());
-	EXPECT_EQ(farWallHealth, farWall->GetHealth());
+		const auto nearWall{SpawnObstacle(ObjRectangle{.x = 0.0, .y = 20.0, .w = _gridSize, .h = 4.0},
+										  ObstacleType::Brick)};
+		const auto farWall{SpawnObstacle(ObjRectangle{.x = 0.0, .y = 34.0, .w = _gridSize, .h = 4.0},
+										 ObstacleType::Brick)};
+
+		const unsigned int nearWallHealth{nearWall->GetHealth()};
+		const unsigned int farWallHealth{farWall->GetHealth()};
+
+		for (int frame = 0; frame < 40 && nearWall->GetHealth() == nearWallHealth; ++frame)
+		{
+			_events->EmitEvent(TickUpdateEvent{.deltaTime = 1.0 / fps});
+		}
+
+		EXPECT_GT(nearWallHealth, nearWall->GetHealth());
+		EXPECT_EQ(farWallHealth, farWall->GetHealth());
+	}
 }
 
-// a shorter frame is a shorter step, and the blast must not reach past the wall it hit
-TEST_F(BulletTestAdvanced, BlastSparesTheWallBehindAtHundredFortyFourFps)
-{
-	CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
-
-	const auto nearWall{SpawnObstacle(ObjRectangle{.x = 0.0, .y = 20.0, .w = _gridSize, .h = 4.0},
-									  ObstacleType::Brick)};
-	const auto farWall{SpawnObstacle(ObjRectangle{.x = 0.0, .y = 34.0, .w = _gridSize, .h = 4.0}, ObstacleType::Brick)};
-
-	const int nearWallHealth{nearWall->GetHealth()};
-	const int farWallHealth{farWall->GetHealth()};
-
-	for (int frame = 0; frame < 40 && nearWall->GetHealth() == nearWallHealth; ++frame)
-	{
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = 1.0 / 144.0});
-	}
-
-	EXPECT_GT(nearWallHealth, nearWall->GetHealth());
-	EXPECT_EQ(farWallHealth, farWall->GetHealth());
-}
-
-// A bush never stops a bullet, so it can only ever be caught by a blast that went off on something
-// solid - and only from tier three, the same rule that lets a shot through steel
+// a bush never stops a bullet - it burns only in a blast on something solid, and only from tier three
 TEST_F(BulletTestAdvanced, BushBurnsInABlastFromTierThree)
 {
 	CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
@@ -126,7 +96,7 @@ TEST_F(BulletTestAdvanced, BushBurnsInABlastFromTierThree)
 	const auto bush{SpawnObstacle(ObjRectangle{.x = 0.0, .y = 26.0, .w = _gridSize, .h = _gridSize},
 								  ObstacleType::Bush)};
 
-	const int wallHealth{wall->GetHealth()};
+	const unsigned int wallHealth{wall->GetHealth()};
 	for (int frame = 0; frame < 20 && wall->GetHealth() == wallHealth; ++frame)
 	{
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
@@ -147,7 +117,7 @@ TEST_F(BulletTestAdvanced, BushSurvivesABlastBelowTierThree)
 	const auto bush{SpawnObstacle(ObjRectangle{.x = 0.0, .y = 26.0, .w = _gridSize, .h = _gridSize},
 								  ObstacleType::Bush)};
 
-	const int wallHealth{wall->GetHealth()};
+	const unsigned int wallHealth{wall->GetHealth()};
 	for (int frame = 0; frame < 20 && wall->GetHealth() == wallHealth; ++frame)
 	{
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
@@ -173,54 +143,50 @@ TEST_F(BulletTestAdvanced, TierThreeFliesThroughABushWithoutBurningIt)
 	EXPECT_TRUE(bush->GetIsAlive());
 }
 
-// a tier-three blast burns a bush and digs into steel, but terrain it cannot clear - the water beside the
-// wall it hit comes through untouched
-TEST_F(BulletTestAdvanced, WaterSurvivesABlastThatBurnsABush)
+// a tier-three blast burns a bush and digs steel, but the water or ice beside the wall comes through untouched
+TEST_F(BulletTestAdvanced, WaterAndIceSurviveABlastThatBurnsABush)
 {
-	CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
-
-	const auto wall{SpawnObstacle(ObjRectangle{.x = 0.0, .y = 20.0, .w = _gridSize, .h = 4.0}, ObstacleType::Brick)};
-	const auto water{SpawnObstacle(ObjRectangle{.x = 0.0, .y = 26.0, .w = _gridSize, .h = _gridSize},
-								   ObstacleType::Water)};
-
-	const int wallHealth{wall->GetHealth()};
-	for (int frame{0}; frame < 20 && wall->GetHealth() == wallHealth; ++frame)
+	constexpr std::array kTerrains{ObstacleType::Water, ObstacleType::Ice};
+	for (const ObstacleType terrain: kTerrains)
 	{
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-	}
+		SCOPED_TRACE(static_cast<int>(terrain));
+		_events->EmitEvent(GameResetEvent{});
+		_allObjects.clear();
+		CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
 
-	EXPECT_GT(wallHealth, wall->GetHealth()) << "the shot never reached the wall";
-	EXPECT_TRUE(water->GetIsAlive());
+		const auto wall{SpawnObstacle(ObjRectangle{.x = 0.0, .y = 20.0, .w = _gridSize, .h = 4.0},
+									  ObstacleType::Brick)};
+		const auto tile{SpawnObstacle(ObjRectangle{.x = 0.0, .y = 26.0, .w = _gridSize, .h = _gridSize}, terrain)};
+
+		const unsigned int wallHealth{wall->GetHealth()};
+		for (int frame{0}; frame < 20 && wall->GetHealth() == wallHealth; ++frame)
+		{
+			_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		}
+
+		EXPECT_GT(wallHealth, wall->GetHealth()) << "the shot never reached the wall";
+		EXPECT_TRUE(tile->GetIsAlive());
+	}
 }
 
-// the same for ice - the blast spares it the way it spares water
-TEST_F(BulletTestAdvanced, IceSurvivesABlastThatBurnsABush)
+// water and ice are terrain a bullet flies over: the shot crosses the tile and leaves it be
+TEST_F(BulletTestAdvanced, ABulletFliesOverWaterAndIce)
 {
-	CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
-
-	const auto wall{SpawnObstacle(ObjRectangle{.x = 0.0, .y = 20.0, .w = _gridSize, .h = 4.0}, ObstacleType::Brick)};
-	const auto ice{SpawnObstacle(ObjRectangle{.x = 0.0, .y = 26.0, .w = _gridSize, .h = _gridSize}, ObstacleType::Ice)};
-
-	const int wallHealth{wall->GetHealth()};
-	for (int frame{0}; frame < 20 && wall->GetHealth() == wallHealth; ++frame)
+	constexpr std::array kTerrains{ObstacleType::Water, ObstacleType::Ice};
+	for (const ObstacleType terrain: kTerrains)
 	{
+		SCOPED_TRACE(static_cast<int>(terrain));
+		_events->EmitEvent(GameResetEvent{});
+		_allObjects.clear();
+		const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};
+
+		const auto tile{SpawnObstacle(ObjRectangle{.x = 0.0, .y = 6.0, .w = _gridSize, .h = _gridSize}, terrain)};
+		const unsigned int tileHealth{tile->GetHealth()};
+
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+		EXPECT_TRUE(bullet->GetIsAlive()) << "the terrain stopped the bullet";
+		EXPECT_EQ(tileHealth, tile->GetHealth());
+		EXPECT_GT(bullet->GetRect().y, 0.0) << "the bullet did not move";
 	}
-
-	EXPECT_GT(wallHealth, wall->GetHealth()) << "the shot never reached the wall";
-	EXPECT_TRUE(ice->GetIsAlive());
-}
-
-// ice is terrain a bullet flies over: the shot crosses it and only stops at the wall behind
-TEST_F(BulletTestAdvanced, ABulletFliesOverIceWithoutStopping)
-{
-	const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};
-
-	const auto ice{SpawnObstacle(ObjRectangle{.x = 0.0, .y = 10.0, .w = _gridSize, .h = _gridSize}, ObstacleType::Ice)};
-
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-
-	EXPECT_TRUE(bullet->GetIsAlive()) << "the ice stopped the bullet";
-	EXPECT_TRUE(ice->GetIsAlive());
-	EXPECT_GT(bullet->GetRect().y, 0.0) << "the bullet did not move";
 }

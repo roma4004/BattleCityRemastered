@@ -36,8 +36,8 @@ protected:
 	EventSubscription _spawnQueueSub{};
 	EventSubscription _healthSub{};
 	FPoint _bonusPos{.x = 200.0, .y = 200.0};
-	int _tankHealth{100};
-	int _bonusHeal{50};
+	unsigned int _tankHealth{100};
+	unsigned int _bonusHeal{50};
 
 	void SetUp() override
 	{

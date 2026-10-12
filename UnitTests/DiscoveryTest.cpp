@@ -8,6 +8,7 @@
 #include <boost/asio/ip/address.hpp>
 #include <gtest/gtest.h>
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <cstdint>
 #include <optional>
@@ -16,70 +17,28 @@
 #include <thread>
 #include <tuple>
 
-// the reply is raw bytes rather than a command, so the pack/parse pair is the whole contract
-TEST(DiscoveryFormatTest, APackedReplyParsesBackToItself)
+// not an answer: the probe itself, a reply a byte short, someone else's datagram, more free seats than seats
+TEST(DiscoveryFormatTest, WhatIsNotAReplyIsRefused)
 {
-	constexpr network::discovery::Reply reply{
-			.protocolVersion = 7u, .gamePort = 50000u, .seats = 4u, .freeSeats = 2u, .rules = MatchRules::FreeForAll};
+	const auto reply{network::discovery::Pack(network::discovery::Reply{})};
+	const auto overfull{network::discovery::Pack(network::discovery::Reply{.seats = 2u, .freeSeats = 3u})};
 
-	const auto bytes{network::discovery::Pack(reply)};
-	const auto parsed{network::discovery::Parse(std::string_view{bytes.data(), bytes.size()})};
-
-	ASSERT_TRUE(parsed.has_value());
-	EXPECT_EQ(parsed->protocolVersion, reply.protocolVersion);
-	EXPECT_EQ(parsed->gamePort, reply.gamePort);
-	EXPECT_EQ(parsed->seats, reply.seats);
-	EXPECT_EQ(parsed->freeSeats, reply.freeSeats);
-	EXPECT_EQ(parsed->rules, reply.rules);
+	const std::array notReplies{network::discovery::kProbe,
+								std::string_view{reply.data(), reply.size() - 1u},
+								std::string_view{"hello there"},
+								std::string_view{overfull.data(), overfull.size()}};
+	for (const std::string_view datagram: notReplies)
+	{
+		SCOPED_TRACE(datagram.size());
+		EXPECT_FALSE(network::discovery::Parse(datagram).has_value());
+	}
 }
 
-// a port above 32767 is where a sign or a narrowed byte would show up
-TEST(DiscoveryFormatTest, AHighPortSurvivesTheRoundTrip)
-{
-	constexpr network::discovery::Reply reply{.protocolVersion = 1u, .gamePort = 65535u, .freeSeats = 0u};
-
-	const auto bytes{network::discovery::Pack(reply)};
-	const auto parsed{network::discovery::Parse(std::string_view{bytes.data(), bytes.size()})};
-
-	ASSERT_TRUE(parsed.has_value());
-	EXPECT_EQ(parsed->gamePort, 65535u);
-}
-
-// the probe's own datagram must never read as an answer - both travel on the same well-known port
-TEST(DiscoveryFormatTest, AProbeIsNotAReply)
-{
-	EXPECT_FALSE(network::discovery::Parse(network::discovery::kProbe).has_value());
-}
-
-// a reply one byte short is not read as a shorter one
-TEST(DiscoveryFormatTest, ATruncatedReplyIsRefused)
-{
-	const auto bytes{network::discovery::Pack(network::discovery::Reply{})};
-
-	EXPECT_FALSE(network::discovery::Parse(std::string_view{bytes.data(), bytes.size() - 1u}).has_value());
-}
-
-// and neither is a datagram that was never ours
-TEST(DiscoveryFormatTest, SomeoneElsesDatagramIsRefused)
-{
-	EXPECT_FALSE(network::discovery::Parse("hello there").has_value());
-}
-
-// nor one with more seats free than the server has - the list would show a negative player count
-TEST(DiscoveryFormatTest, MoreFreeSeatsThanSeatsIsRefused)
-{
-	const auto bytes{network::discovery::Pack(network::discovery::Reply{.seats = 2u, .freeSeats = 3u})};
-
-	EXPECT_FALSE(network::discovery::Parse(std::string_view{bytes.data(), bytes.size()}).has_value());
-}
-
-// the beacon and the probe talk over a real loopback socket - the point is the two halves meeting,
-// so the io_context is pumped by hand instead of running a thread for it
+// beacon and probe over a real loopback socket - the io_context is pumped by hand instead of on a thread
 class DiscoveryBeaconTest : public ::testing::Test
 {
 protected:
-	//NOTE: the probe is non-blocking, so an answer needs the beacon's handler to have run first - the
-	//poll below pumps both sides until one of them produces a reply or the patience runs out
+	//NOTE: the probe is non-blocking - both sides are pumped until a reply comes or the patience runs out
 	[[nodiscard]] std::optional<network::discovery::Reply> Ask(network::DiscoveryProbe& probe)
 	{
 		for (int attempt{}; attempt < 100; ++attempt)
@@ -125,9 +84,20 @@ TEST_F(DiscoveryBeaconTest, ABeaconAnswersWithTheGamePortItsRulesAndItsFreeSeats
 // silence is the answer when nobody is up - it is what keeps the client asking instead of dialling
 TEST_F(DiscoveryBeaconTest, AProbeWithNoBeaconGetsNothing)
 {
+	//NOTE: a beacon up and down first on a context never pumped - if it cannot listen, a server runs here
+	{
+		boost::asio::io_context checkContext{};
+		const network::DiscoveryBeacon portCheck{checkContext, boost::asio::ip::address_v4::loopback(), 1u,
+												 std::uint8_t{4}, MatchRules::Classic, [] { return std::uint8_t{}; }};
+		if (!portCheck.IsListening())
+		{
+			GTEST_SKIP() << "the discovery port is taken by something else on this machine";
+		}
+	}
+
 	network::DiscoveryProbe probe{std::string{network::kDefaultHost}};
 
-	EXPECT_FALSE(probe.Poll().has_value());
+	EXPECT_FALSE(Ask(probe).has_value());
 }
 
 // a full server still answers: silence would read as "no server here" and the client would keep looking

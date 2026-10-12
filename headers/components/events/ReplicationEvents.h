@@ -26,7 +26,7 @@ struct TankShotEvent
 
 struct HealthChangedEvent
 {
-	int health;
+	unsigned int health;
 	Uuid uuid;
 };
 

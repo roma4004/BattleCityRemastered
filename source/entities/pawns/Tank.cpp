@@ -80,7 +80,7 @@ BulletCaliber Tank::BaseCaliber() const
 	constexpr double baseBulletSpeed{300.0};
 	constexpr unsigned int baseDamage{30};
 	//NOTE: half the damage - the player's shell hits a tank harder than it digs into a wall
-	constexpr int baseShellHealth{15};
+	constexpr unsigned int baseShellHealth{15};
 	const FPoint shell{ShellSizeOf(_model, baseShell)};
 
 	return BulletCaliber{.speed = baseBulletSpeed * SpecOf(_model).bulletSpeedFactor,
@@ -203,7 +203,7 @@ std::optional<Sprite> Tank::Cover() const
 }
 
 //NOTE: none under a helmet or in a bush - the bush is meant to hide the tank, and the bar would give it away
-std::optional<int> Tank::ShownHealth() const
+std::optional<unsigned int> Tank::ShownHealth() const
 {
 	if (_effects.isHelmetActive || _effects.isTouchTheBushes)
 	{
@@ -506,8 +506,6 @@ double Tank::GetBulletSpeed() const noexcept { return _caliber.speed; }
 
 void Tank::SetBulletSpeed(const double bulletSpeed) { _caliber.speed = bulletSpeed; }
 
-unsigned int Tank::GetBulletDamage() const noexcept { return _caliber.damage; }
-
 void Tank::SetBulletDamage(const unsigned int bulletDamage) { _caliber.damage = bulletDamage; }
 
 double Tank::GetBulletDamageRadius() const noexcept { return _caliber.damageRadius; }
@@ -538,9 +536,9 @@ void Tank::OnBonusHelmet(const bool isActive)
 
 void Tank::OnBonusGrenade(const BonusGrenadePickupEvent& event)
 {
-	if (const int health{GetHealth()}; health > 0 && event.spared != _author)
+	if (const unsigned int health{GetHealth()}; health > 0 && event.spared != _author)
 	{
-		TakeDamage(static_cast<unsigned int>(health), Author::None);
+		TakeDamage(health, Author::None);
 	}
 }
 
@@ -556,9 +554,10 @@ void Tank::ApplyTier(const unsigned short tier)
 	_speed = SpeedOf(_model, _gameConfig.tankSpeed) * faster;
 	_caliber.speed = base.speed * faster;
 	_caliber.damage = MathUtils::RoundTo<unsigned int>(base.damage * (1.0 + kTierStep.damageShare * shellSteps));
-	_caliber.health = MathUtils::RoundTo<int>(base.health * (1.0 + kTierStep.damageShare * shellSteps));
+	_caliber.health = MathUtils::RoundTo<unsigned int>(base.health * (1.0 + kTierStep.damageShare * shellSteps));
 	_caliber.damageRadius = base.damageRadius * (1.0 + kTierStep.blastShare * shellSteps);
 	_caliber.tier = _tier;
+	_caliber.penetratesWalls = _tier >= SpecOf(_model).brickPenetrationTier;
 	_shootTimer.cooldown = std::chrono::round<std::chrono::milliseconds>(
 			ReloadOf(_model, kBaseReload) * (1.0 - kTierStep.reloadShare * shellSteps));
 }

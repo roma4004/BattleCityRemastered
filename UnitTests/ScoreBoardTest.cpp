@@ -8,10 +8,10 @@
 #include "enums/GameMode.h"
 #include "enums/GameState.h"
 #include "gtest/gtest.h"
+#include <array>
 #include <memory>
 
-// the board follows the phase of the match, not the score: each case sets a mode, announces a phase and
-// reads whether the board was put up
+// the board follows the phase, not the score: each case sets a mode, announces a phase and reads if the board is up
 class ScoreBoardTest : public testing::Test
 {
 protected:
@@ -30,24 +30,20 @@ protected:
 	}
 };
 
-// a local match lost
-TEST_F(ScoreBoardTest, GameOverShowsScore)
+// a local match over, lost or won - the board goes up either way
+TEST_F(ScoreBoardTest, AFinishedMatchShowsScore)
 {
-	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::OnePlayer});
-	ASSERT_FALSE(_scoreBoard->IsShown());
+	constexpr std::array kResults{GameState::Over, GameState::Won};
+	for (const GameState result: kResults)
+	{
+		SCOPED_TRACE(static_cast<int>(result));
+		_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::OnePlayer});
+		ASSERT_FALSE(_scoreBoard->IsShown());
 
-	_events->EmitEvent(GameFinishedEvent{.state = GameState::Over});
+		_events->EmitEvent(GameFinishedEvent{.state = result});
 
-	EXPECT_TRUE(_scoreBoard->IsShown());
-}
-
-// and won - the board goes up either way
-TEST_F(ScoreBoardTest, GameWonShowsScore)
-{
-	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::OnePlayer});
-	_events->EmitEvent(GameFinishedEvent{.state = GameState::Won});
-
-	EXPECT_TRUE(_scoreBoard->IsShown());
+		EXPECT_TRUE(_scoreBoard->IsShown());
+	}
 }
 
 //NOTE: a client never runs the win check, so the phase arriving from the server is all it has to go on

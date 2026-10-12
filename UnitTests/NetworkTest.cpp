@@ -28,7 +28,6 @@
 #include "network/DatagramLink.h"
 #include "network/Serializer.h"
 #include "network/commands/CommandBatch.h"
-#include "network/commands/Disconnect.h"
 #include "network/commands/SlotAssignment.h"
 #include "network/ServerNode.h"
 #include "gtest/gtest.h"
@@ -61,8 +60,7 @@ protected:
 
 	void TearDown() override {}
 
-	//NOTE: one bus per node - on a shared bus a listener fires off the local emit before anything
-	//crosses the wire, and the test passes with no networking at all
+	//NOTE: one bus per node - on a shared one a listener fires off the local emit, with no networking at all
 	std::shared_ptr<EventSystem> _serverEvents{std::make_shared<EventSystem>()};
 	std::shared_ptr<EventSystem> _clientEvents{std::make_shared<EventSystem>()};
 	//NOTE: a seat is handed out per connection, so telling the two apart takes a second game process
@@ -239,9 +237,9 @@ TEST_F(NetworkTest, HealthEventReplication)
 	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
-	constexpr int healthOrigin{42};
+	constexpr unsigned int healthOrigin{42};
 
-	std::optional<int> received{};
+	std::optional<unsigned int> received{};
 	auto healthSub{_clientEvents->AddListener(Key(_uuid),
 											  [&received](const HealthChangedEvent& event)
 											  {
@@ -275,23 +273,6 @@ TEST_F(NetworkTest, DespawnEventReplication)
 	EXPECT_EQ(_uuid, received[0].uuid);
 	EXPECT_EQ(DespawnReason::Destroyed, received[0].reason);
 	EXPECT_EQ(DespawnReason::PickedUp, received[1].reason);
-}
-
-// a counter event the host raised reaches the client's own statistics
-TEST_F(NetworkTest, StatisticsEventReplication)
-{
-	const auto server{MakeServer()};
-	const auto client{MakeClient(server->GetBoundPort())};
-	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
-
-	std::optional<StatisticsBulletHitEvent> received{};
-	auto statsSub{_clientEvents->AddListener(
-			[&received](const StatisticsBulletHitEvent& event) { received = event; })};
-
-	_serverEvents->EmitEvent(StatisticsBulletHitEvent{.author = Author::Enemy1});
-
-	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
-	EXPECT_EQ(Author::Enemy1, received.value().author);
 }
 
 // one of the four things a client may ask for: the pause travels the other way and stops the host
@@ -379,8 +360,7 @@ TEST_F(NetworkTest, BonusStatusEventReplication)
 	EXPECT_EQ(isActiveOrigin, *received);
 }
 
-//NOTE: the tier travels as a result, on its own command - the client sets it instead of replaying the
-//upgrade formula, exactly as it does with health
+//NOTE: the tier travels as a result on its own command - the client sets it rather than replaying the upgrade
 TEST_F(NetworkTest, TierEventReplication)
 {
 	const auto server{MakeServer()};
@@ -417,47 +397,6 @@ TEST_F(NetworkTest, TankGrewEventReplication)
 	EXPECT_DOUBLE_EQ(received->x, grown.x);
 	EXPECT_DOUBLE_EQ(received->y, grown.y);
 	EXPECT_DOUBLE_EQ(received->w, grown.w);
-}
-
-//NOTE: no payload of its own - under test is that its alternative reaches the right seat
-TEST_F(NetworkTest, BonusShipStatusEventReplication)
-{
-	const auto server{MakeServer()};
-	const auto client{MakeClient(server->GetBoundPort())};
-	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
-
-	constexpr auto authorOrigin{Author::Player1};
-
-	bool received{};
-	auto bonusShipSub{_clientEvents->AddListener(Key(authorOrigin),
-												 [&received](const BonusShipAppliedEvent&) { received = true; })};
-
-	_serverEvents->EmitEvent(BonusShipAppliedEvent{.author = authorOrigin});
-
-	EXPECT_TRUE(PumpUntil([&received] { return received; }));
-}
-
-// one obstacle placed by the host is placed on the client too
-TEST_F(NetworkTest, ObstacleSpawnEventReplication)
-{
-	const auto server{MakeServer()};
-	const auto client{MakeClient(server->GetBoundPort())};
-	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
-
-	constexpr auto obstacleType{ObstacleType::Brick};
-	constexpr FPoint posOrigin{.x = 42.0, .y = 43.0};
-
-	std::optional<ObstacleSpawnedEvent> received{};
-	auto obstacleSpawnSub{_clientEvents->AddListener(
-			[&received](const ObstacleSpawnedEvent& event) { received = event; })};
-
-	_serverEvents->EmitEvent(ObstacleSpawnedEvent{.pos = posOrigin, .type = obstacleType, .uuid = _uuid});
-
-	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
-	const auto& event{received.value()};
-	EXPECT_EQ(posOrigin, event.pos);
-	EXPECT_EQ(obstacleType, event.type);
-	EXPECT_EQ(_uuid, event.uuid);
 }
 
 //NOTE: a whole map in one batch - one frame, and every command has to come out of it in order
@@ -580,8 +519,7 @@ TEST_F(NetworkTest, ClientReconnectsAfterEstablishedLinkDrops)
 			<< "reconnected client never asked the server to start the match again";
 }
 
-//NOTE: the other half of ClientQuitTellsHostWhy - here the server outlives the loss and has to take the
-//next client on the same acceptor
+//NOTE: the other half of ClientQuitTellsHostWhy - the server outlives the loss and takes the next client
 TEST_F(NetworkTest, TheServerLearnsTheClientDroppedWithoutSayingGoodbye)
 {
 	const auto server{MakeServer()};
@@ -669,11 +607,7 @@ TEST_F(NetworkTest, ClientQuitTellsHostWhy)
 	EXPECT_FALSE(clientLost) << "the silence after the goodbye was reported as a second, silent drop";
 }
 
-//TODO: other bonus effect replication test after write this replication
-// TEST_F(NetworkTest, bonusKind...EventReplication) {
-
-// Three effects ride BonusStatus and bonusType is all that tells them apart, so a swapped case arrives
-// as the wrong effect on the wrong seat in silence. The ship lands keyed on its seat, the tank broadcasts
+// three effects share BonusStatus, told apart by bonusType - a swap would land the wrong effect on the wrong seat
 TEST_F(NetworkTest, ShipAndTankEffectsKeepTheirOwnEventAcrossTheWire)
 {
 	const auto server{MakeServer()};
@@ -700,8 +634,7 @@ TEST_F(NetworkTest, ShipAndTankEffectsKeepTheirOwnEventAcrossTheWire)
 	EXPECT_EQ(tankSeat, *tank);
 }
 
-// The seat handed out on connect is the only thing tying a key to a tank: the server reads whose
-// press it is off the session it arrived on.
+// the seat given on connect is all that ties a key to a tank - the server reads whose press it is off the session
 TEST_F(NetworkTest, TheServerHandsOutTheSeatsInOrder)
 {
 	std::optional<PlayerSlot> first{};
@@ -722,8 +655,7 @@ TEST_F(NetworkTest, TheServerHandsOutTheSeatsInOrder)
 	EXPECT_EQ(PlayerSlot::P2, *second);
 }
 
-// A seat is held by its session and comes back only once that session is swept - and a session
-// that said goodbye is swept on its own IsFinished verdict.
+// a seat comes back only once its session is swept - one that said goodbye is swept on its own IsFinished
 TEST_F(NetworkTest, ASeatComesBackWhenItsClientSaysGoodbye)
 {
 	std::optional<PlayerSlot> first{};
@@ -782,8 +714,7 @@ TEST_F(NetworkTest, EachClientPutsOnlyItsOwnSeatOnTheWire)
 	subs.push_back(_serverEvents->AddListener(Key(InputChannel::RemoteP1),
 											[&strayArrived](const MoveDownEvent&) { strayArrived = true; }));
 
-	//NOTE: the stray goes first - the wire keeps its order, so once the press behind it has landed,
-	//a press that never left is told apart from one still in flight
+	//NOTE: the stray goes first - the wire keeps order, so once the press behind it lands, the stray never left
 	_clientEvents->EmitEvent(Key(InputChannel::LocalP2), MoveDownEvent{.isPressed = true});
 	_clientEvents->EmitEvent(Key(InputChannel::LocalP1), MoveUpEvent{.isPressed = true});
 	_secondClientEvents->EmitEvent(Key(InputChannel::LocalP2), MoveUpEvent{.isPressed = true});
@@ -792,8 +723,7 @@ TEST_F(NetworkTest, EachClientPutsOnlyItsOwnSeatOnTheWire)
 	EXPECT_FALSE(strayArrived) << "a client sent the keyboard half of a seat it was never given";
 }
 
-//NOTE: an unanswered hello reads as a host that is not there - a third player would burn its retries on
-//one that is merely busy
+//NOTE: an unanswered hello reads as no host - a third player would burn its retries on one merely busy
 TEST_F(NetworkTest, AThirdClientIsToldTheSeatsAreTaken)
 {
 	std::optional<PlayerSlot> firstSeat{};
@@ -847,8 +777,7 @@ TEST_F(NetworkTest, AThreeSeatServerSeatsAThirdClientAndTellsItTheMatch)
 	EXPECT_EQ(third->match, match);
 }
 
-// A ready landing in a running match is owed the field, and the snapshot goes out in place of that frame -
-// sent beside it, the frame's spawns would land a second time on top
+// a ready in a running match is owed the field, sent in place of that frame - beside it, spawns would land twice
 TEST_F(NetworkTest, AReadyInARunningMatchIsAnsweredWithTheFieldInsteadOfTheFrame)
 {
 	const Uuid standing{UuidUtils::GetRandomUuid()};
@@ -919,8 +848,7 @@ TEST_F(NetworkTest, AReadyInTheLobbyIsAnsweredWithFramesNotASnapshot)
 	EXPECT_FALSE(isSnapshotReceived);
 }
 
-// A lobby ready has no field to catch up with, but the debt it leaves has to outlive the lobby - the
-// first one in is playing on a field nobody would ever send him otherwise
+// a lobby ready owes the field once the match starts - otherwise the first one in plays a field nobody sends
 TEST_F(NetworkTest, AReadyOwedFromTheLobbyIsPaidOnceTheMatchStarts)
 {
 	const Uuid standing{UuidUtils::GetRandomUuid()};
@@ -984,8 +912,7 @@ TEST_F(NetworkTest, ALostClientLetsGoOfTheKeysOfItsSeat)
 	EXPECT_FALSE(isUpHeld.value_or(true)) << "the seat's tank still drives on a key nobody holds";
 }
 
-// A client whose link timed out dials again from the same socket before the host noticed - it gets its seat
-// back instead of being told the match is full of the connection it replaced
+// a client redialing from the same socket before the host saw the timeout gets its seat back, not "match full"
 TEST_F(NetworkTest, AClientDialingAgainFromTheSameAddressTakesItsSeatBack)
 {
 	std::optional<PlayerSlot> lost{};
@@ -1011,39 +938,14 @@ TEST_F(NetworkTest, AClientDialingAgainFromTheSameAddressTakesItsSeatBack)
 	EXPECT_EQ(*lost, PlayerSlot::P1);
 }
 
-// a frame that is not an archive comes back as an error with a reason, not as an empty batch
-TEST(SerializerTest, UnreadableFrameIsReportedNotSwallowed)
-{
-	const auto batch{network::Deserialize("not an archive at all")};
-
-	ASSERT_FALSE(batch.has_value());
-	EXPECT_FALSE(batch.error().reason.empty());
-}
-
-// and a batch written and read back holds the same command with the same fields
-TEST(SerializerTest, ABatchSurvivesTheRoundTrip)
-{
-	network::commands::CommandBatch sent;
-	sent.commands.emplace_back(network::commands::Disconnect{.reason = DisconnectReason::GameOver});
-
-	const auto received{network::Deserialize(network::Serialize(sent))};
-
-	ASSERT_TRUE(received.has_value());
-	const auto& commands{received.value().commands};
-	ASSERT_EQ(commands.size(), 1u);
-	const auto* goodbye{std::get_if<network::commands::Disconnect>(&commands.front())};
-	ASSERT_NE(goodbye, nullptr);
-	EXPECT_EQ(goodbye->reason, DisconnectReason::GameOver);
-}
-
-// Eleven local types collapse onto one StatisticsChange, so the discriminator table is all that keeps
-// them apart. Every type here carries a different author - identical payloads would hide a crossed wire
+// eleven local types share one StatisticsChange - each case has its own author, or a crossed wire would hide
 TEST_F(NetworkTest, EveryStatisticsTypeKeepsItsOwnEventAcrossTheWire)
 {
 	const auto server{MakeServer()};
 	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
+	std::optional<StatisticsBulletHitEvent> bulletHit{};
 	std::optional<StatisticsTankHitEvent> tankHit{};
 	std::optional<TankDiedEvent> tankDied{};
 	std::optional<BrickWallDiedEvent> brickDied{};
@@ -1053,6 +955,7 @@ TEST_F(NetworkTest, EveryStatisticsTypeKeepsItsOwnEventAcrossTheWire)
 	bool bonusExpired{};
 
 	std::vector<EventSubscription> subs{};
+	subs.push_back(_clientEvents->AddListener([&bulletHit](const StatisticsBulletHitEvent& e) { bulletHit = e; }));
 	subs.push_back(_clientEvents->AddListener([&tankHit](const StatisticsTankHitEvent& e) { tankHit = e; }));
 	subs.push_back(_clientEvents->AddListener([&tankDied](const TankDiedEvent& e) { tankDied = e; }));
 	subs.push_back(_clientEvents->AddListener([&brickDied](const BrickWallDiedEvent& e) { brickDied = e; }));
@@ -1064,6 +967,7 @@ TEST_F(NetworkTest, EveryStatisticsTypeKeepsItsOwnEventAcrossTheWire)
 	subs.push_back(_clientEvents->AddListener(
 			[&bonusExpired](const StatisticsBonusExpiredEvent&) { bonusExpired = true; }));
 
+	_serverEvents->EmitEvent(StatisticsBulletHitEvent{.author = Author::Player3});
 	_serverEvents->EmitEvent(StatisticsTankHitEvent{.who = Author::Player1, .author = Author::Enemy1});
 	_serverEvents->EmitEvent(TankDiedEvent{.who = Author::Player2, .uuid = _uuid, .author = Author::Enemy2});
 	_serverEvents->EmitEvent(BrickWallDiedEvent{.author = Author::Enemy3});
@@ -1074,9 +978,11 @@ TEST_F(NetworkTest, EveryStatisticsTypeKeepsItsOwnEventAcrossTheWire)
 
 	ASSERT_TRUE(PumpUntil([&]
 	{
-		return tankHit && tankDied && brickDied && steelDied && bonusPickup && bonusDestroyed && bonusExpired;
+		return bulletHit && tankHit && tankDied && brickDied && steelDied && bonusPickup && bonusDestroyed
+			   && bonusExpired;
 	}));
 
+	EXPECT_EQ(Author::Player3, bulletHit.value().author);
 	EXPECT_EQ(Author::Player1, tankHit.value().who);
 	EXPECT_EQ(Author::Enemy1, tankHit.value().author);
 	EXPECT_EQ(Author::Player2, tankDied.value().who);

@@ -47,8 +47,7 @@ public:
 };
 }//namespace
 
-// point the config at a path with no file: it is written with defaults, and the absence is not an
-// error the caller has to show
+// no file at the config path: it is written with defaults, and the absence is no error to show
 TEST(ProjectConfigTest, MissingFileIsWrittenAndNotReported)
 {
 	const TempIni ini{"battlecity_missing.ini"};

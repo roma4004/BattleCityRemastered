@@ -21,6 +21,7 @@
 #include "enums/Direction.h"
 #include "enums/Faction.h"
 #include "enums/GameMode.h"
+#include "enums/GameState.h"
 #include "enums/InputChannel.h"
 #include "enums/MatchRules.h"
 #include "enums/PlayerSlot.h"
@@ -32,9 +33,11 @@
 #include <algorithm>
 #include <array>
 #include <chrono>
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <string_view>
+#include <utility>
 
 using namespace std::chrono_literals;
 
@@ -118,62 +121,39 @@ protected:
 	}
 };
 
-// in the demo nobody sits down, so every seat goes to a bot and the field fills up
-TEST_F(TankSpawnerTest, DemoPhaseStart)
+// each mode starts with its tanks - the demo all bots, 2P free-for-all two bots, not four; the rest in the rows
+TEST_F(TankSpawnerTest, EachModeStartsWithItsTanks)
 {
-	_gameConfig.gameState = GameState::Demo;
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::CoopWithBot, _respawnManager,
-							 _tankSpawner);
-	_events->EmitEvent(GameResetEvent{});
-	_events->EmitEvent(RespawnTanksEvent{});
-	EXPECT_EQ(_allObjects.size(), 6u);
-}
+	struct Start final
+	{
+		GameMode mode;
+		GameState state;
+		std::size_t seats;
+		std::size_t tanks;
+	};
 
-// one seat taken and four bots
-TEST_F(TankSpawnerTest, OnePlayersGameModeStart)
-{
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
-	_events->EmitEvent(GameResetEvent{});
-	_events->EmitEvent(RespawnTanksEvent{});
-	EXPECT_EQ(_allObjects.size(), 5u);
-}
+	const GameState menu{_gameConfig.gameState};
+	const std::array starts{
+			 Start{.mode = GameMode::CoopWithBot, .state = GameState::Demo, .seats = kDefaultSeats, .tanks = 6u},
+			 Start{.mode = GameMode::OnePlayer, .state = menu, .seats = kDefaultSeats, .tanks = 5u},
+			 Start{.mode = GameMode::TwoPlayers, .state = menu, .seats = kDefaultSeats, .tanks = 6u},
+			 Start{.mode = GameMode::CoopWithBot, .state = menu, .seats = kDefaultSeats, .tanks = 6u},
+			 Start{.mode = GameMode::PlayAsHost, .state = menu, .seats = kDefaultSeats, .tanks = 6u},
+			 Start{.mode = GameMode::PlayAsHost, .state = menu, .seats = 4u, .tanks = 8u},
+			 Start{.mode = GameMode::TwoPlayersFreeForAll, .state = menu, .seats = kDefaultSeats, .tanks = 4u}};
+	for (const auto& [mode, state, seats, tanks]: starts)
+	{
+		SCOPED_TRACE(testing::Message() << static_cast<int>(mode) << " in " << static_cast<int>(state) << " with "
+										<< seats);
+		_allObjects.clear();
+		_gameConfig.gameState = state;
+		_gameConfig.networkSeats = seats;
+		TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, mode, _respawnManager, _tankSpawner);
+		_events->EmitEvent(GameResetEvent{});
+		_events->EmitEvent(RespawnTanksEvent{});
 
-// both seats taken
-TEST_F(TankSpawnerTest, TwoPlayersGameModeStart)
-{
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::TwoPlayers, _respawnManager, _tankSpawner);
-	_events->EmitEvent(GameResetEvent{});
-	_events->EmitEvent(RespawnTanksEvent{});
-	EXPECT_EQ(_allObjects.size(), 6u);
-}
-
-// one player and a bot on its side
-TEST_F(TankSpawnerTest, CoopWithBotGameModeStart)
-{
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::CoopWithBot, _respawnManager, _tankSpawner);
-	_events->EmitEvent(GameResetEvent{});
-	_events->EmitEvent(RespawnTanksEvent{});
-	EXPECT_EQ(_allObjects.size(), 6u);
-}
-
-// and a network match seats the same six
-TEST_F(TankSpawnerTest, PlayAsHostGameModeStart)
-{
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
-	_events->EmitEvent(GameResetEvent{});
-	_events->EmitEvent(RespawnTanksEvent{});
-	EXPECT_EQ(_allObjects.size(), 6u);
-}
-
-// a four-seat host spawns four players, two on each side of the fortress
-TEST_F(TankSpawnerTest, AFourSeatHostMatchSeatsFourPlayers)
-{
-	_gameConfig.networkSeats = 4u;
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
-	_events->EmitEvent(GameResetEvent{});
-	_events->EmitEvent(RespawnTanksEvent{});
-
-	EXPECT_EQ(_allObjects.size(), 8u);
+		EXPECT_EQ(_allObjects.size(), tanks);
+	}
 }
 
 // a host told to play free-for-all sets every tank against every other and keeps the bots it picked on the field
@@ -217,8 +197,7 @@ TEST_F(TankSpawnerTest, PlayAsClientGameModeStart)
 	EXPECT_EQ(_allObjects.size(), 6u);
 }
 
-//NOTE: the instant-animation wiring is dropped on purpose - the grenade only has something to cancel
-//while the spawns are still pending
+//NOTE: no instant spawn animation on purpose - the grenade can only cancel spawns still pending
 TEST_F(TankSpawnerTest, GrenadeCancelsEnemiesStillSpawning)
 {
 	_instantSpawnAnimationSubs.clear();
@@ -514,41 +493,28 @@ TEST_F(TankSpawnerTest, AServerTakesBothSeatsOffTheWire)
 	EXPECT_NE(startPos, playerOne->GetPos()) << "the first seat never heard the wire";
 }
 
-// a strip full of bush is passable ground, so it must not read as a sealed edge
-TEST_F(TankSpawnerTest, AnEnemySpawnsOnBush)
+// bush and ice are ground a tank drives on, water is not: a fresh tank has no ship and could never drive off it
+TEST_F(TankSpawnerTest, AnEnemySpawnsOnBushAndIceButNotOnWater)
 {
-	PlantTopRow(ObstacleType::Bush);
+	constexpr std::array kGrounds{std::pair{ObstacleType::Bush, true}, std::pair{ObstacleType::Ice, true},
+								  std::pair{ObstacleType::Water, false}};
+	for (const auto& [ground, isSpawnable]: kGrounds)
+	{
+		SCOPED_TRACE(static_cast<int>(ground));
+		_allObjects.clear();
+		TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, _gameConfig.gameMode, _respawnManager,
+								 _tankSpawner);
+		_events->EmitEvent(GameResetEvent{});
+		PlantTopRow(ground);
 
-	const std::size_t before{CountTanksInTopRow()};
-	_events->EmitEvent(RespawnTanksEvent{});
+		const std::size_t before{CountTanksInTopRow()};
+		_events->EmitEvent(RespawnTanksEvent{});
 
-	EXPECT_GT(CountTanksInTopRow(), before) << "bush was read as a wall";
+		EXPECT_EQ(CountTanksInTopRow() > before, isSpawnable);
+	}
 }
 
-// ice is the same kind of ground, and the spawner treats it the same
-TEST_F(TankSpawnerTest, AnEnemySpawnsOnIce)
-{
-	PlantTopRow(ObstacleType::Ice);
-
-	const std::size_t before{CountTanksInTopRow()};
-	_events->EmitEvent(RespawnTanksEvent{});
-
-	EXPECT_GT(CountTanksInTopRow(), before) << "ice was read as a wall";
-}
-
-// water is not - a fresh tank has no ship bonus and could never drive off it
-TEST_F(TankSpawnerTest, NoEnemySpawnsOnWater)
-{
-	PlantTopRow(ObstacleType::Water);
-
-	const std::size_t before{CountTanksInTopRow()};
-	_events->EmitEvent(RespawnTanksEvent{});
-
-	EXPECT_EQ(CountTanksInTopRow(), before) << "a tank was put down on water";
-}
-
-// the one opening in the top row sits off both the tank and the half-tank stride, which a search by
-// strides alone would miss
+// the one opening in the top row is off both the tank and the half-tank stride - a search by strides misses it
 TEST_F(TankSpawnerTest, AnEnemyFindsAnOpeningThatIsOffTheCoarseSteps)
 {
 	//NOTE: exactly one tank wide, set one cell off the tank-sized stride
@@ -625,17 +591,6 @@ TEST_F(TankSpawnerTest, AnEnemyComesUpTheMomentTheFrontClears)
 	EXPECT_EQ(CountTanksInTopRow(), 1u) << "the front cleared and the enemy still sat out a cooldown nobody spent";
 }
 
-// 2P free-for-all keeps two bots on the field, not four
-TEST_F(TankSpawnerTest, TwoPlayersFreeForAllStartsWithTwoPlayersAndTwoBots)
-{
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::TwoPlayersFreeForAll, _respawnManager,
-							 _tankSpawner);
-	_events->EmitEvent(GameResetEvent{});
-	_events->EmitEvent(RespawnTanksEvent{});
-
-	EXPECT_EQ(_allObjects.size(), 4u);
-}
-
 // a seat the match gave to a bot gets a coop tank, and the clients are told it is one
 TEST_F(TankSpawnerTest, AHostSeatsABotWhereTheMatchSaysAndTellsTheClients)
 {
@@ -678,11 +633,23 @@ TEST_F(TankSpawnerTest, APlayerTakingOverABotDrivesItsTankWhereItStands)
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = 1.0 / 60.0});
 	EXPECT_NE(standing, tank->GetPos()) << "the newcomer's keys do not reach the tank";
 	EXPECT_EQ(uuid, tank->GetUuid());
+}
+
+// and a client joining afterwards is sent that tank as the player's, not as the bot's it was
+TEST_F(TankSpawnerTest, ATankTakenOverFromABotIsSentAsThePlayers)
+{
+	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
+	_events->EmitEvent(SeatsFilledEvent{
+			.holders = {SeatHolder::Player, SeatHolder::Bot, SeatHolder::Empty, SeatHolder::Empty}});
+	_events->EmitEvent(GameResetEvent{});
+	_events->EmitEvent(RespawnTankEvent{.type = TankType::PLAYER2, .uuid = UuidUtils::GetRandomUuid()});
+
+	_events->EmitEvent(SeatHolderChangedEvent{.slot = PlayerSlot::P2, .from = SeatHolder::Bot});
 
 	WorldSnapshot field{};
 	_events->EmitEvent(WorldSnapshotRequestedEvent{.snapshot = field});
 	ASSERT_EQ(field.tanks.size(), 1u);
-	EXPECT_EQ(field.tanks.front().type, TankType::PLAYER2) << "the newcomer would be sent the seat as a bot's";
+	EXPECT_EQ(field.tanks.front().type, TankType::PLAYER2);
 }
 
 // the player who carried a tier left between the levels - whoever takes the seat afterwards starts afresh

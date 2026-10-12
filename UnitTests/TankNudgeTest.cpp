@@ -233,8 +233,7 @@ TEST_F(TankNudgeTest, AnOpeningExactlyOneTankWideIsEnteredFromHalfATankOff)
 	EXPECT_GT(player->GetRect().y, kWallY) << "the tank stayed under the wall";
 }
 
-// The edge of the field is not an opening - a tank nudged past it keeps going, because nothing out
-// there ever blocks the way back
+// the field edge is no opening - a tank nudged past it would keep going, nothing out there blocks the way back
 TEST_F(TankNudgeTest, ANudgeStopsAtTheFieldEdge)
 {
 	//NOTE: a third of the tank across - little enough that clearing it sideways looks like a way through
@@ -247,8 +246,7 @@ TEST_F(TankNudgeTest, ANudgeStopsAtTheFieldEdge)
 	EXPECT_DOUBLE_EQ(player->GetRect().x, 0.0) << "the nudge walked the tank out of the field";
 }
 
-// A tank standing against a wall lands a hair inside it as often as a hair short of it, and that hair
-// is well under what the collider itself calls a touch - read as "behind me" it opens the wall
+// a tank against a wall lands a hair inside it as often as short of it - read as "behind me" it opens the wall
 TEST_F(TankNudgeTest, ATankAHairInsideAWallDoesNotDriveThroughIt)
 {
 	//NOTE: two cells, so neither way across clears them - the tank has nowhere to go but stand

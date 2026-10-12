@@ -25,8 +25,6 @@ class BonusManager final
 {
 	using milliseconds = std::chrono::milliseconds;
 
-	//NOTE: one bonus pickup is worth this much of its effect - a super one simply lands twice
-	static constexpr milliseconds kEffectDuration{std::chrono::seconds{15}};
 	static constexpr milliseconds kRespawnHelmetDuration{std::chrono::seconds{5}};
 
 	//NOTE: the field owns the bonus, this only watches its clock - weak, so a spent one drops out

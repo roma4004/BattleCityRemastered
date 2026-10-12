@@ -167,19 +167,19 @@ void BonusManager::EmitEffectStatus(const ActiveEffect& effect, const bool isAct
 
 void BonusManager::OnBonusHelmetPickup(const BonusHelmetPickupEvent& event)
 {
-	StartEffect(BonusType::Helmet, event.author, kEffectDuration);
+	StartEffect(BonusType::Helmet, event.author, _gameConfig.bonusEffectDuration);
 }
 
 void BonusManager::OnTimerBonus(const BonusTimerPickupEvent& event)
 {
-	StartEffect(BonusType::Timer, event.target, kEffectDuration, event.spared);
+	StartEffect(BonusType::Timer, event.target, _gameConfig.bonusEffectDuration, event.spared);
 }
 
 void BonusManager::OnBonusShovelPickup(const BonusShovelPickupEvent& event)
 {
 	if (event.faction == Faction::PlayerTeam)
 	{
-		StartEffect(BonusType::Shovel, event.faction, kEffectDuration);
+		StartEffect(BonusType::Shovel, event.faction, _gameConfig.bonusEffectDuration);
 
 		return;
 	}

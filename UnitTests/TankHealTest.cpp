@@ -32,7 +32,7 @@ protected:
 	EventSubscription _spawnQueueSub{};
 	EventSubscription _healthSub{};
 	double _deltaTimeOneFrame{1.0 / 60.0};
-	int _tankHealth{100};
+	unsigned int _tankHealth{100};
 
 	void SetUp() override
 	{
@@ -86,7 +86,7 @@ TEST_F(TankHealTest, APickupHealIsReported)
 TEST_F(TankHealTest, AMaxedTankStillHealsOnAStar)
 {
 	const auto player{CreatePlayer(7u)};
-	const int healthBefore{player->GetHealth()};
+	const unsigned int healthBefore{player->GetHealth()};
 
 	DriveIntoBonus(BonusType::Star);
 

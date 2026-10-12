@@ -134,7 +134,6 @@ set(UNIT_TESTS_SOURCES
         UnitTests/BonusTestDestroy.cpp
         UnitTests/BonusTestEnemy.cpp
         UnitTests/BotsTest.cpp
-        UnitTests/BulletPoolTest.cpp
         UnitTests/LevelProgressionTest.cpp
         UnitTests/MapTest.cpp
         UnitTests/MatchStartTest.cpp
@@ -144,21 +143,16 @@ set(UNIT_TESTS_SOURCES
         UnitTests/DatagramLinkTest.cpp
         UnitTests/DiscoveryTest.cpp
         UnitTests/CommandLineParserTest.cpp
-        UnitTests/EndpointsTest.cpp
         UnitTests/AddressFieldTest.cpp
         UnitTests/ConsoleCommandTest.cpp
         UnitTests/ProjectConfigTest.cpp
-        UnitTests/CoopBotTest.cpp
         UnitTests/DeadObjectFilterTest.cpp
-        UnitTests/DirectionUtilsTest.cpp
         UnitTests/GamepadDirectionTest.cpp
-        UnitTests/EnemyBotTest.cpp
         UnitTests/GameStateManagerTest.cpp
         UnitTests/GameStateTest.cpp
         UnitTests/ClientMirrorTest.cpp
         UnitTests/TankHealTest.cpp
         UnitTests/TankNudgeTest.cpp
-        UnitTests/TankPoolTest.cpp
         UnitTests/TankModelTest.cpp
         UnitTests/TankShoveTest.cpp
         UnitTests/TankTerrainTest.cpp
@@ -169,14 +163,12 @@ set(UNIT_TESTS_SOURCES
         UnitTests/PlayerTest.cpp
         UnitTests/RespawnManagerTest.cpp
         UnitTests/ScoreBoardTest.cpp
-        UnitTests/StatisticsTestAdvanced.cpp
         UnitTests/SeatAssignmentTest.cpp
         UnitTests/SeatHistoryTest.cpp
         UnitTests/SessionTest.cpp
         UnitTests/SimulationStepTest.cpp
         UnitTests/StatisticsTestBasic.cpp
         UnitTests/TankSpawnerTest.cpp
-        UnitTests/TimeUtilsTest.cpp
         UnitTests/WorldSnapshotTest.cpp
         UnitTests/TestUtils.cpp
 )

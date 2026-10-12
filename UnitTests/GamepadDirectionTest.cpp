@@ -3,13 +3,11 @@
 #include "gtest/gtest.h"
 #include <optional>
 
-// one pad drives one tank, and it has two ways of saying where: the d-pad and the left stick. Every case
-// here works the same pad and asks what the tank should be following - a direction, or nothing at all
+// one pad drives one tank by the d-pad and the left stick; each case asks which direction the tank follows
 class GamepadDirectionTest : public testing::Test
 {
 protected:
-	//NOTE: the stick rests near the center and never exactly on it, so anything inside the dead zone is not
-	//a press; the tilt is well past it
+	//NOTE: a resting stick is near the center, never on it - inside the dead zone is no press
 	static constexpr int kDeadZone{8000};
 	static constexpr int kTilt{20000};
 
@@ -59,8 +57,7 @@ TEST_F(GamepadDirectionTest, LettingTheNewestGoHandsBackToWhatIsStillHeld)
 	EXPECT_EQ(_direction.Held(), std::nullopt);
 }
 
-// a stick already tilted keeps sending values as the thumb shifts - those are not new presses, so the
-// d-pad pressed afterwards keeps the tank
+// a tilted stick keeps sending values as the thumb shifts - no new presses, so a later d-pad press keeps the tank
 TEST_F(GamepadDirectionTest, AStickWobblingOnItsSideDoesNotTakeOverTheDpad)
 {
 	_direction.MoveStickX(kTilt);

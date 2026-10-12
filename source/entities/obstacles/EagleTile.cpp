@@ -21,7 +21,7 @@ void EagleTile::Subscribe()
 }
 
 //NOTE: a whole eagle wears no bar - it shows up with the first hit
-std::optional<int> EagleTile::ShownHealth() const
+std::optional<unsigned int> EagleTile::ShownHealth() const
 {
 	return GetHealth() < kHealth ? std::optional{GetHealth()} : std::nullopt;
 }

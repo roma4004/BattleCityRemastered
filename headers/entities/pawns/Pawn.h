@@ -33,7 +33,7 @@ public:
 	void TakeDamage(unsigned int damage, Author author) override;
 	[[nodiscard]] Author GetAuthor() const noexcept;
 
-	void Heal(int amount);
+	void Heal(unsigned int amount);
 
 	[[nodiscard]] Direction GetDirection() const noexcept;
 	void SetDirection(Direction dir);

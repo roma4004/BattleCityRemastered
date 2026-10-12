@@ -44,7 +44,7 @@ namespace
 }
 }//namespace
 
-Obstacle::Obstacle(const ObjRectangle rect, const int health, const std::shared_ptr<EventSystem>& events,
+Obstacle::Obstacle(const ObjRectangle rect, const unsigned int health, const std::shared_ptr<EventSystem>& events,
 				   const Uuid uuid, const GameConfig& gameConfig, const ObstacleType obstacleType,
 				   const CollisionTags collision, const DrawLayer layer)
 	: BaseObj{BaseObjProperty{.rect = rect, .health = health, .uuid = uuid, .faction = Faction::Neutral},

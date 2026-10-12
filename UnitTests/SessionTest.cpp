@@ -10,8 +10,7 @@
 #include <cstdint>
 #include <memory>
 
-// A client that acks nothing is not sent the tail it missed - its session drops the backlog and owes a
-// snapshot, paid in place of the next frame
+// a client that acks nothing loses its backlog and is owed a snapshot, paid in place of the next frame
 class SessionTest : public testing::Test
 {
 protected:

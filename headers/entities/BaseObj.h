@@ -15,7 +15,7 @@ struct Sprite;
 
 class BaseObj : public IObstacle
 {
-	int _health{};
+	unsigned int _health{};
 	CollisionTags _collision;
 
 protected:
@@ -44,7 +44,7 @@ public:
 	[[nodiscard]] virtual std::optional<Sprite> Look() const = 0;
 	//NOTE: what is painted over the object on a layer of its own - a tank's helmet
 	[[nodiscard]] virtual std::optional<Sprite> Cover() const;
-	[[nodiscard]] virtual std::optional<int> ShownHealth() const { return std::nullopt; }
+	[[nodiscard]] virtual std::optional<unsigned int> ShownHealth() const { return std::nullopt; }
 
 	[[nodiscard]] FPoint GetPos() const noexcept;
 	void SetPos(const FPoint& pos);
@@ -66,8 +66,8 @@ public:
 	void MoveX(double i);
 	void MoveY(double i);
 
-	[[nodiscard]] virtual int GetHealth() const;
-	virtual void SetHealth(int health);
+	[[nodiscard]] virtual unsigned int GetHealth() const;
+	virtual void SetHealth(unsigned int health);
 
 	[[nodiscard]] bool GetIsAlive() const noexcept override;
 	void SetIsAlive(bool isAlive) noexcept override;

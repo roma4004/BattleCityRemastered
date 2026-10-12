@@ -15,6 +15,7 @@
 #include <cstddef>
 #include <expected>
 #include <algorithm>
+#include <array>
 #include <filesystem>
 #include <fstream>
 #include <memory>
@@ -35,8 +36,7 @@ protected:
 			"4567\n"
 			"0000\n"};
 
-	//NOTE: the smallest grid the rules let through - three cells make a tank, so both edges need a gap that
-	//wide, and the eagle takes a square of its own that wide too
+	//NOTE: the smallest grid the rules pass - both edge gaps and the eagle's square are a tank wide
 	static constexpr auto kPlayableGrid{"000000000000\n"
 			"000000000000\n"
 			"000000000000\n"
@@ -130,31 +130,19 @@ TEST_F(MapLoaderTest, ALetterLaysABonusOnFreeGround)
 	EXPECT_EQ(map->bonuses.front().type, BonusType::Helmet);
 }
 
-// the letters are a closed legend of their own - an unknown one is refused like an unknown digit
-TEST_F(MapLoaderTest, ALetterOutsideTheBonusLegendIsRejected)
-{
-	const auto map{MapLoader::Parse("0000\n00z0\n")};
-
-	ASSERT_FALSE(map.has_value());
-	EXPECT_EQ(map.error().line, 2u);
-}
-
-// so is any other symbol
-TEST_F(MapLoaderTest, SymbolOutsideTheLegendIsRejected)
-{
-	const auto map{MapLoader::Parse("0000\n00x0\n")};
-
-	ASSERT_FALSE(map.has_value());
-	EXPECT_EQ(map.error().line, 2u);
-}
-
-// and a digit past the last obstacle - the enum is the gate for what comes from outside
-TEST_F(MapLoaderTest, DigitPastTheLastObstacleIsRejected)
+// a cell outside the legend is refused with its line: a stray letter, another symbol, a digit past the last obstacle
+TEST_F(MapLoaderTest, ACellOutsideTheLegendIsRejectedWithItsLineNumber)
 {
 	//NOTE: '8' is one past Ice - a plain range check on the digit would have let it through as a cast
-	const auto map{MapLoader::Parse("0080\n")};
+	constexpr std::array kGrids{"0000\n00z0\n", "0000\n00x0\n", "0000\n0080\n"};
+	for (const std::string_view grid: kGrids)
+	{
+		SCOPED_TRACE(grid);
+		const auto map{MapLoader::Parse(grid)};
 
-	ASSERT_FALSE(map.has_value());
+		ASSERT_FALSE(map.has_value());
+		EXPECT_EQ(map.error().line, 2u);
+	}
 }
 
 // "N enemies:" gives the level its count, and the list after it the models of the first ones in their order
@@ -200,8 +188,9 @@ TEST_F(MapLoaderTest, ACommentedEnemyLineIsIgnored)
 // a broken line is refused with the line it stands on, the way a broken row is
 TEST_F(MapLoaderTest, ABrokenEnemyLineIsRejectedWithItsLineNumber)
 {
-	for (const std::string_view enemies: {"4 enemies: tiger", "4 enemies: basic,", "4 enemies: 0 basic",
-										   "4 enemies: 3", "0 enemies:", "70000 enemies:", "2 enemies: 3 basic"})
+	constexpr std::array kBrokenLines{"4 enemies: tiger", "4 enemies: basic,", "4 enemies: 0 basic",
+									   "4 enemies: 3", "0 enemies:", "70000 enemies:", "2 enemies: 3 basic"};
+	for (const std::string_view enemies: kBrokenLines)
 	{
 		SCOPED_TRACE(enemies);
 		const auto map{MapLoader::Parse("# legend\n" + std::string{enemies} + "\n0000\n")};
@@ -236,28 +225,6 @@ TEST_F(MapLoaderTest, MissingFileIsAnErrorNotAnEmptyMap)
 
 	ASSERT_FALSE(map.has_value());
 	EXPECT_EQ(map.error().path, "Resources/Maps/there-is-no-such-level.map");
-}
-
-//NOTE: nothing in the result says whether the disk was touched, so the file is swapped between the two
-//loads - the first map coming back the second time is the cache answering
-TEST_F(MapLoaderTest, TheSameFileIsReadFromDiskOnlyOnce)
-{
-	const std::string name{"battlecity_cache_" + UuidUtils::GetStringUuid(UuidUtils::GetRandomUuid()) + ".map"};
-	const std::filesystem::path path{std::filesystem::temp_directory_path() / name};
-
-	std::ofstream{path} << kPlayableGrid;
-	const auto first{MapLoader::LoadFromFile(path)};
-
-	//NOTE: both grids have to pass the rules - a refused second one errors whether the disk was read or not
-	std::ofstream{path} << std::string{kPlayableGrid} + "000000000000\n";
-	const auto second{MapLoader::LoadFromFile(path)};
-
-	std::filesystem::remove(path);//NOTE: before the assertions - a failed one would return past it
-
-	ASSERT_TRUE(first.has_value()) << first.error().reason;
-	ASSERT_TRUE(second.has_value()) << second.error().reason;
-	EXPECT_EQ(second->cols, 12u);
-	EXPECT_EQ(second->rows, 8u);
 }
 
 // the rules of the game on top of the grid: a match needs its eagle and a way in at both ends
@@ -295,22 +262,18 @@ TEST_F(MapLoaderTest, ABushEdgeStillLeavesRoomToSpawn)
 	EXPECT_TRUE(ValidateGrid(grid).has_value());
 }
 
-// a walled-off edge leaves the spawner waiting for a spot that never comes
-TEST_F(MapLoaderTest, ASealedTopEdgeLeavesNowhereToSpawn)
+// a walled-off edge leaves nowhere to spawn - the top one the enemy, the bottom one the players
+TEST_F(MapLoaderTest, ASealedEdgeLeavesNowhereToSpawn)
 {
-	std::string grid{kPlayableGrid};
-	grid.replace(0u, kRowStride - 1u, std::string(kRowStride - 1u, '1'));
+	constexpr std::array<std::size_t, 2> kSealedRows{0u, 7u};
+	for (const std::size_t row: kSealedRows)
+	{
+		SCOPED_TRACE(row);
+		std::string grid{kPlayableGrid};
+		grid.replace(kRowStride * row, kRowStride - 1u, std::string(kRowStride - 1u, '1'));
 
-	EXPECT_FALSE(ValidateGrid(grid).has_value());
-}
-
-// and a walled bottom one leaves the players nowhere
-TEST_F(MapLoaderTest, ASealedBottomEdgeLeavesNowhereToSpawn)
-{
-	std::string grid{kPlayableGrid};
-	grid.replace(kRowStride * 7u, kRowStride - 1u, std::string(kRowStride - 1u, '1'));
-
-	EXPECT_FALSE(ValidateGrid(grid).has_value());
+		EXPECT_FALSE(ValidateGrid(grid).has_value());
+	}
 }
 
 // the gap has to take a whole tank - two cells of the three is still a wall
@@ -325,8 +288,7 @@ TEST_F(MapLoaderTest, AGapNarrowerThanATankIsNoOpening)
 	EXPECT_FALSE(ValidateGrid(grid).has_value());
 }
 
-//NOTE: the eagle is one character but a whole tank across, and the file leaves its body as zeros - read as
-//free ground they would promise a spawn spot inside the fortress
+//NOTE: the eagle is one character but a tank wide, its body zeros in the file - no spawn spot inside the fortress
 TEST_F(MapLoaderTest, TheEaglesOwnBodyIsNotFreeGround)
 {
 	const auto grid{std::string{"00000\n"
@@ -339,54 +301,16 @@ TEST_F(MapLoaderTest, TheEaglesOwnBodyIsNotFreeGround)
 	EXPECT_FALSE(ValidateGrid(grid).has_value()) << "the cells the eagle covers were read as free";
 }
 
-// the classic grid gives the field the game has always had
-TEST(WorldGeometryTest, ClassicMapKeepsTheClassicField)
+// the map decides the world, not the window: the cell keeps its size, so the field grows with the grid
+TEST(WorldGeometryTest, TheFieldGrowsWithTheGridAndTheCellKeepsItsSize)
 {
-	const UPoint battlefieldSize{WorldGeometry::ForMap(52u, 50u)};
-
-	EXPECT_EQ(battlefieldSize.x, 624u);
-	EXPECT_EQ(battlefieldSize.y, 600u);
+	EXPECT_EQ(WorldGeometry::ForMap(52u, 50u), (UPoint{.x = 624u, .y = 600u}));
+	EXPECT_EQ(WorldGeometry::ForMap(80u, 50u), (UPoint{.x = 960u, .y = 600u}));
+	EXPECT_EQ(WorldGeometry::ForMap(52u, 100u), (UPoint{.x = 624u, .y = 1200u}));
+	EXPECT_EQ(WorldGeometry::ForMap(0u, 0u), (UPoint{}));
 }
 
-// a wider map widens the world - the cell stays the size it is
-TEST(WorldGeometryTest, WideMapWidensTheWorldInsteadOfShrinkingTheCell)
-{
-	const UPoint battlefieldSize{WorldGeometry::ForMap(80u, 50u)};
-
-	EXPECT_EQ(battlefieldSize.x, 960u);
-	EXPECT_EQ(battlefieldSize.y, 600u);
-}
-
-// and a taller one makes it taller
-TEST(WorldGeometryTest, TallMapMakesTheWorldTaller)
-{
-	const UPoint battlefieldSize{WorldGeometry::ForMap(52u, 100u)};
-
-	EXPECT_EQ(battlefieldSize.x, 624u);
-	EXPECT_EQ(battlefieldSize.y, 1200u);
-}
-
-// a map of no cells gives no world at all
-TEST(WorldGeometryTest, EmptyMapProducesNoWorld)
-{
-	const UPoint battlefieldSize{WorldGeometry::ForMap(0u, 0u)};
-
-	EXPECT_EQ(battlefieldSize.x, 0u);
-	EXPECT_EQ(battlefieldSize.y, 0u);
-}
-
-// what the renderer is given is the field plus the side bar
-TEST(WorldGeometryTest, LogicalSizeIsTheFieldPlusTheBar)
-{
-	GameConfig gameConfig{};
-	gameConfig.battlefieldSize = WorldGeometry::ForMap(52u, 50u);
-
-	EXPECT_EQ(gameConfig.LogicalSize().x, 624u + WorldGeometry::kSideBarWidth);
-	EXPECT_EQ(gameConfig.LogicalSize().y, 600u);
-}
-
-//NOTE: the server sizes an eagle from the map, the client from a spawn event carrying only a position -
-//they used to disagree, the client giving it a single cell
+//NOTE: the client sizes an eagle from a position-only spawn event and used to give it a single cell
 TEST(ObstacleSpawnerTest, ClientGivesTheEagleTheSameSpanTheMapDoes)
 {
 	const auto events{std::make_shared<EventSystem>()};

@@ -12,8 +12,7 @@
 #include <string>
 #include <vector>
 
-// The next level travels the events a restart travels, and their order is the whole of it: the reset
-// empties the world, the map load fills it, and a reset arriving afterwards leaves the level unplayable.
+// the next level travels a restart's events, and their order is all: the reset empties the world, the map fills it
 class NextLevelFlowTest : public testing::Test
 {
 protected:
@@ -41,22 +40,12 @@ protected:
 	}
 };
 
-// nothing resets the world after its map has been loaded
-TEST_F(NextLevelFlowTest, TheMapOfTheNextLevelIsLoadedLast)
+// one reset, then the next level's map - a reset after the load empties the level, a second one tears it down twice
+TEST_F(NextLevelFlowTest, TheNextLevelIsOneResetThenItsMap)
 {
 	WinAndAskForTheNextLevel();
 
-	ASSERT_FALSE(_order.empty()) << "the next level never started";
-	EXPECT_EQ("map", _order.back()) << "a reset followed the map load and emptied the level";
-}
-
-// and it is torn down once, not once per listener that felt like starting the match
-TEST_F(NextLevelFlowTest, TheWorldIsResetOnceForTheNextLevel)
-{
-	WinAndAskForTheNextLevel();
-
-	EXPECT_EQ(1, std::ranges::count(_order, "reset"));
-	EXPECT_EQ(1, std::ranges::count(_order, "map"));
+	EXPECT_EQ(_order, (std::vector<std::string>{"reset", "map"}));
 }
 
 // a restart is a new run, not one more level of the old one

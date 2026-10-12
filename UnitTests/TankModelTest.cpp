@@ -18,6 +18,7 @@
 #include "utils/UuidUtils.h"
 #include "gtest/gtest.h"
 #include <algorithm>
+#include <array>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -125,7 +126,8 @@ TEST_F(TankModelTest, EnemiesComeAsTheMapListsThem)
 	_events->EmitEvent(EnemyLineupLoadedEvent{.count = lineup.size(), .models = lineup});
 
 	std::vector<TankModel> models;
-	for (const TankType seat: {TankType::ENEMY1, TankType::ENEMY2, TankType::ENEMY3})
+	constexpr std::array kEnemySeats{TankType::ENEMY1, TankType::ENEMY2, TankType::ENEMY3};
+	for (const TankType seat: kEnemySeats)
 	{
 		_events->EmitEvent(RespawnTankEvent{.type = seat, .uuid = UuidUtils::GetRandomUuid()});
 		models.push_back(std::dynamic_pointer_cast<Tank>(_allObjects.back())->GetModel());

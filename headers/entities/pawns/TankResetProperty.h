@@ -11,7 +11,7 @@ struct TankResetProperty final
 {
 	Uuid uuid{};
 	ObjRectangle rect{};
-	int health{};
+	unsigned int health{};
 	TankType type{};
 	TankModel model{};
 	Direction dir{};

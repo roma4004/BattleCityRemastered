@@ -11,8 +11,7 @@
 #include <memory>
 #include <vector>
 
-// the menu keys are read on PreTickUpdate, so every case here presses what it needs, runs one tick and
-// counts what came out of it - the mode is applied at most once per press
+// menu keys are read on PreTickUpdate: each case presses, runs one tick and counts - one apply per press at most
 class MenuInputTest : public testing::Test
 {
 protected:
@@ -39,18 +38,7 @@ protected:
 	}
 };
 
-// one press of the menu key opens it, and applies nothing
-TEST_F(MenuInputTest, MenuKeyOnlyTogglesTheMenu)
-{
-	_events->EmitEvent(MenuReleasedEvent{});
-	_events->EmitEvent(PreTickUpdateEvent{});
-
-	ASSERT_EQ(_menuShown.size(), 1u);
-	EXPECT_TRUE(_menuShown.front());
-	EXPECT_EQ(_applyCount, 0);
-}
-
-// a second press closes it again - still nothing applied, so leaving the menu is not a choice
+// one press of the menu key opens it and a second closes it - nothing applied, so leaving the menu is not a choice
 TEST_F(MenuInputTest, MenuKeyClosesWhatItOpenedWithoutApplyingAnything)
 {
 	_events->EmitEvent(MenuReleasedEvent{});

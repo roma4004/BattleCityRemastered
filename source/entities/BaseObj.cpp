@@ -2,6 +2,7 @@
 #include "components/Sprite.h"
 #include "geometry/Point.h"
 #include "entities/BaseObjProperty.h"
+#include <algorithm>
 
 BaseObj::BaseObj(BaseObjProperty baseObjProperty, const CollisionTags collision)
 	: _health(baseObjProperty.health)
@@ -56,10 +57,10 @@ void BaseObj::MoveX(const double i) { _rect.x += i; }
 
 void BaseObj::MoveY(const double i) { _rect.y += i; }
 
-int BaseObj::GetHealth() const { return _health; }
+unsigned int BaseObj::GetHealth() const { return _health; }
 
 //NOTE: never kills - the host decides a death in TakeDamage, the client hears of it from DespawnedEvent
-void BaseObj::SetHealth(const int health) { _health = health; }
+void BaseObj::SetHealth(const unsigned int health) { _health = health; }
 
 void BaseObj::SetIsAlive(const bool isAlive) noexcept { _isAlive = isAlive; }
 
@@ -77,7 +78,7 @@ void BaseObj::TakeDamage(const unsigned int damage, const Author author)
 		return;
 	}
 
-	_health -= static_cast<int>(damage);
+	_health -= std::min(damage, _health);
 	_isAlive = _health > 0;
 
 	EmitDamageStatistics(author);

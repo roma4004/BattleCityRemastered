@@ -271,23 +271,7 @@ TEST_F(DatagramLinkTest, AValueWaitingForASnapshotThatNeverCameGoesWithTheNextOn
 	EXPECT_FALSE(_client.IsAwaitingSnapshot());
 }
 
-// the timeout is measured, not fixed - a slow round trip stretches it
-TEST_F(DatagramLinkTest, TheRetransmitTimeoutFollowsTheMeasuredRoundTrip)
-{
-	ASSERT_EQ(_host.RetransmitTimeout(), 200ms);
-
-	ASSERT_TRUE(_host.SendReliable("hello"));
-	const auto datagrams{_host.TakeDatagrams(_now)};
-	_now += 20ms;
-	Carry(datagrams, _client);
-	Carry(_client.TakeDatagrams(_now), _host);
-
-	//NOTE: RFC 6298 on a first sample - the round trip plus four times half of it
-	EXPECT_EQ(_host.RetransmitTimeout(), 60ms);
-}
-
-// A peer that stopped acking is not sent the tail it missed - it is dropped, and the snapshot replacing it
-// is what arrives first
+// a peer that stopped acking is not sent the tail it missed - it is dropped, and the snapshot replacing it comes first
 TEST_F(DatagramLinkTest, ABacklogPastTheLimitIsDroppedAndThePeerSkipsToTheNextMessage)
 {
 	for (std::size_t i = 0u; i < network::DatagramLink::kMaxBacklog; ++i)

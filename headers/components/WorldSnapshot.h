@@ -26,7 +26,7 @@ struct TankSnapshot final
 	Uuid uuid{};
 	ObjRectangle rect{};
 	Direction dir{};
-	int health{};
+	unsigned int health{};
 	unsigned short tier{};
 	bool isHelmetActive{};
 	bool isShipActive{};
@@ -37,7 +37,7 @@ struct ObstacleSnapshot final
 	FPoint pos{};
 	ObstacleType type{};
 	Uuid uuid{};
-	int health{};
+	unsigned int health{};
 };
 
 struct BulletSnapshot final

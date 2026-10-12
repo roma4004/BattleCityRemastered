@@ -14,7 +14,7 @@ class EventSystem;
 
 class EagleTile final : public Obstacle, public IFortress
 {
-	static constexpr int kHealth{100};
+	static constexpr unsigned int kHealth{100};
 
 	void Subscribe() override;
 	void OnBonusShovel(const BonusShovelStatusChangeEvent& event);
@@ -30,5 +30,5 @@ protected:
 public:
 	EagleTile(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, Uuid uuid, const GameConfig& gameConfig);
 
-	[[nodiscard]] std::optional<int> ShownHealth() const override;
+	[[nodiscard]] std::optional<unsigned int> ShownHealth() const override;
 };

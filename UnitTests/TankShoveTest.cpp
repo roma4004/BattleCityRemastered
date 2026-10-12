@@ -16,8 +16,7 @@
 #include <memory>
 #include <vector>
 
-// a tank in the way gives way: each case puts a second tank on the first one's nose, presses the key for
-// one frame and reads where both ended up. The pusher is player one, so nothing steers it but the test
+// each case: a tank on the pusher's nose, one frame of player one's key, then where both ended up
 class TankShoveTest : public testing::Test
 {
 protected:
@@ -70,12 +69,6 @@ protected:
 		TestUtils::SpawnObstacleArea(_events, _allObjects, area, type, _gameConfig);
 	}
 
-	void DriveP1Right() const
-	{
-		_events->EmitEvent(Key(InputChannel::LocalP1), MoveRightEvent{.isPressed = true});
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-	}
-
 	//NOTE: two frames - on the first one neither tank has read what the other was asked to do yet
 	void DriveTowardsEachOther() const
 	{
@@ -88,8 +81,7 @@ protected:
 	[[nodiscard]] double StepOfOneFrame() const { return _gameConfig.tankSpeed * _deltaTimeOneFrame; }
 };
 
-// the plain case: the tank ahead is moved along and the one pushing takes the room it made - half a step,
-// because that is all that was cleared
+// the plain case: the tank ahead is moved, and the pusher takes the room it made - half a step, all that cleared
 TEST_F(TankShoveTest, APushedTankGivesWayAndThePusherFollowsAtHalfSpeed)
 {
 	const auto pusher{CreatePlayer({.x = 0.0, .y = _tankSize * 2.0}, Author::Player1, Direction::RIGHT)};
@@ -97,7 +89,8 @@ TEST_F(TankShoveTest, APushedTankGivesWayAndThePusherFollowsAtHalfSpeed)
 	const double pusherX{pusher->GetPos().x};
 	const double pushedX{pushed->GetPos().x};
 
-	DriveP1Right();
+	_events->EmitEvent(Key(InputChannel::LocalP1), MoveRightEvent{.isPressed = true});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_GT(pushed->GetPos().x, pushedX) << "the tank ahead stood like a wall";
 	EXPECT_GT(pusher->GetPos().x, pusherX);
@@ -127,7 +120,8 @@ TEST_F(TankShoveTest, ATankMerelyLookingAtUsIsStillPushed)
 	const auto pushed{CreatePlayer({.x = _tankSize, .y = _tankSize * 2.0}, Author::Player2, Direction::LEFT)};
 	const double pushedX{pushed->GetPos().x};
 
-	DriveP1Right();
+	_events->EmitEvent(Key(InputChannel::LocalP1), MoveRightEvent{.isPressed = true});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_GT(pushed->GetPos().x, pushedX) << "a parked tank held the shove by looking our way";
 }
@@ -143,7 +137,8 @@ TEST_F(TankShoveTest, ATankWithItsBackToAWallIsNotPushed)
 	const FPoint pusherPos{pusher->GetPos()};
 	const FPoint pushedPos{pushed->GetPos()};
 
-	DriveP1Right();
+	_events->EmitEvent(Key(InputChannel::LocalP1), MoveRightEvent{.isPressed = true});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(pushed->GetPos(), pushedPos);
 	EXPECT_EQ(pusher->GetPos(), pusherPos);
@@ -157,32 +152,45 @@ TEST_F(TankShoveTest, AnEnemyIsPushedLikeAnyoneElse)
 	SpawnObstacle(FPoint{.x = _tankSize, .y = _tankSize}, ObstacleType::Steel);
 	const double enemyX{enemy->GetPos().x};
 
-	DriveP1Right();
+	_events->EmitEvent(Key(InputChannel::LocalP1), MoveRightEvent{.isPressed = true});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_GT(enemy->GetPos().x, enemyX);
 }
 
-// the chain is asked as a whole: the far tank has room, so the near one gives way by everything asked of it
+// the chain is asked as a whole: the far tank has room, so the near one gives way and takes it along
 TEST_F(TankShoveTest, TheWholeChainGivesWayTogether)
 {
-	const auto near{CreatePlayer({.x = _tankSize, .y = _tankSize * 2.0}, Author::Player1, Direction::UP)};
-	CreatePlayer({.x = _tankSize * 2.0 + 1.0, .y = _tankSize * 2.0}, Author::Player2, Direction::UP);
-	constexpr double wanted{2.0};
+	CreatePlayer({.x = 0.0, .y = _tankSize * 2.0}, Author::Player1, Direction::RIGHT);
+	const auto near{CreatePlayer({.x = _tankSize, .y = _tankSize * 2.0}, Author::Player2, Direction::UP)};
+	const auto far{CreatePlayer({.x = _tankSize * 2.0, .y = _tankSize * 2.0}, Author::Player3, Direction::UP)};
+	const double nearX{near->GetPos().x};
+	const double farX{far->GetPos().x};
 
-	EXPECT_DOUBLE_EQ(near->ShoveDistance(Direction::RIGHT, wanted, 1), wanted);
+	_events->EmitEvent(Key(InputChannel::LocalP1), MoveRightEvent{.isPressed = true});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_GT(near->GetPos().x, nearX) << "the near tank stood like a wall";
+	EXPECT_GT(far->GetPos().x, farX) << "the far tank was left in the near one's way";
 }
 
 // and stands as a whole: a wall behind the far tank stops the near one as surely as a wall of its own
 TEST_F(TankShoveTest, TheChainStandsWhenItsFarEndCannotMove)
 {
-	const auto near{CreatePlayer({.x = _tankSize, .y = _tankSize * 2.0}, Author::Player1, Direction::UP)};
-	CreatePlayer({.x = _tankSize * 2.0 + 1.0, .y = _tankSize * 2.0}, Author::Player2, Direction::UP);
-	SpawnObstacleArea(ObjRectangle{.x = _tankSize * 3.0 + 1.0, .y = _tankSize * 2.0,
+	const auto pusher{CreatePlayer({.x = 0.0, .y = _tankSize * 2.0}, Author::Player1, Direction::RIGHT)};
+	const auto near{CreatePlayer({.x = _tankSize, .y = _tankSize * 2.0}, Author::Player2, Direction::UP)};
+	CreatePlayer({.x = _tankSize * 2.0, .y = _tankSize * 2.0}, Author::Player3, Direction::UP);
+	SpawnObstacleArea(ObjRectangle{.x = _tankSize * 3.0, .y = _tankSize * 2.0,
 								   .w = _gameConfig.gridOffset, .h = _tankSize},
 					  ObstacleType::Steel);
-	constexpr double wanted{2.0};
+	const FPoint pusherPos{pusher->GetPos()};
+	const FPoint nearPos{near->GetPos()};
 
-	EXPECT_DOUBLE_EQ(near->ShoveDistance(Direction::RIGHT, wanted, 1), 0.0);
+	_events->EmitEvent(Key(InputChannel::LocalP1), MoveRightEvent{.isPressed = true});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_EQ(near->GetPos(), nearPos);
+	EXPECT_EQ(pusher->GetPos(), pusherPos);
 }
 
 // on ice the shoved tank glides on after the pusher lets go
@@ -196,7 +204,8 @@ TEST_F(TankShoveTest, ATankShovedOnIceSlidesOnAfterThePusherStops)
 	constexpr int framesPushing{10};
 	for (int frame{}; frame < framesPushing; ++frame)
 	{
-		DriveP1Right();
+		_events->EmitEvent(Key(InputChannel::LocalP1), MoveRightEvent{.isPressed = true});
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 	}
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveRightEvent{.isPressed = false});
 	const double pushedX{pushed->GetPos().x};

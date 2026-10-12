@@ -96,7 +96,7 @@ void Pawn::TakeDamage(const unsigned int damage, const Author author)
 	}
 }
 
-void Pawn::Heal(const int amount)
+void Pawn::Heal(const unsigned int amount)
 {
 	if (!_gameConfig.IsAuthority())
 	{

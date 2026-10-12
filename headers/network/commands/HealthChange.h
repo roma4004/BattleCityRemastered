@@ -9,7 +9,7 @@ struct HealthChange final
 {
 	static constexpr Delivery kDelivery{Delivery::Reliable};
 
-	int health{};
+	unsigned int health{};
 	Uuid uuid{};
 };
 }//namespace network::commands

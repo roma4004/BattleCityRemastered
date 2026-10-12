@@ -12,12 +12,13 @@
 #include "enums/PlayerSlot.h"
 #include "gtest/gtest.h"
 #include <array>
+#include <cstdint>
 #include <memory>
 #include <optional>
+#include <ranges>
 #include <vector>
 
-// the phase machine alone: a mode is applied, events are fed in, and the phase, the announcements or the
-// match starts are read back
+// the phase machine alone: apply a mode, feed events, read back the phase, the announcements or the match starts
 class GameStateTest : public testing::Test
 {
 protected:
@@ -44,61 +45,64 @@ protected:
 	}
 };
 
-// a four-seat host waits for four readies
-TEST_F(GameStateTest, AFourSeatServerWaitsForEveryReady)
-{
-	_stateManager = std::make_unique<GameStateManager>(_events, MatchSettings{.seats = 4u});
-	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
-
-	for (const PlayerSlot slot: {PlayerSlot::P1, PlayerSlot::P2, PlayerSlot::P3})
-	{
-		_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = slot});
-	}
-
-	ASSERT_EQ(GameState::Lobby, _stateManager->GetState()) << "three of four started the match";
-
-	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P4});
-
-	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
-}
-
-// a local mode has both seats filled from the start, so the match begins on the spot
+// a local mode has every seat filled from the start: one announcement, and the match begins on the spot
 TEST_F(GameStateTest, LocalGameStartsPlayingWithNoOneToWaitFor)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::OnePlayer});
 
 	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
 	EXPECT_EQ(std::vector{GameState::Playing}, _announced);
+	EXPECT_EQ(_matchStarts, 1);
 }
 
-// a network mode has nobody in its seats yet and waits
+// a network mode has nobody in its seats yet and waits in the lobby, which starts nothing by itself
 TEST_F(GameStateTest, NetworkGameStartsInTheLobby)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
 
 	EXPECT_EQ(GameState::Lobby, _stateManager->GetState());
+	EXPECT_EQ(_matchStarts, 0);
 }
 
-// one ready seat is not enough for the server - the second one starts the match
-TEST_F(GameStateTest, TheServerLeavesTheLobbyOnceBothSeatsAreReady)
+// the server waits for every seat to ready, and the one that fills last starts the match - two seats or four
+TEST_F(GameStateTest, TheLastSeatToReadyStartsTheMatch)
 {
-	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
-	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P1});
-	EXPECT_EQ(GameState::Lobby, _stateManager->GetState()) << "the first player alone started the match";
+	constexpr std::array<std::uint8_t, 2> kSeatCounts{std::uint8_t{2}, std::uint8_t{4}};
+	for (const std::uint8_t seats: kSeatCounts)
+	{
+		SCOPED_TRACE(static_cast<int>(seats));
+		_stateManager = std::make_unique<GameStateManager>(_events, MatchSettings{.seats = seats});
+		_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
+		for (const PlayerSlot slot: kSlots | std::views::take(seats - 1u))
+		{
+			_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = slot});
+		}
 
-	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P2});
-	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
+		ASSERT_EQ(GameState::Lobby, _stateManager->GetState()) << "the match started a seat short";
+		_announced.clear();
+		_matchStarts = 0;
+
+		_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = kSlots[seats - 1u]});
+
+		EXPECT_EQ(GameState::Playing, _stateManager->GetState());
+		EXPECT_EQ(std::vector{GameState::Playing}, _announced);
+		EXPECT_EQ(_matchStarts, 1);
+	}
 }
 
 //NOTE: the link says nothing about the other seat - starting on it played alone on an empty field
-TEST_F(GameStateTest, AClientStaysInTheLobbyUntilTheServerSaysOtherwise)
+TEST_F(GameStateTest, AClientStartsTheMatchOnlyWhenTheServerAnnouncesIt)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsClient});
+	_matchStarts = 0;
+
 	_events->EmitEvent(ClientConnectedToHostEvent{});
 	EXPECT_EQ(GameState::Lobby, _stateManager->GetState());
+	EXPECT_EQ(_matchStarts, 0) << "the link alone started the match";
 
 	_events->EmitEvent(HostPhaseAnnouncedEvent{.phase = GameState::Playing});
 	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
+	EXPECT_EQ(_matchStarts, 1);
 }
 
 //NOTE: entering Playing wipes the world on a client, so a spawn burst ahead of it is erased there
@@ -110,9 +114,10 @@ TEST_F(GameStateTest, ThePhaseIsAnnouncedBeforeTheMatchStarts)
 	EXPECT_EQ(_phasesBeforeMatchStart, 1u) << "the match started before its phase was announced";
 }
 
-//NOTE: the one who stayed keeps playing - the seat is taken back later with a snapshot of the field
-TEST_F(GameStateTest, ALostSeatLeavesTheMatchToThePlayerWhoStayed)
+//NOTE: the seat is taken back later with a snapshot of the field, not with a match of its own
+TEST_F(GameStateTest, APlayerBackInALostSeatDoesNotRestartTheMatch)
 {
+	const PauseSwitch pauseSwitch{_events};
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P1});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P2});
@@ -120,10 +125,8 @@ TEST_F(GameStateTest, ALostSeatLeavesTheMatchToThePlayerWhoStayed)
 	_matchStarts = 0;
 
 	_events->EmitEvent(ServerClientLostEvent{.slot = PlayerSlot::P2});
-	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
-
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P2});
-	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
+
 	EXPECT_EQ(_matchStarts, 0) << "the returning player restarted the match of the one who stayed";
 }
 
@@ -217,21 +220,27 @@ TEST_F(GameStateTest, PausingInTheLobbyKeepsTheLobby)
 	EXPECT_EQ(GameState::Lobby, _stateManager->GetState());
 }
 
-// a result stands until the field is cleared, and a pause key does not clear it
-TEST_F(GameStateTest, WinAndLossSurviveUntilTheFieldIsCleared)
+// a result stands while the field is up, and a pause key does not clear it
+TEST_F(GameStateTest, AResultSurvivesThePauseKey)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::OnePlayer});
-
 	_events->EmitEvent(GameFinishedEvent{.state = GameState::Won});
-	EXPECT_EQ(GameState::Won, _stateManager->GetState());
+
 	_events->EmitEvent(PauseStatusEvent{.isPaused = true});
+
 	EXPECT_EQ(GameState::Won, _stateManager->GetState()) << "a pause key press erased the result";
+}
+
+// clearing the field is what ends a result - the next match is played afresh
+TEST_F(GameStateTest, AResetClearsTheResult)
+{
+	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::OnePlayer});
+	_events->EmitEvent(GameFinishedEvent{.state = GameState::Over});
+	ASSERT_EQ(GameState::Over, _stateManager->GetState());
 
 	_events->EmitEvent(GameResetEvent{});
-	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
 
-	_events->EmitEvent(GameFinishedEvent{.state = GameState::Over});
-	EXPECT_EQ(GameState::Over, _stateManager->GetState());
+	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
 }
 
 //NOTE: entering a phase clears the field, so answering the reset with a phase change would loop
@@ -288,31 +297,6 @@ TEST_F(GameStateTest, ResumingFromAPauseStartsNoMatch)
 	EXPECT_EQ(_matchStarts, 0);
 }
 
-// a local mode is one announcement and one match start
-TEST_F(GameStateTest, ApplyingALocalModeStartsAMatch)
-{
-	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::OnePlayer});
-
-	ASSERT_EQ(_announced.size(), 1u);
-	EXPECT_EQ(_announced.front(), GameState::Playing);
-	EXPECT_EQ(_matchStarts, 1);
-}
-
-// on a server it is the seat that fills last that starts it
-TEST_F(GameStateTest, TheLastPeerToJoinStartsTheMatch)
-{
-	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
-	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P1});
-	_announced.clear();
-	_matchStarts = 0;
-
-	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P2});
-
-	ASSERT_EQ(_announced.size(), 1u);
-	EXPECT_EQ(_announced.front(), GameState::Playing);
-	EXPECT_EQ(_matchStarts, 1);
-}
-
 // Seats, not a count: a client that readies twice fills one seat, not both
 TEST_F(GameStateTest, ASeatReadiedTwiceStillWaitsForTheOther)
 {
@@ -335,20 +319,6 @@ TEST_F(GameStateTest, ALossBeforeTheReadyTakesNoSeatAway)
 	_events->EmitEvent(ServerClientLostEvent{.slot = PlayerSlot::P2});
 
 	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
-}
-
-// The other side of the same counter - a client waits for the server, and the server is one peer
-TEST_F(GameStateTest, AClientStartsTheMatchOnlyWhenTheServerAnnouncesIt)
-{
-	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsClient});
-	_matchStarts = 0;
-
-	_events->EmitEvent(ClientConnectedToHostEvent{});
-	EXPECT_EQ(_matchStarts, 0) << "the link alone started the match";
-
-	_events->EmitEvent(HostPhaseAnnouncedEvent{.phase = GameState::Playing});
-	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
-	EXPECT_EQ(_matchStarts, 1);
 }
 
 // a restart empties both seats, so one ready player waits again
@@ -381,14 +351,6 @@ TEST_F(GameStateTest, ARestartAnnouncesTheLobbyItIsAlreadyIn)
 	EXPECT_EQ(std::vector{GameState::Lobby}, _announced);
 }
 
-// entering the lobby starts nothing by itself
-TEST_F(GameStateTest, WaitingInTheLobbyStartsNoMatch)
-{
-	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
-
-	EXPECT_EQ(_matchStarts, 0);
-}
-
 //NOTE: the menu, not the mode's idle phase - a lobby would start the same match on the same map again
 TEST_F(GameStateTest, AMapThatFailsToLoadTakesThePhaseBackToTheMenu)
 {
@@ -401,8 +363,7 @@ TEST_F(GameStateTest, AMapThatFailsToLoadTakesThePhaseBackToTheMenu)
 	EXPECT_EQ(GameState::Menu, _announced.back());
 }
 
-// the host lifts a pause and says Playing again: the client resumes where it stood. A match start would
-// empty the field and load the map over it, and the host would not respawn the tanks it still counts alive
+// the host lifting a pause resumes the client where it stood - a match start would empty the field and reload it
 TEST_F(GameStateTest, AHostLeavingAPauseStartsNoMatch)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsClient});
@@ -926,7 +887,8 @@ TEST_F(GameStateTest, ARestartForgetsWhoLeft)
 	})};
 	_stateManager = std::make_unique<GameStateManager>(_events, MatchSettings{.seats = 3u});
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
-	for (const PlayerSlot slot: {PlayerSlot::P1, PlayerSlot::P2, PlayerSlot::P3})
+	constexpr std::array kLeavers{PlayerSlot::P1, PlayerSlot::P2, PlayerSlot::P3};
+	for (const PlayerSlot slot: kLeavers)
 	{
 		_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = slot});
 	}

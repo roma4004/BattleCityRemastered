@@ -29,7 +29,7 @@ protected:
 	double _deltaTimeOneFrame{1.0 / 60.0};
 	Uuid _uuid{};
 	double _tankSize{};
-	int _tankHealth{100};
+	unsigned int _tankHealth{100};
 	EventSubscription _spawnQueueSub{};
 
 	void SetUp() override
@@ -54,7 +54,7 @@ protected:
 		return tank;
 	}
 
-	void Tick(const int frames = 1) const
+	void Tick(const int frames) const
 	{
 		for (int i = 0; i < frames; ++i)
 		{
@@ -73,41 +73,19 @@ protected:
 	}
 };
 
-// the control for the two bush cases: on open ground the bar is drawn
-TEST_F(TankTerrainTest, HealthBarIsDrawnOnPlainGround)
+// in a bush a tank shows no health bar, which would give it away - on open ground and once the bush is gone, it is back
+TEST_F(TankTerrainTest, TheHealthBarHidesInABush)
 {
 	const std::shared_ptr<Tank> tank{SpawnPlayerAt({.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize})};
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	ASSERT_TRUE(tank->ShownHealth().has_value()) << "no bar on open ground";
 
-	Tick();
-
-	EXPECT_TRUE(tank->ShownHealth().has_value());
-	EXPECT_EQ(tank->GetDirection(), Direction::DOWN);
-}
-
-// put the tank inside a bush: no bar, so a hidden tank is not given away by its own health
-TEST_F(TankTerrainTest, HealthBarIsHiddenWhileTheTankStandsInABush)
-{
-	const std::shared_ptr<Tank> tank{SpawnPlayerAt({.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize})};
 	SpawnObstacle(FPoint{.x = 0.0, .y = 0.0}, ObstacleType::Bush);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	ASSERT_FALSE(tank->ShownHealth().has_value()) << "the bar gave the hidden tank away";
 
-	Tick();
-
-	EXPECT_FALSE(tank->ShownHealth().has_value());
-}
-
-// burn the bush out from under a standing tank: the bar is back on the next frame
-TEST_F(TankTerrainTest, HealthBarComesBackOnceTheBushIsGone)
-{
-	const std::shared_ptr<Tank> tank{SpawnPlayerAt({.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize})};
-	//NOTE: one cell under the tank is all it takes to stand in a bush, and it is the one popped below
-	SpawnObstacle(FPoint{.x = 0.0, .y = 0.0}, ObstacleType::Bush);
-
-	Tick();
-	ASSERT_FALSE(tank->ShownHealth().has_value());
-
-	_allObjects.pop_back();// the bush burned down
-
-	Tick();
+	_allObjects.pop_back();
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_TRUE(tank->ShownHealth().has_value());
 }
@@ -143,7 +121,7 @@ TEST_F(TankTerrainTest, TheTankKeepsSlidingAfterTheKeyIsReleasedOnIce)
 
 	const double yOnRelease{tank->GetPos().y};
 
-	Tick();
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_GT(tank->GetPos().y, yOnRelease);
 }
@@ -187,7 +165,7 @@ TEST_F(TankTerrainTest, TurningAroundDoesNotStopTheDriftOnIce)
 	ASSERT_EQ(tank->GetDirection(), Direction::DOWN);
 
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveUpEvent{.isPressed = true});
-	Tick();
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveUpEvent{.isPressed = false});
 
 	Tick(2);

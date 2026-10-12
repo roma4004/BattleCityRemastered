@@ -6,8 +6,7 @@
 #include "gtest/gtest.h"
 #include <memory>
 
-// InputProviderForMenu owns the pause flag and everything else mirrors PauseStatusEvent, so a pause set
-// from outside - a reset, a window drag, a host echo - has to reach the owner for it to be released
+// InputProviderForMenu owns the pause flag, so a pause set from outside must reach it to be released
 class PauseSyncTest : public testing::Test
 {
 protected:
@@ -36,8 +35,7 @@ TEST_F(PauseSyncTest, GameResetReleasesExternalPause)
 	EXPECT_FALSE(_isPaused);
 }
 
-// pause from outside, then press the pause key: the key releases it instead of toggling into a
-// second pause nobody can leave
+// pause from outside, then the pause key: it releases the pause instead of stacking a second one nobody can leave
 TEST_F(PauseSyncTest, ToggleReleasesExternalPause)
 {
 	_events->EmitEvent(SetPauseEvent{.isPaused = true});

@@ -3,6 +3,7 @@
 #include "network/Endpoints.h"
 #include "gtest/gtest.h"
 #include <algorithm>
+#include <array>
 #include <string_view>
 
 using namespace std::string_view_literals;
@@ -150,7 +151,8 @@ TEST(AddressFieldTest, APickedAddressKeepsTheCaretInThePort)
 	AddressField field{AddressFamily::IPv4, AddressInput::Picked};
 	field.Fill(network::ServerAddress{.host = "192.168.0.5", .port = 50}, false);
 
-	for (const TextKey key: {TextKey::Erase, TextKey::Erase, TextKey::Erase, TextKey::CaretLeft, TextKey::WordLeft})
+	constexpr std::array kKeys{TextKey::Erase, TextKey::Erase, TextKey::Erase, TextKey::CaretLeft, TextKey::WordLeft};
+	for (const TextKey key: kKeys)
 	{
 		field.Press(key);
 	}

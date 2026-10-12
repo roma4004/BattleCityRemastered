@@ -8,8 +8,7 @@
 #include <memory>
 #include <vector>
 
-// Movement is speed * deltaTime, so a step that followed the frame would make the same input land
-// differently on a fast machine and a slow one.
+// movement is speed * deltaTime, so a step following the frame would land the same input differently per machine
 class SimulationStepTest : public testing::Test
 {
 protected:
@@ -69,14 +68,12 @@ TEST_F(SimulationStepTest, AFrameShorterThanAStepIsCarriedIntoTheNext)
 	EXPECT_EQ(1u, _steps.size());
 }
 
-// Vsync never lands exactly on the step. Without the snap the accumulator drifts and turns that
-// jitter into an alternating zero-then-two pattern, which reads as a stutter on screen.
+// vsync never lands exactly on the step - without the snap the drift alternates zero and two steps, a stutter
 TEST_F(SimulationStepTest, JitterAroundTheStepStaysOneStepPerFrame)
 {
 	constexpr double kJitter{kStep / 40.0};
 
-	//NOTE: counted per frame, not in total - the drifting accumulator ends up with the same sum,
-	//it just pays it in an empty frame and a double one
+	//NOTE: counted per frame, not in total - the drift keeps the sum but pays it as an empty frame and a double one
 	for (int frame{}; frame < 60; ++frame)
 	{
 		const std::size_t before{_steps.size()};
@@ -86,8 +83,7 @@ TEST_F(SimulationStepTest, JitterAroundTheStepStaysOneStepPerFrame)
 	}
 }
 
-// Catching up is capped: every step is a full frame of movement and shooting, and a stall must not
-// come back as a burst of them
+// catch-up is capped: each step is a full frame of movement and shooting, so a stall must not return as a burst
 TEST_F(SimulationStepTest, ALongStallDoesNotBurstIntoUnboundedCatchUp)
 {
 	Frame(kStep * 100.0);
@@ -95,8 +91,7 @@ TEST_F(SimulationStepTest, ALongStallDoesNotBurstIntoUnboundedCatchUp)
 	EXPECT_EQ(4u, _steps.size());
 }
 
-// The client mirrors host-driven updates and runs no entity logic of its own. The mode is set on
-// the config rather than applied - applying it would dial a server that is not there
+// a client runs no entity logic; the mode is set on the config, not applied - applying it would dial a server
 TEST_F(SimulationStepTest, AClientTakesNoStepsAtAll)
 {
 	_gameConfig.gameMode = GameMode::PlayAsClient;

@@ -110,7 +110,7 @@ class Tank final : public Pawn
 	//NOTE: past it a star adds shells to the volley instead - a harder shell would be multiplied by their number
 	static constexpr unsigned short kLastShellTier{3u};
 	//NOTE: any bonus heals the tank that picked it up, with no ceiling - the surplus rides on to the next level
-	static constexpr int kPickupHeal{50};
+	static constexpr unsigned int kPickupHeal{50};
 
 	void Upgrade(unsigned short tiers);
 	//NOTE: the tier's size waits for room - grown into a wall the tank could not drive off it
@@ -162,7 +162,7 @@ public:
 
 	[[nodiscard]] std::optional<Sprite> Look() const override;
 	[[nodiscard]] std::optional<Sprite> Cover() const override;
-	[[nodiscard]] std::optional<int> ShownHealth() const override;
+	[[nodiscard]] std::optional<unsigned int> ShownHealth() const override;
 
 	//NOTE: back into service from the pool - everything a previous life could have changed
 	void Reset(const TankResetProperty& resetProperty, std::unique_ptr<IInputProvider> driver);
@@ -195,7 +195,6 @@ public:
 	[[nodiscard]] double GetBulletSpeed() const noexcept;
 	void SetBulletSpeed(double bulletSpeed);
 
-	[[nodiscard]] unsigned int GetBulletDamage() const noexcept;
 	void SetBulletDamage(unsigned int bulletDamage);
 
 	[[nodiscard]] double GetBulletDamageRadius() const noexcept;

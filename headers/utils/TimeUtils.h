@@ -11,6 +11,4 @@ public:
 	[[nodiscard]] static time_point Now() noexcept;
 
 	static void SetPaused(bool isPaused);
-
-	[[nodiscard]] static bool IsPaused() noexcept;
 };

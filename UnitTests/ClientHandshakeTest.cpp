@@ -5,6 +5,7 @@
 #include "components/events/TimingEvents.h"
 #include "enums/GameMode.h"
 #include "enums/GameState.h"
+#include "utils/TimeUtils.h"
 #include <gtest/gtest.h>
 #include <algorithm>
 #include <memory>
@@ -29,6 +30,9 @@ protected:
 			_trace.emplace_back("ready");
 		}));
 	}
+
+	//NOTE: the simulation stops the process-wide game clock outside a match - left stopped, it freezes every timed test after
+	void TearDown() override { TimeUtils::SetPaused(false); }
 
 	//NOTE: the lobby is entered at PostTickUpdate, which only a frame produces
 	void Frame()
@@ -107,8 +111,7 @@ TEST_F(ClientHandshakeTest, ALostLinkStopsTheAnnouncements)
 	EXPECT_EQ(Count("ready"), 0);
 }
 
-//NOTE: a host lost without a goodbye leaves the field stale - the client goes back to the lobby and asks
-//again, but only once the link is back
+//NOTE: a host lost without a goodbye leaves the field stale - the client asks again, only once the link is back
 TEST_F(ClientHandshakeTest, AHostLostWithoutAGoodbyeIsAskedAgainOnceTheLinkIsBack)
 {
 	_simulation.ApplyGameMode(GameMode::PlayAsClient);

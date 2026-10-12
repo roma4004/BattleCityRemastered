@@ -33,9 +33,6 @@
     <ClCompile Include="BotsTest.cpp">
       <Filter></Filter>
     </ClCompile>
-    <ClCompile Include="BulletPoolTest.cpp">
-      <Filter></Filter>
-    </ClCompile>
     <ClCompile Include="BulletsTestAdvanced.cpp">
       <Filter></Filter>
     </ClCompile>
@@ -60,19 +57,10 @@
     <ClCompile Include="CommandLineParserTest.cpp">
       <Filter></Filter>
     </ClCompile>
-    <ClCompile Include="EndpointsTest.cpp">
-      <Filter></Filter>
-    </ClCompile>
     <ClCompile Include="AddressFieldTest.cpp">
       <Filter></Filter>
     </ClCompile>
-    <ClCompile Include="CoopBotTest.cpp">
-      <Filter></Filter>
-    </ClCompile>
     <ClCompile Include="DeadObjectFilterTest.cpp">
-      <Filter></Filter>
-    </ClCompile>
-    <ClCompile Include="EnemyBotTest.cpp">
       <Filter></Filter>
     </ClCompile>
     <ClCompile Include="GameStateManagerTest.cpp">
@@ -111,16 +99,10 @@
     <ClCompile Include="RespawnManagerTest.cpp">
       <Filter></Filter>
     </ClCompile>
-    <ClCompile Include="StatisticsTestAdvanced.cpp">
-      <Filter></Filter>
-    </ClCompile>
     <ClCompile Include="StatisticsTestBasic.cpp">
       <Filter></Filter>
     </ClCompile>
     <ClCompile Include="TankSpawnerTest.cpp">
-      <Filter></Filter>
-    </ClCompile>
-    <ClCompile Include="TimeUtilsTest.cpp">
       <Filter></Filter>
     </ClCompile>
     <ClCompile Include="WorldSnapshotTest.cpp">

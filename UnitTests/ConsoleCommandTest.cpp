@@ -36,8 +36,7 @@ TEST(ConsoleCommandTest, KickNamesTheSeat)
 	EXPECT_EQ(std::get<KickCommand>(*command).slot, PlayerSlot::P4);
 }
 
-// leading spaces, a tab between the words, a trailing carriage return - a line typed into a console
-// arrives with whatever the terminal added, and still parses
+// spaces around, a tab between words, a trailing carriage return - whatever the terminal adds, the line parses
 TEST(ConsoleCommandTest, BlanksAroundTheWordsDoNotMatter)
 {
 	const auto command{ParseConsoleCommand("  /log\tdetailed\r")};
@@ -50,7 +49,7 @@ TEST(ConsoleCommandTest, BlanksAroundTheWordsDoNotMatter)
 TEST(ConsoleCommandTest, AMistypedLineIsRefusedWithAReason)
 {
 	constexpr std::array kMistyped{"", "/unknown", "restart", "/kick", "/kick p5", "/log loud", "/exit now",
-								   "/kick p1 p2"};
+								   "/kick p1 p2", "/map"};
 
 	std::ranges::for_each(kMistyped, [](const char* line)
 	{
@@ -76,12 +75,4 @@ TEST(ConsoleCommandTest, MapRefusesAPathOrASuffix)
 	EXPECT_FALSE(ParseConsoleCommand("/map ../secrets/level1").has_value());
 	EXPECT_FALSE(ParseConsoleCommand("/map level2.map").has_value());
 	EXPECT_FALSE(ParseConsoleCommand(R"(/map maps\level2)").has_value());
-}
-
-// the command carries the level to load, so a bare /map is an error rather than a reload
-TEST(ConsoleCommandTest, MapWithoutANameIsRefused)
-{
-	const auto command{ParseConsoleCommand("/map")};
-
-	EXPECT_FALSE(command.has_value());
 }

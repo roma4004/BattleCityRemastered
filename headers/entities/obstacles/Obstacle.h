@@ -26,8 +26,8 @@ class Obstacle : public BaseObj
 	void SubscribeAsClient();
 
 protected:
-	//NOTE: a quarter of brick or steel - what a shell pays to sink one layer deeper
-	static constexpr int kWallHealth{10};
+	//NOTE: a quarter of brick or steel - what a shell pays to penetrate one layer deeper
+	static constexpr unsigned int kWallHealth{10};
 
 	//NOTE: empty, not pure - only the eagle has something to hear
 	virtual void Subscribe();
@@ -39,7 +39,7 @@ protected:
 
 	void EmitDeathStatistics(Author author) override = 0;
 
-	Obstacle(ObjRectangle rect, int health, const std::shared_ptr<EventSystem>& events, Uuid uuid,
+	Obstacle(ObjRectangle rect, unsigned int health, const std::shared_ptr<EventSystem>& events, Uuid uuid,
 			 const GameConfig& gameConfig, ObstacleType obstacleType, CollisionTags collision, DrawLayer layer);
 
 public:

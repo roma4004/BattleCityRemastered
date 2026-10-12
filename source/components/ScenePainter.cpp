@@ -58,7 +58,7 @@ void ScenePainter::Read()
 			_layers[static_cast<std::size_t>(cover->layer)].push_back(*cover);
 		}
 
-		if (const std::optional<int> health{object->ShownHealth()})
+		if (const std::optional<unsigned int> health{object->ShownHealth()})
 		{
 			_healthBars.push_back(RenderHealthBarEvent{.rect = look->rect, .health = *health});
 		}

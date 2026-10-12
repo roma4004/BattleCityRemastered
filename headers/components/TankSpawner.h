@@ -57,7 +57,7 @@ class TankSpawner final
 		ObjRectangle rect;
 		//NOTE: the square it was rolled for - the burst goes back to it the moment it is free again
 		ObjRectangle home{};
-		int health;
+		unsigned int health;
 		unsigned short tier{1u};
 	};
 
@@ -67,7 +67,7 @@ class TankSpawner final
 	{
 		TankType type{};
 		unsigned short tier{1u};
-		int health{};
+		unsigned int health{};
 		bool isShipActive{};
 	};
 
@@ -105,7 +105,7 @@ class TankSpawner final
 	void Reset(const GameResetEvent& event);
 
 	[[nodiscard]] NextLevelLoadout LoadoutOf(TankType type) const;
-	void SpendLoadout(Uuid uuid, TankType type, int health);
+	void SpendLoadout(Uuid uuid, TankType type, unsigned int health);
 
 	void OnSpawnDelayFinished(Uuid uuid);
 
