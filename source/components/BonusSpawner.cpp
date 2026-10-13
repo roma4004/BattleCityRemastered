@@ -15,13 +15,10 @@
 #include "utils/UuidUtils.h"
 #include "utils/WorldQuery.h"
 #include <algorithm>
-#include <chrono>
 #include <iterator>
 
 class BaseObj;
 class EventSystem;
-
-using namespace std::chrono_literals;
 
 namespace
 {
@@ -36,7 +33,7 @@ BonusSpawner::BonusSpawner(const std::shared_ptr<EventSystem>& events,
 	, _distSpawnType{kFirstSpawnableBonusId, kLastSpawnableBonusId}
 	, _distSuperRoll{1, kSuperBonusOdds}
 	, _gameConfig{gameConfig}
-	, _spawnTimer{60s}
+	, _spawnTimer{_gameConfig.bonusSpawnCooldown}
 {
 	ResetSpawnRanges();
 
@@ -225,6 +222,6 @@ void BonusSpawner::SpawnRandomBonus(const ObjRectangle rect)
 
 void BonusSpawner::Reset(const GameResetEvent&)
 {
-	_spawnTimer.Reset();
+	_spawnTimer.Reset(_gameConfig.bonusSpawnCooldown);
 	_pendingSpawns.clear();
 }

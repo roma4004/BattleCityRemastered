@@ -77,6 +77,7 @@ public:
 	size_t sideBarWidth{WorldGeometry::kSideBarWidth};
 	unsigned int tankHealth{100};
 	std::chrono::milliseconds enemySpawnCooldown{std::chrono::seconds{5}};
+	std::chrono::milliseconds bonusSpawnCooldown{std::chrono::seconds{60}};
 	std::chrono::milliseconds bonusLifeTimeCooldown{std::chrono::seconds{15}};
 	std::chrono::milliseconds bonusEffectDuration{std::chrono::seconds{15}};
 	double gridOffset{WorldGeometry::kCellSize};

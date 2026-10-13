@@ -20,7 +20,8 @@ bool WorldQuery::IsSpotFree(const std::vector<std::shared_ptr<BaseObj>>& objects
 {
 	return std::ranges::none_of(objects, [&rect](const std::shared_ptr<BaseObj>& object)
 	{
-		return ObjectUtils::IsAlive(object.get()) && ColliderUtils::IsCollide(rect, object->GetRect());
+		return ObjectUtils::IsAlive(object.get()) && object->GetTerrain() != Terrain::Ice
+			   && ColliderUtils::IsCollide(rect, object->GetRect());
 	});
 }
 

@@ -32,6 +32,7 @@
 #include <algorithm>
 #include <array>
 #include <chrono>
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <string_view>
@@ -453,6 +454,28 @@ TEST_F(BonusTest, ABonusLaidOutByTheMapNeverExpires)
 
 	EXPECT_FALSE(dropped->GetIsAlive()) << "the dropped one outlived its cooldown";
 	EXPECT_TRUE(placed->GetIsAlive());
+}
+
+// a bonus lands neither in a wall nor in a bush - nobody would see it there
+TEST_F(BonusTest, ABonusNeverLandsUnderCover)
+{
+	_gameConfig.bonusSpawnCooldown = 0ms;
+	const auto spot{static_cast<std::size_t>(_gameConfig.bonusSize)};
+	_gameConfig.battlefieldSize = UPoint{.x = spot, .y = spot};
+	_events->EmitEvent(WorldGeometryChangedEvent{});
+
+	constexpr std::array kCovers{ObstacleType::Bush, ObstacleType::Brick};
+	for (const ObstacleType cover: kCovers)
+	{
+		SCOPED_TRACE(cover == ObstacleType::Bush ? "bush" : "brick");
+		_events->EmitEvent(GameResetEvent{});
+		_allObjects.clear();
+		_events->EmitEvent(SpawnObstacleEvent{.rect = {.w = _gridSize, .h = _gridSize}, .type = cover});
+
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+		EXPECT_EQ(_allObjects.size(), 1u);
+	}
 }
 
 // a free-for-all grenade spares only its taker

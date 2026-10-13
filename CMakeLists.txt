@@ -136,6 +136,7 @@ set(UNIT_TESTS_SOURCES
         UnitTests/BulletTest.cpp
         UnitTests/NetworkClientHandshakeTest.cpp
         UnitTests/NetworkDiscoveryTest.cpp
+        UnitTests/InputIPAddressTest.cpp
         UnitTests/InputTest.cpp
         UnitTests/GameStateTest.cpp
         UnitTests/NetworkGameStateTest.cpp

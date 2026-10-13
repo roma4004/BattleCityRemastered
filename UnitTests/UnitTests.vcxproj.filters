@@ -33,6 +33,9 @@
     <ClCompile Include="NetworkClientHandshakeTest.cpp">
       <Filter></Filter>
     </ClCompile>
+    <ClCompile Include="InputIPAddressTest.cpp">
+      <Filter></Filter>
+    </ClCompile>
     <ClCompile Include="InputTest.cpp">
       <Filter></Filter>
     </ClCompile>
