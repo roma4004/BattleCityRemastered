@@ -17,7 +17,9 @@
 #include "utils/Log.h"
 #include <algorithm>
 #include <string>
+#include <utility>
 #include <variant>
+#include <vector>
 
 namespace network::commands
 {
@@ -199,6 +201,7 @@ void ReplicationApplier::Emit(const WorldSnapshot& command) const
 
 	_events->EmitEvent(WorldSnapshotReceivedEvent{.snapshot = command});
 	_events->EmitEvent(AbsenceChangedEvent{.seats = command.absence});
+	EmitEffects(command.effects);
 	_events->EmitEvent(SetPauseEvent{.isPaused = command.phase == GameState::Paused});
 }
 
@@ -254,5 +257,30 @@ void ReplicationApplier::Emit(const BonusStatus& command) const
 
 	Log::Error("ReplicationApplier: bonus type " + std::to_string(static_cast<int>(command.bonusType))
 			   + " is not replicated");
+}
+
+void ReplicationApplier::Emit(const BonusEffects& command) const { EmitEffects(command.effects); }
+
+void ReplicationApplier::EmitEffects(std::vector<BonusEffectTimeLeft> effects) const
+{
+	const auto hasNoClock = [](const BonusEffectTimeLeft& effect)
+	{
+		return effect.type != BonusType::Timer && effect.type != BonusType::Helmet && effect.type != BonusType::Shovel;
+	};
+	if (std::erase_if(effects, hasNoClock) > 0u)
+	{
+		Log::Error("ReplicationApplier: a bonus that runs on no clock came as an effect");
+	}
+
+	std::ranges::for_each(effects, [](BonusEffectTimeLeft& effect)
+	{
+		effect.spared = SeatFromWire(effect.spared);
+		if (Author* const seat{std::get_if<Author>(&effect.target)})
+		{
+			*seat = SeatFromWire(*seat);
+		}
+	});
+
+	_events->EmitEvent(BonusEffectsChangedEvent{.effects = std::move(effects)});
 }
 }//namespace network::commands

@@ -1,22 +1,23 @@
 #pragma once
 #include "components/EventSystem.h"
+#include "entities/EffectTarget.h"
 #include "enums/Author.h"
 #include "enums/BonusType.h"
 #include "utils/Timer.h"
 #include <chrono>
 #include <memory>
 #include <string>
-#include <variant>
 #include <vector>
 
-enum class Faction : char8_t;
 struct BonusCreatedEvent;
 struct GameResetEvent;
 struct TickUpdateEvent;
 struct BonusTimerPickupEvent;
 struct BonusHelmetPickupEvent;
 struct BonusShovelPickupEvent;
+struct BonusEffectTimeLeft;
 struct BonusReApplyEvent;
+struct WorldSnapshotRequestedEvent;
 class Bonus;
 class EventSystem;
 class GameConfig;
@@ -33,9 +34,6 @@ class BonusManager final
 		std::weak_ptr<Bonus> bonus{};
 		Timer lifeTime{};
 	};
-
-	//NOTE: an effect outlives its bonus, so it is keyed by what it sits on - a seat or a faction
-	using EffectTarget = std::variant<Author, Faction>;
 
 	struct ActiveEffect
 	{
@@ -61,6 +59,7 @@ class BonusManager final
 	void OnTimerBonus(const BonusTimerPickupEvent& event);
 	void OnBonusShovelPickup(const BonusShovelPickupEvent& event);
 	void ApplyBonusEffectsOnSpawnTo(const BonusReApplyEvent& event);
+	void OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const;
 
 	void ExpireBonuses();
 	void ExpireEffects();
@@ -69,6 +68,7 @@ class BonusManager final
 	void StartEffect(BonusType type, EffectTarget target, milliseconds duration, Author spared = {});
 	void FinishEffect(BonusType type, const EffectTarget& target);
 	void EmitEffectStatus(const ActiveEffect& effect, bool isActive) const;
+	[[nodiscard]] std::vector<BonusEffectTimeLeft> RunningEffects() const;
 	[[nodiscard]] std::vector<ActiveEffect>::iterator FindEffect(BonusType type, const EffectTarget& target);
 
 public:

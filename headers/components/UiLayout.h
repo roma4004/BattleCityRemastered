@@ -38,9 +38,9 @@ public:
 
 	static constexpr int kColumnGap{20};
 
-	//NOTE: a row is as tall as its tallest cell, and never lower than minRowHeight
+	//NOTE: a row is as tall as its tallest cell, and never lower than minRowHeight; a column likewise
 	[[nodiscard]] static Placement Place(const UiTable& table, Point origin, int minRowHeight, const Measure& measure,
-										 int columnGap = kColumnGap);
+										 int columnGap = kColumnGap, int minColumnWidth = 0);
 	[[nodiscard]] static std::vector<Placement> MeasureAll(std::span<const UiTable> tables, int rowHeight,
 														   const Measure& measure);
 	//NOTE: measured once, then moved to where its width sits in the middle - no second layout

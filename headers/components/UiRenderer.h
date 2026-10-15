@@ -81,6 +81,7 @@ class UiRenderer final
 	//NOTE: one switch with no default - an icon left out is a compiler warning, not an empty square
 	[[nodiscard]] IconSource Icon(UiIcon icon) const;
 	void DrawIcon(UiIcon icon, SDL_Rect dstRect) const;
+	void DrawFadingIcon(UiIcon icon, SDL_Rect dstRect, float faded) const;
 	//NOTE: what a table needs to become places: a word is as wide as the font makes it, a picture as Icon says
 	[[nodiscard]] UiLayout::Measure CellMeasurer(int pointSize, float scale) const;
 	//NOTE: every picture first, then every word under one render scale - each change of it breaks the batch

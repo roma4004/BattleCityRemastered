@@ -3,8 +3,10 @@
 #include "components/EventSystem.h"
 #include "components/events/BonusPickupEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
+#include "components/events/ReplicationEvents.h"
 #include "components/events/SpawnEvents.h"
 #include "components/events/TimingEvents.h"
+#include "components/WorldSnapshot.h"
 #include "entities/bonuses/Bonus.h"
 #include "enums/Author.h"
 #include "enums/Faction.h"
@@ -31,6 +33,7 @@ void BonusManager::Subscribe()
 	_subs.push_back(_events->AddListener(this, &BonusManager::OnBonusShovelPickup));
 	_subs.push_back(_events->AddListener(this, &BonusManager::OnBonusCreated));
 	_subs.push_back(_events->AddListener(this, &BonusManager::ApplyBonusEffectsOnSpawnTo));
+	_subs.push_back(_events->AddListener(this, &BonusManager::OnWorldSnapshotRequested));
 }
 
 void BonusManager::OnGameReset(const GameResetEvent&) { Reset(); }
@@ -92,7 +95,10 @@ void BonusManager::ExpireEffects()
 		EmitEffectStatus(effect, false);
 	}
 
-	std::erase_if(_activeEffects, isExpired);
+	if (std::erase_if(_activeEffects, isExpired) > 0u)
+	{
+		_events->EmitEvent(BonusEffectsChangedEvent{.effects = RunningEffects()});
+	}
 }
 
 std::vector<BonusManager::ActiveEffect>::iterator BonusManager::FindEffect(const BonusType type,
@@ -114,6 +120,7 @@ void BonusManager::StartEffect(const BonusType type, const EffectTarget target, 
 		if (it->spared == spared)
 		{
 			it->timer.cooldown += duration;
+			_events->EmitEvent(BonusEffectsChangedEvent{.effects = RunningEffects()});
 
 			return;
 		}
@@ -121,6 +128,7 @@ void BonusManager::StartEffect(const BonusType type, const EffectTarget target, 
 		//NOTE: a free-for-all timer retaken turns on its former taker
 		*it = ActiveEffect{.type = type, .target = target, .timer = Timer{duration}, .spared = spared};
 		EmitEffectStatus(*it, true);
+		_events->EmitEvent(BonusEffectsChangedEvent{.effects = RunningEffects()});
 
 		return;
 	}
@@ -128,6 +136,7 @@ void BonusManager::StartEffect(const BonusType type, const EffectTarget target, 
 	const ActiveEffect& effect{_activeEffects.emplace_back(
 			ActiveEffect{.type = type, .target = target, .timer = Timer{duration}, .spared = spared})};
 	EmitEffectStatus(effect, true);
+	_events->EmitEvent(BonusEffectsChangedEvent{.effects = RunningEffects()});
 }
 
 void BonusManager::FinishEffect(const BonusType type, const EffectTarget& target)
@@ -141,6 +150,7 @@ void BonusManager::FinishEffect(const BonusType type, const EffectTarget& target
 	const ActiveEffect finished{*it};
 	_activeEffects.erase(it);
 	EmitEffectStatus(finished, false);
+	_events->EmitEvent(BonusEffectsChangedEvent{.effects = RunningEffects()});
 }
 
 void BonusManager::EmitEffectStatus(const ActiveEffect& effect, const bool isActive) const
@@ -163,6 +173,20 @@ void BonusManager::EmitEffectStatus(const ActiveEffect& effect, const bool isAct
 		default:
 			break;//NOTE: every other bonus lands in one step, it has nothing left running
 	}
+}
+
+std::vector<BonusEffectTimeLeft> BonusManager::RunningEffects() const
+{
+	const auto timeLeft = [now = TimeUtils::Now()](const ActiveEffect& effect)
+	{
+		return BonusEffectTimeLeft{.type = effect.type,
+								   .target = effect.target,
+								   .spared = effect.spared,
+								   .duration = effect.timer.cooldown,
+								   .left = effect.timer.TimeLeft(now)};
+	};
+
+	return _activeEffects | std::views::transform(timeLeft) | std::ranges::to<std::vector>();
 }
 
 void BonusManager::OnBonusHelmetPickup(const BonusHelmetPickupEvent& event)
@@ -206,4 +230,9 @@ void BonusManager::ApplyBonusEffectsOnSpawnTo(const BonusReApplyEvent& event)
 	_events->EmitEvent(Key(event.uuid), BonusTimerReApplyOnSpawnEvent{.isEnabled = isFrozen});
 
 	StartEffect(BonusType::Helmet, event.author, kRespawnHelmetDuration);
+}
+
+void BonusManager::OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const
+{
+	event.snapshot.effects = RunningEffects();
 }

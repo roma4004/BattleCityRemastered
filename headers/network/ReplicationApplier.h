@@ -3,7 +3,9 @@
 #include "NetworkCommandQueue.h"
 #include "commands/AnyCommand.h"
 #include <memory>
+#include <vector>
 
+struct BonusEffectTimeLeft;
 class EventSystem;
 
 namespace network::commands
@@ -37,11 +39,14 @@ private:
 	void Emit(const StatisticsChange& command) const;
 	void Emit(const BonusSpawn& command) const;
 	void Emit(const BonusStatus& command) const;
+	void Emit(const BonusEffects& command) const;
 	void Emit(const SlotAssignment& command) const;
 	void Emit(const WorldSnapshot& command) const;
 	void Emit(const AbsenceChange& command) const;
 	void Emit(const PortForwardingChange& command) const;
 	void Emit(const SeatHoldersChange& command) const;
+
+	void EmitEffects(std::vector<BonusEffectTimeLeft> effects) const;
 
 	//NOTE: the host-bound half of the wire - both peers share one AnyCommand, so these reach a client
 	//only if it is talking to itself

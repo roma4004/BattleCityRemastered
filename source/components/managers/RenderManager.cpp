@@ -12,6 +12,7 @@
 #include "enums/GameMode.h"
 #include "enums/PlayerSlot.h"
 #include "geometry/ObjRectangle.h"
+#include "utils/DirectionUtils.h"
 #include "utils/Log.h"
 #include <algorithm>
 #include <cmath>
@@ -250,8 +251,10 @@ void RenderManager::DrawTexture(const RenderTextureEvent& event) const
 {
 	auto [angle, flip] = GetRotateAndAngleAndFlip(event.dir);
 	const SDL_FRect src{SdlRenderUtils::ToFRect(SdlRenderUtils::RectToSdlRect(event.textureRect))};
-	const SDL_FRect dst{SdlRenderUtils::SnapToWindowPixels(
+	const SDL_FRect snapped{SdlRenderUtils::SnapToWindowPixels(
 			_sdlConfig.renderer.get(), SdlRenderUtils::ToFRect(SdlRenderUtils::RectToSdlRect(event.destRect)))};
+	const SDL_FRect dst{DirectionUtils::IsVertical(event.dir) ? snapped
+															  : SdlRenderUtils::SwapSidesAboutCenter(snapped)};
 	SDL_Texture* atlas{_sdlConfig.atlasTexture.get()};
 
 	if (event.color != 0u)

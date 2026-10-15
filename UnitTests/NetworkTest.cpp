@@ -12,7 +12,9 @@
 #include "components/events/StatisticsEvents.h"
 #include "components/events/TimingEvents.h"
 #include "components/WorldSnapshot.h"
+#include "entities/EffectTarget.h"
 #include "enums/Absence.h"
+#include "enums/Faction.h"
 #include "enums/MatchRules.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
@@ -205,6 +207,7 @@ TEST_F(NetworkTest, EveryReplicatedEventArrivesAsItself)
 	std::optional<BonusHelmetAppliedEvent> helmet{};
 	std::optional<BonusShipAppliedEvent> ship{};
 	std::optional<BonusTankAppliedEvent> extraLife{};
+	std::optional<BonusEffectsChangedEvent> effects{};
 	std::optional<TierChangedEvent> tier{};
 	std::optional<TankGrewEvent> grew{};
 	std::vector<TankRespawnedEvent> respawned{};
@@ -230,6 +233,7 @@ TEST_F(NetworkTest, EveryReplicatedEventArrivesAsItself)
 	subs.push_back(_clientEvents->AddListener(Key(Author::Player1),
 											  [&ship](const BonusShipAppliedEvent& e) { ship = e; }));
 	subs.push_back(_clientEvents->AddListener([&extraLife](const BonusTankAppliedEvent& e) { extraLife = e; }));
+	subs.push_back(_clientEvents->AddListener([&effects](const BonusEffectsChangedEvent& e) { effects = e; }));
 	subs.push_back(_clientEvents->AddListener(Key(_uuid), [&tier](const TierChangedEvent& e) { tier = e; }));
 	subs.push_back(_clientEvents->AddListener(Key(_uuid), [&grew](const TankGrewEvent& e) { grew = e; }));
 	subs.push_back(_clientEvents->AddListener([&respawned](const TankRespawnedEvent& e) { respawned.push_back(e); }));
@@ -257,6 +261,16 @@ TEST_F(NetworkTest, EveryReplicatedEventArrivesAsItself)
 	_serverEvents->EmitEvent(BonusHelmetAppliedEvent{.author = Author::Player1, .isActive = true});
 	_serverEvents->EmitEvent(BonusShipAppliedEvent{.author = Author::Player1});
 	_serverEvents->EmitEvent(BonusTankAppliedEvent{.author = Author::Player2});
+	_serverEvents->EmitEvent(BonusEffectsChangedEvent{
+			.effects = {BonusEffectTimeLeft{.type = BonusType::Helmet,
+											.target = Author::Enemy3,
+											.duration = 20s,
+											.left = 7s},
+						BonusEffectTimeLeft{.type = BonusType::Timer,
+											.target = Faction::Solo,
+											.spared = Author::Player2,
+											.duration = 15s,
+											.left = 15s}}});
 	//NOTE: the tier travels as a result on its own command - the client sets it rather than replaying the upgrade
 	_serverEvents->EmitEvent(TierChangedEvent{.tier = 4u, .uuid = _uuid});
 	_serverEvents->EmitEvent(TankGrewEvent{.rect = grown, .uuid = _uuid});
@@ -278,8 +292,8 @@ TEST_F(NetworkTest, EveryReplicatedEventArrivesAsItself)
 	ASSERT_TRUE(PumpUntil([&]
 	{
 		return moved && shot && health && despawned.size() == 2u && bonus && bonusLanded && helmet && ship && extraLife
-			   && tier && grew && respawned.size() == kTankTypes.size() && bulletHit && tankHit && tankDied && brickDied
-			   && steelDied && bonusPickup && bonusDestroyed && bonusExpired;
+			   && effects && tier && grew && respawned.size() == kTankTypes.size() && bulletHit && tankHit
+			   && tankDied && brickDied && steelDied && bonusPickup && bonusDestroyed && bonusExpired;
 	}));
 
 	EXPECT_EQ(moved->pos, pos);
@@ -297,6 +311,14 @@ TEST_F(NetworkTest, EveryReplicatedEventArrivesAsItself)
 	EXPECT_TRUE(helmet->isActive);
 	EXPECT_EQ(ship->author, Author::Player1);
 	EXPECT_EQ(extraLife->author, Author::Player2);
+	ASSERT_EQ(effects->effects.size(), 2u);
+	EXPECT_EQ(effects->effects[0].type, BonusType::Helmet);
+	EXPECT_EQ(effects->effects[0].target, EffectTarget{Author::Enemy3});
+	EXPECT_EQ(effects->effects[0].duration, 20s);
+	EXPECT_EQ(effects->effects[0].left, 7s);
+	EXPECT_EQ(effects->effects[1].type, BonusType::Timer);
+	EXPECT_EQ(effects->effects[1].target, EffectTarget{Faction::Solo});
+	EXPECT_EQ(effects->effects[1].spared, Author::Player2);
 	EXPECT_EQ(tier->tier, 4u);
 	EXPECT_DOUBLE_EQ(grew->rect.x, grown.x);
 	EXPECT_DOUBLE_EQ(grew->rect.y, grown.y);

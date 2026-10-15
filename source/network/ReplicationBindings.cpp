@@ -83,6 +83,7 @@ void BindHostBonus(ReplicationPublisher& out)
 	{
 		return BonusStatus{.author = e.author, .bonusType = BonusType::Tank};
 	});
+	out.Bind<BonusEffectsChangedEvent>([](const auto& e) { return BonusEffects{.effects = e.effects}; });
 }
 
 [[nodiscard]] ClientSignal SignalOf(const AbsenceChoice choice) noexcept

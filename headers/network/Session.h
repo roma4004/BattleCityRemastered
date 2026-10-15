@@ -94,6 +94,7 @@ private:
 	void Handle(const StatisticsChange&) const {}
 	void Handle(const BonusSpawn&) const {}
 	void Handle(const BonusStatus&) const {}
+	void Handle(const BonusEffects&) const {}
 	void Handle(const SlotAssignment&) const {}
 	void Handle(const WorldSnapshot&) const {}
 	void Handle(const AbsenceChange&) const {}

@@ -323,6 +323,7 @@
     <ClInclude Include="..\headers\entities\BaseObj.h" />
     <ClInclude Include="..\headers\entities\BaseObjProperty.h" />
     <ClInclude Include="..\headers\entities\BonusEffectProperty.h" />
+    <ClInclude Include="..\headers\entities\EffectTarget.h" />
     <ClInclude Include="..\headers\entities\bonuses\Bonus.h" />
     <ClInclude Include="..\headers\entities\BulletCaliber.h" />
     <ClInclude Include="..\headers\entities\TankModelSpec.h" />
@@ -394,6 +395,7 @@
     <ClInclude Include="..\headers\network\PublicAddressProbe.h" />
     <ClInclude Include="..\headers\network\Stun.h" />
     <ClInclude Include="..\headers\network\commands\AnyCommand.h" />
+    <ClInclude Include="..\headers\network\commands\BonusEffects.h" />
     <ClInclude Include="..\headers\network\commands\BonusSpawn.h" />
     <ClInclude Include="..\headers\network\commands\BonusSpawnComplete.h" />
     <ClInclude Include="..\headers\network\commands\BonusStatus.h" />

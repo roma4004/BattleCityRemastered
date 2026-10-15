@@ -20,6 +20,7 @@
 #include <functional>
 #include <optional>
 #include <ranges>
+#include <SDL3/SDL_pixels.h>
 #include <SDL3/SDL_render.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <span>
@@ -79,6 +80,9 @@ constexpr int kReserveColumnGap{1};
 constexpr Point kSideBarEnemyTankSize{.x = 30, .y = 25};
 constexpr Point kSideBarLivesSize{.x = kSideBarItemWidth, .y = 70};
 constexpr Point kSideBarStageSize{.x = kSideBarItemWidth, .y = 95};
+constexpr Point kSideBarBonusSize{.x = 24, .y = 24};
+constexpr int kSeatEffectGap{6};
+constexpr Uint8 kFadedAlpha{0x80u};
 //NOTE: the medium font is a glyph as wide as its size - thirteen of them would not fit across the bar
 constexpr int kSideBarHintPointSize{12};
 
@@ -336,11 +340,11 @@ void UiRenderer::DrawCaret(const UiTable& table, const UiLayout::Placement& plac
 	const int thickness{std::max(height / kCaretWidthShare, 1)};
 	const std::string_view under{text.substr(start, TextUtils::ByteOf(text, caret.symbol + caret.symbols) - start)};
 	const SDL_Rect bar{caret.symbols == 0
-							   ? SDL_Rect{.x = placed->pos.x + before, .y = top, .w = thickness, .h = height}
-							   : SDL_Rect{.x = placed->pos.x + before,
-										  .y = top + height - thickness,
-										  .w = _textCache.MeasureString(under, pointSize, scale).x,
-										  .h = thickness}};
+						   ? SDL_Rect{.x = placed->pos.x + before, .y = top, .w = thickness, .h = height}
+						   : SDL_Rect{.x = placed->pos.x + before,
+									  .y = top + height - thickness,
+									  .w = _textCache.MeasureString(under, pointSize, scale).x,
+									  .h = thickness}};
 
 	SDL_Renderer* const renderer{_sdlConfig.renderer.get()};
 	SDL_SetRenderDrawColor(renderer, 0xffu, 0xffu, 0xffu, caret.alpha);
@@ -416,10 +420,14 @@ void UiRenderer::DrawSideBar(const RenderSideBarEvent& event) const
 										   SdlRenderUtils::RectToSdlRect(TextureOffset::kEnemyIconBackground), frame);
 
 	const Point reserveAt{.x = frame.x + kReserveInset.x, .y = frame.y + kReserveInset.y};
-	const UiLayout::Placement enemies{
-			UiLayout::Place(event.enemies, reserveAt, kReserveRowHeight, measure, kReserveColumnGap)};
-	const Point countersAt{.x = frame.x, .y = frame.y + frame.h + kReserveGapBelow};
-	const UiLayout::Placement counters{UiLayout::Place(event.counters, countersAt, 0, measure)};
+	//NOTE: a free cell keeps a tank's width
+	const UiLayout::Placement enemies{UiLayout::Place(event.enemies, reserveAt, kReserveRowHeight, measure,
+													  kReserveColumnGap, kSideBarEnemyTankSize.x)};
+	//NOTE: the bonus column keeps its width when empty, so the seats stay in the bar's column
+	const Point countersAt{.x = frame.x - kSideBarBonusSize.x - kSeatEffectGap,
+						   .y = frame.y + frame.h + kReserveGapBelow};
+	const UiLayout::Placement counters{
+			UiLayout::Place(event.counters, countersAt, 0, measure, kSeatEffectGap, kSideBarBonusSize.x)};
 
 	DrawTables(std::array<PlacedTable, 2>{{{event.enemies, enemies}, {event.counters, counters}}},
 			   SDL_Config::kFontSizePtMedium, scale);
@@ -512,6 +520,12 @@ UiRenderer::IconSource UiRenderer::Icon(const UiIcon icon) const
 			return sprite(TextureOffset::kPlayer2Icon, kSideBarLivesSize);
 		case UiIcon::SideBarStageFlag:
 			return sprite(TextureOffset::kStageNumberFlag, kSideBarStageSize);
+		case UiIcon::SideBarBonusTimer:
+			return sprite(TextureOffset::kBonusTimer, kSideBarBonusSize);
+		case UiIcon::SideBarBonusHelmet:
+			return sprite(TextureOffset::kBonusHelmet, kSideBarBonusSize);
+		case UiIcon::SideBarBonusShovel:
+			return sprite(TextureOffset::kBonusShovel, kSideBarBonusSize);
 		case UiIcon::PlatePause:
 			return sprite(TextureOffset::kPauseText, PlateSize(TextureOffset::kPauseText, kPausePlateShare));
 		case UiIcon::PlateGameOver:
@@ -533,6 +547,35 @@ void UiRenderer::DrawIcon(const UiIcon icon, const SDL_Rect dstRect) const
 	}
 
 	SdlRenderUtils::RenderCopy(_sdlConfig.renderer.get(), source.texture, dstRect);
+}
+
+void UiRenderer::DrawFadingIcon(const UiIcon icon, const SDL_Rect dstRect, const float faded) const
+{
+	const IconSource source{Icon(icon)};
+	const int rows{source.sprite ? source.sprite->h : 0};
+	const int fadedRows{std::clamp(static_cast<int>(faded * static_cast<float>(rows)), 0, rows)};
+	if (fadedRows == 0)
+	{
+		DrawIcon(icon, dstRect);
+
+		return;
+	}
+
+	//NOTE: the opaque rest over the whole faded picture; unrounded, or the two scale apart
+	const float share{static_cast<float>(fadedRows) / static_cast<float>(rows)};
+	const auto uncut = [share](const SDL_FRect& rect)
+	{
+		const float cut{rect.h * share};
+
+		return SDL_FRect{.x = rect.x, .y = rect.y + cut, .w = rect.w, .h = rect.h - cut};
+	};
+	const SDL_FRect sprite{uncut(SdlRenderUtils::ToFRect(*source.sprite))};
+	const SDL_FRect dst{uncut(SdlRenderUtils::ToFRect(dstRect))};
+
+	SDL_SetTextureAlphaMod(source.texture, kFadedAlpha);
+	DrawIcon(icon, dstRect);
+	SDL_SetTextureAlphaMod(source.texture, SDL_ALPHA_OPAQUE);
+	SDL_RenderTexture(_sdlConfig.renderer.get(), source.texture, &sprite, &dst);
 }
 
 UiLayout::Measure UiRenderer::CellMeasurer(const int pointSize, const float scale) const
@@ -565,7 +608,7 @@ void UiRenderer::DrawTablePictures(const UiTable& table, const UiLayout::Placeme
 
 		if (cell.icon != UiIcon::None)
 		{
-			DrawIcon(cell.icon, SdlRenderUtils::RectOf(placed.pos, placed.size));
+			DrawFadingIcon(cell.icon, SdlRenderUtils::RectOf(placed.pos, placed.size), cell.faded);
 		}
 	}
 }
@@ -605,8 +648,8 @@ void UiRenderer::AnnounceMenuTiles(const UiLayout::Placement& modes) const
 
 	_menuTilePlaces = tiles;
 	_events->EmitEvent(MenuTilesPlacedEvent{.tiles = std::move(tiles),
-										 .tileSize = {.x = modes.size.x + kMenuRowPadding * 2,
-													 .y = kMenuModeRowHeight}});
+											.tileSize = {.x = modes.size.x + kMenuRowPadding * 2,
+														 .y = kMenuModeRowHeight}});
 }
 
 void UiRenderer::AnnouncePanelRows(const std::vector<Point>& rows, const Point rowSize, const int symbolWidth) const

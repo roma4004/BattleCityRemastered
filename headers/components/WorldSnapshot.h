@@ -1,6 +1,7 @@
 #pragma once
 
 #include "components/StatisticsData.h"
+#include "components/events/BonusPickupEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/SpawnEvents.h"
 #include "enums/Absence.h"
@@ -63,6 +64,7 @@ struct WorldSnapshot final
 	std::vector<BulletSnapshot> bullets{};
 	std::vector<BonusSpawnedEvent> bonuses{};
 	std::vector<BonusSpawnedEvent> bonusSpawns{};
+	std::vector<BonusEffectTimeLeft> effects{};
 	//NOTE: indexed by RespawnGroup
 	std::array<unsigned short, kRespawnGroupCount> respawnCounts{};
 	StatisticsData statistics{};

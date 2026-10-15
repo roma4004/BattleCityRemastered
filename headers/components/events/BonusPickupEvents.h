@@ -1,6 +1,10 @@
 #pragma once
 
+#include "entities/EffectTarget.h"
 #include "enums/Author.h"
+#include "enums/BonusType.h"
+#include <chrono>
+#include <vector>
 
 enum class Faction : char8_t;
 
@@ -57,6 +61,21 @@ struct BonusShovelStatusChangeEvent
 {
 	Faction faction{};
 	bool isActive;
+};
+
+struct BonusEffectTimeLeft
+{
+	BonusType type{};
+	EffectTarget target{};
+	Author spared{};
+	std::chrono::milliseconds duration{};
+	std::chrono::milliseconds left{};
+};
+
+//NOTE: the whole running set, sent on each change
+struct BonusEffectsChangedEvent
+{
+	std::vector<BonusEffectTimeLeft> effects{};
 };
 
 struct BonusHelmetAppliedEvent

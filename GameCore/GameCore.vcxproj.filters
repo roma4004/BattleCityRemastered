@@ -566,6 +566,9 @@
     <ClInclude Include="..\headers\entities\BulletCaliber.h">
       <Filter>headers\entities</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\entities\EffectTarget.h">
+      <Filter>headers\entities</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\entities\obstacles\BrickWall.h">
       <Filter>headers\entities\obstacles</Filter>
     </ClInclude>
@@ -741,6 +744,9 @@
       <Filter>headers\network\commands</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\commands\AnyCommand.h">
+      <Filter>headers\network\commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\commands\BonusEffects.h">
       <Filter>headers\network\commands</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\commands\BonusSpawn.h">

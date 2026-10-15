@@ -7,6 +7,8 @@
 #include "components/Sprite.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "entities/TankModelSpec.h"
+#include "enums/Direction.h"
+#include "geometry/Point.h"
 #include "utils/MathUtils.h"
 #include "utils/Log.h"
 #include <optional>
@@ -89,22 +91,47 @@ std::optional<ObjRectangle> QuarterOf(const Author author)
 	return std::nullopt;
 }
 
+//NOTE: two frames per facing; a long barrel loses its tip
+FPoint FacingShift(const Direction dir)
+{
+	constexpr double facing{2.0 * kAtlasCellSize};
+	switch (dir)
+	{
+		case Direction::UP:
+			return FPoint{.y = 1.0};
+		case Direction::LEFT:
+			return FPoint{.x = facing + 1.0};
+		case Direction::DOWN:
+			return FPoint{.x = 2.0 * facing};
+		case Direction::RIGHT:
+			return FPoint{.x = 3.0 * facing};
+	}
+
+	return FPoint{};
+}
+
 //NOTE: the seat picks the color quarter, SpriteRowOf the row in it - player tiers first, then enemy models
-ObjRectangle GetTankTextureRect(const Author author, const TankModel model, const unsigned short tier)
+ObjRectangle GetTankTextureRect(const Author author, const TankModel model, const unsigned short tier,
+								const Direction dir)
 {
 	const double rowOffset{SpriteRowOf(model, tier) * kAtlasCellSize};
-	const auto shiftedDown = [rowOffset](const ObjRectangle& quarter)
+	const FPoint facing{FacingShift(dir)};
+	const auto placed = [rowOffset, facing](const ObjRectangle& quarter)
 	{
-		return ObjRectangle{.x = quarter.x, .y = quarter.y + rowOffset, .w = quarter.w, .h = quarter.h};
+		return ObjRectangle{.x = quarter.x + facing.x,
+							.y = quarter.y + rowOffset + facing.y,
+							.w = quarter.w,
+							.h = quarter.h};
 	};
 
-	return QuarterOf(author).transform(shiftedDown).value_or(ObjRectangle{});
+	return QuarterOf(author).transform(placed).value_or(ObjRectangle{});
 }
 
 ObjRectangle AtlasRectOf(const Sprite& sprite)
 {
-	ObjRectangle rect{sprite.texture == TextureType::Tank ? GetTankTextureRect(sprite.author, sprite.model, sprite.tier)
-														  : GetTextureRect(sprite.texture)};
+	ObjRectangle rect{sprite.texture == TextureType::Tank
+							  ? GetTankTextureRect(sprite.author, sprite.model, sprite.tier, sprite.dir)
+							  : GetTextureRect(sprite.texture)};
 	rect.x += sprite.frame * kAtlasCellSize;
 
 	return rect;
@@ -161,7 +188,9 @@ void TextureManager::Draw(const Sprite& sprite) const
 		_events->EmitEvent(RenderColorTextureEvent{.rect = destRect});
 	}
 
-	_events->EmitEvent(RenderTextureEvent{.textureRect = textureRect, .destRect = destRect, .dir = sprite.dir});
+	//NOTE: a tank has a frame per facing, with its own light
+	const Direction turn{sprite.texture == TextureType::Tank ? Direction::UP : sprite.dir};
+	_events->EmitEvent(RenderTextureEvent{.textureRect = textureRect, .destRect = destRect, .dir = turn});
 
 	if (sprite.rimColor != 0u)
 	{

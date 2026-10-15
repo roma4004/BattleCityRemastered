@@ -74,6 +74,14 @@ SDL_FRect SdlRenderUtils::SnapToWindowPixels(SDL_Renderer* const renderer, const
 					 .h = snap(rect.y + rect.h, scaleY) - top};
 }
 
+SDL_FRect SdlRenderUtils::SwapSidesAboutCenter(const SDL_FRect& rect)
+{
+	return SDL_FRect{.x = rect.x + (rect.w - rect.h) / 2.f,
+					 .y = rect.y + (rect.h - rect.w) / 2.f,
+					 .w = rect.h,
+					 .h = rect.w};
+}
+
 void SdlRenderUtils::FillRect(SDL_Renderer* const renderer, const SDL_Rect& rect)
 {
 	const SDL_FRect target{ToFRect(rect)};

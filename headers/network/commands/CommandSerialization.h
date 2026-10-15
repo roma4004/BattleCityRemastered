@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AbsenceChange.h"
+#include "BonusEffects.h"
 #include "BonusSpawn.h"
 #include "BonusSpawnComplete.h"
 #include "BonusStatus.h"
@@ -27,10 +28,12 @@
 #include "UuidSerialization.h"
 #include "components/StatisticsData.h"
 #include "components/WorldSnapshot.h"
+#include "components/events/BonusPickupEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/SpawnEvents.h"
 #include "geometry/ObjRectangle.h"
 #include <ser20/types/array.hpp>
+#include <ser20/types/chrono.hpp>
 #include <ser20/types/common.hpp>
 #include <ser20/types/string.hpp>
 #include <ser20/types/variant.hpp>
@@ -62,6 +65,12 @@ void serialize(Archive& ar, network::commands::BonusStatus& cmd, const unsigned 
 	ar & cmd.author;
 	ar & cmd.bonusType;
 	ar & cmd.isEnable;
+}
+
+template<class Archive>
+void serialize(Archive& ar, network::commands::BonusEffects& cmd, const unsigned int /*version*/)
+{
+	ar & cmd.effects;
 }
 
 template<class Archive>
@@ -250,6 +259,16 @@ void serialize(Archive& ar, BonusSpawnedEvent& bonus, const unsigned int /*versi
 }
 
 template<class Archive>
+void serialize(Archive& ar, BonusEffectTimeLeft& effect, const unsigned int /*version*/)
+{
+	ar & effect.type;
+	ar & effect.target;
+	ar & effect.spared;
+	ar & effect.duration;
+	ar & effect.left;
+}
+
+template<class Archive>
 void serialize(Archive& ar, TankSnapshot& tank, const unsigned int /*version*/)
 {
 	ar & tank.type;
@@ -328,6 +347,7 @@ void serialize(Archive& ar, WorldSnapshot& snapshot, const unsigned int /*versio
 	ar & snapshot.bullets;
 	ar & snapshot.bonuses;
 	ar & snapshot.bonusSpawns;
+	ar & snapshot.effects;
 	ar & snapshot.respawnCounts;
 	ar & snapshot.statistics;
 	ar & snapshot.absence;

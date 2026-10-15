@@ -16,10 +16,12 @@
 #include "components/events/SpawnEvents.h"
 #include "components/events/StatisticsEvents.h"
 #include "components/events/TimingEvents.h"
+#include "components/managers/BonusManager.h"
 #include "components/managers/GameStateManager.h"
 #include "components/managers/RespawnManager.h"
 #include "components/managers/SpawnManager.h"
 #include "components/managers/WorldScaleManager.h"
+#include "entities/EffectTarget.h"
 #include "entities/bonuses/Bonus.h"
 #include "entities/obstacles/Obstacle.h"
 #include "entities/pawns/Bullet.h"
@@ -29,6 +31,7 @@
 #include "enums/Author.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
+#include "enums/Faction.h"
 #include "enums/GameMode.h"
 #include "enums/GameState.h"
 #include "enums/ObstacleType.h"
@@ -44,6 +47,7 @@
 #include "gtest/gtest.h"
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <map>
 #include <memory>
 #include <optional>
@@ -304,4 +308,35 @@ TEST_F(NetworkWorldSnapshotTest, TheScoreLivesAndAbsenceAreTakenOver)
 	}
 	ASSERT_TRUE(shown.has_value()) << "a newcomer to a held match is not shown who left";
 	EXPECT_EQ(shown->seats, (std::array{Absence::None, Absence::Left, Absence::None, Absence::None}));
+}
+
+// a newcomer gets every running effect with what is left of it
+TEST_F(NetworkWorldSnapshotTest, RunningEffectsArriveWithWhatIsLeftOfThem)
+{
+	//NOTE: not in the fixture - the other cases' tanks would get helmets
+	const BonusManager bonuses{_serverEvents, _hostConfig};
+	std::optional<BonusEffectsChangedEvent> shown{};
+	_subs.push_back(_clientEvents->AddListener([&shown](const BonusEffectsChangedEvent& event) { shown = event; }));
+	_serverEvents->EmitEvent(BonusTimerPickupEvent{.target = Faction::Solo, .spared = Author::Player2});
+	_serverEvents->EmitEvent(BonusHelmetPickupEvent{.author = Author::Enemy3});
+	_serverEvents->EmitEvent(BonusHelmetPickupEvent{.author = Author::Enemy3});
+
+	Replicate();
+
+	const std::chrono::milliseconds duration{_hostConfig.bonusEffectDuration};
+	ASSERT_TRUE(shown.has_value());
+	ASSERT_EQ(shown->effects.size(), 2u);
+	const BonusEffectTimeLeft& frozen{shown->effects[0]};
+	EXPECT_EQ(frozen.type, BonusType::Timer);
+	EXPECT_EQ(frozen.target, EffectTarget{Faction::Solo});
+	EXPECT_EQ(frozen.spared, Author::Player2);
+	EXPECT_EQ(frozen.duration, duration);
+	EXPECT_GT(frozen.left, std::chrono::milliseconds{});
+	EXPECT_LE(frozen.left, duration);
+	const BonusEffectTimeLeft& shielded{shown->effects[1]};
+	EXPECT_EQ(shielded.type, BonusType::Helmet);
+	EXPECT_EQ(shielded.target, EffectTarget{Author::Enemy3});
+	EXPECT_EQ(shielded.duration, duration * 2);
+	EXPECT_GT(shielded.left, duration);
+	EXPECT_LE(shielded.left, duration * 2);
 }

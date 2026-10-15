@@ -1,5 +1,7 @@
 #include "utils/Timer.h"
 #include "utils/TimeUtils.h"
+#include <algorithm>
+#include <chrono>
 
 Timer::Timer(const milliseconds newCooldown)
 	: cooldown{newCooldown}
@@ -11,6 +13,11 @@ bool Timer::IsCooldownFinish() const noexcept { return IsCooldownFinish(TimeUtil
 bool Timer::IsCooldownFinish(const TimeUtils::time_point& now) const noexcept
 {
 	return now - activateTime >= cooldown;
+}
+
+Timer::milliseconds Timer::TimeLeft(const TimeUtils::time_point& now) const noexcept
+{
+	return std::max(cooldown - std::chrono::duration_cast<milliseconds>(now - activateTime), milliseconds{});
 }
 
 void Timer::Reset()
