@@ -111,7 +111,7 @@ void Simulation::OnGameModeChangedTo(const GameModeChangedToEvent& event)
 
 	if (IsHost(event.mode))
 	{
-		auto server{std::make_unique<network::commands::ServerNode>(_gameConfig.serverAddress, _events,
+		auto server{std::make_unique<network::ServerNode>(_gameConfig.serverAddress, _events,
 																	_gameConfig.HostedMatch())};
 		//NOTE: asked for port 0, the OS picked one - read it here, while the concrete type is still in hand
 		_boundPort = server->GetBoundPort();
@@ -128,7 +128,7 @@ void Simulation::OnGameModeChangedTo(const GameModeChangedToEvent& event)
 			return;
 		}
 
-		_networkNode = std::make_unique<network::commands::ClientNode>(_gameConfig.serverAddress, _events);
+		_networkNode = std::make_unique<network::ClientNode>(_gameConfig.serverAddress, _events);
 	}
 }
 

@@ -27,7 +27,7 @@
 #include "CommandBatch.h"
 #include "UuidSerialization.h"
 #include "components/StatisticsData.h"
-#include "components/WorldSnapshot.h"
+#include "WorldSnapshot.h"
 #include "components/events/BonusPickupEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/SpawnEvents.h"
@@ -230,7 +230,7 @@ void serialize(Archive& ar, ObjRectangle& rect, const unsigned int /*version*/)
 }
 
 template<class Archive>
-void serialize(Archive& ar, ObstacleSnapshot& obstacle, const unsigned int /*version*/)
+void serialize(Archive& ar, network::commands::ObstacleSnapshot& obstacle, const unsigned int /*version*/)
 {
 	ar & obstacle.pos;
 	ar & obstacle.type;
@@ -268,7 +268,7 @@ void serialize(Archive& ar, BonusEffectTimeLeft& effect, const unsigned int /*ve
 }
 
 template<class Archive>
-void serialize(Archive& ar, TankSnapshot& tank, const unsigned int /*version*/)
+void serialize(Archive& ar, network::commands::TankSnapshot& tank, const unsigned int /*version*/)
 {
 	ar & tank.type;
 	ar & tank.model;
@@ -282,7 +282,7 @@ void serialize(Archive& ar, TankSnapshot& tank, const unsigned int /*version*/)
 }
 
 template<class Archive>
-void serialize(Archive& ar, BulletSnapshot& bullet, const unsigned int /*version*/)
+void serialize(Archive& ar, network::commands::BulletSnapshot& bullet, const unsigned int /*version*/)
 {
 	ar & bullet.author;
 	ar & bullet.uuid;
@@ -336,7 +336,7 @@ void serialize(Archive& ar, MapLoadedEvent& map, const unsigned int /*version*/)
 }
 
 template<class Archive>
-void serialize(Archive& ar, WorldSnapshot& snapshot, const unsigned int /*version*/)
+void serialize(Archive& ar, network::commands::WorldSnapshot& snapshot, const unsigned int /*version*/)
 {
 	ar & snapshot.map;
 	ar & snapshot.phase;

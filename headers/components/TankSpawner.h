@@ -34,7 +34,6 @@ struct TankRespawnedEvent;
 struct TankSpawnCompletedEvent;
 struct TankSpawnMovedEvent;
 struct TankDiedEvent;
-struct TankSnapshot;
 struct WorldSnapshotRequestedEvent;
 struct WorldSnapshotReceivedEvent;
 class Tank;
@@ -43,6 +42,11 @@ class TankPool;
 class EventSystem;
 class IInputProvider;
 class GameConfig;
+
+namespace network::commands
+{
+struct TankSnapshot;
+}
 
 class TankSpawner final
 {
@@ -120,7 +124,7 @@ class TankSpawner final
 	[[nodiscard]] std::optional<ObjRectangle> RoomOutOfTheWay(const DelayedTankSpawn& spawn,
 															  const Tank& pusher) const;
 	void DelayedSpawnWith(const DelayedTankSpawn& params);
-	void RestoreTank(const TankSnapshot& tank);
+	void RestoreTank(const network::commands::TankSnapshot& tank);
 	void CancelDelayedSpawnsOf(Faction faction, Author spared);
 	void DropDelayedSpawn(Uuid uuid);
 

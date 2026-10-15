@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <memory>
 
-namespace network::commands
+namespace network
 {
 class Server;
 
@@ -31,4 +31,4 @@ private:
 	std::unique_ptr<Server> _server;
 };
 
-}//namespace network::commands
+}//namespace network

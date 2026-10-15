@@ -8,7 +8,6 @@
 #include "components/Sprite.h"
 #include "components/StatisticsData.h"
 #include "components/TankSpawner.h"
-#include "components/WorldSnapshot.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "components/events/BonusPickupEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
@@ -43,6 +42,7 @@
 #include "network/ReplicationApplier.h"
 #include "network/Serializer.h"
 #include "network/commands/CommandBatch.h"
+#include "network/commands/WorldSnapshot.h"
 #include "utils/Uuid.h"
 #include "gtest/gtest.h"
 #include <algorithm>
@@ -134,14 +134,15 @@ protected:
 	void Replicate() const
 	{
 		network::commands::CommandBatch batch;
-		auto& snapshot{std::get<WorldSnapshot>(batch.commands.emplace_back(WorldSnapshot{}))};
+		auto& snapshot{std::get<network::commands::WorldSnapshot>(
+				batch.commands.emplace_back(network::commands::WorldSnapshot{}))};
 		_serverEvents->EmitEvent(WorldSnapshotRequestedEvent{.snapshot = snapshot});
 
 		const auto received{network::Deserialize(network::Serialize(batch))};
 		ASSERT_TRUE(received.has_value());
 
 		network::NetworkCommandQueue queue;
-		network::commands::ReplicationApplier applier{_clientEvents, queue};
+		network::ReplicationApplier applier{_clientEvents, queue};
 		std::ranges::for_each(received->commands, [&applier](const auto& command) { applier.Apply(command); });
 		queue.ProcessAll();
 	}

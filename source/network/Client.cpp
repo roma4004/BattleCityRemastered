@@ -33,7 +33,7 @@ boost::asio::ip::address DialAddress(const std::string& host)
 }
 }//namespace
 
-namespace network::commands
+namespace network
 {
 Client::Client(boost::asio::io_context& ioContext, const ServerAddress& address,
 			   const std::shared_ptr<EventSystem>& events)
@@ -62,11 +62,11 @@ Client::Client(boost::asio::io_context& ioContext, const ServerAddress& address,
 	TryConnect();
 }
 
-void Client::OnCommand(const AnyCommand& command)
+void Client::OnCommand(const commands::AnyCommand& command)
 {
 	//NOTE: peeled off rather than left to the applier - the goodbye has to be read on the network thread,
 	//while everything else is a game fact and belongs on the game one
-	if (const auto* goodbye{std::get_if<Disconnect>(&command)})
+	if (const auto* goodbye{std::get_if<commands::Disconnect>(&command)})
 	{
 		OnDisconnect(*goodbye);
 		return;
@@ -343,8 +343,8 @@ void Client::Shutdown(const DisconnectReason reason, std::function<void()> onClo
 		return;
 	}
 
-	CommandBatch farewell;
-	farewell.commands.emplace_back(Disconnect{.reason = reason});
+	commands::CommandBatch farewell;
+	farewell.commands.emplace_back(commands::Disconnect{.reason = reason});
 	std::ignore = _link->SendReliable(network::Serialize(farewell));
 
 	const auto now{Clock::now()};
@@ -385,7 +385,7 @@ void Client::OnSendNetworkFrame(const SendNetworkFrameEvent&)
 	});
 }
 
-void Client::OnDisconnect(const Disconnect& command)
+void Client::OnDisconnect(const commands::Disconnect& command)
 {
 	const auto reason{command.reason};
 
@@ -401,4 +401,4 @@ void Client::OnDisconnect(const Disconnect& command)
 	//NOTE: the goodbye is the end of this link - there is no closing socket to report it a second time
 	HandleDisconnect();
 }
-}//namespace network::commands
+}//namespace network

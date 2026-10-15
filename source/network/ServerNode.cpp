@@ -6,7 +6,7 @@
 #include <functional>
 #include <memory>
 
-namespace network::commands
+namespace network
 {
 ServerNode::ServerNode(const ServerAddress& address, const std::shared_ptr<EventSystem>& events,
 					   const MatchSettings& match)
@@ -33,4 +33,4 @@ void ServerNode::Abort()
 {
 	boost::asio::post(IoContext(), [server = _server.get()] { server->Shutdown(); });
 }
-}//namespace network::commands
+}//namespace network

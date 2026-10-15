@@ -13,7 +13,6 @@
 #include "components/events/ObjectLifecycleEvents.h"
 #include "components/events/ReplicationEvents.h"
 #include "components/events/StatisticsEvents.h"
-#include "components/WorldSnapshot.h"
 #include "entities/BulletCaliber.h"
 #include "entities/TankModelSpec.h"
 #include "entities/pawns/PawnProperty.h"
@@ -29,6 +28,7 @@
 #include "interfaces/IInputProvider.h"
 #include "interfaces/IMoveBeh.h"
 #include "interfaces/IPickupableBonus.h"
+#include "network/commands/WorldSnapshot.h"
 #include "utils/ColliderUtils.h"
 #include "utils/DirectionUtils.h"
 #include "utils/MathUtils.h"
@@ -260,7 +260,7 @@ void Tank::OnBonusShipPickup(const BonusShipPickupEvent&) { OnBonusShip(); }
 
 void Tank::OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const
 {
-	event.snapshot.tanks.push_back(TankSnapshot{.type = _type,
+	event.snapshot.tanks.push_back(network::commands::TankSnapshot{.type = _type,
 												.model = _model,
 												.uuid = _uuid,
 												.rect = _rect,

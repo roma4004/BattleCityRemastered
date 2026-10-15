@@ -13,7 +13,7 @@
 #include "components/events/SpawnEvents.h"
 #include "components/events/StatisticsEvents.h"
 
-namespace network::commands
+namespace network
 {
 namespace
 {
@@ -23,45 +23,45 @@ void BindHostStatistics(ReplicationPublisher& out)
 {
 	out.Bind<StatisticsBulletHitEvent>([](const auto& e)
 	{
-		return StatisticsChange{.statisticsType = StatisticsType::BulletHit,
+		return commands::StatisticsChange{.statisticsType = StatisticsType::BulletHit,
 								.author = e.author};
 	});
 	out.Bind<StatisticsTankHitEvent>([](const auto& e)
 	{
-		return StatisticsChange{.statisticsType = StatisticsType::TankHit,
+		return commands::StatisticsChange{.statisticsType = StatisticsType::TankHit,
 								.who = e.who,
 								.author = e.author};
 	});
 	out.Bind<TankDiedEvent>([](const auto& e)
 	{
-		return StatisticsChange{.statisticsType = StatisticsType::TankDied,
+		return commands::StatisticsChange{.statisticsType = StatisticsType::TankDied,
 								.who = e.who,
 								.author = e.author,
 								.uuid = e.uuid};
 	});
 	out.Bind<BrickWallDiedEvent>([](const auto& e)
 	{
-		return StatisticsChange{.statisticsType = StatisticsType::BrickWallDied,
+		return commands::StatisticsChange{.statisticsType = StatisticsType::BrickWallDied,
 								.author = e.author};
 	});
 	out.Bind<SteelWallDiedEvent>([](const auto& e)
 	{
-		return StatisticsChange{.statisticsType = StatisticsType::SteelWallDied,
+		return commands::StatisticsChange{.statisticsType = StatisticsType::SteelWallDied,
 								.author = e.author};
 	});
 	out.Bind<StatisticsBonusPickupEvent>([](const auto& e)
 	{
-		return StatisticsChange{.statisticsType = StatisticsType::BonusPickup,
+		return commands::StatisticsChange{.statisticsType = StatisticsType::BonusPickup,
 								.author = e.author};
 	});
 	out.Bind<StatisticsBonusDestroyedEvent>([](const auto& e)
 	{
-		return StatisticsChange{.statisticsType = StatisticsType::BonusDestroyed,
+		return commands::StatisticsChange{.statisticsType = StatisticsType::BonusDestroyed,
 								.author = e.author};
 	});
 	out.Bind<StatisticsBonusExpiredEvent>([](const auto&)
 	{
-		return StatisticsChange{.statisticsType = StatisticsType::BonusExpired};
+		return commands::StatisticsChange{.statisticsType = StatisticsType::BonusExpired};
 	});
 }
 
@@ -69,21 +69,21 @@ void BindHostBonus(ReplicationPublisher& out)
 {
 	out.Bind<BonusSpawnedEvent>([](const auto& e)
 	{
-		return BonusSpawn{.pos = e.pos, .bonusType = e.type, .uuid = e.uuid, .isSuper = e.isSuper};
+		return commands::BonusSpawn{.pos = e.pos, .bonusType = e.type, .uuid = e.uuid, .isSuper = e.isSuper};
 	});
 	out.Bind<BonusHelmetAppliedEvent>([](const auto& e)
 	{
-		return BonusStatus{.author = e.author, .bonusType = BonusType::Helmet, .isEnable = e.isActive};
+		return commands::BonusStatus{.author = e.author, .bonusType = BonusType::Helmet, .isEnable = e.isActive};
 	});
 	out.Bind<BonusShipAppliedEvent>([](const auto& e)
 	{
-		return BonusStatus{.author = e.author, .bonusType = BonusType::Ship};
+		return commands::BonusStatus{.author = e.author, .bonusType = BonusType::Ship};
 	});
 	out.Bind<BonusTankAppliedEvent>([](const auto& e)
 	{
-		return BonusStatus{.author = e.author, .bonusType = BonusType::Tank};
+		return commands::BonusStatus{.author = e.author, .bonusType = BonusType::Tank};
 	});
-	out.Bind<BonusEffectsChangedEvent>([](const auto& e) { return BonusEffects{.effects = e.effects}; });
+	out.Bind<BonusEffectsChangedEvent>([](const auto& e) { return commands::BonusEffects{.effects = e.effects}; });
 }
 
 [[nodiscard]] ClientSignal SignalOf(const AbsenceChoice choice) noexcept
@@ -105,7 +105,7 @@ template<class EventT>
 {
 	return events.AddListener(Key(channel), [&out, action](const EventT& event)
 	{
-		out.Publish(KeyStateChange{.action = action, .isPressed = event.isPressed});
+		out.Publish(commands::KeyStateChange{.action = action, .isPressed = event.isPressed});
 	});
 }
 }//namespace
@@ -113,47 +113,51 @@ void BindHostReplication(ReplicationPublisher& out)
 {
 	out.Bind<PauseStatusEvent>([](const auto& e)
 	{
-		return KeyStateChange{.action = InputSignal::PauseStatus, .isPressed = e.isPaused};
+		return commands::KeyStateChange{.action = InputSignal::PauseStatus, .isPressed = e.isPaused};
 	});
-	out.Bind<GameStateChangedToEvent>([](const auto& e) { return GameStateChange{.state = e.state}; });
-	out.Bind<AbsenceChangedEvent>([](const auto& e) { return AbsenceChange{.seats = e.seats}; });
-	out.Bind<SeatHoldersAnnouncedEvent>([](const auto& e) { return SeatHoldersChange{.holders = e.holders}; });
+	out.Bind<GameStateChangedToEvent>([](const auto& e) { return commands::GameStateChange{.state = e.state}; });
+	out.Bind<AbsenceChangedEvent>([](const auto& e) { return commands::AbsenceChange{.seats = e.seats}; });
+	out.Bind<SeatHoldersAnnouncedEvent>([](const auto& e)
+	{
+		return commands::SeatHoldersChange{.holders = e.holders};
+	});
 
 	out.Bind<PosChangedEvent>([](const auto& e)
 	{
-		return PositionChange{.pos = e.pos, .dir = e.dir, .uuid = e.uuid};
+		return commands::PositionChange{.pos = e.pos, .dir = e.dir, .uuid = e.uuid};
 	});
 	out.Bind<TankShotEvent>([](const auto& e)
 	{
-		return TankShot{.who = e.who, .dir = e.dir, .uuid = e.bulletUuid};
+		return commands::TankShot{.who = e.who, .dir = e.dir, .uuid = e.bulletUuid};
 	});
 	out.Bind<HealthChangedEvent>([](const auto& e)
 	{
-		return HealthChange{.health = e.health, .uuid = e.uuid};
+		return commands::HealthChange{.health = e.health, .uuid = e.uuid};
 	});
 	out.Bind<DespawnedEvent>([](const auto& e)
 	{
-		return Despawn{.uuid = e.uuid, .reason = e.reason};
+		return commands::Despawn{.uuid = e.uuid, .reason = e.reason};
 	});
 	out.Bind<TankRespawnedEvent>([](const auto& e)
 	{
-		return RespawnTank{.tankType = e.type, .model = e.model, .tier = e.tier, .uuid = e.uuid, .pos = e.pos};
+		return commands::RespawnTank{
+				.tankType = e.type, .model = e.model, .tier = e.tier, .uuid = e.uuid, .pos = e.pos};
 	});
 	out.Bind<ObstacleSpawnedEvent>([](const auto& e)
 	{
-		return ObstacleSpawn{.pos = e.pos, .obstacleType = e.type, .uuid = e.uuid};
+		return commands::ObstacleSpawn{.pos = e.pos, .obstacleType = e.type, .uuid = e.uuid};
 	});
-	out.Bind<TankSpawnCompletedEvent>([](const auto& e) { return TankSpawnComplete{.uuid = e.uuid}; });
+	out.Bind<TankSpawnCompletedEvent>([](const auto& e) { return commands::TankSpawnComplete{.uuid = e.uuid}; });
 	out.Bind<TankSpawnMovedEvent>([](const auto& e)
 	{
-		return TankSpawnMoved{.uuid = e.uuid, .pos = e.pos};
+		return commands::TankSpawnMoved{.uuid = e.uuid, .pos = e.pos};
 	});
-	out.Bind<BonusSpawnCompletedEvent>([](const auto& e) { return BonusSpawnComplete{.uuid = e.uuid}; });
+	out.Bind<BonusSpawnCompletedEvent>([](const auto& e) { return commands::BonusSpawnComplete{.uuid = e.uuid}; });
 	out.Bind<TierChangedEvent>([](const auto& e)
 	{
-		return TierChange{.tier = e.tier, .uuid = e.uuid};
+		return commands::TierChange{.tier = e.tier, .uuid = e.uuid};
 	});
-	out.Bind<TankGrewEvent>([](const auto& e) { return TankGrew{.rect = e.rect, .uuid = e.uuid}; });
+	out.Bind<TankGrewEvent>([](const auto& e) { return commands::TankGrew{.rect = e.rect, .uuid = e.uuid}; });
 
 	BindHostStatistics(out);
 	BindHostBonus(out);
@@ -163,24 +167,24 @@ void BindClientReplication(ReplicationPublisher& out)
 {
 	out.Bind<ClientOutReadyToPlayEvent>([](const auto&)
 	{
-		return SignalEvent{.signal = ClientSignal::ReadyToPlay};
+		return commands::SignalEvent{.signal = ClientSignal::ReadyToPlay};
 	});
 	out.Bind<ClientOutRestartMatchEvent>([](const auto&)
 	{
-		return SignalEvent{.signal = ClientSignal::RestartMatch};
+		return commands::SignalEvent{.signal = ClientSignal::RestartMatch};
 	});
 	out.Bind<NextLevelRequestedEvent>([](const auto&)
 	{
-		return SignalEvent{.signal = ClientSignal::NextLevel};
+		return commands::SignalEvent{.signal = ClientSignal::NextLevel};
 	});
 	out.Bind<WorldSnapshotReceivedEvent>([](const auto&)
 	{
-		return SignalEvent{.signal = ClientSignal::WorldSynced};
+		return commands::SignalEvent{.signal = ClientSignal::WorldSynced};
 	});
-	out.Bind<AbsenceChosenEvent>([](const auto& e) { return SignalEvent{.signal = SignalOf(e.choice)}; });
+	out.Bind<AbsenceChosenEvent>([](const auto& e) { return commands::SignalEvent{.signal = SignalOf(e.choice)}; });
 	out.Bind<PauseRequestedEvent>([](const auto& e)
 	{
-		return KeyStateChange{.action = InputSignal::PauseRequest, .isPressed = e.isPaused};
+		return commands::KeyStateChange{.action = InputSignal::PauseRequest, .isPressed = e.isPaused};
 	});
 }
 
@@ -200,4 +204,4 @@ std::vector<EventSubscription> BindClientInput(ReplicationPublisher& out, EventS
 
 	return subs;
 }
-}//namespace network::commands
+}//namespace network

@@ -42,10 +42,10 @@ git checkout -q -- . && git clean -fdq
 git fetch -q "$SRC" HEAD && git checkout -q --detach FETCH_HEAD || exit 1
 
 mapfile -t changed < <({
-	src_git diff --name-only --diff-filter=d HEAD
+	src_git diff --name-only --no-renames --diff-filter=d HEAD
 	src_git ls-files --others --exclude-standard
 } | sort -u)
-mapfile -t deleted < <(src_git diff --name-only --diff-filter=D HEAD)
+mapfile -t deleted < <(src_git diff --name-only --no-renames --diff-filter=D HEAD)
 for f in "${changed[@]}"; do
 	mkdir -p "$(dirname "$f")"
 	cp "$SRC/$f" "$f" || exit 1

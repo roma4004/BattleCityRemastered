@@ -4,10 +4,10 @@
 #include "components/events/ObjectLifecycleEvents.h"
 #include "components/events/ReplicationEvents.h"
 #include "components/StatisticsData.h"
-#include "components/WorldSnapshot.h"
 #include "enums/Author.h"
 #include "enums/Faction.h"
 #include "enums/PlayerSlot.h"
+#include "network/commands/WorldSnapshot.h"
 #include <optional>
 
 namespace

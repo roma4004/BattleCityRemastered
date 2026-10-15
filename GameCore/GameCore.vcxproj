@@ -305,7 +305,6 @@
     <ClInclude Include="..\headers\components\MapLoader.h" />
     <ClInclude Include="..\headers\components\MatchSettings.h" />
     <ClInclude Include="..\headers\components\WorldGeometry.h" />
-    <ClInclude Include="..\headers\components\WorldSnapshot.h" />
     <ClInclude Include="..\headers\components\Menu.h" />
     <ClInclude Include="..\headers\components\ObstacleSpawner.h" />
     <ClInclude Include="..\headers\components\RightSideBar.h" />
@@ -420,6 +419,7 @@
     <ClInclude Include="..\headers\network\commands\TankSpawnComplete.h" />
     <ClInclude Include="..\headers\network\commands\TankSpawnMoved.h" />
     <ClInclude Include="..\headers\network\commands\TierChange.h" />
+    <ClInclude Include="..\headers\network\commands\WorldSnapshot.h" />
     <ClInclude Include="..\headers\network\commands\PointSerialization.h" />
     <ClInclude Include="..\headers\network\commands\UuidSerialization.h" />
     <ClInclude Include="..\headers\network\ReplicationApplier.h" />

@@ -39,7 +39,7 @@ struct ServerKickRequestedEvent;
 struct ServerAcceptingChangedEvent;
 class EventSystem;
 
-namespace network::commands
+namespace network
 {
 using boost::asio::ip::udp;
 
@@ -126,10 +126,10 @@ private:
 	mutable std::mutex _sessionsMutex;
 
 	//NOTE: what the router said last - told again to whoever sits down after. Both sides of it are on the game thread
-	std::optional<PortForwardingChange> _portForwarding{};
+	std::optional<commands::PortForwardingChange> _portForwarding{};
 
 	//NOTE: set once the goodbyes are out - the socket closes when every one is acked or the linger runs out
 	std::function<void()> _onClosed{};
 	Clock::time_point _closeDeadline{};
 };
-}//namespace network::commands
+}//namespace network

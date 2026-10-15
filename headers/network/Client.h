@@ -26,7 +26,7 @@ struct PlayerSlotAssignedEvent;
 struct SendNetworkFrameEvent;
 class EventSystem;
 
-namespace network::commands
+namespace network
 {
 using boost::asio::ip::udp;
 
@@ -47,7 +47,7 @@ private:
 	using Clock = DatagramLink::Clock;
 
 	void Subscribe();
-	void OnCommand(const AnyCommand& command) override;
+	void OnCommand(const commands::AnyCommand& command) override;
 
 	void Receive();
 	void OnDatagram(std::string_view datagram, Clock::time_point now);
@@ -62,7 +62,7 @@ private:
 
 	//NOTE: the only command Client reads itself - the rest are the applier's, and this one is not a
 	//game fact but transport state, taken on the network thread before the queue
-	void OnDisconnect(const Disconnect& command);
+	void OnDisconnect(const commands::Disconnect& command);
 	void HandleDisconnect();
 	void HandleProtocolError();
 	void ScheduleReconnect();
@@ -97,4 +97,4 @@ private:
 	static constexpr std::chrono::milliseconds kReconnectDelay{500};
 	static constexpr std::chrono::milliseconds kFullServerRetry{std::chrono::seconds{3}};
 };
-}//namespace network::commands
+}//namespace network

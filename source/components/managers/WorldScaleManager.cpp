@@ -4,7 +4,7 @@
 #include "components/WorldGeometry.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/ReplicationEvents.h"
-#include "components/WorldSnapshot.h"
+#include "network/commands/WorldSnapshot.h"
 
 WorldScaleManager::WorldScaleManager(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig)
 	: _events{events}

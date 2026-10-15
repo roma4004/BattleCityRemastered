@@ -11,7 +11,6 @@
 #include "components/events/ServerConsoleEvents.h"
 #include "components/events/StatisticsEvents.h"
 #include "components/events/TimingEvents.h"
-#include "components/WorldSnapshot.h"
 #include "entities/EffectTarget.h"
 #include "enums/Absence.h"
 #include "enums/Faction.h"
@@ -31,6 +30,7 @@
 #include "network/Serializer.h"
 #include "network/commands/CommandBatch.h"
 #include "network/commands/SlotAssignment.h"
+#include "network/commands/WorldSnapshot.h"
 #include "network/ServerNode.h"
 #include "gtest/gtest.h"
 #include "utils/Uuid.h"
@@ -109,14 +109,14 @@ protected:
 	}
 
 	//NOTE: port 0 - the OS picks a free one, so a leftover socket cannot collide
-	[[nodiscard]] std::unique_ptr<network::commands::ServerNode> MakeServer() const
+	[[nodiscard]] std::unique_ptr<network::ServerNode> MakeServer() const
 	{
-		return std::make_unique<network::commands::ServerNode>(network::ServerAddress{.port = 0}, _serverEvents);
+		return std::make_unique<network::ServerNode>(network::ServerAddress{.port = 0}, _serverEvents);
 	}
 
-	[[nodiscard]] std::unique_ptr<network::commands::ClientNode> MakeClient(const uint16_t port) const
+	[[nodiscard]] std::unique_ptr<network::ClientNode> MakeClient(const uint16_t port) const
 	{
-		return std::make_unique<network::commands::ClientNode>(network::ServerAddress{.port = port}, _clientEvents);
+		return std::make_unique<network::ClientNode>(network::ServerAddress{.port = port}, _clientEvents);
 	}
 
 	[[nodiscard]] EventSubscription AnnounceReadyOnConnect() const
@@ -128,7 +128,7 @@ protected:
 	}
 
 	//NOTE: keeps pumping while it waits - the client's own retries need it
-	[[nodiscard]] bool ReboundHost(std::unique_ptr<network::commands::ServerNode>& server,
+	[[nodiscard]] bool ReboundHost(std::unique_ptr<network::ServerNode>& server,
 								   const uint16_t port) const
 	{
 		return PumpUntil([this, &server, port]
@@ -140,7 +140,7 @@ protected:
 
 			try
 			{
-				server = std::make_unique<network::commands::ServerNode>(network::ServerAddress{.port = port},
+				server = std::make_unique<network::ServerNode>(network::ServerAddress{.port = port},
 																		_serverEvents);
 			}
 			catch (const std::exception&)
@@ -544,7 +544,7 @@ TEST_F(NetworkTest, TheServerHandsOutTheSeatsInOrder)
 	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&first] { return first.has_value(); })) << "the first client was told no seat";
 	//NOTE: dialled only once the first seat is out, so the accept order is the test's, not the OS's
-	const auto secondClient{std::make_unique<network::commands::ClientNode>(
+	const auto secondClient{std::make_unique<network::ClientNode>(
 			network::ServerAddress{.port = server->GetBoundPort()}, _secondClientEvents)};
 	ASSERT_TRUE(PumpUntil([&second] { return second.has_value(); })) << "the second client was told no seat";
 
@@ -572,7 +572,7 @@ TEST_F(NetworkTest, ASeatComesBackWhenItsClientSaysGoodbye)
 	client.reset();
 	ASSERT_TRUE(PumpUntil([&goodbye] { return goodbye; })) << "host never got the client's goodbye";
 
-	const auto next{std::make_unique<network::commands::ClientNode>(
+	const auto next{std::make_unique<network::ClientNode>(
 			network::ServerAddress{.port = server->GetBoundPort()}, _secondClientEvents)};
 	ASSERT_TRUE(PumpUntil([&second] { return second.has_value(); })) << "the freed seat was never handed out";
 	EXPECT_EQ(PlayerSlot::P1, *second) << "the seat of a client that quit is still held by its session";
@@ -591,7 +591,7 @@ TEST_F(NetworkTest, EachClientPutsOnlyItsOwnSeatOnTheWire)
 	const auto server{MakeServer()};
 	const auto client{MakeClient(server->GetBoundPort())};
 	ASSERT_TRUE(PumpUntil([&firstSeat] { return firstSeat.has_value(); }));
-	const auto secondClient{std::make_unique<network::commands::ClientNode>(
+	const auto secondClient{std::make_unique<network::ClientNode>(
 			network::ServerAddress{.port = server->GetBoundPort()}, _secondClientEvents)};
 	ASSERT_TRUE(PumpUntil([&secondSeat] { return secondSeat.has_value(); }));
 
@@ -636,11 +636,11 @@ TEST_F(NetworkTest, AThirdClientIsToldTheSeatsAreTaken)
 	const auto server{MakeServer()};
 	const uint16_t port{server->GetBoundPort()};
 	const auto client{MakeClient(port)};
-	const auto secondClient{std::make_unique<network::commands::ClientNode>(network::ServerAddress{.port = port},
+	const auto secondClient{std::make_unique<network::ClientNode>(network::ServerAddress{.port = port},
 																					_secondClientEvents)};
 	ASSERT_TRUE(PumpUntil([&firstSeat, &secondSeat] { return firstSeat && secondSeat; }));
 
-	const auto thirdClient{std::make_unique<network::commands::ClientNode>(network::ServerAddress{.port = port},
+	const auto thirdClient{std::make_unique<network::ClientNode>(network::ServerAddress{.port = port},
 																				   _thirdClientEvents)};
 
 	ASSERT_TRUE(PumpUntil([&refusal] { return refusal.has_value(); })) << "the third client heard nothing";
@@ -660,13 +660,13 @@ TEST_F(NetworkTest, AThreeSeatServerSeatsAThirdClientAndTellsItTheMatch)
 							  .enemiesAtOnce = 1u,
 							  .bots = 2u,
 							  .isStartingAtOnce = true};
-	const auto server{std::make_unique<network::commands::ServerNode>(network::ServerAddress{.port = 0},
+	const auto server{std::make_unique<network::ServerNode>(network::ServerAddress{.port = 0},
 																	  _serverEvents, match)};
 	const uint16_t port{server->GetBoundPort()};
 	const auto client{MakeClient(port)};
-	const auto secondClient{std::make_unique<network::commands::ClientNode>(network::ServerAddress{.port = port},
+	const auto secondClient{std::make_unique<network::ClientNode>(network::ServerAddress{.port = port},
 																			_secondClientEvents)};
-	const auto thirdClient{std::make_unique<network::commands::ClientNode>(network::ServerAddress{.port = port},
+	const auto thirdClient{std::make_unique<network::ClientNode>(network::ServerAddress{.port = port},
 																		   _thirdClientEvents)};
 
 	ASSERT_TRUE(PumpUntil([&third] { return third.has_value(); })) << "the third client was told no seat";
@@ -679,14 +679,14 @@ TEST_F(NetworkTest, AReadyInARunningMatchIsAnsweredWithTheFieldInsteadOfTheFrame
 {
 	const Uuid standing{UuidUtils::GetRandomUuid()};
 	const Uuid inTheFrame{UuidUtils::GetRandomUuid()};
-	std::optional<std::vector<ObstacleSnapshot>> field{};
+	std::optional<std::vector<network::commands::ObstacleSnapshot>> field{};
 	std::vector<Uuid> spawned{};
 	std::vector<EventSubscription> subs{};
 	subs.push_back(_serverEvents->AddListener([standing](const WorldSnapshotRequestedEvent& event)
 	{
 		event.snapshot.phase = GameState::Playing;
 		event.snapshot.obstacles.push_back(
-				ObstacleSnapshot{.pos = {}, .type = ObstacleType::Steel, .uuid = standing});
+				network::commands::ObstacleSnapshot{.pos = {}, .type = ObstacleType::Steel, .uuid = standing});
 	}));
 	subs.push_back(_serverEvents->AddListener([this, inTheFrame](const ServerInClientReadyToStartGameEvent&)
 	{
@@ -751,14 +751,14 @@ TEST_F(NetworkTest, AReadyOwedFromTheLobbyIsPaidOnceTheMatchStarts)
 	const Uuid standing{UuidUtils::GetRandomUuid()};
 	const Uuid inTheFrame{UuidUtils::GetRandomUuid()};
 	GameState phase{GameState::Lobby};
-	std::optional<std::vector<ObstacleSnapshot>> field{};
+	std::optional<std::vector<network::commands::ObstacleSnapshot>> field{};
 	std::optional<Uuid> spawned{};
 	std::vector<EventSubscription> subs{};
 	subs.push_back(_serverEvents->AddListener([&phase, standing](const WorldSnapshotRequestedEvent& event)
 	{
 		event.snapshot.phase = phase;
 		event.snapshot.obstacles.push_back(
-				ObstacleSnapshot{.pos = {}, .type = ObstacleType::Steel, .uuid = standing});
+				network::commands::ObstacleSnapshot{.pos = {}, .type = ObstacleType::Steel, .uuid = standing});
 	}));
 	subs.push_back(_serverEvents->AddListener([this, inTheFrame](const ServerInClientReadyToStartGameEvent&)
 	{
@@ -826,7 +826,7 @@ TEST_F(NetworkTest, AClientDialingAgainFromTheSameAddressTakesItsSeatBack)
 	socket.non_blocking(true);
 
 	ASSERT_EQ(Dial(socket, 1u), PlayerSlot::P1);
-	const auto secondClient{std::make_unique<network::commands::ClientNode>(
+	const auto secondClient{std::make_unique<network::ClientNode>(
 			network::ServerAddress{.port = server->GetBoundPort()}, _secondClientEvents)};
 	ASSERT_TRUE(PumpUntil([&secondSeat] { return secondSeat.has_value(); }));
 
@@ -951,7 +951,7 @@ TEST_F(NetworkTest, ASeatTakenInARunningMatchSendsEveryoneTheField)
 	const auto server{MakeServer()};
 	const uint16_t port{server->GetBoundPort()};
 	const auto client{MakeClient(port)};
-	const auto secondClient{std::make_unique<network::commands::ClientNode>(network::ServerAddress{.port = port},
+	const auto secondClient{std::make_unique<network::ClientNode>(network::ServerAddress{.port = port},
 																			_secondClientEvents)};
 	ASSERT_TRUE(PumpUntil([&firstSeat, &secondSeat] { return firstSeat && secondSeat; }));
 	ASSERT_FALSE(isFirstSent || isSecondSent) << "the control failed - nobody readied, nobody is owed the field";
@@ -968,7 +968,7 @@ TEST_F(NetworkTest, AClientSeatedAfterTheMapChangedIsToldTheNewOne)
 	const EventSubscription assignedSub{_clientEvents->AddListener(
 			[&assigned](const PlayerSlotAssignedEvent& e) { assigned = e; })};
 
-	const auto server{std::make_unique<network::commands::ServerNode>(network::ServerAddress{.port = 0},
+	const auto server{std::make_unique<network::ServerNode>(network::ServerAddress{.port = 0},
 																	  _serverEvents, MatchSettings{.map = "level1"})};
 	_serverEvents->EmitEvent(MapLoadedEvent{.cols = 52u, .rows = 52u, .stage = 2u, .name = "level2"});
 	const auto client{MakeClient(server->GetBoundPort())};

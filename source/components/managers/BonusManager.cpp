@@ -6,10 +6,10 @@
 #include "components/events/ReplicationEvents.h"
 #include "components/events/SpawnEvents.h"
 #include "components/events/TimingEvents.h"
-#include "components/WorldSnapshot.h"
 #include "entities/bonuses/Bonus.h"
 #include "enums/Author.h"
 #include "enums/Faction.h"
+#include "network/commands/WorldSnapshot.h"
 #include "utils/TimeUtils.h"
 #include "utils/Uuid.h"
 #include <algorithm>

@@ -9,12 +9,12 @@
 #include <utility>
 #include <variant>
 
-namespace network::commands
+namespace network
 {
 ReplicationPublisher::ReplicationPublisher(const std::shared_ptr<EventSystem>& events)
 	: _events{events} {}
 
-void ReplicationPublisher::Publish(const AnyCommand command)
+void ReplicationPublisher::Publish(const commands::AnyCommand command)
 {
 	const std::scoped_lock lock{_batchWriteMutex};
 	_batch.commands.emplace_back(command);
@@ -22,7 +22,7 @@ void ReplicationPublisher::Publish(const AnyCommand command)
 
 std::shared_ptr<const WireFrame> ReplicationPublisher::TakeFrame()
 {
-	CommandBatch batch;
+	commands::CommandBatch batch;
 	{
 		const std::scoped_lock lock{_batchWriteMutex};
 		std::swap(batch, _batch);
@@ -34,12 +34,12 @@ std::shared_ptr<const WireFrame> ReplicationPublisher::TakeFrame()
 	}
 
 	const auto frame{std::make_shared<WireFrame>()};
-	CommandBatch reliable;
-	std::ranges::for_each(batch.commands, [&frame, &reliable](AnyCommand& command)
+	commands::CommandBatch reliable;
+	std::ranges::for_each(batch.commands, [&frame, &reliable](commands::AnyCommand& command)
 	{
 		const auto latestKey{std::visit([]<class CommandT>(const CommandT& alternative) -> std::optional<Uuid>
 		{
-			if constexpr (LatestCommand<CommandT>)
+			if constexpr (commands::LatestCommand<CommandT>)
 			{
 				return alternative.uuid;
 			}
@@ -55,7 +55,7 @@ std::shared_ptr<const WireFrame> ReplicationPublisher::TakeFrame()
 			return;
 		}
 
-		CommandBatch single;
+		commands::CommandBatch single;
 		single.commands.push_back(std::move(command));
 		frame->latest.emplace_back(*latestKey, network::Serialize(single));
 	});
@@ -68,4 +68,4 @@ std::shared_ptr<const WireFrame> ReplicationPublisher::TakeFrame()
 	return frame;
 }
 
-}//namespace network::commands
+}//namespace network

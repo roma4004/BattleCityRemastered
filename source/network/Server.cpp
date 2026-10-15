@@ -4,13 +4,13 @@
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/ServerConsoleEvents.h"
 #include "components/events/ReplicationEvents.h"
-#include "components/WorldSnapshot.h"
 #include "network/DatagramLink.h"
 #include "network/ReplicationBindings.h"
 #include "network/Serializer.h"
 #include "network/WireFrame.h"
 #include "network/commands/CommandBatch.h"
 #include "network/commands/Disconnect.h"
+#include "network/commands/WorldSnapshot.h"
 #include "enums/DisconnectReason.h"
 #include "enums/MatchRules.h"
 #include "enums/PlayerSlot.h"
@@ -44,7 +44,7 @@ MatchSettings Seated(MatchSettings match)
 }
 }//namespace
 
-namespace network::commands
+namespace network
 {
 Server::Server(boost::asio::io_context& ioContext, const ServerAddress& address,
 			   const std::shared_ptr<EventSystem>& events, const MatchSettings& match)
@@ -207,8 +207,8 @@ void Server::RefuseSeat(const udp::endpoint& endpoint, const std::uint32_t conne
 {
 	Log::Info("Server: every seat is taken, the client is told to wait for a free match");
 
-	CommandBatch farewell;
-	farewell.commands.emplace_back(Disconnect{.reason = DisconnectReason::ServerFull});
+	commands::CommandBatch farewell;
+	farewell.commands.emplace_back(commands::Disconnect{.reason = DisconnectReason::ServerFull});
 
 	//NOTE: no session is kept for it - the client asks again later, and every ask gets the same answer
 	DatagramLink refusal{connectionId, now};
@@ -366,7 +366,7 @@ void Server::OnAcceptingChanged(const ServerAcceptingChangedEvent& event)
 
 void Server::OnPortForwardingChanged(const PortForwardingChangedEvent& event)
 {
-	_portForwarding = PortForwardingChange{.state = event.state, .host = event.host, .port = event.port};
+	_portForwarding = commands::PortForwardingChange{.state = event.state, .host = event.host, .port = event.port};
 	_replicationOut.Publish(*_portForwarding);
 }
 
@@ -434,8 +434,8 @@ void Server::OnSeatHolderChanged(const SeatHolderChangedEvent&) const
 
 std::shared_ptr<const WireFrame> Server::TakeWorldSnapshot() const
 {
-	CommandBatch batch;
-	auto& snapshot{std::get<WorldSnapshot>(batch.commands.emplace_back(WorldSnapshot{}))};
+	commands::CommandBatch batch;
+	auto& snapshot{std::get<commands::WorldSnapshot>(batch.commands.emplace_back(commands::WorldSnapshot{}))};
 	_events->EmitEvent(WorldSnapshotRequestedEvent{.snapshot = snapshot});
 
 	if (!IsInMatch(snapshot.phase))
@@ -489,4 +489,4 @@ void Server::ProcessNetworkCommands() const
 		session->ProcessCommandQueue();
 	}
 }
-}//namespace network::commands
+}//namespace network

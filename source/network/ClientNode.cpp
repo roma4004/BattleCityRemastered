@@ -2,7 +2,7 @@
 #include "network/Client.h"
 #include <boost/asio/post.hpp>
 
-namespace network::commands
+namespace network
 {
 ClientNode::ClientNode(const ServerAddress& address, const std::shared_ptr<EventSystem>& events)
 	: NetworkNodeBase(events, "ClientNode")
@@ -33,4 +33,4 @@ void ClientNode::Abort()
 {
 	boost::asio::post(IoContext(), [client = _client] { client->Shutdown(); });
 }
-}//namespace network::commands
+}//namespace network

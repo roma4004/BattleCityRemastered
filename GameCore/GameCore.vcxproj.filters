@@ -548,9 +548,6 @@
     <ClInclude Include="..\headers\components\WorldGeometry.h">
       <Filter>headers\components</Filter>
     </ClInclude>
-    <ClInclude Include="..\headers\components\WorldSnapshot.h">
-      <Filter>headers\components</Filter>
-    </ClInclude>
     <ClInclude Include="..\headers\entities\BaseObj.h">
       <Filter>headers\entities</Filter>
     </ClInclude>
@@ -822,6 +819,9 @@
       <Filter>headers\network\commands</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\commands\UuidSerialization.h">
+      <Filter>headers\network\commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\commands\WorldSnapshot.h">
       <Filter>headers\network\commands</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\DatagramLink.h">

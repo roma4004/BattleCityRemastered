@@ -8,7 +8,7 @@
 
 class EventSystem;
 
-namespace network::commands
+namespace network
 {
 class PeerLink
 {
@@ -29,7 +29,7 @@ protected:
 
 	//NOTE: what this peer makes of a command - Client takes the goodbye off the network thread first,
 	//Session visits straight away. Called from Dispatch, so never before the peer is built.
-	virtual void OnCommand(const AnyCommand& command) = 0;
+	virtual void OnCommand(const commands::AnyCommand& command) = 0;
 
 	//NOTE: false only for a message that will not parse. A command the peer ignores is not a failure -
 	//both ends share one AnyCommand, and each drops the half addressed to the other.
@@ -42,4 +42,4 @@ protected:
 private:
 	[[nodiscard]] bool DispatchMessage(const std::string& message);
 };
-}//namespace network::commands
+}//namespace network

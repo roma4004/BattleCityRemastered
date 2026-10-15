@@ -20,6 +20,8 @@
 #include <array>
 #include <vector>
 
+namespace network::commands
+{
 struct TankSnapshot final
 {
 	TankType type{};
@@ -71,3 +73,4 @@ struct WorldSnapshot final
 	//NOTE: a newcomer to a held match is shown why it is held
 	std::array<Absence, kSeatCount> absence{};
 };
+}//namespace network::commands

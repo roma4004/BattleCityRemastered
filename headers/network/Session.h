@@ -17,7 +17,7 @@
 
 class EventSystem;
 
-namespace network::commands
+namespace network
 {
 using boost::asio::ip::udp;
 
@@ -70,36 +70,36 @@ public:
 private:
 	//NOTE: visited straight on the network thread, and each Handle queues its own game-thread work -
 	//the goodbye has a half that must run right here, ahead of the queue
-	void OnCommand(const AnyCommand& command) override;
+	void OnCommand(const commands::AnyCommand& command) override;
 
 	//NOTE: every alternative of AnyCommand is named on purpose - without a catch-all template, a new
 	//command stops compiling until someone decides whether the host half of the wire cares about it
-	void Handle(const SignalEvent& command);
-	void Handle(const KeyStateChange& command);
-	void Handle(const Disconnect& command);
+	void Handle(const commands::SignalEvent& command);
+	void Handle(const commands::KeyStateChange& command);
+	void Handle(const commands::Disconnect& command);
 
 	//NOTE: the client-bound half - a host writes these, it never reads them
-	void Handle(const PositionChange&) const {}
-	void Handle(const TankShot&) const {}
-	void Handle(const HealthChange&) const {}
-	void Handle(const TierChange&) const {}
-	void Handle(const TankGrew&) const {}
-	void Handle(const Despawn&) const {}
-	void Handle(const RespawnTank&) const {}
-	void Handle(const ObstacleSpawn&) const {}
-	void Handle(const TankSpawnComplete&) const {}
-	void Handle(const TankSpawnMoved&) const {}
-	void Handle(const BonusSpawnComplete&) const {}
-	void Handle(const GameStateChange&) const {}
-	void Handle(const StatisticsChange&) const {}
-	void Handle(const BonusSpawn&) const {}
-	void Handle(const BonusStatus&) const {}
-	void Handle(const BonusEffects&) const {}
-	void Handle(const SlotAssignment&) const {}
-	void Handle(const WorldSnapshot&) const {}
-	void Handle(const AbsenceChange&) const {}
-	void Handle(const PortForwardingChange&) const {}
-	void Handle(const SeatHoldersChange&) const {}
+	void Handle(const commands::PositionChange&) const {}
+	void Handle(const commands::TankShot&) const {}
+	void Handle(const commands::HealthChange&) const {}
+	void Handle(const commands::TierChange&) const {}
+	void Handle(const commands::TankGrew&) const {}
+	void Handle(const commands::Despawn&) const {}
+	void Handle(const commands::RespawnTank&) const {}
+	void Handle(const commands::ObstacleSpawn&) const {}
+	void Handle(const commands::TankSpawnComplete&) const {}
+	void Handle(const commands::TankSpawnMoved&) const {}
+	void Handle(const commands::BonusSpawnComplete&) const {}
+	void Handle(const commands::GameStateChange&) const {}
+	void Handle(const commands::StatisticsChange&) const {}
+	void Handle(const commands::BonusSpawn&) const {}
+	void Handle(const commands::BonusStatus&) const {}
+	void Handle(const commands::BonusEffects&) const {}
+	void Handle(const commands::SlotAssignment&) const {}
+	void Handle(const commands::WorldSnapshot&) const {}
+	void Handle(const commands::AbsenceChange&) const {}
+	void Handle(const commands::PortForwardingChange&) const {}
+	void Handle(const commands::SeatHoldersChange&) const {}
 
 	void Lose();
 
@@ -120,4 +120,4 @@ private:
 	std::atomic_bool _isWoundDown{};
 	std::atomic_bool _isSnapshotOwed{};
 };
-}//namespace network::commands
+}//namespace network

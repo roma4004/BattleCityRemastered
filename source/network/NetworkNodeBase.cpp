@@ -8,7 +8,7 @@
 #include <string>
 #include <utility>
 
-namespace network::commands
+namespace network
 {
 NetworkNodeBase::NetworkNodeBase(std::shared_ptr<EventSystem> events, std::string name)
 	: _events(std::move(events))
@@ -83,4 +83,4 @@ void NetworkNodeBase::SubscribeToNetCommandUpdate()
 }
 
 void NetworkNodeBase::OnNetCommandUpdate(const NetCommandUpdateEvent&) { ProcessNetworkCommands(); }
-}//namespace network::commands
+}//namespace network

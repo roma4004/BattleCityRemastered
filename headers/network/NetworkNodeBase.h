@@ -18,7 +18,7 @@ namespace boost::asio
 class io_context;
 }
 
-namespace network::commands
+namespace network
 {
 //NOTE: the io_context + its thread, shared by ClientNode and ServerNode. Only one thread runs
 //it, which is what lets Client and Server touch their sockets and links from handlers without a lock.
@@ -53,4 +53,4 @@ private:
 
 	static constexpr std::chrono::milliseconds kShutdownTimeout{500};
 };
-}//namespace network::commands
+}//namespace network

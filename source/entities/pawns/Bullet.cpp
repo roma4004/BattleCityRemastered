@@ -8,7 +8,6 @@
 #include "components/events/ReplicationEvents.h"
 #include "components/events/StatisticsEvents.h"
 #include "components/Sprite.h"
-#include "components/WorldSnapshot.h"
 #include "entities/pawns/BulletResetProperty.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/Author.h"
@@ -16,6 +15,7 @@
 #include "enums/Terrain.h"
 #include "enums/TextureType.h"
 #include "interfaces/IMoveBeh.h"
+#include "network/commands/WorldSnapshot.h"
 #include "utils/ObjectUtils.h"
 #include "utils/UuidUtils.h"
 #include <algorithm>
@@ -50,7 +50,8 @@ void Bullet::Subscribe()
 
 void Bullet::OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const
 {
-	event.snapshot.bullets.push_back(BulletSnapshot{.author = _author, .uuid = _uuid, .rect = _rect, .dir = _dir});
+	event.snapshot.bullets.push_back(
+			network::commands::BulletSnapshot{.author = _author, .uuid = _uuid, .rect = _rect, .dir = _dir});
 }
 
 void Bullet::OnDespawned(const DespawnedEvent& event)

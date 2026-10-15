@@ -20,7 +20,7 @@
 #include <variant>
 #include <vector>
 
-namespace network::commands
+namespace network
 {
 namespace
 {
@@ -86,7 +86,7 @@ Session::Session(udp::endpoint endpoint, const std::uint32_t connectionId, const
 	, _slot{slot}
 	, _match{std::move(match)} {}
 
-void Session::OnCommand(const AnyCommand& command)
+void Session::OnCommand(const commands::AnyCommand& command)
 {
 	std::visit([this](const auto& alternative) { Handle(alternative); }, command);
 }
@@ -94,8 +94,8 @@ void Session::OnCommand(const AnyCommand& command)
 //NOTE: the first thing this client hears - everything it sends afterwards is read as that seat's
 void Session::Start()
 {
-	CommandBatch assignment;
-	assignment.commands.emplace_back(SlotAssignment{.slot = _slot, .match = _match});
+	commands::CommandBatch assignment;
+	assignment.commands.emplace_back(commands::SlotAssignment{.slot = _slot, .match = _match});
 	std::ignore = _link.SendReliable(network::Serialize(assignment));
 
 	_commandQueue.Enqueue([this] { _events->EmitEvent(ServerClientSeatedEvent{.slot = _slot}); });
@@ -165,8 +165,8 @@ void Session::Lose()
 
 void Session::Shutdown(const DisconnectReason reason)
 {
-	CommandBatch farewell;
-	farewell.commands.emplace_back(Disconnect{.reason = reason});
+	commands::CommandBatch farewell;
+	farewell.commands.emplace_back(commands::Disconnect{.reason = reason});
 	std::ignore = _link.SendReliable(network::Serialize(farewell));
 
 	MarkFinished();
@@ -179,7 +179,7 @@ void Session::Kick()
 	Lose();
 }
 
-void Session::Handle(const Disconnect& command)
+void Session::Handle(const commands::Disconnect& command)
 {
 	_isPeerGone = true;
 
@@ -192,7 +192,7 @@ void Session::Handle(const Disconnect& command)
 	MarkFinished();
 }
 
-void Session::Handle(const SignalEvent& command)
+void Session::Handle(const commands::SignalEvent& command)
 {
 	_commandQueue.Enqueue([this, signal = command.signal]()
 	{
@@ -223,7 +223,7 @@ void Session::Handle(const SignalEvent& command)
 }
 
 //NOTE: the tank is taken before the key goes on, so the key that takes it drives it as well
-void Session::Handle(const KeyStateChange& command)
+void Session::Handle(const commands::KeyStateChange& command)
 {
 	_commandQueue.Enqueue([this, cmd = command]
 	{
@@ -244,4 +244,4 @@ void Session::ReleaseSeatKeys() const
 		EmitInput(*_events, _slot, key, false);
 	}
 }
-}//namespace network::commands
+}//namespace network

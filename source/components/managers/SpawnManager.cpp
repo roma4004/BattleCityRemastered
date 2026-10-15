@@ -12,12 +12,12 @@
 #include "components/TankPool.h"
 #include "components/ObstacleSpawner.h"
 #include "components/TankSpawner.h"
-#include "components/WorldSnapshot.h"
 #include "components/managers/FortressManager.h"
 #include "components/managers/RespawnManager.h"
 #include "entities/BaseObj.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/BulletResetProperty.h"
+#include "network/commands/WorldSnapshot.h"
 #include <algorithm>
 #include <iterator>
 #include <memory>
@@ -84,7 +84,7 @@ void SpawnManager::OnGameReset(const GameResetEvent&)
 //NOTE: a bullet in flight has no shooter to fire it again - the tank may be gone, or facing elsewhere
 void SpawnManager::OnWorldSnapshotReceived(const WorldSnapshotReceivedEvent& event) const
 {
-	std::ranges::for_each(event.snapshot.bullets, [this](const BulletSnapshot& bullet)
+	std::ranges::for_each(event.snapshot.bullets, [this](const network::commands::BulletSnapshot& bullet)
 	{
 		const BulletResetProperty property{
 				.rect = bullet.rect, .dir = bullet.dir, .health = 1, .author = bullet.author};

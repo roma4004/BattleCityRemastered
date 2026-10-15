@@ -13,7 +13,6 @@
 #include "components/events/AnimationRenderEvents.h"
 #include "components/events/TimingEvents.h"
 #include "components/WorldGeometry.h"
-#include "components/WorldSnapshot.h"
 #include "entities/TankModelSpec.h"
 #include "entities/pawns/Tank.h"
 #include "entities/pawns/TankResetProperty.h"
@@ -25,6 +24,7 @@
 #include "enums/PlayerSlot.h"
 #include "enums/TankType.h"
 #include "enums/Faction.h"
+#include "network/commands/WorldSnapshot.h"
 #include "utils/ColliderUtils.h"
 #include "utils/DirectionUtils.h"
 #include "utils/Log.h"
@@ -288,7 +288,10 @@ void TankSpawner::OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& ev
 //already count it
 void TankSpawner::OnWorldSnapshotReceived(const WorldSnapshotReceivedEvent& event)
 {
-	std::ranges::for_each(event.snapshot.tanks, [this](const TankSnapshot& tank) { RestoreTank(tank); });
+	std::ranges::for_each(event.snapshot.tanks, [this](const network::commands::TankSnapshot& tank)
+	{
+		RestoreTank(tank);
+	});
 	std::ranges::for_each(event.snapshot.tankSpawns, [this](const TankRespawnedEvent& spawn)
 	{
 		OnTankRespawned(spawn);
@@ -391,11 +394,11 @@ void TankSpawner::OnNextLevelRequested(const NextLevelRequestedEvent&)
 		return;
 	}
 
-	WorldSnapshot field{};
+	network::commands::WorldSnapshot field{};
 	_events->EmitEvent(WorldSnapshotRequestedEvent{.snapshot = field});
 
 	_nextLevelLoadouts.clear();
-	for (const TankSnapshot& tank: field.tanks)
+	for (const network::commands::TankSnapshot& tank: field.tanks)
 	{
 		if (IsPlayerTank(tank.type))
 		{
@@ -762,7 +765,7 @@ void TankSpawner::DelayedSpawnWith(const DelayedTankSpawn& params)
 }
 
 //NOTE: a tank already on the host's field lands at once - its burst is long over there
-void TankSpawner::RestoreTank(const TankSnapshot& tank)
+void TankSpawner::RestoreTank(const network::commands::TankSnapshot& tank)
 {
 	DelayedSpawnWith(DelayedTankSpawn{.uuid = tank.uuid,
 									  .type = tank.type,

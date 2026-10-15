@@ -8,13 +8,13 @@
 #include "components/events/StatisticsEvents.h"
 #include "components/events/BonusPickupEvents.h"
 #include "components/Sprite.h"
-#include "components/WorldSnapshot.h"
 #include "entities/BaseObjProperty.h"
 #include "enums/Author.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
 #include "enums/Faction.h"
 #include "enums/TextureType.h"
+#include "network/commands/WorldSnapshot.h"
 #include "utils/TimeUtils.h"
 #include <algorithm>
 #include <array>

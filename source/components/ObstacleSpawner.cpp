@@ -7,7 +7,6 @@
 #include "components/Map.h"
 #include "components/events/ReplicationEvents.h"
 #include "components/events/SpawnEvents.h"
-#include "components/WorldSnapshot.h"
 #include "entities/obstacles/BrickWall.h"
 #include "entities/obstacles/EagleTile.h"
 #include "entities/obstacles/FortressWalls.h"
@@ -16,6 +15,7 @@
 #include "entities/obstacles/SteelWall.h"
 #include "entities/obstacles/WaterTile.h"
 #include "enums/ObstacleType.h"
+#include "network/commands/WorldSnapshot.h"
 #include "utils/UuidUtils.h"
 #include <algorithm>
 #include <filesystem>
@@ -68,7 +68,7 @@ void ObstacleSpawner::OnObstacleSpawned(const ObstacleSpawnedEvent& event)
 
 void ObstacleSpawner::OnWorldSnapshotReceived(const WorldSnapshotReceivedEvent& event)
 {
-	std::ranges::for_each(event.snapshot.obstacles, [this](const ObstacleSnapshot& obstacle)
+	std::ranges::for_each(event.snapshot.obstacles, [this](const network::commands::ObstacleSnapshot& obstacle)
 	{
 		OnObstacleSpawned(ObstacleSpawnedEvent{.pos = obstacle.pos, .type = obstacle.type, .uuid = obstacle.uuid});
 		_events->EmitEvent(Key(obstacle.uuid), HealthChangedEvent{.health = obstacle.health, .uuid = obstacle.uuid});

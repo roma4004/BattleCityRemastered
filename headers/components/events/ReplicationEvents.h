@@ -6,7 +6,10 @@
 #include "enums/Direction.h"
 #include "utils/Uuid.h"
 
+namespace network::commands
+{
 struct WorldSnapshot;
+}
 
 struct PosChangedEvent
 {
@@ -62,11 +65,11 @@ struct BonusSpawnCompletedEvent
 //NOTE: filled in place - every holder of a piece of the field writes its own part
 struct WorldSnapshotRequestedEvent
 {
-	WorldSnapshot& snapshot;
+	network::commands::WorldSnapshot& snapshot;
 };
 
 //NOTE: the mirror has just been reset - every holder rebuilds its own part
 struct WorldSnapshotReceivedEvent
 {
-	const WorldSnapshot& snapshot;
+	const network::commands::WorldSnapshot& snapshot;
 };

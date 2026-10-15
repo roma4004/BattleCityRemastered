@@ -6,13 +6,13 @@
 #include "components/events/ReplicationEvents.h"
 #include "components/events/SpawnEvents.h"
 #include "components/Sprite.h"
-#include "components/WorldSnapshot.h"
 #include "entities/BaseObjProperty.h"
 #include "enums/Direction.h"
 #include "enums/DrawLayer.h"
 #include "enums/ObstacleType.h"
 #include "enums/Faction.h"
 #include "enums/TextureType.h"
+#include "network/commands/WorldSnapshot.h"
 #include <optional>
 
 namespace
@@ -88,8 +88,8 @@ void Obstacle::OnDespawned(const DespawnedEvent&) { SetIsAlive(false); }
 
 void Obstacle::OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const
 {
-	event.snapshot.obstacles.push_back(
-			ObstacleSnapshot{.pos = GetPos(), .type = _obstacleType, .uuid = _uuid, .health = GetHealth()});
+	event.snapshot.obstacles.push_back(network::commands::ObstacleSnapshot{
+			.pos = GetPos(), .type = _obstacleType, .uuid = _uuid, .health = GetHealth()});
 }
 
 

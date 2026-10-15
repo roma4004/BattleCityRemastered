@@ -11,7 +11,7 @@
 
 class EventSystem;
 
-namespace network::commands
+namespace network
 {
 class ReplicationPublisher final
 {
@@ -22,7 +22,7 @@ public:
 	//link for a client, every session for a server
 	[[nodiscard]] std::shared_ptr<const WireFrame> TakeFrame();
 
-	void Publish(AnyCommand command);
+	void Publish(commands::AnyCommand command);
 
 	//NOTE: origin defaults here and is forwarded, so the debug listener registry names each Bind call site
 	template<class EventT, class ToCommand>
@@ -39,6 +39,6 @@ private:
 	std::vector<EventSubscription> _subs{};
 
 	std::mutex _batchWriteMutex;
-	CommandBatch _batch{};
+	commands::CommandBatch _batch{};
 };
-}//namespace network::commands
+}//namespace network

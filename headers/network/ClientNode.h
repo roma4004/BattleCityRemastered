@@ -4,7 +4,7 @@
 #include "NetworkNodeBase.h"
 #include <memory>
 
-namespace network::commands
+namespace network
 {
 class Client;
 
@@ -24,4 +24,4 @@ private:
 	std::shared_ptr<Client> _client{nullptr};
 };
 
-}//namespace network::commands
+}//namespace network

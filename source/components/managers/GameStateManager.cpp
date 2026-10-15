@@ -5,10 +5,10 @@
 #include "components/events/InputEvents.h"
 #include "components/events/ReplicationEvents.h"
 #include "components/MatchSettings.h"
-#include "components/WorldSnapshot.h"
 #include "enums/Absence.h"
 #include "enums/GameMode.h"
 #include "enums/PlayerSlot.h"
+#include "network/commands/WorldSnapshot.h"
 #include <algorithm>
 #include <cstddef>
 #include <memory>

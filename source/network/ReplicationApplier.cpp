@@ -7,13 +7,13 @@
 #include "components/events/ReplicationEvents.h"
 #include "components/events/SpawnEvents.h"
 #include "components/events/StatisticsEvents.h"
-#include "components/WorldSnapshot.h"
 #include "enums/Author.h"
 #include "enums/BonusType.h"
 #include "enums/GameState.h"
 #include "enums/InputSignal.h"
 #include "enums/PortForwarding.h"
 #include "enums/StatisticsType.h"
+#include "network/commands/WorldSnapshot.h"
 #include "utils/Log.h"
 #include <algorithm>
 #include <string>
@@ -21,56 +21,56 @@
 #include <variant>
 #include <vector>
 
-namespace network::commands
+namespace network
 {
 ReplicationApplier::ReplicationApplier(const std::shared_ptr<EventSystem>& events,
 									   network::NetworkCommandQueue& queue)
 	: _events{events}
 	, _queue{queue} {}
 
-void ReplicationApplier::Apply(const AnyCommand& command)
+void ReplicationApplier::Apply(const commands::AnyCommand& command)
 {
 	//NOTE: the lambda is the callable std::visit wants, so Emit stays a named private overload set
 	//rather than the class pretending to be a functor
 	_queue.Enqueue([this, command] { std::visit([this](const auto& alternative) { Emit(alternative); }, command); });
 }
 
-void ReplicationApplier::Emit(const PositionChange& command) const
+void ReplicationApplier::Emit(const commands::PositionChange& command) const
 {
 	_events->EmitEvent(Key(command.uuid),
 					   PosChangedEvent{.pos = command.pos, .dir = command.dir, .uuid = command.uuid});
 }
 
-void ReplicationApplier::Emit(const TankShot& command) const
+void ReplicationApplier::Emit(const commands::TankShot& command) const
 {
 	const Author who{SeatFromWire(command.who)};
 	_events->EmitEvent(Key(who), TankShotEvent{.who = who, .dir = command.dir, .bulletUuid = command.uuid});
 }
 
-void ReplicationApplier::Emit(const HealthChange& command) const
+void ReplicationApplier::Emit(const commands::HealthChange& command) const
 {
 	_events->EmitEvent(Key(command.uuid),
 					   HealthChangedEvent{.health = command.health, .uuid = command.uuid});
 }
 
-void ReplicationApplier::Emit(const TierChange& command) const
+void ReplicationApplier::Emit(const commands::TierChange& command) const
 {
 	_events->EmitEvent(Key(command.uuid),
 					   TierChangedEvent{.tier = command.tier, .uuid = command.uuid});
 }
 
-void ReplicationApplier::Emit(const TankGrew& command) const
+void ReplicationApplier::Emit(const commands::TankGrew& command) const
 {
 	_events->EmitEvent(Key(command.uuid), TankGrewEvent{.rect = command.rect, .uuid = command.uuid});
 }
 
-void ReplicationApplier::Emit(const Despawn& command) const
+void ReplicationApplier::Emit(const commands::Despawn& command) const
 {
 	_events->EmitEvent(Key(command.uuid),
 					   DespawnedEvent{.uuid = command.uuid, .reason = command.reason});
 }
 
-void ReplicationApplier::Emit(const RespawnTank& command) const
+void ReplicationApplier::Emit(const commands::RespawnTank& command) const
 {
 	_events->EmitEvent(TankRespawnedEvent{.type = command.tankType,
 										  .model = command.model,
@@ -79,32 +79,32 @@ void ReplicationApplier::Emit(const RespawnTank& command) const
 										  .pos = command.pos});
 }
 
-void ReplicationApplier::Emit(const ObstacleSpawn& command) const
+void ReplicationApplier::Emit(const commands::ObstacleSpawn& command) const
 {
 	_events->EmitEvent(ObstacleSpawnedEvent{.pos = command.pos, .type = command.obstacleType, .uuid = command.uuid});
 }
 
-void ReplicationApplier::Emit(const TankSpawnComplete& command) const
+void ReplicationApplier::Emit(const commands::TankSpawnComplete& command) const
 {
 	_events->EmitEvent(TankSpawnCompletedEvent{.uuid = command.uuid});
 }
 
-void ReplicationApplier::Emit(const TankSpawnMoved& command) const
+void ReplicationApplier::Emit(const commands::TankSpawnMoved& command) const
 {
 	_events->EmitEvent(TankSpawnMovedEvent{.uuid = command.uuid, .pos = command.pos});
 }
 
-void ReplicationApplier::Emit(const BonusSpawnComplete& command) const
+void ReplicationApplier::Emit(const commands::BonusSpawnComplete& command) const
 {
 	_events->EmitEvent(BonusSpawnCompletedEvent{.uuid = command.uuid});
 }
 
-void ReplicationApplier::Emit(const GameStateChange& command) const
+void ReplicationApplier::Emit(const commands::GameStateChange& command) const
 {
 	_events->EmitEvent(HostPhaseAnnouncedEvent{.phase = command.state});
 }
 
-void ReplicationApplier::Emit(const KeyStateChange& command) const
+void ReplicationApplier::Emit(const commands::KeyStateChange& command) const
 {
 	if (command.action == InputSignal::PauseStatus)
 	{
@@ -117,7 +117,7 @@ void ReplicationApplier::Emit(const KeyStateChange& command) const
 
 //NOTE: one command fans back out into eight local types - StatisticsType is the discriminator the
 //host wrote, so this is the exact inverse of the statistics half of the host bindings
-void ReplicationApplier::Emit(const StatisticsChange& command) const
+void ReplicationApplier::Emit(const commands::StatisticsChange& command) const
 {
 	const Author who{SeatFromWire(command.who)};
 	const Author author{SeatFromWire(command.author)};
@@ -151,7 +151,7 @@ void ReplicationApplier::Emit(const StatisticsChange& command) const
 	}
 }
 
-void ReplicationApplier::Emit(const BonusSpawn& command) const
+void ReplicationApplier::Emit(const commands::BonusSpawn& command) const
 {
 	//NOTE: the type indexes the bonus catalogue further down, so a wire byte outside the enum
 	//would read past its end - checked here, where the untrusted value enters
@@ -169,14 +169,14 @@ void ReplicationApplier::Emit(const BonusSpawn& command) const
 										 .isSuper = command.isSuper});
 }
 
-void ReplicationApplier::Emit(const SlotAssignment& command) const
+void ReplicationApplier::Emit(const commands::SlotAssignment& command) const
 {
 	_events->EmitEvent(PlayerSlotAssignedEvent{.slot = command.slot, .match = command.match});
 }
 
 //NOTE: the mirror is replaced, not patched - the reset first, then the phase before the field, since
 //entering a match clears it
-void ReplicationApplier::Emit(const WorldSnapshot& command) const
+void ReplicationApplier::Emit(const commands::WorldSnapshot& command) const
 {
 	const auto isSpawnable = [](const BonusSpawnedEvent& bonus) { return IsSpawnableBonus(bonus.type); };
 	if (!std::ranges::all_of(command.bonuses, isSpawnable) || !std::ranges::all_of(command.bonusSpawns, isSpawnable))
@@ -202,17 +202,17 @@ void ReplicationApplier::Emit(const WorldSnapshot& command) const
 	_events->EmitEvent(SetPauseEvent{.isPaused = command.phase == GameState::Paused});
 }
 
-void ReplicationApplier::Emit(const AbsenceChange& command) const
+void ReplicationApplier::Emit(const commands::AbsenceChange& command) const
 {
 	_events->EmitEvent(AbsenceChangedEvent{.seats = command.seats});
 }
 
-void ReplicationApplier::Emit(const SeatHoldersChange& command) const
+void ReplicationApplier::Emit(const commands::SeatHoldersChange& command) const
 {
 	_events->EmitEvent(SeatHoldersAnnouncedEvent{.holders = command.holders});
 }
 
-void ReplicationApplier::Emit(const PortForwardingChange& command) const
+void ReplicationApplier::Emit(const commands::PortForwardingChange& command) const
 {
 	//NOTE: the lobby picks its words by the state, so a wire byte outside the enum is stopped where it enters
 	if (command.state >= PortForwarding::lastId)
@@ -226,7 +226,7 @@ void ReplicationApplier::Emit(const PortForwardingChange& command) const
 	_events->EmitEvent(PortForwardingChangedEvent{.state = command.state, .host = command.host, .port = command.port});
 }
 
-void ReplicationApplier::Emit(const BonusStatus& command) const
+void ReplicationApplier::Emit(const commands::BonusStatus& command) const
 {
 	//NOTE: only the bonuses whose effect the client cannot see any other way arrive here - a star and a
 	//caliber land as a TierChange, so either of them is as wrong as a byte outside the enum
@@ -256,7 +256,7 @@ void ReplicationApplier::Emit(const BonusStatus& command) const
 			   + " is not replicated");
 }
 
-void ReplicationApplier::Emit(const BonusEffects& command) const { EmitEffects(command.effects); }
+void ReplicationApplier::Emit(const commands::BonusEffects& command) const { EmitEffects(command.effects); }
 
 void ReplicationApplier::EmitEffects(std::vector<BonusEffectTimeLeft> effects) const
 {
@@ -280,4 +280,4 @@ void ReplicationApplier::EmitEffects(std::vector<BonusEffectTimeLeft> effects) c
 
 	_events->EmitEvent(BonusEffectsChangedEvent{.effects = std::move(effects)});
 }
-}//namespace network::commands
+}//namespace network

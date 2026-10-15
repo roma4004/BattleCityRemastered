@@ -6,7 +6,7 @@
 
 class EventSystem;
 
-namespace network::commands
+namespace network
 {
 class ReplicationPublisher;
 
@@ -20,4 +20,4 @@ void BindClientReplication(ReplicationPublisher& out);
 //The caller holds the subscriptions, so rebinding is dropping them and calling this again
 [[nodiscard]] std::vector<EventSubscription> BindClientInput(ReplicationPublisher& out, EventSystem& events,
 															 PlayerSlot slot);
-}//namespace network::commands
+}//namespace network

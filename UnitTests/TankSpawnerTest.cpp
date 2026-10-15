@@ -14,7 +14,6 @@
 #include "components/events/SpawnEvents.h"
 #include "components/events/TimingEvents.h"
 #include "components/TankSpawner.h"
-#include "components/WorldSnapshot.h"
 #include "components/managers/RespawnManager.h"
 #include "entities/BaseObj.h"
 #include "enums/Author.h"
@@ -27,6 +26,7 @@
 #include "enums/PlayerSlot.h"
 #include "enums/TankModel.h"
 #include "enums/TankType.h"
+#include "network/commands/WorldSnapshot.h"
 #include "utils/ColliderUtils.h"
 #include "utils/UuidUtils.h"
 #include "gtest/gtest.h"
@@ -618,7 +618,7 @@ TEST_F(TankSpawnerTest, ATankTakenOverFromABotIsSentAsThePlayers)
 
 	_events->EmitEvent(SeatHolderChangedEvent{.slot = PlayerSlot::P2, .from = SeatHolder::Bot});
 
-	WorldSnapshot field{};
+	network::commands::WorldSnapshot field{};
 	_events->EmitEvent(WorldSnapshotRequestedEvent{.snapshot = field});
 	ASSERT_EQ(field.tanks.size(), 1u);
 	EXPECT_EQ(field.tanks.front().type, TankType::PLAYER2);
@@ -668,7 +668,7 @@ TEST_F(TankSpawnerTest, ABotTakingOverFromAPlayerWhoLeftDrivesItsTank)
 	_events->EmitEvent(SeatHolderChangedEvent{.slot = PlayerSlot::P2, .from = SeatHolder::Player,
 											  .to = SeatHolder::Bot});
 
-	WorldSnapshot field{};
+	network::commands::WorldSnapshot field{};
 	_events->EmitEvent(WorldSnapshotRequestedEvent{.snapshot = field});
 	ASSERT_EQ(field.tanks.size(), 1u);
 	EXPECT_EQ(field.tanks.front().uuid, tank->GetUuid());

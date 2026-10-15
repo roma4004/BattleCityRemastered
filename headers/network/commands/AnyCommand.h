@@ -23,7 +23,7 @@
 #include "TankSpawnComplete.h"
 #include "TankSpawnMoved.h"
 #include "TierChange.h"
-#include "components/WorldSnapshot.h"
+#include "WorldSnapshot.h"
 #include "enums/Delivery.h"
 #include "utils/Uuid.h"
 #include <concepts>

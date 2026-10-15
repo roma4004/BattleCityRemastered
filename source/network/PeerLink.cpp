@@ -8,7 +8,7 @@
 #include <string>
 #include <utility>
 
-namespace network::commands
+namespace network
 {
 PeerLink::PeerLink(std::string ownerName, std::shared_ptr<EventSystem> events)
 	: _events{std::move(events)}
@@ -44,4 +44,4 @@ bool PeerLink::DispatchMessage(const std::string& message)
 
 	return true;
 }
-}//namespace network::commands
+}//namespace network
