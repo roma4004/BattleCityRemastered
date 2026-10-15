@@ -151,7 +151,8 @@ void InputProviderForMenu::MenuUpdate()
 
 	if (menuKeysStats.reset)
 	{
-		_events->EmitEvent("ResetBattlefield");
+		_events->EmitEvent("MenuItemEnter");
 		_events->EmitEvent("ShowMenu", false);
+		// TODO: add a new entry to enum for menu navigation
 	}
 }

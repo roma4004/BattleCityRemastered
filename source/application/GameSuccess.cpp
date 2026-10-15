@@ -62,7 +62,18 @@ void GameSuccess::Subscribe()
 {
 	_events->AddListener("PreviousGameMode", _name, [this]() { this->PrevGameMode(); });
 	_events->AddListener("NextGameMode", _name, [this]() { this->NextGameMode(); });
-	_events->AddListener("ResetBattlefield", _name, [this]() { this->ResetBattlefieldTo(this->_selectedGameMode); });
+	_events->AddListener("MenuItemEnter", _name, [this]()
+	{
+		if (this->_selectedGameMode == GameMode::EndIterator)
+		{
+			this->_events->EmitEvent("ShowOptions", true); 
+			this->_events->EmitEvent("ShowMenu", false); 
+		}
+		else
+		{
+			this->ResetBattlefieldTo(this->_selectedGameMode);
+		}		
+	});
 	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		this->OnGameModeChangedTo(newGameMode);
@@ -213,11 +224,6 @@ void GameSuccess::MainLoop()
 			if (_gameMode == GameMode::PlayAsHost)
 			{
 				_events->EmitEvent("Server_EndFrame");
-			}
-			
-			if (_gameMode == GameMode::EndIterator)
-			{			
-				_events->EmitEvent("DrawOptions");				
 			}
 
 			_events->EmitEvent("CalculateActualFps");

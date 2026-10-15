@@ -16,7 +16,7 @@
  */
 
 Options::Options(UPoint windowSize, const std::shared_ptr<EventSystem>& events) 
-	: _pos{.x = 25, .y = 0}
+	: _pos{.x = 25, .y = 25}
 	, _windowHeight{static_cast<int>(windowSize.y)}
 	, _yOffsetStart{static_cast<int>(windowSize.y)}
 	, _name{std::string("Options")}
@@ -37,22 +37,35 @@ Options::~Options()
 
 void Options::Subscribe()
 {
-	_events->AddListener("DrawOptions", _name, [this](){ this->Draw(); });
+	//TODO: replace this listener from "...changedTo" to menu items as in Menu
+
+	_events->AddListener("MenuShowed", _name, [this](const bool isMenuDisplayed)
+	{
+		if (isMenuDisplayed)
+		{
+			this->DisplayOptions(false);
+		}
+	});
+
+	_events->AddListener("ShowOptions", _name, [this](const bool isDisplayed)
+	{
+		this->DisplayOptions(isDisplayed);
+	});
 }
 
 void Options::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
-void Options::DisplayOptions(bool isDisplayed)
+void Options::DisplayOptions(const bool isDisplayed)
 {
 	_isOptionsDisplayed = isDisplayed;
 
 	if (_isOptionsDisplayed)
 	{
-		_events->AddListener("DrawOptions", _name, [this]() { this->Draw(); });
+		_events->AddListener("DrawUserInterface", _name, [this]() { this->Draw(); });
 	}
 	else
 	{
-		_events->RemoveListener("DrawOptions", _name);
+		_events->RemoveListener("DrawUserInterface", _name);
 	}
 }
 
@@ -65,13 +78,6 @@ void Options::DrawTextLine(Point& posText, std::string text) const
 
 void Options::Draw()
 {
-	// first time animation, slow scrolling from bottom corner to vertical center
-	/*if (constexpr int yOffsetEnd = 0; _yOffsetStart > yOffsetEnd)
-	{
-		_yOffsetStart -= 3;
-		_pos.y = _padding + _yOffsetStart;
-		_events->EmitEvent("MenuPosChanged", _pos);
-	}*/
-
 	_events->EmitEvent("RenderMenuBackground", _pos);
+	//Here must be added points of options
 }
