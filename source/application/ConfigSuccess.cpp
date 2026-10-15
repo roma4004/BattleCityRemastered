@@ -18,7 +18,7 @@ std::unique_ptr<IGame> ConfigSuccess::CreateGame(const GameMode gameMode, SDL_Co
 	auto menu = std::make_unique<Menu>(_gameConfig.windowSize, events);
 	auto renderManager = std::make_unique<RenderManager>(events, _gameConfig, sdlConfig);
 	auto rightSideBar = std::make_unique<RightSideBar>(events);
-	auto options = std::make_unique<Options>(_gameConfig.windowPos,events);
+	auto options = std::make_unique<Options>(_gameConfig.windowSize, events);
 
 	return std::make_unique<GameSuccess>(_gameConfig, events, menu, renderManager, rightSideBar, options, gameMode);
 }

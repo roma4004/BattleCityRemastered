@@ -31,8 +31,8 @@ TEST_F(NetworkTest, PosEventReplication)
 	using buuid = boost::uuids::uuid;
 
 	auto events = std::make_shared<EventSystem>();
-	auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
-	auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
+	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
+	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
 
 	constexpr std::chrono::milliseconds connectTimeout{5000};
 	const auto connectStart = std::chrono::steady_clock::now();
@@ -92,8 +92,8 @@ TEST_F(NetworkTest, ShotEventReplication)
 	using buuid = boost::uuids::uuid;
 
 	auto events = std::make_shared<EventSystem>();
-	auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
-	auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
+	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
+	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
 
 	constexpr std::chrono::milliseconds connectTimeout{5000};
 	const auto connectStart = std::chrono::steady_clock::now();
@@ -145,8 +145,8 @@ TEST_F(NetworkTest, ShotEventReplication)
 TEST_F(NetworkTest, HealthEventReplication)
 {
 	auto events = std::make_shared<EventSystem>();
-	auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
-	auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
+	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
+	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
 
 	constexpr std::chrono::milliseconds connectTimeout{5000};
 	const auto connectStart = std::chrono::steady_clock::now();
@@ -201,8 +201,8 @@ TEST_F(NetworkTest, DisposeEventReplication)
 	using buuid = boost::uuids::uuid;
 
 	auto events = std::make_shared<EventSystem>();
-	auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
-	auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
+	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
+	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
 
 	constexpr std::chrono::milliseconds connectTimeout{5000};
 	const auto connectStart = std::chrono::steady_clock::now();
@@ -252,8 +252,8 @@ TEST_F(NetworkTest, DisposeEventReplication)
 TEST_F(NetworkTest, StatisticsEventReplication)
 {
 	auto events = std::make_shared<EventSystem>();
-	auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
-	auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
+	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
+	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
 
 	constexpr std::chrono::milliseconds connectTimeout{5000};
 	const auto connectStart = std::chrono::steady_clock::now();
@@ -419,8 +419,8 @@ TEST_F(NetworkTest, BonusSpawnEventReplication)
 	using buuid = boost::uuids::uuid;
 
 	auto events = std::make_shared<EventSystem>();
-	auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
-	auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
+	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
+	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
 
 	constexpr std::chrono::milliseconds connectTimeout{5000};
 	const auto connectStart = std::chrono::steady_clock::now();
@@ -477,8 +477,8 @@ TEST_F(NetworkTest, BonusDeSpawnEventReplication)
 	using buuid = boost::uuids::uuid;
 
 	auto events = std::make_shared<EventSystem>();
-	auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
-	auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
+	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
+	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
 
 	constexpr std::chrono::milliseconds connectTimeout{5000};
 	const auto connectStart = std::chrono::steady_clock::now();
@@ -526,8 +526,8 @@ TEST_F(NetworkTest, BonusDeSpawnEventReplication)
 TEST_F(NetworkTest, BonusStatusEventReplication)
 {
 	auto events = std::make_shared<EventSystem>();
-	auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
-	auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
+	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
+	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
 
 	constexpr std::chrono::milliseconds connectTimeout{5000};
 	const auto connectStart = std::chrono::steady_clock::now();
@@ -730,8 +730,8 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 	using buuid = boost::uuids::uuid;
 
 	auto events = std::make_shared<EventSystem>();
-	auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
-	auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
+	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
+	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
 
 	constexpr std::chrono::milliseconds connectTimeout{5000};
 	const auto connectStart = std::chrono::steady_clock::now();

@@ -9,6 +9,7 @@
 
 enum class AnimationType : char8_t;
 struct ObjRectangle;
+struct FPoint;
 class Tank;
 
 class AnimationManager
@@ -46,8 +47,8 @@ private:
 	void Update();
 	static void UpdateFrame(AnimatedObject& object, int animationSpeed);
 	static void UpdateWaterFrame(AnimatedObject& object, int animationSpeed);
-	void UpdateTank(const std::string_view& name, const ObjRectangle& rect, const Direction& dir);
-	void UpdateHelmetEffect(const std::string_view& name, const ObjRectangle& rect);
+	void UpdateTank(const std::string_view& name, const FPoint& pos, const Direction& dir);
+	void UpdateHelmetEffect(const std::string_view& name, const FPoint& pos);
 	void DeleteHelmetAnimation(const std::string& name);
 	void OnHelmetEffect(const std::string& name, bool isEnable);
 	// void DisableTankAnimation(const std::string& name);

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Point.h"
-#include "components/Options.h"
 #include "interfaces/IGame.h"
 #include <chrono>
 
@@ -21,6 +20,7 @@ class BonusEffectManager;
 class ScoreBoard;
 class GameStatistics;
 class RightSideBar;
+class Options;
 class GameConfig;
 
 class GameSuccess final : public IGame
@@ -28,7 +28,7 @@ class GameSuccess final : public IGame
 public:
 	GameSuccess(GameConfig& gameConfig, const std::shared_ptr<EventSystem>& events,
 				std::unique_ptr<Menu>& menu, std::unique_ptr<RenderManager>& renderManager,
-				std::unique_ptr<RightSideBar>& rightSideBar, std::unique_ptr<Options>& options, GameMode gameMode);
+				std::unique_ptr<RightSideBar>& rightSideBar, GameMode gameMode);
 	~GameSuccess() override;
 
 	void MainLoop() override;

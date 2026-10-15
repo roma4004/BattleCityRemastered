@@ -4,6 +4,7 @@
 #include "components/EventSystem.h"
 #include "components/GameStatistics.h"
 #include "components/Menu.h"
+#include "components/Options.h"
 #include "components/RightSideBar.h"
 #include "components/ScoreBoard.h"
 #include "components/managers/BonusEffectManager.h"
@@ -136,7 +137,7 @@ void GameSuccess::NextGameMode()
 	int mode = static_cast<int>(_selectedGameMode);
 	++mode;
 
-	constexpr int maxMode = static_cast<int>(GameMode::EndIterator);
+	constexpr int maxMode = static_cast<int>(GameMode::EndIterator) - 1;
 	constexpr int minMode = 1;
 	const int newMode = mode > maxMode ? minMode : mode;
 	_selectedGameMode = static_cast<GameMode>(newMode);

@@ -38,7 +38,7 @@ protected:
 
 	void TearDown() override
 	{
-		// Deinitialization or some cleanup operations
+		_events->RemoveListener("AddToSpawnQueue", "TestSpawnQueue");
 	}
 
 	//TODO: use this style for others bullet creation

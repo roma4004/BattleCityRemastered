@@ -16,7 +16,9 @@ class Options final
 	int _yOffsetStart{};
 	int _padding{};
 	std::string _name{};
+	bool _isMenuDisplayed{true};
 	bool _isOptionsDisplayed{false};
+	GameMode _selectedGameMode{};
 	GameMode _gameMode{};
 	GameMode _selectedGameMode{};
 

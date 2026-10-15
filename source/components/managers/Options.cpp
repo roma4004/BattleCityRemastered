@@ -1,6 +1,5 @@
 ﻿#include "components/Options.h"
 #include "components/EventSystem.h"
-#include "components/input/InputProviderForMenu.h"
 
 /* 
  * План меню опций:
@@ -22,11 +21,8 @@ Options::Options(UPoint windowSize, const std::shared_ptr<EventSystem>& events)
 	, _name{std::string("Options")}
 	, _selectedGameMode{GameMode::EndIterator}
 	, _events{events}
-	, _input{std::make_unique<InputProviderForMenu>(events)}
 		{
 			Subscribe();
-
-			//std::shared_ptr<EventSystem> _events{nullptr};
 			_windowHeight = static_cast<int>(windowSize.y);
 		}
 
