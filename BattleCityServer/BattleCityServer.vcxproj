@@ -70,9 +70,6 @@
     <LocalDebuggerWorkingDirectory>$(OutDir)</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
   <ItemDefinitionGroup>
-    <PreBuildEvent>
-      <Command>powershell -NoProfile -ExecutionPolicy Bypass -File "$(RepoRoot)scripts\fetch-submodules.ps1" -Root "$(RepoRoot)."</Command>
-    </PreBuildEvent>
     <!-- Only the map, unlike the game project: a console server loads the level and never
          looks at a texture or a sound. -->
     <PostBuildEvent>

@@ -182,8 +182,7 @@
   </ItemGroup>
   <ItemDefinitionGroup>
     <PreBuildEvent>
-      <Command>powershell -NoProfile -ExecutionPolicy Bypass -File "$(RepoRoot)scripts\fetch-submodules.ps1" -Root "$(RepoRoot)."
-powershell -NoProfile -ExecutionPolicy Bypass -File "$(RepoRoot)scripts\gen-vcxproj-filters.ps1" -Project "$(MSBuildProjectFullPath)"</Command>
+      <Command>powershell -NoProfile -ExecutionPolicy Bypass -File "$(RepoRoot)scripts\gen-vcxproj-filters.ps1" -Project "$(MSBuildProjectFullPath)"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

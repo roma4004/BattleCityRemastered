@@ -1,4 +1,4 @@
-# Fetches git submodules a shallow (non-recursive) clone left empty. Runs from a PreBuildEvent -
+# Fetches git submodules a shallow (non-recursive) clone left empty. Runs from Directory.Build.targets -
 # no-op once the markers exist. Mirrors cmake/FetchSubmodules.cmake; keep the two group lists in sync.
 param([Parameter(Mandatory = $true)][string]$Root)
 
@@ -45,5 +45,16 @@ function Update-Submodules($paths, [switch]$Recurse)
     }
 }
 
-Update-Submodules (Get-MissingPaths $recursiveGroups) -Recurse
-Update-Submodules (Get-MissingPaths $flatGroups)
+# Every project runs this and the solution's leaves build in parallel - two `git submodule update` at once
+# fight over .git/config.lock. The markers are read only once the mutex is ours, so a waiter finds the work done.
+$mutex = New-Object System.Threading.Mutex($false, 'Local\BattleCityRemastered.fetch-submodules')
+$null = $mutex.WaitOne()
+try
+{
+    Update-Submodules (Get-MissingPaths $recursiveGroups) -Recurse
+    Update-Submodules (Get-MissingPaths $flatGroups)
+}
+finally
+{
+    $mutex.ReleaseMutex()
+}

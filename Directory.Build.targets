@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Submodules are fetched here, before every project of the solution, and not in a PreBuildEvent of
+     GameCore and later: the SDL3Wrappers projects are the leaves of the build order, so they compiled
+     against an empty ThirdParty\ and failed before any project that fetched it got its turn. -->
+<Project>
+  <Target Name="FetchSubmodules" BeforeTargets="PreBuildEvent">
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(RepoRoot)scripts\fetch-submodules.ps1&quot; -Root &quot;$(RepoRoot).&quot;" />
+  </Target>
+</Project>
