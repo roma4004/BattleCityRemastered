@@ -20,10 +20,8 @@ class Options final
 	bool _isOptionsDisplayed{false};
 	GameMode _selectedGameMode{};
 	GameMode _gameMode{};
-	GameMode _selectedGameMode{};
 
 	std::shared_ptr<EventSystem> _events{nullptr};
-	std::unique_ptr<InputProviderForMenu> _input{nullptr};
 
 	void Subscribe();
 	void Unsubscribe() const;
