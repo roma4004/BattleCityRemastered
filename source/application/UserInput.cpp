@@ -801,8 +801,6 @@ void UserInput::Update()
 
 bool UserInput::IsShutdown() const noexcept { return _isShutdown; }
 
-bool UserInput::IsPause() const noexcept { return _isPause; }
-
 void UserInput::ConnectController(const std::shared_ptr<SDL_Gamepad>& newController)
 {
 	const auto isEmpty = [](const std::shared_ptr<SDL_Gamepad>& controller) { return controller == nullptr; };

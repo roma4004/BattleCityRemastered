@@ -44,10 +44,7 @@ void ReplicationApplier::Emit(const PositionChange& command) const
 void ReplicationApplier::Emit(const TankShot& command) const
 {
 	const Author who{SeatFromWire(command.who)};
-	_events->EmitEvent(Key(who), TankShotEvent{.who = who,
-											   .dir = command.dir,
-											   .bulletUuid = command.uuid,
-											   .damage = command.damage});
+	_events->EmitEvent(Key(who), TankShotEvent{.who = who, .dir = command.dir, .bulletUuid = command.uuid});
 }
 
 void ReplicationApplier::Emit(const HealthChange& command) const

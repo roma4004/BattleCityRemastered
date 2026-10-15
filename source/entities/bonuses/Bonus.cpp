@@ -215,8 +215,6 @@ std::optional<Sprite> Bonus::Look() const
 				  .rimColor = _isSuper ? SuperRimColor() : 0u};
 }
 
-bool Bonus::GetIsSuper() const noexcept { return _isSuper; }
-
 void Bonus::Expire()
 {
 	if (!GetIsAlive())

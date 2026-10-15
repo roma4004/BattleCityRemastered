@@ -411,7 +411,7 @@ TEST_F(BonusTest, ShipPickUpCanCrossWater)
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 	}
 
-	EXPECT_GT(player->GetY(), waterRect.y + waterRect.h);
+	EXPECT_GT(player->GetRect().y, waterRect.y + waterRect.h);
 }
 
 // a dropped bonus waits out its burst: the world stays empty until the animation reports the end

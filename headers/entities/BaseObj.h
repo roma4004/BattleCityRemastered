@@ -48,23 +48,6 @@ public:
 
 	[[nodiscard]] FPoint GetPos() const noexcept;
 	void SetPos(const FPoint& pos);
-	[[nodiscard]] double GetRightSide() const noexcept;
-
-	[[nodiscard]] double GetBottomSide() const noexcept;
-	[[nodiscard]] double GetX() const noexcept;
-	void SetX(const FPoint& pos);
-
-	[[nodiscard]] double GetY() const noexcept;
-	void SetY(const FPoint& pos);
-
-	[[nodiscard]] double GetWidth() const noexcept;
-	void SetWidth(double width);
-
-	[[nodiscard]] double GetHeight() const noexcept;
-	void SetHeight(double height);
-
-	void MoveX(double i);
-	void MoveY(double i);
 
 	[[nodiscard]] virtual unsigned int GetHealth() const;
 	virtual void SetHealth(unsigned int health);

@@ -14,11 +14,6 @@ enum class Faction : char8_t
 	lastId
 };
 
-[[nodiscard]] constexpr bool IsValidFaction(const Faction faction) noexcept
-{
-	return faction >= Faction::Neutral && faction < Faction::lastId;
-}
-
 [[nodiscard]] constexpr Faction EnemiesOf(const Faction faction) noexcept
 {
 	switch (faction)

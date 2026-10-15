@@ -13,8 +13,6 @@ struct ObjRectangle final
 
 	double x{}, y{}, w{}, h{};
 
-	[[nodiscard]] constexpr double Area() const noexcept;
-
 	[[nodiscard]] constexpr double Right() const noexcept;
 
 	[[nodiscard]] constexpr double Bottom() const noexcept;
@@ -25,8 +23,6 @@ struct ObjRectangle final
 
 	[[nodiscard]] constexpr Span SpanOn(bool isXAxis) const noexcept;
 };
-
-constexpr double ObjRectangle::Area() const noexcept { return w * h; }
 
 constexpr double ObjRectangle::Right() const noexcept { return x + w; }
 

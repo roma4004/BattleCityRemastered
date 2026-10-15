@@ -61,9 +61,7 @@ public:
 	[[nodiscard]] std::vector<std::string> TakeDatagrams(Clock::time_point now);
 
 	[[nodiscard]] bool IsDrained() const { return _unacked.empty(); }
-	[[nodiscard]] bool IsAwaitingSnapshot() const { return !_heldLatest.empty(); }
 	[[nodiscard]] bool IsSilent(const Clock::time_point now) const { return now - _lastReceivedAt > kPeerTimeout; }
-	[[nodiscard]] bool HasHeardPeer() const { return _hasHeardPeer; }
 	[[nodiscard]] std::uint32_t ConnectionId() const { return _connectionId; }
 	[[nodiscard]] Clock::duration RetransmitTimeout() const;
 

@@ -94,17 +94,10 @@ ObjRectangle ShootingBeh::GetBulletStartRect() const
 	return bulletRect;
 }
 
-//NOTE: rolled per shot and by the authority alone - a client is handed the number with the shot
-BulletCaliber ShootingBeh::CaliberOfShot(const std::optional<unsigned int> damage) const
+//NOTE: rolled per shot and by the authority alone - a client's shell hits nothing, its damage comes as health
+BulletCaliber ShootingBeh::CaliberOfShot() const
 {
 	BulletCaliber shot{_caliber};
-	if (damage)
-	{
-		shot.damage = *damage;
-
-		return shot;
-	}
-
 	if (const double spread{_gameConfig.bulletDamageSpread};
 		spread > 0.0 && !_gameConfig.IsClient())
 	{
@@ -129,10 +122,9 @@ bool ShootingBeh::IsClear(const ObjRectangle& path, const std::vector<std::share
 	});
 }
 
-ShotResult ShootingBeh::SpawnShell(const ObjRectangle& rect, const std::optional<Uuid> uuid,
-								   const std::optional<unsigned int> damage) const
+Uuid ShootingBeh::SpawnShell(const ObjRectangle& rect, const std::optional<Uuid> uuid) const
 {
-	const BulletCaliber caliber{CaliberOfShot(damage)};
+	const BulletCaliber caliber{CaliberOfShot()};
 
 	const BulletResetProperty bulletResetProperty{
 			.rect = rect,
@@ -149,14 +141,14 @@ ShotResult ShootingBeh::SpawnShell(const ObjRectangle& rect, const std::optional
 
 	_events->EmitEvent(AddToSpawnQueueEvent{.obj = bullet});
 
-	return ShotResult{.uuid = bullet->GetUuid(), .damage = caliber.damage};
+	return bullet->GetUuid();
 }
 
 //NOTE: the first row stands at the muzzle whatever is there, as a single shell always did - so point blank
 //only that row goes off, and every row past it needs the cell before it clear
-std::vector<ShotResult> ShootingBeh::Volley(const std::vector<std::shared_ptr<BaseObj>>& objects)
+std::vector<Uuid> ShootingBeh::Volley(const std::vector<std::shared_ptr<BaseObj>>& objects)
 {
-	std::vector<ShotResult> shots{};
+	std::vector<Uuid> shots{};
 	const ObjRectangle muzzle{GetBulletStartRect()};
 	if (muzzle.x < 0.0 || muzzle.y < 0.0)
 	{
@@ -169,7 +161,7 @@ std::vector<ShotResult> ShootingBeh::Volley(const std::vector<std::shared_ptr<Ba
 	for (int column{}; column < width; ++column)
 	{
 		ObjRectangle at{DirectionUtils::Moved(muzzle, (column - (width - 1) / 2.0) * step, across)};
-		shots.push_back(SpawnShell(at, std::nullopt, std::nullopt));
+		shots.push_back(SpawnShell(at, std::nullopt));
 
 		for (int row{1}; row < depth; ++row)
 		{
@@ -180,14 +172,14 @@ std::vector<ShotResult> ShootingBeh::Volley(const std::vector<std::shared_ptr<Ba
 			}
 
 			at = DirectionUtils::Moved(at, step, _direction);
-			shots.push_back(SpawnShell(at, std::nullopt, std::nullopt));
+			shots.push_back(SpawnShell(at, std::nullopt));
 		}
 	}
 
 	return shots;
 }
 
-void ShootingBeh::Mirror(const Uuid uuid, const unsigned int damage)
+void ShootingBeh::Mirror(const Uuid uuid)
 {
 	const ObjRectangle rect{GetBulletStartRect()};
 	if (rect.x < 0.0 || rect.y < 0.0)
@@ -195,5 +187,5 @@ void ShootingBeh::Mirror(const Uuid uuid, const unsigned int damage)
 		return;
 	}
 
-	std::ignore = SpawnShell(rect, uuid, damage);
+	std::ignore = SpawnShell(rect, uuid);
 }

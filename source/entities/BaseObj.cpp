@@ -33,30 +33,6 @@ void BaseObj::SetPos(const FPoint& pos)
 	_rect.y = pos.y;
 }
 
-double BaseObj::GetRightSide() const noexcept { return _rect.Right(); }
-
-double BaseObj::GetBottomSide() const noexcept { return _rect.Bottom(); }
-
-double BaseObj::GetX() const noexcept { return _rect.x; }
-
-void BaseObj::SetX(const FPoint& pos) { _rect.x = pos.x; }
-
-double BaseObj::GetY() const noexcept { return _rect.y; }
-
-void BaseObj::SetY(const FPoint& pos) { _rect.y = pos.y; }
-
-double BaseObj::GetWidth() const noexcept { return _rect.w; }
-
-void BaseObj::SetWidth(const double width) { _rect.w = width; }
-
-double BaseObj::GetHeight() const noexcept { return _rect.h; }
-
-void BaseObj::SetHeight(const double height) { _rect.h = height; }
-
-void BaseObj::MoveX(const double i) { _rect.x += i; }
-
-void BaseObj::MoveY(const double i) { _rect.y += i; }
-
 unsigned int BaseObj::GetHealth() const { return _health; }
 
 //NOTE: never kills - the host decides a death in TakeDamage, the client hears of it from DespawnedEvent

@@ -102,13 +102,7 @@ void Bullet::TickUpdate(const double deltaTime)
 	}
 }
 
-unsigned int Bullet::GetDamage() const noexcept { return _caliber.damage; }
-
-double Bullet::GetDamageRadius() const noexcept { return _caliber.damageRadius; }
-
 double Bullet::GetFlightSpeed() const noexcept { return _caliber.speed; }
-
-unsigned int Bullet::GetTier() const noexcept { return _caliber.tier; }
 
 //NOTE: steel gives way from the third tier on
 bool Bullet::CanBreak(const BaseObj& target) const noexcept { return target.GetIsDestructible() || _caliber.tier > 2u; }

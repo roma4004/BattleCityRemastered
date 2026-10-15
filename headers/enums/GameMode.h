@@ -28,8 +28,6 @@ enum class GameMode : char8_t
 	return mode == GameMode::PlayAsHost || mode == GameMode::PlayAsClient;
 }
 
-[[nodiscard]] constexpr bool IsLocalGame(const GameMode mode) noexcept { return !IsNetworkGame(mode); }
-
 //NOTE: every tank for itself, no base
 [[nodiscard]] constexpr bool IsFreeForAll(const GameMode mode) noexcept
 {

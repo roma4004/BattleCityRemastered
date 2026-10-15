@@ -38,8 +38,6 @@ public:
 
 	~Client();
 
-	[[nodiscard]] bool IsConnected() const noexcept { return _isConnected; }
-
 	void Shutdown();
 
 	//NOTE: onClosed fires once the goodbye is acked, or turned out undeliverable

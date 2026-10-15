@@ -40,7 +40,6 @@ protected:
 	void SubscribeToNetCommandUpdate();
 
 	[[nodiscard]] boost::asio::io_context& IoContext();
-	[[nodiscard]] const std::shared_ptr<EventSystem>& Events() const noexcept { return _events; }
 
 private:
 	void OnNetCommandUpdate(const NetCommandUpdateEvent&);

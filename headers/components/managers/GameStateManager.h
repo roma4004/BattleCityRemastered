@@ -112,6 +112,5 @@ class GameStateManager final
 public:
 	explicit GameStateManager(const std::shared_ptr<EventSystem>& events, const MatchSettings& match = {});
 
-	[[nodiscard]] GameState GetState() const noexcept { return _state; }
 	[[nodiscard]] bool IsPauseShown() const;
 };

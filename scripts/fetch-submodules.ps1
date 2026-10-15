@@ -45,8 +45,7 @@ function Update-Submodules($paths, [switch]$Recurse)
     }
 }
 
-# Every project runs this and the solution's leaves build in parallel - two `git submodule update` at once
-# fight over .git/config.lock. The markers are read only once the mutex is ours, so a waiter finds the work done.
+# Leaves build in parallel, and two `git submodule update` at once fight over .git/config.lock
 $mutex = New-Object System.Threading.Mutex($false, 'Local\BattleCityRemastered.fetch-submodules')
 $null = $mutex.WaitOne()
 try

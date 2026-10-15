@@ -221,13 +221,11 @@ TEST_F(NetworkDatagramTest, AValueArrivingAheadOfItsSnapshotIsHandedOverRightAft
 	_host.SendLatest(_tank, "after");
 	Carry(_host.TakeDatagrams(_now), _client);
 	ASSERT_TRUE(_latest.empty());
-	ASSERT_TRUE(_client.IsAwaitingSnapshot());
 
 	Carry(snapshot, _client);
 
 	EXPECT_EQ(_messages, std::vector<std::string>{"snapshot"});
 	EXPECT_EQ(_latest, std::vector<std::string>{"after"});
-	EXPECT_FALSE(_client.IsAwaitingSnapshot());
 }
 
 // a snapshot carries the field, so the values it already contains are dropped
@@ -254,7 +252,7 @@ TEST_F(NetworkDatagramTest, AValueWaitingForASnapshotThatNeverCameGoesWithTheNex
 	std::ignore = _host.TakeDatagrams(_now);
 	_host.SendLatest(_tank, "waiting");
 	Carry(_host.TakeDatagrams(_now), _client);
-	ASSERT_TRUE(_client.IsAwaitingSnapshot());
+	ASSERT_TRUE(_latest.empty());
 
 	//NOTE: the backlog overflows and takes the first snapshot with it
 	for (std::size_t i = 0u; i < network::DatagramLink::kMaxBacklog; ++i)
@@ -268,7 +266,6 @@ TEST_F(NetworkDatagramTest, AValueWaitingForASnapshotThatNeverCameGoesWithTheNex
 
 	EXPECT_EQ(_messages, std::vector<std::string>{"next snapshot"});
 	EXPECT_TRUE(_latest.empty());
-	EXPECT_FALSE(_client.IsAwaitingSnapshot());
 }
 
 // a peer that stopped acking is not sent the tail it missed - it is dropped, and the snapshot replacing it comes first

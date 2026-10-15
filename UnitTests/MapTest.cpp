@@ -233,8 +233,8 @@ TEST_F(MapTest, ClientGivesTheEagleTheSameSpanTheMapDoes)
 										   .uuid = UuidUtils::GetRandomUuid()});
 
 	ASSERT_EQ(allObjects.size(), 2u);
-	EXPECT_DOUBLE_EQ(allObjects[0]->GetWidth(), cell * ObstacleCellSpan(ObstacleType::Eagle));
-	EXPECT_DOUBLE_EQ(allObjects[1]->GetWidth(), cell);
+	EXPECT_DOUBLE_EQ(allObjects[0]->GetRect().w, cell * ObstacleCellSpan(ObstacleType::Eagle));
+	EXPECT_DOUBLE_EQ(allObjects[1]->GetRect().w, cell);
 }
 
 // a baseless map leaves out the eagle, its wall and the shovel

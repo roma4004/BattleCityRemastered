@@ -125,7 +125,7 @@ void BindHostReplication(ReplicationPublisher& out)
 	});
 	out.Bind<TankShotEvent>([](const auto& e)
 	{
-		return TankShot{.who = e.who, .dir = e.dir, .uuid = e.bulletUuid, .damage = e.damage};
+		return TankShot{.who = e.who, .dir = e.dir, .uuid = e.bulletUuid};
 	});
 	out.Bind<HealthChangedEvent>([](const auto& e)
 	{

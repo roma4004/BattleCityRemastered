@@ -39,17 +39,16 @@ class ShootingBeh final : public IShootable
 	[[nodiscard]] static VolleyShape ShapeOf(unsigned short tier) noexcept;
 	[[nodiscard]] ObjRectangle GetBulletStartRect() const;
 	//NOTE: the caliber this one shot leaves with - the tank's own is untouched, the spread lives per shell
-	[[nodiscard]] BulletCaliber CaliberOfShot(std::optional<unsigned int> damage) const;
+	[[nodiscard]] BulletCaliber CaliberOfShot() const;
 	//NOTE: whether a shell could have flown this way - a shell born past a wall would be a shot through it
 	[[nodiscard]] bool IsClear(const ObjRectangle& path, const std::vector<std::shared_ptr<BaseObj>>& objects) const;
-	[[nodiscard]] ShotResult SpawnShell(const ObjRectangle& rect, std::optional<Uuid> uuid,
-										std::optional<unsigned int> damage) const;
+	[[nodiscard]] Uuid SpawnShell(const ObjRectangle& rect, std::optional<Uuid> uuid) const;
 
 public:
 	ShootingBeh(ObjRectangle& rect, Direction& dir, Uuid& uuid, Author& author,
 				const std::shared_ptr<BulletPool>& bulletPool, BulletCaliber& caliber,
 				const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig);
 
-	[[nodiscard]] std::vector<ShotResult> Volley(const std::vector<std::shared_ptr<BaseObj>>& objects) override;
-	void Mirror(Uuid uuid, unsigned int damage) override;
+	[[nodiscard]] std::vector<Uuid> Volley(const std::vector<std::shared_ptr<BaseObj>>& objects) override;
+	void Mirror(Uuid uuid) override;
 };

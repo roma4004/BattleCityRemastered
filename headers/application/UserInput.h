@@ -123,5 +123,4 @@ public:
 	void Update();
 
 	[[nodiscard]] bool IsShutdown() const noexcept;
-	[[nodiscard]] bool IsPause() const noexcept;
 };

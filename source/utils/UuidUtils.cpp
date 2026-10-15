@@ -2,7 +2,6 @@
 
 #include <bit>
 #include <boost/uuid/random_generator.hpp>
-#include <boost/uuid/string_generator.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
 using buuid = boost::uuids::uuid;
@@ -28,8 +27,3 @@ Uuid UuidUtils::GetRandomUuid()
 Uuid UuidUtils::GetNilUuid() noexcept { return Uuid{}; }
 
 std::string UuidUtils::GetStringUuid(const Uuid uuid) { return boost::uuids::to_string(ToBoost(uuid)); }
-
-Uuid UuidUtils::GetUuidFromString(const std::string_view text)
-{
-	return ToUuid(boost::uuids::string_generator{}(text.begin(), text.end()));
-}

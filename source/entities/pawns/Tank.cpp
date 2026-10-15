@@ -33,6 +33,7 @@
 #include "utils/DirectionUtils.h"
 #include "utils/MathUtils.h"
 #include "utils/TimeUtils.h"
+#include "utils/Uuid.h"
 #include "enums/Faction.h"
 #include <algorithm>
 #include <chrono>
@@ -225,7 +226,7 @@ void Tank::SubscribeAsClient()
 void Tank::OnTankShot(const TankShotEvent& event)
 {
 	SetDirection(event.dir);
-	_shootingBeh->Mirror(event.bulletUuid, event.damage);
+	_shootingBeh->Mirror(event.bulletUuid);
 }
 
 void Tank::OnBonusHelmetApplied(const BonusHelmetAppliedEvent& event) { OnBonusHelmet(event.isActive); }
@@ -279,8 +280,6 @@ void Tank::TakeDamage(const unsigned int damage, const Author author)
 }
 
 unsigned int Tank::GetTier() const noexcept { return _tier; }
-
-TankModel Tank::GetModel() const noexcept { return _model; }
 
 bool Tank::CanShoot() const noexcept { return !_shootTimer.isActive; }
 
@@ -478,16 +477,13 @@ void Tank::TickUpdate(const double deltaTime)
 
 void Tank::Shot()
 {
-	const std::vector<ShotResult> shots{_shootingBeh->Volley(_allObjects)};
+	const std::vector<Uuid> shots{_shootingBeh->Volley(_allObjects)};
 
 	if (_gameConfig.IsHost())
 	{
-		std::ranges::for_each(shots, [this](const ShotResult& shot)
+		std::ranges::for_each(shots, [this](const Uuid shot)
 		{
-			_events->EmitEvent(TankShotEvent{.who = _author,
-											 .dir = GetDirection(),
-											 .bulletUuid = shot.uuid,
-											 .damage = shot.damage});
+			_events->EmitEvent(TankShotEvent{.who = _author, .dir = GetDirection(), .bulletUuid = shot});
 		});
 	}
 
@@ -496,21 +492,11 @@ void Tank::Shot()
 
 double Tank::GetBulletWidth() const noexcept { return _caliber.size.x; }
 
-void Tank::SetBulletWidth(const double bulletWidth) { _caliber.size.x = bulletWidth; }
-
 double Tank::GetBulletHeight() const noexcept { return _caliber.size.y; }
-
-void Tank::SetBulletHeight(const double bulletHeight) { _caliber.size.y = bulletHeight; }
 
 double Tank::GetBulletSpeed() const noexcept { return _caliber.speed; }
 
-void Tank::SetBulletSpeed(const double bulletSpeed) { _caliber.speed = bulletSpeed; }
-
-void Tank::SetBulletDamage(const unsigned int bulletDamage) { _caliber.damage = bulletDamage; }
-
 double Tank::GetBulletDamageRadius() const noexcept { return _caliber.damageRadius; }
-
-void Tank::SetBulletDamageRadius(const double bulletDamageRadius) { _caliber.damageRadius = bulletDamageRadius; }
 
 void Tank::OnBonusTimer(const BonusTimerStatusChangeEvent& event)
 {

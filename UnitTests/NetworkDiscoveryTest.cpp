@@ -6,6 +6,8 @@
 #include "enums/MatchRules.h"
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/address.hpp>
+#include <boost/asio/ip/udp.hpp>
+#include <boost/system/error_code.hpp>
 #include <gtest/gtest.h>
 #include <algorithm>
 #include <chrono>
@@ -36,6 +38,16 @@ protected:
 		return std::nullopt;
 	}
 
+	[[nodiscard]] bool IsDiscoveryPortFree()
+	{
+		boost::asio::ip::udp::socket socket{_ioContext};
+		boost::system::error_code ec;
+		std::ignore = socket.open(boost::asio::ip::udp::v4(), ec);
+		std::ignore = socket.bind({boost::asio::ip::address_v4::loopback(), network::kDiscoveryPort}, ec);
+
+		return !ec;
+	}
+
 	boost::asio::io_context _ioContext{};
 };
 
@@ -43,12 +55,12 @@ protected:
 TEST_F(NetworkDiscoveryTest, ABeaconAnswersWithTheGamePortItsRulesAndItsFreeSeats)
 {
 	constexpr std::uint16_t gamePort{54321u};
-	const network::DiscoveryBeacon beacon{_ioContext, boost::asio::ip::address_v4::loopback(), gamePort,
-										  std::uint8_t{4}, MatchRules::FreeForAll, [] { return std::uint8_t{1}; }};
-	if (!beacon.IsListening())
+	if (!IsDiscoveryPortFree())
 	{
 		GTEST_SKIP() << "the discovery port is taken by something else on this machine";
 	}
+	const network::DiscoveryBeacon beacon{_ioContext, boost::asio::ip::address_v4::loopback(), gamePort,
+										  std::uint8_t{4}, MatchRules::FreeForAll, [] { return std::uint8_t{1}; }};
 
 	network::DiscoveryProbe probe{std::string{network::kDefaultHost}};
 
@@ -65,15 +77,9 @@ TEST_F(NetworkDiscoveryTest, ABeaconAnswersWithTheGamePortItsRulesAndItsFreeSeat
 // silence is the answer when nobody is up - it is what keeps the client asking instead of dialling
 TEST_F(NetworkDiscoveryTest, AProbeWithNoBeaconGetsNothing)
 {
-	//NOTE: a beacon up and down first on a context never pumped - if it cannot listen, a server runs here
+	if (!IsDiscoveryPortFree())
 	{
-		boost::asio::io_context checkContext{};
-		const network::DiscoveryBeacon portCheck{checkContext, boost::asio::ip::address_v4::loopback(), 1u,
-												 std::uint8_t{4}, MatchRules::Classic, [] { return std::uint8_t{}; }};
-		if (!portCheck.IsListening())
-		{
-			GTEST_SKIP() << "the discovery port is taken by something else on this machine";
-		}
+		GTEST_SKIP() << "the discovery port is taken by something else on this machine";
 	}
 
 	network::DiscoveryProbe probe{std::string{network::kDefaultHost}};
@@ -84,12 +90,12 @@ TEST_F(NetworkDiscoveryTest, AProbeWithNoBeaconGetsNothing)
 // a full server still answers: silence would read as "no server here" and the client would keep looking
 TEST_F(NetworkDiscoveryTest, AFullServerStillAnswers)
 {
-	const network::DiscoveryBeacon beacon{_ioContext, boost::asio::ip::address_v4::loopback(), 12345u,
-										  std::uint8_t{4}, MatchRules::Classic, [] { return std::uint8_t{}; }};
-	if (!beacon.IsListening())
+	if (!IsDiscoveryPortFree())
 	{
 		GTEST_SKIP() << "the discovery port is taken by something else on this machine";
 	}
+	const network::DiscoveryBeacon beacon{_ioContext, boost::asio::ip::address_v4::loopback(), 12345u,
+										  std::uint8_t{4}, MatchRules::Classic, [] { return std::uint8_t{}; }};
 
 	network::DiscoveryProbe probe{std::string{network::kDefaultHost}};
 
@@ -103,12 +109,12 @@ TEST_F(NetworkDiscoveryTest, AFullServerStillAnswers)
 TEST_F(NetworkDiscoveryTest, AScanFindsTheServerOnThisMachine)
 {
 	constexpr std::uint16_t gamePort{54321u};
-	const network::DiscoveryBeacon beacon{_ioContext, boost::asio::ip::address_v4::loopback(), gamePort,
-										  std::uint8_t{4}, MatchRules::FreeForAll, [] { return std::uint8_t{2}; }};
-	if (!beacon.IsListening())
+	if (!IsDiscoveryPortFree())
 	{
 		GTEST_SKIP() << "the discovery port is taken by something else on this machine";
 	}
+	const network::DiscoveryBeacon beacon{_ioContext, boost::asio::ip::address_v4::loopback(), gamePort,
+										  std::uint8_t{4}, MatchRules::FreeForAll, [] { return std::uint8_t{2}; }};
 
 	network::DiscoveryScan scan{std::string{network::kDefaultHost}};
 	const network::FoundServer expected{

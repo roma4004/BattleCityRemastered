@@ -438,7 +438,6 @@
     <ClInclude Include="..\headers\utils\Log.h" />
     <ClInclude Include="..\headers\utils\MathUtils.h" />
     <ClInclude Include="..\headers\utils\ObjectUtils.h" />
-    <ClInclude Include="..\headers\utils\PixelUtils.h" />
     <ClInclude Include="..\headers\utils\RandUtils.h" />
     <ClInclude Include="..\headers\utils\TextUtils.h" />
     <ClInclude Include="..\headers\utils\Timer.h" />

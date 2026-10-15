@@ -34,12 +34,6 @@ SDL_Color SdlRenderUtils::IntToColor(const unsigned int color)
 					 .a = static_cast<Uint8>((color >> 24u) & 0xFFu)};
 }
 
-unsigned int SdlRenderUtils::ColorToInt(const SDL_Color& color)
-{
-	//NOTE: Uint8 promotes to int and 255 << 24 lands on the sign bit - the widening keeps it unsigned
-	return (Uint32{color.a} << 24u) | (Uint32{color.r} << 16u) | (Uint32{color.g} << 8u) | Uint32{color.b};
-}
-
 SDL_FPoint SdlRenderUtils::LogicalScale(SDL_Renderer* const renderer)
 {
 	int logicalWidth{};

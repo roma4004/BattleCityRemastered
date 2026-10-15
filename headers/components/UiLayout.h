@@ -7,8 +7,7 @@
 #include <span>
 #include <vector>
 
-//NOTE: turns a table into places. All it knows of a cell comes from the measurer, so the same code lays
-//out the menu on screen and a table of known widths in a test.
+//NOTE: turns a table into places; cell sizes come from the measurer, so no fonts or SDL here
 class UiLayout final
 {
 public:

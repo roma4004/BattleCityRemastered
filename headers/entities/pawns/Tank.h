@@ -169,7 +169,6 @@ public:
 	[[nodiscard]] static double SizeOf(TankModel model, unsigned short tier, const GameConfig& gameConfig);
 
 	[[nodiscard]] unsigned int GetTier() const noexcept;
-	[[nodiscard]] TankModel GetModel() const noexcept;
 
 	//NOTE: how far this tank gives way, the ones behind it counted in - a wall, the edge of the field or
 	//a tank driving the other way ends the chain, and then the whole of it stands
@@ -186,16 +185,7 @@ public:
 												  std::optional<Direction> excludeDirection) const;
 
 	[[nodiscard]] double GetBulletWidth() const noexcept;
-	void SetBulletWidth(double bulletWidth);
-
 	[[nodiscard]] double GetBulletHeight() const noexcept;
-	void SetBulletHeight(double bulletHeight);
-
 	[[nodiscard]] double GetBulletSpeed() const noexcept;
-	void SetBulletSpeed(double bulletSpeed);
-
-	void SetBulletDamage(unsigned int bulletDamage);
-
 	[[nodiscard]] double GetBulletDamageRadius() const noexcept;
-	void SetBulletDamageRadius(double bulletDamageRadius);
 };

@@ -29,8 +29,6 @@ void ClientNode::ProcessNetworkCommands()
 	}
 }
 
-bool ClientNode::IsConnected() const noexcept { return _client && _client->IsConnected(); }
-
 void ClientNode::Abort()
 {
 	boost::asio::post(IoContext(), [client = _client] { client->Shutdown(); });

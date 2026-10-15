@@ -17,8 +17,6 @@ public:
 
 	void ProcessNetworkCommands() override;
 
-	[[nodiscard]] bool IsConnected() const noexcept;
-
 	void Abort();
 
 private:

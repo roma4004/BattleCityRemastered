@@ -31,10 +31,6 @@ public:
 	DiscoveryBeacon(DiscoveryBeacon&&) = delete;
 	DiscoveryBeacon& operator=(DiscoveryBeacon&&) = delete;
 
-	//NOTE: false when the port was already taken - a second server on this machine is reachable by its
-	//number alone, and says so instead of fighting the first one for the well-known one
-	[[nodiscard]] bool IsListening() const noexcept { return _inbox.socket.is_open(); }
-
 	void Shutdown();
 
 private:

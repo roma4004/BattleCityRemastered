@@ -55,7 +55,5 @@ public:
 
 	void PickUpBonus(Author author) override;
 
-	[[nodiscard]] bool GetIsSuper() const noexcept;
-
 	[[nodiscard]] std::optional<Sprite> Look() const override;
 };

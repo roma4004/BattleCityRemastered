@@ -56,9 +56,12 @@ using namespace std::chrono_literals;
 class NetworkTest : public testing::Test
 {
 protected:
-	Uuid _uuid{UuidUtils::GetUuidFromString("01234567-89ab-cdef-0123-456789abcdef")};
+	Uuid _uuid{UuidUtils::GetRandomUuid()};
 
-	void SetUp() override {}
+	void SetUp() override
+	{
+		_linksUpSub = _clientEvents->AddListener([this](const ClientConnectedToHostEvent&) { ++_linksUp; });
+	}
 
 	void TearDown() override {}
 
@@ -69,6 +72,9 @@ protected:
 	std::shared_ptr<EventSystem> _secondClientEvents{std::make_shared<EventSystem>()};
 	//NOTE: the one that finds both seats taken
 	std::shared_ptr<EventSystem> _thirdClientEvents{std::make_shared<EventSystem>()};
+	//NOTE: every client made on _clientEvents adds one
+	int _linksUp{};
+	EventSubscription _linksUpSub{};
 	double _deltaTimeOneFrame{1.0 / 60.0};
 
 	//NOTE: stands in for MainLoop, in its order - nothing is received or sent without it
@@ -191,7 +197,7 @@ TEST_F(NetworkTest, EveryReplicatedEventArrivesAsItself)
 {
 	const auto server{MakeServer()};
 	const auto client{MakeClient(server->GetBoundPort())};
-	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
+	ASSERT_TRUE(PumpUntil([this] { return _linksUp == 1; }));
 
 	constexpr FPoint pos{.x = 42.0, .y = 42.0};
 	constexpr ObjRectangle grown{.x = 98.0, .y = 96.0, .w = 40.0, .h = 40.0};
@@ -346,7 +352,7 @@ TEST_F(NetworkTest, PauseRequestFromClientPausesTheServer)
 {
 	const auto server{MakeServer()};
 	const auto client{MakeClient(server->GetBoundPort())};
-	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
+	ASSERT_TRUE(PumpUntil([this] { return _linksUp == 1; }));
 
 	bool isServerPaused{};
 	auto pauseSub{_serverEvents->AddListener(
@@ -367,7 +373,7 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 {
 	const auto server{MakeServer()};
 	const auto client{MakeClient(server->GetBoundPort())};
-	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
+	ASSERT_TRUE(PumpUntil([this] { return _linksUp == 1; }));
 
 	constexpr auto obstacleType{ObstacleType::Brick};
 	constexpr unsigned short itemsInMassiveTest{10000u};
@@ -409,34 +415,29 @@ TEST_F(NetworkTest, ClientReconnectsAfterEstablishedLinkDrops)
 	const auto client{MakeClient(port)};
 
 	int readySignals{};
-	int linksUp{};
+	bool isHostLost{};
 	std::vector<EventSubscription> subs{};
 	subs.push_back(_serverEvents->AddListener(
 			[&readySignals](const ServerInClientReadyToStartGameEvent&) { ++readySignals; }));
-	subs.push_back(_clientEvents->AddListener([&linksUp](const ClientConnectedToHostEvent&) { ++linksUp; }));
+	subs.push_back(_clientEvents->AddListener([&isHostLost](const ClientHostLostEvent&) { isHostLost = true; }));
 	subs.push_back(AnnounceReadyOnConnect());
 
-	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
+	ASSERT_TRUE(PumpUntil([this] { return _linksUp == 1; }));
 	ASSERT_TRUE(PumpUntil([&readySignals] { return readySignals == 1; })) << "the server never got the first ready";
 
 	//NOTE: Abort, not just reset - this test is about a link that dies without a goodbye
 	server->Abort();
 	server.reset();
 
-	ASSERT_TRUE(PumpUntil([&client] { return !client->IsConnected(); }))
-			<< "client never noticed the link dropped";
+	ASSERT_TRUE(PumpUntil([&isHostLost] { return isHostLost; })) << "client never noticed the link dropped";
 
 	if (!ReboundHost(server, port))
 	{
 		GTEST_SKIP() << "port " << port << " still held by the OS - nothing to test against";
 	}
 
-	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }, 10s))
+	ASSERT_TRUE(PumpUntil([this] { return _linksUp == 2; }, 10s))
 			<< "client did not reconnect after the server came back";
-
-	//NOTE: pumped, not read straight off - IsConnected flips before the event behind it is drained
-	EXPECT_TRUE(PumpUntil([&linksUp] { return linksUp == 2; }))
-			<< "client did not tell its own side the link was back";
 
 	EXPECT_TRUE(PumpUntil([&readySignals] { return readySignals == 2; }))
 			<< "reconnected client never asked the server to start the match again";
@@ -460,7 +461,7 @@ TEST_F(NetworkTest, TheServerLearnsTheClientDroppedWithoutSayingGoodbye)
 			[&announced](const ServerInDisconnectEvent& event) { announced = event.reason; }));
 	subs.push_back(AnnounceReadyOnConnect());
 
-	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
+	ASSERT_TRUE(PumpUntil([this] { return _linksUp == 1; }));
 	ASSERT_TRUE(PumpUntil([&readySignals] { return readySignals == 1; }));
 
 	client->Abort();
@@ -471,7 +472,7 @@ TEST_F(NetworkTest, TheServerLearnsTheClientDroppedWithoutSayingGoodbye)
 	EXPECT_FALSE(announced.has_value()) << "a dropped link reported itself as an announced leave";
 
 	const auto secondClient{MakeClient(port)};
-	ASSERT_TRUE(PumpUntil([&secondClient] { return secondClient->IsConnected(); }))
+	ASSERT_TRUE(PumpUntil([this] { return _linksUp == 2; }))
 			<< "the server stopped accepting after losing the first client";
 	EXPECT_TRUE(PumpUntil([&readySignals] { return readySignals == 2; }))
 			<< "host never got a ready from the client that replaced the lost one";
@@ -484,7 +485,7 @@ TEST_F(NetworkTest, HostShutdownTellsClientWhyAndKeepsTheReconnect)
 	const uint16_t port{server->GetBoundPort()};
 	const auto client{MakeClient(port)};
 
-	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
+	ASSERT_TRUE(PumpUntil([this] { return _linksUp == 1; }));
 
 	std::optional<DisconnectReason> received{};
 	bool gaveUp{};
@@ -503,7 +504,7 @@ TEST_F(NetworkTest, HostShutdownTellsClientWhyAndKeepsTheReconnect)
 		GTEST_SKIP() << "port " << port << " still held by the OS - nothing to test against";
 	}
 
-	EXPECT_TRUE(PumpUntil([&client] { return client->IsConnected(); }, 10s))
+	EXPECT_TRUE(PumpUntil([this] { return _linksUp == 2; }, 10s))
 			<< "client did not dial back the server that only announced a restart";
 	EXPECT_FALSE(gaveUp) << "client gave up on a host that was restarting the same mode";
 }
@@ -514,7 +515,7 @@ TEST_F(NetworkTest, ClientQuitTellsHostWhy)
 	const auto server{MakeServer()};
 	auto client{MakeClient(server->GetBoundPort())};
 
-	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
+	ASSERT_TRUE(PumpUntil([this] { return _linksUp == 1; }));
 
 	std::optional<DisconnectReason> received{};
 	bool clientLost{};
@@ -848,7 +849,7 @@ TEST_F(NetworkTest, AKickedClientIsToldWhyAndDoesNotDialBack)
 
 	const auto server{MakeServer()};
 	const auto client{MakeClient(server->GetBoundPort())};
-	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
+	ASSERT_TRUE(PumpUntil([this] { return _linksUp == 1; }));
 
 	_serverEvents->EmitEvent(ServerKickRequestedEvent{.slot = PlayerSlot::P1});
 
@@ -864,10 +865,10 @@ TEST_F(NetworkTest, AClosedServerSeatsNoClientUntilItOpens)
 	_serverEvents->EmitEvent(ServerAcceptingChangedEvent{.isAccepting = false});
 
 	const auto client{MakeClient(server->GetBoundPort())};
-	EXPECT_FALSE(PumpUntil([&client] { return client->IsConnected(); }, 1s)) << "a closed server seated a client";
+	EXPECT_FALSE(PumpUntil([this] { return _linksUp == 1; }, 1s)) << "a closed server seated a client";
 
 	_serverEvents->EmitEvent(ServerAcceptingChangedEvent{.isAccepting = true});
-	EXPECT_TRUE(PumpUntil([&client] { return client->IsConnected(); })) << "the reopened server never seated it";
+	EXPECT_TRUE(PumpUntil([this] { return _linksUp == 1; })) << "the reopened server never seated it";
 }
 
 // a hello the server turns away is no connection - the client must not report a seat it never got
@@ -876,19 +877,15 @@ TEST_F(NetworkTest, ATurnedAwayHelloIsNoConnection)
 	const auto server{MakeServer()};
 	_serverEvents->EmitEvent(ServerAcceptingChangedEvent{.isAccepting = false});
 
-	int linksUp{};
 	std::optional<DisconnectReason> refusal{};
-	std::vector<EventSubscription> subs{};
-	subs.push_back(_clientEvents->AddListener([&linksUp](const ClientConnectedToHostEvent&) { ++linksUp; }));
-	subs.push_back(_clientEvents->AddListener(
-			[&refusal](const ClientInDisconnectEvent& event) { refusal = event.reason; }));
+	const EventSubscription refusalSub{_clientEvents->AddListener(
+			[&refusal](const ClientInDisconnectEvent& event) { refusal = event.reason; })};
 
 	const auto client{MakeClient(server->GetBoundPort())};
 
 	ASSERT_TRUE(PumpUntil([&refusal] { return refusal.has_value(); })) << "the closed server never turned it away";
 	EXPECT_EQ(DisconnectReason::ServerFull, *refusal);
-	EXPECT_EQ(0, linksUp) << "a turned-away client told its own side the link was up";
-	EXPECT_FALSE(client->IsConnected()) << "a turned-away client counts itself seated";
+	EXPECT_EQ(0, _linksUp) << "a turned-away client told its own side the link was up";
 }
 
 // a client is announced as it gets its seat, before it is ready - a match starting at once waits for it
@@ -985,7 +982,7 @@ TEST_F(NetworkTest, TheClientsAreToldWhoLeft)
 {
 	const auto server{MakeServer()};
 	const auto client{MakeClient(server->GetBoundPort())};
-	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
+	ASSERT_TRUE(PumpUntil([this] { return _linksUp == 1; }));
 
 	std::optional<AbsenceChangedEvent> told{};
 	const EventSubscription toldSub{_clientEvents->AddListener([&told](const AbsenceChangedEvent& event)
@@ -1004,7 +1001,7 @@ TEST_F(NetworkTest, TheClientsAreToldWhereTheInternetReachesTheServer)
 {
 	const auto server{MakeServer()};
 	const auto client{MakeClient(server->GetBoundPort())};
-	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
+	ASSERT_TRUE(PumpUntil([this] { return _linksUp == 1; }));
 
 	std::optional<PortForwardingChangedEvent> told{};
 	const EventSubscription toldSub{_clientEvents->AddListener([&told](const PortForwardingChangedEvent& event)
@@ -1044,7 +1041,7 @@ TEST_F(NetworkTest, EveryAnswerAboutWhoLeftReachesTheServer)
 {
 	const auto server{MakeServer()};
 	const auto client{MakeClient(server->GetBoundPort())};
-	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
+	ASSERT_TRUE(PumpUntil([this] { return _linksUp == 1; }));
 
 	std::vector<AbsenceChoice> heard{};
 	const EventSubscription heardSub{_serverEvents->AddListener([&heard](const AbsenceChosenEvent& event)
@@ -1072,7 +1069,7 @@ TEST_F(NetworkTest, AClientDialingAgainGetsItsOwnSeatOverAnEarlierFreeOne)
 
 	const auto server{MakeServer()};
 	auto client{MakeClient(server->GetBoundPort())};
-	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
+	ASSERT_TRUE(PumpUntil([this] { return _linksUp == 1; }));
 	boost::asio::io_context ioContext;
 	boost::asio::ip::udp::socket socket{ioContext, boost::asio::ip::udp::v4()};
 	socket.connect({boost::asio::ip::make_address("127.0.0.1"), server->GetBoundPort()});

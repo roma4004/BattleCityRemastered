@@ -24,6 +24,7 @@ protected:
 	std::shared_ptr<EventSystem> _events{std::make_shared<EventSystem>()};
 	std::unique_ptr<GameStateManager> _stateManager{nullptr};
 	std::vector<GameState> _announced{};
+	GameState _phase{};
 	int _matchStarts{};
 	size_t _phasesBeforeMatchStart{};
 	EventSubscription _stateSub{};
@@ -35,6 +36,7 @@ protected:
 		_stateSub = _events->AddListener([this](const GameStateChangedToEvent& event)
 		{
 			_announced.push_back(event.state);
+			_phase = event.state;
 		});
 		_matchStartSub = _events->AddListener([this](const MatchStartedEvent&)
 		{
@@ -96,13 +98,13 @@ TEST_F(NetworkGameStateTest, TheReadyThatCompletesTheSeatsStartsTheMatch)
 		{
 			_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = slot});
 		}
-		ASSERT_EQ(GameState::Lobby, _stateManager->GetState()) << "the match started a seat short";
+		ASSERT_EQ(GameState::Lobby, _phase) << "the match started a seat short";
 		ASSERT_EQ(_matchStarts, 0);
 		_announced.clear();
 
 		_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = start.last});
 
-		EXPECT_EQ(GameState::Playing, _stateManager->GetState());
+		EXPECT_EQ(GameState::Playing, _phase);
 		EXPECT_EQ(std::vector{GameState::Playing}, _announced);
 		EXPECT_EQ(_matchStarts, 1);
 		_matchStarts = 0;
@@ -116,21 +118,21 @@ TEST_F(NetworkGameStateTest, AClientStartsTheMatchOnlyWhenTheServerAnnouncesIt)
 	_matchStarts = 0;
 
 	_events->EmitEvent(ClientConnectedToHostEvent{});
-	EXPECT_EQ(GameState::Lobby, _stateManager->GetState());
+	EXPECT_EQ(GameState::Lobby, _phase);
 	EXPECT_EQ(_matchStarts, 0) << "the link alone started the match";
 
 	_events->EmitEvent(HostPhaseAnnouncedEvent{.phase = GameState::Playing});
-	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
+	EXPECT_EQ(GameState::Playing, _phase);
 	EXPECT_EQ(_matchStarts, 1);
 
 	_events->EmitEvent(ClientReconnectAbandonedEvent{});
-	ASSERT_EQ(GameState::Lobby, _stateManager->GetState());
+	ASSERT_EQ(GameState::Lobby, _phase);
 	_announced.clear();
 	_events->EmitEvent(ClientConnectedToHostEvent{});
-	EXPECT_EQ(GameState::Lobby, _stateManager->GetState()) << "dialling again alone started a match";
+	EXPECT_EQ(GameState::Lobby, _phase) << "dialling again alone started a match";
 
 	_events->EmitEvent(HostPhaseAnnouncedEvent{.phase = GameState::Playing});
-	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
+	EXPECT_EQ(GameState::Playing, _phase);
 	EXPECT_EQ(std::vector{GameState::Playing}, _announced);
 }
 
@@ -141,7 +143,7 @@ TEST_F(NetworkGameStateTest, APlayerBackInALostSeatDoesNotRestartTheMatch)
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P1});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P2});
-	ASSERT_EQ(GameState::Playing, _stateManager->GetState());
+	ASSERT_EQ(GameState::Playing, _phase);
 	_matchStarts = 0;
 
 	_events->EmitEvent(ServerClientLostEvent{.slot = PlayerSlot::P2});
@@ -157,18 +159,18 @@ TEST_F(NetworkGameStateTest, EveryKindOfLeaveEmptyingTheLastSeatGoesBackToTheLob
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P1});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P2});
 	_events->EmitEvent(ServerInDisconnectEvent{.reason = DisconnectReason::PlayerQuit, .slot = PlayerSlot::P1});
-	ASSERT_EQ(GameState::Playing, _stateManager->GetState());
+	ASSERT_EQ(GameState::Playing, _phase);
 
 	_events->EmitEvent(ServerClientLostEvent{.slot = PlayerSlot::P2});
-	EXPECT_EQ(GameState::Lobby, _stateManager->GetState());
+	EXPECT_EQ(GameState::Lobby, _phase);
 
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P1});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P2});
 	_events->EmitEvent(ServerClientLostEvent{.slot = PlayerSlot::P1});
-	ASSERT_EQ(GameState::Playing, _stateManager->GetState());
+	ASSERT_EQ(GameState::Playing, _phase);
 
 	_events->EmitEvent(ServerInDisconnectEvent{.reason = DisconnectReason::PlayerQuit, .slot = PlayerSlot::P2});
-	EXPECT_EQ(GameState::Lobby, _stateManager->GetState());
+	EXPECT_EQ(GameState::Lobby, _phase);
 }
 
 // and on a client, every way of losing the host does the same
@@ -177,19 +179,19 @@ TEST_F(NetworkGameStateTest, EveryKindOfHostLossSendsAClientBackToTheLobby)
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsClient});
 
 	_events->EmitEvent(HostPhaseAnnouncedEvent{.phase = GameState::Playing});
-	ASSERT_EQ(GameState::Playing, _stateManager->GetState());
+	ASSERT_EQ(GameState::Playing, _phase);
 	_events->EmitEvent(ClientInDisconnectEvent{.reason = DisconnectReason::HostShutdown});
-	EXPECT_EQ(GameState::Lobby, _stateManager->GetState());
+	EXPECT_EQ(GameState::Lobby, _phase);
 
 	_events->EmitEvent(HostPhaseAnnouncedEvent{.phase = GameState::Playing});
-	ASSERT_EQ(GameState::Playing, _stateManager->GetState());
+	ASSERT_EQ(GameState::Playing, _phase);
 	_events->EmitEvent(ClientReconnectAbandonedEvent{});
-	EXPECT_EQ(GameState::Lobby, _stateManager->GetState());
+	EXPECT_EQ(GameState::Lobby, _phase);
 
 	_events->EmitEvent(HostPhaseAnnouncedEvent{.phase = GameState::Playing});
-	ASSERT_EQ(GameState::Playing, _stateManager->GetState());
+	ASSERT_EQ(GameState::Playing, _phase);
 	_events->EmitEvent(ClientHostLostEvent{});
-	EXPECT_EQ(GameState::Lobby, _stateManager->GetState());
+	EXPECT_EQ(GameState::Lobby, _phase);
 }
 
 // the pause key pauses only a running match - the lobby stays the lobby, a result stands
@@ -219,7 +221,7 @@ TEST_F(NetworkGameStateTest, ThePauseKeyPausesOnlyARunningMatch)
 
 		_events->EmitEvent(PauseStatusEvent{.isPaused = true});
 
-		EXPECT_EQ(pause.paused, _stateManager->GetState());
+		EXPECT_EQ(pause.paused, _phase);
 	}
 }
 
@@ -229,12 +231,12 @@ TEST_F(NetworkGameStateTest, AResetDuringAMatchChangesNothing)
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P1});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P2});
-	ASSERT_EQ(GameState::Playing, _stateManager->GetState());
+	ASSERT_EQ(GameState::Playing, _phase);
 
 	_announced.clear();
 	_events->EmitEvent(GameResetEvent{});
 
-	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
+	EXPECT_EQ(GameState::Playing, _phase);
 	EXPECT_TRUE(_announced.empty());
 }
 
@@ -264,12 +266,12 @@ TEST_F(NetworkGameStateTest, ApplyingTheModeAgainStartsAFreshMatch)
 		{
 			_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = slot});
 		}
-		ASSERT_EQ(GameState::Playing, _stateManager->GetState());
+		ASSERT_EQ(GameState::Playing, _phase);
 		_announced.clear();
 
 		_events->EmitEvent(GameModeAppliedEvent{.mode = match.mode});
 
-		EXPECT_EQ(match.fresh, _stateManager->GetState());
+		EXPECT_EQ(match.fresh, _phase);
 		EXPECT_EQ(std::vector{match.fresh}, _announced);
 	}
 }
@@ -281,11 +283,11 @@ TEST_F(NetworkGameStateTest, ALossBeforeTheReadyTakesNoSeatAway)
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P1});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P2});
 	_events->EmitEvent(ServerClientLostEvent{.slot = PlayerSlot::P2});
-	ASSERT_EQ(GameState::Playing, _stateManager->GetState());
+	ASSERT_EQ(GameState::Playing, _phase);
 
 	_events->EmitEvent(ServerClientLostEvent{.slot = PlayerSlot::P2});
 
-	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
+	EXPECT_EQ(GameState::Playing, _phase);
 }
 
 // a restart empties both seats, so one ready player waits again
@@ -294,16 +296,16 @@ TEST_F(NetworkGameStateTest, ARestartPutsTheServerBackToWaitingForBothSeats)
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P1});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P2});
-	ASSERT_EQ(GameState::Playing, _stateManager->GetState());
+	ASSERT_EQ(GameState::Playing, _phase);
 
 	_events->EmitEvent(ServerInRestartRequestedEvent{});
-	EXPECT_EQ(GameState::Lobby, _stateManager->GetState());
+	EXPECT_EQ(GameState::Lobby, _phase);
 
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P1});
-	EXPECT_EQ(GameState::Lobby, _stateManager->GetState()) << "one player restarted the match alone";
+	EXPECT_EQ(GameState::Lobby, _phase) << "one player restarted the match alone";
 
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P2});
-	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
+	EXPECT_EQ(GameState::Playing, _phase);
 }
 
 //NOTE: hearing the lobby is what makes a client drop its world - announced once, even from it, and never left again
@@ -337,7 +339,7 @@ TEST_F(NetworkGameStateTest, ARestartAnnouncesTheLobbyOnce)
 		{
 			_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = slot});
 		}
-		ASSERT_EQ(restart.before, _stateManager->GetState());
+		ASSERT_EQ(restart.before, _phase);
 		_announced.clear();
 
 		_events->EmitEvent(ServerInRestartRequestedEvent{});
@@ -357,7 +359,7 @@ TEST_F(NetworkGameStateTest, AHostLeavingAPauseStartsNoMatch)
 
 	_events->EmitEvent(HostPhaseAnnouncedEvent{.phase = GameState::Playing});
 
-	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
+	EXPECT_EQ(GameState::Playing, _phase);
 	EXPECT_EQ(std::vector{GameState::Playing}, _announced);
 	EXPECT_EQ(_matchStarts, 0);
 }
@@ -369,11 +371,11 @@ TEST_F(NetworkGameStateTest, ASeatedClientLeavingStartsTheMatchThatWaitedForIt)
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
 	_events->EmitEvent(ServerClientSeatedEvent{.slot = PlayerSlot::P2});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P1});
-	ASSERT_EQ(GameState::Lobby, _stateManager->GetState());
+	ASSERT_EQ(GameState::Lobby, _phase);
 
 	_events->EmitEvent(ServerClientLostEvent{.slot = PlayerSlot::P2});
 
-	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
+	EXPECT_EQ(GameState::Playing, _phase);
 }
 
 //NOTE: the top ones - a player joining later sits in an empty seat, and only then takes a bot's
@@ -459,7 +461,7 @@ TEST_F(NetworkGameStateTest, AJoinTakesTheTankFromItsBotOnTheFirstCommand)
 			_events, MatchSettings{.seats = 2u, .bots = 1u, .isStartingAtOnce = true});
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P1});
-	ASSERT_EQ(GameState::Playing, _stateManager->GetState());
+	ASSERT_EQ(GameState::Playing, _phase);
 	ASSERT_FALSE(taken.has_value());
 	_matchStarts = 0;
 
@@ -538,7 +540,7 @@ TEST_F(NetworkGameStateTest, APauseAskedForDuringTheHoldOutlastsIt)
 	_events->EmitEvent(ServerClientSyncedEvent{.slot = PlayerSlot::P2});
 
 	EXPECT_EQ(pauses, std::vector{true});
-	EXPECT_EQ(GameState::Paused, _stateManager->GetState());
+	EXPECT_EQ(GameState::Paused, _phase);
 }
 
 // a newcomer lost on its way in is asked about like anyone who left, and holds nobody up once answered
@@ -559,7 +561,7 @@ TEST_F(NetworkGameStateTest, ANewcomerLostBeforeItSyncedLetsTheMatchGoOn)
 	_events->EmitEvent(AbsenceChosenEvent{.choice = AbsenceChoice::Continue});
 
 	EXPECT_EQ(pauses, (std::vector{true, false}));
-	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
+	EXPECT_EQ(GameState::Playing, _phase);
 }
 
 // a player leaving a running match holds it and asks the ones still in - the pause key does not answer the panel
@@ -574,17 +576,17 @@ TEST_F(NetworkGameStateTest, APlayerLeavingHoldsTheMatchAndAsksTheRest)
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P1});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P2});
-	ASSERT_EQ(GameState::Playing, _stateManager->GetState());
+	ASSERT_EQ(GameState::Playing, _phase);
 
 	_events->EmitEvent(ServerInDisconnectEvent{.reason = DisconnectReason::GameOver, .slot = PlayerSlot::P2});
 
 	ASSERT_TRUE(asked.has_value());
 	EXPECT_EQ(asked->seats, (std::array{Absence::None, Absence::Left, Absence::None, Absence::None}));
-	EXPECT_EQ(GameState::Paused, _stateManager->GetState());
+	EXPECT_EQ(GameState::Paused, _phase);
 
 	_events->EmitEvent(SetPauseEvent{.isPaused = false});
 
-	EXPECT_EQ(GameState::Paused, _stateManager->GetState()) << "an unpause answered the panel";
+	EXPECT_EQ(GameState::Paused, _phase) << "an unpause answered the panel";
 }
 
 // an answer lets the match go and nobody is asked any more - playing on keeps the seat for the one who left, not a bot
@@ -624,7 +626,7 @@ TEST_F(NetworkGameStateTest, AnAnswerLetsTheMatchGoAndSaysWhoTakesTheSeat)
 
 		ASSERT_TRUE(asked.has_value());
 		EXPECT_EQ(asked->seats, (std::array<Absence, kSeatCount>{}));
-		EXPECT_EQ(GameState::Playing, _stateManager->GetState());
+		EXPECT_EQ(GameState::Playing, _phase);
 		ASSERT_EQ(changed.size(), 1u);
 		EXPECT_EQ(changed.front().slot, PlayerSlot::P2);
 		EXPECT_EQ(changed.front().from, SeatHolder::Player);
@@ -651,10 +653,10 @@ TEST_F(NetworkGameStateTest, TheOneBackIsShownAndTheMatchWaitsForAnAnswer)
 
 	ASSERT_TRUE(asked.has_value());
 	EXPECT_EQ(asked->seats, (std::array{Absence::None, Absence::Back, Absence::None, Absence::None}));
-	ASSERT_EQ(GameState::Paused, _stateManager->GetState()) << "the match went on before anyone said so";
+	ASSERT_EQ(GameState::Paused, _phase) << "the match went on before anyone said so";
 
 	_events->EmitEvent(AbsenceChosenEvent{.choice = AbsenceChoice::Continue});
-	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
+	EXPECT_EQ(GameState::Playing, _phase);
 }
 
 // a bot takes over the seat of the one who left, and gives it back to the player's first command once they return
@@ -677,7 +679,7 @@ TEST_F(NetworkGameStateTest, ABotHoldsTheSeatOfTheOneWhoLeftUntilTheirFirstComma
 	EXPECT_EQ(taken.front().slot, PlayerSlot::P2);
 	EXPECT_EQ(taken.front().from, SeatHolder::Player);
 	EXPECT_EQ(taken.front().to, SeatHolder::Bot);
-	ASSERT_EQ(GameState::Playing, _stateManager->GetState());
+	ASSERT_EQ(GameState::Playing, _phase);
 
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P2});
 	_events->EmitEvent(ServerClientSyncedEvent{.slot = PlayerSlot::P2});
@@ -787,6 +789,6 @@ TEST_F(NetworkGameStateTest, ARestartForgetsWhoLeft)
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P2});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P3});
 
-	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
+	EXPECT_EQ(GameState::Playing, _phase);
 	EXPECT_FALSE(isPaused) << "the new match is held for the one who left the old one";
 }

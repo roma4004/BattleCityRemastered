@@ -908,9 +908,6 @@
     <ClInclude Include="..\headers\utils\ObjectUtils.h">
       <Filter>headers\utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\headers\utils\PixelUtils.h">
-      <Filter>headers\utils</Filter>
-    </ClInclude>
     <ClInclude Include="..\headers\utils\RandUtils.h">
       <Filter>headers\utils</Filter>
     </ClInclude>

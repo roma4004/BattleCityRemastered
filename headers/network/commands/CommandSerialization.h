@@ -185,7 +185,6 @@ void serialize(Archive& ar, network::commands::TankShot& cmd, const unsigned int
 	ar & cmd.who;
 	ar & cmd.dir;
 	ar & cmd.uuid;
-	ar & cmd.damage;
 }
 
 template<class Archive>

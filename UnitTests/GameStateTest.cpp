@@ -19,6 +19,7 @@ protected:
 	std::shared_ptr<EventSystem> _events{std::make_shared<EventSystem>()};
 	std::unique_ptr<GameStateManager> _stateManager{nullptr};
 	std::vector<GameState> _announced{};
+	GameState _phase{};
 	int _matchStarts{};
 	size_t _phasesBeforeMatchStart{};
 	EventSubscription _stateSub{};
@@ -30,6 +31,7 @@ protected:
 		_stateSub = _events->AddListener([this](const GameStateChangedToEvent& event)
 		{
 			_announced.push_back(event.state);
+			_phase = event.state;
 		});
 		_matchStartSub = _events->AddListener([this](const MatchStartedEvent&)
 		{
@@ -44,14 +46,14 @@ TEST_F(GameStateTest, ALocalMatchStartsOnTheSpotAndNeverEntersTheLobby)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::OnePlayer});
 
-	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
+	EXPECT_EQ(GameState::Playing, _phase);
 	EXPECT_EQ(std::vector{GameState::Playing}, _announced);
 	ASSERT_EQ(_matchStarts, 1);
 	EXPECT_EQ(_phasesBeforeMatchStart, 1u) << "the match started before its phase was announced";
 
 	_events->EmitEvent(ServerClientLostEvent{.slot = PlayerSlot::P1});
 
-	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
+	EXPECT_EQ(GameState::Playing, _phase);
 }
 
 // leaving a pause announces the phase, but it is the same match
@@ -64,7 +66,7 @@ TEST_F(GameStateTest, ResumingFromAPauseStartsNoMatch)
 
 	_events->EmitEvent(PauseStatusEvent{.isPaused = false});
 
-	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
+	EXPECT_EQ(GameState::Playing, _phase);
 	EXPECT_EQ(std::vector{GameState::Playing}, _announced);
 	EXPECT_EQ(_matchStarts, 0);
 }
@@ -74,11 +76,11 @@ TEST_F(GameStateTest, AResetClearsTheResult)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::OnePlayer});
 	_events->EmitEvent(GameFinishedEvent{.state = GameState::Over});
-	ASSERT_EQ(GameState::Over, _stateManager->GetState());
+	ASSERT_EQ(GameState::Over, _phase);
 
 	_events->EmitEvent(GameResetEvent{});
 
-	EXPECT_EQ(GameState::Playing, _stateManager->GetState());
+	EXPECT_EQ(GameState::Playing, _phase);
 }
 
 // a pause from outside - the host's or a hold's - is lifted by a reset, by the pause key, and by one release
@@ -111,10 +113,10 @@ TEST_F(GameStateTest, APauseFromOutsideIsLiftedByAResetThePauseKeyOrOneRelease)
 TEST_F(GameStateTest, AMapThatFailsToLoadTakesThePhaseBackToTheMenu)
 {
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::OnePlayer});
-	ASSERT_EQ(GameState::Playing, _stateManager->GetState());
+	ASSERT_EQ(GameState::Playing, _phase);
 
 	_events->EmitEvent(MapLoadFailedEvent{});
 
-	EXPECT_EQ(GameState::Menu, _stateManager->GetState());
+	EXPECT_EQ(GameState::Menu, _phase);
 	EXPECT_EQ(GameState::Menu, _announced.back());
 }

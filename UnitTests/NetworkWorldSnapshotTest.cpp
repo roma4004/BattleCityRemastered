@@ -5,6 +5,7 @@
 #include "components/EventSystem.h"
 #include "components/GameStatistics.h"
 #include "components/ObstacleSpawner.h"
+#include "components/Sprite.h"
 #include "components/StatisticsData.h"
 #include "components/TankSpawner.h"
 #include "components/WorldSnapshot.h"
@@ -22,7 +23,6 @@
 #include "components/managers/SpawnManager.h"
 #include "components/managers/WorldScaleManager.h"
 #include "entities/EffectTarget.h"
-#include "entities/bonuses/Bonus.h"
 #include "entities/obstacles/Obstacle.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/BulletResetProperty.h"
@@ -170,9 +170,14 @@ protected:
 TEST_F(NetworkWorldSnapshotTest, TheClientLandsInTheHostsMatch)
 {
 	unsigned short clientStage{};
+	GameState clientPhase{};
 	_subs.push_back(_clientEvents->AddListener([&clientStage](const MapLoadedEvent& event)
 	{
 		clientStage = event.stage;
+	}));
+	_subs.push_back(_clientEvents->AddListener([&clientPhase](const GameStateChangedToEvent& event)
+	{
+		clientPhase = event.state;
 	}));
 	_serverEvents->EmitEvent(MapLoadedEvent{.cols = 61u, .rows = 50u, .stage = 3u});
 	_clientEvents->EmitEvent(
@@ -183,7 +188,7 @@ TEST_F(NetworkWorldSnapshotTest, TheClientLandsInTheHostsMatch)
 
 	Replicate();
 
-	EXPECT_EQ(_clientStateManager->GetState(), GameState::Playing);
+	EXPECT_EQ(clientPhase, GameState::Playing);
 	EXPECT_EQ(_clientConfig.battlefieldSize, _hostConfig.battlefieldSize) << "the field overlaps the side bar";
 	EXPECT_EQ(clientStage, 3u);
 	EXPECT_TRUE(stale.expired()) << "the client kept a wall the host never had";
@@ -277,9 +282,11 @@ TEST_F(NetworkWorldSnapshotTest, BulletsAndBonusesArriveAsTheyStand)
 	EXPECT_EQ(clientBullet->GetPos(), bullet->GetPos());
 	EXPECT_EQ(clientBullet->GetDirection(), Direction::RIGHT);
 	EXPECT_EQ(clientBullet->GetAuthor(), Author::Enemy3);
-	const auto bonus{std::dynamic_pointer_cast<Bonus>(ClientObject(settled))};
+	const auto bonus{ClientObject(settled)};
 	ASSERT_NE(bonus, nullptr);
-	EXPECT_TRUE(bonus->GetIsSuper());
+	const std::optional<Sprite> look{bonus->Look()};
+	ASSERT_TRUE(look.has_value());
+	EXPECT_NE(look->rimColor, 0u) << "a super bonus arrived looking like a plain one";
 	ASSERT_EQ(ClientObject(pending), nullptr);
 
 	_clientEvents->EmitEvent(BonusSpawnCompletedEvent{.uuid = pending});

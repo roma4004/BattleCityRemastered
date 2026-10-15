@@ -20,8 +20,6 @@ struct TankShotEvent
 	Author who{};
 	Direction dir;
 	Uuid bulletUuid;
-	//NOTE: the authority's roll, carried so the mirrored shell is the same shell and not a second opinion
-	unsigned int damage{};
 };
 
 struct HealthChangedEvent

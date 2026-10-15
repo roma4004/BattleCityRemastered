@@ -48,18 +48,12 @@ public:
 
 	~Bullet() override;
 
-	[[nodiscard]] unsigned int GetDamage() const noexcept;
-
-	[[nodiscard]] double GetDamageRadius() const noexcept;
-
 	//NOTE: the caliber's speed and not Pawn::GetSpeed - MoveLikeBulletBeh steps the bullet by this one
 	[[nodiscard]] double GetFlightSpeed() const noexcept;
 
 	[[nodiscard]] Uuid GetUuid() const override;
 
 	[[nodiscard]] Uuid GetAuthorUuid() const noexcept;
-
-	[[nodiscard]] unsigned int GetTier() const noexcept;
 
 	void DealDamage(const std::vector<BaseObj*>& objectList);
 
