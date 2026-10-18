@@ -426,6 +426,28 @@ TEST_F(NetworkGameStateTest, TheBotsTakeTheTopSeatsNobodyTookThenTheTopPlayersSe
 	}
 }
 
+// in the lobby the host announces who holds each seat on every join and leave; bots take the top free seats
+TEST_F(NetworkGameStateTest, TheLobbyAnnouncesTheSeatsAsClientsComeAndGo)
+{
+	std::optional<SeatHoldersAnnouncedEvent> announced{};
+	const EventSubscription announcedSub{_events->AddListener([&announced](const SeatHoldersAnnouncedEvent& event)
+	{
+		announced = event;
+	})};
+	_stateManager = std::make_unique<GameStateManager>(_events, MatchSettings{.seats = 4u, .bots = 1u});
+	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
+
+	_events->EmitEvent(ServerClientSeatedEvent{.slot = PlayerSlot::P1});
+	_events->EmitEvent(ServerClientSeatedEvent{.slot = PlayerSlot::P2});
+	ASSERT_TRUE(announced.has_value());
+	EXPECT_EQ(announced->holders,
+			  (std::array{SeatHolder::Player, SeatHolder::Player, SeatHolder::Empty, SeatHolder::Bot}));
+
+	_events->EmitEvent(ServerClientLostEvent{.slot = PlayerSlot::P2});
+	EXPECT_EQ(announced->holders,
+			  (std::array{SeatHolder::Player, SeatHolder::Empty, SeatHolder::Empty, SeatHolder::Bot}));
+}
+
 // a player who took their tank keeps it at the next level - the bot left over does not take it back
 TEST_F(NetworkGameStateTest, ATankTakenFromABotStaysWithItsPlayerAtTheNextLevel)
 {

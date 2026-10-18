@@ -26,7 +26,6 @@ struct TankModelSpec final
 	//NOTE: of the player's reload, above one is slower - every enemy's is, which keeps a field of four playable
 	double reloadCooldownFactor{1.0};
 	double sizeFactor{1.0};
-	unsigned short brickPenetrationTier{2};
 };
 
 //NOTE: the original's four types, told apart by hull speed, shell speed, armor and reload
@@ -64,8 +63,7 @@ struct TankModelSpec final
 								 .shellCaliberFactor = 1.4,
 								 .shellLengthFactor = 1.6,
 								 .reloadCooldownFactor = 3.0,
-								 .sizeFactor = 4.0 / 3.0,
-								 .brickPenetrationTier = 1};
+								 .sizeFactor = 4.0 / 3.0};
 		//NOTE: the yardstick - every figure of GameConfig is this tank's, so all its shares are one
 		case TankModel::Player:
 			return TankModelSpec{};

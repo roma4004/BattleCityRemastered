@@ -17,9 +17,6 @@ namespace
 {
 constexpr double kAtlasCellSize{16.0};
 constexpr int kBonusSpawnFrames{3};
-//NOTE: the bonus icon is a 15x14 box inside its 16x16 cell, framed by a single atlas pixel
-constexpr double kBonusBoxWidth{15.0};
-constexpr double kBonusBoxHeight{14.0};
 
 //NOTE: entity sprites only - UI reads TextureOffset directly and never lands here
 ObjRectangle GetTextureRect(const TextureType texture)
@@ -221,10 +218,12 @@ void TextureManager::DrawRim(const ObjRectangle& textureRect, const ObjRectangle
 						.color = color});
 	};
 
-	emitSlice(0.0, 0.0, kBonusBoxWidth, thickness);
-	emitSlice(0.0, kBonusBoxHeight - thickness, kBonusBoxWidth, thickness);
-	emitSlice(0.0, 0.0, thickness, kBonusBoxHeight);
-	emitSlice(kBonusBoxWidth - thickness, 0.0, thickness, kBonusBoxHeight);
+	constexpr double width{TextureOffset::kBonusBoxWidth};
+	constexpr double height{TextureOffset::kBonusBoxHeight};
+	emitSlice(0.0, 0.0, width, thickness);
+	emitSlice(0.0, height - thickness, width, thickness);
+	emitSlice(0.0, 0.0, thickness, height);
+	emitSlice(width - thickness, 0.0, thickness, height);
 }
 
 void TextureManager::Draw(const AnimatedObject& animation) const

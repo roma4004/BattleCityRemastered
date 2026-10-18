@@ -22,9 +22,6 @@ enum class UiIcon : char8_t
 	SideBarPlayerOne,
 	SideBarPlayerTwo,
 	SideBarStageFlag,
-	SideBarBonusTimer,
-	SideBarBonusHelmet,
-	SideBarBonusShovel,
 	PlatePause,
 	PlateGameOver,
 	PlateGameWon

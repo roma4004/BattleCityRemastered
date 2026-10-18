@@ -6,6 +6,7 @@
 #include "entities/pawns/Tank.h"
 #include "enums/Direction.h"
 #include "enums/Faction.h"
+#include "geometry/Circle.h"
 #include "geometry/ObjRectangle.h"
 #include "geometry/Point.h"
 #include "utils/ColliderUtils.h"
@@ -14,8 +15,11 @@
 #include "utils/RandUtils.h"
 #include <algorithm>
 #include <chrono>
+#include <iterator>
+#include <memory>
 #include <optional>
 #include <random>
+#include <ranges>
 #include <vector>
 
 using namespace std::chrono_literals;
@@ -30,7 +34,7 @@ bool IsClearToFire(const Tank& self, const Direction dir, const BaseObj& target)
 	const double drivenDuringFlight{gap * self.GetSpeed() / self.GetBulletSpeed()};
 
 	//NOTE: the shell blows up mid-length, half its height short of the target; height runs along any flight
-	return gap - drivenDuringFlight >= self.GetBulletDamageRadius() + self.GetBulletHeight() / 2.0;
+	return gap - drivenDuringFlight >= self.GetBulletBlastRadius() + self.GetBulletHeight() / 2.0;
 }
 
 BaseObj* NearestAhead(LineOfSight& lineOfSight, const Direction dir)
@@ -40,27 +44,10 @@ BaseObj* NearestAhead(LineOfSight& lineOfSight, const Direction dir)
 	return obstacles.empty() ? nullptr : obstacles.front();
 }
 
-//NOTE: a bot in the player team is defending the eagle, so it never fires at the fortress
-bool ShouldShootObstacle(const Tank& self, const BaseObj& obj)
-{
-	if (ObjectUtils::IsAlly(self, obj))
-	{
-		return false;
-	}
-
-	if ((!obj.GetIsDestructible() && self.GetTier() <= 2u) || obj.GetIsPenetrable())// skip water, ice, bush
-	{
-		return false;
-	}
-
-	//NOTE: the eagle and the walls around it - a player's bot shooting those would lose the match for its own side
-	return self.GetFaction() == Faction::EnemyTeam || !ObjectUtils::IsFortress(obj);
-}
-
-//NOTE: what the hull is held for - a wall waits, and a shell coming at us is the intercept's business
+//NOTE: what the hull is held still for - an opponent tank, not a wall or a shell (a shell carries a faction too)
 bool IsOpponentTankInSights(const Tank& self, const BaseObj& target)
 {
-	return self.CanShoot() && ObjectUtils::IsOpponent(self, target) && ObjectUtils::AsBullet(target) == nullptr;
+	return self.CanShoot() && ObjectUtils::IsOpponent(self, target) && dynamic_cast<const Bullet*>(&target) == nullptr;
 }
 }//namespace
 
@@ -82,7 +69,7 @@ bool InputProviderForBot::IsShotStoppedOnTheWay(const ObjRectangle& corridor, co
 	const auto stopsIt = [&corridor, &bullet, &self](const std::shared_ptr<BaseObj>& object)
 	{
 		return ObjectUtils::IsAlive(object.get()) && object.get() != &bullet && object.get() != &self
-			   && ObjectUtils::AsBullet(*object) == nullptr && !object->GetIsPenetrable()
+			   && dynamic_cast<const Bullet*>(object.get()) == nullptr && !object->GetIsPenetrable()
 			   && ColliderUtils::IsCollide(corridor, object->GetRect());
 	};
 
@@ -102,7 +89,7 @@ InputProviderForBot::BulletThreat InputProviderForBot::FindBulletThreat(const Ta
 			continue;
 		}
 
-		const Bullet* bullet{ObjectUtils::AsBullet(*object)};
+		const Bullet* bullet{dynamic_cast<const Bullet*>(object.get())};
 		if (bullet == nullptr)
 		{
 			continue;
@@ -225,30 +212,21 @@ bool InputProviderForBot::CanDriveToBonus(const Tank& self, const Direction dir)
 bool InputProviderForBot::ChangeDirIfSeenOpponent(Tank& self, const Direction dir,
 												  const std::vector<BaseObj*>& sideObstacle)
 {
-	if (!self.CanShoot() || sideObstacle.empty())
+	if (sideObstacle.empty() || dir == self.GetDirection())
 	{
 		return false;
 	}
 
-	//NOTE: a bullet carries its shooter's faction, so it used to read as a tank, and the bot drove at the shot
-	if (const BaseObj* const nearestSeenObstacle{sideObstacle.front()};
-		ObjectUtils::IsOpponent(self, *nearestSeenObstacle) && ObjectUtils::AsBullet(*nearestSeenObstacle) == nullptr)
+	const BaseObj& seen{*sideObstacle.front()};
+	if (!IsOpponentTankInSights(self, seen) || !HasNoticed(self, dir, seen) || !IsClearToFire(self, dir, seen))
 	{
-		if (dir == self.GetDirection() || !HasNoticed(self, dir, *nearestSeenObstacle))
-		{
-			return false;
-		}
-
-		if (IsClearToFire(self, dir, *nearestSeenObstacle))
-		{
-			self.SetDirection(dir);
-			PostponeRandomTurn();
-
-			return true;
-		}
+		return false;
 	}
 
-	return false;
+	self.SetDirection(dir);
+	PostponeRandomTurn();
+
+	return true;
 }
 
 //NOTE: the sides are tried in this order, and the first one that triggers wins
@@ -379,34 +357,33 @@ std::optional<Direction> InputProviderForBot::PickRandomDirection(const Tank& se
 	return freePath[pathIndex];
 }
 
-//NOTE: a target only once the two centers line up - caught by a sliver it falls through to the obstacle roll
-bool InputProviderForBot::ShouldShootOpponent(const Tank& self, const BaseObj& obj)
+//NOTE: fire at once only when noticed and centered; an opponent caught by an edge goes to the chance roll like a wall
+bool InputProviderForBot::IsOpponentLinedUp(const Tank& self, const BaseObj& target)
 {
-	if (ObjectUtils::IsAlly(self, obj))
-	{
-		return false;
-	}
+	const Direction heading{self.GetDirection()};
 
-	//NOTE: asked only with the gun loaded - reloading, its one answer is to leave the line
-	if (ObjectUtils::IsOpponent(self, obj) && self.CanShoot())
-	{
-		const Direction heading{self.GetDirection()};
-
-		return HasNoticed(self, heading, obj) && IsCenteredOn(self, heading, obj);
-	}
-
-	return false;
+	return ObjectUtils::IsOpponent(self, target) && HasNoticed(self, heading, target)
+		   && IsCenteredOn(self, heading, target);
 }
 
-//NOTE: asked every frame, so a refusal needs the cooldown - a success does not, the reload paces it
-bool InputProviderForBot::RollShootObstacle(const BaseObj& obj)
+//NOTE: not an ally, breakable, not shot-through, not the eagle a player-side bot defends
+bool InputProviderForBot::MayShootObstacle(const Tank& self, const BaseObj& target)
+{
+	const bool isBreakable{target.GetIsDestructible() || self.GetTier() > 2u};
+	const bool isDefended{self.GetFaction() != Faction::EnemyTeam && ObjectUtils::IsFortress(target)};
+
+	return !ObjectUtils::IsAlly(self, target) && isBreakable && !target.GetIsPenetrable() && !isDefended;
+}
+
+//NOTE: rolled every frame, so a miss starts a cooldown; a hit needs none, the reload paces it
+bool InputProviderForBot::RollShootObstacle(const BaseObj& target)
 {
 	if (!_obstacleShootCooldown.IsCooldownFinish())
 	{
 		return false;
 	}
 
-	const double chance{ObjectUtils::IsFortress(obj)
+	const double chance{ObjectUtils::IsFortress(target)
 							? _gameConfig.botShootFortressChance
 							: _gameConfig.botShootObstacleChance};
 	if (RandUtils::GetRandNumber(std::uniform_real_distribution{0.0, 1.0}) < chance)
@@ -417,6 +394,78 @@ bool InputProviderForBot::RollShootObstacle(const BaseObj& obj)
 	_obstacleShootCooldown.Reset(_gameConfig.botObstacleShootCooldown);
 
 	return false;
+}
+
+//NOTE: no ally or bonus in the blast at the target, nor at each wall behind it up to the first non-wall
+bool InputProviderForBot::SparesAlliesAndBonuses(const Tank& self, const BaseObj& target) const
+{
+	const std::vector<BaseObj*> spared{
+			_allObjects | std::views::transform(ObjectUtils::Raw)
+			| std::views::filter([&self](const BaseObj* const object)
+			{
+				return ObjectUtils::IsAlive(object) && object != &self && dynamic_cast<const Bullet*>(object) == nullptr
+					   && (ObjectUtils::IsBonus(*object) || ObjectUtils::IsAlly(self, *object));
+			})
+			| std::ranges::to<std::vector>()};
+	if (spared.empty())
+	{
+		return true;
+	}
+
+	const Direction dir{self.GetDirection()};
+	const ObjRectangle selfRect{self.GetRect()};
+	//NOTE: the blast centered on the hull's midline, at the face of whatever the shell meets
+	const auto isTakenByBlastAt = [&self, &selfRect, dir, &spared](const BaseObj& met)
+	{
+		const double reach{DirectionUtils::SizeAlong(selfRect, dir) / 2.0
+						   + DirectionUtils::GapTo(selfRect, met.GetRect(), dir)};
+		const Circle blast{.center = DirectionUtils::Moved(selfRect.Center(), reach, dir),
+						   .radius = self.GetBulletBlastRadius()};
+
+		return std::ranges::any_of(spared, [&blast](const BaseObj* const object)
+		{
+			return ColliderUtils::IsCollide(blast, object->GetRect());
+		});
+	};
+
+	if (isTakenByBlastAt(target))
+	{
+		return false;
+	}
+
+	if (!ObjectUtils::IsWall(target))
+	{
+		return true;
+	}
+
+	const FPoint bulletSize{.x = self.GetBulletWidth(), .y = self.GetBulletHeight()};
+	LineOfSight lineOfSight{selfRect, bulletSize, _allObjects, _gameConfig};
+	const std::vector<BaseObj*>& lane{lineOfSight.SideObstacles(dir)};
+	const auto at{std::ranges::find(lane, &target)};
+	if (at == lane.end())
+	{
+		return true;
+	}
+
+	for (const BaseObj* const met: std::ranges::subrange(std::next(at), lane.end()))
+	{
+		if (met->GetIsPenetrable())
+		{
+			continue;
+		}
+
+		if (isTakenByBlastAt(*met))
+		{
+			return false;
+		}
+
+		if (!ObjectUtils::IsWall(*met))
+		{
+			return true;
+		}
+	}
+
+	return true;
 }
 
 bool InputProviderForBot::CanIntercept() const
@@ -517,27 +566,16 @@ bool InputProviderForBot::ShouldShoot(Tank& self)
 
 	//NOTE: the hull may have just turned onto it, so the shot goes along the direction it holds now
 	const BaseObj* const target{TurnOntoNearestSeen(self)};
-	if (target == nullptr || !IsClearToFire(self, self.GetDirection(), *target))
-	{
-		_isLinedUpForShot = false;
-
-		return false;
-	}
-
+	const bool isInReach{target != nullptr && IsClearToFire(self, self.GetDirection(), *target)};
 	//NOTE: asked anew every tick - a target that drove off or a gun on cooldown frees the hull
-	_isLinedUpForShot = IsOpponentTankInSights(self, *target);
+	_isLinedUpForShot = isInReach && IsOpponentTankInSights(self, *target);
 
-	//NOTE: a bonus is driven onto, not shot - going for it is ChooseDirection's business
-	if (ObjectUtils::IsBonus(*target))
+	//NOTE: a reloading bot doesn't hold the line (ChooseDirection frees it); a bonus is driven onto, not shot
+	if (!isInReach || !self.CanShoot() || ObjectUtils::IsBonus(*target))
 	{
 		return false;
 	}
 
-	if (ShouldShootOpponent(self, *target))
-	{
-		return true;
-	}
-
-	//NOTE: a refusal keeps the loaded shot for an opponent, so it is asked only with the gun loaded
-	return self.CanShoot() && ShouldShootObstacle(self, *target) && RollShootObstacle(*target);
+	return IsOpponentLinedUp(self, *target)
+		   || (MayShootObstacle(self, *target) && SparesAlliesAndBonuses(self, *target) && RollShootObstacle(*target));
 }

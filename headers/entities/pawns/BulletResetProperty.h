@@ -11,7 +11,6 @@ struct BulletResetProperty
 {
 	ObjRectangle rect{};
 	Direction dir{};
-	unsigned int health{};
 	Author author{};
 	Uuid authorUuid{};
 	BulletCaliber caliber{};

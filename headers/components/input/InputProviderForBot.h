@@ -122,8 +122,10 @@ class InputProviderForBot final : public IInputProvider
 	[[nodiscard]] std::optional<Direction> PickRandomDirection(const Tank& self, double deltaTime,
 															   bool excludeCurrentDirection = false);
 
-	[[nodiscard]] bool ShouldShootOpponent(const Tank& self, const BaseObj& obj);
-	[[nodiscard]] bool RollShootObstacle(const BaseObj& obj);
+	[[nodiscard]] bool IsOpponentLinedUp(const Tank& self, const BaseObj& target);
+	[[nodiscard]] static bool MayShootObstacle(const Tank& self, const BaseObj& target);
+	[[nodiscard]] bool RollShootObstacle(const BaseObj& target);
+	[[nodiscard]] bool SparesAlliesAndBonuses(const Tank& self, const BaseObj& target) const;
 
 public:
 	InputProviderForBot(const std::vector<std::shared_ptr<BaseObj>>& allObjects, const GameConfig& gameConfig);

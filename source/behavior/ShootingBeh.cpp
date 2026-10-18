@@ -129,7 +129,6 @@ Uuid ShootingBeh::SpawnShell(const ObjRectangle& rect, const std::optional<Uuid>
 	const BulletResetProperty bulletResetProperty{
 			.rect = rect,
 			.dir = _direction,
-			.health = _caliber.health,
 			.author = _author,
 			.authorUuid = _uuid,
 			.caliber = caliber,
@@ -144,8 +143,7 @@ Uuid ShootingBeh::SpawnShell(const ObjRectangle& rect, const std::optional<Uuid>
 	return bullet->GetUuid();
 }
 
-//NOTE: the first row stands at the muzzle whatever is there, as a single shell always did - so point blank
-//only that row goes off, and every row past it needs the cell before it clear
+//NOTE: the first row spawns at the muzzle whatever is there; each next row needs the cell before it clear
 std::vector<Uuid> ShootingBeh::Volley(const std::vector<std::shared_ptr<BaseObj>>& objects)
 {
 	std::vector<Uuid> shots{};

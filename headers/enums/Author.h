@@ -27,6 +27,8 @@ enum class Author : char8_t
 	lastId
 };
 
+inline constexpr std::array kEnemyAuthors{Author::Enemy1, Author::Enemy2, Author::Enemy3, Author::Enemy4};
+
 //NOTE: the wire carries a raw byte, so a value from it lands on no seat unless it names one
 [[nodiscard]] constexpr Author SeatFromWire(const Author author) noexcept
 {

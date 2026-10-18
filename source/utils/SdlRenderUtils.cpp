@@ -1,6 +1,7 @@
 #include "utils/SdlRenderUtils.h"
 #include "geometry/ObjRectangle.h"
 #include "geometry/Point.h"
+#include <algorithm>
 #include <cmath>
 #include <SDL3/SDL_rect.h>
 #include <SDL3/SDL_render.h>
@@ -94,4 +95,27 @@ void SdlRenderUtils::RenderCopyWithClipping(SDL_Renderer* const renderer, SDL_Te
 	const SDL_FRect src{ToFRect(srcRect)};
 	const SDL_FRect dst{ToFRect(dstRect)};
 	SDL_RenderTexture(renderer, texture, &src, &dst);
+}
+
+//NOTE: the spent part is cut off the top in whole atlas rows, so the picture and its black backing stay aligned
+void SdlRenderUtils::DrawBadge(SDL_Renderer* const renderer, SDL_Texture* const atlas, const SDL_FRect& src,
+							   const SDL_FRect& dst, const float spent)
+{
+	const SDL_FRect box{SnapToWindowPixels(renderer, dst)};
+	const float scaleX{box.w / src.w};
+	const float scaleY{box.h / src.h};
+	const float cut{std::floor(spent * src.h)};
+
+	constexpr float halfLine{0.5f};
+	const float blackTop{std::max(cut, halfLine)};
+	const SDL_FRect black{.x = box.x + halfLine * scaleX,
+						  .y = box.y + blackTop * scaleY,
+						  .w = (src.w - 2.f * halfLine) * scaleX,
+						  .h = (src.h - halfLine - blackTop) * scaleY};
+	SDL_SetRenderDrawColor(renderer, 0u, 0u, 0u, 255u);
+	SDL_RenderFillRect(renderer, &black);
+
+	const SDL_FRect restSrc{.x = src.x, .y = src.y + cut, .w = src.w, .h = src.h - cut};
+	const SDL_FRect restDst{.x = box.x, .y = box.y + cut * scaleY, .w = box.w, .h = box.h - cut * scaleY};
+	SDL_RenderTexture(renderer, atlas, &restSrc, &restDst);
 }

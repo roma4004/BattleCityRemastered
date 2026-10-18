@@ -75,13 +75,14 @@ class UiRenderer final
 	void DrawMenu(const RenderMenuEvent& event) const;
 	void DrawPanelTables(const RenderPanelTablesEvent& event) const;
 	void DrawSideBar(const RenderSideBarEvent& event) const;
+	void DrawEnemyEffects(const RenderSideBarEvent& event, int firstEmpty) const;
+	void DrawSideBarBadge(const ObjRectangle& picture, std::optional<float> spent, const SDL_Rect& place) const;
 	void RenderFPS(const RenderFPSEvent& event) const;
 	void DrawPlate(const RenderPlateEvent& event) const;
 
 	//NOTE: one switch with no default - an icon left out is a compiler warning, not an empty square
 	[[nodiscard]] IconSource Icon(UiIcon icon) const;
 	void DrawIcon(UiIcon icon, SDL_Rect dstRect) const;
-	void DrawFadingIcon(UiIcon icon, SDL_Rect dstRect, float faded) const;
 	//NOTE: what a table needs to become places: a word is as wide as the font makes it, a picture as Icon says
 	[[nodiscard]] UiLayout::Measure CellMeasurer(int pointSize, float scale) const;
 	//NOTE: every picture first, then every word under one render scale - each change of it breaks the batch
@@ -99,13 +100,10 @@ class UiRenderer final
 	[[nodiscard]] SDL_Rect MenuPanelRect(int slide) const;
 	[[nodiscard]] float CurrentRenderScale() const;
 
-	//NOTE: the map decides the field, so a plate is placed against it - fixed numbers were the middle
-	//of the first map and stayed where they were when it grew
 	[[nodiscard]] SDL_Rect CenteredInField(int width, int height, double middleShare) const;
-	//NOTE: the field says how wide the plate is, the sprite says what shape - so a bigger map moves it
-	//and grows it without stretching the picture
 	[[nodiscard]] Point PlateSize(const ObjRectangle& sprite, double widthShare) const;
 	[[nodiscard]] int SideBarColumnX() const;
+	[[nodiscard]] SDL_Rect SideBarRect(const ObjRectangle& atlas) const;
 
 public:
 	UiRenderer(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig, const SDL_Config& sdlConfig);

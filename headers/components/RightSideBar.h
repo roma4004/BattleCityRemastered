@@ -7,17 +7,19 @@
 #include "enums/RespawnGroup.h"
 #include "utils/Timer.h"
 #include <array>
-#include <cstddef>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <vector>
 
 struct BonusEffectsChangedEvent;
+struct GameModeAppliedEvent;
 struct GameResetEvent;
 struct MapLoadedEvent;
 struct RespawnCountChangedToEvent;
 struct SeatHoldersAnnouncedEvent;
-struct UiCell;
+struct SideBarEnemyBadge;
+struct SideBarSeat;
 struct UiTable;
 class GameConfig;
 
@@ -35,29 +37,39 @@ class RightSideBar final
 		EffectTarget target{};
 		Author spared{};
 		Timer timer{};
-		std::size_t reserveCell{};
 	};
 
 	std::vector<RunningEffect> _effects{};
+
+	struct EnemyBadge final
+	{
+		Author seat{};
+		BonusType type{};
+		int cell{};
+	};
+
+	//NOTE: a badge keeps its cell until it runs out - the reserve shrinking above it does not move it
+	std::vector<EnemyBadge> _enemyBadges{};
 	const GameConfig& _gameConfig;
 
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
 
 	void Subscribe();
-	[[nodiscard]] UiTable EnemiesTable() const;
-	[[nodiscard]] UiTable CountersTable() const;
-	//NOTE: empty when none - still holds its column
-	[[nodiscard]] UiCell EffectCell(const std::function<bool(const RunningEffect&)>& isIt) const;
-	[[nodiscard]] static UiCell FadingCell(const RunningEffect& effect);
+	void PlaceEnemyBadges();
+	[[nodiscard]] std::vector<SideBarEnemyBadge> EnemyBadges() const;
+	[[nodiscard]] std::optional<float> EnemyBadgeSpent(Author seat, BonusType type) const;
+	[[nodiscard]] std::vector<SideBarSeat> Seats() const;
+	[[nodiscard]] unsigned short LivesOf(PlayerSlot slot) const;
+	[[nodiscard]] std::optional<float> SpentOn(const std::function<bool(const RunningEffect&)>& isIt) const;
+	[[nodiscard]] std::optional<float> HelmetSpent(Author seat) const;
+	[[nodiscard]] static float Spent(const RunningEffect& effect);
 	[[nodiscard]] static bool IsRunning(const RunningEffect& effect);
-	//NOTE: never a clock an enemy took, even in a free-for-all
-	[[nodiscard]] static bool IsOnEnemies(const RunningEffect& effect);
-	//NOTE: a helmet takes its tank's cell, a clock the lowest free one in the frame
-	[[nodiscard]] std::size_t PickCell(BonusType type) const;
-	[[nodiscard]] std::size_t EnemyReserve() const;
+	[[nodiscard]] static bool FreezesEnemyTeam(const RunningEffect& effect);
+	[[nodiscard]] static bool FortifiesBase(const RunningEffect& effect);
 	[[nodiscard]] bool IsWatching() const;
 	[[nodiscard]] UiTable HintTable() const;
+	void OnGameModeApplied(const GameModeAppliedEvent& event);
 	void OnGameReset(const GameResetEvent&);
 	void OnRespawnCountChangedTo(const RespawnCountChangedToEvent& event);
 	void OnMapLoaded(const MapLoadedEvent& event);

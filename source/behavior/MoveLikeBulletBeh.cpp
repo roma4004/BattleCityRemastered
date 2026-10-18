@@ -106,10 +106,16 @@ std::vector<BaseObj*> MoveLikeBulletBeh::GetContacts(
 	return contacts | std::views::transform(ObjectUtils::Raw) | std::ranges::to<std::vector>();
 }
 
+std::vector<BaseObj*> MoveLikeBulletBeh::GetBlastWhereItStands(
+		const std::vector<std::shared_ptr<BaseObj>>& objects) const
+{
+	return GetCircleCollisionObjects(_rect.Center(), objects);
+}
+
 std::vector<BaseObj*> MoveLikeBulletBeh::GetCircleCollisionObjects(
 		const FPoint blowCenter, const std::vector<std::shared_ptr<BaseObj>>& objects) const
 {
-	const Circle circle{.center = blowCenter, .radius = _caliber.damageRadius};
+	const Circle circle{.center = blowCenter, .radius = _caliber.blastRadius};
 
 	//NOTE: the shooter's own tank is hit as ever - only the shells flying with this one are spared
 	auto collisions{objects | std::views::filter([this, &circle](const std::shared_ptr<BaseObj>& obj)

@@ -8,8 +8,7 @@ struct BulletCaliber
 	unsigned int damage{};
 	//NOTE: the shell's own, apart from its damage - spent penetrating walls and on a shell it meets
 	unsigned int health{};
-	double damageRadius{};
+	double blastRadius{};
 	unsigned short tier{};
-	bool penetratesWalls{};
 	FPoint size{};
 };

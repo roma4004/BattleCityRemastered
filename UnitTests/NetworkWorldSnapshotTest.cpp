@@ -24,6 +24,7 @@
 #include "entities/EffectTarget.h"
 #include "entities/obstacles/Obstacle.h"
 #include "entities/pawns/Bullet.h"
+#include "entities/BulletCaliber.h"
 #include "entities/pawns/BulletResetProperty.h"
 #include "entities/pawns/Tank.h"
 #include "enums/Absence.h"
@@ -43,6 +44,7 @@
 #include "network/Serializer.h"
 #include "network/commands/CommandBatch.h"
 #include "network/commands/WorldSnapshot.h"
+#include "utils/TimeUtils.h"
 #include "utils/Uuid.h"
 #include "gtest/gtest.h"
 #include <algorithm>
@@ -53,6 +55,8 @@
 #include <optional>
 #include <variant>
 #include <vector>
+
+using namespace std::chrono_literals;
 
 // The host's field crosses the wire as one command onto a client that has seen none of it
 class NetworkWorldSnapshotTest : public testing::Test
@@ -224,7 +228,7 @@ TEST_F(NetworkWorldSnapshotTest, ObstaclesArriveAsTheyStand)
 	EXPECT_EQ(clientEagle->GetHealth(), eagle->GetHealth());
 }
 
-// a landed tank arrives whole - place, facing, health, tier, shield; a flashing one lands on the host's word
+// a snapshot restores a spawned tank whole - place, facing, health, tier, helmet; a spawning one waits for the host
 TEST_F(NetworkWorldSnapshotTest, TanksArriveAsTheyStand)
 {
 	_serverEvents->EmitEvent(SpawnAnimationFinishedEvent{.uuid = _hostTankSpawns.at(TankType::PLAYER1)});
@@ -265,8 +269,8 @@ TEST_F(NetworkWorldSnapshotTest, BulletsAndBonusesArriveAsTheyStand)
 {
 	const BulletResetProperty property{.rect = {.x = 200.0, .y = 250.0, .w = 9.0, .h = 9.0},
 									   .dir = Direction::RIGHT,
-									   .health = 1,
-									   .author = Author::Enemy3};
+									   .author = Author::Enemy3,
+									   .caliber{.health = 1}};
 	const std::shared_ptr<Bullet> bullet{_hostBulletPool->SpawnBullet(property)};
 	_serverEvents->EmitEvent(AddToSpawnQueueEvent{.obj = bullet});
 	const double size{static_cast<double>(_hostConfig.bonusSize)};
@@ -328,6 +332,8 @@ TEST_F(NetworkWorldSnapshotTest, RunningEffectsArriveWithWhatIsLeftOfThem)
 	_serverEvents->EmitEvent(BonusTimerPickupEvent{.target = Faction::Solo, .spared = Author::Player2});
 	_serverEvents->EmitEvent(BonusHelmetPickupEvent{.author = Author::Enemy3});
 	_serverEvents->EmitEvent(BonusHelmetPickupEvent{.author = Author::Enemy3});
+	constexpr auto elapsed{1s};
+	TimeUtils::Advance(elapsed);
 
 	Replicate();
 
@@ -339,12 +345,10 @@ TEST_F(NetworkWorldSnapshotTest, RunningEffectsArriveWithWhatIsLeftOfThem)
 	EXPECT_EQ(frozen.target, EffectTarget{Faction::Solo});
 	EXPECT_EQ(frozen.spared, Author::Player2);
 	EXPECT_EQ(frozen.duration, duration);
-	EXPECT_GT(frozen.left, std::chrono::milliseconds{});
-	EXPECT_LE(frozen.left, duration);
-	const BonusEffectTimeLeft& shielded{shown->effects[1]};
-	EXPECT_EQ(shielded.type, BonusType::Helmet);
-	EXPECT_EQ(shielded.target, EffectTarget{Author::Enemy3});
-	EXPECT_EQ(shielded.duration, duration * 2);
-	EXPECT_GT(shielded.left, duration);
-	EXPECT_LE(shielded.left, duration * 2);
+	EXPECT_EQ(frozen.left, duration - elapsed);
+	const BonusEffectTimeLeft& helmet{shown->effects[1]};
+	EXPECT_EQ(helmet.type, BonusType::Helmet);
+	EXPECT_EQ(helmet.target, EffectTarget{Author::Enemy3});
+	EXPECT_EQ(helmet.duration, duration * 2);
+	EXPECT_EQ(helmet.left, duration * 2 - elapsed);
 }

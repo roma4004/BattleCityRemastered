@@ -204,7 +204,7 @@ std::expected<void, InitError> SDL_Config::InitFonts()
 
 	fontPath = projectConfig.ResourcePath("Fonts.BattleCity");
 
-	if (font = OpenFont(kFontSizePtMedium);
+	if (font = OpenFont(kFontSizePt);
 		font == nullptr)
 	{
 		return std::unexpected(InitError{.stage = "TTF font loading Error", .detail = SDL_GetError()});

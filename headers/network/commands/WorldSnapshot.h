@@ -70,6 +70,8 @@ struct WorldSnapshot final
 	//NOTE: indexed by RespawnGroup
 	std::array<unsigned short, kRespawnGroupCount> respawnCounts{};
 	StatisticsData statistics{};
+	//NOTE: the seat announce may be in the frame this snapshot replaces, so the snapshot carries it too
+	std::array<SeatHolder, kSeatCount> holders{};
 	//NOTE: a newcomer to a held match is shown why it is held
 	std::array<Absence, kSeatCount> absence{};
 };

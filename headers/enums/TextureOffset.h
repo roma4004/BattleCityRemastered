@@ -32,6 +32,8 @@ struct TextureOffset
 	static constexpr ObjRectangle kHelmetEffect{.x = 256, .y = 144, .w = 16, .h = 16};
 
 	// Bonuses
+	static constexpr double kBonusBoxWidth{15.0};
+	static constexpr double kBonusBoxHeight{14.0};
 	static constexpr ObjRectangle kBonusHelmet{.x = 256, .y = 112, .w = 16, .h = 16};
 	static constexpr ObjRectangle kBonusTimer{.x = 272, .y = 112, .w = 16, .h = 16};
 	static constexpr ObjRectangle kBonusShovel{.x = 288, .y = 112, .w = 16, .h = 16};
@@ -49,7 +51,8 @@ struct TextureOffset
 	// SideBar
 	static constexpr ObjRectangle kEnemyIconBackground{.x = 375, .y = 23, .w = 18, .h = 82};
 	static constexpr ObjRectangle kEnemyIcon{.x = 321, .y = 193, .w = 7, .h = 7};
-	static constexpr ObjRectangle kPlayer1Icon{.x = 375, .y = 135, .w = 19, .h = 18};
-	static constexpr ObjRectangle kPlayer2Icon{.x = 375, .y = 159, .w = 19, .h = 18};
-	static constexpr ObjRectangle kStageNumberFlag{.x = 375, .y = 182, .w = 18, .h = 28};
+	static constexpr ObjRectangle kPlayer1Icon{.x = 375, .y = 135, .w = 18, .h = 18};
+	static constexpr ObjRectangle kPlayer2Icon{.x = 375, .y = 159, .w = 18, .h = 18};
+	static constexpr ObjRectangle kStageNumberFlag{.x = 375, .y = 184, .w = 18, .h = 24};
+	static constexpr ObjRectangle kSideBarGray{.x = 376, .y = 112, .w = 8, .h = 8};
 };

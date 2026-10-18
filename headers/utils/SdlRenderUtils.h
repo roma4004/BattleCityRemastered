@@ -23,4 +23,6 @@ public:
 	static void RenderCopy(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect dstRect);
 	static void RenderCopyWithClipping(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect srcRect,
 									   SDL_Rect dstRect);
+	static void DrawBadge(SDL_Renderer* renderer, SDL_Texture* atlas, const SDL_FRect& src, const SDL_FRect& dst,
+						  float spent);
 };

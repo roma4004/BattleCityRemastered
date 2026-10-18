@@ -44,4 +44,6 @@ public:
 	//NOTE: the first layer the shell runs into - empty when the edge of the field comes first
 	[[nodiscard]] std::vector<BaseObj*> GetContacts(
 			Direction dir, double deltaTime, const std::vector<std::shared_ptr<BaseObj>>& objects) const;
+	[[nodiscard]] std::vector<BaseObj*> GetBlastWhereItStands(
+			const std::vector<std::shared_ptr<BaseObj>>& objects) const;
 };

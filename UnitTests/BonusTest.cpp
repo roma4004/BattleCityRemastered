@@ -26,6 +26,7 @@
 #include "enums/GameMode.h"
 #include "enums/ObstacleType.h"
 #include "enums/InputChannel.h"
+#include "utils/TimeUtils.h"
 #include "utils/UuidUtils.h"
 #include "geometry/Point.h"
 #include "gtest/gtest.h"
@@ -36,7 +37,6 @@
 #include <memory>
 #include <optional>
 #include <string_view>
-#include <thread>
 #include <vector>
 
 using namespace std::chrono_literals;
@@ -60,11 +60,11 @@ protected:
 	GameConfig _gameConfig{};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	unsigned short _tankHealth{100u};
-	unsigned short _bulletHealth{1u};
 	double _tankSize{};
 	double _gridSize{};
 	double _deltaTimeOneFrame{1.0 / 60.0};
-	BulletCaliber _caliber{.speed = 300.0, .damage = 1u, .damageRadius = 12.0, .tier = 1u, .size{.x = 6.0, .y = 5.0}};
+	BulletCaliber _caliber{
+			.speed = 300.0, .damage = 1u, .health = 1, .blastRadius = 12.0, .tier = 1u, .size{.x = 6.0, .y = 5.0}};
 	EventSubscription _spawnQueueSub{};
 
 	void SetUp() override
@@ -112,7 +112,7 @@ protected:
 	std::shared_ptr<Bullet> CreateBullet(const FPoint pos, const Direction dir, const Author author)
 	{
 		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _caliber.size.x, .h = _caliber.size.y};
-		auto bullet{TestUtils::CreateBullet(rect, _bulletHealth, _bulletPool, _events, _caliber, dir,
+		auto bullet{TestUtils::CreateBullet(rect, _bulletPool, _events, _caliber, dir,
 											author)};
 
 		return bullet;
@@ -206,13 +206,13 @@ TEST_F(BonusTest, AnotherPlayersTimerExtendsTheFreeze)
 		timer->PickUpBonus(taker);
 	}
 
-	std::this_thread::sleep_for(225ms);
+	TimeUtils::Advance(225ms);
 	const FPoint frozenAt{enemyBot->GetPos()};
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 	ASSERT_EQ(frozenAt, enemyBot->GetPos()) << "the freeze ended with the first timer's time";
 
-	std::this_thread::sleep_for(125ms);
+	TimeUtils::Advance(125ms);
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -253,7 +253,7 @@ TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 	_bonusSpawner->SpawnBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize}, BonusType::Grenade);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-	ASSERT_EQ(enemyBot->GetHealth(), 100u) << "the grenade went off before anyone reached it";
+	ASSERT_EQ(enemyBot->GetHealth(), 100u) << "the grenade hit the enemy before anyone picked it up";
 
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = true});
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});

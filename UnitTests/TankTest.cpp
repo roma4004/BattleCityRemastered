@@ -370,7 +370,7 @@ TEST_F(TankTest, TopTierVolleyIsHullWide)
 	}
 }
 
-// the lead shell goes off at the edge of the field, and the one behind it flies on through that blast
+// the lead shell deals its damage at the field edge, and the one behind it flies on through that blast
 TEST_F(TankTest, VolleyShellSurvivesTheBlastAhead)
 {
 	CreatePlayer({.x = _tankSize * 2.0, .y = _tankSize * 2.0}, Author::Player1, Direction::UP, 4u);
@@ -394,7 +394,7 @@ TEST_F(TankTest, VolleyShellSurvivesTheBlastAhead)
 	EXPECT_TRUE(behind->GetIsAlive()) << "the blast of the lead shell took the one behind it";
 }
 
-// point blank only the first row goes off - a row born past the wall would be a shot through it
+// point blank only the first row fires - a row spawned past the wall would shoot through it
 TEST_F(TankTest, PointBlankVolleyFiresFirstRowOnly)
 {
 	const auto windowWidth{static_cast<double>(_gameConfig.battlefieldSize.x)};

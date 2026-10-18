@@ -80,14 +80,13 @@ BulletCaliber Tank::BaseCaliber() const
 	constexpr FPoint baseShell{.x = 9.0, .y = 9.0};
 	constexpr double baseBulletSpeed{300.0};
 	constexpr unsigned int baseDamage{30};
-	//NOTE: half the damage - the player's shell hits a tank harder than it digs into a wall
-	constexpr unsigned int baseShellHealth{15};
+	constexpr unsigned int baseShellHealth{10};
 	const FPoint shell{ShellSizeOf(_model, baseShell)};
 
 	return BulletCaliber{.speed = baseBulletSpeed * SpecOf(_model).bulletSpeedFactor,
 						 .damage = DamageOf(_model, baseDamage),
 						 .health = ShellHealthOf(_model, baseShellHealth),
-						 .damageRadius = BlastOf(_model, WorldGeometry::BlastRadiusFor(_gameConfig.tankSize,
+						 .blastRadius = BlastOf(_model, WorldGeometry::BlastRadiusFor(_gameConfig.tankSize,
 																					   shell.y)),
 						 .tier = _tier,
 						 .size = shell};
@@ -496,7 +495,7 @@ double Tank::GetBulletHeight() const noexcept { return _caliber.size.y; }
 
 double Tank::GetBulletSpeed() const noexcept { return _caliber.speed; }
 
-double Tank::GetBulletDamageRadius() const noexcept { return _caliber.damageRadius; }
+double Tank::GetBulletBlastRadius() const noexcept { return _caliber.blastRadius; }
 
 void Tank::OnBonusTimer(const BonusTimerStatusChangeEvent& event)
 {
@@ -541,9 +540,8 @@ void Tank::ApplyTier(const unsigned short tier)
 	_caliber.speed = base.speed * faster;
 	_caliber.damage = MathUtils::RoundTo<unsigned int>(base.damage * (1.0 + kTierStep.damageShare * shellSteps));
 	_caliber.health = MathUtils::RoundTo<unsigned int>(base.health * (1.0 + kTierStep.damageShare * shellSteps));
-	_caliber.damageRadius = base.damageRadius * (1.0 + kTierStep.blastShare * shellSteps);
+	_caliber.blastRadius = base.blastRadius * (1.0 + kTierStep.blastShare * shellSteps);
 	_caliber.tier = _tier;
-	_caliber.penetratesWalls = _tier >= SpecOf(_model).brickPenetrationTier;
 	_shootTimer.cooldown = std::chrono::round<std::chrono::milliseconds>(
 			ReloadOf(_model, kBaseReload) * (1.0 - kTierStep.reloadShare * shellSteps));
 }

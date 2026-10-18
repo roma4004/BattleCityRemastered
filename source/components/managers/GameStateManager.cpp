@@ -70,6 +70,7 @@ void GameStateManager::AnnouncePhase()
 		FillSeats();
 	}
 
+	AnnounceLobbySeats();
 	_events->EmitEvent(GameStateChangedToEvent{.state = _state});
 
 	if (_state == GameState::Playing)
@@ -110,27 +111,32 @@ bool GameStateManager::IsReadyToStart() const noexcept
 		   && (_isStartingAtOnce || players + _bots >= _seatCount);
 }
 
-//NOTE: bots fill empty seats from the top, so a later joiner sits in a free one first; the rest take players' seats
-void GameStateManager::FillSeats()
+//NOTE: bots fill empty seats from the top, so a later joiner sits in a free one first
+std::array<SeatHolder, kSeatCount> GameStateManager::HoldersFor(const std::bitset<kSeatCount>& players) const
 {
+	std::array<SeatHolder, kSeatCount> holders{};
 	std::size_t botsLeft{_bots};
 	for (const std::size_t seat: std::views::iota(std::size_t{}, kSeatCount) | std::views::reverse)
 	{
-		if (_readySeats.test(seat))
+		if (players.test(seat))
 		{
-			_holders[seat] = SeatHolder::Player;
+			holders[seat] = SeatHolder::Player;
 		}
 		else if (seat < _seatCount && botsLeft > 0u)
 		{
-			_holders[seat] = SeatHolder::Bot;
+			holders[seat] = SeatHolder::Bot;
 			--botsLeft;
-		}
-		else
-		{
-			_holders[seat] = SeatHolder::Empty;
 		}
 	}
 
+	return holders;
+}
+
+//NOTE: bots left over take the top seats of players who never drove their tank - those players watch
+void GameStateManager::FillSeats()
+{
+	_holders = HoldersFor(_readySeats);
+	const std::size_t botsLeft{_bots - static_cast<std::size_t>(std::ranges::count(_holders, SeatHolder::Bot))};
 	const auto isWatchable = [this](const std::size_t seat)
 	{
 		return _holders[seat] == SeatHolder::Player && !_drivenSeats.test(seat);
@@ -144,6 +150,18 @@ void GameStateManager::FillSeats()
 	});
 
 	_events->EmitEvent(SeatsFilledEvent{.holders = _holders});
+	AnnounceHolders();
+}
+
+//NOTE: in the lobby, seats as a start now would fill them - the panel shows who is coming
+void GameStateManager::AnnounceLobbySeats()
+{
+	if (!IsHost(_gameMode) || _state != GameState::Lobby)
+	{
+		return;
+	}
+
+	_holders = HoldersFor(_seatedSeats);
 	AnnounceHolders();
 }
 
@@ -277,6 +295,7 @@ void GameStateManager::FreeSeat(const PlayerSlot slot)
 
 	//NOTE: the phase goes first, as on a restart
 	SetState(GameState::Lobby);
+	AnnounceLobbySeats();
 	ForgetAbsence();
 	UpdateHold();
 }
@@ -424,7 +443,12 @@ void GameStateManager::OnHostPhase(const HostPhaseAnnouncedEvent& event)
 
 void GameStateManager::OnClientLeft(const ServerInDisconnectEvent& event) { FreeSeat(event.slot); }
 void GameStateManager::OnClientLost(const ServerClientLostEvent& event) { FreeSeat(event.slot); }
-void GameStateManager::OnClientSeated(const ServerClientSeatedEvent& event) { _seatedSeats.set(SeatIndex(event.slot)); }
+void GameStateManager::OnClientSeated(const ServerClientSeatedEvent& event)
+{
+	_seatedSeats.set(SeatIndex(event.slot));
+	AnnounceLobbySeats();
+}
+
 void GameStateManager::OnClientSynced(const ServerClientSyncedEvent& event) { FinishSync(event.slot); }
 void GameStateManager::OnHostLeft(const ClientInDisconnectEvent&) { LoseHost(); }
 void GameStateManager::OnHostUnreachable(const ClientReconnectAbandonedEvent&) { LoseHost(); }
@@ -433,6 +457,7 @@ void GameStateManager::OnHostLost(const ClientHostLostEvent&) { LoseHost(); }
 void GameStateManager::OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const
 {
 	event.snapshot.phase = _state;
+	event.snapshot.holders = _holders;
 	event.snapshot.absence = _absence;
 }
 

@@ -5,7 +5,6 @@
 #include "components/events/TimingEvents.h"
 #include "enums/GameMode.h"
 #include "enums/GameState.h"
-#include "utils/TimeUtils.h"
 #include <gtest/gtest.h>
 #include <algorithm>
 #include <memory>
@@ -30,9 +29,6 @@ protected:
 			_trace.emplace_back("ready");
 		}));
 	}
-
-	//NOTE: the simulation stops the process-wide game clock outside a match - left stopped, it freezes every timed test after
-	void TearDown() override { TimeUtils::SetPaused(false); }
 
 	//NOTE: the lobby is entered at PostTickUpdate, which only a frame produces
 	void Frame()

@@ -349,6 +349,7 @@ void serialize(Archive& ar, network::commands::WorldSnapshot& snapshot, const un
 	ar & snapshot.effects;
 	ar & snapshot.respawnCounts;
 	ar & snapshot.statistics;
+	ar & snapshot.holders;
 	ar & snapshot.absence;
 }
 

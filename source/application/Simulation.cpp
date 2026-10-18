@@ -20,6 +20,7 @@
 #include "network/ServerNode.h"
 #include "utils/TimeUtils.h"
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <memory>
 #include <vector>
@@ -264,7 +265,10 @@ void Simulation::Tick()
 	//NOTE: read after PreTickUpdate, not before - that is where the keyboard is polled, so a pause
 	//pressed this frame takes effect this frame
 	const bool isRunning{!_isPaused && _gameConfig.gameState != GameState::Lobby};
-	TimeUtils::SetPaused(!isRunning);
+	if (isRunning)
+	{
+		TimeUtils::Advance(duration_cast<TimeUtils::clock::duration>(std::chrono::duration<double>{_deltaTime}));
+	}
 
 	if (isRunning && _gameConfig.IsAuthority())
 	{

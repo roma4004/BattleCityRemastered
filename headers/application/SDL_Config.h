@@ -27,8 +27,7 @@ using AudioHandle = SdlHandle<MIX_Audio, MIX_DestroyAudio>;
 struct SDL_Config final
 {
 	static constexpr auto kWindowTitle{"Battle City remastered"};
-	static constexpr int kFontSizePtSmall{14};
-	static constexpr int kFontSizePtMedium{24};
+	static constexpr int kFontSizePt{14};
 
 	[[nodiscard]] FontHandle OpenFont(int pointSize) const;
 

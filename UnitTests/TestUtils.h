@@ -146,7 +146,7 @@ public:
 			unsigned short tier = 1u, TankModel model = TankModel::Player);
 
 	[[nodiscard]] static std::shared_ptr<Bullet> CreateBullet(
-			ObjRectangle rect, unsigned int health, const std::shared_ptr<BulletPool>& bulletPool,
+			ObjRectangle rect, const std::shared_ptr<BulletPool>& bulletPool,
 			const std::shared_ptr<EventSystem>& events, const BulletCaliber& caliber, Direction dir,
 			Author author, const Uuid& authorUuid = {});
 };

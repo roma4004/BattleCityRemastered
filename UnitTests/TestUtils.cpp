@@ -99,15 +99,13 @@ std::shared_ptr<Tank> TestUtils::CreatePlayer(
 	return tank;
 }
 
-std::shared_ptr<Bullet> TestUtils::CreateBullet(const ObjRectangle rect, const unsigned int health,
-												const std::shared_ptr<BulletPool>& bulletPool,
+std::shared_ptr<Bullet> TestUtils::CreateBullet(const ObjRectangle rect, const std::shared_ptr<BulletPool>& bulletPool,
 												const std::shared_ptr<EventSystem>& events,
 												const BulletCaliber& caliber, const Direction dir,
 												const Author author, const Uuid& authorUuid)
 {
 	const BulletResetProperty property{.rect = rect,
 									   .dir = dir,
-									   .health = health,
 									   .author = author,
 									   .authorUuid = authorUuid,
 									   .caliber = caliber};

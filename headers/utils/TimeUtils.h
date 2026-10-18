@@ -10,5 +10,5 @@ public:
 
 	[[nodiscard]] static time_point Now() noexcept;
 
-	static void SetPaused(bool isPaused);
+	static void Advance(clock::duration elapsed) noexcept;
 };

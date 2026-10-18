@@ -71,7 +71,9 @@ class GameStateManager final
 	void Resume();
 	[[nodiscard]] GameState IdleStateForMode() const;
 	[[nodiscard]] bool IsReadyToStart() const noexcept;
+	[[nodiscard]] std::array<SeatHolder, kSeatCount> HoldersFor(const std::bitset<kSeatCount>& players) const;
 	void FillSeats();
+	void AnnounceLobbySeats();
 	void AnnounceHolders() const;
 
 	void OnGameModeApplied(const GameModeAppliedEvent& event);

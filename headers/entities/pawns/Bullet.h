@@ -4,6 +4,7 @@
 #include "components/Sprite.h"
 #include "entities/BulletCaliber.h"
 #include "enums/DrawLayer.h"
+#include "geometry/ObjRectangle.h"
 #include "utils/Uuid.h"
 #include <memory>
 #include <optional>
@@ -26,13 +27,15 @@ class Bullet final : public Pawn
 	Uuid _authorUuid{};
 	BulletCaliber _caliber{};
 	MoveLikeBulletBeh* _bulletMoveBeh{nullptr};
+	double _depthInWall{};
+	ObjRectangle _wallBack{};
 
 	void Reset(const BulletResetProperty& resetProperty);
 	void OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const;
 	[[nodiscard]] bool CanBreak(const BaseObj& target) const noexcept;
-	[[nodiscard]] bool PenetrateWall(double deltaTime, const std::vector<BaseObj*>& blast);
-	//NOTE: whether it met another shell - one that did is spent by the meeting, not burnt out by itself
-	[[nodiscard]] bool Blast(const std::vector<BaseObj*>& objectList);
+	void MeetShells(const std::vector<BaseObj*>& contacts, const std::vector<BaseObj*>& blast);
+	[[nodiscard]] bool PenetrateWall(const std::vector<BaseObj*>& contacts);
+	void DealDamage(const std::vector<BaseObj*>& blast);
 
 protected:
 	void Subscribe() override;
@@ -54,8 +57,6 @@ public:
 	[[nodiscard]] Uuid GetUuid() const override;
 
 	[[nodiscard]] Uuid GetAuthorUuid() const noexcept;
-
-	void DealDamage(const std::vector<BaseObj*>& objectList);
 
 	[[nodiscard]] std::optional<Sprite> Look() const override;
 };

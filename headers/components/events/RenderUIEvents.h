@@ -1,6 +1,7 @@
 #pragma once
 
 #include "components/UiTable.h"
+#include "enums/BonusType.h"
 #include "enums/UiIcon.h"
 #include "geometry/Point.h"
 #include <cstddef>
@@ -51,8 +52,7 @@ struct PanelCaret
 	std::uint8_t alpha{};
 };
 
-//NOTE: a list hung under a row of the picked table, over the rows below it. While it is down PanelRowsPlacedEvent
-//places its items and then the row it hangs from, not the table's rows
+//NOTE: the list dropped under the picked row; while open, PanelRowsPlacedEvent reports its items and that row only
 struct PanelDropDown
 {
 	std::size_t row{};
@@ -77,8 +77,7 @@ struct RenderPanelTablesEvent
 	std::optional<PanelPick> pick{};
 };
 
-//NOTE: the whole menu in one ask - what travels is the rows themselves, because the panel they stand in,
-//and with it every pixel, belongs to the renderer
+//NOTE: menu content only - where the panel stands and every pixel of it are the renderer's job
 struct RenderMenuEvent
 {
 	int slide{};
@@ -88,8 +87,7 @@ struct RenderMenuEvent
 	UiTable controls{};
 };
 
-//NOTE: where the clickable menu items ended up - the mouse has to hit them where they were drawn, and
-//the point size that decided it is the renderer's own answer
+//NOTE: where the renderer drew the menu items, so a mouse click hits them; the font size is the renderer's choice
 struct MenuTilesPlacedEvent
 {
 	//NOTE: the top left of each tile, in the order the modes stand in
@@ -113,12 +111,37 @@ struct RenderPlateEvent
 	UiIcon plate{};
 };
 
-//NOTE: the side column as two tables - the reserve stands in its frame at the top, the counters under it
+//NOTE: near-black side bar text; alpha spelled out - IntToColor reads it from the top byte, and 0 is invisible
+inline constexpr unsigned int kSideBarTextColor{0xff000002u};
+
+struct SideBarSeat
+{
+	unsigned short lives{};
+	std::optional<float> frozen{};
+	std::optional<float> helmet{};
+};
+
+//NOTE: the reserve fills the enemy frame from the top; badges take the cells it left empty
+inline constexpr int kEnemyFrameCells{20};
+
+//NOTE: an enemy's helmet or free-for-all timer, in the frame cell it took when it started
+struct SideBarEnemyBadge
+{
+	int cell{};
+	BonusType type{};
+	std::optional<float> spent{};
+};
+
 struct RenderSideBarEvent
 {
-	UiTable enemies{};
-	UiTable counters{};
-	//NOTE: under the counters, across the whole bar - what a player watching the bot in their seat is told
+	unsigned short enemyReserve{};
+	std::vector<SideBarEnemyBadge> enemyBadges{};
+	std::optional<float> enemyTeamFrozen{};
+	std::vector<SideBarSeat> seats{};
+	//NOTE: empty while the watching hint replaces the flag
+	std::optional<unsigned short> stage{};
+	std::optional<float> fortified{};
+	//NOTE: tells a player whose seat a bot drives how to take it over
 	UiTable hint{};
 };
 

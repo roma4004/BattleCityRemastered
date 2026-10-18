@@ -187,5 +187,5 @@ public:
 	[[nodiscard]] double GetBulletWidth() const noexcept;
 	[[nodiscard]] double GetBulletHeight() const noexcept;
 	[[nodiscard]] double GetBulletSpeed() const noexcept;
-	[[nodiscard]] double GetBulletDamageRadius() const noexcept;
+	[[nodiscard]] double GetBulletBlastRadius() const noexcept;
 };

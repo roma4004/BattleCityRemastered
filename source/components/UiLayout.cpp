@@ -63,7 +63,7 @@ void UiLayout::Placement::ShiftBy(const Point offset)
 }
 
 UiLayout::Placement UiLayout::Place(const UiTable& table, const Point origin, const int minRowHeight,
-									const Measure& measure, const int columnGap, const int minColumnWidth)
+									const Measure& measure, const int columnGap)
 {
 	std::vector<std::vector<Point>> sizes{};
 	std::vector<int> columnWidths{};
@@ -75,7 +75,7 @@ UiLayout::Placement UiLayout::Place(const UiTable& table, const Point origin, co
 	{
 		std::vector<Point> rowSizes{};
 		rowSizes.reserve(row.cells.size());
-		columnWidths.resize(std::max(columnWidths.size(), row.cells.size()), minColumnWidth);
+		columnWidths.resize(std::max(columnWidths.size(), row.cells.size()));
 		int tallest{minRowHeight};
 
 		for (std::size_t column{}; column < row.cells.size(); ++column)

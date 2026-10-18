@@ -19,6 +19,7 @@
 #include "entities/BulletCaliber.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/Tank.h"
+#include "enums/BonusType.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
 #include "geometry/Point.h"
@@ -102,7 +103,7 @@ protected:
 										 const BulletCaliber& caliber)
 	{
 		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = caliber.size.x, .h = caliber.size.y};
-		auto bullet{TestUtils::CreateBullet(rect, _tankHealth, _bulletPool, _events, caliber, dir,
+		auto bullet{TestUtils::CreateBullet(rect, _bulletPool, _events, caliber, dir,
 											author)};
 
 		return bullet;
@@ -118,7 +119,8 @@ protected:
 	{
 		return BulletCaliber{.speed = tank.GetBulletSpeed(),
 							 .damage = 1u,
-							 .damageRadius = tank.GetBulletDamageRadius(),
+							 .health = 1u,
+							 .blastRadius = tank.GetBulletBlastRadius(),
 							 .tier = 1u,
 							 .size{.x = tank.GetBulletWidth(), .y = tank.GetBulletHeight()}};
 	}
@@ -500,7 +502,7 @@ TEST_F(BotsTest, ABotShootsAnOpponentDownTheLine)
 
 		const auto shots{std::ranges::count_if(_allObjects, [shooter](const std::shared_ptr<BaseObj>& object)
 		{
-			const Bullet* bullet{ObjectUtils::AsBullet(*object)};
+			const Bullet* bullet{dynamic_cast<const Bullet*>(object.get())};
 
 			return bullet != nullptr && bullet->GetAuthor() == shooter;
 		})};
@@ -543,6 +545,55 @@ TEST_F(BotsTest, ABotHoldsFireAtItsOwnSide)
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 		EXPECT_EQ(_allObjects.size(), before);
+	}
+}
+
+// no shot at a wall with an ally or a bonus behind it, however many walls deep; one off the fire line is no reason
+TEST_F(BotsTest, ABotHoldsFireAtAWallWhenTheShotWouldTakeAnAllyOrABonus)
+{
+	struct Behind final
+	{
+		bool isBonus{};
+		double wallCells{};
+		bool isAside{};
+		bool isShot{};
+	};
+
+	constexpr std::array kRows{Behind{.wallCells = 1.0},
+							   Behind{.isBonus = true, .wallCells = 1.0},
+							   Behind{.wallCells = 3.0},
+							   Behind{.isBonus = true, .wallCells = 3.0},
+							   Behind{.wallCells = 3.0, .isAside = true, .isShot = true},
+							   Behind{.isBonus = true, .wallCells = 3.0, .isAside = true, .isShot = true}};
+	for (const auto& [isBonus, wallCells, isAside, isShot]: kRows)
+	{
+		SCOPED_TRACE(testing::Message() << (isBonus ? "bonus" : "ally") << (isAside ? " aside of " : " behind ")
+										<< wallCells << " cells");
+		_events->EmitEvent(GameResetEvent{});
+		_allObjects.clear();
+		CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
+		const ObjRectangle wall{.x = 0.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _gridSize * wallCells};
+		SpawnObstacleArea(wall, ObstacleType::Brick);
+		const FPoint behind{.x = isAside ? _tankSize * 3.0 : 0.0, .y = wall.y + wall.h};
+		if (isBonus)
+		{
+			_bonusSpawner->SpawnBonus({.x = behind.x, .y = behind.y, .w = _tankSize, .h = _tankSize},
+									  BonusType::Helmet);
+		}
+		else
+		{
+			CreateBot(behind, Author::Enemy2, Direction::DOWN);
+		}
+
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+		const auto shots{std::ranges::count_if(_allObjects, [](const std::shared_ptr<BaseObj>& object)
+		{
+			const Bullet* const bullet{dynamic_cast<const Bullet*>(object.get())};
+
+			return bullet != nullptr && bullet->GetAuthor() == Author::Enemy1;
+		})};
+		EXPECT_EQ(shots, isShot ? 1 : 0);
 	}
 }
 

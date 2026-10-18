@@ -125,7 +125,11 @@ void Game::OnServerAddressChosen(const ServerAddressChosenEvent& event)
 	_isPortForwarded = event.isPortForwarded;
 	_routerUrl = event.routerUrl;
 	_isPortNamed = event.address.port != network::kAnyFreePort;
-	//NOTE: a server still up was started on the address before; the link goes first, as in EnterGameMode
+	if (event.mode == GameMode::PlayAsHost)
+	{
+		_gameConfig.networkSeats = event.match.seats;
+	}
+
 	_simulation->LeaveGameMode();
 	_serverProcess.reset();
 

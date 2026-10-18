@@ -16,6 +16,7 @@
 #include "components/managers/RespawnManager.h"
 #include "entities/BaseObj.h"
 #include "entities/pawns/Bullet.h"
+#include "entities/BulletCaliber.h"
 #include "entities/pawns/BulletResetProperty.h"
 #include "network/commands/WorldSnapshot.h"
 #include <algorithm>
@@ -87,7 +88,7 @@ void SpawnManager::OnWorldSnapshotReceived(const WorldSnapshotReceivedEvent& eve
 	std::ranges::for_each(event.snapshot.bullets, [this](const network::commands::BulletSnapshot& bullet)
 	{
 		const BulletResetProperty property{
-				.rect = bullet.rect, .dir = bullet.dir, .health = 1, .author = bullet.author};
+				.rect = bullet.rect, .dir = bullet.dir, .author = bullet.author, .caliber{.health = 1}};
 		_events->EmitEvent(AddToSpawnQueueEvent{.obj = _bulletPool->SpawnBullet(property, bullet.uuid)});
 	});
 }
