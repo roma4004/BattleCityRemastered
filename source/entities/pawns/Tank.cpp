@@ -37,6 +37,7 @@
 #include "enums/Faction.h"
 #include <algorithm>
 #include <chrono>
+#include <cstddef>
 #include <optional>
 #include <ranges>
 
@@ -577,12 +578,14 @@ void Tank::GrowIfPending()
 	}
 }
 
+//NOTE: a cell more every third tier - the player's tank fills a corridor at tier 4, as a heavy one does
 double Tank::SizeOf(const TankModel model, const unsigned short tier, const GameConfig& gameConfig)
 {
-	const auto steps{static_cast<double>(std::clamp(tier, kMinTier, kMaxTier) - kMinTier)};
-	const double side{gameConfig.tankSize * SpecOf(model).sizeFactor * (1.0 + kTierStep.sizeShare * steps)};
+	constexpr unsigned short tiersPerCell{3u};
+	const auto steps{static_cast<std::size_t>(std::clamp(tier, kMinTier, kMaxTier) - kMinTier)};
+	const std::size_t cells{std::min(SpecOf(model).cellSpan + steps / tiersPerCell, WorldGeometry::kMaxTankCellSpan)};
 
-	return std::min(side, gameConfig.gridOffset * static_cast<double>(WorldGeometry::kMaxTankCellSpan));
+	return gameConfig.gridOffset * static_cast<double>(cells);
 }
 
 void Tank::OnBonusStar() { Upgrade(kStarTiers); }

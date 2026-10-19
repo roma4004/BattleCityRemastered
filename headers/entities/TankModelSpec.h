@@ -1,10 +1,12 @@
 #pragma once
 
+#include "components/WorldGeometry.h"
 #include "enums/TankModel.h"
 #include "geometry/Point.h"
 #include "utils/MathUtils.h"
 #include <algorithm>
 #include <chrono>
+#include <cstddef>
 
 //NOTE: shares of the base tank, not absolute numbers - TankModel::Player is the base the rest are read against
 struct TankModelSpec final
@@ -25,7 +27,8 @@ struct TankModelSpec final
 	double shellLengthFactor{1.0};
 	//NOTE: of the player's reload, above one is slower - every enemy's is, which keeps a field of four playable
 	double reloadCooldownFactor{1.0};
-	double sizeFactor{1.0};
+	//NOTE: whole cells, not a share - 2 for a light tank, 3 for a medium one, 4 for a heavy
+	std::size_t cellSpan{WorldGeometry::kTankCellSpan};
 };
 
 //NOTE: the original's four types, told apart by hull speed, shell speed, armor and reload
@@ -44,7 +47,7 @@ struct TankModelSpec final
 								 .shellCaliberFactor = 0.6,
 								 .shellLengthFactor = 0.8,
 								 .reloadCooldownFactor = 3.6,
-								 .sizeFactor = 5.0 / 6.0};
+								 .cellSpan = 2u};
 		case TankModel::Power:
 			return TankModelSpec{.spriteRow = 2,
 								 .healthFactor = 0.6,
@@ -63,7 +66,7 @@ struct TankModelSpec final
 								 .shellCaliberFactor = 1.4,
 								 .shellLengthFactor = 1.6,
 								 .reloadCooldownFactor = 3.0,
-								 .sizeFactor = 4.0 / 3.0};
+								 .cellSpan = 4u};
 		//NOTE: the yardstick - every figure of GameConfig is this tank's, so all its shares are one
 		case TankModel::Player:
 			return TankModelSpec{};
@@ -77,8 +80,7 @@ struct TankModelSpec final
 						 .bulletSpeedFactor = 1.2,
 						 .damageFactor = 1.0 / 3.0,
 						 .shellHealthFactor = 2.0 / 3.0,
-						 .reloadCooldownFactor = 3.0,
-						 .sizeFactor = 11.0 / 12.0};
+						 .reloadCooldownFactor = 3.0};
 }
 
 //NOTE: a color quarter holds the player's four tier rows, then the four enemy models

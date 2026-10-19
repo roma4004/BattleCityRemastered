@@ -141,6 +141,12 @@ void RespawnManager::ResetRespawnStat(const bool keepsPlayerLives)
 
 	for (SpawnSlot& slot: _slots)
 	{
+		//NOTE: a tank that saw the level out lost no life - its seat gets it back to spend on the next map
+		if (keepsPlayerLives && slot.isOnField && !IsEnemyGroup(slot.group))
+		{
+			++_respawnCount[static_cast<std::size_t>(slot.group)];
+		}
+
 		slot.isAvailable = false;
 		slot.isOnField = false;
 	}
