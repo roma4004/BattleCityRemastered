@@ -2,6 +2,9 @@
 
 #include "geometry/Point.h"
 #include "components/EventSystem.h"
+#include "components/SideBarCanvas.h"
+#include "components/SideBarEnemyPainter.h"
+#include "components/SideBarPlayerPainter.h"
 #include "components/UiLayout.h"
 #include "components/UiTable.h"
 #include "components/managers/TextCache.h"
@@ -67,6 +70,9 @@ class UiRenderer final
 	using PlacedTable = std::pair<const UiTable&, const UiLayout::Placement&>;
 
 	mutable TextCache _textCache;
+	SideBarCanvas _sideBarCanvas;
+	SideBarEnemyPainter _enemyPainter;
+	SideBarPlayerPainter _playerPainter;
 
 	void Subscribe();
 	void OnRenderDeviceReset(const RenderDeviceResetEvent&);
@@ -75,8 +81,6 @@ class UiRenderer final
 	void DrawMenu(const RenderMenuEvent& event) const;
 	void DrawPanelTables(const RenderPanelTablesEvent& event) const;
 	void DrawSideBar(const RenderSideBarEvent& event) const;
-	void DrawEnemyEffects(const RenderSideBarEvent& event, int firstEmpty) const;
-	void DrawSideBarBadge(const ObjRectangle& picture, std::optional<float> spent, const SDL_Rect& place) const;
 	void RenderFPS(const RenderFPSEvent& event) const;
 	void DrawPlate(const RenderPlateEvent& event) const;
 
@@ -102,8 +106,6 @@ class UiRenderer final
 
 	[[nodiscard]] SDL_Rect CenteredInField(int width, int height, double middleShare) const;
 	[[nodiscard]] Point PlateSize(const ObjRectangle& sprite, double widthShare) const;
-	[[nodiscard]] int SideBarColumnX() const;
-	[[nodiscard]] SDL_Rect SideBarRect(const ObjRectangle& atlas) const;
 
 public:
 	UiRenderer(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig, const SDL_Config& sdlConfig);

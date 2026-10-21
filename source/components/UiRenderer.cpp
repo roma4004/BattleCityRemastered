@@ -1,4 +1,6 @@
 #include "components/UiRenderer.h"
+#include "components/SideBarCanvas.h"
+#include "components/SideBarPlayerPainter.h"
 #include "components/UiLayout.h"
 #include "components/UiTable.h"
 #include "components/WorldGeometry.h"
@@ -12,12 +14,10 @@
 #include "components/EventSystem.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/RenderUIEvents.h"
-#include "enums/BonusType.h"
 #include "enums/TextureOffset.h"
 #include "geometry/ObjRectangle.h"
 #include <algorithm>
 #include <array>
-#include <cmath>
 #include <cstddef>
 #include <functional>
 #include <optional>
@@ -43,20 +43,6 @@ constexpr int kMenuModeRowHeight{24};
 constexpr Point kMenuIconSize{.x = 30, .y = 30};
 constexpr int kMenuRowPadding{5};
 
-//NOTE: side bar places are atlas coordinates off the reserve frame's corner; one scale keeps the original gaps
-constexpr double kAtlasCell{8.0};
-constexpr double kSideBarScale{2.75};
-//NOTE: a digit fills one atlas cell - a glyph's eight dots, an atlas pixel each
-constexpr int kSideBarPointSize{static_cast<int>(kAtlasCell * kSideBarScale)};
-constexpr int kFpsBoxHeight{60};
-constexpr int kReservePerRow{2};
-constexpr int kReserveRows{kEnemyFrameCells / kReservePerRow};
-constexpr Point kReserveFirstCell{.x = 1, .y = 1};
-//NOTE: a picture inside a cell is inset half an atlas pixel on each side
-constexpr double kCellMargin{0.5};
-//NOTE: badges keep an atlas pixel clear of the pictures above and below
-constexpr double kBadgeMarginDown{1.0};
-
 int PanelRowHeight(const int pointSize)
 {
 	//NOTE: at the full point size - rows and the gaps between tables shrink with the font
@@ -70,45 +56,6 @@ int ScrollBarWidth(const int rowHeight)
 	constexpr int rowShare{4};
 
 	return std::max(rowHeight / rowShare, 2);
-}
-
-int SideBarPixels(const double atlasPixels) { return static_cast<int>(std::lround(atlasPixels * kSideBarScale)); }
-
-Point SideBarSize(const ObjRectangle& atlas)
-{
-	return Point{.x = SideBarPixels(atlas.w), .y = SideBarPixels(atlas.h)};
-}
-
-ObjRectangle AtlasCellOff(const ObjRectangle& picture, const Point offset)
-{
-	return ObjRectangle{.x = picture.x + offset.x, .y = picture.y + offset.y, .w = kAtlasCell, .h = kAtlasCell};
-}
-
-ObjRectangle FrameCell(const ObjRectangle& frame, const std::size_t cell)
-{
-	const auto column{static_cast<int>(cell % kReservePerRow)};
-	const auto row{static_cast<int>(cell / kReservePerRow)};
-	const Point offset{.x = kReserveFirstCell.x + column * static_cast<int>(kAtlasCell),
-					   .y = kReserveFirstCell.y + row * static_cast<int>(kAtlasCell)};
-
-	return AtlasCellOff(frame, offset);
-}
-
-//NOTE: the same whole-pixel inset on both sides - rounding each edge apart would shift the picture off center
-SDL_Rect Inset(const SDL_Rect& place, const double atlasAcross, const double atlasDown)
-{
-	const int across{SideBarPixels(atlasAcross)};
-	const int down{SideBarPixels(atlasDown)};
-
-	return SDL_Rect{.x = place.x + across, .y = place.y + down, .w = place.w - across * 2, .h = place.h - down * 2};
-}
-
-//NOTE: a glyph inks only the top-left 7 of its 8 dots, so it is shifted half a dot to center it in the cell
-ObjRectangle GlyphCells(const ObjRectangle& cells)
-{
-	constexpr double halfDot{0.5};
-
-	return ObjRectangle{.x = cells.x + halfDot, .y = cells.y + halfDot, .w = cells.w, .h = cells.h};
 }
 
 void FillColored(SDL_Renderer* const renderer, const SDL_Color& color, const SDL_Rect& rect)
@@ -145,6 +92,9 @@ UiRenderer::UiRenderer(const std::shared_ptr<EventSystem>& events, const GameCon
 	, _gameConfig{gameConfig}
 	, _sdlConfig{sdlConfig}
 	, _textCache{sdlConfig}
+	, _sideBarCanvas{sdlConfig, gameConfig}
+	, _enemyPainter{_sideBarCanvas}
+	, _playerPainter{_sideBarCanvas}
 {
 	Subscribe();
 }
@@ -439,205 +389,20 @@ void UiRenderer::DrawDropDown(const UiLayout::Placement& picked, const PanelDrop
 					  _textCache.MeasureString("0", pointSize, scale).x);
 }
 
-//NOTE: top to bottom - the fps box, the enemy reserve right under it, the seats and the flag at their atlas places
+//NOTE: the painters draw pictures and place words; the words are written here
 void UiRenderer::DrawSideBar(const RenderSideBarEvent& event) const
 {
-	//NOTE: the lives digit cell, relative to the seat's picture
-	constexpr Point livesCell{.x = 9, .y = 9};
-	//NOTE: badges in the empty row under a seat's picture - the timer under the tank, the helmet under the lives
-	constexpr Point timerCell{.x = 1, .y = 17};
-	constexpr Point helmetCell{.x = 9, .y = 17};
-	//NOTE: with three or four seats each is a row; its cells count from where the first seat's label starts
-	constexpr int rowTimerCell{0};
-	constexpr int rowNumberCell{1};
-	constexpr int rowHelmetCell{3};
-	constexpr int rowLivesCell{4};
-	constexpr double seatRowsTop{1.0};
-	//NOTE: the two cells under the flag's picture holding the stage number, right-aligned
-	constexpr ObjRectangle stageCells{.x = 1, .y = 16, .w = kAtlasCell * 2, .h = kAtlasCell};
-	//NOTE: the shovel badge spot between the flag's cloth and the stage number, two screen pixels clear of both
-	constexpr ObjRectangle fortifiedSpace{.x = stageCells.x + kAtlasCell / 2, .y = 9, .w = kAtlasCell, .h = 7};
-	constexpr double fortifiedMargin{0.75};
+	_enemyPainter.Paint(event.enemies);
 
 	const float scale{CurrentRenderScale()};
-	const UiLayout::Measure measure{CellMeasurer(kSideBarPointSize, scale)};
-	std::vector<UiTable> words{};
-	std::vector<UiLayout::Placement> places{};
-	const auto write = [&words, &places, &measure](UiTable table, const Point at)
+	const SideBarWords words{_playerPainter.Paint(event.players, CellMeasurer(SideBarCanvas::kPointSize, scale),
+												  CellMeasurer(SDL_Config::kFontSizePt, scale))};
+	if (words.hint)
 	{
-		places.push_back(UiLayout::Place(table, at, 0, measure));
-		words.push_back(std::move(table));
-	};
-	const auto line = [](std::string text)
-	{
-		return UiTable{.rows = {UiRow{.cells = {TextCell(std::move(text), kSideBarTextColor)}}}};
-	};
-	const auto topLeft = [](const SDL_Rect& rect) { return Point{.x = rect.x, .y = rect.y}; };
-
-	const ObjRectangle& frame{TextureOffset::kEnemyIconBackground};
-	SdlRenderUtils::RenderCopyWithClipping(_sdlConfig.renderer.get(), _sdlConfig.atlasTexture.get(),
-										   SdlRenderUtils::RectToSdlRect(frame), SideBarRect(frame));
-	const int reserveShown{std::min(static_cast<int>(event.enemyReserve), kEnemyFrameCells)};
-	//NOTE: one cell per reserve tank in order; tanks past the frame's cells are not shown
-	std::ranges::for_each(std::views::iota(0, reserveShown), [this, &frame](const int cell)
-	{
-		const SDL_Rect place{SideBarRect(FrameCell(frame, static_cast<std::size_t>(cell)))};
-		DrawIcon(UiIcon::SideBarEnemyTank, Inset(place, kCellMargin, kCellMargin));
-	});
-	DrawEnemyEffects(event, reserveShown);
-
-	//NOTE: the atlas lays out two seats; with more, each seat is a row as wide as its lives number needs
-	const ObjRectangle& firstSeat{TextureOffset::kPlayer1Icon};
-	const ObjRectangle& flag{TextureOffset::kStageNumberFlag};
-	const bool isRows{event.seats.size() > 2u};
-	const std::size_t livesDigits{std::ranges::fold_left(event.seats | std::views::transform([](const SideBarSeat& seat)
-	{
-		return std::to_string(seat.lives).size();
-	}), std::size_t{1}, std::ranges::max)};
-	const double rowWidth{kAtlasCell * static_cast<double>(rowLivesCell + livesDigits)};
-	const double rowLeft{frame.x + (frame.w - rowWidth) / 2.0};
-	const double rowsTop{firstSeat.y + seatRowsTop};
-
-	//NOTE: one gray block under the seats and the flag, reaching an atlas pixel past the outermost picture
-	const double border{kReserveFirstCell.x};
-	const double seatsBottom{isRows ? rowsTop + kAtlasCell * static_cast<double>(event.seats.size()) + border : flag.y};
-	const double blockBottom{event.stage ? flag.y + flag.h + border : seatsBottom};
-	const ObjRectangle block{.x = isRows ? rowLeft - border : frame.x,
-							 .y = firstSeat.y,
-							 .w = isRows ? rowWidth + border * 2.0 : frame.w,
-							 .h = blockBottom - firstSeat.y};
-	SdlRenderUtils::RenderCopyWithClipping(_sdlConfig.renderer.get(), _sdlConfig.atlasTexture.get(),
-										   SdlRenderUtils::RectToSdlRect(TextureOffset::kSideBarGray),
-										   SideBarRect(block));
-	if (event.stage)
-	{
-		DrawIcon(UiIcon::SideBarStageFlag, SideBarRect(flag));
-		DrawSideBarBadge(TextureOffset::kBonusShovel, event.fortified,
-						 Inset(SideBarRect(ObjRectangle{.x = flag.x + fortifiedSpace.x,
-													  .y = flag.y + fortifiedSpace.y,
-													  .w = fortifiedSpace.w,
-													  .h = fortifiedSpace.h}),
-							   kCellMargin, fortifiedMargin));
+		DrawTables(std::array<PlacedTable, 1>{{{*event.players.hint, *words.hint}}}, SDL_Config::kFontSizePt, scale);
 	}
 
-	if (isRows)
-	{
-		for (const auto& [index, seat]: std::views::zip(std::views::iota(0), event.seats))
-		{
-			const auto cell = [rowLeft, rowTop = rowsTop + kAtlasCell * index](const int column, const int span)
-			{
-				return ObjRectangle{.x = rowLeft + kAtlasCell * column,
-									.y = rowTop,
-									.w = kAtlasCell * span,
-									.h = kAtlasCell};
-			};
-			const auto badgeIn = [this, &cell](const int column)
-			{
-				return Inset(SideBarRect(cell(column, 1)), kCellMargin, kBadgeMarginDown);
-			};
-			const ObjRectangle number{cell(rowNumberCell, rowHelmetCell - rowNumberCell)};
-			DrawSideBarBadge(TextureOffset::kBonusTimer, seat.frozen, badgeIn(rowTimerCell));
-			write(line(std::to_string(index + 1) + "P"), topLeft(SideBarRect(GlyphCells(number))));
-			DrawSideBarBadge(TextureOffset::kBonusHelmet, seat.helmet, badgeIn(rowHelmetCell));
-			write(line(std::to_string(seat.lives)), topLeft(SideBarRect(GlyphCells(cell(rowLivesCell, 1)))));
-		}
-	}
-	else
-	{
-		constexpr std::array pictures{std::pair{UiIcon::SideBarPlayerOne, TextureOffset::kPlayer1Icon},
-									  std::pair{UiIcon::SideBarPlayerTwo, TextureOffset::kPlayer2Icon}};
-		const auto seats{std::views::zip(event.seats, pictures)};
-		for (const auto& [seat, picture]: seats)
-		{
-			const auto& [icon, atlas] = picture;
-			DrawIcon(icon, SideBarRect(atlas));
-			write(line(std::to_string(seat.lives)),
-				  topLeft(SideBarRect(GlyphCells(AtlasCellOff(atlas, livesCell)))));
-		}
-
-		//NOTE: badges go after all pictures - the gray margins of the next seat and of the flag overlap the badge row
-		for (const auto& [seat, picture]: seats)
-		{
-			const ObjRectangle& atlas{picture.second};
-			const auto badgeIn = [this, &atlas](const Point cell)
-			{
-				return Inset(SideBarRect(AtlasCellOff(atlas, cell)), kCellMargin, kBadgeMarginDown);
-			};
-			DrawSideBarBadge(TextureOffset::kBonusTimer, seat.frozen, badgeIn(timerCell));
-			DrawSideBarBadge(TextureOffset::kBonusHelmet, seat.helmet, badgeIn(helmetCell));
-		}
-	}
-
-	if (event.stage)
-	{
-		const std::string number{std::to_string(*event.stage)};
-		const SDL_Rect cells{SideBarRect(GlyphCells(ObjRectangle{.x = flag.x + stageCells.x,
-																 .y = flag.y + stageCells.y,
-																 .w = stageCells.w,
-																 .h = stageCells.h}))};
-		const int width{measure(TextCell(number, kSideBarTextColor)).x};
-		write(line(number), Point{.x = cells.x + cells.w - width, .y = cells.y});
-	}
-	else
-	{
-		//NOTE: in the menu font - twelve letters in the side bar's font would not fit its width
-		const Point hintAt{.x = static_cast<int>(_gameConfig.battlefieldSize.x), .y = SideBarRect(flag).y};
-		const UiLayout::Placement hint{UiLayout::CenteredAcross(
-				UiLayout::Place(event.hint, hintAt, 0, CellMeasurer(SDL_Config::kFontSizePt, scale)), hintAt,
-				static_cast<int>(WorldGeometry::kSideBarWidth))};
-		DrawTables(std::array<PlacedTable, 1>{{{event.hint, hint}}}, SDL_Config::kFontSizePt, scale);
-	}
-
-	DrawTables(std::views::zip(words, places), kSideBarPointSize, scale);
-}
-
-//NOTE: helmets and free-for-all timers stand in the cells they took; the team timer centers on the first two free rows
-void UiRenderer::DrawEnemyEffects(const RenderSideBarEvent& event, const int firstEmpty) const
-{
-	const ObjRectangle& frame{TextureOffset::kEnemyIconBackground};
-	const auto inCell = [this](const ObjRectangle& cell)
-	{
-		return Inset(SideBarRect(cell), kCellMargin, kBadgeMarginDown);
-	};
-
-	std::ranges::for_each(event.enemyBadges, [this, &frame, &inCell](const SideBarEnemyBadge& badge)
-	{
-		const ObjRectangle& picture{badge.type == BonusType::Helmet ? TextureOffset::kBonusHelmet
-																	: TextureOffset::kBonusTimer};
-		DrawSideBarBadge(picture, badge.spent, inCell(FrameCell(frame, static_cast<std::size_t>(badge.cell))));
-	});
-
-	//NOTE: the team timer is centered across two reserve rows
-	constexpr int timerRows{2};
-	const int firstEmptyRow{(firstEmpty + kReservePerRow - 1) / kReservePerRow};
-	const int timerRow{std::min(firstEmptyRow, kReserveRows - timerRows)};
-	const auto halfCell{static_cast<int>(kAtlasCell) / 2};
-	const Point middle{.x = kReserveFirstCell.x + halfCell,
-					   .y = kReserveFirstCell.y + timerRow * static_cast<int>(kAtlasCell) + halfCell};
-	DrawSideBarBadge(TextureOffset::kBonusTimer, event.enemyTeamFrozen, inCell(AtlasCellOff(frame, middle)));
-}
-
-void UiRenderer::DrawSideBarBadge(const ObjRectangle& picture, const std::optional<float> spent,
-								  const SDL_Rect& place) const
-{
-	if (!spent)
-	{
-		return;
-	}
-
-	const SDL_FRect box{.x = static_cast<float>(picture.x),
-						.y = static_cast<float>(picture.y),
-						.w = static_cast<float>(TextureOffset::kBonusBoxWidth),
-						.h = static_cast<float>(TextureOffset::kBonusBoxHeight)};
-	const SDL_FRect room{SdlRenderUtils::ToFRect(place)};
-	const float aspect{box.w / box.h};
-	const float width{std::min(room.w, room.h * aspect)};
-	const float height{width / aspect};
-	const SDL_FRect fitted{.x = room.x + (room.w - width) / 2.f,
-						   .y = room.y + (room.h - height) / 2.f,
-						   .w = width,
-						   .h = height};
-	SdlRenderUtils::DrawBadge(_sdlConfig.renderer.get(), _sdlConfig.atlasTexture.get(), box, fitted, *spent);
+	DrawTables(std::views::zip(words.tables, words.places), SideBarCanvas::kPointSize, scale);
 }
 
 void UiRenderer::RenderFPS(const RenderFPSEvent& event) const
@@ -650,13 +415,14 @@ void UiRenderer::RenderFPS(const RenderFPSEvent& event) const
 	constexpr unsigned int textColor{0xFF8C00FFu};
 	const UiTable fps{.rows = {UiRow{.cells = {TextCell(std::to_string(event.fps), textColor)}}}};
 	const float scale{CurrentRenderScale()};
-	//NOTE: one row as tall as the fps box centers the digits vertically, the column's middle centers them across
+	const SDL_Rect box{_sideBarCanvas.FpsBox()};
+	//NOTE: one row as tall as the box centers the digits vertically
 	const UiLayout::Placement placement{UiLayout::CenteredAcross(
-			UiLayout::Place(fps, Point{}, kFpsBoxHeight, CellMeasurer(kSideBarPointSize, scale)),
-			Point{.x = SideBarColumnX(), .y = 0}, SideBarSize(TextureOffset::kEnemyIconBackground).x)};
+			UiLayout::Place(fps, Point{}, box.h, CellMeasurer(SideBarCanvas::kPointSize, scale)),
+			Point{.x = box.x, .y = box.y}, box.w)};
 
 	const ScopedRenderScale scaled{_sdlConfig.renderer.get(), scale};
-	DrawTableText(fps, placement, kSideBarPointSize, scale);
+	DrawTableText(fps, placement, SideBarCanvas::kPointSize, scale);
 }
 
 void UiRenderer::DrawPlate(const RenderPlateEvent& event) const
@@ -715,14 +481,6 @@ UiRenderer::IconSource UiRenderer::Icon(const UiIcon icon) const
 			return IconSource{.texture = _sdlConfig.ps5Textures[2].get(), .size = kMenuIconSize};
 		case UiIcon::MenuPS5Cross:
 			return IconSource{.texture = _sdlConfig.ps5Textures[1].get(), .size = kMenuIconSize};
-		case UiIcon::SideBarEnemyTank:
-			return sprite(TextureOffset::kEnemyIcon, SideBarSize(TextureOffset::kEnemyIcon));
-		case UiIcon::SideBarPlayerOne:
-			return sprite(TextureOffset::kPlayer1Icon, SideBarSize(TextureOffset::kPlayer1Icon));
-		case UiIcon::SideBarPlayerTwo:
-			return sprite(TextureOffset::kPlayer2Icon, SideBarSize(TextureOffset::kPlayer2Icon));
-		case UiIcon::SideBarStageFlag:
-			return sprite(TextureOffset::kStageNumberFlag, SideBarSize(TextureOffset::kStageNumberFlag));
 		case UiIcon::PlatePause:
 			return sprite(TextureOffset::kPauseText, PlateSize(TextureOffset::kPauseText, pauseShare));
 		case UiIcon::PlateGameOver:
@@ -866,26 +624,4 @@ Point UiRenderer::PlateSize(const ObjRectangle& sprite, const double widthShare)
 	const auto width{static_cast<int>(static_cast<double>(_gameConfig.battlefieldSize.x) * widthShare)};
 
 	return Point{.x = width, .y = static_cast<int>(static_cast<double>(width) * sprite.h / sprite.w)};
-}
-
-//NOTE: x of the reserve frame's left edge; the frame is centered in the side bar
-int UiRenderer::SideBarColumnX() const
-{
-	const int frameWidth{SideBarSize(TextureOffset::kEnemyIconBackground).x};
-
-	return static_cast<int>(_gameConfig.battlefieldSize.x)
-		   + (static_cast<int>(WorldGeometry::kSideBarWidth) - frameWidth) / 2;
-}
-
-//NOTE: each edge rounded separately, so adjacent cells share an edge with no gap
-SDL_Rect UiRenderer::SideBarRect(const ObjRectangle& atlas) const
-{
-	const ObjRectangle& frame{TextureOffset::kEnemyIconBackground};
-	const int left{SideBarColumnX() + SideBarPixels(atlas.x - frame.x)};
-	const int top{kFpsBoxHeight + SideBarPixels(atlas.y - frame.y)};
-
-	return SDL_Rect{.x = left,
-					.y = top,
-					.w = SideBarColumnX() + SideBarPixels(atlas.x + atlas.w - frame.x) - left,
-					.h = kFpsBoxHeight + SideBarPixels(atlas.y + atlas.h - frame.y) - top};
 }

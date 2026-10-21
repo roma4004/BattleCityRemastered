@@ -51,6 +51,15 @@
     <ClCompile Include="..\source\components\managers\TextCache.cpp">
       <Filter>source\components\managers</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\components\SideBarCanvas.cpp">
+      <Filter>source\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\components\SideBarEnemyPainter.cpp">
+      <Filter>source\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\components\SideBarPlayerPainter.cpp">
+      <Filter>source\components</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\components\UiRenderer.cpp">
       <Filter>source\components</Filter>
     </ClCompile>
@@ -79,6 +88,15 @@
     </ClInclude>
     <ClInclude Include="..\headers\components\managers\TextCache.h">
       <Filter>headers\components\managers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\SideBarCanvas.h">
+      <Filter>headers\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\SideBarEnemyPainter.h">
+      <Filter>headers\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\SideBarPlayerPainter.h">
+      <Filter>headers\components</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\components\UiRenderer.h">
       <Filter>headers\components</Filter>

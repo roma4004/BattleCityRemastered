@@ -90,13 +90,15 @@ class Tank final : public Pawn
 		double damageShare{};
 		double blastShare{};
 		double reloadShare{};
+		double sizeShare{};
 	};
 
 	//NOTE: the numbers the player's tank used to gain per star, read back as shares of its own base
 	static constexpr TierGrowth kTierStep{.speedShare = 0.10,
 										  .damageShare = 1.0,
 										  .blastShare = 0.25,
-										  .reloadShare = 0.30};
+										  .reloadShare = 0.30,
+										  .sizeShare = 1.0 / 9.0};
 
 	//NOTE: star and caliber differ only in how far they carry a tank along the same four tiers
 	static constexpr unsigned short kStarTiers{1u};

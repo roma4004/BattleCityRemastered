@@ -267,7 +267,8 @@ void Simulation::Tick()
 	const bool isRunning{!_isPaused && _gameConfig.gameState != GameState::Lobby};
 	if (isRunning)
 	{
-		TimeUtils::Advance(duration_cast<TimeUtils::clock::duration>(std::chrono::duration<double>{_deltaTime}));
+		TimeUtils::Advance(
+				std::chrono::duration_cast<TimeUtils::clock::duration>(std::chrono::duration<double>{_deltaTime}));
 	}
 
 	if (isRunning && _gameConfig.IsAuthority())

@@ -132,17 +132,26 @@ struct SideBarEnemyBadge
 	std::optional<float> spent{};
 };
 
+struct SideBarEnemies
+{
+	unsigned short reserve{};
+	std::vector<SideBarEnemyBadge> badges{};
+	std::optional<float> teamFrozen{};
+};
+
+struct SideBarPlayers
+{
+	std::vector<SideBarSeat> seats{};
+	unsigned short stage{};
+	std::optional<float> fortified{};
+	//NOTE: while a bot drives the client's seat; it replaces the flag
+	std::optional<UiTable> hint{};
+};
+
 struct RenderSideBarEvent
 {
-	unsigned short enemyReserve{};
-	std::vector<SideBarEnemyBadge> enemyBadges{};
-	std::optional<float> enemyTeamFrozen{};
-	std::vector<SideBarSeat> seats{};
-	//NOTE: empty while the watching hint replaces the flag
-	std::optional<unsigned short> stage{};
-	std::optional<float> fortified{};
-	//NOTE: tells a player whose seat a bot drives how to take it over
-	UiTable hint{};
+	SideBarEnemies enemies{};
+	SideBarPlayers players{};
 };
 
 struct RenderFPSEvent

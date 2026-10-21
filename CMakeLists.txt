@@ -34,6 +34,9 @@ set(GAME_PLATFORM_SOURCES
         source/application/UserInput.cpp
         source/components/managers/RenderManager.cpp
         source/components/managers/TextCache.cpp
+        source/components/SideBarCanvas.cpp
+        source/components/SideBarEnemyPainter.cpp
+        source/components/SideBarPlayerPainter.cpp
         source/components/UiRenderer.cpp
         source/utils/SdlRenderUtils.cpp
 )

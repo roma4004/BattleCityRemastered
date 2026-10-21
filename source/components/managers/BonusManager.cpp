@@ -6,6 +6,7 @@
 #include "components/events/ReplicationEvents.h"
 #include "components/events/SpawnEvents.h"
 #include "components/events/TimingEvents.h"
+#include "entities/EffectTarget.h"
 #include "entities/bonuses/Bonus.h"
 #include "enums/Author.h"
 #include "enums/Faction.h"
@@ -221,12 +222,11 @@ void BonusManager::ApplyBonusEffectsOnSpawnTo(const BonusReApplyEvent& event)
 		return;
 	}
 
-	const EffectTarget side{FactionOf(event.author, _gameConfig.Rules())};
-	const auto freezes = [&side, &event](const ActiveEffect& effect)
+	const Faction side{FactionOf(event.author, _gameConfig.Rules())};
+	const bool isFrozen{std::ranges::any_of(_activeEffects, [side, &event](const ActiveEffect& effect)
 	{
-		return effect.type == BonusType::Timer && effect.target == side && effect.spared != event.author;
-	};
-	const bool isFrozen{std::ranges::any_of(_activeEffects, freezes)};
+		return FreezesSeat(effect.type, effect.target, effect.spared, side, event.author);
+	})};
 	_events->EmitEvent(Key(event.uuid), BonusTimerReApplyOnSpawnEvent{.isEnabled = isFrozen});
 
 	StartEffect(BonusType::Helmet, event.author, kRespawnHelmetDuration);

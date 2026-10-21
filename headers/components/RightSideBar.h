@@ -7,7 +7,8 @@
 #include "enums/RespawnGroup.h"
 #include "utils/Timer.h"
 #include <array>
-#include <functional>
+#include <chrono>
+#include <concepts>
 #include <memory>
 #include <optional>
 #include <vector>
@@ -37,6 +38,7 @@ class RightSideBar final
 		EffectTarget target{};
 		Author spared{};
 		Timer timer{};
+		std::chrono::milliseconds duration{};
 	};
 
 	std::vector<RunningEffect> _effects{};
@@ -61,14 +63,15 @@ class RightSideBar final
 	[[nodiscard]] std::optional<float> EnemyBadgeSpent(Author seat, BonusType type) const;
 	[[nodiscard]] std::vector<SideBarSeat> Seats() const;
 	[[nodiscard]] unsigned short LivesOf(PlayerSlot slot) const;
-	[[nodiscard]] std::optional<float> SpentOn(const std::function<bool(const RunningEffect&)>& isIt) const;
+	[[nodiscard]] unsigned short RespawnCountOf(RespawnGroup group) const;
+	[[nodiscard]] std::optional<float> SpentOn(const std::predicate<const RunningEffect&> auto& isIt) const;
 	[[nodiscard]] std::optional<float> HelmetSpent(Author seat) const;
 	[[nodiscard]] static float Spent(const RunningEffect& effect);
 	[[nodiscard]] static bool IsRunning(const RunningEffect& effect);
 	[[nodiscard]] static bool FreezesEnemyTeam(const RunningEffect& effect);
 	[[nodiscard]] static bool FortifiesBase(const RunningEffect& effect);
 	[[nodiscard]] bool IsWatching() const;
-	[[nodiscard]] UiTable HintTable() const;
+	[[nodiscard]] std::optional<UiTable> HintTable() const;
 	void OnGameModeApplied(const GameModeAppliedEvent& event);
 	void OnGameReset(const GameResetEvent&);
 	void OnRespawnCountChangedTo(const RespawnCountChangedToEvent& event);

@@ -15,6 +15,7 @@
 #include "components/events/StatisticsEvents.h"
 #include "entities/BulletCaliber.h"
 #include "entities/TankModelSpec.h"
+#include "entities/obstacles/Obstacle.h"
 #include "entities/pawns/PawnProperty.h"
 #include "entities/pawns/TankResetProperty.h"
 #include "geometry/Point.h"
@@ -37,7 +38,6 @@
 #include "enums/Faction.h"
 #include <algorithm>
 #include <chrono>
-#include <cstddef>
 #include <optional>
 #include <ranges>
 
@@ -81,7 +81,7 @@ BulletCaliber Tank::BaseCaliber() const
 	constexpr FPoint baseShell{.x = 9.0, .y = 9.0};
 	constexpr double baseBulletSpeed{300.0};
 	constexpr unsigned int baseDamage{30};
-	constexpr unsigned int baseShellHealth{10};
+	constexpr unsigned int baseShellHealth{Obstacle::kWallHealth};
 	const FPoint shell{ShellSizeOf(_model, baseShell)};
 
 	return BulletCaliber{.speed = baseBulletSpeed * SpecOf(_model).bulletSpeedFactor,
@@ -578,14 +578,14 @@ void Tank::GrowIfPending()
 	}
 }
 
-//NOTE: a cell more every third tier - the player's tank fills a corridor at tier 4, as a heavy one does
+//NOTE: each tier above the first adds a ninth of the model's own size - a 3-cell tank grows to 4 cells at tier 4
 double Tank::SizeOf(const TankModel model, const unsigned short tier, const GameConfig& gameConfig)
 {
-	constexpr unsigned short tiersPerCell{3u};
-	const auto steps{static_cast<std::size_t>(std::clamp(tier, kMinTier, kMaxTier) - kMinTier)};
-	const std::size_t cells{std::min(SpecOf(model).cellSpan + steps / tiersPerCell, WorldGeometry::kMaxTankCellSpan)};
+	const auto steps{static_cast<double>(std::clamp(tier, kMinTier, kMaxTier) - kMinTier)};
+	const double side{gameConfig.gridOffset * static_cast<double>(SpecOf(model).cellSpan)
+					  * (1.0 + kTierStep.sizeShare * steps)};
 
-	return gameConfig.gridOffset * static_cast<double>(cells);
+	return std::min(side, gameConfig.gridOffset * static_cast<double>(WorldGeometry::kMaxTankCellSpan));
 }
 
 void Tank::OnBonusStar() { Upgrade(kStarTiers); }

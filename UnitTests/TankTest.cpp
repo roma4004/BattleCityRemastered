@@ -615,13 +615,13 @@ TEST_F(TankTest, TankWideGapTakesTheTank)
 	EXPECT_GT(player->GetRect().y, kWallY);
 }
 
-// a caliber grows the tank a cell, and standing on a wall it grows away from it - grown into the wall it would be stuck
-TEST_F(TankTest, CaliberGrowsAwayFromTheWall)
+// a star grows the tank, and standing on a wall it grows away from it - grown into the wall it would be stuck there
+TEST_F(TankTest, StarGrowsAwayFromTheWall)
 {
 	BuildWall(0.0, _tankSize * 3.0);
 	const auto player{CreatePlayer({.x = _tankSize, .y = kWallY - _tankSize}, Author::Player1, Direction::DOWN)};
 
-	_events->EmitEvent(Key(Author::Player1), BonusCaliberPickupEvent{});
+	_events->EmitEvent(Key(Author::Player1), BonusStarPickupEvent{});
 
 	const ObjRectangle hull{player->GetRect()};
 	const auto isInside = [&player, &hull](const std::shared_ptr<BaseObj>& object)
@@ -632,15 +632,15 @@ TEST_F(TankTest, CaliberGrowsAwayFromTheWall)
 	EXPECT_TRUE(std::ranges::none_of(_allObjects, isInside));
 }
 
-// a caliber picked up in an opening cut to the tank's width - grown into the walls it could not drive out of them
-TEST_F(TankTest, CaliberInATightGapGrowsOnceOut)
+// a star picked up in an opening cut to the tank's width - grown into the walls it could not drive out of them
+TEST_F(TankTest, StarInATightGapGrowsOnceOut)
 {
 	const double gapStart{_tankSize * 2.0};
 	BuildWall(0.0, gapStart);
 	BuildWall(gapStart + _tankSize, _tankSize * 2.0);
 	const auto player{CreatePlayer({.x = gapStart, .y = kWallY - _gridSize}, Author::Player1, Direction::DOWN)};
 
-	_events->EmitEvent(Key(Author::Player1), BonusCaliberPickupEvent{});
+	_events->EmitEvent(Key(Author::Player1), BonusStarPickupEvent{});
 
 	EXPECT_GT(player->GetTier(), 1u) << "the model has to change at once, only the size waits";
 	EXPECT_DOUBLE_EQ(player->GetRect().w, _tankSize) << "the tank grew into the walls on both sides";

@@ -18,10 +18,6 @@ enum class UiIcon : char8_t
 	MenuPS5Triangle,
 	MenuPS5Dpad,
 	MenuPS5Cross,
-	SideBarEnemyTank,
-	SideBarPlayerOne,
-	SideBarPlayerTwo,
-	SideBarStageFlag,
 	PlatePause,
 	PlateGameOver,
 	PlateGameWon

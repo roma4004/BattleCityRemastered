@@ -84,11 +84,11 @@ TEST_F(NetworkClientMirrorTest, AMirroredTankGrowsOnlyWhenTheHostSaysItGrew)
 	const auto enemy{CreateBot({.x = 100.0, .y = 100.0}, Author::Enemy1)};
 	const double before{enemy->GetRect().w};
 
-	_events->EmitEvent(Key(enemy->GetUuid()), TierChangedEvent{.tier = 4u, .uuid = enemy->GetUuid()});
+	_events->EmitEvent(Key(enemy->GetUuid()), TierChangedEvent{.tier = 2u, .uuid = enemy->GetUuid()});
 
 	EXPECT_DOUBLE_EQ(enemy->GetRect().w, before) << "the mirror grew where the host had no room";
 
-	const double side{Tank::SizeOf(TankModel::Basic, 4u, _gameConfig)};
+	const double side{Tank::SizeOf(TankModel::Basic, 2u, _gameConfig)};
 	const ObjRectangle grown{.x = 98.0, .y = 96.0, .w = side, .h = side};
 	_events->EmitEvent(Key(enemy->GetUuid()), TankGrewEvent{.rect = grown, .uuid = enemy->GetUuid()});
 

@@ -31,7 +31,6 @@
 #include "utils/MathUtils.h"
 #include "utils/ObjectUtils.h"
 #include "utils/RandUtils.h"
-#include "utils/TimeUtils.h"
 #include "utils/Uuid.h"
 #include "utils/UuidUtils.h"
 #include "utils/WorldQuery.h"
@@ -365,7 +364,6 @@ void TankSpawner::Reset(const GameResetEvent& event)
 {
 	_enemySpawnTimer.cooldown = _gameConfig.enemySpawnCooldown;
 	_enemySpawnTimer.isActive = false;
-	_enemySpawnTimer.activateTime = TimeUtils::Now() - _enemySpawnTimer.cooldown;
 	_delayedSpawns.clear();
 
 	if (!event.keepsPlayerProgress)
@@ -628,7 +626,8 @@ void TankSpawner::RespawnTank(const TankType type, const Uuid uuid, const std::o
 			{
 				RespawnEnemyTanks(type, uuid, rect, model);
 			}
-			else if (_enemySpawnTimer.IsCooldownFinish() && RespawnEnemyTanks(type, uuid, rect, model))
+			else if ((!_enemySpawnTimer.isActive || _enemySpawnTimer.IsCooldownFinish())
+					 && RespawnEnemyTanks(type, uuid, rect, model))
 			{
 				_enemySpawnTimer.Reset();
 			}

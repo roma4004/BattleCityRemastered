@@ -20,8 +20,8 @@
 #include <algorithm>
 #include <array>
 #include <chrono>
+#include <concepts>
 #include <cstddef>
-#include <functional>
 #include <optional>
 #include <ranges>
 #include <variant>
@@ -46,22 +46,20 @@ void RightSideBar::Subscribe()
 
 void RightSideBar::Draw() const
 {
-	const unsigned short enemyReserve{_respawnCounts[static_cast<std::size_t>(RespawnGroup::ENEMY_ALL)]};
-	const std::optional<unsigned short> stage{IsWatching() ? std::nullopt : std::optional{_stageNumber}};
-	_events->EmitEvent(RenderSideBarEvent{.enemyReserve = enemyReserve,
-										  .enemyBadges = EnemyBadges(),
-										  .enemyTeamFrozen = SpentOn(FreezesEnemyTeam),
-										  .seats = Seats(),
-										  .stage = stage,
-										  .fortified = SpentOn(FortifiesBase),
-										  .hint = HintTable()});
+	const unsigned short enemyReserve{RespawnCountOf(RespawnGroup::ENEMY_ALL)};
+	_events->EmitEvent(RenderSideBarEvent{.enemies = SideBarEnemies{.reserve = enemyReserve,
+																	.badges = EnemyBadges(),
+																	.teamFrozen = SpentOn(FreezesEnemyTeam)},
+										  .players = SideBarPlayers{.seats = Seats(),
+																	.stage = _stageNumber,
+																	.fortified = SpentOn(FortifiesBase),
+																	.hint = HintTable()}});
 }
 
 //NOTE: a new badge takes the first empty cell under the reserve; one the reserve grew over is placed anew
 void RightSideBar::PlaceEnemyBadges()
 {
-	const int reserve{std::min(static_cast<int>(_respawnCounts[static_cast<std::size_t>(RespawnGroup::ENEMY_ALL)]),
-							   kEnemyFrameCells)};
+	const int reserve{std::min(static_cast<int>(RespawnCountOf(RespawnGroup::ENEMY_ALL)), kEnemyFrameCells)};
 	std::erase_if(_enemyBadges, [this, reserve](const EnemyBadge& badge)
 	{
 		return badge.cell < reserve || !EnemyBadgeSpent(badge.seat, badge.type);
@@ -111,7 +109,7 @@ std::optional<float> RightSideBar::EnemyBadgeSpent(const Author seat, const Bonu
 
 	return SpentOn([seat](const RunningEffect& effect)
 	{
-		return effect.type == BonusType::Timer && effect.target == EffectTarget{Faction::Solo} && effect.spared != seat;
+		return FreezesSeat(effect.type, effect.target, effect.spared, Faction::Solo, seat);
 	});
 }
 
@@ -120,15 +118,14 @@ std::vector<SideBarSeat> RightSideBar::Seats() const
 	const auto seatOf = [this](const PlayerSlot slot)
 	{
 		const Author seat{AuthorOf(slot)};
-		const auto isFrozen = [seat](const RunningEffect& effect)
-		{
-			const bool isOnSide{effect.target == EffectTarget{FactionOf(seat)}
-								|| effect.target == EffectTarget{Faction::Solo}};
+		const Faction side{FactionOf(seat, _gameConfig.Rules())};
 
-			return effect.type == BonusType::Timer && isOnSide && effect.spared != seat;
-		};
-
-		return SideBarSeat{.lives = LivesOf(slot), .frozen = SpentOn(isFrozen), .helmet = HelmetSpent(seat)};
+		return SideBarSeat{.lives = LivesOf(slot),
+						   .frozen = SpentOn([seat, side](const RunningEffect& effect)
+						   {
+							   return FreezesSeat(effect.type, effect.target, effect.spared, side, seat);
+						   }),
+						   .helmet = HelmetSpent(seat)};
 	};
 
 	return kSlots | std::views::take(_gameConfig.SeatCount()) | std::views::transform(seatOf)
@@ -143,10 +140,15 @@ unsigned short RightSideBar::LivesOf(const PlayerSlot slot) const
 		return 0u;
 	}
 
-	return _respawnCounts[static_cast<std::size_t>(GroupOf(slot))];
+	return RespawnCountOf(GroupOf(slot));
 }
 
-std::optional<float> RightSideBar::SpentOn(const std::function<bool(const RunningEffect&)>& isIt) const
+unsigned short RightSideBar::RespawnCountOf(const RespawnGroup group) const
+{
+	return _respawnCounts[static_cast<std::size_t>(group)];
+}
+
+std::optional<float> RightSideBar::SpentOn(const std::predicate<const RunningEffect&> auto& isIt) const
 {
 	const auto it{std::ranges::find_if(_effects, [&isIt](const RunningEffect& effect)
 	{
@@ -167,7 +169,7 @@ std::optional<float> RightSideBar::HelmetSpent(const Author seat) const
 float RightSideBar::Spent(const RunningEffect& effect)
 {
 	const std::chrono::duration<float> left{effect.timer.TimeLeft(TimeUtils::Now())};
-	const std::chrono::duration<float> duration{effect.timer.cooldown};
+	const std::chrono::duration<float> duration{effect.duration};
 
 	return 1.f - left / duration;
 }
@@ -192,11 +194,11 @@ bool RightSideBar::IsWatching() const
 		   && _holders[SeatIndex(*own)] == SeatHolder::Bot;
 }
 
-UiTable RightSideBar::HintTable() const
+std::optional<UiTable> RightSideBar::HintTable() const
 {
 	if (!IsWatching())
 	{
-		return UiTable{};
+		return std::nullopt;
 	}
 
 	return UiTable{.rows = {UiRow{.cells = {TextCell("MOVE OR FIRE", kSideBarTextColor, UiAlign::Centered)}},
@@ -229,13 +231,11 @@ void RightSideBar::OnBonusEffectsChanged(const BonusEffectsChangedEvent& event)
 {
 	const auto toRunning = [](const BonusEffectTimeLeft& entry)
 	{
-		RunningEffect effect{.type = entry.type,
+		return RunningEffect{.type = entry.type,
 							 .target = entry.target,
 							 .spared = entry.spared,
-							 .timer = Timer{entry.duration}};
-		effect.timer.activateTime -= entry.duration - entry.left;
-
-		return effect;
+							 .timer = Timer{entry.left},
+							 .duration = entry.duration};
 	};
 
 	_effects = event.effects | std::views::transform(toRunning) | std::ranges::to<std::vector>();

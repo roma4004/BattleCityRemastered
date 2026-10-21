@@ -26,9 +26,6 @@ class Obstacle : public BaseObj
 	void SubscribeAsClient();
 
 protected:
-	//NOTE: a quarter of brick or steel - what a shell pays to penetrate one layer deeper
-	static constexpr unsigned int kWallHealth{10};
-
 	//NOTE: empty, not pure - only the eagle has something to hear
 	virtual void Subscribe();
 	virtual void OnDespawned(const DespawnedEvent& event);
@@ -43,6 +40,9 @@ protected:
 			 const GameConfig& gameConfig, ObstacleType obstacleType, CollisionTags collision, DrawLayer layer);
 
 public:
+	//NOTE: a quarter of brick or steel - what a shell pays to penetrate one layer deeper
+	static constexpr unsigned int kWallHealth{10};
+
 	void Activate() override;
 	void Deactivate() override;
 

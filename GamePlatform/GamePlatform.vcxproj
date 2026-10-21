@@ -165,6 +165,9 @@
     <ClCompile Include="..\source\application\UserInput.cpp" />
     <ClCompile Include="..\source\components\managers\RenderManager.cpp" />
     <ClCompile Include="..\source\components\managers\TextCache.cpp" />
+    <ClCompile Include="..\source\components\SideBarCanvas.cpp" />
+    <ClCompile Include="..\source\components\SideBarEnemyPainter.cpp" />
+    <ClCompile Include="..\source\components\SideBarPlayerPainter.cpp" />
     <ClCompile Include="..\source\components\UiRenderer.cpp" />
     <ClCompile Include="..\source\utils\SdlRenderUtils.cpp" />
   </ItemGroup>
@@ -177,6 +180,9 @@
     <ClInclude Include="..\headers\application\UserInput.h" />
     <ClInclude Include="..\headers\components\managers\RenderManager.h" />
     <ClInclude Include="..\headers\components\managers\TextCache.h" />
+    <ClInclude Include="..\headers\components\SideBarCanvas.h" />
+    <ClInclude Include="..\headers\components\SideBarEnemyPainter.h" />
+    <ClInclude Include="..\headers\components\SideBarPlayerPainter.h" />
     <ClInclude Include="..\headers\components\UiRenderer.h" />
     <ClInclude Include="..\headers\utils\SdlRenderUtils.h" />
   </ItemGroup>
