@@ -46,8 +46,7 @@ struct UiRow final
 	[[nodiscard]] bool operator==(const UiRow& rhs) const = default;
 };
 
-//NOTE: what is shown, with no pixel in it - rows of cells that stand in columns. Only the side that
-//measures the text can say how wide a column is, so the pixels are worked out there.
+//NOTE: no pixels - column widths come from whoever measures the text
 struct UiTable final
 {
 	std::vector<UiRow> rows{};

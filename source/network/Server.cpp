@@ -154,8 +154,7 @@ void Server::Receive()
 									   return;
 								   }
 
-								   //NOTE: one datagram's error - Windows reports a peer that went away on
-								   //the next receive, and the socket itself is fine
+								   //NOTE: one datagram's error - a gone peer, reported by Windows
 								   if (!ec)
 								   {
 									   OnDatagram(std::string_view{_receiveBuffer.data(), size}, Clock::now());
@@ -219,8 +218,7 @@ void Server::RefuseSeat(const udp::endpoint& endpoint, const std::uint32_t conne
 void Server::Seat(const udp::endpoint& endpoint, const std::uint32_t connectionId, const std::string_view hello,
 				  const Clock::time_point now)
 {
-	//NOTE: a console that stopped taking clients answers like a full server - the dialler waits instead of
-	//burning its retries on silence
+	//NOTE: not accepting answers like a full server - the client waits instead of spending its retries on silence
 	if (!_isAccepting.load(std::memory_order_acquire))
 	{
 		RefuseSeat(endpoint, connectionId, now);
@@ -398,8 +396,7 @@ void Server::OnSendNetworkFrame(const SendNetworkFrameEvent&)
 				snapshot = TakeWorldSnapshot();
 			}
 
-			//NOTE: a lobby has no field, and the debt stands until there is one - cleared here it would
-			//leave whoever readied first playing on a field nobody ever sent him
+			//NOTE: a lobby has no field, so the debt stays until there is one - cleared, the first ready gets no field
 			if (*snapshot)
 			{
 				session->ClearSnapshotDebt();
@@ -425,8 +422,7 @@ void Server::OnMapLoaded(const MapLoadedEvent& event)
 	_match.map = event.name;
 }
 
-//NOTE: everyone, not only the one who sat down - the seat's lives may have been given back, and only the
-//field says so. The match is held while it goes out, so nobody sees it jump
+//NOTE: to everyone - the seat's lives may have been given back, only the field says so; the match is held meanwhile
 void Server::OnSeatHolderChanged(const SeatHolderChangedEvent&) const
 {
 	std::ranges::for_each(CopySessions(), [](const std::shared_ptr<Session>& session) { session->OweSnapshot(); });

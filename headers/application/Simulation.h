@@ -55,14 +55,11 @@ class Simulation final
 	bool _isPaused{};
 	//NOTE: the link and the lobby arrive in either order, so the ready waits for both
 	bool _isLinkUp{};
-	//NOTE: derived from the phase, not latched, so a match starting later in the same frame clears a
-	//lobby entry that no longer applies. Acted on at PostTickUpdate
+	//NOTE: follows the phase, not latched - a match started later in the frame cancels it; handled at PostTickUpdate
 	bool _isEnterLobbyPending{};
-	//NOTE: set when the map was advanced and read by the reset that starts the match - the two are a
-	//phase change apart, and on a server several ready signals apart
+	//NOTE: set by StartNextLevel, read by the next GameResetEvent, which on a server waits for every ready
 	bool _isNextLevel{};
-	//NOTE: the ask is answered a step later - every listener of it reads the field that is still standing,
-	//and the reset that tears the field down must not run inside their dispatch
+	//NOTE: handled at PostTickUpdate - the reset must not clear the field inside NextLevelRequestedEvent's dispatch
 	bool _isNextLevelPending{};
 
 	LevelRotation _levels{};

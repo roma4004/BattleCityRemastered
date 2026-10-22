@@ -65,8 +65,6 @@ private:
 	void Receive();
 	void OnDatagram(std::string_view datagram, Clock::time_point now);
 
-	//NOTE: the seat is the one FindFreeSlot picks - the order clients arrive in is the order they sit, unless
-	//one sat here before
 	void Seat(const udp::endpoint& endpoint, std::uint32_t connectionId, std::string_view hello,
 			  Clock::time_point now);
 
@@ -81,8 +79,7 @@ private:
 
 	[[nodiscard]] std::vector<std::shared_ptr<Session>> CopySessions() const;
 
-	//NOTE: called with _sessionsMutex held - the search and the session that takes the seat have to
-	//be one step, or two clients arriving back to back get the same one
+	//NOTE: called under _sessionsMutex - search and seating are one step, or two clients get the same seat
 	[[nodiscard]] std::optional<PlayerSlot> FindFreeSlot(const udp::endpoint& endpoint) const;
 
 	//NOTE: what the beacon answers with, so it is taken under the mutex like any other read of the seats
@@ -104,12 +101,10 @@ private:
 	void OnClientSeated(const ServerClientSeatedEvent&);
 
 	udp::socket _socket;
-	//NOTE: written by the console on the game thread, read where a hello lands on the network one - UDP has
-	//no acceptor to close, so the socket stays bound and the hello is turned away
+	//NOTE: set by the console on the game thread, read on the network one; UDP has no acceptor, so hellos are refused
 	std::atomic_bool _isAccepting{true};
 	const uint16_t _boundPort;
-	//NOTE: its seats held to one to four - every client is told the match as it is played, the map it is on
-	//now included, so it is written under _sessionsMutex
+	//NOTE: seats clamped to 1-4; clients are told the current match, map included, so written under _sessionsMutex
 	MatchSettings _match;
 	//NOTE: after _boundPort - it answers with that number, so it may not be built before there is one
 	DiscoveryBeacon _beacon;

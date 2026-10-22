@@ -30,8 +30,7 @@ ReplicationApplier::ReplicationApplier(const std::shared_ptr<EventSystem>& event
 
 void ReplicationApplier::Apply(const commands::AnyCommand& command)
 {
-	//NOTE: the lambda is the callable std::visit wants, so Emit stays a named private overload set
-	//rather than the class pretending to be a functor
+	//NOTE: the lambda is std::visit's callable, so Emit stays a private overload set rather than a functor
 	_queue.Enqueue([this, command] { std::visit([this](const auto& alternative) { Emit(alternative); }, command); });
 }
 
@@ -115,8 +114,7 @@ void ReplicationApplier::Emit(const commands::KeyStateChange& command) const
 	Log::Info("ReplicationApplier: unexpected signal " + std::to_string(static_cast<int>(command.action)));
 }
 
-//NOTE: one command fans back out into eight local types - StatisticsType is the discriminator the
-//host wrote, so this is the exact inverse of the statistics half of the host bindings
+//NOTE: one command back into eight local types by StatisticsType - the inverse of BindHostStatistics
 void ReplicationApplier::Emit(const commands::StatisticsChange& command) const
 {
 	const Author who{SeatFromWire(command.who)};
@@ -153,8 +151,7 @@ void ReplicationApplier::Emit(const commands::StatisticsChange& command) const
 
 void ReplicationApplier::Emit(const commands::BonusSpawn& command) const
 {
-	//NOTE: the type indexes the bonus catalogue further down, so a wire byte outside the enum
-	//would read past its end - checked here, where the untrusted value enters
+	//NOTE: the type indexes the bonus catalogue, so a wire byte outside the enum is stopped here
 	if (!IsSpawnableBonus(command.bonusType))
 	{
 		Log::Error("ReplicationApplier: bonus type " + std::to_string(static_cast<int>(command.bonusType))
@@ -174,8 +171,7 @@ void ReplicationApplier::Emit(const commands::SlotAssignment& command) const
 	_events->EmitEvent(PlayerSlotAssignedEvent{.slot = command.slot, .match = command.match});
 }
 
-//NOTE: the mirror is replaced, not patched - the reset first, then the phase before the field, since
-//entering a match clears it
+//NOTE: replaced, not patched - the reset first, then the phase before the field, since entering a match clears it
 void ReplicationApplier::Emit(const commands::WorldSnapshot& command) const
 {
 	const auto isSpawnable = [](const BonusSpawnedEvent& bonus) { return IsSpawnableBonus(bonus.type); };
@@ -189,8 +185,7 @@ void ReplicationApplier::Emit(const commands::WorldSnapshot& command) const
 	_events->EmitEvent(GameResetEvent{});
 	_events->EmitEvent(HostPhaseAnnouncedEvent{.phase = command.phase});
 
-	//NOTE: the field is sized before anything is put on it; a snapshot taken before the host loaded
-	//a map carries zeros, and no size at all is better than a field of none
+	//NOTE: the field is sized first; a snapshot from before the host loaded a map carries zeros and sizes nothing
 	if (command.map.cols != 0u && command.map.rows != 0u)
 	{
 		_events->EmitEvent(command.map);
@@ -229,8 +224,7 @@ void ReplicationApplier::Emit(const commands::PortForwardingChange& command) con
 
 void ReplicationApplier::Emit(const commands::BonusStatus& command) const
 {
-	//NOTE: only the bonuses whose effect the client cannot see any other way arrive here - a star and a
-	//caliber land as a TierChange, so either of them is as wrong as a byte outside the enum
+	//NOTE: only bonuses the client cannot see otherwise - a star or a caliber comes as TierChange, so is invalid here
 	const Author author{SeatFromWire(command.author)};
 	switch (command.bonusType)
 	{

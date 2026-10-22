@@ -36,16 +36,14 @@ class RenderManager final
 
 	static constexpr unsigned int kGrayColor{0x808080u};
 
-	//NOTE: both halves of the caption - the mode arrives on entering a match, the seat only once
-	//the server has answered, so the title is rebuilt rather than written in one go
+	//NOTE: the title is rebuilt from both - the mode comes on entering a match, the seat once the server answers
 	GameMode _titleMode{};
 	std::optional<PlayerSlot> _titleSlot{};
 
 	void Subscribe();
 	void OnWorldGeometryChanged(const WorldGeometryChangedEvent&);
 	void OnWindowSizeChangedTo(const WindowSizeChangedToEvent&);
-	//NOTE: a letterbox only ever fills what the window has and the field does not - give the window the
-	//field's own proportions and there is nothing left to fill
+	//NOTE: resizes the window to the field's aspect, so the letterbox has nothing to fill
 	void SnapWindowToLogicalAspect() const;
 	void OnRenderTargetsReset(const RenderTargetsResetEvent&);
 	void OnRenderDeviceReset(const RenderDeviceResetEvent&);

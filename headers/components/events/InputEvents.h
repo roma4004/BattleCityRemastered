@@ -26,8 +26,7 @@ struct PauseStatusEvent
 	bool isPaused;
 };
 
-//NOTE: a client joining a running match is catching up, or a player left it and the rest have not said what
-//to do - the match stands still whatever the players ask for
+//NOTE: a joining client is catching up, or the players have not decided about a leaver - the match stands still
 struct MatchHoldChangedEvent
 {
 	bool isHeld;
@@ -106,7 +105,7 @@ struct PanelRowClickedEvent
 	std::size_t symbol;
 };
 
-//NOTE: and the one the pointer moved onto
+//NOTE: the row of PanelRowsPlacedEvent the pointer moved onto
 struct PanelRowHoveredEvent
 {
 	std::size_t row;

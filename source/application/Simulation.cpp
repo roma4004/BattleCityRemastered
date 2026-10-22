@@ -104,8 +104,7 @@ void Simulation::OnGameStateChangedTo(const GameStateChangedToEvent& event)
 
 void Simulation::OnGameModeChangedTo(const GameModeChangedToEvent& event)
 {
-	//NOTE: the old node goes first - assigning over it would build the new one (same port, new
-	//connect) while the outgoing one still holds both
+	//NOTE: reset first - assigning over it would build the new node while the old one still holds the port
 	_networkNode.reset();
 
 	_boundPort = 0u;
@@ -120,8 +119,7 @@ void Simulation::OnGameModeChangedTo(const GameModeChangedToEvent& event)
 	}
 	else if (IsClient(event.mode))
 	{
-		//NOTE: a port nobody named is a free one, which only a server can use - a client has nothing to
-		//dial yet. The game watches for a server to publish one and comes back here with it
+		//NOTE: port 0 is for servers only - a client waits until Game finds a published port and comes back here
 		if (_gameConfig.serverAddress.port == network::kAnyFreePort)
 		{
 			Log::Info("no server port to join yet - waiting for the server to tell it");
@@ -133,8 +131,7 @@ void Simulation::OnGameModeChangedTo(const GameModeChangedToEvent& event)
 	}
 }
 
-//NOTE: the reset empties the field, the map fills it. The map goes last so a failed load has the final
-//say - it puts the menu back up, and nothing here paints over that
+//NOTE: the map goes last so a failed load can bring the menu back
 void Simulation::OnMatchStarted(const MatchStartedEvent&)
 {
 	if (!_isNextLevel)
@@ -151,8 +148,7 @@ void Simulation::OnMatchStarted(const MatchStartedEvent&)
 	_events->EmitEvent(LoadMapEvent{});
 }
 
-//NOTE: a client only asks - the binding puts this on the wire, and the answer comes back as the phase
-//the authority announces, so both machines leave on the same map
+//NOTE: a client only asks over the wire; the authority's phase change brings both machines to the same map
 void Simulation::OnNextLevelRequested(const NextLevelRequestedEvent&)
 {
 	if (IsClient(_gameConfig.gameMode))
@@ -163,8 +159,7 @@ void Simulation::OnNextLevelRequested(const NextLevelRequestedEvent&)
 	_isNextLevelPending = true;
 }
 
-//NOTE: the map is named before the match is torn down, the way the console does it - the reset that
-//follows carries the level flag, so the players keep what they earned on the one they just won
+//NOTE: the map is chosen before the teardown; the following reset keeps the players' progress from the won level
 void Simulation::StartNextLevel()
 {
 	_gameConfig.mapPath = _levels.PathAfter(_gameConfig.mapPath);
@@ -180,8 +175,7 @@ void Simulation::StartNextLevel()
 		return;
 	}
 
-	//NOTE: the phase is asked to start over, and the reset comes with the match that follows - two resets
-	//in one dispatch would have the second one load the map the first then throws away
+	//NOTE: the reset comes with the next match - two resets in one dispatch would load a map, then throw it away
 	_events->EmitEvent(MatchRestartRequestedEvent{});
 }
 
@@ -213,8 +207,7 @@ void Simulation::OnHostLost(const ClientHostLostEvent&) { _isLinkUp = false; }
 //NOTE: the mode is kept - dropping it tears the link down, and nobody could reconnect
 void Simulation::EnterLobby()
 {
-	//NOTE: carries the level flag too - on a host the lobby stands between the won board and the next
-	//map, and a plain reset here would take the tier and the lives the players just earned
+	//NOTE: keeps progress too - on a host the lobby sits between the won level and the next map
 	_events->EmitEvent(GameResetEvent{.keepsPlayerProgress = _isNextLevel});
 	_events->EmitEvent(ShowMenuEvent{.isShown = false});
 
@@ -231,8 +224,7 @@ void Simulation::LeaveGameMode() { _networkNode.reset(); }
 
 void Simulation::ApplyGameMode(const GameMode gameMode)
 {
-	//NOTE: before the reset - listeners of GameResetEvent read the mode off the config, so it has
-	//to be the new one already
+	//NOTE: before the reset - GameResetEvent listeners read the new mode from the config
 	_gameConfig.gameMode = gameMode;
 
 	_events->EmitEvent(GameResetEvent{});
@@ -262,8 +254,7 @@ void Simulation::Tick()
 	_events->EmitEvent(NetCommandUpdateEvent{.deltaTime = _deltaTime});
 	_events->EmitEvent(PreTickUpdateEvent{.deltaTime = _deltaTime});
 
-	//NOTE: read after PreTickUpdate, not before - that is where the keyboard is polled, so a pause
-	//pressed this frame takes effect this frame
+	//NOTE: after PreTickUpdate, which polls the keyboard - a pause pressed this frame applies this frame
 	const bool isRunning{!_isPaused && _gameConfig.gameState != GameState::Lobby};
 	if (isRunning)
 	{

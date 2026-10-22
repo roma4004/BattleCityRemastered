@@ -258,7 +258,7 @@ TEST_F(RespawnManagerTest, AFallenEagleLosesWithTheNextDeath)
 	EXPECT_EQ(_result, GameState::Over);
 }
 
-// a life picked up after the eagle fell buys exactly one more death, not a return to three
+// a life picked up after the eagle fell allows exactly one more death, not a return to three
 TEST_F(RespawnManagerTest, ALifeTakenAfterTheEagleFellBuysOneMoreDeath)
 {
 	_events->EmitEvent(RespawnTanksEvent{});

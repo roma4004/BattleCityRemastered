@@ -163,8 +163,7 @@ void RespawnManager::ResetSpawn(const bool keepsPlayerLives)
 	SetPlayerNeedRespawn();
 	SetEnemyNeedRespawn();
 
-	//NOTE: said out loud on every reset - the counters on screen are told what the numbers are, and a
-	//level change is the one reset that does not put them back where they started
+	//NOTE: announced on every reset - a level change is the one reset that does not restore the counters on screen
 	for (const std::size_t group: std::views::iota(std::size_t{}, kRespawnGroupCount))
 	{
 		_events->EmitEvent(RespawnCountChangedToEvent{.group = static_cast<RespawnGroup>(group),
@@ -229,8 +228,7 @@ void RespawnManager::OnTankRespawned(const TankRespawnedEvent& event)
 //NOTE: told before the reset that spawns by it
 void RespawnManager::OnSeatsFilled(const SeatsFilledEvent& event) { _holders = event.holders; }
 
-//NOTE: whoever sat down gets a tank while the seat has a life left - a seat whose bot spent every life is given
-//the starting ones back, while a player coming back finds the seat as it was left, and so does a bot taking over
+//NOTE: a seat with a life left gets a tank; one a bot drained gets the starting lives, a returning player's stays
 void RespawnManager::OnSeatHolderChanged(const SeatHolderChangedEvent& event)
 {
 	_holders[SeatIndex(event.slot)] = event.to;
@@ -257,8 +255,7 @@ void RespawnManager::OnSeatHolderChanged(const SeatHolderChangedEvent& event)
 	seat.isAvailable = _respawnCount[group] > 0u;
 }
 
-//NOTE: the tank of a seat given up is taken off the field, not killed - its life goes back to the seat for the one
-//who comes back, and the match ends here only if that leaves nobody to play it
+//NOTE: removed, not killed - its life returns to the seat; the match ends here only if nobody is left to play
 void RespawnManager::Vacate(SpawnSlot& seat)
 {
 	if (seat.isOnField)

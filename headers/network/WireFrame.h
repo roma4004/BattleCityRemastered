@@ -7,8 +7,7 @@
 
 namespace network
 {
-//NOTE: one frame archived by delivery - the reliable ones as a single message, every Latest one on its own,
-//so it can replace the older value of its entity on the way out
+//NOTE: reliable commands as one message, each Latest one apart, so it replaces its entity's older value on the way out
 struct WireFrame final
 {
 	std::string reliable{};

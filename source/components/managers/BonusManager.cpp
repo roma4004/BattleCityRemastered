@@ -117,7 +117,6 @@ void BonusManager::StartEffect(const BonusType type, const EffectTarget target, 
 	if (const auto it{FindEffect(type, target)};
 		it != _activeEffects.end())
 	{
-		//NOTE: picking the same bonus up again buys more of the same effect, it does not restart it
 		if (it->spared == spared)
 		{
 			it->timer.cooldown += duration;
@@ -126,7 +125,7 @@ void BonusManager::StartEffect(const BonusType type, const EffectTarget target, 
 			return;
 		}
 
-		//NOTE: a free-for-all timer retaken turns on its former taker
+		//NOTE: a free-for-all timer taken by another tank now freezes its former taker
 		*it = ActiveEffect{.type = type, .target = target, .timer = Timer{duration}, .spared = spared};
 		EmitEffectStatus(*it, true);
 		_events->EmitEvent(BonusEffectsChangedEvent{.effects = RunningEffects()});

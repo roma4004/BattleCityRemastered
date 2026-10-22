@@ -148,7 +148,7 @@ void RenderManager::ApplyLogicalSize()
 {
 	const UPoint logicalSize{_gameConfig.LogicalSize()};
 
-	//NOTE: letterbox, not stretch - text sizing rests on the equal scale, and the bars are answered by the window shape
+	//NOTE: letterbox, not stretch - text sizing needs one scale; SnapWindowToLogicalAspect removes the bars
 	SDL_SetRenderLogicalPresentation(_sdlConfig.renderer.get(),
 									 static_cast<int>(logicalSize.x),
 									 static_cast<int>(logicalSize.y),

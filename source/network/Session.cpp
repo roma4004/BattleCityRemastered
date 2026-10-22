@@ -24,8 +24,7 @@ namespace network
 {
 namespace
 {
-//NOTE: a switch, not a table - a signal added to the enum stops compiling here instead of slipping past
-//into a runtime log, and the seat's key needs no std::function to travel four lines
+//NOTE: a switch, not a table - a new signal fails to compile here instead of slipping into a runtime log
 void EmitInput(EventSystem& events, const PlayerSlot slot, const InputSignal signal, const bool isPressed)
 {
 	switch (signal)
@@ -45,8 +44,7 @@ void EmitInput(EventSystem& events, const PlayerSlot slot, const InputSignal sig
 		case InputSignal::Fire:
 			events.EmitEvent(Key(RemoteInput(slot)), FireEvent{.isPressed = isPressed});
 			return;
-		//NOTE: the state the client asked for, not a toggle - two clients toggling in turn would cancel
-		//each other out, and the authority has no pause of its own to flip
+		//NOTE: the asked state, not a toggle - two clients toggling would cancel out; the authority has no own pause
 		case InputSignal::PauseRequest:
 			events.EmitEvent(SetPauseEvent{.isPaused = isPressed});
 			return;
@@ -199,7 +197,7 @@ void Session::Handle(const commands::SignalEvent& command)
 		switch (signal)
 		{
 			case ClientSignal::ReadyToPlay:
-				//NOTE: here, on the game thread - owed any earlier, it could be paid before the ready it answers
+				//NOTE: here, on the game thread - set earlier, the snapshot could go out before the ready it answers
 				_isSnapshotOwed.store(true, std::memory_order_release);
 				_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = _slot});
 				break;

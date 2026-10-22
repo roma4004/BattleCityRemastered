@@ -203,8 +203,7 @@ void GameStateManager::OnPauseStatus(const PauseStatusEvent& event)
 
 void GameStateManager::OnGameFinished(const GameFinishedEvent& event) { SetState(event.state); }
 
-//NOTE: not the mode's idle phase - a lobby would start the same match the moment the seats are ready,
-//and it would fail on the same map
+//NOTE: the menu, not the mode's idle phase - a lobby would retry the same map as soon as the seats are ready
 void GameStateManager::OnMapLoadFailed(const MapLoadFailedEvent&) { SetState(GameState::Menu); }
 
 void GameStateManager::TakeSeat(const PlayerSlot slot)
@@ -354,8 +353,7 @@ void GameStateManager::HandAbsentSeatsTo(const SeatHolder to)
 	AnnounceHolders();
 }
 
-//NOTE: waiting takes no answer - the panel standing is the wait. The first answer decides: a later one finds
-//nobody left to ask about, so it changes nothing
+//NOTE: no answer means waiting; the first answer decides, a later one finds nobody left to ask about
 void GameStateManager::OnAbsenceChosen(const AbsenceChosenEvent& event)
 {
 	if (!IsHost(_gameMode))
@@ -407,8 +405,7 @@ void GameStateManager::OnTankCommand(const ServerInTankCommandEvent& event)
 	UpdateHold();
 }
 
-//NOTE: announced rather than set - a local match is already Playing, and SetState would see no change
-//and leave the finished board on the screen
+//NOTE: announced, not set - a local match is already Playing, so SetState would keep the finished board up
 void GameStateManager::OnMatchRestartRequested(const MatchRestartRequestedEvent&)
 {
 	_state = IdleStateForMode();
@@ -426,8 +423,7 @@ void GameStateManager::OnRestartRequested(const ServerInRestartRequestedEvent&)
 //NOTE: announced even when the phase keeps its name - SetState would swallow the repeat
 void GameStateManager::OnHostPhase(const HostPhaseAnnouncedEvent& event)
 {
-	//NOTE: the field the players are looking at is not restarted under them - leaving a pause announces
-	//Playing again, and a full announce would have it emptied and the map loaded over
+	//NOTE: resuming does not restart - leaving a pause announces Playing, and a full announce would reload the map
 	if (const bool isResuming{event.phase == GameState::Playing
 							  && (_state == GameState::Paused || _state == GameState::Playing)};
 		isResuming)

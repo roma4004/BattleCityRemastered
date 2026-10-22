@@ -15,8 +15,7 @@ namespace network
 {
 using boost::asio::ip::udp;
 
-//NOTE: what the internet sees this machine as, asked of public STUN servers. Polled like DiscoveryProbe -
-//nothing here waits: the servers' names are resolved on a thread of its own and every poll reads what has come
+//NOTE: this machine's public address from STUN servers; polled like DiscoveryProbe, names resolve on a thread
 class PublicAddressProbe final
 {
 public:

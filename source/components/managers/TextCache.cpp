@@ -47,8 +47,7 @@ void TextCache::Clear()
 	_engine.reset();
 }
 
-//NOTE: every layout is laid out in output pixels, so a new scale invalidates the lot of them - and
-//nothing else: reopening the fonts here is what made a window drag pay for the whole cache each frame
+//NOTE: layouts are in output pixels, so a new scale drops them all - only them, reopening fonts made drags slow
 void TextCache::SyncScale(const float scale)
 {
 	if (scale == _scale)
@@ -95,8 +94,7 @@ TTF_TextEngine* TextCache::Engine()
 	return _engine.get();
 }
 
-//NOTE: the file is read once, at startup - a size is a copy of that font resized, so fitting a block
-//tries a dozen of them without touching the disk
+//NOTE: the font file is read once; each size is a resized copy, so fitting tries a dozen sizes without the disk
 TTF_Font* TextCache::FontForScale(const int basePointSize, const float scale)
 {
 	const int pixelSize{PixelSize(basePointSize, scale)};
@@ -108,8 +106,7 @@ TTF_Font* TextCache::FontForScale(const int basePointSize, const float scale)
 	FontHandle sized{TTF_CopyFont(_sdlConfig.font.get())};
 	if (!sized || !TTF_SetFontSize(sized.get(), static_cast<float>(pixelSize)))
 	{
-		//NOTE: nothing is stored on failure - an empty handle would retry the copy on every call,
-		//and the startup font draws the line at its own size rather than not at all
+		//NOTE: nothing stored on failure; the startup font draws the line at its own size instead of not at all
 		return _sdlConfig.font.get();
 	}
 

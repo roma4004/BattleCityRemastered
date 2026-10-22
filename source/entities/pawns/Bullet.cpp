@@ -154,7 +154,7 @@ void Bullet::MeetShells(const std::vector<BaseObj*>& contacts, const std::vector
 
 double Bullet::GetFlightSpeed() const noexcept { return _caliber.speed; }
 
-//NOTE: steel gives way from the third tier on
+//NOTE: steel breaks from the third tier on
 bool Bullet::CanBreak(const BaseObj& target) const noexcept { return target.GetIsDestructible() || _caliber.tier > 2u; }
 
 //NOTE: a layer costs its toughest brick's health and breaks only within the depth BlastDepthFor allows

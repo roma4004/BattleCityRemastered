@@ -60,8 +60,7 @@ private:
 	void OnSendNetworkFrame(const SendNetworkFrameEvent&);
 	void OnSlotAssigned(const PlayerSlotAssignedEvent& event);
 
-	//NOTE: the only command Client reads itself - the rest are the applier's, and this one is not a
-	//game fact but transport state, taken on the network thread before the queue
+	//NOTE: the only command Client reads itself - transport state, taken on the network thread before the queue
 	void OnDisconnect(const commands::Disconnect& command);
 	void HandleDisconnect();
 	void HandleProtocolError();
@@ -83,8 +82,7 @@ private:
 	bool _reconnectPending{};
 	//NOTE: tells our own cancellation apart from a dropped link, so teardown does not reconnect
 	std::atomic<bool> _isShuttingDown{};
-	//NOTE: a goodbye is not one of these - the host sends it while restarting the same mode, and
-	//the client is the only side that can dial back
+	//NOTE: not set by a goodbye - the host sends one when restarting, and only the client can dial back
 	std::atomic<bool> _isLinkUnrecoverable{};
 	std::atomic<bool> _isWaitingForSeat{};
 	unsigned char _reconnectAttempts{};

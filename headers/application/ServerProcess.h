@@ -5,7 +5,6 @@
 #include <optional>
 #include <string>
 
-//NOTE: no network code of its own. A game killed rather than closed takes the server with it, or it holds the port
 struct MatchSettings;
 
 namespace network
@@ -13,11 +12,11 @@ namespace network
 struct ServerAddress;
 }//namespace network
 
+//NOTE: no network code; a killed game takes the server down so the port is freed
 class ServerProcess final
 {
 	struct Process;
 
-	//NOTE: pimpl to keep windows.h and the POSIX headers out of every translation unit that includes this
 	std::unique_ptr<Process> _process;
 
 public:
@@ -30,13 +29,11 @@ public:
 	ServerProcess& operator=(const ServerProcess&) = delete;
 	ServerProcess& operator=(ServerProcess&&) = delete;
 
-	//NOTE: looks for the exe next to our own, never on PATH. Does not wait for it to listen - the port turns
-	//up in PublishedPort once it does
+	//NOTE: runs the exe next to ours, not from PATH; returns at once - PublishedPort has the port once it listens
 	[[nodiscard]] bool Start(const network::ServerAddress& address, const MatchSettings& match, bool isPortForwarded,
 							 const std::string& routerUrl);
 
-	//NOTE: the port a server started next to us wrote down, whoever started it - the only number a
-	//client has to dial while the lobby cannot ask for one. Empty until a server publishes it
+	//NOTE: the port written by a server running next to us, whoever started it
 	[[nodiscard]] static std::optional<std::uint16_t> PublishedPort();
 
 	[[nodiscard]] bool IsRunning() const;

@@ -5,9 +5,7 @@
 #include <string>
 #include <thread>
 
-//NOTE: every way the server is told to stop - Ctrl+C, a closed console window, /exit, and the game that started
-//it - read by the loop as one answer. The loop then winds down on its own: the players are told goodbye and the
-//port opened on the router is closed, whichever way the stop came
+//NOTE: Ctrl+C, a closed console, /exit and the parent game's event as one stop flag; the loop then shuts down cleanly
 class ServerStop final
 {
 public:
@@ -30,7 +28,7 @@ private:
 	//NOTE: the game that started the server does not wait for it, so nothing else would end one that hangs
 	void CutShortIfHung(const std::stop_token& stop) const;
 
-	//NOTE: a HANDLE, held as what it is underneath so windows.h stays out of this header; Windows only
+	//NOTE: a HANDLE; Windows only
 	[[maybe_unused]] void* _event{nullptr};
 	std::jthread _watchdog{};
 };

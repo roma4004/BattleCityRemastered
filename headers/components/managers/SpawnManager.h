@@ -31,8 +31,7 @@ class SpawnManager final
 	std::vector<EventSubscription> _subs{};
 
 	std::unique_ptr<FortressManager> _fortressManager{nullptr};
-	//NOTE: above the spawners because they outlive them - a mode change rebuilds every spawner, and
-	//the pools have to keep their objects across it for a tank to be reused rather than rebuilt
+	//NOTE: declared above the spawners to outlive them - a mode change rebuilds spawners, the pools keep their objects
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 	std::shared_ptr<TankPool> _tankPool{nullptr};
 	std::shared_ptr<BonusSpawner> _bonusSpawner{nullptr};

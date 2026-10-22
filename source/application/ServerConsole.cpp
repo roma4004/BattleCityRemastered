@@ -12,8 +12,7 @@ struct ServerConsole::Inbox final
 	std::vector<std::string> lines;
 };
 
-//NOTE: detached - a thread blocked in getline cannot be joined, so waiting for it on /exit would hang; it
-//shares the inbox, outlives this object and ends with the process
+//NOTE: detached - a thread blocked in getline cannot be joined; it shares the inbox and ends with the process
 ServerConsole::ServerConsole()
 	: _inbox{std::make_shared<Inbox>()}
 {

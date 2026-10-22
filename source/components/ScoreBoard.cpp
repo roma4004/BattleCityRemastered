@@ -206,8 +206,7 @@ void ScoreBoard::DisplayScore(const bool isShown)
 												 : EventSubscription{};
 }
 
-//NOTE: on the release, and the offer is taken down with it - a held key would ask for a level per frame,
-//and the press that started the match would count as an answer to the board it put up
+//NOTE: on release, and the offer goes with it - a held key would ask every frame, the start press would answer it
 void ScoreBoard::OnEnter(const EnterEvent& event)
 {
 	if (event.isPressed)

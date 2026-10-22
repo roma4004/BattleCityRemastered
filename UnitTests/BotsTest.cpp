@@ -241,7 +241,7 @@ TEST_F(BotsTest, BotsChangeDirectionIfBonusSeenAndNoOneShoot)
 	EXPECT_EQ(endDirEnemy, Direction::LEFT);
 }
 
-// but not while an opponent it can shoot stands in the sights - the bonus keeps, the shot does not
+// but not while an opponent it can shoot stands in the sights - the bonus can wait, the shot cannot
 TEST_F(BotsTest, ABonusAtTheSideDoesNotTurnABotOffAnOpponentItCanShoot)
 {
 	const auto coopBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN)};

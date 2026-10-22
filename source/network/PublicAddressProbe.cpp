@@ -65,8 +65,7 @@ PublicAddressProbe::PublicAddressProbe()
 	, _socket{_ioContext}
 	, _transaction{RandomTransaction()}
 {
-	//NOTE: let go of - a DNS server out of reach holds it for seconds, and closing the game does not wait for that.
-	//asio's own asynchronous lookup would make whoever drops the probe wait for it instead
+	//NOTE: detached - an unreachable DNS server blocks it for seconds, and closing the game must not wait for that
 	std::thread{[handover = _handover]
 	{
 		std::vector<udp::endpoint> servers{ResolveServers()};

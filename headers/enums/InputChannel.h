@@ -3,8 +3,7 @@
 #include "enums/PlayerSlot.h"
 #include <cstdint>
 
-// Dispatch key for the input events: the slot half says whose press it is, the origin half which pipe
-// it came in on. One machine can hold a keyboard for both slots and take wire input for the same ones
+//NOTE: the input events' dispatch key - whose press it is (slot) and where it came from (local keys or the wire)
 enum class InputChannel : std::uint8_t
 {
 	LocalP1,

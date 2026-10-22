@@ -49,8 +49,7 @@ class UserInput final
 	bool _isPausedByWindowDrag{};
 	bool _isWindowDragging{};
 	bool _isMenuShown{};
-	//NOTE: a release is only the other half of a press that landed on a menu item - loose ones reach
-	//whoever else listens for Enter, and the won scoreboard would take a click meant for the window
+	//NOTE: a release counts only after a press on a menu item; a stray one would reach the scoreboard as a click
 	bool _isMenuPressHeld{};
 	//NOTE: the keys type instead of steering, and Esc closes the field
 	bool _isTyping{};
@@ -70,7 +69,7 @@ class UserInput final
 	std::unordered_map<SDL_JoystickID, GamepadDirection> _gamepadDirections{};
 	int _gamepadDeadZone;
 	const SDL_Config& _sdlConfig;
-	//NOTE: the rows as the renderer drew them - nothing here works them out, a click just lands on them
+	//NOTE: the rows as the renderer laid them out; clicks are hit-tested against them
 	SDL_Rect _allTilesRect{};
 	std::vector<SubTile> _menuTiles;
 	std::vector<SDL_Rect> _panelRows{};

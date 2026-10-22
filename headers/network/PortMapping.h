@@ -16,10 +16,7 @@ namespace network
 {
 class PublicAddressProbe;
 
-//NOTE: the server's UDP port opened on the router through UPnP for as long as this lives - renewed before its
-//lease runs out and closed on the way out. A router takes seconds to find, so the work is done on a thread of
-//its own and the server's loop polls for the outcome. A process killed outright leaves the port open until
-//the lease runs out on the router
+//NOTE: holds the server port open on the router via UPnP from a thread; a killed process leaves it till the lease ends
 class PortMapping final
 {
 public:
@@ -49,8 +46,7 @@ private:
 	const std::string _routerUrl;
 	//NOTE: past it with no word from the router, the host is told it does not answer
 	const std::chrono::steady_clock::time_point _answerDue;
-	//NOTE: built at once, so the servers' names resolve while the router is looked for. Only the thread touches it
-	//afterwards
+	//NOTE: built at once so the STUN names resolve while the router is searched; only the worker touches it afterwards
 	std::unique_ptr<PublicAddressProbe> _publicProbe;
 	std::mutex _mutex;
 	std::condition_variable_any _wake;

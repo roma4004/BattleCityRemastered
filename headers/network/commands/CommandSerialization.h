@@ -41,8 +41,7 @@
 
 namespace ser20
 {
-//NOTE: every command in one place, so a command header stays plain data and ser20 reaches only
-//this file and the Serializer.
+//NOTE: every command's serialize lives here, so command headers stay plain data and only this file sees ser20
 
 template<class Archive>
 void serialize(Archive& ar, network::commands::AbsenceChange& cmd, const unsigned int /*version*/)

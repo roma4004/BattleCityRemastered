@@ -39,7 +39,7 @@ class UiRenderer final
 	const GameConfig& _gameConfig;
 	const SDL_Config& _sdlConfig;
 
-	//NOTE: kept between frames - a fit measures every word at every size; other words, scale or panel refit
+	//NOTE: kept between frames since a fit measures every word at every size; refit on new words, scale or panel
 	struct PanelFit final
 	{
 		std::vector<UiTable> tables{};

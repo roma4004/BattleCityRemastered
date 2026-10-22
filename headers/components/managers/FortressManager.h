@@ -13,8 +13,7 @@ class BaseObj;
 class EventSystem;
 class GameConfig;
 
-// Keeps the places the eagle's wall stands in, filled once from the map. A spot outlives the wall in
-// it - that is what lets the shovel rebuild one shot out earlier, when no object is left to ask.
+//NOTE: the eagle wall's spots from the map; a spot outlives its wall, so the shovel can rebuild a destroyed one
 class FortressManager final
 {
 	struct Spot

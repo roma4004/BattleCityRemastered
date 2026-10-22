@@ -65,8 +65,7 @@ class TankSpawner final
 		unsigned short tier{1u};
 	};
 
-	//NOTE: what a player takes to the next level, read while the field it was won on still stands and
-	//spent on its first spawn there - dying inside a level costs the tier as it always did
+	//NOTE: what a player takes to the next level, saved from the won field and used on the first spawn there
 	struct NextLevelLoadout
 	{
 		TankType type{};
@@ -85,7 +84,7 @@ class TankSpawner final
 	const GameConfig& _gameConfig;
 	std::vector<DelayedTankSpawn> _delayedSpawns{};
 	std::vector<NextLevelLoadout> _nextLevelLoadouts{};
-	//NOTE: the models of the map's first enemies and how far down them the enemies have come - past, they are rolled
+	//NOTE: the models of the map's first enemies and how many came out; past the list models are rolled
 	std::vector<TankModel> _enemyLineup{};
 	std::size_t _enemiesChosen{};
 	//NOTE: the seats a network match gave to bots - a player joining takes one over
@@ -128,8 +127,7 @@ class TankSpawner final
 	void CancelDelayedSpawnsOf(Faction faction, Author spared);
 	void DropDelayedSpawn(Uuid uuid);
 
-	//NOTE: the rolled point first, then the grid outwards from it - obstacles sit on the grid, so a spot
-	//off it that fits covers at least one more cell than the aligned one beside it and finds nothing new
+	//NOTE: tries the rolled point, then grid steps outwards - obstacles are grid-aligned, so off-grid spots add nothing
 	[[nodiscard]] std::optional<ObjRectangle> FindSpawnSpot(double minX, double maxX, double y, double preferredX,
 															double side) const;
 

@@ -44,11 +44,10 @@ public:
 														   const Measure& measure);
 	//NOTE: measured once, then moved to where its width sits in the middle - no second layout
 	[[nodiscard]] static Placement CenteredAcross(Placement placement, Point origin, int width);
-	//NOTE: the tables one under another, with a gap between each two
 	[[nodiscard]] static int StackHeight(std::span<const Placement> placed, int gap);
-	//NOTE: only the words answer to the font - a picture is not asked, nor a table of nothing but pictures
+	//NOTE: only words depend on the font - pictures and tables of pictures only are not checked
 	[[nodiscard]] static bool FitsAcross(std::span<const UiTable> tables, std::span<const Placement> placed, int width,
 										 int rowHeight);
-	//NOTE: the largest size from smallest to largest that goesIn accepts, smallest when none is
+	//NOTE: the largest size in [smallest, largest] that goesIn accepts; smallest if none does
 	[[nodiscard]] static int FitPointSize(int smallest, int largest, const std::function<bool(int)>& goesIn);
 };

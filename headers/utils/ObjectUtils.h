@@ -19,6 +19,6 @@ public:
 	[[nodiscard]] static bool IsFortress(const BaseObj& object);
 	[[nodiscard]] static bool IsWall(const BaseObj& object);
 
-	//NOTE: the world holds its objects for the whole tick - what a pass collects is looked at, not kept
+	//NOTE: a raw pointer is safe for one tick - the world keeps every object alive until PostTickUpdate
 	[[nodiscard]] static BaseObj* Raw(const std::shared_ptr<BaseObj>& object) { return object.get(); }
 };

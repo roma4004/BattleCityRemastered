@@ -20,7 +20,7 @@ struct ServerInClientReadyToStartGameEvent
 	PlayerSlot slot;
 };
 
- //NOTE: a client pressed a key that drives a tank - a player watching the bot in their seat takes the tank with it
+//NOTE: a client's driving key; a player watching a bot in their seat takes the tank over with it
 struct ServerInTankCommandEvent
 {
 	PlayerSlot slot;
@@ -92,8 +92,7 @@ struct SeatsFilledEvent
 	std::array<SeatHolder, kSeatCount> holders{};
 };
 
-//NOTE: a seat of a running match changed hands - a player sat down in it, or the one who left gave it up to a bot
-//or to nobody
+//NOTE: a running match's seat changed hands - a player sat down, or a leaver gave it to a bot or to nobody
 struct SeatHolderChangedEvent
 {
 	PlayerSlot slot;
@@ -126,23 +125,19 @@ struct GameStateChangedToEvent
 
 struct MatchStartedEvent {};
 
-//NOTE: named GameResetEvent because <windows.h>, pulled in through SDL, declares a function literally
-//called `ResetEvent` - a same-named struct in the global namespace collides with it
+//NOTE: not ResetEvent - <windows.h>, pulled in through SDL, declares a global function of that name
 struct GameResetEvent
 {
-	//NOTE: a level change goes the way a restart does, and this is what tells the two apart - the players
-	//keep the lives and the tier they earned, the enemies and the statistics start over
+	//NOTE: a level change, not a restart - players keep lives and tier, enemies and statistics start over
 	bool keepsPlayerProgress{};
 };
 
 struct LoadMapEvent {};
 
-//NOTE: asked for by whoever shows the scoreboard, answered by the authority - a client sends it on
-//the wire instead, or the two machines would walk off onto different maps
+//NOTE: sent by the scoreboard, handled by the authority only - a client forwards it so both load the same map
 struct NextLevelRequestedEvent {};
 
-//NOTE: the local twin of ServerInRestartRequestedEvent - the seats are already taken, so the match
-//starts over where it stands instead of asking anyone to be ready again
+//NOTE: local ServerInRestartRequestedEvent - the seats are taken, so the match restarts without a new ready round
 struct MatchRestartRequestedEvent {};
 
 struct ClientOutReadyToPlayEvent {};
@@ -198,14 +193,13 @@ struct EnemyLineupLoadedEvent
 	std::vector<TankModel> models{};
 };
 
-//NOTE: the reason is already in the log - this only says the world never got filled, so whoever started
-//the match has to take it back
+//NOTE: the reason is already logged; the field stayed empty, so whoever started the match must undo it
 struct MapLoadFailedEvent {};
 
 struct WorldGeometryChangedEvent {};
 
-//NOTE: the handle survives, the pixels do not - SDL reports it, repairs nothing
+//NOTE: render target textures lost their pixels but stay valid; SDL only reports it
 struct RenderTargetsResetEvent {};
 
-//NOTE: SDL sends it only on real device loss - whoever replaces the renderer emits it himself
+//NOTE: SDL sends it only on device loss; code that replaces the renderer emits it too
 struct RenderDeviceResetEvent {};

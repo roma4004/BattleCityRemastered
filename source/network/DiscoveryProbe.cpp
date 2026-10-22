@@ -13,8 +13,7 @@ namespace
 //NOTE: the same rule the client dials by - a server told to listen everywhere is asked on this machine
 boost::asio::ip::address ProbeAddress(const std::string& host)
 {
-	//NOTE: one named result and one return - two returns of different objects is what -Wnrvo is about.
-	//A host that does not parse leaves a v4 unspecified behind, so the fallback below is already right
+	//NOTE: one named result for -Wnrvo; an unparsable host leaves v4 unspecified, so the fallback below is right
 	boost::system::error_code ec;
 	boost::asio::ip::address address{boost::asio::ip::make_address(host, ec)};
 	if (ec || address.is_unspecified())
@@ -57,8 +56,7 @@ std::optional<discovery::Reply> DiscoveryProbe::Poll()
 	boost::system::error_code ec;
 	std::ignore = _socket.send_to(boost::asio::buffer(discovery::kProbe), _beacon, {}, ec);
 
-	//NOTE: the answer to this probe is not here yet - what is read now is the answer to an earlier one,
-	//which says the same thing, so the freshest datagram in the buffer wins
+	//NOTE: the freshest datagram wins - what arrives now answers an earlier probe, which says the same
 	for (;;)
 	{
 		udp::endpoint sender{};

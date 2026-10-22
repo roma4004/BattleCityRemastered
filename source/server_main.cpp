@@ -34,8 +34,7 @@
 
 namespace
 {
-//NOTE: said only when a name did not work out - a listing nobody asked for is noise, and one that comes
-//with the complaint is the answer to the question the complaint raises
+//NOTE: listed only after a bad map name - unasked it is noise, with the complaint it answers what is available
 std::string KnownMaps()
 {
 	const std::vector<std::string> names{LevelRotation{}.Names()};
@@ -106,8 +105,7 @@ struct ConsoleCommandHandler final
 
 	void operator()(const LogLevelCommand& command) const { Log::SetLevel(command.level); }
 
-	//NOTE: the map is checked before anything is torn down - a name that does not load leaves the match
-	//running on the one it already has, and the console says why
+	//NOTE: the map is checked before any teardown - a bad name keeps the current match running and says why
 	void operator()(const MapCommand& command) const
 	{
 		const std::string path{MapPathForName(command.name)};
@@ -165,8 +163,7 @@ void ApplyConsoleLine(const std::string& line, const ConsoleCommandHandler& hand
 
 }//namespace
 
-//NOTE: the same Simulation the game runs, minus the screen - it links GameCore alone, so SDL cannot
-//reach it. A spawning tank still lands: PostTickUpdate advances the animation without draw phases
+//NOTE: the game's Simulation without the screen, GameCore only; PostTickUpdate still advances spawn animations
 int main(const int argc, char* argv[])
 {
 	Log::SetConsole(true);
@@ -230,7 +227,7 @@ int main(const int argc, char* argv[])
 
 	//NOTE: the port asked for may have been 0, so this is the first place the real one is known
 	const std::uint16_t boundPort{simulation.BoundPort()};
-	//NOTE: a failed bind is caught and logged by the event system - no port is all that is left of it here
+	//NOTE: the event system already logged the failed bind; here it is only a zero port
 	if (boundPort == network::kAnyFreePort)
 	{
 		Log::Error("server: cannot listen on " + gameConfig.serverAddress.host + ':'

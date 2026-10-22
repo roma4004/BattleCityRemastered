@@ -11,8 +11,7 @@
 
 namespace
 {
-//NOTE: how long the network is listened to for a router - UPnP's own advice is a second or two. miniupnpc asks
-//under four names in turn and stops at the first one answered, so silence takes four times as long
+//NOTE: per search name - UPnP advises a second or two; miniupnpc tries four names, so silence takes four times this
 constexpr int kDiscoverMilliseconds{2000};
 //NOTE: two hops, as UPnP advises - the router is the next one
 constexpr unsigned char kDiscoverTtl{2u};

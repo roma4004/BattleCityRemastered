@@ -40,7 +40,7 @@ protected:
 			 const GameConfig& gameConfig, ObstacleType obstacleType, CollisionTags collision, DrawLayer layer);
 
 public:
-	//NOTE: a quarter of brick or steel - what a shell pays to penetrate one layer deeper
+	//NOTE: one quarter of brick or steel - a shell spends this much health on each layer it penetrates
 	static constexpr unsigned int kWallHealth{10};
 
 	void Activate() override;

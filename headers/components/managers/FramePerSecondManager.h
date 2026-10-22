@@ -25,8 +25,7 @@ class FramePerSecondManager final
 	unsigned int _frameCounter{};
 	unsigned int _lastDisplayedFps{};
 	const ProjectConfig& _projectConfig;
-	//NOTE: without a presenter nothing else blocks this thread, so the wait below is the only
-	//thing between the loop and a busy spin - the vsync setting says nothing on a console server
+	//NOTE: no vsync without a presenter - on the console server only the frame wait keeps the loop from spinning
 	bool _isVsyncAvailable{true};
 
 	void Subscribe();

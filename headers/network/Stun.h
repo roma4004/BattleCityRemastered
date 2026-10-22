@@ -10,8 +10,7 @@
 
 namespace network::stun
 {
-//NOTE: RFC 5389 - a binding request is a bare 20-byte header, and the answer says which address and port
-//the request came from as the server saw it
+//NOTE: RFC 5389 - a binding request is a bare 20-byte header; the answer names our address as the server saw it
 inline constexpr std::size_t kHeaderSize{20u};
 inline constexpr std::uint32_t kMagicCookie{0x2112A442u};
 inline constexpr std::uint16_t kBindingRequest{0x0001u};
@@ -52,8 +51,7 @@ inline constexpr std::array kPublicServers{Server{.host = "stun.l.google.com", .
 	return bytes;
 }
 
-//NOTE: the IPv4 out of the answer to our own request - XOR-MAPPED-ADDRESS first, as servers since RFC 5389 send
-//it; the plain MAPPED-ADDRESS of older ones only when it is missing. Anything else read is none
+//NOTE: the IPv4 in the answer to our request - XOR-MAPPED-ADDRESS, else the old MAPPED-ADDRESS; anything else is none
 [[nodiscard]] inline std::optional<std::string> MappedAddress(const std::string_view datagram,
 															 const Transaction& transaction)
 {

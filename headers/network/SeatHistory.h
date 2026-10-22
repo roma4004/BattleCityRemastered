@@ -16,8 +16,7 @@ class SeatHistory final
 public:
 	void Seat(PlayerSlot slot, const udp::endpoint& endpoint);
 
-	//NOTE: the seat left from this very address and port, then from this machine - a restarted game dials from
-	//another port - then one nobody sat in, and only then one somebody else may still come back to
+	//NOTE: this endpoint's seat, then this machine's, then a never-used one, then one a leaver may still come back to
 	[[nodiscard]] std::optional<PlayerSlot> Choose(std::span<const PlayerSlot> freeSeats,
 												   const udp::endpoint& endpoint) const;
 

@@ -32,8 +32,7 @@ class MoveLikeTankBeh final : public IMoveBeh
 											  const std::vector<std::shared_ptr<BaseObj>>& objects,
 											  std::vector<BaseObj*>& outTouched) const;
 
-	//NOTE: a wall with an opening beside it - the tank is steered in rather than left standing, but only
-	//when it is already more than half inside
+	//NOTE: steers the tank into an opening beside a wall, only when more than half of it is already in line
 	[[nodiscard]] bool NudgeIntoGap(Direction dir, double step,
 									const std::vector<std::shared_ptr<BaseObj>>& objects,
 									const std::vector<BaseObj*>& blockers);
@@ -50,8 +49,6 @@ public:
 	[[nodiscard]]
 	bool Move(Direction dir, double deltaTime, const std::vector<std::shared_ptr<BaseObj>>& objects,
 			  std::vector<BaseObj*>& outCollisions) override;
-	//NOTE: what stands in the way of this step - the caller decides whether any of it can be moved out
-	//of the way, this only measures
 	[[nodiscard]] std::vector<BaseObj*> BlockersAhead(
 			Direction dir, double step, const std::vector<std::shared_ptr<BaseObj>>& objects) const;
 	[[nodiscard]] bool ApplyMoveVelocity(double deltaTime, const std::vector<std::shared_ptr<BaseObj>>& objects);

@@ -3,8 +3,6 @@
 #include <cstdint>
 #include <string>
 
-//NOTE: the one owner of <iostream> and <fstream>, so the console has one format and one switch. Takes
-//a ready string on purpose - <format> costs as much as <iostream>, and <string> a third of that
 class Log final
 {
 public:

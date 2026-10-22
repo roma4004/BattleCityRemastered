@@ -46,8 +46,7 @@ void BonusSpawner::Subscribe()
 	_subs.push_back(_events->AddListener(this, &BonusSpawner::OnWorldGeometryChanged));
 	_subs.push_back(_events->AddListener(this, &BonusSpawner::OnSpawnMapBonus));
 
-	//NOTE: the burst is only a picture on the client - what settles is the host's call, so the bonus
-	//waits for BonusSpawnComplete instead of its own clock, and one picked up mid-burst never arrives
+	//NOTE: a client's burst is only a picture - the bonus waits for BonusSpawnComplete, a mid-burst pickup gets none
 	if (_gameConfig.IsAuthority())
 	{
 		_subs.push_back(_events->AddListener(this, &BonusSpawner::OnSpawnAnimationFinished));

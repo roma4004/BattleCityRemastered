@@ -7,8 +7,7 @@
 
 bool ColliderUtils::IsCollide(const ObjRectangle& r1, const ObjRectangle& r2) noexcept
 {
-	//NOTE: a corridor is cut to the tank's own width, so a touch cannot be a collision - driving into one
-	//another is caught by the swept rectangle
+	//NOTE: a corridor is cut to the tank's width, so a touch is no collision; driving into one is caught by the sweep
 	auto atOrPast = [](const double a, const double b) { return a > b - kTouchTolerance; };
 
 	if (atOrPast(r1.x, r2.x + r2.w) || atOrPast(r2.x, r1.x + r1.w))

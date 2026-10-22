@@ -51,8 +51,7 @@ struct BulletSnapshot final
 	Direction dir{};
 };
 
-//NOTE: the host's field as a client rebuilds it from nothing, and a wire command as it stands - the
-//serialization lives in CommandSerialization.h
+//NOTE: the host's field for a client to rebuild from scratch; serialized in CommandSerialization.h
 struct WorldSnapshot final
 {
 	static constexpr Delivery kDelivery{Delivery::Reliable};

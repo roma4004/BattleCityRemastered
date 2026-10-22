@@ -49,7 +49,7 @@ class LobbyScreen final
 	std::array<Absence, kSeatCount> _absence{};
 	//NOTE: an index into Choices()
 	std::size_t _pick{};
-	//NOTE: a release answers only a press made while the panel asked, not the shot that was being fired
+	//NOTE: a release answers only a press made while the panel was up, not a fire key held from the match
 	bool _isConfirmHeld{};
 
 	void Subscribe();

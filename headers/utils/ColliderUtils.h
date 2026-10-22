@@ -7,8 +7,7 @@ struct UPoint;
 class ColliderUtils final
 {
 public:
-	//NOTE: shallower than this and the two are touching, not overlapping - whoever measures a gap has to
-	//read it the same way, or an edge one call calls clear the other calls behind it
+	//NOTE: an overlap below this is a touch; every gap measure must use it, or two calls disagree about one edge
 	static constexpr double kTouchTolerance{0.01};
 
 	[[nodiscard]] static bool IsCollide(const ObjRectangle& r1, const ObjRectangle& r2) noexcept;

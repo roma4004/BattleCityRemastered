@@ -28,8 +28,7 @@ DiscoveryBeacon::DiscoveryBeacon(boost::asio::io_context& ioContext, const boost
 	, _rules{rules}
 	, _freeSeats{std::move(freeSeats)}
 {
-	//NOTE: deliberately not SO_REUSEADDR - two servers answering the same probe would send a client to
-	//whichever replied first, and a coin toss is worse than being told to name the port
+	//NOTE: no SO_REUSEADDR - two servers answering one probe would send the client to whichever replied first
 	if (!Listen(_inbox, host))
 	{
 		Log::Info("DiscoveryBeacon: port " + std::to_string(kDiscoveryPort)

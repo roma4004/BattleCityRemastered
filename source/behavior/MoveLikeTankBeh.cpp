@@ -60,8 +60,7 @@ double MoveLikeTankBeh::GetTravelledDistance(const double step, const Direction 
 {
 	const ObjRectangle sweptRect{DirectionUtils::Swept(_rect, step, dir)};
 
-	//NOTE: park a pixel short - flush is the knife edge where rounding alone decides which side of the
-	//wall the leading edge is on
+	//NOTE: stop a pixel short - flush with the wall, rounding alone decides which side of it the leading edge is on
 	constexpr double padding{1.0};
 	double travelled{step};
 	outTouched.clear();
@@ -73,8 +72,7 @@ double MoveLikeTankBeh::GetTravelledDistance(const double step, const Direction 
 		}
 
 		outTouched.push_back(object.get());
-		//NOTE: only what is behind the leading edge is out of the way - a tank standing against a wall is
-		//a hair inside it as often as a hair short of it, and a bare sign test lets that hair through
+		//NOTE: only objects behind the leading edge are passed - a tank at a wall is a hair inside it as often as short
 		if (const double gap{DirectionUtils::GapTo(_rect, object->GetRect(), dir)};
 			gap > -ColliderUtils::kTouchTolerance)
 		{
@@ -101,8 +99,7 @@ bool MoveLikeTankBeh::NudgeIntoGap(const Direction dir, const double step,
 			needed = std::max(needed, DirectionUtils::DistanceOutOfLane(_rect, blocker->GetRect(), lateral));
 		}
 
-		//NOTE: the border is not an opening - without this the nudge walks the tank off the field, and
-		//nothing outside it ever blocks the way back
+		//NOTE: the field border is no opening - the nudge would push the tank off the field with nothing to stop it
 		if (needed <= 0.0 || needed > reach
 			|| !DirectionUtils::FitsBeforeEdge(_rect, _gameConfig.battlefieldSize, needed, lateral))
 		{

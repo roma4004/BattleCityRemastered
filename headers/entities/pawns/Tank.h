@@ -56,8 +56,7 @@ class Tank final : public Pawn
 
 	void EmitMoved();
 
-	//NOTE: a tank ahead gives way instead of standing like a wall - it is shoved along our own heading
-	//before we move, and what is left of the room is all our own step gets
+	//NOTE: shoves a tank ahead along our heading before we move; our step gets only the room left after the shove
 	void ShoveAhead(Direction dir, double step);
 	void ApplyFreshLoadout();
 
@@ -109,11 +108,11 @@ class Tank final : public Pawn
 	static constexpr unsigned short kMaxTier{7u};
 	//NOTE: past it a star adds shells to the volley instead - a harder shell would be multiplied by their number
 	static constexpr unsigned short kLastShellTier{3u};
-	//NOTE: any bonus heals the tank that picked it up, with no ceiling - the surplus rides on to the next level
+	//NOTE: any bonus heals its taker with no ceiling; the surplus carries over to the next level
 	static constexpr unsigned int kPickupHeal{50};
 
 	void Upgrade(unsigned short tiers);
-	//NOTE: the tier's size waits for room - grown into a wall the tank could not drive off it
+	//NOTE: grows to the tier's size only when there is room - grown into a wall, the tank would be stuck
 	void GrowIfPending();
 
 	//NOTE: the model's own numbers, before a single tier has been earned
@@ -170,13 +169,12 @@ public:
 
 	[[nodiscard]] unsigned int GetTier() const noexcept;
 
-	//NOTE: how far this tank gives way, the ones behind it counted in - a wall, the edge of the field or
-	//a tank driving the other way ends the chain, and then the whole of it stands
+	//NOTE: how far this tank and the ones beyond it can be shoved; a wall, the edge or a tank pushing back stops all
 	[[nodiscard]] double ShoveDistance(Direction dir, double wanted, int depth) const;
-	//NOTE: leaning in, not just facing - a parked tank gives way, one pressing towards us holds the chain
+	//NOTE: driving towards dir, not just facing it - a parked tank is shoved, one driving at us blocks the chain
 	[[nodiscard]] bool IsDrivingAgainst(Direction dir) const;
 
-	//NOTE: two tanks can lean on a third - alreadyMoved makes it give way once
+	//NOTE: two tanks may push a third - alreadyMoved shoves it only once
 	void ShoveBy(double distance, Direction dir, double velocity, std::vector<const Tank*>& alreadyMoved);
 
 	//NOTE: what the driver needs of the tank it drives

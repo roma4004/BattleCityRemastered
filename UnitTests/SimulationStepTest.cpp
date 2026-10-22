@@ -76,7 +76,7 @@ TEST_F(SimulationStepTest, JitterAroundTheStepStaysOneStepPerFrame)
 	GameConfig gameConfig{};
 	Simulation simulation{_events, gameConfig};
 
-	//NOTE: counted per frame, not in total - the drift keeps the sum but pays it as an empty frame and a double one
+	//NOTE: counted per frame, not in total - the drift keeps the sum but splits it into an empty frame and a double one
 	for (int frame{}; frame < 60; ++frame)
 	{
 		const std::size_t before{_steps.size()};

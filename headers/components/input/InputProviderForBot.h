@@ -68,7 +68,7 @@ class InputProviderForBot final : public IInputProvider
 	{
 		Uuid target{};
 		Timer delay{};
-		//NOTE: under fire the wait re-rolls a rung faster - a shot at a back is noticed, driving behind it is not
+		//NOTE: under fire the notice band is one faster - a shot in the back is noticed, a tank driving behind is not
 		bool isUnderFire{};
 	};
 
@@ -82,7 +82,7 @@ class InputProviderForBot final : public IInputProvider
 
 	//NOTE: found in ChooseDirection and read again in ShouldShoot, which run in that order
 	BulletThreat _threat{};
-	//NOTE: the hull is held for the shot - answered anew every tick, a target that drove off frees it
+	//NOTE: the tank stops to shoot; recomputed every tick, so a target driving off releases it
 	bool _isLinedUpForShot{};
 
 	//NOTE: below this our shell cannot meet theirs in time - they close at the sum of speeds, ours a frame late
@@ -90,7 +90,6 @@ class InputProviderForBot final : public IInputProvider
 
 	[[nodiscard]] BulletThreat FindBulletThreat(const Tank& self) const;
 	[[nodiscard]] bool CanIntercept() const;
-	//NOTE: what the bullet would hit before it reaches us - a shot behind steel is the steel's business
 	[[nodiscard]] bool IsShotStoppedOnTheWay(const ObjRectangle& corridor, const BaseObj& bullet,
 											 const Tank& self) const;
 

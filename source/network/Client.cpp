@@ -64,8 +64,6 @@ Client::Client(boost::asio::io_context& ioContext, const ServerAddress& address,
 
 void Client::OnCommand(const commands::AnyCommand& command)
 {
-	//NOTE: peeled off rather than left to the applier - the goodbye has to be read on the network thread,
-	//while everything else is a game fact and belongs on the game one
 	if (const auto* goodbye{std::get_if<commands::Disconnect>(&command)})
 	{
 		OnDisconnect(*goodbye);
@@ -93,8 +91,7 @@ void Client::Receive()
 								  return;
 							  }
 
-							  //NOTE: one datagram's error - Windows refuses on the next receive when
-							  //nobody listens at the far end
+							  //NOTE: one datagram's error - Windows reports a refusal on the next receive
 							  if (!ec)
 							  {
 								  OnDatagram(std::string_view{_receiveBuffer.data(), size}, Clock::now());
@@ -127,8 +124,7 @@ void Client::OnDatagram(const std::string_view datagram, const Clock::time_point
 		return;
 	}
 
-	//NOTE: announced after the batch, not before - a refusal rides in the very datagram that answers the
-	//hello, and the link is gone by now, so a turned-away client never reports a seat it did not get
+	//NOTE: after the batch - a refusal comes in the answer to the hello and drops the link, so no seat is reported
 	if (!isFirstAnswer || !_link || _isShuttingDown)
 	{
 		return;
@@ -250,8 +246,7 @@ void Client::ScheduleReconnect()
 
 	_reconnectPending = true;
 
-	//NOTE: weak - the timer is our own member, so a shared capture would keep this Client alive
-	//through its own pending handler
+	//NOTE: weak - the timer is our member, so a shared capture would keep this Client alive through its own handler
 	const std::weak_ptr<Client> weakSelf{weak_from_this()};
 	_reconnectTimer.expires_after(_isWaitingForSeat ? kFullServerRetry : kReconnectDelay);
 	_reconnectTimer.async_wait([weakSelf](const boost::system::error_code& timerEc)
@@ -293,8 +288,7 @@ void Client::HandleDisconnect()
 	ScheduleReconnect();
 }
 
-//NOTE: an unreadable message arrived whole and in order, so it is a protocol disagreement - the next one
-//fails the same way, and the link ends here
+//NOTE: an unreadable message arrived whole and in order - a protocol mismatch, so the link ends here
 void Client::HandleProtocolError()
 {
 	if (_isShuttingDown)
@@ -364,7 +358,7 @@ void Client::OnSlotAssigned(const PlayerSlotAssignedEvent& event)
 	_inputSubs = BindClientInput(_replicationOut, *_events, event.slot);
 }
 
-//NOTE: nothing is banked without a link - keys pressed while reconnecting would reach the new one as a burst
+//NOTE: nothing is queued without a link - keys pressed while reconnecting would arrive as a burst
 void Client::OnSendNetworkFrame(const SendNetworkFrameEvent&)
 {
 	const auto frame{_replicationOut.TakeFrame()};
@@ -389,7 +383,7 @@ void Client::OnDisconnect(const commands::Disconnect& command)
 {
 	const auto reason{command.reason};
 
-	//NOTE: here, not in the queued lambda - HandleDisconnect must know before the queue drains; no redial keeps a kick
+	//NOTE: set here, before the queue drains, for HandleDisconnect; a protocol error or a kick stops redialing
 	_isLinkUnrecoverable = reason == DisconnectReason::ProtocolError || reason == DisconnectReason::Kicked;
 	_isWaitingForSeat = reason == DisconnectReason::ServerFull;
 

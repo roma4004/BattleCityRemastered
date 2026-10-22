@@ -38,8 +38,7 @@ void ReportLeftoverListener(const char* const kind, const char* const eventTypeN
 EventSystem::~EventSystem()
 {
 #ifndef NDEBUG
-	// Anything still subscribed here never had its Unsubscribe() run. Unreachable while every listener
-	// comes in through an EventSubscription, since that one holds the bus alive
+	// a listener left here never unsubscribed; unreachable while every EventSubscription holds the bus alive
 	bool anyLeftoverListeners{};
 
 	for (const auto& [eventType, eventInfo]: _events)

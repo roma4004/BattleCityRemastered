@@ -8,13 +8,11 @@
 
 namespace network::discovery
 {
-//NOTE: raw bytes, not a ser20 command: the whole point is that a client asks before it knows whether it
-//speaks the same protocol at all, so the answer has to be readable by a version that disagrees
+//NOTE: raw bytes, not ser20 - the reply must be readable by a client speaking another protocol version
 inline constexpr std::string_view kProbe{"BC?1"};
 inline constexpr std::string_view kReplyTag{"BC!2"};
 
-//NOTE: bumped whenever AnyCommand or the link header changes shape - an old client that dialled a new
-//server would break on the first batch, and the reply is the last place it can still be told
+//NOTE: bump on any change to AnyCommand or the link header - the reply is the last place to refuse an old client
 inline constexpr std::uint16_t kProtocolVersion{5};
 
 struct Reply final
@@ -22,8 +20,7 @@ struct Reply final
 	std::uint16_t protocolVersion{};
 	std::uint16_t gamePort{};
 	std::uint8_t seats{};
-	//NOTE: answered even at zero - silence reads as "no server here", and a client that is told the
-	//match is full knows to wait rather than to keep dialling
+	//NOTE: answered even at zero - silence means no server; a full match tells the client to wait, not to redial
 	std::uint8_t freeSeats{};
 	MatchRules rules{};
 };

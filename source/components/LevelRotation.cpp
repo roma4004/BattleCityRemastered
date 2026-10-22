@@ -28,8 +28,7 @@ std::vector<std::string> LevelRotation::Names() const
 {
 	std::vector<std::string> names{};
 
-	//NOTE: the error code is the guard, not the loop - a missing folder answers with an empty listing
-	//instead of throwing at whoever asked which levels there are
+	//NOTE: the error code is the guard - a missing folder lists nothing instead of throwing
 	std::error_code ec;
 	for (const auto& entry: std::filesystem::directory_iterator{_folder, ec})
 	{

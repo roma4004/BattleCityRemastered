@@ -17,8 +17,7 @@
 
 namespace
 {
-//NOTE: Water animates instead of drawing a still, and Fortress never reaches an instance - the ring
-//around the eagle is built out of brick and steel walls
+//NOTE: Water animates instead, and Fortress is never instantiated - its ring is built of brick and steel walls
 [[nodiscard]] constexpr TextureType TextureOf(const ObstacleType type)
 {
 	switch (type)
@@ -77,8 +76,7 @@ void Obstacle::Subscribe() {}
 void Obstacle::SubscribeAsClient()
 {
 	_subs.push_back(_events->AddListener(Key(_uuid), this, &Obstacle::OnHealthChanged));
-	//NOTE: how a wall the shovel swept away reaches the client - it never took damage, so no health
-	//change is coming for it
+	//NOTE: how the client learns of a wall the shovel removed - it took no damage, so no health change comes
 	_subs.push_back(_events->AddListener(Key(_uuid), this, &Obstacle::OnDespawned));
 }
 

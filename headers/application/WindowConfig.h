@@ -5,8 +5,7 @@
 struct LaunchOptions;
 class ProjectConfig;
 
-//NOTE: the window, the battlefield sizes itself from the map. Read at startup and never written
-//afterwards, so everyone but main holds it by const&
+//NOTE: window settings only, the battlefield comes from the map
 class WindowConfig final
 {
 public:

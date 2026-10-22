@@ -44,7 +44,7 @@ struct BonusTimerPickupEvent
 	Author spared{};
 };
 
-//NOTE: keyed by the faction it is on; its taker runs on in a free-for-all
+//NOTE: keyed by the frozen faction; in a free-for-all the taker is not frozen
 struct BonusTimerStatusChangeEvent
 {
 	bool isActive;

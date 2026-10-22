@@ -300,8 +300,7 @@ void Tank::EmitMoved()
 	}
 }
 
-//NOTE: half of the step off ice, and that is the whole cost of pushing - what we shove the tank ahead by is the
-//room our own move is then clamped to, so a tank with a tank on its nose travels half as far
+//NOTE: pushing costs half the step off ice - our own move is clamped to the room the shove made
 constexpr double kShoveShare{0.5};
 
 //NOTE: a chain longer than the tanks in a match cannot happen, and a cycle in it must not hang the frame
@@ -366,8 +365,6 @@ void Tank::ShoveBy(const double distance, const Direction dir, const double velo
 	EmitMoved();
 }
 
-//NOTE: the whole chain moves by one distance or none of it moves - a tank that cannot give way is a wall
-//again, and so is one driving at us
 void Tank::ShoveAhead(const Direction dir, const double step)
 {
 	const std::vector<BaseObj*> blockers{_tankMoveBeh->BlockersAhead(dir, step, _allObjects)};

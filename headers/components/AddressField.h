@@ -29,8 +29,7 @@ struct ShownAddress
 	std::optional<std::size_t> caret{};
 };
 
-//NOTE: one typed address - four octets and a port, or an IPv6 address and a port; the separators between parts
-//are drawn, never typed into a part
+//NOTE: one typed address - IPv4 or IPv6 plus a port; the separators between parts are drawn, never typed
 class AddressField final
 {
 	struct Row
@@ -56,7 +55,7 @@ class AddressField final
 	Row _row{};
 	AddressFamily _family{};
 	AddressInput _input{};
-	//NOTE: the last colon closed a full group - a colon typed next is the same one
+	//NOTE: a full group added its colon itself - a colon typed right after it is not doubled; Press, Focus clear it
 	bool _isColonAdded{};
 	//NOTE: only drawn - the text never holds the brackets
 	bool _isBracketed{};
@@ -87,9 +86,7 @@ public:
 	//NOTE: the caret goes on the port; only an IPv6 address shows the brackets it was pasted in
 	void Fill(const network::ServerAddress& address, bool isBracketed);
 	void Type(char symbol);
-	//NOTE: anything but typing forgets the colon a full group got
 	void Press(TextKey key);
-	//NOTE: back on the row, a colon typed is a new one and not the one the last full group got
 	void Focus();
 	void CaretToStart();
 

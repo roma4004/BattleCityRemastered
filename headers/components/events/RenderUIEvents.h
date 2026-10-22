@@ -31,7 +31,7 @@ struct RenderMenuBackgroundEvent
 	int slide{};
 };
 
-//NOTE: a run of the picked table's rows is a window over a list - one that fits keeps the bar's room, with no bar
+//NOTE: the picked table's rows show a window over a longer list; a list that fits has no bar but keeps its room
 struct PanelScroll
 {
 	std::size_t firstRow{};
@@ -47,7 +47,7 @@ struct PanelCaret
 {
 	std::size_t row{};
 	std::size_t symbol{};
-	//NOTE: none is a bar before the symbol, more underline that many - a column picked, not a place to type
+	//NOTE: 0 draws a bar before the symbol, more underline that many symbols - a picked column, not a caret
 	std::size_t symbols{};
 	std::uint8_t alpha{};
 };

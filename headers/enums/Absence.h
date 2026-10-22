@@ -2,8 +2,7 @@
 
 #include <cstdint>
 
-//NOTE: a seat whose player dropped out of a running match, as the ones still in are asked about it - goes on the
-//wire, append only
+//NOTE: a seat whose player left a running match, while the rest are asked about it; on the wire, append only
 enum class Absence : std::uint8_t
 {
 	None,

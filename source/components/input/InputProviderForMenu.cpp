@@ -69,8 +69,7 @@ void InputProviderForMenu::EnableMenuInput()
 {
 	_menuNavSubs.push_back(_events->AddListener(this, &InputProviderForMenu::OnMenuNavEnter));
 
-	//NOTE: every local seat drives the menu in every mode - the peer scrolls nothing here, its keys
-	//arrive on the remote channels and the menu is not on them
+	//NOTE: every local seat drives the menu in every mode; the peer's keys come on remote channels, not these
 	for (const InputChannel channel: kSlots | std::views::transform(LocalInput))
 	{
 		_menuNavSubs.push_back(_events->AddListener(Key(channel), this, &InputProviderForMenu::OnMenuNavUp));

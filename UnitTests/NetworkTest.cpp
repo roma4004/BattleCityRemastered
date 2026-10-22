@@ -77,7 +77,7 @@ protected:
 	EventSubscription _linksUpSub{};
 	double _deltaTimeOneFrame{1.0 / 60.0};
 
-	//NOTE: stands in for MainLoop, in its order - nothing is received or sent without it
+	//NOTE: stands in for Game::Run, in its order - nothing is received or sent without it
 	void Pump() const
 	{
 		_serverEvents->EmitEvent(NetCommandUpdateEvent{.deltaTime = _deltaTimeOneFrame});
@@ -620,7 +620,7 @@ TEST_F(NetworkTest, EachClientPutsOnlyItsOwnSeatOnTheWire)
 	EXPECT_FALSE(strayArrived) << "a client sent the keyboard half of a seat it was never given";
 }
 
-//NOTE: an unanswered hello reads as no host - a third player would burn its retries on one merely busy
+//NOTE: an unanswered hello reads as no host - a third player would spend its retries on a server merely busy
 TEST_F(NetworkTest, AThirdClientIsToldTheSeatsAreTaken)
 {
 	std::optional<PlayerSlot> firstSeat{};

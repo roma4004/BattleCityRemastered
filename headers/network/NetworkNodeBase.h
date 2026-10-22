@@ -11,8 +11,6 @@
 
 struct NetCommandUpdateEvent;
 
-//NOTE: declared, not included - <boost/asio/io_context.hpp> costs ~239k lines after preprocessing,
-//and nothing above the network layer ever needs to see the type
 namespace boost::asio
 {
 class io_context;
@@ -20,8 +18,7 @@ class io_context;
 
 namespace network
 {
-//NOTE: the io_context + its thread, shared by ClientNode and ServerNode. Only one thread runs
-//it, which is what lets Client and Server touch their sockets and links from handlers without a lock.
+//NOTE: the io_context and its one thread for ClientNode and ServerNode - one thread, so handlers need no lock
 class NetworkNodeBase : public INetworkNode
 {
 public:
@@ -32,8 +29,7 @@ protected:
 
 	void StartIoThread();
 
-	//NOTE: call from the derived destructor, while the node it shuts down is still alive. `done`
-	//instead of a plain return: the goodbye is a frame write, so it finishes asynchronously.
+	//NOTE: call from the derived destructor while the node lives; shutdownNode gets `done`, as the goodbye is async
 	void StopIoThread(const std::function<void(std::function<void()>)>& shutdownNode);
 
 	//NOTE: not in the constructor - it would expose a half-built object through ProcessNetworkCommands

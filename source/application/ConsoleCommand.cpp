@@ -74,8 +74,7 @@ std::expected<ConsoleCommand, std::string> ParseConsoleCommand(const std::string
 
 	if (name == "/map")
 	{
-		//NOTE: a name, not a path - a slash or a suffix here would let the console reach outside the maps
-		//folder, and the answer to "which levels are there" is the folder listing, not a typed path
+		//NOTE: a name, not a path - the console must not reach outside the maps folder, which is the level list
 		if (!argument || !IsMapName(*argument))
 		{
 			return Rejected("expected /map NAME, where NAME is a file in Resources/Maps without .map");

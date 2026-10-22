@@ -158,7 +158,7 @@ public:
 	return MathUtils::AreEqualAbsolute(lhs.x, rhs.x, epsilon) && MathUtils::AreEqualAbsolute(lhs.y, rhs.y, epsilon);
 }
 
-//NOTE: gtest finds these by ADL, so a test printing a point includes this header; Point.h stays free of <ostream>
+//NOTE: gtest finds these by ADL, so a test printing a point includes this header
 inline void PrintTo(const FPoint& point, std::ostream* os)
 {
 	*os << "FPoint(x: " << point.x << ", y: " << point.y << ")";

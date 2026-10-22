@@ -288,7 +288,7 @@ TEST_F(BulletTest, AHeavierBulletOutlivesTheMeetingAndFliesOn)
 	EXPECT_LT(metAt.y, heavy->GetPos().y);
 }
 
-// a shell with health above the brick's and depth to spare breaks the brick, pays its health and flies on
+// a shell with health above the brick's and depth to spare breaks the brick, loses that much health and flies on
 TEST_F(BulletTest, BulletPenetratesABrickItCanPayFor)
 {
 	const auto brickWall{SpawnObstacle({.x = 0.0, .y = 6.0, .w = _gridSize, .h = _gridSize}, ObstacleType::Brick)};
@@ -374,7 +374,7 @@ TEST_F(BulletTest, BulletBelowTierThreeDealsDamageAgainstSteel)
 	EXPECT_EQ(steelWallHealth, steelWall->GetHealth());
 }
 
-// from the third tier on steel is paid for like brick
+// from the third tier on steel is penetrated like brick
 TEST_F(BulletTest, TierThreeBulletPenetratesSteel)
 {
 	const auto steelWall{SpawnObstacle({.x = 0.0, .y = 6.0, .w = _gridSize, .h = _gridSize}, ObstacleType::Steel)};

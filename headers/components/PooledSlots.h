@@ -5,8 +5,7 @@
 #include <queue>
 #include <vector>
 
-//NOTE: the free-list half of a pool, shared by BulletPool and TankPool. The rule it carries: an object
-//on the free list must not listen, or the next spawn subscribes it twice
+//NOTE: the free list of BulletPool and TankPool; an object on it must not listen, or a spawn subscribes it twice
 template<class T>
 class PooledSlots final
 {
@@ -37,8 +36,7 @@ public:
 
 	void Track(std::shared_ptr<T> obj) { _inPlay.push_back(std::move(obj)); }
 
-	//NOTE: returns what it reclaimed so the caller can log it or announce it - the slots are already
-	//free by then, so a listener is free to spawn again
+	//NOTE: the slots are free before the caller announces the result, so a listener may spawn again
 	[[nodiscard]] std::vector<std::shared_ptr<T>> ReclaimDead()
 	{
 		auto isDead = [](const std::shared_ptr<T>& obj) { return !obj->GetIsAlive(); };
@@ -61,8 +59,7 @@ public:
 		return reclaimed;
 	}
 
-	//NOTE: a reset ends the match, so the field goes back on the shelf alive or not - what comes off
-	//it next is armed by Reset anyway
+	//NOTE: a reset ends the match, so every object goes back to the free list; Reset arms it on its next spawn
 	void ReclaimAll()
 	{
 		for (const std::shared_ptr<T>& obj: _inPlay)

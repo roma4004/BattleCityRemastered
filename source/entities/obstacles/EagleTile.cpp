@@ -26,7 +26,7 @@ std::optional<unsigned int> EagleTile::ShownHealth() const
 	return GetHealth() < kHealth ? std::optional{GetHealth()} : std::nullopt;
 }
 
-//NOTE: the players' shovel heals the eagle at once; the enemies' arrives switched off and only sweeps the walls away
+//NOTE: the players' shovel heals the eagle at once; the enemies' comes inactive and only removes the walls
 void EagleTile::OnBonusShovel(const BonusShovelStatusChangeEvent& event)
 {
 	//NOTE: an eagle shot down this tick is not healed back - its corpse waits for the sweep

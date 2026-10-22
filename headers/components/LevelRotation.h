@@ -7,8 +7,7 @@
 //NOTE: letters, digits, '-' and '_' - never a path out of the maps folder, never two words on a command line
 [[nodiscard]] bool IsMapName(std::string_view name);
 
-//NOTE: the campaign is the maps folder itself, read in name order - a new level joins by being dropped in,
-//and nothing in the code lists the levels by hand
+//NOTE: the campaign is the maps folder in name order - a new level is added by dropping a file in
 class LevelRotation final
 {
 	std::string _folder;
@@ -18,7 +17,6 @@ public:
 
 	[[nodiscard]] std::vector<std::string> Names() const;
 
-	//NOTE: the last level is followed by the first one again - a campaign that ran out would leave the
-	//prompt on the scoreboard pointing at nothing
+	//NOTE: wraps from the last level to the first, so the scoreboard's next-level prompt always has a map
 	[[nodiscard]] std::string PathAfter(std::string_view currentPath) const;
 };

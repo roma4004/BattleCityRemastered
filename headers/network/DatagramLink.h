@@ -23,8 +23,7 @@ struct DatagramHeader final
 	bool isHello{};
 };
 
-//NOTE: one peer's side of the protocol, with no socket and no clock - the owner feeds datagrams in and puts
-//what comes back on the wire, so every rule here runs in a test without a network
+//NOTE: one peer's protocol, no socket and no clock - the owner passes datagrams both ways, so tests need no network
 class DatagramLink final
 {
 public:
@@ -42,11 +41,10 @@ public:
 
 	[[nodiscard]] static std::optional<DatagramHeader> PeekHeader(std::string_view datagram);
 
-	//NOTE: false when the backlog would outgrow kMaxBacklog - it goes whole and the peer skips past the gap
+	//NOTE: false when the backlog would exceed kMaxBacklog - the backlog is dropped and the peer skips the gap
 	[[nodiscard]] bool SendReliable(std::string_view message);
 
-	//NOTE: a reliable message replacing the peer's whole field - it opens an epoch, and a Latest value of an
-	//older one is dropped on both ends
+	//NOTE: a reliable message replacing the peer's whole field; opens an epoch, older epochs' Latest values are dropped
 	[[nodiscard]] bool SendSnapshot(std::string_view message);
 
 	//NOTE: false when the value alone would not fit a datagram - nothing here splits one

@@ -22,12 +22,10 @@ public:
 
 	[[nodiscard]] uint16_t GetBoundPort() const noexcept;
 
-	//NOTE: no goodbye, the way a crashed host would go - the peer hears nothing more, times out and reconnects,
-	//unlike the destructor's announced leave
+	//NOTE: no goodbye, like a crashed host - the peer times out and reconnects; the destructor does say goodbye
 	void Abort();
 
 private:
-	//NOTE: by pointer only to keep Server - and with it asio - out of this header
 	std::unique_ptr<Server> _server;
 };
 

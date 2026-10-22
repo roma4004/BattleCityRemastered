@@ -27,12 +27,10 @@ protected:
 
 	PeerLink(std::string ownerName, std::shared_ptr<EventSystem> events);
 
-	//NOTE: what this peer makes of a command - Client takes the goodbye off the network thread first,
-	//Session visits straight away. Called from Dispatch, so never before the peer is built.
+	//NOTE: called only from Dispatch, so never before the peer is built
 	virtual void OnCommand(const commands::AnyCommand& command) = 0;
 
-	//NOTE: false only for a message that will not parse. A command the peer ignores is not a failure -
-	//both ends share one AnyCommand, and each drops the half addressed to the other.
+	//NOTE: false only for an unparsable message; both ends share AnyCommand, so ignoring the other half is fine
 	[[nodiscard]] bool Dispatch(const DatagramLink::Arrivals& arrivals);
 
 	std::shared_ptr<EventSystem> _events{nullptr};

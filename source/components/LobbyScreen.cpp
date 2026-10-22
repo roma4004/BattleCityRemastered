@@ -121,7 +121,7 @@ void LobbyScreen::OnRefusedOrLost(const ClientInDisconnectEvent& event)
 
 void LobbyScreen::OnConnectedToHost(const ClientConnectedToHostEvent&) { _isServerFull = false; }
 
-//NOTE: a new seat is a new server, maybe one that opens no port - it says again what it has after the seat
+//NOTE: a new seat may mean a new server without a forwarded port - the server resends its state after the seat
 void LobbyScreen::OnSlotAssigned(const PlayerSlotAssignedEvent& event)
 {
 	_match = event.match;
@@ -181,7 +181,7 @@ bool LobbyScreen::IsAsking() const
 	return !_isLobby && std::ranges::any_of(_absence, [](const Absence absence) { return absence != Absence::None; });
 }
 
-//NOTE: no wait among them - the panel standing is the wait
+//NOTE: no wait choice - an open panel already means waiting
 std::vector<AbsenceChoice> LobbyScreen::Choices() const
 {
 	if (std::ranges::contains(_absence, Absence::Left))

@@ -146,7 +146,7 @@ void UserInput::OnPanelRowsPlaced(const PanelRowsPlacedEvent& event)
 	};
 	_panelRows = event.rows | std::views::transform(toRect) | std::ranges::to<std::vector>();
 	_panelSymbolWidth = event.symbolWidth;
-	//NOTE: the numbers may name other rows now - the next move over one tells of it again
+	//NOTE: row indices may point at other rows now - the next pointer move reports again
 	_hoveredPanelRow.reset();
 }
 
@@ -217,7 +217,7 @@ void UserInput::SwapControllers(const TabReleasedEvent& event)
 	bool& isSwapped{event.isSecondPair ? _isSecondPairSwapped : _areControllersSwapped};
 	isSwapped = !isSwapped;
 	Log::Info("controllers swap state: " + std::to_string(_areControllersSwapped) + '/'
-			  + std::to_string(_isSecondPairSwapped));// left while visual label is absent
+			  + std::to_string(_isSecondPairSwapped));//NOTE: logged until the screen shows the swap
 }
 
 PlayerSlot UserInput::ControllerSlotDefiner(const SDL_JoystickID instanceId) const
@@ -250,8 +250,7 @@ void UserInput::OnWindowDragStop()
 				_events->EmitEvent(SetPauseEvent{.isPaused = _isPausedByWindowDrag});
 			}
 
-			//NOTE: announced here and not on every resize step - resizing the window back while the
-			//user is still dragging it fights the drag
+			//NOTE: announced once the drag ends - resizing the window back during a drag fights the user
 			_events->EmitEvent(WindowSizeChangedToEvent{.newSize = _windowSize});
 		}
 	}
@@ -676,8 +675,7 @@ void UserInput::SteerByStick(const SDL_GamepadAxisEvent& event)
 	EmitHeldChange(event.which, before, direction.Held());
 }
 
-//NOTE: the held direction goes first and the seat second - a pad pulled out mid-turn would otherwise
-//leave the tank driving with nothing to stop it
+//NOTE: the held direction is released before the seat - a pad pulled mid-turn would leave the tank driving
 void UserInput::ReleaseGamepad(const SDL_JoystickID instanceId)
 {
 	if (const auto it{_gamepadDirections.find(instanceId)}; it != _gamepadDirections.end())
@@ -742,8 +740,7 @@ void UserInput::EmitMove(const InputChannel channel, const Direction dir, const 
 	}
 }
 
-//NOTE: SDL fires this for every pixel of a drag, so only the last size is kept - who cares about it
-//is told once, when the drag stops
+//NOTE: SDL fires this for every pixel of a drag - only the last size is kept, announced when the drag stops
 void UserInput::OnWindowResized(const UPoint newSize)
 {
 	_windowSize = newSize;

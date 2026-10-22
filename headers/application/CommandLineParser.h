@@ -24,7 +24,6 @@ inline constexpr std::array kUsage{"--server               bring a server up and
 								   "--mute                 start with the sound off",
 								   "--help                 this text"};
 
-//NOTE: the server has no window and no seat, so it takes neither - the same list for ParseServer
 inline constexpr std::array kServerUsage{"--address=IP           what to listen on - 0.0.0.0 is every interface; "
 										 "left out, this machine's own on its network",
 										 "--port=N               the port to listen on; left out, or auto, takes any free one",
@@ -44,7 +43,7 @@ inline constexpr std::array kServerUsage{"--address=IP           what to listen 
 										 "- what the game passes the server it starts",
 										 "--help                 this text"};
 
-//NOTE: the game that started the server has checked the address, so this exit tells the host the port is taken
+//NOTE: exit code for a taken port - the game that started the server has already checked the address
 inline constexpr int kServerExitCannotListen{2};
 
 class CommandLineParser final
@@ -53,6 +52,6 @@ public:
 	//NOTE: an unknown argument or a malformed value fails the whole parse, so a typo never passes for a dead flag
 	[[nodiscard]] static std::expected<LaunchOptions, ArgError> Parse(int argc, const char* const* argv);
 
-	//NOTE: a game option reaching the server would be taken and dropped on the floor, so it is an error here
+	//NOTE: a game-only option is an error here - the server would silently ignore it
 	[[nodiscard]] static std::expected<LaunchOptions, ArgError> ParseServer(int argc, const char* const* argv);
 };

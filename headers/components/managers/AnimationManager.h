@@ -83,7 +83,6 @@ private:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	bool _isPaused{};
 	std::vector<EventSubscription> _subs{};
-	//NOTE: the container is the layer - the water is driven over, the bursts flash over the field
 	std::vector<AnimatedObject> _groundAnimations{};
 	std::vector<AnimatedObject> _effectAnimations{};
 };

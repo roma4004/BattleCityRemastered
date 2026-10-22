@@ -241,8 +241,7 @@ constexpr auto kCaretBlink{1060ms};
 	return address && address->is_loopback() ? "THIS PC ONLY" : own.interfaceName;
 }
 
-//NOTE: a host row's list - its family's addresses, the one that listens on every network, and for IPv4 the
-//router's on the internet. A machine the internet sees by its own address needs no router to pass anything on
+//NOTE: a host row's list - its family's addresses, every network, and for IPv4 the router's public address
 [[nodiscard]] std::vector<network::OwnAddress> OwnChoices(const bool isIPv6,
 														 const std::optional<std::string>& publicHost)
 {
@@ -750,8 +749,7 @@ void ServerScreen::Press()
 		return;
 	}
 
-	//NOTE: no interface has the router's address - the server listens on every network, and the router is asked
-	//to pass the port on
+	//NOTE: the router's public address - the server listens on every network and asks the router to forward the port
 	if (IsHosting() && IsPublic(address->host))
 	{
 		Choose(network::ServerAddress{.host = std::string{kEveryIPv4Network}, .port = address->port}, true);

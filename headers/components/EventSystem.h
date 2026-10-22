@@ -1,7 +1,5 @@
 #pragma once
 
-// NOTE: 65 TUs include this, so each include here is paid 65 times - a `| views::` pipeline alone
-// costs ~52k lines. Pipelines, and anything needing <iostream>/<cassert>, live in EventSystem.cpp
 #include <algorithm>
 #include <exception>
 #include <functional>
@@ -160,7 +158,6 @@ struct Listener
 constexpr auto IsAlive = [](const auto& listener) { return listener.alive; };
 
 #ifndef NDEBUG
-// Defined in EventSystem.cpp, so <iostream> stays out of this header
 void ReportLeftoverListener(const char* kind, const char* eventTypeName,
 							const std::source_location& origin) noexcept;
 #endif
@@ -353,7 +350,7 @@ public:
 	{
 		if (const auto it{_listeners.find(key)}; it != _listeners.end())
 		{
-			//NOTE: bound by reference before the walk - a rehash mid-dispatch kills the map's iterators, not its elements
+			//NOTE: bound by reference first - a rehash mid-dispatch invalidates the map's iterators, not its elements
 			ListenerList& listeners{it->second};
 
 			++_emitDepth;

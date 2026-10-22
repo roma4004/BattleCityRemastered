@@ -8,8 +8,7 @@ struct SetPauseEvent;
 struct MatchHoldChangedEvent;
 class EventSystem;
 
-//NOTE: in the game the pause belongs to the menu, and there is no menu on the server - so a console command and a
-//client's request would reach nothing. Everything downstream waits on PauseStatusEvent, this is what says it
+//NOTE: the server's pause, which has no menu - takes console and client requests and emits PauseStatusEvent
 class PauseSwitch final
 {
 public:
@@ -25,6 +24,6 @@ private:
 	bool _isPaused{};
 	//NOTE: what a player or the console asked for last
 	bool _isAskedFor{};
-	//NOTE: a newcomer catches up, or the players decide about one who left - nobody's unpause lets the match go
+	//NOTE: from MatchHoldChangedEvent - the match stays paused, an unpause asked meanwhile gets the pause back
 	bool _isHeld{};
 };

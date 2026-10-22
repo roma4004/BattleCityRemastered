@@ -17,8 +17,7 @@ struct ConfigError final
 	std::size_t line{};
 };
 
-//NOTE: startup input - the ini store and asset paths, fixed once the game runs. Kept apart from GameConfig
-//so property_tree stays out of everything that includes that
+//NOTE: startup input - the ini and asset paths, fixed once the game runs
 class ProjectConfig final
 {
 public:

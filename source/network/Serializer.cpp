@@ -10,8 +10,7 @@ namespace network
 {
 namespace
 {
-//NOTE: the name sits beside the type it names, so reordering the variant cannot make the log lie -
-//and an alternative added without a name here does not compile, there is no catch-all overload
+//NOTE: names beside their types, so reordering the variant cannot mislabel the log; a missing name fails to compile
 constexpr const char* NameOf(const commands::PositionChange&) { return "PositionChange"; }
 constexpr const char* NameOf(const commands::TankShot&) { return "TankShot"; }
 constexpr const char* NameOf(const commands::HealthChange&) { return "HealthChange"; }

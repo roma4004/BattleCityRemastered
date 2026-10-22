@@ -317,8 +317,7 @@ std::optional<DatagramLink::Arrivals> DatagramLink::Receive(const std::string_vi
 	return arrivals;
 }
 
-//NOTE: a value belongs to the snapshot it was sent after - an older one would move what that snapshot put
-//in place, a newer one would be wiped by the snapshot still on its way
+//NOTE: a value belongs to the snapshot before it - an older one would undo that snapshot, a newer one be wiped by it
 void DatagramLink::AcceptLatest(const Uuid& key, const HeldLatest& value, Arrivals& arrivals)
 {
 	if (value.epoch < _appliedEpoch)
@@ -347,7 +346,7 @@ void DatagramLink::AcceptLatest(const Uuid& key, const HeldLatest& value, Arriva
 	arrivals.latest.push_back(value.bytes);
 }
 
-//NOTE: a snapshot that never came is replaced by the next one, so what waited for it goes along with it
+//NOTE: a missed snapshot is superseded by the next one, so the values held for it are dropped with it
 void DatagramLink::EnterEpoch(const std::uint32_t epoch, Arrivals& arrivals)
 {
 	_appliedEpoch = epoch;

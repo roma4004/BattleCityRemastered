@@ -34,12 +34,9 @@ constexpr auto kServerExeName{L"BattleCityServer.exe"};
 #else
 constexpr auto kServerExeName{"BattleCityServer"};
 #endif
-//NOTE: relative, so the name on the command line stays ASCII whatever the install path is - the child
-//runs with the exe's folder as its working directory. Two games hosting at once would share it, and the
-//second one would read the first one's port - a lobby is what fixes that, not a longer name
+//NOTE: relative to the child's working directory, so the argument stays ASCII; two hosting games would share it
 constexpr auto kPortFileName{"server-port.txt"};
 
-//NOTE: what the child reads back - the host stays a bare literal, the port is its own word, the map a bare name
 std::vector<std::string> ChildArguments(const network::ServerAddress& address, const MatchSettings& match,
 										const bool isPortForwarded, const std::string& routerUrl)
 {
@@ -126,8 +123,7 @@ std::optional<std::uint16_t> ReadPortFile(const std::filesystem::path& path)
 }
 #endif
 
-//NOTE: next to our own exe, never the working directory - the child is started there and writes the
-//name relative to it, and a debugger starts the game from wherever it likes
+//NOTE: next to our exe, not the working directory - the child writes it there, and a debugger may start us anywhere
 [[nodiscard]] std::filesystem::path PortFilePath()
 {
 	const std::filesystem::path exe{ServerExePath()};
@@ -253,8 +249,7 @@ bool ServerProcess::Start(const network::ServerAddress& address, const MatchSett
 
 	STARTUPINFOW startup{};
 	startup.cb = sizeof(startup);
-	//NOTE: a new console takes the foreground by default, and it is started while the game window is
-	//already up - so it would land on top of it. Nothing is lost: the same log goes to the file
+	//NOTE: minimized without focus - a new console would cover the game window; its log also goes to the file
 	startup.dwFlags = STARTF_USESHOWWINDOW;
 	startup.wShowWindow = SW_SHOWMINNOACTIVE;
 	PROCESS_INFORMATION info{};
@@ -309,7 +304,7 @@ bool ServerProcess::CouldNotListen() const
 struct ServerProcess::Process
 {
 	pid_t pid{};
-	//NOTE: what it exited with, once reaped - a child is reaped once and asked about more often than that
+	//NOTE: the exit status, kept - a child is reaped once but asked about many times
 	std::optional<int> status{};
 
 	~Process() { Stop(); }
@@ -393,8 +388,7 @@ bool ServerProcess::Start(const network::ServerAddress& address, const MatchSett
 
 	if (pid == 0)
 	{
-		//NOTE: the game gone, killed or crashed, the server is told as the game would tell it - it winds down and
-		//closes its port. Tied to the thread that forked, and that is the game's main one, which lives to the end
+		//NOTE: however the game goes, the server gets SIGTERM and closes its port; tied to the forking main thread
 		prctl(PR_SET_PDEATHSIG, SIGTERM);
 		if (getppid() != parent)
 		{

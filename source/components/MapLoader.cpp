@@ -22,8 +22,7 @@
 namespace
 {
 constexpr char kCommentPrefix{'#'};
-//NOTE: the digits line up with ObstacleType by construction, so the legend in the map file is the
-//enum order - keep them in step when a new obstacle appears
+//NOTE: digits follow ObstacleType order, so the map legend is the enum order - keep them in step
 constexpr char kFirstSymbol{'0'};
 constexpr std::string_view kBlanks{" \t"};
 //NOTE: "20 enemies: 6 basic, 2 fast" - a grid row holds no blank, so the line never reads as one
@@ -38,8 +37,7 @@ constexpr std::size_t kMaxListedEnemies{std::numeric_limits<unsigned short>::max
 	return firstVisible == std::string_view::npos || line[firstVisible] == kCommentPrefix;
 }
 
-//NOTE: bonuses are letters, obstacles digits - so the grid still reads as a picture, and a new obstacle
-//cannot collide with a bonus by sliding the legend
+//NOTE: bonuses are letters, obstacles digits - the grid stays a picture, and a new obstacle never takes a bonus symbol
 [[nodiscard]] BonusType BonusOfSymbol(const char symbol)
 {
 	switch (symbol)
@@ -65,8 +63,7 @@ constexpr std::size_t kMaxListedEnemies{std::numeric_limits<unsigned short>::max
 	}
 }
 
-//NOTE: only what stops a tank - bush and ice are ground it drives over and spawns on, so counting them
-//would refuse a perfectly playable map. WorldQuery draws the same line, and the two have to agree
+//NOTE: only what stops a tank - bush and ice are driven over and spawned on; must agree with WorldQuery
 [[nodiscard]] std::vector<bool> BlockedCells(const MapData& map)
 {
 	std::vector<bool> blocked(map.cols * map.rows, false);
@@ -93,8 +90,7 @@ constexpr std::size_t kMaxListedEnemies{std::numeric_limits<unsigned short>::max
 	return blocked;
 }
 
-//NOTE: what TankSpawner asks of the world - does the biggest tank's square fit anywhere in this strip. Without
-//one the spawner waits for a spot that never comes
+//NOTE: whether the biggest tank fits anywhere in this strip - otherwise TankSpawner waits for a spot forever
 [[nodiscard]] bool HasTankWideOpening(const MapData& map, const std::vector<bool>& blocked,
 									  const std::size_t firstRow)
 {

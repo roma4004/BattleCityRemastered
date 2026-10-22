@@ -16,13 +16,11 @@ class ReplicationApplier final
 public:
 	ReplicationApplier(const std::shared_ptr<EventSystem>& events, network::NetworkCommandQueue& queue);
 
-	//NOTE: called on the network thread, and the hop to the game one happens here, once for the whole
-	//command - so no Emit below has to remember to queue anything
+	//NOTE: called on the network thread; hops to the game thread once per command, so no Emit below queues itself
 	void Apply(const commands::AnyCommand& command);
 
 private:
-	//NOTE: every alternative of AnyCommand is named on purpose - without a catch-all template, a new
-	//command stops compiling until someone decides what the client does with it
+	//NOTE: an overload per AnyCommand alternative, no catch-all - a new command fails to compile until handled here
 	void Emit(const commands::PositionChange& command) const;
 	void Emit(const commands::TankShot& command) const;
 	void Emit(const commands::HealthChange& command) const;
@@ -48,12 +46,10 @@ private:
 
 	void EmitEffects(std::vector<BonusEffectTimeLeft> effects) const;
 
-	//NOTE: the host-bound half of the wire - both peers share one AnyCommand, so these reach a client
-	//only if it is talking to itself
+	//NOTE: host-bound commands - both peers share AnyCommand, so these reach a client only if it talks to itself
 	void Emit(const commands::SignalEvent&) const {}
 
-	//NOTE: not a game fact but transport state - Client reads it on the network thread, ahead of the
-	//queue, and never lets it reach here
+	//NOTE: transport state, not a game fact - Client handles it on the network thread before the queue
 	void Emit(const commands::Disconnect&) const {}
 
 	std::shared_ptr<EventSystem> _events{nullptr};

@@ -12,9 +12,7 @@ namespace network
 {
 using boost::asio::ip::udp;
 
-//NOTE: the client's side of "where is the game" - it asks kDiscoveryPort and reads the game port out of
-//the answer. Its socket is non-blocking and it owns its own io_context, because nothing here waits: the
-//caller is the game loop, which asks again next frame
+//NOTE: the client side of discovery - asks kDiscoveryPort for the game port; non-blocking, polled every frame
 class DiscoveryProbe final
 {
 public:
@@ -25,8 +23,7 @@ public:
 	DiscoveryProbe(DiscoveryProbe&&) = delete;
 	DiscoveryProbe& operator=(DiscoveryProbe&&) = delete;
 
-	//NOTE: sends one probe and reads whatever has already arrived - empty means "not yet", not "nobody
-	//there". A reply from a server speaking another protocol version is refused rather than dialled
+	//NOTE: sends a probe and reads what arrived - empty means not yet, not nobody; another protocol version is refused
 	[[nodiscard]] std::optional<discovery::Reply> Poll();
 
 private:

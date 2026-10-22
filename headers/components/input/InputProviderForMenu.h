@@ -32,12 +32,11 @@ class InputProviderForMenu final
 {
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
-	//NOTE: apart from _subs because the menu keys come and go with the menu, and clearing this vector
-	//is how they go - the listeners in _subs stay for the life of the object
+	//NOTE: menu keys apart from _subs - they come and go with the menu by clearing this vector
 	std::vector<EventSubscription> _menuNavSubs{};
 	const GameConfig& _gameConfig;
 	MenuKeys _keys{};
-	//NOTE: it stands in for the menu, so hiding the menu for it is no unpause
+	//NOTE: the server screen hides the menu - OnMenuShown must not take that for a closed menu and unpause
 	bool _isServerScreenShown{};
 
 	void OnMenuReleased(const MenuReleasedEvent&);

@@ -27,8 +27,7 @@ struct FoundServer final
 	[[nodiscard]] bool operator==(const FoundServer& rhs) const = default;
 };
 
-//NOTE: probes by broadcast, into every network of this machine too, and at its own address - a broadcast
-//may not return to its sender
+//NOTE: probes by broadcast into every own network and at its own address - a broadcast may not return to its sender
 class DiscoveryScan final
 {
 public:

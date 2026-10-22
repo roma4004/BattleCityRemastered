@@ -1,7 +1,6 @@
 #pragma once
 
-//NOTE: what became of the server's port on the router - the lobby says it, so the host knows whether the
-//address to give out lets anybody in
+//NOTE: the server's port on the router, shown in the lobby so the host knows whether the address lets anybody in
 enum class PortForwarding : char8_t
 {
 	//NOTE: the router is being looked for and asked - a few seconds
@@ -13,7 +12,7 @@ enum class PortForwarding : char8_t
 	Refused,
 	//NOTE: a provider's NAT (CGNAT) stands between the router and the internet - the port stays closed from outside
 	BehindProvider,
-	//NOTE: was open, and the router would not keep it so - asked again until it does
+	//NOTE: was open, then the router dropped it - asked again until it holds
 	Lost,
 	//NOTE: open behind another router - the host passes the port on there by hand, to this router's outside address
 	BehindRouter,

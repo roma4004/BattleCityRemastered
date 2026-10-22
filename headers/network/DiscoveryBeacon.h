@@ -13,13 +13,10 @@ namespace network
 {
 using boost::asio::ip::udp;
 
-//NOTE: the server's side of "where is the game" - it sits on kDiscoveryPort, which never changes, and
-//answers with the port the match actually got. Named for what it does here, not for who asks
+//NOTE: the server side of discovery - listens on kDiscoveryPort and answers with the game port it got
 class DiscoveryBeacon final
 {
 public:
-	//NOTE: freeSeats is asked at answer time, not captured as a number - the answer is only worth
-	//anything if it describes the server as it is when the probe arrives
 	DiscoveryBeacon(boost::asio::io_context& ioContext, const boost::asio::ip::address& host,
 					std::uint16_t gamePort, std::uint8_t seats, MatchRules rules,
 					std::function<std::uint8_t()> freeSeats);
@@ -49,8 +46,7 @@ private:
 
 	//NOTE: bound to the server's address - every answer goes out of it, so the asker reads that address
 	Inbox _inbox;
-	//NOTE: Linux hands a broadcast only to a socket bound to the address it was sent to - 255.255.255.255,
-	//or the broadcast of the server's own network
+	//NOTE: Linux delivers a broadcast only to a socket bound to its address - 255.255.255.255 or the subnet one
 	Inbox _broadcastInbox;
 	Inbox _subnetInbox;
 	const std::uint16_t _gamePort;

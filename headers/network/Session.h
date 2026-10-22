@@ -21,16 +21,14 @@ namespace network
 {
 using boost::asio::ip::udp;
 
-//NOTE: one client of the server, known by its address. It owns no socket - Server reads and writes for all
-//sessions on its own, on its io thread, and every method below the accessors runs there
+//NOTE: one client, known by address; Server does its I/O, and every method below the accessors runs on the io thread
 class Session final : public PeerLink, public std::enable_shared_from_this<Session>
 {
 public:
 	Session(udp::endpoint endpoint, std::uint32_t connectionId, const std::shared_ptr<EventSystem>& events,
 			PlayerSlot slot, MatchSettings match, DatagramLink::Clock::time_point now);
 
-	//NOTE: the seat is the session's, fixed when the server took the client in - a press off the wire names
-	//the key, and the seat says whose it is
+	//NOTE: fixed when the server seated the client - a press off the wire names the key, the seat says whose
 	[[nodiscard]] PlayerSlot GetSlot() const noexcept { return _slot; }
 	[[nodiscard]] std::string Address() const
 	{
@@ -45,9 +43,8 @@ public:
 	//NOTE: on the network thread, the link's only one - the game thread is handed the answer, not the link
 	void UpdateWoundDown(DatagramLink::Clock::time_point now);
 
-	//NOTE: owed on ready and after a dropped backlog - paid with a snapshot in place of the next frame
+	//NOTE: set on ready and after a dropped backlog - the next frame is replaced by a snapshot
 	[[nodiscard]] bool IsSnapshotOwed() const { return _isSnapshotOwed.load(std::memory_order_acquire); }
-	//NOTE: a seat changed hands - everyone is sent the field the way the one who took it is
 	void OweSnapshot() { _isSnapshotOwed.store(true, std::memory_order_release); }
 	void ClearSnapshotDebt() { _isSnapshotOwed.store(false, std::memory_order_release); }
 
@@ -68,12 +65,10 @@ public:
 	void Kick();
 
 private:
-	//NOTE: visited straight on the network thread, and each Handle queues its own game-thread work -
-	//the goodbye has a half that must run right here, ahead of the queue
+	//NOTE: visited on the network thread; each Handle queues its game-thread work, the goodbye also acts right here
 	void OnCommand(const commands::AnyCommand& command) override;
 
-	//NOTE: every alternative of AnyCommand is named on purpose - without a catch-all template, a new
-	//command stops compiling until someone decides whether the host half of the wire cares about it
+	//NOTE: an overload per AnyCommand alternative, no catch-all - a new command fails to compile until handled here
 	void Handle(const commands::SignalEvent& command);
 	void Handle(const commands::KeyStateChange& command);
 	void Handle(const commands::Disconnect& command);

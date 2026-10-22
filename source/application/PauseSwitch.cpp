@@ -10,8 +10,7 @@ PauseSwitch::PauseSwitch(const std::shared_ptr<EventSystem>& events)
 	_subs.push_back(_events->AddListener(this, &PauseSwitch::OnHoldChanged));
 }
 
-//NOTE: an ask the hold overrules is answered anyway - the client that let go of the pause has already let go of
-//its own, and only the answer puts it back
+//NOTE: answered even while held - the client already unpaused locally, and only the answer pauses it back
 void PauseSwitch::OnSetPause(const SetPauseEvent& event)
 {
 	_isAskedFor = event.isPaused;

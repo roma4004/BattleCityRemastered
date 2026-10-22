@@ -13,10 +13,10 @@ class AnimatedObject final
 {
 public:
 	ObjRectangle rect{};
-	int currentFrameIndex{};//NOTE: frame index currently shown, advances every animationSpeed ticks
-	int ticksSinceLastFrame{};//NOTE: tick counter throttling how often currentFrameIndex advances
+	int currentFrameIndex{};
+	int ticksSinceLastFrame{};
 	int size{};
-	int speed{};//NOTE: ticks between frame advances;
+	int speed{};//NOTE: ticks between frame advances
 	int passes{1};//NOTE: how many times the frame sequence is played before disposal
 	int passesDone{};
 	Uuid owner{};//NOTE: the spawn this animation runs for, if any - it is told when the last frame is done

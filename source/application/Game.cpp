@@ -35,8 +35,7 @@
 
 namespace
 {
-//NOTE: a lobby screen away from being a user action, so it is polled rather than watched - slow enough
-//to cost nothing, quick enough that the second window joins as soon as the first one is up
+//NOTE: polled, not watched - cheap enough, and the second window joins soon after the first one is up
 constexpr auto kPublishedPortPollStep{std::chrono::milliseconds{250}};
 }//namespace
 
@@ -136,12 +135,10 @@ void Game::OnServerAddressChosen(const ServerAddressChosenEvent& event)
 	EnterGameMode(event.mode);
 }
 
-//NOTE: PlayAsHost starts BattleCityServer and joins it as an ordinary client - this process runs
-//as a client either way, and takes whichever seat is free
+//NOTE: PlayAsHost starts BattleCityServer and joins it as an ordinary client in whichever seat is free
 void Game::EnterGameMode(const GameMode mode)
 {
-	//NOTE: the link goes before the process it talks to - built any earlier it dials a server
-	//this call is about to kill
+	//NOTE: the link goes first - left up, it would redial the server this call is about to kill
 	_simulation->LeaveGameMode();
 
 	if (mode != GameMode::PlayAsHost)
@@ -172,7 +169,7 @@ void Game::EnterGameMode(const GameMode mode)
 
 void Game::WatchPublishedPort(const GameMode mode)
 {
-	//NOTE: our own server is dialled by the port it writes down even when it was named - it listens only then
+	//NOTE: our own server is dialled by its port file even when the port was named - the file means it listens
 	_isDialingPublishedPort = mode == GameMode::PlayAsHost || (mode == GameMode::PlayAsClient && !_isPortNamed);
 	//NOTE: the file lies next to this exe, so it can only name a server on this machine
 	_isPortFileRead = mode == GameMode::PlayAsHost || network::IsThisMachine(_gameConfig.serverAddress.host);
@@ -184,8 +181,7 @@ void Game::WatchPublishedPort(const GameMode mode)
 		return;
 	}
 
-	//NOTE: whatever number is left over belongs to a server we just shut down or to the last run - only
-	//what a server says now is worth dialling, even when it says the same thing again
+	//NOTE: a leftover port belongs to a stopped or a previous server - only what a server says now is dialled
 	_gameConfig.serverAddress.port = network::kAnyFreePort;
 	_nextPortPoll = std::chrono::steady_clock::time_point{};
 	//NOTE: a beacon on this machine may be another server's - our own child is read from its file
@@ -238,8 +234,7 @@ void Game::PollPublishedPort()
 
 bool Game::TryAdoptPublishedPort()
 {
-	//NOTE: the beacon first - it answers over the network, so it works for a server on another machine,
-	//while the file rides on both copies sitting in the same folder
+	//NOTE: the beacon first - it works across machines, the port file only for copies in the same folder
 	std::optional<std::uint16_t> port{};
 	if (_portProbe)
 	{
@@ -274,13 +269,13 @@ void Game::AbandonHosting()
 	_events->EmitEvent(ShowMenuEvent{.isShown = true});
 }
 
-//NOTE: the number held now is the one that answered, so there is nothing left to watch for
+//NOTE: the port in use has answered, so there is no published one to watch for
 void Game::OnConnectedToHost(const ClientConnectedToHostEvent&)
 {
 	_isDialingPublishedPort = false;
 	_portProbe.reset();
 
-	//NOTE: our own child's server is no host to come back to
+	//NOTE: our own child server is not remembered as the last host
 	if (_serverProcess)
 	{
 		return;

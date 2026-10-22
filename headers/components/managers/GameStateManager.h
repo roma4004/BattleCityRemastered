@@ -49,12 +49,11 @@ class GameStateManager final
 	std::bitset<kSeatCount> _seatedSeats{};
 	//NOTE: joined a running match and not yet holding the field it was sent
 	std::bitset<kSeatCount> _syncingSeats{};
-	//NOTE: their players have driven the seat's tank - a bot left over at the next level never takes it back
+	//NOTE: seats whose player has driven the tank; a bot never takes those back at the next level
 	std::bitset<kSeatCount> _drivenSeats{};
 	std::array<SeatHolder, kSeatCount> _holders{};
-	//NOTE: written by the host, mirrored by a client - the pause plate gives way to the panel asking about it
+	//NOTE: written by the host, mirrored by a client; the absence panel replaces the pause plate
 	std::array<Absence, kSeatCount> _absence{};
-	//NOTE: what the pause was last told - a newcomer catching up, or the players asked about one who left
 	bool _isHeld{};
 	//NOTE: the match starts once this many are ready, the bots counted in
 	std::size_t _seatCount{};

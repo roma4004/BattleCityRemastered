@@ -5,8 +5,7 @@
 
 enum class Direction : char8_t;
 
-//NOTE: the d-pad and the left stick drive one tank - the direction pressed last wins, and letting it go hands
-//the tank back to whatever is still held
+//NOTE: d-pad and left stick drive one tank - the last pressed direction wins, releasing it returns to a held one
 class GamepadDirection final
 {
 public:

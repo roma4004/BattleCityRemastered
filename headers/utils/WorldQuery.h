@@ -12,8 +12,7 @@ public:
 	[[nodiscard]] static bool IsSpotFree(const std::vector<std::shared_ptr<BaseObj>>& objects,
 										 const ObjRectangle& rect);
 
-	//NOTE: ground a tank drives over - bush and ice - leaves the spot free; water and everything solid
-	//do not, and neither does a bullet passing through
+	//NOTE: bush and ice leave the spot free; water, solid objects and bullets do not
 	[[nodiscard]] static bool IsSpotFreeOfBlockers(const std::vector<std::shared_ptr<BaseObj>>& objects,
 												   const ObjRectangle& rect);
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "geometry/ObjRectangle.h"//NOTE: complete type needed - a std::vector<ObjRectangle> member is instantiated below
+#include "geometry/ObjRectangle.h"
 
 #include <array>
 #include <memory>
@@ -17,7 +17,7 @@ class LineOfSight final
 	//NOTE: up, left, down, right - the order Direction lists them, so a side indexes straight into it
 	std::array<ObjRectangle, 4> _lineOfSightBoundaries{};
 
-	//NOTE: looked at, not held - a sight is read the tick it is taken, while the world still holds them
+	//NOTE: raw pointers - a sight is read in the tick it is taken, while the world keeps them alive
 	std::vector<BaseObj*> _upSideObstacles{};
 	std::vector<BaseObj*> _leftSideObstacles{};
 	std::vector<BaseObj*> _downSideObstacles{};

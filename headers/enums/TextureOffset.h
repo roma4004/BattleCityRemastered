@@ -4,7 +4,7 @@
 
 struct TextureOffset
 {
-	//NOTE: a 16x16 grid holding 13x13 tanks; the window of the up facing
+	//NOTE: tanks are 13x13 in a 16x16 grid; these are the up-facing frames
 
 	// Tanks
 	static constexpr ObjRectangle kEnemy{.x = 129, .y = 1, .w = 13, .h = 13};

@@ -30,8 +30,7 @@ extern "C" void OnStopSignal(int) { isRequested.store(true, std::memory_order_re
 constexpr auto kClosePatience{4500ms};
 constexpr auto kClosePollStep{10ms};
 
-//NOTE: a closed console window raises no signal - the CRT turns only Ctrl+C and Ctrl+Break into one - and the
-//process is ended the moment this returns, so it is held here until the loop has wound down
+//NOTE: a closed console raises no signal, and the process ends once this returns - so it waits for the wind-down
 BOOL WINAPI OnConsoleClosed(const DWORD event)
 {
 	if (event != CTRL_CLOSE_EVENT && event != CTRL_LOGOFF_EVENT && event != CTRL_SHUTDOWN_EVENT)

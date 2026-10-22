@@ -28,7 +28,6 @@ class BonusManager final
 
 	static constexpr milliseconds kRespawnHelmetDuration{std::chrono::seconds{5}};
 
-	//NOTE: the field owns the bonus, this only watches its clock - weak, so a spent one drops out
 	struct SpawnedBonus
 	{
 		std::weak_ptr<Bonus> bonus{};

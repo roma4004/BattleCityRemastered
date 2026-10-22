@@ -14,8 +14,7 @@ struct SDL_Config;
 struct TTF_Text;
 struct TTF_TextEngine;
 
-//NOTE: declared here rather than taken from SDL_Config.h - the cache opens fonts and nothing
-//else, so it has no business pulling the renderer and the mixer in with the alias
+//NOTE: declared here, not taken from SDL_Config.h - the cache needs fonts only, not the renderer and the mixer
 using FontHandle = SdlHandle<TTF_Font, TTF_CloseFont>;
 
 //NOTE: glyphs are laid out at final pixel size, so a layout is only valid for the scale that made it
@@ -95,8 +94,6 @@ private:
 	[[nodiscard]] TTF_Font* FontForScale(int basePointSize, float scale);
 	[[nodiscard]] TTF_TextEngine* Engine();
 	[[nodiscard]] CachedText LayOut(std::string_view text, TTF_Font* font, float scale);
-	//NOTE: the layouts alone - the fonts are keyed by final pixel size and the engine belongs to the
-	//renderer, so a scale change leaves both valid
 	void SyncScale(float scale);
 
 	const SDL_Config& _sdlConfig;

@@ -17,8 +17,7 @@ namespace network
 {
 namespace
 {
-//NOTE: eleven local types collapse onto one command - each line names the StatisticsType that tells
-//them apart and the fields that value carries
+//NOTE: eleven local types onto one command - each line names its StatisticsType and the fields it carries
 void BindHostStatistics(ReplicationPublisher& out)
 {
 	out.Bind<StatisticsBulletHitEvent>([](const auto& e)
@@ -188,8 +187,7 @@ void BindClientReplication(ReplicationPublisher& out)
 	});
 }
 
-//NOTE: forwards the five keys of the half that the server's slot maps to locally. The command names
-//the key, and the server takes the seat from the session it arrived on
+//NOTE: forwards the five keys of the slot's local half; the server takes the seat from the session they came on
 std::vector<EventSubscription> BindClientInput(ReplicationPublisher& out, EventSystem& events, const PlayerSlot slot)
 {
 	const InputChannel channel{LocalInput(slot)};

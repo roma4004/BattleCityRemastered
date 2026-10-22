@@ -247,7 +247,7 @@ BaseObj* InputProviderForBot::Lookup(Tank& self, LineOfSight& lineOfSight, Direc
 	return nullptr;
 }
 
-//NOTE: the rung is read off the hull at the moment of the sighting - a shot on its way here moves it one up
+//NOTE: the band is read off the heading at the sighting - a shot coming at us moves it one faster
 InputProviderForBot::NoticeBand InputProviderForBot::NoticeBandFor(const Direction heading, const Direction side,
 																   const bool isUnderFire)
 {
@@ -309,7 +309,7 @@ BaseObj* InputProviderForBot::TurnOntoNearestSeen(Tank& self)
 		seen = NearestAhead(lineOfSight, dir);
 	}
 
-	//NOTE: an opponent in the sights holds the hull - the bonus keeps until the reload, the shot does not
+	//NOTE: a clear shot at an opponent comes first - a bonus can wait for the reload, the shot cannot
 	const bool hasShot{seen != nullptr && IsOpponentTankInSights(self, *seen) && IsClearToFire(self, dir, *seen)};
 	if (!hasShot)
 	{
@@ -476,7 +476,7 @@ bool InputProviderForBot::CanIntercept() const
 //NOTE: the first of the two calls Tank::TickUpdate makes - the threat found here is what ShouldShoot answers
 std::optional<Direction> InputProviderForBot::ChooseDirection(Tank& self, const double deltaTime)
 {
-	//NOTE: a reloading bot has no business in the opponent it saw - it used to turn onto it, stop, turn away
+	//NOTE: a reloading bot ignores the opponent it sees - turning onto it only to turn away made it jitter
 	if (!self.CanShoot())
 	{
 		_isLinedUpForShot = false;

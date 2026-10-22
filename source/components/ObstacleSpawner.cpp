@@ -136,8 +136,7 @@ void ObstacleSpawner::SpawnFortressWall(const ObjRectangle rect, const ObstacleT
 		wall = std::make_shared<FortressBrickWall>(rect, _events, uuid, _gameConfig);
 	}
 
-	//NOTE: reported from here, not from the map branch - a wall no one told FortressManager about would
-	//never be rebuilt by the shovel, and a rebuilt one has to replace what the spot points at
+	//NOTE: registered here for map and shovel walls - FortressManager must know each wall to rebuild or replace it
 	_events->EmitEvent(FortressSpotRegisteredEvent{.rect = rect, .wall = wall});
 
 	_events->EmitEvent(AddToSpawnQueueEvent{.obj = std::move(wall)});
@@ -173,8 +172,7 @@ void ObstacleSpawner::LoadMap() const
 		return;
 	}
 
-	//NOTE: the cell size comes from this, so it has to be settled before a single obstacle is placed -
-	//the bus is synchronous, so by the time this returns _gameConfig already holds the new geometry
+	//NOTE: before any obstacle - the cell size comes from it, and the synchronous bus updates _gameConfig at once
 	_events->EmitEvent(MapLoadedEvent{.cols = map.GetCols(),
 									  .rows = map.GetRows(),
 									  .stage = _gameConfig.stageNumber,

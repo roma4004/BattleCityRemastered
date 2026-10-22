@@ -36,8 +36,7 @@ void GameStatistics::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &GameStatistics::OnGameReset));
 
-	//NOTE: one set for both roles - the host reaches these off its own game logic, the client off the
-	//same events re-emitted from the wire, so nothing below asks which one it is
+	//NOTE: the same listeners on host and client - the client gets these events re-emitted from the wire
 	_subs.push_back(_events->AddListener(this, &GameStatistics::OnBulletHit));
 	_subs.push_back(_events->AddListener(this, &GameStatistics::OnTankHit));
 	_subs.push_back(_events->AddListener(this, &GameStatistics::OnTankDied));
@@ -79,7 +78,7 @@ void GameStatistics::OnBulletHit(const StatisticsBulletHitEvent& event)
 	Credit(event.author, &EnemyTeamStatistics::bulletHits, &SeatStatistics::bulletHits);
 }
 
-//NOTE: friendly fire is the one hit's to take; across the sides the player scores, hitting or hit
+//NOTE: friendly fire counts for the hit seat only; across sides the shooter gets a hit, the target a hit taken
 void GameStatistics::OnTankHit(const StatisticsTankHitEvent& event)
 {
 	if (FactionOf(event.author) == Faction::Neutral)
@@ -98,7 +97,7 @@ void GameStatistics::OnTankHit(const StatisticsTankHitEvent& event)
 	CreditSeat(event.who, &SeatStatistics::hitByEnemyTeam);
 }
 
-//NOTE: friendly fire is the one killed's to take; a kill across the sides is the killer's
+//NOTE: friendly fire counts for the killed seat only; across sides the kill is the killer's
 void GameStatistics::OnTankDied(const TankDiedEvent& event)
 {
 	if (FactionOf(event.author) == Faction::Neutral)

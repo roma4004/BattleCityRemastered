@@ -5,8 +5,7 @@
 
 enum class Direction : char8_t;
 
-//NOTE: also the spawn's clock - AnimationManager reports the last frame by uuid; an endless burst is a
-//client's, which lands on the host's word and so plays until TankSpawnCompletedEvent
+//NOTE: also the spawn's clock - the last frame is reported by uuid; a client's burst runs until TankSpawnCompletedEvent
 struct AnimationCreateTankSpawnEvent
 {
 	ObjRectangle rect;
@@ -14,13 +13,13 @@ struct AnimationCreateTankSpawnEvent
 	bool isEndless{};
 };
 
-//NOTE: a cancelled burst never reports, so the tank waiting for it never lands
+//NOTE: a cancelled burst never reports its last frame, so its tank never spawns
 struct AnimationCancelTankSpawnEvent
 {
 	Uuid uuid;
 };
 
-//NOTE: the same burst carried to another square - creating a fresh one would restart the countdown
+//NOTE: moves the burst to another square; a new burst would restart the countdown
 struct AnimationMoveTankSpawnEvent
 {
 	ObjRectangle rect;

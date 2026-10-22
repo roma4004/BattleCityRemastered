@@ -259,8 +259,7 @@ void Bonus::PickUpBonus(const Author author)
 
 		if (_isSuper)
 		{
-			//NOTE: a super bonus is simply its own effect twice - timed ones stack their duration,
-			//stepped ones (a tier, a life) advance one more step
+			//NOTE: a super bonus applies its effect twice - timed ones double the duration, stepped ones advance twice
 			emit(*_events, author, faction);
 		}
 

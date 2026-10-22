@@ -70,11 +70,10 @@ private:
 	void EnterGameMode(GameMode mode);
 	void AbandonHosting();
 
-	//NOTE: a port nobody named, and our own child's, is asked of the server's beacon or read from the file it
-	//writes next to the exe. It is watched rather than read once, so the two windows may be started in either order
+	//NOTE: an unnamed port comes from the server's beacon or its port file; polled, so either window may start first
 	void WatchPublishedPort(GameMode mode);
 	void PollPublishedPort();
-	//NOTE: the answer matters only to the poll - the first reading is taken for its side effect
+	//NOTE: true when the port changed - WatchPublishedPort's first look leaves the dialling to ApplyGameMode
 	bool TryAdoptPublishedPort();
 
 	std::shared_ptr<EventSystem> _events{nullptr};

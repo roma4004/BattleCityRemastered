@@ -48,8 +48,7 @@
 
 namespace
 {
-//NOTE: every cell of the strip plus the rolled point itself, the nearest to it first - a spot beside the
-//roll still reads as that spawn, a spot across the field does not
+//NOTE: every cell of the strip and the rolled point, nearest first - a spot beside the roll still counts as it
 [[nodiscard]] std::vector<double> SpawnCandidates(const double minX, const double maxX, const double preferredX,
 												  const double cell)
 {
@@ -115,8 +114,7 @@ void TankSpawner::Subscribe()
 		_subs.push_back(_events->AddListener(this, &TankSpawner::OnSeatHolderChanged));
 	}
 
-	//NOTE: a tank mid-spawn is not an object yet, so the grenade cannot reach it the way it reaches
-	//the others - the spawner cancels it on their behalf, and only where the world is decided
+	//NOTE: a spawning tank is no object yet, so the grenade misses it - the authority's spawner cancels it instead
 	if (IsAuthority(_gameMode))
 	{
 		for (const Faction faction: {Faction::PlayerTeam, Faction::EnemyTeam, Faction::Solo})
@@ -283,8 +281,7 @@ void TankSpawner::OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& ev
 						   });
 }
 
-//NOTE: a spawn still bursting goes the way a mirrored respawn does, minus the event - the snapshot's lives
-//already count it
+//NOTE: a pending spawn lands like a mirrored respawn, minus the event - the snapshot's lives already count it
 void TankSpawner::OnWorldSnapshotReceived(const WorldSnapshotReceivedEvent& event)
 {
 	std::ranges::for_each(event.snapshot.tanks, [this](const network::commands::TankSnapshot& tank)
@@ -383,8 +380,7 @@ TankModel TankSpawner::UpcomingEnemyModel() const
 	return _enemiesChosen < _enemyLineup.size() ? _enemyLineup[_enemiesChosen] : RollEnemyModel();
 }
 
-//NOTE: asked of the field while it still stands - the reset that empties it comes a phase later, and
-//on a server several ready signals later
+//NOTE: read from the field while it stands - the reset that clears it comes a phase later, on a server even later
 void TankSpawner::OnNextLevelRequested(const NextLevelRequestedEvent&)
 {
 	if (IsClient(_gameMode))
@@ -415,8 +411,7 @@ TankSpawner::NextLevelLoadout TankSpawner::LoadoutOf(const TankType type) const
 	return found == _nextLevelLoadouts.end() ? NextLevelLoadout{.type = type} : *found;
 }
 
-//NOTE: the tier and the health ride in with the reset property, the ship is a pickup nobody picked up - and
-//the client hears none of it, so the host says it out loud once the tank is there
+//NOTE: tier and health come with the reset property, the ship is no pickup - the host announces them for the client
 void TankSpawner::SpendLoadout(const Uuid uuid, const TankType type, const unsigned int health)
 {
 	const auto found{std::ranges::find(_nextLevelLoadouts, type, &NextLevelLoadout::type)};
@@ -555,8 +550,6 @@ std::optional<ObjRectangle> TankSpawner::GetPlayerRandomPosX(const PlayerSlot sl
 	const auto battleFieldSizeX{static_cast<double>(_gameConfig.battlefieldSize.x)};
 	const auto battleFieldSizeY{static_cast<double>(_gameConfig.battlefieldSize.y)};
 
-	//NOTE: the seats stand either side of the fortress, so the ranges are cut around it - the eagle plus its
-	//ring of walls, from the middle of the field outwards
 	const double fortressHalfWidth{_gameConfig.gridOffset
 								   * (ObstacleCellSpan(ObstacleType::Eagle) / 2.0
 									  + static_cast<double>(WorldGeometry::kFortressRingCells))};
@@ -684,8 +677,7 @@ void TankSpawner::DelayedSpawnStart(const ObjRectangle rect, const Uuid uuid, co
 
 	_events->EmitEvent(TankSpawnEvent{.uuid = uuid});
 
-	//NOTE: the burst is also the countdown - the tank lands when its last frame is done; a client's never
-	//ends by itself, so it lasts exactly as long as the host's
+	//NOTE: the burst is the countdown - the tank lands on its last frame; a client's is endless and lasts as the host's
 	_events->EmitEvent(AnimationCreateTankSpawnEvent{.rect = rect, .uuid = uuid, .isEndless = IsClient(_gameMode)});
 }
 
@@ -751,8 +743,7 @@ void TankSpawner::DelayedSpawnWith(const DelayedTankSpawn& params)
 	{
 		_events->EmitEvent(AddToSpawnQueueEvent{.obj = tank});
 
-		//NOTE: ahead of the effects - their status travels as its own command, and the client has to
-		//have built the tank before one arrives for it
+		//NOTE: before the effects - their status is a command of its own, and the client must have the tank first
 		if (IsHost(_gameMode))
 		{
 			_events->EmitEvent(TankSpawnCompletedEvent{.uuid = params.uuid});

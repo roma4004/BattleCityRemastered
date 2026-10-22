@@ -18,7 +18,7 @@ namespace
 {
 using namespace std::chrono_literals;
 
-//NOTE: past the patience the server before has with its own wind-down - it is surely gone by then
+//NOTE: longer than the old server's own wind-down limit - it is surely gone by then
 constexpr auto kPatience{12s};
 }//namespace
 

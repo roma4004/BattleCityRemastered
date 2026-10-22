@@ -7,7 +7,7 @@
 using buuid = boost::uuids::uuid;
 
 static_assert(sizeof(buuid) == sizeof(Uuid), "Uuid and boost::uuids::uuid must stay layout-compatible");
-//NOTE: only the size has to match - bit_cast converts by value, boost's alignment is its own business
+//NOTE: only the size must match - bit_cast copies by value, so boost's alignment does not matter
 
 namespace
 {

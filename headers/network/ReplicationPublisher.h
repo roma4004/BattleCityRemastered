@@ -18,8 +18,6 @@ class ReplicationPublisher final
 public:
 	explicit ReplicationPublisher(const std::shared_ptr<EventSystem>& events);
 
-	//NOTE: one frame out, or nothing to say. The archive is the same on every node, delivery is not - one
-	//link for a client, every session for a server
 	[[nodiscard]] std::shared_ptr<const WireFrame> TakeFrame();
 
 	void Publish(commands::AnyCommand command);

@@ -156,8 +156,7 @@ TextureManager::AtlasFrames TextureManager::GetAnimFrames(const AnimationType ty
 			return AtlasFrames{.first = TextureOffset::kTankSpawn};
 		case AnimationType::Bonus_Spawn:
 		{
-			//NOTE: the tank spawn burst entered from its last frame and walked backwards, so the bonus
-			//shrinks into place instead of blooming out of it
+			//NOTE: the tank spawn burst played backwards from its last frame, so the bonus shrinks into place
 			ObjRectangle lastFrame{TextureOffset::kTankSpawn};
 			lastFrame.x += (kBonusSpawnFrames - 1) * kAtlasCellSize;
 
@@ -195,8 +194,7 @@ void TextureManager::Draw(const Sprite& sprite) const
 	}
 }
 
-//NOTE: the frame is one atlas pixel of the sprite's own outline, so it is redrawn from the atlas rather
-//than stroked over - that way it lands exactly on the pixels it recolors, at any scale
+//NOTE: the rim is the sprite's outline redrawn from the atlas, not stroked, so it hits exactly its pixels at any scale
 void TextureManager::DrawRim(const ObjRectangle& textureRect, const ObjRectangle& destRect, const Direction dir,
 							 const unsigned int color) const
 {

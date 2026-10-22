@@ -31,10 +31,9 @@ using namespace std::chrono_literals;
 namespace
 {
 constexpr auto kDescription{"Battle City Remastered"};
-//NOTE: renewed at half, so the port stays open while the server runs - and one killed outright leaves it open
-//no longer than this
+//NOTE: renewed at half, so the port stays open while the server runs; a killed one leaves it at most this long
 constexpr auto kLease{20min};
-//NOTE: a router that keeps a port only for good answers so, and is asked again with no end set
+//NOTE: the UPnP error of a router that takes permanent leases only; asked again with no lease time
 constexpr int kOnlyPermanentLeases{725};
 //NOTE: a port kept for good needs no renewal - asked again once a day all the same, in case the router forgot it
 constexpr auto kPermanentRenewStep{24h};
@@ -54,8 +53,7 @@ constexpr auto kAnswerPatience{10s};
 	return !ec && address.is_unspecified();
 }
 
-//NOTE: nothing on this machine listens there - Windows lets a socket on every network in beside one on a single
-//address, so both are tried
+//NOTE: nothing here listens on it - Windows allows an every-network socket beside one on an address, so try both
 [[nodiscard]] bool IsPortFree(const std::string& host, const std::uint16_t port)
 {
 	boost::asio::io_context ioContext{};
@@ -75,9 +73,7 @@ constexpr auto kAnswerPatience{10s};
 	return !ec && canBind(address) && canBind(boost::asio::ip::address_v4::any());
 }
 
-//NOTE: what a server of ours left open before - killed outright, or on a router that keeps a port for good. Only
-//ours by the description, only to this machine, and only a port nobody here listens on: a second server on this
-//machine keeps its own. Read whole before anything goes, since a removal renumbers the list
+//NOTE: drops our old servers' mappings to this machine on unused ports; read whole first, a removal renumbers
 void CloseLeftovers(const network::Router& router, const std::string& client, const std::stop_token& stop)
 {
 	std::vector<std::string> leftovers{};
@@ -208,7 +204,7 @@ void PortMapping::Forward(const std::stop_token& stop)
 
 	const auto found{FindRouter(_routerUrl)};
 	const Router& router{*found};
-	//NOTE: whatever it said - what follows is quick, or waits on the internet and not on the router
+	//NOTE: the search is over, whatever it found - the rest is quick or waits on the internet, not on the router
 	{
 		const std::scoped_lock lock{_mutex};
 		_isAnswered = true;

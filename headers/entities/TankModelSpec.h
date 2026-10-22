@@ -22,7 +22,6 @@ struct TankModelSpec final
 	double shellHealthFactor{1.0};
 	//NOTE: of the blast the geometry asks for - a light shell alone no longer opens a passage, the tier grows it
 	double blastFactor{1.0};
-	//NOTE: across the flight and along it - a scout's round reads as a needle, a heavy's as a log
 	double shellCaliberFactor{1.0};
 	double shellLengthFactor{1.0};
 	//NOTE: of the player's reload, above one is slower - every enemy's is, which keeps a field of four playable

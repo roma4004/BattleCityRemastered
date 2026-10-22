@@ -59,14 +59,12 @@ void SpawnManager::OnGameModeChangedTo(const GameModeChangedToEvent&) { CreateSp
 
 void SpawnManager::OnAddToSpawnQueue(const AddToSpawnQueueEvent& event)
 {
-	//NOTE: the bus is entered here rather than in a constructor - the object is whole by now, so
-	//the call reaches the leaf, and a spawner emits nothing between this and the flush
+	//NOTE: activated here, not in a constructor - the object is complete, so the virtual call reaches the leaf
 	event.obj->Activate();
 	_pendingSpawns.push_back(event.obj);
 }
 
-//NOTE: pour in, then sweep out - the two run back to back so nothing iterates the world in between.
-//The pools reclaim on the announcement that follows, so a free slot is never also still in the world
+//NOTE: flush, then sweep, back to back so nothing iterates in between; pools reclaim on the event that follows
 void SpawnManager::OnPostTickUpdate(const PostTickUpdateEvent&)
 {
 	FlushSpawnQueue();
