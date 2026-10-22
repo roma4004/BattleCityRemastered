@@ -7,7 +7,7 @@
 #include "application/Simulation.h"
 #include "application/UserInput.h"
 #include "application/WindowConfig.h"
-#include "components/Options.h"
+#include "../components/Options.h"
 #include "components/EventSystem.h"
 #include "components/LobbyScreen.h"
 #include "components/Menu.h"
@@ -56,7 +56,7 @@ Game::Game(GameConfig& gameConfig, ProjectConfig& projectConfig, const WindowCon
 	, _scoreBoard{std::make_unique<ScoreBoard>(_events, _simulation->Statistics(), gameConfig)}
 	, _lobbyScreen{std::make_unique<LobbyScreen>(_events, gameConfig)}
 	, _rightSideBar{std::make_unique<RightSideBar>(_events, gameConfig)}
-	, _options{std::make_unique<Options>(_events, gameConfig)}
+	, _options{std::make_unique<Options>(windowConfig.size, _events)}
 	, _gameConfig{gameConfig}
 	, _projectConfig{projectConfig}
 	, _selectedGameMode{GameMode::OnePlayer}
