@@ -34,13 +34,16 @@ UiTable TitleTable() { return UiTable{.rows = {UiRow{.cells = {Picture(UiIcon::M
 
 UiTable ModesTable()
 {
-	return UiTable{.rows = {UiRow{.cells = {Text("ONE PLAYER")}},
-							UiRow{.cells = {Text("TWO PLAYER")}},
-							UiRow{.cells = {Text("COOP WITH BOT")}},
-							UiRow{.cells = {Text("FREE FOR ALL")}},
-							UiRow{.cells = {Text("2P FREE FOR ALL")}},
-							UiRow{.cells = {Text("PLAY AS HOST")}},
-							UiRow{.cells = {Text("PLAY AS CLIENT")}}}};
+	return UiTable{
+		.rows = {UiRow{.cells = {Text("ONE PLAYER")}},
+				 UiRow{.cells = {Text("TWO PLAYER")}},
+				 UiRow{.cells = {Text("COOP WITH BOT")}},
+				 UiRow{.cells = {Text("FREE FOR ALL")}},
+				 UiRow{.cells = {Text("2P FREE FOR ALL")}},
+				 UiRow{.cells = {Text("PLAY AS HOST")}},
+				 UiRow{.cells = {Text("PLAY AS CLIENT")}},
+				 UiRow{.cells = {Text("OPTIONS")}}}
+				  };
 }
 
 //NOTE: an action, the keys that do it, and for each pad its button as a picture and by name

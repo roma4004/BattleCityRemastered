@@ -34,6 +34,7 @@ class UiRenderer;
 class UserInput;
 class UserInterface;
 class WindowConfig;
+class Options;
 
 namespace network
 {
@@ -91,6 +92,7 @@ private:
 	std::unique_ptr<ScoreBoard> _scoreBoard{nullptr};
 	std::unique_ptr<LobbyScreen> _lobbyScreen{nullptr};
 	std::unique_ptr<RightSideBar> _rightSideBar{nullptr};
+	std::unique_ptr<Options> _options{nullptr};
 	std::unique_ptr<ServerScreen> _serverScreen{nullptr};
 	//NOTE: last - it draws every part above
 	std::unique_ptr<UserInterface> _userInterface{nullptr};

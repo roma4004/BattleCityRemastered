@@ -195,6 +195,9 @@
     <ClCompile Include="..\source\components\ObstacleSpawner.cpp">
       <Filter>source\components</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\components\Options.cpp">
+      <Filter>source\components</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\components\RightSideBar.cpp">
       <Filter>source\components</Filter>
     </ClCompile>
@@ -928,6 +931,9 @@
     </ClInclude>
     <ClInclude Include="..\headers\utils\WorldQuery.h">
       <Filter>headers\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\components\Options.h">
+      <Filter>source\components</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

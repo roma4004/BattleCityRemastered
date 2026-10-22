@@ -183,6 +183,7 @@
     <ClCompile Include="..\source\components\input\InputProviderForPlayer.cpp" />
     <ClCompile Include="..\source\components\input\GamepadDirection.cpp" />
     <ClCompile Include="..\source\components\LevelRotation.cpp" />
+    <ClCompile Include="..\source\components\Options.cpp" />
     <ClCompile Include="..\source\components\UiLayout.cpp" />
     <ClCompile Include="..\source\components\LineOfSight.cpp" />
     <ClCompile Include="..\source\components\managers\AnimationManager.cpp" />
@@ -446,6 +447,7 @@
     <ClInclude Include="..\headers\utils\Fraction.h" />
     <ClInclude Include="..\headers\utils\UuidUtils.h" />
     <ClInclude Include="..\headers\utils\WorldQuery.h" />
+    <ClInclude Include="..\source\components\Options.h" />
   </ItemGroup>
   <ItemDefinitionGroup>
     <PreBuildEvent>
