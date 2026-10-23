@@ -24,7 +24,8 @@ constexpr std::array kModes{GameMode::OnePlayer,
 							GameMode::FreeForAll,
 							GameMode::TwoPlayersFreeForAll,
 							GameMode::PlayAsHost,
-							GameMode::PlayAsClient};
+							GameMode::PlayAsClient,
+							GameMode::EndIterator};
 
 UiCell Text(std::string text) { return TextCell(std::move(text), kTextColor); }
 
@@ -101,11 +102,12 @@ void Menu::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &Menu::OnSelectedGameModeChangedTo));
 	_subs.push_back(_events->AddListener(this, &Menu::OnMenuShown));
+	_subs.push_back(_events->AddListener(this, &Menu::OnOptionsShown));
 }
 
 void Menu::OnSelectedGameModeChangedTo(const SelectedGameModeChangedToEvent& event) { _selectedGameMode = event.mode; }
 void Menu::OnMenuShown(const MenuShownEvent& event) { DisplayMenu(event.isShown); }
-
+void Menu::OnOptionsShown(const EnterToTheOptions& event) { DisplayMenu(false); }
 void Menu::Draw()
 {
 	if (!_isMenuShown)

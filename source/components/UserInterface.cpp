@@ -1,4 +1,5 @@
 #include "components/UserInterface.h"
+#include "Options.h"
 #include "components/EventSystem.h"
 #include "components/LobbyScreen.h"
 #include "components/Menu.h"
@@ -13,8 +14,8 @@
 
 UserInterface::UserInterface(const std::shared_ptr<EventSystem>& events, const GameStateManager& gameState,
 							 const ScoreBoard& scoreBoard, const RightSideBar& rightSideBar,
-							 const LobbyScreen& lobbyScreen, const ServerScreen& serverScreen, Menu& menu,
-							 const FramePerSecondManager& fps)
+							 const Options& options, const LobbyScreen& lobbyScreen, const ServerScreen& serverScreen,
+							 Menu& menu, const FramePerSecondManager& fps)
 	: _events{events}
 	, _gameState{gameState}
 	, _scoreBoard{scoreBoard}
@@ -22,7 +23,8 @@ UserInterface::UserInterface(const std::shared_ptr<EventSystem>& events, const G
 	, _lobbyScreen{lobbyScreen}
 	, _serverScreen{serverScreen}
 	, _menu{menu}
-	, _fps{fps} {}
+	, _fps{fps}
+	, _options{options} {}
 
 void UserInterface::Draw() const
 {
@@ -33,6 +35,7 @@ void UserInterface::Draw() const
 
 	_scoreBoard.DrawPlate();
 	_rightSideBar.Draw();
+	_options.Draw();
 	_lobbyScreen.Draw();
 	_scoreBoard.Draw();
 	_serverScreen.Draw();

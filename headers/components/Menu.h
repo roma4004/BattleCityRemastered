@@ -5,6 +5,7 @@
 #include <memory>
 #include <vector>
 
+struct EnterToTheOptions;
 enum class GameMode : char8_t;
 struct SelectedGameModeChangedToEvent;
 struct MenuShownEvent;
@@ -28,6 +29,7 @@ class Menu final
 
 	void OnSelectedGameModeChangedTo(const SelectedGameModeChangedToEvent& event);
 	void OnMenuShown(const MenuShownEvent& event);
+	void OnOptionsShown(const EnterToTheOptions& event);
 
 	[[nodiscard]] int SelectedRow() const;
 	void DisplayMenu(bool isShown);

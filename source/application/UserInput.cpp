@@ -169,7 +169,7 @@ void UserInput::OnMenuTilesPlaced(const MenuTilesPlacedEvent& event)
 {
 	static constexpr std::array kModes{GameMode::OnePlayer,  GameMode::TwoPlayers,           GameMode::CoopWithBot,
 									   GameMode::FreeForAll, GameMode::TwoPlayersFreeForAll, GameMode::PlayAsHost,
-									   GameMode::PlayAsClient};
+									   GameMode::PlayAsClient, GameMode::EndIterator};
 
 	_menuTiles.clear();
 	for (std::size_t row{}; row < event.tiles.size() && row < kModes.size(); ++row)

@@ -163,6 +163,10 @@ struct NextGameModeEvent {};
 
 struct ApplyGameModeEvent {};
 
+struct EnterToTheOptions {};
+
+struct MenuEnter {};
+
 struct DemoStartedEvent {};
 
 struct PlayersBaseFinishedEvent {};

@@ -2,6 +2,7 @@
 
 #include <memory>
 
+class Options;
 class EventSystem;
 class FramePerSecondManager;
 class GameStateManager;
@@ -22,12 +23,13 @@ class UserInterface final
 	const ServerScreen& _serverScreen;
 	Menu& _menu;
 	const FramePerSecondManager& _fps;
+	const Options& _options;
 
 	void DrawPause() const;
 
 public:
 	UserInterface(const std::shared_ptr<EventSystem>& events, const GameStateManager& gameState,
-				  const ScoreBoard& scoreBoard, const RightSideBar& rightSideBar, const LobbyScreen& lobbyScreen,
+				  const ScoreBoard& scoreBoard, const RightSideBar& rightSideBar, const Options& options, const LobbyScreen& lobbyScreen,
 				  const ServerScreen& serverScreen, Menu& menu, const FramePerSecondManager& fps);
 
 	void Draw() const;

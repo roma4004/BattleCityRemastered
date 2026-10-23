@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 
+struct EnterToTheOptions;
 class EventSystem;
 struct MenuShownEvent;
 
@@ -29,6 +30,7 @@ class Options final
 	void Subscribe();
 
 	void OnMenuShown(const MenuShownEvent& event);
+	void OnOptionsShown(const EnterToTheOptions& event);
 
 	void DisplayOptions(bool isDisplayed);
 	void DrawTextLine(Point& posText, std::string text) const;
@@ -38,5 +40,5 @@ public:
 
 	~Options();
 
-	void Draw();
+	void Draw() const;
 };

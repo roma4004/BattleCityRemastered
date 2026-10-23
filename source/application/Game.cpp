@@ -73,7 +73,7 @@ Game::Game(GameConfig& gameConfig, ProjectConfig& projectConfig, const WindowCon
 			_events, _gameConfig.serverAddress,
 			network::ParseHost(projectConfig.LastConnectAddress()));
 	_userInterface = std::make_unique<UserInterface>(_events, _simulation->State(), *_scoreBoard, *_rightSideBar,
-													 *_lobbyScreen, *_serverScreen, *_menu, *_fpsManager);
+													  *_options, *_lobbyScreen, *_serverScreen, *_menu, *_fpsManager);
 
 	Subscribe();
 
@@ -96,6 +96,18 @@ void Game::Subscribe()
 	_subs.push_back(_events->AddListener(this, &Game::OnSelectedGameModeChangedTo));
 	_subs.push_back(_events->AddListener(this, &Game::OnConnectedToHost));
 	_subs.push_back(_events->AddListener(this, &Game::OnServerAddressChosen));
+	_subs.push_back(_events->AddListener([&](const MenuEnter&)
+	{
+		if (_selectedGameMode == GameMode::EndIterator)
+        {
+        	_events->EmitEvent(EnterToTheOptions{});
+        }
+        else
+        {
+        	_events->EmitEvent(ApplyGameModeEvent{});
+        }
+	}));
+
 }
 
 void Game::OnApplyGameMode(const ApplyGameModeEvent&)
@@ -301,7 +313,7 @@ void Game::PrevGameMode(const PreviousGameModeEvent&)
 	auto mode{static_cast<int>(_selectedGameMode)};
 	--mode;
 
-	constexpr int maxMode{static_cast<int>(GameMode::EndIterator) - 1};
+	constexpr int maxMode{static_cast<int>(GameMode::EndIterator)};
 	constexpr int minMode = 0;
 	const int newMode{mode < minMode ? maxMode : mode};
 	_selectedGameMode = static_cast<GameMode>(newMode);
@@ -314,7 +326,7 @@ void Game::NextGameMode(const NextGameModeEvent&)
 	auto mode{static_cast<int>(_selectedGameMode)};
 	++mode;
 
-	constexpr int maxMode{static_cast<int>(GameMode::EndIterator) - 1};
+	constexpr int maxMode{static_cast<int>(GameMode::EndIterator)};
 	constexpr int minMode = 0;
 	const int newMode{mode > maxMode ? minMode : mode};
 	_selectedGameMode = static_cast<GameMode>(newMode);
