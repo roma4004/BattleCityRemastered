@@ -2,7 +2,6 @@
 #include "application/GameConfig.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
-#include "components/LevelRotation.h"
 #include "components/ObstacleSpawner.h"
 #include "components/TankSpawner.h"
 #include "components/events/BonusPickupEvents.h"
@@ -16,9 +15,8 @@
 #include "enums/RespawnGroup.h"
 #include "geometry/ObjRectangle.h"
 #include "gtest/gtest.h"
+#include "utils/Uuid.h"
 #include <algorithm>
-#include <filesystem>
-#include <fstream>
 #include <memory>
 #include <string>
 #include <vector>
@@ -46,8 +44,7 @@ protected:
 		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, _allObjects);
 		_allObjects.reserve(6u);
 		_bulletPool = std::make_shared<BulletPool>(_events, _allObjects, _gameConfig);
-		TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager,
-								 _tankSpawner);
+		ApplyGameMode(GameMode::OnePlayer);
 		_instantSpawnAnimationSubs = TestUtils::WireInstantSpawnAnimations(_events);
 
 		_subs.push_back(_events->AddListener([this](const RespawnCountChangedToEvent& event)
@@ -59,6 +56,11 @@ protected:
 		}));
 
 		StartMatch(GameResetEvent{});
+	}
+
+	void ApplyGameMode(const GameMode mode)
+	{
+		TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, mode, _respawnManager, _tankSpawner);
 	}
 
 	//NOTE: swept by hand here, by SpawnManager in the game - leftovers would answer the search for the new tank
@@ -171,7 +173,7 @@ TEST_F(LevelProgressionTest, AWoundedTankStartsTheNextLevelWhole)
 // a client builds the tank from its model alone, so the host reports the health and the tier the tank brought along
 TEST_F(LevelProgressionTest, TheHostReportsWhatTheTankCarried)
 {
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
+	ApplyGameMode(GameMode::PlayAsHost);
 	StartMatch(GameResetEvent{});
 	PlayerOne()->Heal(1);
 	_events->EmitEvent(Key(Author::Player1), BonusStarPickupEvent{});

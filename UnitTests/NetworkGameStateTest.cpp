@@ -11,7 +11,9 @@
 #include "enums/GameState.h"
 #include "enums/PlayerSlot.h"
 #include "gtest/gtest.h"
+#include <algorithm>
 #include <array>
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <string_view>
@@ -27,22 +29,36 @@ protected:
 	GameState _phase{};
 	int _matchStarts{};
 	size_t _phasesBeforeMatchStart{};
-	EventSubscription _stateSub{};
-	EventSubscription _matchStartSub{};
+	std::vector<bool> _pauses{};
+	//NOTE: the latest panel the players were shown about who left
+	std::optional<AbsenceChangedEvent> _asked{};
+	std::optional<SeatsFilledEvent> _filled{};
+	std::vector<SeatHolderChangedEvent> _seatChanges{};
+	std::vector<EventSubscription> _subs{};
 
 	void SetUp() override
 	{
 		_stateManager = std::make_unique<GameStateManager>(_events);
-		_stateSub = _events->AddListener([this](const GameStateChangedToEvent& event)
+		_subs.push_back(_events->AddListener([this](const GameStateChangedToEvent& event)
 		{
 			_announced.push_back(event.state);
 			_phase = event.state;
-		});
-		_matchStartSub = _events->AddListener([this](const MatchStartedEvent&)
+		}));
+		_subs.push_back(_events->AddListener([this](const MatchStartedEvent&)
 		{
 			++_matchStarts;
 			_phasesBeforeMatchStart = _announced.size();
-		});
+		}));
+		_subs.push_back(_events->AddListener([this](const PauseStatusEvent& event)
+		{
+			_pauses.push_back(event.isPaused);
+		}));
+		_subs.push_back(_events->AddListener([this](const AbsenceChangedEvent& event) { _asked = event; }));
+		_subs.push_back(_events->AddListener([this](const SeatsFilledEvent& event) { _filled = event; }));
+		_subs.push_back(_events->AddListener([this](const SeatHolderChangedEvent& event)
+		{
+			_seatChanges.push_back(event);
+		}));
 	}
 };
 
@@ -390,11 +406,6 @@ TEST_F(NetworkGameStateTest, TheBotsTakeTheTopSeatsNobodyTookThenTheTopPlayersSe
 		std::array<SeatHolder, kSeatCount> holders;
 	};
 
-	std::optional<SeatsFilledEvent> filled{};
-	const EventSubscription filledSub{_events->AddListener([&filled](const SeatsFilledEvent& event)
-	{
-		filled = event;
-	})};
 	const std::array seatings{
 			Seating{.why = "the empty seats first",
 					.match = {.seats = 4u, .bots = 2u, .isStartingAtOnce = true},
@@ -408,7 +419,7 @@ TEST_F(NetworkGameStateTest, TheBotsTakeTheTopSeatsNobodyTookThenTheTopPlayersSe
 	for (const Seating& seating: seatings)
 	{
 		SCOPED_TRACE(seating.why);
-		filled.reset();
+		_filled.reset();
 		_stateManager = std::make_unique<GameStateManager>(_events, seating.match);
 		_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
 		for (const PlayerSlot slot: seating.seated)
@@ -421,8 +432,8 @@ TEST_F(NetworkGameStateTest, TheBotsTakeTheTopSeatsNobodyTookThenTheTopPlayersSe
 			_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = slot});
 		}
 
-		ASSERT_TRUE(filled.has_value()) << "the match started without saying who sits where";
-		EXPECT_EQ(filled->holders, seating.holders);
+		ASSERT_TRUE(_filled.has_value()) << "the match started without saying who sits where";
+		EXPECT_EQ(_filled->holders, seating.holders);
 	}
 }
 
@@ -451,51 +462,42 @@ TEST_F(NetworkGameStateTest, TheLobbyAnnouncesTheSeatsAsClientsComeAndGo)
 // a player who took their tank keeps it at the next level - the bot left over does not take it back
 TEST_F(NetworkGameStateTest, ATankTakenFromABotStaysWithItsPlayerAtTheNextLevel)
 {
-	std::optional<SeatsFilledEvent> filled{};
-	const EventSubscription filledSub{_events->AddListener([&filled](const SeatsFilledEvent& event)
-	{
-		filled = event;
-	})};
 	_stateManager = std::make_unique<GameStateManager>(
 			_events, MatchSettings{.seats = 2u, .bots = 2u, .isStartingAtOnce = true});
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P1});
-	ASSERT_TRUE(filled.has_value());
-	ASSERT_EQ(filled->holders[SeatIndex(PlayerSlot::P1)], SeatHolder::Bot) << "the second bot left the player alone";
+	ASSERT_TRUE(_filled.has_value());
+	ASSERT_EQ(_filled->holders[SeatIndex(PlayerSlot::P1)], SeatHolder::Bot) << "the second bot left the player alone";
 	_events->EmitEvent(ServerInTankCommandEvent{.slot = PlayerSlot::P1});
 	_events->EmitEvent(ServerClientSyncedEvent{.slot = PlayerSlot::P1});
 
 	_events->EmitEvent(ServerInRestartRequestedEvent{});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P1});
 
-	EXPECT_EQ(filled->holders, (std::array{SeatHolder::Player, SeatHolder::Bot, SeatHolder::Empty, SeatHolder::Empty}));
+	EXPECT_EQ(_filled->holders,
+			  (std::array{SeatHolder::Player, SeatHolder::Bot, SeatHolder::Empty, SeatHolder::Empty}));
 }
 
 // a player joining a running match watches the bot in their seat, and takes the tank with their first command
 TEST_F(NetworkGameStateTest, AJoinTakesTheTankFromItsBotOnTheFirstCommand)
 {
-	std::optional<SeatHolderChangedEvent> taken{};
-	const EventSubscription takenSub{_events->AddListener([&taken](const SeatHolderChangedEvent& event)
-	{
-		taken = event;
-	})};
 	_stateManager = std::make_unique<GameStateManager>(
 			_events, MatchSettings{.seats = 2u, .bots = 1u, .isStartingAtOnce = true});
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P1});
 	ASSERT_EQ(GameState::Playing, _phase);
-	ASSERT_FALSE(taken.has_value());
+	ASSERT_TRUE(_seatChanges.empty());
 	_matchStarts = 0;
 
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P2});
 	_events->EmitEvent(ServerClientSyncedEvent{.slot = PlayerSlot::P2});
-	ASSERT_FALSE(taken.has_value()) << "the tank was taken before the newcomer gave it a command";
+	ASSERT_TRUE(_seatChanges.empty()) << "the tank was taken before the newcomer gave it a command";
 
 	_events->EmitEvent(ServerInTankCommandEvent{.slot = PlayerSlot::P2});
 
-	ASSERT_TRUE(taken.has_value());
-	EXPECT_EQ(taken->slot, PlayerSlot::P2);
-	EXPECT_EQ(taken->from, SeatHolder::Bot);
+	ASSERT_FALSE(_seatChanges.empty());
+	EXPECT_EQ(_seatChanges.back().slot, PlayerSlot::P2);
+	EXPECT_EQ(_seatChanges.back().from, SeatHolder::Bot);
 	EXPECT_EQ(_matchStarts, 0) << "the join restarted the match";
 }
 
@@ -503,34 +505,24 @@ TEST_F(NetworkGameStateTest, AJoinTakesTheTankFromItsBotOnTheFirstCommand)
 TEST_F(NetworkGameStateTest, AJoinHoldsTheMatchUntilTheFieldReachesTheNewcomer)
 {
 	const PauseSwitch pauseSwitch{_events};
-	std::vector<bool> pauses{};
-	const EventSubscription pauseSub{_events->AddListener([&pauses](const PauseStatusEvent& event)
-	{
-		pauses.push_back(event.isPaused);
-	})};
 	_stateManager = std::make_unique<GameStateManager>(_events, MatchSettings{.seats = 2u, .isStartingAtOnce = true});
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P1});
 
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P2});
-	ASSERT_EQ(pauses, std::vector{true});
+	ASSERT_EQ(_pauses, std::vector{true});
 
 	_events->EmitEvent(SetPauseEvent{.isPaused = false});
-	EXPECT_EQ(pauses, (std::vector{true, true})) << "the unpause was not answered with the pause that still stands";
+	EXPECT_EQ(_pauses, (std::vector{true, true})) << "the unpause was not answered with the pause that still stands";
 
 	_events->EmitEvent(ServerClientSyncedEvent{.slot = PlayerSlot::P2});
-	EXPECT_EQ(pauses, (std::vector{true, true, false}));
+	EXPECT_EQ(_pauses, (std::vector{true, true, false}));
 }
 
 // two newcomers at once - the first one caught up does not let the match go for the other
 TEST_F(NetworkGameStateTest, TheHoldWaitsForEveryNewcomer)
 {
 	const PauseSwitch pauseSwitch{_events};
-	std::vector<bool> pauses{};
-	const EventSubscription pauseSub{_events->AddListener([&pauses](const PauseStatusEvent& event)
-	{
-		pauses.push_back(event.isPaused);
-	})};
 	_stateManager = std::make_unique<GameStateManager>(_events, MatchSettings{.seats = 3u, .isStartingAtOnce = true});
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P1});
@@ -538,21 +530,16 @@ TEST_F(NetworkGameStateTest, TheHoldWaitsForEveryNewcomer)
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P3});
 
 	_events->EmitEvent(ServerClientSyncedEvent{.slot = PlayerSlot::P2});
-	ASSERT_EQ(pauses, std::vector{true}) << "the match went on before the second newcomer had the field";
+	ASSERT_EQ(_pauses, std::vector{true}) << "the match went on before the second newcomer had the field";
 
 	_events->EmitEvent(ServerClientSyncedEvent{.slot = PlayerSlot::P3});
-	EXPECT_EQ(pauses, (std::vector{true, false}));
+	EXPECT_EQ(_pauses, (std::vector{true, false}));
 }
 
 //NOTE: a player pausing while the field is on its way meant it - the end of the sync does not lift it
 TEST_F(NetworkGameStateTest, APauseAskedForDuringTheHoldOutlastsIt)
 {
 	const PauseSwitch pauseSwitch{_events};
-	std::vector<bool> pauses{};
-	const EventSubscription pauseSub{_events->AddListener([&pauses](const PauseStatusEvent& event)
-	{
-		pauses.push_back(event.isPaused);
-	})};
 	_stateManager = std::make_unique<GameStateManager>(_events, MatchSettings{.seats = 2u, .isStartingAtOnce = true});
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P1});
@@ -561,7 +548,7 @@ TEST_F(NetworkGameStateTest, APauseAskedForDuringTheHoldOutlastsIt)
 	_events->EmitEvent(SetPauseEvent{.isPaused = true});
 	_events->EmitEvent(ServerClientSyncedEvent{.slot = PlayerSlot::P2});
 
-	EXPECT_EQ(pauses, std::vector{true});
+	EXPECT_EQ(_pauses, std::vector{true});
 	EXPECT_EQ(GameState::Paused, _phase);
 }
 
@@ -569,11 +556,6 @@ TEST_F(NetworkGameStateTest, APauseAskedForDuringTheHoldOutlastsIt)
 TEST_F(NetworkGameStateTest, ANewcomerLostBeforeItSyncedLetsTheMatchGoOn)
 {
 	const PauseSwitch pauseSwitch{_events};
-	std::vector<bool> pauses{};
-	const EventSubscription pauseSub{_events->AddListener([&pauses](const PauseStatusEvent& event)
-	{
-		pauses.push_back(event.isPaused);
-	})};
 	_stateManager = std::make_unique<GameStateManager>(_events, MatchSettings{.seats = 2u, .isStartingAtOnce = true});
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P1});
@@ -582,7 +564,7 @@ TEST_F(NetworkGameStateTest, ANewcomerLostBeforeItSyncedLetsTheMatchGoOn)
 	_events->EmitEvent(ServerClientLostEvent{.slot = PlayerSlot::P2});
 	_events->EmitEvent(AbsenceChosenEvent{.choice = AbsenceChoice::Continue});
 
-	EXPECT_EQ(pauses, (std::vector{true, false}));
+	EXPECT_EQ(_pauses, (std::vector{true, false}));
 	EXPECT_EQ(GameState::Playing, _phase);
 }
 
@@ -590,11 +572,6 @@ TEST_F(NetworkGameStateTest, ANewcomerLostBeforeItSyncedLetsTheMatchGoOn)
 TEST_F(NetworkGameStateTest, APlayerLeavingHoldsTheMatchAndAsksTheRest)
 {
 	const PauseSwitch pauseSwitch{_events};
-	std::optional<AbsenceChangedEvent> asked{};
-	const EventSubscription askedSub{_events->AddListener([&asked](const AbsenceChangedEvent& event)
-	{
-		asked = event;
-	})};
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P1});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P2});
@@ -602,8 +579,8 @@ TEST_F(NetworkGameStateTest, APlayerLeavingHoldsTheMatchAndAsksTheRest)
 
 	_events->EmitEvent(ServerInDisconnectEvent{.reason = DisconnectReason::GameOver, .slot = PlayerSlot::P2});
 
-	ASSERT_TRUE(asked.has_value());
-	EXPECT_EQ(asked->seats, (std::array{Absence::None, Absence::Left, Absence::None, Absence::None}));
+	ASSERT_TRUE(_asked.has_value());
+	EXPECT_EQ(_asked->seats, (std::array{Absence::None, Absence::Left, Absence::None, Absence::None}));
 	EXPECT_EQ(GameState::Paused, _phase);
 
 	_events->EmitEvent(SetPauseEvent{.isPaused = false});
@@ -621,16 +598,6 @@ TEST_F(NetworkGameStateTest, AnAnswerLetsTheMatchGoAndSaysWhoTakesTheSeat)
 	};
 
 	const PauseSwitch pauseSwitch{_events};
-	std::optional<AbsenceChangedEvent> asked{};
-	std::vector<SeatHolderChangedEvent> changed{};
-	const EventSubscription askedSub{_events->AddListener([&asked](const AbsenceChangedEvent& event)
-	{
-		asked = event;
-	})};
-	const EventSubscription changedSub{_events->AddListener([&changed](const SeatHolderChangedEvent& event)
-	{
-		changed.push_back(event);
-	})};
 	constexpr std::array kAnswers{Answer{.choice = AbsenceChoice::Continue, .to = SeatHolder::Empty},
 								  Answer{.choice = AbsenceChoice::Bot, .to = SeatHolder::Bot}};
 	for (const Answer& answer: kAnswers)
@@ -641,18 +608,18 @@ TEST_F(NetworkGameStateTest, AnAnswerLetsTheMatchGoAndSaysWhoTakesTheSeat)
 		_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P1});
 		_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P2});
 		_events->EmitEvent(ServerClientLostEvent{.slot = PlayerSlot::P2});
-		asked.reset();
-		changed.clear();
+		_asked.reset();
+		_seatChanges.clear();
 
 		_events->EmitEvent(AbsenceChosenEvent{.choice = answer.choice});
 
-		ASSERT_TRUE(asked.has_value());
-		EXPECT_EQ(asked->seats, (std::array<Absence, kSeatCount>{}));
+		ASSERT_TRUE(_asked.has_value());
+		EXPECT_EQ(_asked->seats, (std::array<Absence, kSeatCount>{}));
 		EXPECT_EQ(GameState::Playing, _phase);
-		ASSERT_EQ(changed.size(), 1u);
-		EXPECT_EQ(changed.front().slot, PlayerSlot::P2);
-		EXPECT_EQ(changed.front().from, SeatHolder::Player);
-		EXPECT_EQ(changed.front().to, answer.to);
+		ASSERT_EQ(_seatChanges.size(), 1u);
+		EXPECT_EQ(_seatChanges.front().slot, PlayerSlot::P2);
+		EXPECT_EQ(_seatChanges.front().from, SeatHolder::Player);
+		EXPECT_EQ(_seatChanges.front().to, answer.to);
 	}
 }
 
@@ -660,11 +627,6 @@ TEST_F(NetworkGameStateTest, AnAnswerLetsTheMatchGoAndSaysWhoTakesTheSeat)
 TEST_F(NetworkGameStateTest, TheOneBackIsShownAndTheMatchWaitsForAnAnswer)
 {
 	const PauseSwitch pauseSwitch{_events};
-	std::optional<AbsenceChangedEvent> asked{};
-	const EventSubscription askedSub{_events->AddListener([&asked](const AbsenceChangedEvent& event)
-	{
-		asked = event;
-	})};
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P1});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P2});
@@ -673,8 +635,8 @@ TEST_F(NetworkGameStateTest, TheOneBackIsShownAndTheMatchWaitsForAnAnswer)
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P2});
 	_events->EmitEvent(ServerClientSyncedEvent{.slot = PlayerSlot::P2});
 
-	ASSERT_TRUE(asked.has_value());
-	EXPECT_EQ(asked->seats, (std::array{Absence::None, Absence::Back, Absence::None, Absence::None}));
+	ASSERT_TRUE(_asked.has_value());
+	EXPECT_EQ(_asked->seats, (std::array{Absence::None, Absence::Back, Absence::None, Absence::None}));
 	ASSERT_EQ(GameState::Paused, _phase) << "the match went on before anyone said so";
 
 	_events->EmitEvent(AbsenceChosenEvent{.choice = AbsenceChoice::Continue});
@@ -685,11 +647,6 @@ TEST_F(NetworkGameStateTest, TheOneBackIsShownAndTheMatchWaitsForAnAnswer)
 TEST_F(NetworkGameStateTest, ABotHoldsTheSeatOfTheOneWhoLeftUntilTheirFirstCommandBack)
 {
 	const PauseSwitch pauseSwitch{_events};
-	std::vector<SeatHolderChangedEvent> taken{};
-	const EventSubscription takenSub{_events->AddListener([&taken](const SeatHolderChangedEvent& event)
-	{
-		taken.push_back(event);
-	})};
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P1});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P2});
@@ -697,31 +654,26 @@ TEST_F(NetworkGameStateTest, ABotHoldsTheSeatOfTheOneWhoLeftUntilTheirFirstComma
 
 	_events->EmitEvent(AbsenceChosenEvent{.choice = AbsenceChoice::Bot});
 
-	ASSERT_EQ(taken.size(), 1u);
-	EXPECT_EQ(taken.front().slot, PlayerSlot::P2);
-	EXPECT_EQ(taken.front().from, SeatHolder::Player);
-	EXPECT_EQ(taken.front().to, SeatHolder::Bot);
+	ASSERT_EQ(_seatChanges.size(), 1u);
+	EXPECT_EQ(_seatChanges.front().slot, PlayerSlot::P2);
+	EXPECT_EQ(_seatChanges.front().from, SeatHolder::Player);
+	EXPECT_EQ(_seatChanges.front().to, SeatHolder::Bot);
 	ASSERT_EQ(GameState::Playing, _phase);
 
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P2});
 	_events->EmitEvent(ServerClientSyncedEvent{.slot = PlayerSlot::P2});
-	ASSERT_EQ(taken.size(), 1u) << "the bot gave the seat up before its player gave a command";
+	ASSERT_EQ(_seatChanges.size(), 1u) << "the bot gave the seat up before its player gave a command";
 
 	_events->EmitEvent(ServerInTankCommandEvent{.slot = PlayerSlot::P2});
 
-	ASSERT_EQ(taken.size(), 2u);
-	EXPECT_EQ(taken.back().from, SeatHolder::Bot);
-	EXPECT_EQ(taken.back().to, SeatHolder::Player);
+	ASSERT_EQ(_seatChanges.size(), 2u);
+	EXPECT_EQ(_seatChanges.back().from, SeatHolder::Bot);
+	EXPECT_EQ(_seatChanges.back().to, SeatHolder::Player);
 }
 
 // the first answer decides - a second one, sent before the first was heard, finds nobody asked about
 TEST_F(NetworkGameStateTest, OnlyTheFirstAnswerCounts)
 {
-	bool isBotSeated{};
-	const EventSubscription changedSub{_events->AddListener([&isBotSeated](const SeatHolderChangedEvent& event)
-	{
-		isBotSeated = isBotSeated || event.to == SeatHolder::Bot;
-	})};
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P1});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P2});
@@ -730,14 +682,13 @@ TEST_F(NetworkGameStateTest, OnlyTheFirstAnswerCounts)
 	_events->EmitEvent(AbsenceChosenEvent{.choice = AbsenceChoice::Continue});
 	_events->EmitEvent(AbsenceChosenEvent{.choice = AbsenceChoice::Bot});
 
-	EXPECT_FALSE(isBotSeated) << "a late answer handed the seat to a bot after the match went on without it";
+	EXPECT_FALSE(std::ranges::contains(_seatChanges, SeatHolder::Bot, &SeatHolderChangedEvent::to))
+			<< "a late answer handed the seat to a bot after the match went on without it";
 }
 
 // a match already over has nothing to hold - the scoreboard stands for everyone
 TEST_F(NetworkGameStateTest, ALeaveOnTheScoreboardAsksNothing)
 {
-	bool isAsked{};
-	const EventSubscription askedSub{_events->AddListener([&isAsked](const AbsenceChangedEvent&) { isAsked = true; })};
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P1});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P2});
@@ -745,18 +696,13 @@ TEST_F(NetworkGameStateTest, ALeaveOnTheScoreboardAsksNothing)
 
 	_events->EmitEvent(ServerClientLostEvent{.slot = PlayerSlot::P2});
 
-	EXPECT_FALSE(isAsked);
+	EXPECT_FALSE(_asked.has_value());
 }
 
 //NOTE: nobody left to answer - the match goes to the lobby, and the hold let go of on the way does not resume it
 TEST_F(NetworkGameStateTest, TheLastOneLeavingTakesTheHeldMatchToTheLobby)
 {
 	const PauseSwitch pauseSwitch{_events};
-	std::optional<AbsenceChangedEvent> asked{};
-	const EventSubscription askedSub{_events->AddListener([&asked](const AbsenceChangedEvent& event)
-	{
-		asked = event;
-	})};
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P1});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P2});
@@ -766,45 +712,35 @@ TEST_F(NetworkGameStateTest, TheLastOneLeavingTakesTheHeldMatchToTheLobby)
 	_events->EmitEvent(ServerClientLostEvent{.slot = PlayerSlot::P1});
 
 	EXPECT_EQ(_announced, std::vector{GameState::Lobby});
-	ASSERT_TRUE(asked.has_value());
-	EXPECT_EQ(asked->seats, (std::array<Absence, kSeatCount>{})) << "the clients are still asked about a match gone";
+	ASSERT_TRUE(_asked.has_value());
+	EXPECT_EQ(_asked->seats, (std::array<Absence, kSeatCount>{})) << "the clients are still asked about a match gone";
 }
 
 //NOTE: a client only mirrors who left - its own answer goes to the server, and nothing changes here until it answers
 TEST_F(NetworkGameStateTest, AClientsAnswerChangesNothingOnTheClient)
 {
-	bool isSeatTaken{};
-	const EventSubscription takenSub{_events->AddListener([&isSeatTaken](const SeatHolderChangedEvent&)
-	{
-		isSeatTaken = true;
-	})};
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsClient});
 	_events->EmitEvent(HostPhaseAnnouncedEvent{.phase = GameState::Paused});
 	_events->EmitEvent(AbsenceChangedEvent{.seats = {Absence::None, Absence::Left, Absence::None, Absence::None}});
 
 	_events->EmitEvent(AbsenceChosenEvent{.choice = AbsenceChoice::Bot});
 
-	EXPECT_FALSE(isSeatTaken) << "the client handed a seat to a bot on its own";
+	EXPECT_TRUE(_seatChanges.empty()) << "the client handed a seat to a bot on its own";
 }
 
 //NOTE: a restart drops who left with the match - the next one would start held for a player nobody waits for
 TEST_F(NetworkGameStateTest, ARestartForgetsWhoLeft)
 {
 	const PauseSwitch pauseSwitch{_events};
-	bool isPaused{};
-	const EventSubscription pauseSub{_events->AddListener([&isPaused](const PauseStatusEvent& event)
-	{
-		isPaused = event.isPaused;
-	})};
 	_stateManager = std::make_unique<GameStateManager>(_events, MatchSettings{.seats = 3u});
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
-	constexpr std::array kLeavers{PlayerSlot::P1, PlayerSlot::P2, PlayerSlot::P3};
-	for (const PlayerSlot slot: kLeavers)
+	for (const PlayerSlot slot: {PlayerSlot::P1, PlayerSlot::P2, PlayerSlot::P3})
 	{
 		_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = slot});
 	}
 	_events->EmitEvent(ServerClientLostEvent{.slot = PlayerSlot::P3});
-	ASSERT_TRUE(isPaused);
+	ASSERT_FALSE(_pauses.empty());
+	ASSERT_TRUE(_pauses.back());
 
 	_events->EmitEvent(ServerInRestartRequestedEvent{});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P1});
@@ -812,5 +748,5 @@ TEST_F(NetworkGameStateTest, ARestartForgetsWhoLeft)
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P3});
 
 	EXPECT_EQ(GameState::Playing, _phase);
-	EXPECT_FALSE(isPaused) << "the new match is held for the one who left the old one";
+	EXPECT_FALSE(_pauses.back()) << "the new match is held for the one who left the old one";
 }

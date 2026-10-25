@@ -133,8 +133,7 @@ TEST(InputIPAddressTest, APickedAddressKeepsTheCaretInThePort)
 	AddressField field{AddressFamily::IPv4, AddressInput::Picked};
 	field.Fill(network::ServerAddress{.host = "192.168.0.5", .port = 50}, false);
 
-	constexpr std::array kKeys{TextKey::Erase, TextKey::Erase, TextKey::Erase, TextKey::CaretLeft, TextKey::WordLeft};
-	for (const TextKey key: kKeys)
+	for (const TextKey key: {TextKey::Erase, TextKey::Erase, TextKey::Erase, TextKey::CaretLeft, TextKey::WordLeft})
 	{
 		field.Press(key);
 	}

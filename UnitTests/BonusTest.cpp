@@ -13,6 +13,7 @@
 #include "components/TankSpawner.h"
 #include "components/managers/RespawnManager.h"
 #include "components/managers/BonusManager.h"
+#include "entities/BulletCaliber.h"
 #include "entities/bonuses/Bonus.h"
 #include "components/ObstacleSpawner.h"
 #include "components/managers/FortressManager.h"
@@ -27,6 +28,7 @@
 #include "enums/ObstacleType.h"
 #include "enums/InputChannel.h"
 #include "utils/TimeUtils.h"
+#include "utils/Uuid.h"
 #include "utils/UuidUtils.h"
 #include "geometry/Point.h"
 #include "gtest/gtest.h"
@@ -37,6 +39,7 @@
 #include <memory>
 #include <optional>
 #include <string_view>
+#include <tuple>
 #include <vector>
 
 using namespace std::chrono_literals;
@@ -87,42 +90,36 @@ protected:
 		_allObjects.reserve(4);
 	}
 
-	void TearDown() override {}
-
-	std::shared_ptr<Tank> CreatePlayer(const FPoint pos, const Author author = Author::Player1,
-									   const Direction dir = Direction::UP, const unsigned short tier = 1u)
+	[[nodiscard]] std::shared_ptr<Tank> CreatePlayer(const FPoint pos, const Author author = Author::Player1,
+													 const Direction dir = Direction::UP,
+													 const unsigned short tier = 1u) const
 	{
 		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _gameConfig.tankSize, .h = _gameConfig.tankSize};
-		auto player{TestUtils::CreatePlayer(rect, _tankHealth, author, _allObjects, _events, dir, _tankPool,
-											_gameConfig, tier)};
 
-		return player;
+		return TestUtils::CreatePlayer(rect, _tankHealth, author, _allObjects, _events, dir, _tankPool, _gameConfig,
+									   tier);
 	}
 
-	std::shared_ptr<Tank> CreateBot(const FPoint pos, const Author author, const Direction dir,
-									const unsigned short tier = 1u)
+	[[nodiscard]] std::shared_ptr<Tank> CreateBot(const FPoint pos, const Author author, const Direction dir,
+												  const unsigned short tier = 1u) const
 	{
 		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _gameConfig.tankSize, .h = _gameConfig.tankSize};
-		auto bot{TestUtils::CreateBot(rect, _tankHealth, author, _allObjects, _events, dir, _tankPool, _gameConfig,
-									  tier)};
 
-		return bot;
+		return TestUtils::CreateBot(rect, _tankHealth, author, _allObjects, _events, dir, _tankPool, _gameConfig, tier);
 	}
 
-	std::shared_ptr<Bullet> CreateBullet(const FPoint pos, const Direction dir, const Author author)
+	[[nodiscard]] std::shared_ptr<Bullet> CreateBullet(const FPoint pos, const Direction dir, const Author author) const
 	{
 		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _caliber.size.x, .h = _caliber.size.y};
-		auto bullet{TestUtils::CreateBullet(rect, _bulletPool, _events, _caliber, dir,
-											author)};
 
-		return bullet;
+		return TestUtils::CreateBullet(rect, _bulletPool, _events, _caliber, dir, author);
 	}
 };
 
 // a bonus lying untouched stays; driving onto it takes it off the field
 TEST_F(BonusTest, BonusPickUp)
 {
-	CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
+	std::ignore = CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
 	_bonusSpawner->SpawnRandomBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize});
 	const auto* const bonus{dynamic_cast<Bonus*>(_allObjects.back().get())};
 	ASSERT_NE(bonus, nullptr);
@@ -139,7 +136,7 @@ TEST_F(BonusTest, BonusPickUp)
 // the timer freezes the enemy team where it stands - a team that was driving while it lay untouched
 TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 {
-	CreatePlayer({.x = 0.0, .y = 0.0});
+	std::ignore = CreatePlayer({.x = 0.0, .y = 0.0});
 	_bonusSpawner->SpawnBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize}, BonusType::Timer);
 
 	const auto enemyBot{CreateBot({.x = _tankSize * 2, .y = _tankSize * 2}, Author::Enemy1, Direction::DOWN)};
@@ -149,8 +146,7 @@ TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 
 	ASSERT_NE(startPos, enemyBot->GetPos()) << "the enemy stood still with the timer still lying there";
 
-	constexpr bool isPressed{true};
-	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
+	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = true});
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	const FPoint enemyPos{enemyBot->GetPos()};
@@ -163,8 +159,7 @@ TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 // the timer freezes the whole team: an enemy arriving during it arrives frozen, without one it drives off
 TEST_F(BonusTest, AnEnemyArrivingDuringAFreezeArrivesFrozen)
 {
-	constexpr std::array kWithAndWithoutTimer{false, true};
-	for (const bool isTimerTaken: kWithAndWithoutTimer)
+	for (const bool isTimerTaken: {false, true})
 	{
 		SCOPED_TRACE(isTimerTaken);
 		_events->EmitEvent(GameResetEvent{});
@@ -180,6 +175,7 @@ TEST_F(BonusTest, AnEnemyArrivingDuringAFreezeArrivesFrozen)
 		_events->EmitEvent(RespawnTanksEvent{});
 		const auto enemy{std::ranges::find(_allObjects, Faction::EnemyTeam, &BaseObj::GetFaction)};
 		ASSERT_NE(enemy, _allObjects.end()) << "no enemy came up";
+		// NOLINTNEXTLINE(performance-unnecessary-copy-initialization) - a shot in the ticks grows _allObjects
 		const std::shared_ptr<BaseObj> arrived{*enemy};
 		const FPoint arrivedAt{arrived->GetPos()};
 
@@ -197,8 +193,7 @@ TEST_F(BonusTest, AnotherPlayersTimerExtendsTheFreeze)
 {
 	_gameConfig.bonusEffectDuration = 150ms;
 	const auto enemyBot{CreateBot({.x = _tankSize * 2.0, .y = _tankSize * 2.0}, Author::Enemy1, Direction::DOWN)};
-	constexpr std::array kTakers{Author::Player1, Author::Player2};
-	for (const Author taker: kTakers)
+	for (const Author taker: {Author::Player1, Author::Player2})
 	{
 		_bonusSpawner->SpawnBonus({.w = _tankSize, .h = _tankSize}, BonusType::Timer);
 		const auto timer{std::dynamic_pointer_cast<Bonus>(_allObjects.back())};
@@ -224,21 +219,20 @@ TEST_F(BonusTest, HelmetPickUpAndBulletCantDamageTank)
 {
 	const auto player{CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN)};
 	const unsigned int spawnHealth{player->GetHealth()};
-	CreateBullet({.x = _tankSize + 1.0, .y = 0.0}, Direction::LEFT, Author::Enemy1);
+	std::ignore = CreateBullet({.x = _tankSize + 1.0, .y = 0.0}, Direction::LEFT, Author::Enemy1);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	ASSERT_GT(spawnHealth, player->GetHealth()) << "the shot missed the tank even without a helmet";
 
-	constexpr bool isPressed{true};
-	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
+	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = true});
 	_bonusSpawner->SpawnBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize}, BonusType::Helmet);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	//NOTE: taken after the pickup - the pickup heals
 	const unsigned int playerHealth{player->GetHealth()};
-	CreateBullet({.x = _tankSize + 1.0, .y = 0.0}, Direction::LEFT, Author::Enemy1);
+	std::ignore = CreateBullet({.x = _tankSize + 1.0, .y = 0.0}, Direction::LEFT, Author::Enemy1);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -248,7 +242,7 @@ TEST_F(BonusTest, HelmetPickUpAndBulletCantDamageTank)
 // lying untouched the grenade does nothing; taken, it empties the health of every enemy on the field
 TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 {
-	CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
+	std::ignore = CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
 	const auto enemyBot{CreateBot({.x = _tankSize * 2, .y = _tankSize * 2}, Author::Enemy1, Direction::DOWN)};
 	_bonusSpawner->SpawnBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize}, BonusType::Grenade);
 
@@ -265,12 +259,12 @@ TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 TEST_F(BonusTest, TankPickUpExtraLife)
 {
 	unsigned short respawnActual{3u};
-	auto respawnSub{_events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
+	const EventSubscription respawnSub{_events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
 	{
 		respawnActual = event.respawnCount;
 	})};
 
-	CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
+	std::ignore = CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
 	_bonusSpawner->SpawnBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize}, BonusType::Tank);
 	const unsigned short playerSpawnCount{respawnActual};
 
@@ -321,7 +315,7 @@ TEST_F(BonusTest, APickupHealsTheTank)
 {
 	struct Pickup final
 	{
-		BonusType bonus;
+		BonusType bonus{};
 		unsigned short tier{};
 	};
 
@@ -347,7 +341,7 @@ TEST_F(BonusTest, APickupHealsTheTank)
 // the shovel turns the eagle's brick wall into steel once taken, not while it lies there
 TEST_F(BonusTest, ShovelPickUpByPlayerThenFortressWallTurnIntoSteelWall)
 {
-	CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
+	std::ignore = CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN);
 	_bonusSpawner->SpawnBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize}, BonusType::Shovel);
 	const ObjRectangle fortressRect{.x = _tankSize + 1.0, .y = 0, .w = _gridSize, .h = _gridSize};
 	_events->EmitEvent(SpawnObstacleEvent{.rect = fortressRect, .type = ObstacleType::Fortress});
@@ -393,8 +387,7 @@ TEST_F(BonusTest, ShovelDoesNotHealAFallenEagle)
 TEST_F(BonusTest, ShipPickUpCanCrossWater)
 {
 	const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
-	constexpr bool isPressed{true};
-	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
+	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = true});
 
 	_bonusSpawner->SpawnBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize}, BonusType::Ship);
 	const ObjRectangle waterRect{.x = 0.0, .y = _tankSize * 2.0 + 2.0, .w = _gridSize, .h = _gridSize};
@@ -406,7 +399,7 @@ TEST_F(BonusTest, ShipPickUpCanCrossWater)
 	std::erase_if(_allObjects, [](const std::shared_ptr<BaseObj>& object) { return !object->GetIsAlive(); });
 
 	constexpr int framesToCrossWater{100};
-	for (int frame = 0; frame < framesToCrossWater; ++frame)
+	for (int frame{}; frame < framesToCrossWater; ++frame)
 	{
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 	}
@@ -418,7 +411,7 @@ TEST_F(BonusTest, ShipPickUpCanCrossWater)
 TEST_F(BonusTest, DelayedSpawnLandsAfterAnimation)
 {
 	std::optional<AnimationCreateBonusSpawnEvent> burst{};
-	auto animationSub{_events->AddListener(
+	const EventSubscription animationSub{_events->AddListener(
 			[&burst](const AnimationCreateBonusSpawnEvent& event) { burst = event; })};
 
 	//NOTE: this one is about the wait itself, so it drops the fixture's stand-in for the animation
@@ -464,8 +457,7 @@ TEST_F(BonusTest, ABonusNeverLandsUnderCover)
 	_gameConfig.battlefieldSize = UPoint{.x = spot, .y = spot};
 	_events->EmitEvent(WorldGeometryChangedEvent{});
 
-	constexpr std::array kCovers{ObstacleType::Bush, ObstacleType::Brick};
-	for (const ObstacleType cover: kCovers)
+	for (const ObstacleType cover: {ObstacleType::Bush, ObstacleType::Brick})
 	{
 		SCOPED_TRACE(cover == ObstacleType::Bush ? "bush" : "brick");
 		_events->EmitEvent(GameResetEvent{});
@@ -520,7 +512,7 @@ TEST_F(BonusTest, AFreeForAllTimerFreezesEveryoneButItsTaker)
 // a shot bonus leaves the field
 TEST_F(BonusTest, BonusDestroy)
 {
-	CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Enemy1);
+	std::ignore = CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Enemy1);
 
 	_bonusSpawner->SpawnRandomBonus({.x = 0.0, .y = 7.0, .w = _tankSize, .h = _tankSize});
 
@@ -537,7 +529,7 @@ TEST_F(BonusTest, BonusDestroy)
 TEST_F(BonusTest, AShotBonusGivesTheShooterNothing)
 {
 	const auto shooter{CreatePlayer({.x = _tankSize * 3.0, .y = 0.0}, Author::Player1)};
-	CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
+	std::ignore = CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
 
 	_bonusSpawner->SpawnBonus({.x = 0.0, .y = 7.0, .w = _tankSize, .h = _tankSize}, BonusType::Star);
 	const auto* const bonus{dynamic_cast<Bonus*>(_allObjects.back().get())};
@@ -552,7 +544,7 @@ TEST_F(BonusTest, AShotBonusGivesTheShooterNothing)
 // the wall is brick when the enemy takes the shovel
 TEST_F(BonusTest, ShovelPickUpByEnemyThenFortressBrickWallHide)
 {
-	const auto enemyBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN)};
+	std::ignore = CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
 
 	const ObjRectangle fortressRect{.x = _tankSize + 1.0, .y = 0, .w = _gridSize, .h = _gridSize};
 	_events->EmitEvent(SpawnObstacleEvent{.rect = fortressRect, .type = ObstacleType::Fortress});
@@ -569,12 +561,9 @@ TEST_F(BonusTest, ShovelPickUpByEnemyThenFortressBrickWallHide)
 // a player takes a shovel first, so the enemy's finds steel - it goes just the same
 TEST_F(BonusTest, ShovelPickUpByEnemyThenFortressSteelWallHide)
 {
-	const auto enemyBot{CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN)};
-
-	_allObjects.reserve(4);
-	CreatePlayer({.x = _tankSize * 2.0, .y = _tankSize * 2.0}, Author::Player1, Direction::DOWN);
-	constexpr bool isPressed{true};
-	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
+	std::ignore = CreateBot({.x = 0.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
+	std::ignore = CreatePlayer({.x = _tankSize * 2.0, .y = _tankSize * 2.0}, Author::Player1, Direction::DOWN);
+	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = true});
 
 	const ObjRectangle fortressRect{.x = _tankSize * 3.0 + 1.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize};
 	_events->EmitEvent(SpawnObstacleEvent{.rect = fortressRect, .type = ObstacleType::Fortress});

@@ -8,7 +8,6 @@
 #include "enums/GameMode.h"
 #include "enums/GameState.h"
 #include "gtest/gtest.h"
-#include <array>
 #include <memory>
 
 // the board follows the phase, not the score: each case sets a mode, announces a phase and reads if the board is up
@@ -33,8 +32,7 @@ protected:
 // a local match over, lost or won - the board goes up either way
 TEST_F(ScoreBoardTest, AFinishedMatchShowsScore)
 {
-	constexpr std::array kResults{GameState::Over, GameState::Won};
-	for (const GameState result: kResults)
+	for (const GameState result: {GameState::Over, GameState::Won})
 	{
 		SCOPED_TRACE(static_cast<int>(result));
 		_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::OnePlayer});

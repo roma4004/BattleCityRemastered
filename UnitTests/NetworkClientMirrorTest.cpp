@@ -10,12 +10,15 @@
 #include "components/events/ReplicationEvents.h"
 #include "components/events/SpawnEvents.h"
 #include "entities/pawns/Tank.h"
+#include "enums/Author.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
 #include "enums/DespawnReason.h"
 #include "enums/GameMode.h"
 #include "enums/TankModel.h"
 #include "geometry/ObjRectangle.h"
+#include "geometry/Point.h"
+#include "utils/Uuid.h"
 #include "utils/UuidUtils.h"
 #include "gtest/gtest.h"
 #include <memory>
@@ -52,13 +55,13 @@ protected:
 		});
 	}
 
-	std::shared_ptr<Tank> CreateBot(const FPoint pos, const Author author, const unsigned short tier = 1u)
+	[[nodiscard]] std::shared_ptr<Tank> CreateBot(const FPoint pos, const Author author,
+												  const unsigned short tier = 1u) const
 	{
 		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _gameConfig.tankSize, .h = _gameConfig.tankSize};
-		auto bot{TestUtils::CreateBot(rect, _tankHealth, author, _allObjects, _events, Direction::UP, _tankPool,
-									  _gameConfig, tier)};
 
-		return bot;
+		return TestUtils::CreateBot(rect, _tankHealth, author, _allObjects, _events, Direction::UP, _tankPool,
+									_gameConfig, tier);
 	}
 };
 

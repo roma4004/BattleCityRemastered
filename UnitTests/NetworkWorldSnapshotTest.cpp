@@ -24,7 +24,6 @@
 #include "entities/EffectTarget.h"
 #include "entities/obstacles/Obstacle.h"
 #include "entities/pawns/Bullet.h"
-#include "entities/BulletCaliber.h"
 #include "entities/pawns/BulletResetProperty.h"
 #include "entities/pawns/Tank.h"
 #include "enums/Absence.h"
@@ -38,7 +37,6 @@
 #include "enums/PlayerSlot.h"
 #include "enums/RespawnGroup.h"
 #include "enums/TankType.h"
-#include "geometry/ObjRectangle.h"
 #include "network/NetworkCommandQueue.h"
 #include "network/ReplicationApplier.h"
 #include "network/Serializer.h"
@@ -53,7 +51,7 @@
 #include <map>
 #include <memory>
 #include <optional>
-#include <variant>
+#include <variant>//NOTE: std::get on a command
 #include <vector>
 
 using namespace std::chrono_literals;
@@ -267,10 +265,10 @@ TEST_F(NetworkWorldSnapshotTest, TanksArriveAsTheyStand)
 // a bullet is rebuilt where it flies, not by its shooter; a settled bonus is placed, a pending one waits for the host
 TEST_F(NetworkWorldSnapshotTest, BulletsAndBonusesArriveAsTheyStand)
 {
-	const BulletResetProperty property{.rect = {.x = 200.0, .y = 250.0, .w = 9.0, .h = 9.0},
-									   .dir = Direction::RIGHT,
-									   .author = Author::Enemy3,
-									   .caliber{.health = 1}};
+	constexpr BulletResetProperty property{.rect = {.x = 200.0, .y = 250.0, .w = 9.0, .h = 9.0},
+										   .dir = Direction::RIGHT,
+										   .author = Author::Enemy3,
+										   .caliber{.health = 1}};
 	const std::shared_ptr<Bullet> bullet{_hostBulletPool->SpawnBullet(property)};
 	_serverEvents->EmitEvent(AddToSpawnQueueEvent{.obj = bullet});
 	const double size{static_cast<double>(_hostConfig.bonusSize)};

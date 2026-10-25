@@ -12,6 +12,7 @@
 #include "enums/PlayerSlot.h"
 #include "gtest/gtest.h"
 #include <array>
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <string_view>
@@ -56,7 +57,7 @@ TEST_F(InputTest, TheNthDeviceDrivesTheNthSeatUnlessSwapped)
 	{
 		bool isFirstPairSwapped{};
 		bool isSecondPairSwapped{};
-		std::array<PlayerSlot, 4> seats;
+		std::array<PlayerSlot, 4> seats{};
 	};
 
 	constexpr std::array kSwaps{

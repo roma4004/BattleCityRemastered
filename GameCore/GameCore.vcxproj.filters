@@ -911,9 +911,6 @@
     <ClInclude Include="..\headers\utils\DirectionUtils.h">
       <Filter>headers\utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\headers\utils\Fraction.h">
-      <Filter>headers\utils</Filter>
-    </ClInclude>
     <ClInclude Include="..\headers\utils\Log.h">
       <Filter>headers\utils</Filter>
     </ClInclude>

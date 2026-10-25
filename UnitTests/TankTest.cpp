@@ -12,7 +12,6 @@
 #include "entities/BaseObj.h"
 #include "entities/obstacles/BrickWall.h"
 #include "entities/obstacles/BushTile.h"
-#include "entities/obstacles/FortressWalls.h"
 #include "entities/obstacles/IceTile.h"
 #include "entities/obstacles/SteelWall.h"
 #include "entities/obstacles/WaterTile.h"
@@ -31,6 +30,7 @@
 #include <cstddef>
 #include <memory>
 #include <ranges>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -66,8 +66,8 @@ protected:
 		_allObjects.reserve(4u);
 	}
 
-	std::shared_ptr<Tank> CreatePlayer(const FPoint pos, const Author author, const Direction dir,
-									   const unsigned short tier = 1u) const
+	[[nodiscard]] std::shared_ptr<Tank> CreatePlayer(const FPoint pos, const Author author, const Direction dir,
+													 const unsigned short tier = 1u) const
 	{
 		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _tankSize, .h = _tankSize};
 
@@ -75,25 +75,17 @@ protected:
 									   _gameConfig, tier);
 	}
 
-	std::shared_ptr<Tank> CreateBot(const FPoint pos, const Author author, const Direction dir) const
-	{
-		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _tankSize, .h = _tankSize};
-
-		return TestUtils::CreateBot(rect, _gameConfig.tankHealth, author, _allObjects, _events, dir, _tankPool,
-									_gameConfig);
-	}
-
-	std::shared_ptr<BaseObj> SpawnObstacle(const FPoint pos, const ObstacleType type) const
+	[[nodiscard]] std::shared_ptr<BaseObj> SpawnObstacle(const FPoint pos, const ObstacleType type) const
 	{
 		return TestUtils::SpawnObstacle(_events, _allObjects, pos, type, _gameConfig);
 	}
 
-	std::shared_ptr<BaseObj> SpawnObstacle(const ObjRectangle rect, const ObstacleType type) const
+	[[nodiscard]] std::shared_ptr<BaseObj> SpawnObstacle(const ObjRectangle& rect, const ObstacleType type) const
 	{
 		return TestUtils::SpawnObstacle(_events, _allObjects, rect, type);
 	}
 
-	void SpawnObstacleArea(const ObjRectangle area, const ObstacleType type) const
+	void SpawnObstacleArea(const ObjRectangle& area, const ObstacleType type) const
 	{
 		TestUtils::SpawnObstacleArea(_events, _allObjects, area, type, _gameConfig);
 	}
@@ -101,9 +93,9 @@ protected:
 	// a row of brick cells from x to x + width, laid cell by cell the way a map does it
 	void BuildWall(const double from, const double width) const
 	{
-		for (double x{from}; x < from + width; x += _gridSize)
+		for (int column{}; column * _gridSize < width; ++column)
 		{
-			SpawnObstacle(FPoint{.x = x, .y = kWallY}, ObstacleType::Brick);
+			std::ignore = SpawnObstacle(FPoint{.x = from + column * _gridSize, .y = kWallY}, ObstacleType::Brick);
 		}
 	}
 
@@ -200,8 +192,7 @@ TEST_F(TankTest, StandsWhileFiring)
 
 	const FPoint startPos{player->GetPos()};
 
-	constexpr bool isPressed{true};
-	_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = isPressed});
+	_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = true});
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(startPos, player->GetPos());
@@ -219,7 +210,7 @@ TEST_F(TankTest, FiresIntoTheField)
 		SCOPED_TRACE(static_cast<int>(dir));
 		_events->EmitEvent(GameResetEvent{});
 		_allObjects.clear();
-		CreatePlayer(start, Author::Player1, dir);
+		std::ignore = CreatePlayer(start, Author::Player1, dir);
 		const std::size_t size{_allObjects.size()};
 
 		_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = true});
@@ -232,44 +223,19 @@ TEST_F(TankTest, FiresIntoTheField)
 // in each corner, facing out: there is no room for the bullet, so nothing is spawned
 TEST_F(TankTest, HoldsFireOutOfTheField)
 {
-	const auto player{CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::UP)};
-
-	constexpr bool isPressed{true};
+	const FPoint farCorner{.x = static_cast<double>(_gameConfig.battlefieldSize.x) - _tankSize,
+						   .y = static_cast<double>(_gameConfig.battlefieldSize.y) - _tankSize};
+	const std::array starts{std::pair{FPoint{}, Direction::UP}, std::pair{FPoint{}, Direction::LEFT},
+							std::pair{farCorner, Direction::DOWN}, std::pair{farCorner, Direction::RIGHT}};
+	for (const auto& [start, dir]: starts)
 	{
-		const size_t size{_allObjects.size()};
+		SCOPED_TRACE(static_cast<int>(dir));
+		_events->EmitEvent(GameResetEvent{});
+		_allObjects.clear();
+		std::ignore = CreatePlayer(start, Author::Player1, dir);
+		const std::size_t size{_allObjects.size()};
 
-		_events->EmitEvent(Key(InputChannel::LocalP1), MoveUpEvent{.isPressed = isPressed});
-		_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = isPressed});
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-
-		EXPECT_EQ(size, _allObjects.size());
-	}
-	{
-		const size_t size{_allObjects.size()};
-
-		_events->EmitEvent(Key(InputChannel::LocalP1), MoveLeftEvent{.isPressed = isPressed});
-		_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = isPressed});
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-
-		EXPECT_EQ(size, _allObjects.size());
-	}
-
-	player->SetPos({.x = static_cast<double>(_gameConfig.battlefieldSize.x) - _tankSize,
-					.y = static_cast<double>(_gameConfig.battlefieldSize.y) - _tankSize});
-	{
-		const size_t size{_allObjects.size()};
-
-		_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = isPressed});
-		_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = isPressed});
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-
-		EXPECT_EQ(size, _allObjects.size());
-	}
-	{
-		const size_t size{_allObjects.size()};
-
-		_events->EmitEvent(Key(InputChannel::LocalP1), MoveRightEvent{.isPressed = isPressed});
-		_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = isPressed});
+		_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = true});
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 		EXPECT_EQ(size, _allObjects.size());
@@ -279,14 +245,13 @@ TEST_F(TankTest, HoldsFireOutOfTheField)
 // a wall flush ahead stops the drive - brick, steel and the eagle's own wall alike
 TEST_F(TankTest, WallStopsIt)
 {
-	constexpr std::array kWalls{ObstacleType::Brick, ObstacleType::Steel, ObstacleType::Fortress};
-	for (const ObstacleType type: kWalls)
+	for (const ObstacleType type: {ObstacleType::Brick, ObstacleType::Steel, ObstacleType::Fortress})
 	{
 		SCOPED_TRACE(static_cast<int>(type));
 		_events->EmitEvent(GameResetEvent{});
 		_allObjects.clear();
 		const auto player{CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN)};
-		SpawnObstacle(ObjRectangle{.x = 0.0, .y = _tankSize, .w = _tankSize, .h = _gridSize}, type);
+		std::ignore = SpawnObstacle(ObjRectangle{.x = 0.0, .y = _tankSize, .w = _tankSize, .h = _gridSize}, type);
 
 		const FPoint startPos{player->GetPos()};
 
@@ -307,18 +272,14 @@ TEST_F(TankTest, ShotOutrunsTheMovingHull)
 
 	const unsigned int startHealth{player->GetHealth()};
 
-	constexpr bool isPressed{true};
-	_events->EmitEvent(Key(InputChannel::LocalP1), MoveLeftEvent{.isPressed = isPressed});
-	_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = isPressed});
+	_events->EmitEvent(Key(InputChannel::LocalP1), MoveLeftEvent{.isPressed = true});
+	_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = true});
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	ASSERT_EQ(_allObjects.size(), 2u) << "no bullet was spawned";
 	const std::shared_ptr<BaseObj> bullet{_allObjects.back()};
 
-	for (int frame = 0; frame < 5; ++frame)
-	{
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-	}
+	Tick(5);
 
 	EXPECT_EQ(_allObjects.size(), 2u) << "the tank fired a second time mid-flight";
 	EXPECT_TRUE(bullet->GetIsAlive()) << "bullet died on its own tank";
@@ -341,8 +302,7 @@ TEST_F(TankTest, PointBlankBlastHitsTheShooter)
 
 	const unsigned int startHealth{player->GetHealth()};
 
-	constexpr bool isPressed{true};
-	_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = isPressed});
+	_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = true});
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -373,7 +333,7 @@ TEST_F(TankTest, TopTierVolleyIsHullWide)
 // the lead shell deals its damage at the field edge, and the one behind it flies on through that blast
 TEST_F(TankTest, VolleyShellSurvivesTheBlastAhead)
 {
-	CreatePlayer({.x = _tankSize * 2.0, .y = _tankSize * 2.0}, Author::Player1, Direction::UP, 4u);
+	std::ignore = CreatePlayer({.x = _tankSize * 2.0, .y = _tankSize * 2.0}, Author::Player1, Direction::UP, 4u);
 	const std::size_t before{_allObjects.size()};
 
 	_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = true});
@@ -499,7 +459,7 @@ TEST_F(TankTest, TankAgainstAWallIsNotPushed)
 // the chain is asked as a whole: the far tank has room, so the near one gives way and takes it along
 TEST_F(TankTest, ChainGivesWayTogether)
 {
-	CreatePlayer({.x = 0.0, .y = _tankSize * 2.0}, Author::Player1, Direction::RIGHT);
+	std::ignore = CreatePlayer({.x = 0.0, .y = _tankSize * 2.0}, Author::Player1, Direction::RIGHT);
 	const auto near{CreatePlayer({.x = _tankSize, .y = _tankSize * 2.0}, Author::Player2, Direction::UP)};
 	const auto far{CreatePlayer({.x = _tankSize * 2.0, .y = _tankSize * 2.0}, Author::Player3, Direction::UP)};
 	const double nearX{near->GetPos().x};
@@ -517,7 +477,7 @@ TEST_F(TankTest, ChainStandsWhenItsEndIsBlocked)
 {
 	const auto pusher{CreatePlayer({.x = 0.0, .y = _tankSize * 2.0}, Author::Player1, Direction::RIGHT)};
 	const auto near{CreatePlayer({.x = _tankSize, .y = _tankSize * 2.0}, Author::Player2, Direction::UP)};
-	CreatePlayer({.x = _tankSize * 2.0, .y = _tankSize * 2.0}, Author::Player3, Direction::UP);
+	std::ignore = CreatePlayer({.x = _tankSize * 2.0, .y = _tankSize * 2.0}, Author::Player3, Direction::UP);
 	SpawnObstacleArea(ObjRectangle{.x = _tankSize * 3.0, .y = _tankSize * 2.0,
 								   .w = _gameConfig.gridOffset, .h = _tankSize},
 					  ObstacleType::Steel);
@@ -534,7 +494,7 @@ TEST_F(TankTest, ChainStandsWhenItsEndIsBlocked)
 // on ice the shoved tank glides on after the pusher lets go
 TEST_F(TankTest, PushedTankSlidesOnIce)
 {
-	CreatePlayer({.x = 0.0, .y = _tankSize * 2.0}, Author::Player1, Direction::RIGHT);
+	std::ignore = CreatePlayer({.x = 0.0, .y = _tankSize * 2.0}, Author::Player1, Direction::RIGHT);
 	const auto pushed{CreatePlayer({.x = _tankSize, .y = _tankSize * 2.0}, Author::Player2, Direction::UP)};
 	SpawnObstacleArea(ObjRectangle{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize * 8.0, .h = _tankSize},
 					  ObstacleType::Ice);
@@ -664,8 +624,7 @@ TEST_F(TankTest, ShotLeavesAHoleTheTankFits)
 	const auto player{CreatePlayer({.x = _tankSize, .y = 0.0}, Author::Player1, Direction::DOWN)};
 	const double startX{player->GetRect().x};
 
-	constexpr bool isPressed{true};
-	_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = isPressed});
+	_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = true});
 	Drive(Direction::DOWN, 200);
 
 	EXPECT_DOUBLE_EQ(player->GetRect().x, startX) << "the tank had to steer around what the shot left";
@@ -691,7 +650,7 @@ TEST_F(TankTest, TankWideGapIsEnteredFromHalfOff)
 TEST_F(TankTest, NudgeStopsAtTheFieldEdge)
 {
 	//NOTE: a third of the tank across - little enough that clearing it sideways looks like a way through
-	SpawnObstacle(FPoint{.x = _tankSize - _gridSize, .y = _tankSize}, ObstacleType::Brick);
+	std::ignore = SpawnObstacle(FPoint{.x = _tankSize - _gridSize, .y = _tankSize}, ObstacleType::Brick);
 
 	const auto player{CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN)};
 
@@ -704,8 +663,8 @@ TEST_F(TankTest, NudgeStopsAtTheFieldEdge)
 TEST_F(TankTest, HairInsideAWallDoesNotPassIt)
 {
 	//NOTE: two cells, so neither way across clears them - the tank has nowhere to go but stand
-	SpawnObstacle(FPoint{.x = 0.0, .y = _gridSize * 2.0}, ObstacleType::Brick);
-	SpawnObstacle(FPoint{.x = 0.0, .y = _gridSize * 3.0}, ObstacleType::Brick);
+	std::ignore = SpawnObstacle(FPoint{.x = 0.0, .y = _gridSize * 2.0}, ObstacleType::Brick);
+	std::ignore = SpawnObstacle(FPoint{.x = 0.0, .y = _gridSize * 3.0}, ObstacleType::Brick);
 
 	const double startX{_gridSize - ColliderUtils::kTouchTolerance / 10.0};
 	const auto player{CreatePlayer({.x = startX, .y = _gridSize}, Author::Player1, Direction::DOWN)};
@@ -722,7 +681,7 @@ TEST_F(TankTest, HealthBarHidesInABush)
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 	ASSERT_TRUE(tank->ShownHealth().has_value()) << "no bar on open ground";
 
-	SpawnObstacle(FPoint{.x = 0.0, .y = 0.0}, ObstacleType::Bush);
+	std::ignore = SpawnObstacle(FPoint{.x = 0.0, .y = 0.0}, ObstacleType::Bush);
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 	ASSERT_FALSE(tank->ShownHealth().has_value()) << "the bar gave the hidden tank away";
 

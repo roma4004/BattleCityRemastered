@@ -5,7 +5,9 @@
 #include <algorithm>
 #include <chrono>
 #include <cstddef>
+#include <iterator>
 #include <string>
+#include <tuple>
 #include <vector>
 
 using namespace std::chrono_literals;
@@ -255,7 +257,7 @@ TEST_F(NetworkDatagramTest, AValueWaitingForASnapshotThatNeverCameGoesWithTheNex
 	ASSERT_TRUE(_latest.empty());
 
 	//NOTE: the backlog overflows and takes the first snapshot with it
-	for (std::size_t i = 0u; i < network::DatagramLink::kMaxBacklog; ++i)
+	for (std::size_t i{}; i < network::DatagramLink::kMaxBacklog; ++i)
 	{
 		std::ignore = _host.SendReliable("frame");
 	}
@@ -271,7 +273,7 @@ TEST_F(NetworkDatagramTest, AValueWaitingForASnapshotThatNeverCameGoesWithTheNex
 // a peer that stopped acking is not sent the tail it missed - it is dropped, and the snapshot replacing it comes first
 TEST_F(NetworkDatagramTest, ABacklogPastTheLimitIsDroppedAndThePeerSkipsToTheNextMessage)
 {
-	for (std::size_t i = 0u; i < network::DatagramLink::kMaxBacklog; ++i)
+	for (std::size_t i{}; i < network::DatagramLink::kMaxBacklog; ++i)
 	{
 		ASSERT_TRUE(_host.SendReliable("frame " + std::to_string(i)));
 	}

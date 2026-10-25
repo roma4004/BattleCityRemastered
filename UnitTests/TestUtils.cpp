@@ -2,19 +2,23 @@
 #include "components/BulletPool.h"
 #include "components/TankPool.h"
 #include "components/TankSpawner.h"
+#include "components/events/SpawnEvents.h"
 #include "components/managers/RespawnManager.h"
 #include "components/input/InputProviderForBot.h"
 #include "components/input/InputProviderForPlayer.h"
 #include "entities/BaseObj.h"
+#include "entities/BulletCaliber.h"
 #include "entities/pawns/PawnProperty.h"
 #include "entities/pawns/BulletResetProperty.h"
 #include "entities/pawns/Tank.h"
 #include "entities/pawns/TankResetProperty.h"
 #include "enums/InputChannel.h"
 #include "enums/TankType.h"
+#include "utils/Uuid.h"
 #include "utils/UuidUtils.h"
 #include <chrono>
 #include <memory>
+#include <vector>
 
 using namespace std::chrono_literals;
 
@@ -56,7 +60,7 @@ namespace
 	}
 }
 
-[[nodiscard]] TankResetProperty MakeResetProperty(const ObjRectangle rect, const unsigned int health,
+[[nodiscard]] TankResetProperty MakeResetProperty(const ObjRectangle& rect, const unsigned int health,
 												  const TankType type, const Direction dir, const unsigned short tier,
 												  const TankModel model)
 {
@@ -71,7 +75,7 @@ namespace
 }//namespace
 
 std::shared_ptr<Tank> TestUtils::CreateBot(
-		const ObjRectangle rect, const unsigned int health, const Author author,
+		const ObjRectangle& rect, const unsigned int health, const Author author,
 		const std::vector<std::shared_ptr<BaseObj>>& allObjects, const std::shared_ptr<EventSystem>& events,
 		const Direction dir, const std::shared_ptr<TankPool>& tankPool, const GameConfig& gameConfig,
 		const unsigned short tier, const TankModel model)
@@ -84,7 +88,7 @@ std::shared_ptr<Tank> TestUtils::CreateBot(
 }
 
 std::shared_ptr<Tank> TestUtils::CreatePlayer(
-		const ObjRectangle rect, const unsigned int health, const Author author,
+		const ObjRectangle& rect, const unsigned int health, const Author author,
 		const std::vector<std::shared_ptr<BaseObj>>&, const std::shared_ptr<EventSystem>& events,
 		const Direction dir, const std::shared_ptr<TankPool>& tankPool, const GameConfig&,
 		const unsigned short tier, const TankModel model)
@@ -99,7 +103,7 @@ std::shared_ptr<Tank> TestUtils::CreatePlayer(
 	return tank;
 }
 
-std::shared_ptr<Bullet> TestUtils::CreateBullet(const ObjRectangle rect, const std::shared_ptr<BulletPool>& bulletPool,
+std::shared_ptr<Bullet> TestUtils::CreateBullet(const ObjRectangle& rect, const std::shared_ptr<BulletPool>& bulletPool,
 												const std::shared_ptr<EventSystem>& events,
 												const BulletCaliber& caliber, const Direction dir,
 												const Author author, const Uuid& authorUuid)

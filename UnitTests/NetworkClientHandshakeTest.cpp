@@ -36,11 +36,6 @@ protected:
 		_events->EmitEvent(DeltaTimeEvent{.deltaTime = 1.0 / 60.0});
 		_simulation.Tick();
 	}
-
-	[[nodiscard]] std::ptrdiff_t Count(const std::string_view what) const
-	{
-		return std::ranges::count(_trace, what);
-	}
 };
 
 //NOTE: the server answers a ready with the whole world, which a reset after the ready would erase
@@ -63,7 +58,7 @@ TEST_F(NetworkClientHandshakeTest, NothingIsAnnouncedBeforeTheLinkIsUp)
 	Frame();
 	Frame();
 
-	EXPECT_EQ(Count("ready"), 0);
+	EXPECT_EQ(std::ranges::count(_trace, "ready"), 0);
 }
 
 //NOTE: the server counts readies - two from one client fill both seats and start a match alone
@@ -74,7 +69,7 @@ TEST_F(NetworkClientHandshakeTest, TheLinkArrivingWithTheLobbyStillAnnouncesOnce
 	Frame();
 	Frame();
 
-	EXPECT_EQ(Count("ready"), 1);
+	EXPECT_EQ(std::ranges::count(_trace, "ready"), 1);
 }
 
 // a connected client hearing the lobby readies again, so a restarted match does not wait for it forever
@@ -104,7 +99,7 @@ TEST_F(NetworkClientHandshakeTest, ALostLinkStopsTheAnnouncements)
 	_events->EmitEvent(ClientReconnectAbandonedEvent{});
 	Frame();
 
-	EXPECT_EQ(Count("ready"), 0);
+	EXPECT_EQ(std::ranges::count(_trace, "ready"), 0);
 }
 
 //NOTE: a host lost without a goodbye leaves the field stale - the client asks again, only once the link is back

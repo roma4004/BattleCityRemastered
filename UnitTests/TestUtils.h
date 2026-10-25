@@ -98,16 +98,16 @@ public:
 
 	//NOTE: laid cell by cell, the way a map does it - one stretched obstacle is a shape the game never makes
 	static void SpawnObstacleArea(const std::shared_ptr<EventSystem>& events,
-								  const std::vector<std::shared_ptr<BaseObj>>& allObjects, const ObjRectangle area,
+								  const std::vector<std::shared_ptr<BaseObj>>& allObjects, const ObjRectangle& area,
 								  const ObstacleType type, const GameConfig& gameConfig)
 	{
 		const double side{gameConfig.gridOffset * ObstacleCellSpan(type)};
-		for (double y{area.y}; y < area.Bottom(); y += side)
+		for (int row{}; row * side < area.h; ++row)
 		{
-			for (double x{area.x}; x < area.Right(); x += side)
+			for (int column{}; column * side < area.w; ++column)
 			{
-				std::ignore = SpawnObstacle(events, allObjects, ObjRectangle{.x = x, .y = y, .w = side, .h = side},
-											type);
+				const ObjRectangle cell{.x = area.x + column * side, .y = area.y + row * side, .w = side, .h = side};
+				std::ignore = SpawnObstacle(events, allObjects, cell, type);
 			}
 		}
 	}
@@ -115,7 +115,7 @@ public:
 	//NOTE: the game never builds an obstacle itself, ObstacleSpawner does; the rect overload is for geometry cases
 	[[nodiscard]] static std::shared_ptr<BaseObj> SpawnObstacle(const std::shared_ptr<EventSystem>& events,
 																const std::vector<std::shared_ptr<BaseObj>>& allObjects,
-																const ObjRectangle rect, const ObstacleType type)
+																const ObjRectangle& rect, const ObstacleType type)
 	{
 		events->EmitEvent(SpawnObstacleEvent{.rect = rect, .type = type});
 
@@ -134,19 +134,19 @@ public:
 
 	//NOTE: tanks come from the pools through the spawn queue, as in the game; the helpers differ only in the driver
 	[[nodiscard]] static std::shared_ptr<Tank> CreateBot(
-			ObjRectangle rect, unsigned int health, Author author,
+			const ObjRectangle& rect, unsigned int health, Author author,
 			const std::vector<std::shared_ptr<BaseObj>>& allObjects, const std::shared_ptr<EventSystem>& events,
 			Direction dir, const std::shared_ptr<TankPool>& tankPool, const GameConfig& gameConfig,
 			unsigned short tier = 1u, TankModel model = TankModel::Basic);
 
 	[[nodiscard]] static std::shared_ptr<Tank> CreatePlayer(
-			ObjRectangle rect, unsigned int health, Author author,
+			const ObjRectangle& rect, unsigned int health, Author author,
 			const std::vector<std::shared_ptr<BaseObj>>& allObjects, const std::shared_ptr<EventSystem>& events,
 			Direction dir, const std::shared_ptr<TankPool>& tankPool, const GameConfig& gameConfig,
 			unsigned short tier = 1u, TankModel model = TankModel::Player);
 
 	[[nodiscard]] static std::shared_ptr<Bullet> CreateBullet(
-			ObjRectangle rect, const std::shared_ptr<BulletPool>& bulletPool,
+			const ObjRectangle& rect, const std::shared_ptr<BulletPool>& bulletPool,
 			const std::shared_ptr<EventSystem>& events, const BulletCaliber& caliber, Direction dir,
 			Author author, const Uuid& authorUuid = {});
 };

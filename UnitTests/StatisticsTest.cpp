@@ -11,6 +11,7 @@
 #include "components/events/TimingEvents.h"
 #include "components/GameStatistics.h"
 #include "components/StatisticsData.h"
+#include "entities/BulletCaliber.h"
 #include "entities/bonuses/Bonus.h"
 #include "entities/obstacles/BrickWall.h"
 #include "entities/obstacles/SteelWall.h"
@@ -28,7 +29,9 @@
 #include <memory>
 #include <optional>
 #include <string_view>
+#include <tuple>
 #include <utility>
+#include <vector>
 
 // every case: a target, a bullet a step short of it, one tick, the counter that pair owns - one hit is the kill
 class StatisticsTest : public testing::Test// NOLINT(clang-diagnostic-padded)
@@ -48,7 +51,6 @@ protected:
 	BulletCaliber _caliber{
 			.speed = 300.0, .damage = 1u, .health = 1, .blastRadius = 12.0, .tier = 1u, .size{.x = 6.0, .y = 5.0}};
 	double _tankSize{};
-	Uuid _uuid{};
 	unsigned short _tankHealth{1u};
 	EventSubscription _spawnQueueSub{};
 
@@ -68,38 +70,30 @@ protected:
 		_allObjects.reserve(5);
 	}
 
-	void TearDown() override {}
-
-	std::shared_ptr<Tank> CreatePlayer(const FPoint pos, const Author author = Author::Player1,
-									   const Direction dir = Direction::UP)
+	[[nodiscard]] std::shared_ptr<Tank> CreatePlayer(const FPoint pos, const Author author = Author::Player1,
+													 const Direction dir = Direction::UP) const
 	{
 		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _gameConfig.tankSize, .h = _gameConfig.tankSize};
-		auto player{TestUtils::CreatePlayer(rect, _tankHealth, author, _allObjects, _events, dir, _tankPool,
-											_gameConfig)};
 
-		return player;
+		return TestUtils::CreatePlayer(rect, _tankHealth, author, _allObjects, _events, dir, _tankPool, _gameConfig);
 	}
 
-	std::shared_ptr<Tank> CreateBot(const FPoint pos, const Author author, const Direction dir,
-									const unsigned short tier = 1u)
+	[[nodiscard]] std::shared_ptr<Tank> CreateBot(const FPoint pos, const Author author, const Direction dir,
+												  const unsigned short tier = 1u) const
 	{
 		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _gameConfig.tankSize, .h = _gameConfig.tankSize};
-		auto bot{TestUtils::CreateBot(rect, _tankHealth, author, _allObjects, _events, dir, _tankPool, _gameConfig,
-									  tier)};
 
-		return bot;
+		return TestUtils::CreateBot(rect, _tankHealth, author, _allObjects, _events, dir, _tankPool, _gameConfig, tier);
 	}
 
-	std::shared_ptr<Bullet> CreateBullet(const FPoint pos, const Direction dir, const Author author)
+	[[nodiscard]] std::shared_ptr<Bullet> CreateBullet(const FPoint pos, const Direction dir, const Author author) const
 	{
 		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _caliber.size.x, .h = _caliber.size.y};
-		auto bullet{TestUtils::CreateBullet(rect, _bulletPool, _events, _caliber, dir,
-											author)};
 
-		return bullet;
+		return TestUtils::CreateBullet(rect, _bulletPool, _events, _caliber, dir, author);
 	}
 
-	std::shared_ptr<BaseObj> SpawnObstacle(const FPoint pos, const ObstacleType type) const
+	[[nodiscard]] std::shared_ptr<BaseObj> SpawnObstacle(const FPoint pos, const ObstacleType type) const
 	{
 		return TestUtils::SpawnObstacle(_events, _allObjects, pos, type, _gameConfig);
 	}
@@ -108,8 +102,7 @@ protected:
 // a player shot by the enemy team: the hit stays with the seat, the kill goes to the team's shared counter
 TEST_F(StatisticsTest, APlayerShotByTheEnemyTeam)
 {
-	constexpr std::array kSeats{PlayerSlot::P1, PlayerSlot::P2};
-	for (const PlayerSlot seat: kSeats)
+	for (const PlayerSlot seat: {PlayerSlot::P1, PlayerSlot::P2})
 	{
 		SCOPED_TRACE(ToString(seat));
 		_events->EmitEvent(GameResetEvent{});
@@ -117,8 +110,8 @@ TEST_F(StatisticsTest, APlayerShotByTheEnemyTeam)
 		StatisticsData expected{_statistics->GetData()};
 		++expected.seats[SeatIndex(seat)].hitByEnemyTeam;
 		++expected.enemyTeam.playerKills;
-		CreatePlayer({.x = 0.0, .y = 0.0}, AuthorOf(seat));
-		CreateBullet({.x = _tankSize / 2.0, .y = _tankSize}, Direction::UP, Author::Enemy1);
+		std::ignore = CreatePlayer({.x = 0.0, .y = 0.0}, AuthorOf(seat));
+		std::ignore = CreateBullet({.x = _tankSize / 2.0, .y = _tankSize}, Direction::UP, Author::Enemy1);
 
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -139,8 +132,8 @@ TEST_F(StatisticsTest, APlayerShotByTheOtherSeat)
 		StatisticsData expected{_statistics->GetData()};
 		++expected.seats[SeatIndex(seat)].friendlyHitsTaken;
 		++expected.seats[SeatIndex(seat)].friendlyKillsTaken;
-		CreatePlayer({.x = 0.0, .y = 0.0}, AuthorOf(seat));
-		CreateBullet({.x = _tankSize / 2.0, .y = _tankSize + 1.0}, Direction::UP, shooter);
+		std::ignore = CreatePlayer({.x = 0.0, .y = 0.0}, AuthorOf(seat));
+		std::ignore = CreateBullet({.x = _tankSize / 2.0, .y = _tankSize + 1.0}, Direction::UP, shooter);
 
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -151,8 +144,9 @@ TEST_F(StatisticsTest, APlayerShotByTheOtherSeat)
 // a bot shot by a bot - the enemy team counts its own friendly fire too, hit and kill alike
 TEST_F(StatisticsTest, AnEnemyShotByItsOwnTeam)
 {
-	CreateBot({.x = _tankSize * 2.0 + 2.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
-	CreateBullet({.x = _tankSize * 2.0 + 2.0 + _tankSize / 2.0, .y = _tankSize}, Direction::UP, Author::Enemy2);
+	std::ignore = CreateBot({.x = _tankSize * 2.0 + 2.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
+	std::ignore = CreateBullet({.x = _tankSize * 2.0 + 2.0 + _tankSize / 2.0, .y = _tankSize}, Direction::UP,
+							   Author::Enemy2);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -163,8 +157,7 @@ TEST_F(StatisticsTest, AnEnemyShotByItsOwnTeam)
 // a bot shot by a seat is that seat's hit and kill - the seats never share a bucket
 TEST_F(StatisticsTest, AnEnemyShotByASeat)
 {
-	constexpr std::array kSeats{PlayerSlot::P1, PlayerSlot::P2};
-	for (const PlayerSlot seat: kSeats)
+	for (const PlayerSlot seat: {PlayerSlot::P1, PlayerSlot::P2})
 	{
 		SCOPED_TRACE(ToString(seat));
 		_events->EmitEvent(GameResetEvent{});
@@ -172,8 +165,9 @@ TEST_F(StatisticsTest, AnEnemyShotByASeat)
 		StatisticsData expected{_statistics->GetData()};
 		++expected.seats[SeatIndex(seat)].enemyHits;
 		++expected.seats[SeatIndex(seat)].enemyKills;
-		CreateBot({.x = _tankSize * 2.0 + 2.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
-		CreateBullet({.x = _tankSize * 2.0 + 2.0 + _tankSize / 2.0, .y = _tankSize}, Direction::UP, AuthorOf(seat));
+		std::ignore = CreateBot({.x = _tankSize * 2.0 + 2.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
+		std::ignore = CreateBullet({.x = _tankSize * 2.0 + 2.0 + _tankSize / 2.0, .y = _tankSize}, Direction::UP,
+								   AuthorOf(seat));
 
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -184,8 +178,9 @@ TEST_F(StatisticsTest, AnEnemyShotByASeat)
 // a third seat scores into its own column
 TEST_F(StatisticsTest, AThirdSeatScoresIntoItsOwnColumn)
 {
-	CreateBot({.x = _tankSize * 2.0 + 2.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
-	CreateBullet({.x = _tankSize * 2.0 + 2.0 + _tankSize / 2.0, .y = _tankSize}, Direction::UP, Author::Player3);
+	std::ignore = CreateBot({.x = _tankSize * 2.0 + 2.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
+	std::ignore = CreateBullet({.x = _tankSize * 2.0 + 2.0 + _tankSize / 2.0, .y = _tankSize}, Direction::UP,
+							   Author::Player3);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -217,7 +212,8 @@ TEST_F(StatisticsTest, ABulletTouchingAnythingButABulletIsNoBulletHit)
 			const auto wall{SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _caliber.size.y + 1}, *touch.wall)};
 			_caliber.damage = wall->GetHealth();
 		}
-		CreateBullet({.x = 0.0, .y = touch.dir == Direction::UP ? 0.0 : _tankSize}, touch.dir, Author::Player1);
+		std::ignore = CreateBullet({.x = 0.0, .y = touch.dir == Direction::UP ? 0.0 : _tankSize}, touch.dir,
+								   Author::Player1);
 
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -264,7 +260,7 @@ TEST_F(StatisticsTest, AWallBroughtDownIsCountedToItsShooter)
 		const auto wall{SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _caliber.size.y + 1}, type)};
 		_caliber.damage = wall->GetHealth();
 		_caliber.tier = type == ObstacleType::Steel ? 3u : 1u;
-		CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, author);
+		std::ignore = CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, author);
 
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -317,8 +313,8 @@ TEST_F(StatisticsTest, BulletsMeetingCreditBothAuthors)
 		_allObjects.clear();
 		StatisticsData expected{_statistics->GetData()};
 		credit(expected);
-		CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, down);
-		CreateBullet({.x = 0.0, .y = _tankSize + _caliber.size.y + 1.0}, Direction::UP, up);
+		std::ignore = CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, down);
+		std::ignore = CreateBullet({.x = 0.0, .y = _tankSize + _caliber.size.y + 1.0}, Direction::UP, up);
 
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -341,12 +337,12 @@ TEST_F(StatisticsTest, ABonusPickupIsCountedToItsTaker)
 		++(seat.has_value() ? expected.seats[SeatIndex(*seat)].bonusPickups : expected.enemyTeam.bonusPickups);
 		if (seat.has_value())
 		{
-			CreatePlayer({.x = x, .y = 0.0}, author, Direction::DOWN);
+			std::ignore = CreatePlayer({.x = x, .y = 0.0}, author, Direction::DOWN);
 			_events->EmitEvent(Key(LocalInput(*seat)), MoveDownEvent{.isPressed = true});
 		}
 		else
 		{
-			CreateBot({.x = x, .y = 0.0}, author, Direction::DOWN);
+			std::ignore = CreateBot({.x = x, .y = 0.0}, author, Direction::DOWN);
 		}
 		_bonusSpawner->SpawnRandomBonus({.x = x, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize});
 

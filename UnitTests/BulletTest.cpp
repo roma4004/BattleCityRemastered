@@ -1,3 +1,4 @@
+#include "enums/Author.h"
 #include "geometry/Point.h"
 #include "TestUtils.h"
 #include "components/ObstacleSpawner.h"
@@ -15,12 +16,15 @@
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/Tank.h"
 #include "enums/Direction.h"
+#include "utils/DirectionUtils.h"
 #include "gtest/gtest.h"
 #include <algorithm>
 #include <array>
 #include <cstddef>
 #include <memory>
 #include <ranges>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 // a bullet and whatever it flies into, both placed by hand: one tick moves the shot, then health or position is read
@@ -30,6 +34,7 @@ protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::unique_ptr<ObstacleSpawner> _obstacleSpawner{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
+	std::shared_ptr<TankPool> _tankPool{nullptr};
 	GameConfig _gameConfig{};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	double _deltaTimeOneFrame{1.0 / 60.0};
@@ -43,24 +48,38 @@ protected:
 		_events = std::make_shared<EventSystem>();
 		_obstacleSpawner = std::make_unique<ObstacleSpawner>(_events, _gameConfig);
 		_bulletPool = std::make_shared<BulletPool>(_events, _allObjects, _gameConfig);
+		_tankPool = std::make_shared<TankPool>(_events, _allObjects, _gameConfig, _bulletPool);
 		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, _allObjects);
 		_gridSize = _gameConfig.gridOffset;
 
 		_allObjects.reserve(4);
 	}
 
-	void TearDown() override {}
-
-	std::shared_ptr<Bullet> CreateBullet(const FPoint pos, const Direction dir, const Author author)
+	[[nodiscard]] std::shared_ptr<Bullet> CreateBullet(const FPoint pos, const Direction dir, const Author author) const
 	{
 		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _caliber.size.x, .h = _caliber.size.y};
-		auto bullet{TestUtils::CreateBullet(rect, _bulletPool, _events, _caliber, dir,
-											author)};
 
-		return bullet;
+		return TestUtils::CreateBullet(rect, _bulletPool, _events, _caliber, dir, author);
 	}
 
-	std::shared_ptr<BaseObj> SpawnObstacle(const ObjRectangle rect, const ObstacleType type) const
+	[[nodiscard]] std::shared_ptr<Tank> CreatePlayer(const FPoint pos, const Author author,
+													 const unsigned int health) const
+	{
+		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _gameConfig.tankSize, .h = _gameConfig.tankSize};
+
+		return TestUtils::CreatePlayer(rect, health, author, _allObjects, _events, Direction::UP, _tankPool,
+									   _gameConfig);
+	}
+
+	[[nodiscard]] std::shared_ptr<Tank> CreateBot(const FPoint pos, const Author author,
+												   const unsigned int health) const
+	{
+		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _gameConfig.tankSize, .h = _gameConfig.tankSize};
+
+		return TestUtils::CreateBot(rect, health, author, _allObjects, _events, Direction::UP, _tankPool, _gameConfig);
+	}
+
+	[[nodiscard]] std::shared_ptr<BaseObj> SpawnObstacle(const ObjRectangle& rect, const ObstacleType type) const
 	{
 		return TestUtils::SpawnObstacle(_events, _allObjects, rect, type);
 	}
@@ -69,81 +88,44 @@ protected:
 // all four directions with room ahead: the shot advances along its axis and holds the other one
 TEST_F(BulletTest, BulletMoveInsideScreen)
 {
-	const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};
+	const FPoint farCorner{.x = static_cast<double>(_gameConfig.battlefieldSize.x) - _caliber.size.x,
+						   .y = static_cast<double>(_gameConfig.battlefieldSize.y) - _caliber.size.y};
+	const std::array starts{std::pair{FPoint{}, Direction::DOWN}, std::pair{FPoint{}, Direction::RIGHT},
+							std::pair{farCorner, Direction::UP}, std::pair{farCorner, Direction::LEFT}};
+	for (const auto& [start, dir]: starts)
+	{
+		SCOPED_TRACE(static_cast<int>(dir));
+		_events->EmitEvent(GameResetEvent{});
+		_allObjects.clear();
+		const auto bullet{CreateBullet(start, dir, Author::Player1)};
 
-	{
-		bullet->SetDirection(Direction::DOWN);
-		const FPoint bulletStartPos{bullet->GetPos()};
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-		const FPoint bulletEndPos{bullet->GetPos()};
-		EXPECT_LT(bulletStartPos.y, bulletEndPos.y);
-		EXPECT_EQ(bulletStartPos.x, bulletEndPos.x);
-	}
-	{
-		bullet->SetDirection(Direction::RIGHT);
-		const FPoint bulletStartPos{bullet->GetPos()};
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-		const FPoint bulletEndPos{bullet->GetPos()};
-		EXPECT_LT(bulletStartPos.x, bulletEndPos.x);
-		EXPECT_EQ(bulletStartPos.y, bulletEndPos.y);
-	}
 
-	const auto windowWidth{static_cast<double>(_gameConfig.battlefieldSize.x)};
-	const auto windowHeight{static_cast<double>(_gameConfig.battlefieldSize.y)};
-
-	bullet->SetPos({.x = windowWidth - _caliber.size.x, .y = windowHeight - _caliber.size.y});
-	{
-		bullet->SetDirection(Direction::UP);
-		const FPoint bulletStartPos{bullet->GetPos()};
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-		const FPoint bulletEndPos{bullet->GetPos()};
-		EXPECT_GT(bulletStartPos.y, bulletEndPos.y);
-		EXPECT_EQ(bulletStartPos.x, bulletEndPos.x);
-	}
-	{
-		bullet->SetDirection(Direction::LEFT);
-		const FPoint bulletStartPos{bullet->GetPos()};
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-		const FPoint bulletEndPos{bullet->GetPos()};
-		EXPECT_GT(bulletStartPos.x, bulletEndPos.x);
-		EXPECT_EQ(bulletStartPos.y, bulletEndPos.y);
+		const auto [unitX, unitY]{DirectionUtils::Unit(dir)};
+		const double alongX{bullet->GetPos().x - start.x};
+		const double alongY{bullet->GetPos().y - start.y};
+		EXPECT_GT(alongX * unitX + alongY * unitY, 0.0) << "the shot did not move along its direction";
+		EXPECT_EQ(unitX == 0.0 ? alongX : alongY, 0.0) << "the shot drifted across its direction";
 	}
 }
 
 // the same four against the edge of the field, where the shot dies instead of flying on
 TEST_F(BulletTest, BulletMoveOutSideScreen)
 {
-	const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};
+	const FPoint farCorner{.x = static_cast<double>(_gameConfig.battlefieldSize.x) - _caliber.size.x,
+						   .y = static_cast<double>(_gameConfig.battlefieldSize.y) - _caliber.size.y};
+	const std::array starts{std::pair{farCorner, Direction::DOWN}, std::pair{farCorner, Direction::RIGHT},
+							std::pair{FPoint{}, Direction::UP}, std::pair{FPoint{}, Direction::LEFT}};
+	for (const auto& [start, dir]: starts)
+	{
+		SCOPED_TRACE(static_cast<int>(dir));
+		_events->EmitEvent(GameResetEvent{});
+		_allObjects.clear();
+		const auto bullet{CreateBullet(start, dir, Author::Player1)};
 
-	const auto windowWidth{static_cast<double>(_gameConfig.battlefieldSize.x)};
-	const auto windowHeight{static_cast<double>(_gameConfig.battlefieldSize.y)};
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	bullet->SetPos({.x = windowWidth - _caliber.size.x, .y = windowHeight - _caliber.size.y});
-	{
-		bullet->SetDirection(Direction::DOWN);
-		const FPoint bulletStartPos{bullet->GetPos()};
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-		EXPECT_EQ(bulletStartPos, bullet->GetPos());
-	}
-	{
-		bullet->SetDirection(Direction::RIGHT);
-		const FPoint bulletStartPos{bullet->GetPos()};
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-		EXPECT_EQ(bulletStartPos, bullet->GetPos());
-	}
-
-	bullet->SetPos({.x = 0.0, .y = 0.0});
-	{
-		bullet->SetDirection(Direction::UP);
-		const FPoint bulletStartPos{bullet->GetPos()};
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-		EXPECT_EQ(bulletStartPos, bullet->GetPos());
-	}
-	{
-		bullet->SetDirection(Direction::LEFT);
-		const FPoint bulletStartPos{bullet->GetPos()};
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-		EXPECT_EQ(bulletStartPos, bullet->GetPos());
+		EXPECT_EQ(start, bullet->GetPos());
 	}
 }
 
@@ -154,7 +136,7 @@ TEST_F(BulletTest, BulletDamagesABrickFromEverySide)
 	{
 		FPoint bullet;
 		FPoint brick;
-		Direction dir;
+		Direction dir{};
 	};
 
 	constexpr std::array kShots{Shot{.bullet{.x = 0.0, .y = 7.0}, .brick{}, .dir = Direction::UP},
@@ -166,7 +148,7 @@ TEST_F(BulletTest, BulletDamagesABrickFromEverySide)
 		SCOPED_TRACE(static_cast<int>(dir));
 		_events->EmitEvent(GameResetEvent{});
 		_allObjects.clear();
-		CreateBullet(bulletPos, dir, Author::Player1);
+		std::ignore = CreateBullet(bulletPos, dir, Author::Player1);
 
 		const ObjRectangle rect{.x = brickPos.x, .y = brickPos.y, .w = _gridSize, .h = _gridSize};
 		const auto brickWall{SpawnObstacle(rect, ObstacleType::Brick)};
@@ -204,12 +186,11 @@ TEST_F(BulletTest, BulletBlowRadiusIsDirectionSymmetric)
 		_allObjects.clear();
 		std::ignore = TestUtils::CreateBullet(place(0.0, bulletLength), _bulletPool, _events, _caliber,
 											  dir, Author::Player1);
-		SpawnObstacle(place(bulletLength + 1.0, tileSide), ObstacleType::Brick);
+		std::ignore = SpawnObstacle(place(bulletLength + 1.0, tileSide), ObstacleType::Brick);
 
 		//NOTE: half a pixel inside the blast around where the bullet's center stops
-		auto farTile{SpawnObstacle(place(bulletLength / 2.0 + 1.0 + _caliber.blastRadius - 0.5, tileSide),
-								   ObstacleType::Brick)};
-		_allObjects.emplace_back(farTile);
+		const auto farTile{SpawnObstacle(place(bulletLength / 2.0 + 1.0 + _caliber.blastRadius - 0.5, tileSide),
+										 ObstacleType::Brick)};
 
 		const unsigned int healthBefore{farTile->GetHealth()};
 
@@ -229,16 +210,9 @@ TEST_F(BulletTest, BulletBlowRadiusIsDirectionSymmetric)
 // a tank takes the hit like any other target
 TEST_F(BulletTest, BulletDamageTank)
 {
-	CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
+	std::ignore = CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
 
-	constexpr unsigned short tankHealth{1u};
-	const auto tankPool{std::make_shared<TankPool>(_events, _allObjects, _gameConfig, _bulletPool)};
-	const ObjRectangle rectEnemy{.x = 0.0,
-								 .y = _caliber.size.y,
-								 .w = _gameConfig.tankSize,
-								 .h = _gameConfig.tankSize};
-	const std::shared_ptr<Tank> enemyBot{TestUtils::CreateBot(rectEnemy, tankHealth, Author::Enemy1, _allObjects,
-															  _events, Direction::UP, tankPool, _gameConfig)};
+	const auto enemyBot{CreateBot({.x = 0.0, .y = _caliber.size.y}, Author::Enemy1, 1u)};
 
 	EXPECT_EQ(enemyBot->GetHealth(), 1u);
 
@@ -262,12 +236,8 @@ TEST_F(BulletTest, SameRankBulletsDestroyEachOther)
 // shells meet: the lighter deals its damage, the heavier loses that much health and flies on; a tank beside is hit once
 TEST_F(BulletTest, AHeavierBulletOutlivesTheMeetingAndFliesOn)
 {
-	const auto tankPool{std::make_shared<TankPool>(_events, _allObjects, _gameConfig, _bulletPool)};
 	constexpr unsigned int tankHealth{100u};
-	const double tankSize{_gameConfig.tankSize};
-	const std::shared_ptr<Tank> beside{
-			TestUtils::CreatePlayer({.x = _caliber.size.x + 1.0, .y = 0.0, .w = tankSize, .h = tankSize}, tankHealth,
-									Author::Enemy1, _allObjects, _events, Direction::UP, tankPool, _gameConfig)};
+	const auto beside{CreatePlayer({.x = _caliber.size.x + 1.0, .y = 0.0}, Author::Enemy1, tankHealth)};
 	BulletCaliber heavyCaliber{_caliber};
 	heavyCaliber.health = _caliber.health * 2u;
 	heavyCaliber.damage = _caliber.damage * 10u;
@@ -296,9 +266,7 @@ TEST_F(BulletTest, BulletPenetratesABrickItCanPayFor)
 	_caliber.damage = brickWallHealth;
 	_caliber.health = brickWallHealth + 1;
 	_caliber.blastRadius = _gameConfig.tankSize;
-	const ObjRectangle bulletRect{.x = 0.0, .y = 0.0, .w = _caliber.size.x, .h = _caliber.size.y};
-	const auto bullet{
-			TestUtils::CreateBullet(bulletRect, _bulletPool, _events, _caliber, Direction::DOWN, Author::Player1)};
+	const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -310,11 +278,6 @@ TEST_F(BulletTest, BulletPenetratesABrickItCanPayFor)
 // a shell breaks only the bricks it touches and deals damage once, deeper for a bigger blast; a tank beside survives
 TEST_F(BulletTest, AShellSinksAsDeepAsItsBlastLetsAndDealsDamageOnce)
 {
-	const auto tankPool{std::make_shared<TankPool>(_events, _allObjects, _gameConfig, _bulletPool)};
-	constexpr unsigned int tankHealth{100u};
-	constexpr std::size_t layers{12u};
-	//NOTE: beside the wall - in reach of a blast at its face, out of reach of one deep inside
-	constexpr double aside{32.0};
 	const double tankSize{_gameConfig.tankSize};
 	const double column{tankSize * 4.0};
 	const double face{tankSize + _caliber.size.y + 1.0};
@@ -324,6 +287,10 @@ TEST_F(BulletTest, AShellSinksAsDeepAsItsBlastLetsAndDealsDamageOnce)
 		SCOPED_TRACE(radius);
 		_events->EmitEvent(GameResetEvent{});
 		_allObjects.clear();
+		constexpr unsigned int tankHealth{100u};
+		constexpr std::size_t layers{12u};
+		//NOTE: beside the wall - in reach of a blast at its face, out of reach of one deep inside
+		constexpr double aside{32.0};
 		const auto layerAt = [this, column, face](const std::size_t layer)
 		{
 			const double y{face + _gridSize * static_cast<double>(layer)};
@@ -333,15 +300,11 @@ TEST_F(BulletTest, AShellSinksAsDeepAsItsBlastLetsAndDealsDamageOnce)
 		const auto wall{std::views::iota(std::size_t{}, layers) | std::views::transform(layerAt)
 						| std::ranges::to<std::vector>()};
 		const double besideX{column + _caliber.size.x / 2.0 + aside};
-		const std::shared_ptr<Tank> beside{
-				TestUtils::CreatePlayer({.x = besideX, .y = face - tankSize, .w = tankSize, .h = tankSize}, tankHealth,
-										Author::Player2, _allObjects, _events, Direction::UP, tankPool, _gameConfig)};
+		const auto beside{CreatePlayer({.x = besideX, .y = face - tankSize}, Author::Player2, tankHealth)};
 		_caliber.damage = wall.front()->GetHealth();
 		_caliber.health = _caliber.damage * static_cast<unsigned int>(layers) * 2u;
 		_caliber.blastRadius = radius;
-		const ObjRectangle rect{.x = column, .y = tankSize, .w = _caliber.size.x, .h = _caliber.size.y};
-		const auto shell{
-				TestUtils::CreateBullet(rect, _bulletPool, _events, _caliber, Direction::DOWN, Author::Enemy1)};
+		const auto shell{CreateBullet({.x = column, .y = tankSize}, Direction::DOWN, Author::Enemy1)};
 
 		for (int tick{}; tick < 200 && shell->GetIsAlive(); ++tick)
 		{
@@ -364,9 +327,7 @@ TEST_F(BulletTest, BulletBelowTierThreeDealsDamageAgainstSteel)
 	const unsigned int steelWallHealth{steelWall->GetHealth()};
 	_caliber.health = steelWallHealth + 1;
 	_caliber.blastRadius = _gameConfig.tankSize;
-	const ObjRectangle bulletRect{.x = 0.0, .y = 0.0, .w = _caliber.size.x, .h = _caliber.size.y};
-	const auto bullet{
-			TestUtils::CreateBullet(bulletRect, _bulletPool, _events, _caliber, Direction::DOWN, Author::Player1)};
+	const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -383,9 +344,7 @@ TEST_F(BulletTest, TierThreeBulletPenetratesSteel)
 	_caliber.damage = steelWallHealth;
 	_caliber.health = steelWallHealth + 1;
 	_caliber.blastRadius = _gameConfig.tankSize;
-	const ObjRectangle bulletRect{.x = 0.0, .y = 0.0, .w = _caliber.size.x, .h = _caliber.size.y};
-	const auto bullet{
-			TestUtils::CreateBullet(bulletRect, _bulletPool, _events, _caliber, Direction::DOWN, Author::Player1)};
+	const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -402,7 +361,7 @@ TEST_F(BulletTest, EagleFallsOnlyWhenItsHealthIsGone)
 		isBaseFinished = true;
 	})};
 	const auto eagle{SpawnObstacle({.x = 0.0, .y = 6.0, .w = _gridSize, .h = _gridSize}, ObstacleType::Eagle)};
-	CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Enemy1);
+	std::ignore = CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Enemy1);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
@@ -417,7 +376,7 @@ TEST_F(BulletTest, EagleFallsOnlyWhenItsHealthIsGone)
 // the eagle's wall, on the other hand, breaks like brick
 TEST_F(BulletTest, BulletDamagefortressWall)
 {
-	CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
+	std::ignore = CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
 
 	const auto fortressWall{SpawnObstacle({.x = 0.0, .y = 6.0, .w = _gridSize, .h = _gridSize},
 										  ObstacleType::Fortress)};
@@ -437,14 +396,13 @@ TEST_F(BulletTest, ABushBurnsInABlastOnlyFromTierThree)
 		bool isBushStanding{};
 	};
 
-	constexpr std::array kBlasts{Blast{.tier = 2u, .isBushStanding = true}, Blast{.tier = 3u, .isBushStanding = false}};
-	for (const Blast& blast: kBlasts)
+	for (const Blast& blast: {Blast{.tier = 2u, .isBushStanding = true}, Blast{.tier = 3u, .isBushStanding = false}})
 	{
 		SCOPED_TRACE(blast.tier);
 		_events->EmitEvent(GameResetEvent{});
 		_allObjects.clear();
 		_caliber.tier = blast.tier;
-		CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
+		std::ignore = CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
 
 		const auto wall{SpawnObstacle(ObjRectangle{.x = 0.0, .y = 20.0, .w = _gridSize, .h = 4.0},
 									  ObstacleType::Brick)};
@@ -452,7 +410,7 @@ TEST_F(BulletTest, ABushBurnsInABlastOnlyFromTierThree)
 									  ObstacleType::Bush)};
 
 		const unsigned int wallHealth{wall->GetHealth()};
-		for (int frame = 0; frame < 20 && wall->GetHealth() == wallHealth; ++frame)
+		for (int frame{}; frame < 20 && wall->GetHealth() == wallHealth; ++frame)
 		{
 			_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 		}
@@ -466,12 +424,12 @@ TEST_F(BulletTest, ABushBurnsInABlastOnlyFromTierThree)
 TEST_F(BulletTest, TierThreeFliesThroughABushWithoutBurningIt)
 {
 	_caliber.tier = 3u;
-	CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
+	std::ignore = CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
 
 	const auto bush{SpawnObstacle(ObjRectangle{.x = 0.0, .y = 20.0, .w = _gridSize, .h = _gridSize},
 								  ObstacleType::Bush)};
 
-	for (int frame = 0; frame < 10; ++frame)
+	for (int frame{}; frame < 10; ++frame)
 	{
 		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 	}
@@ -483,20 +441,19 @@ TEST_F(BulletTest, TierThreeFliesThroughABushWithoutBurningIt)
 TEST_F(BulletTest, WaterAndIceSurviveABlastThatBurnsABush)
 {
 	_caliber.tier = 3u;
-	constexpr std::array kTerrains{ObstacleType::Water, ObstacleType::Ice};
-	for (const ObstacleType terrain: kTerrains)
+	for (const ObstacleType terrain: {ObstacleType::Water, ObstacleType::Ice})
 	{
 		SCOPED_TRACE(static_cast<int>(terrain));
 		_events->EmitEvent(GameResetEvent{});
 		_allObjects.clear();
-		CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
+		std::ignore = CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
 
 		const auto wall{SpawnObstacle(ObjRectangle{.x = 0.0, .y = 20.0, .w = _gridSize, .h = 4.0},
 									  ObstacleType::Brick)};
 		const auto tile{SpawnObstacle(ObjRectangle{.x = 0.0, .y = 26.0, .w = _gridSize, .h = _gridSize}, terrain)};
 
 		const unsigned int wallHealth{wall->GetHealth()};
-		for (int frame{0}; frame < 20 && wall->GetHealth() == wallHealth; ++frame)
+		for (int frame{}; frame < 20 && wall->GetHealth() == wallHealth; ++frame)
 		{
 			_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 		}
@@ -509,8 +466,7 @@ TEST_F(BulletTest, WaterAndIceSurviveABlastThatBurnsABush)
 // water and ice are terrain a bullet flies over: the shot crosses the tile and leaves it be
 TEST_F(BulletTest, ABulletFliesOverWaterAndIce)
 {
-	constexpr std::array kTerrains{ObstacleType::Water, ObstacleType::Ice};
-	for (const ObstacleType terrain: kTerrains)
+	for (const ObstacleType terrain: {ObstacleType::Water, ObstacleType::Ice})
 	{
 		SCOPED_TRACE(static_cast<int>(terrain));
 		_events->EmitEvent(GameResetEvent{});

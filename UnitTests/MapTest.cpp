@@ -3,6 +3,7 @@
 #include "components/EventSystem.h"
 #include "components/LevelRotation.h"
 #include "components/Map.h"
+#include "components/MapData.h"
 #include "components/MapLoader.h"
 #include "components/ObstacleSpawner.h"
 #include "components/WorldGeometry.h"

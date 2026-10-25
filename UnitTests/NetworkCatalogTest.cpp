@@ -20,7 +20,7 @@
 using namespace std::chrono_literals;
 
 // real loopback sockets - the catalog pumped by hand, the server on its own thread
-class NetworkCatalogTest : public ::testing::Test
+class NetworkCatalogTest : public testing::Test
 {
 protected:
 	boost::asio::io_context _ioContext{};
@@ -44,9 +44,7 @@ protected:
 	{
 		for (int attempt{}; attempt < 400 && std::ranges::contains(scan.Servers(), server) != isListed; ++attempt)
 		{
-			_ioContext.poll();
-			std::ignore = scan.Poll();
-			std::this_thread::sleep_for(5ms);
+			Pump(scan, 5ms);
 		}
 
 		return std::ranges::contains(scan.Servers(), server) == isListed;
@@ -79,11 +77,11 @@ TEST_F(NetworkCatalogTest, AServerOnIPv6IsFoundThroughTheSameCatalog)
 		GTEST_SKIP() << "no IPv6 loopback on this machine";
 	}
 
+	const network::ServerAddress catalogOnIPv6{.host = "::1", .port = _catalog.BoundPort()};
 	const network::ServerNode server{network::ServerAddress{.host = "::1", .port = network::kAnyFreePort},
-									 std::make_shared<EventSystem>(), MatchSettings{},
-									 network::ServerAddress{.host = "::1", .port = _catalog.BoundPort()}};
+									 std::make_shared<EventSystem>(), MatchSettings{}, catalogOnIPv6};
 	//NOTE: asked over IPv6 - a machine without IPv4 still gets the list
-	network::DiscoveryScan scan{std::string{}, {network::ServerAddress{.host = "::1", .port = _catalog.BoundPort()}}};
+	network::DiscoveryScan scan{std::string{}, {catalogOnIPv6}};
 	const network::FoundServer listed{.address = network::ServerAddress{.host = "::1", .port = server.GetBoundPort()},
 									  .seats = kDefaultSeats,
 									  .freeSeats = kDefaultSeats};

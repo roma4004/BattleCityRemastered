@@ -25,7 +25,7 @@
 #include "gtest/gtest.h"
 #include <algorithm>
 #include <array>
-#include <cstddef>
+#include <map>
 #include <memory>
 #include <optional>
 #include <ranges>
@@ -42,37 +42,38 @@ protected:
 	std::vector<EventSubscription> _instantSpawnAnimationSubs{};
 	GameConfig _gameConfig{};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
-	EventSubscription _spawnQueueSub{};
 	std::unique_ptr<BonusSpawner> _bonusSpawner{nullptr};
 	std::optional<GameState> _result{};
-	EventSubscription _resultSub{};
+	//NOTE: the last count each group was told
+	std::map<RespawnGroup, unsigned short> _lives{};
+	//NOTE: the tanks RespawnManager asked for since the test last cleared it
+	std::map<TankType, Uuid> _tanksAsked{};
+	std::vector<EventSubscription> _subs{};
 
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
-		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, _allObjects);
+		_subs.push_back(TestUtils::WireSpawnQueue(_events, _allObjects));
 		_allObjects.reserve(6u);
 		const auto bulletPool{std::make_shared<BulletPool>(_events, _allObjects, _gameConfig)};
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, _allObjects, _gameConfig);
-		TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, _gameConfig.gameMode, _respawnManager,
-								 _tankSpawner);
+		ApplyGameMode(_gameConfig.gameMode);
 		_events->EmitEvent(GameResetEvent{});
 		_instantSpawnAnimationSubs = TestUtils::WireInstantSpawnAnimations(_events);
-		_resultSub = _events->AddListener([this](const GameFinishedEvent& event) { _result = event.state; });
+		_subs.push_back(_events->AddListener([this](const GameFinishedEvent& event) { _result = event.state; }));
+		_subs.push_back(_events->AddListener([this](const RespawnCountChangedToEvent& event)
+		{
+			_lives.insert_or_assign(event.group, event.respawnCount);
+		}));
+		_subs.push_back(_events->AddListener([this](const RespawnTankEvent& event)
+		{
+			_tanksAsked.insert_or_assign(event.type, event.uuid);
+		}));
 	}
 
-	void TearDown() override {}
-
-	//NOTE: the latest count the enemy team was told, read into the given variable
-	[[nodiscard]] EventSubscription WatchEnemiesLeft(unsigned short& enemiesLeft) const
+	void ApplyGameMode(const GameMode mode)
 	{
-		return _events->AddListener([&enemiesLeft](const RespawnCountChangedToEvent& event)
-		{
-			if (event.group == RespawnGroup::ENEMY_ALL)
-			{
-				enemiesLeft = event.respawnCount;
-			}
-		});
+		TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, mode, _respawnManager, _tankSpawner);
 	}
 
 	//NOTE: the first tank of the side dies and leaves the field - one death at a time, as a match has them
@@ -104,8 +105,6 @@ TEST_F(RespawnManagerTest, TheMapsEnemyCountOrTwenty)
 		unsigned short enemies{};
 	};
 
-	unsigned short enemiesLeft{};
-	const EventSubscription countSub{WatchEnemiesLeft(enemiesLeft)};
 	const std::array lineups{Lineup{.loaded = {.count = 3u, .models = {TankModel::Armor}}, .enemies = 3u},
 							 Lineup{.loaded = {}, .enemies = 20u}};
 	for (const Lineup& lineup: lineups)
@@ -115,23 +114,18 @@ TEST_F(RespawnManagerTest, TheMapsEnemyCountOrTwenty)
 
 		_events->EmitEvent(lineup.loaded);
 
-		EXPECT_EQ(enemiesLeft, lineup.enemies);
+		EXPECT_EQ(_lives.at(RespawnGroup::ENEMY_ALL), lineup.enemies);
 	}
 }
 
 // fewer enemies than seats put no more tanks on the field than there are
 TEST_F(RespawnManagerTest, FewerEnemiesThanSeatsFillNoMoreSeatsThanThereAre)
 {
-	std::size_t enemiesSent{};
-	const EventSubscription respawnSub{_events->AddListener([&enemiesSent](const RespawnTankEvent& event)
-	{
-		enemiesSent += SlotOf(event.type) ? 0u : 1u;
-	})};
-
 	_events->EmitEvent(EnemyLineupLoadedEvent{.count = 2u});
 	_events->EmitEvent(RespawnTanksEvent{});
 
-	EXPECT_EQ(enemiesSent, 2u);
+	EXPECT_EQ(std::ranges::count_if(_tanksAsked | std::views::keys, [](const TankType type) { return !SlotOf(type); }),
+			  2);
 }
 
 // a death takes one off its own group - the enemy team's count, or the seat's
@@ -143,24 +137,15 @@ TEST_F(RespawnManagerTest, ADeathTakesALifeOffItsGroup)
 	for (const auto& [group, mode, lives]: kGroups)
 	{
 		SCOPED_TRACE(static_cast<int>(group));
-		unsigned int livesLeft{lives};
-		const EventSubscription livesSub{_events->AddListener(
-				[&livesLeft, group](const RespawnCountChangedToEvent& event)
-				{
-					if (event.group == group)
-					{
-						livesLeft = event.respawnCount;
-					}
-				})};
 		_allObjects.clear();
-		TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, mode, _respawnManager, _tankSpawner);
+		ApplyGameMode(mode);
 		_events->EmitEvent(GameResetEvent{});
 
 		_events->EmitEvent(RespawnTanksEvent{});
 		_events->EmitEvent(TankDiedEvent{.uuid = _allObjects.back()->GetUuid()});
 		_allObjects.pop_back();
 
-		EXPECT_GT(lives, livesLeft);
+		EXPECT_GT(lives, _lives.at(group));
 	}
 }
 
@@ -173,17 +158,8 @@ TEST_F(RespawnManagerTest, RunningOutOfLivesStopsAtNothing)
 	for (const auto& [group, mode, lives]: kGroups)
 	{
 		SCOPED_TRACE(static_cast<int>(group));
-		unsigned int livesLeft{lives};
-		const EventSubscription livesSub{_events->AddListener(
-				[&livesLeft, group](const RespawnCountChangedToEvent& event)
-				{
-					if (event.group == group)
-					{
-						livesLeft = event.respawnCount;
-					}
-				})};
 		_allObjects.clear();
-		TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, mode, _respawnManager, _tankSpawner);
+		ApplyGameMode(mode);
 		_events->EmitEvent(GameResetEvent{});
 
 		for (unsigned int death{}; death <= lives; ++death)
@@ -196,7 +172,7 @@ TEST_F(RespawnManagerTest, RunningOutOfLivesStopsAtNothing)
 			}
 		}
 
-		EXPECT_EQ(0u, livesLeft);
+		EXPECT_EQ(_lives.at(group), 0u);
 	}
 }
 
@@ -209,8 +185,7 @@ TEST_F(RespawnManagerTest, AnEmptiedEnemyPoolWins)
 		int kills{};
 	};
 
-	constexpr std::array kPools{Pool{.extraLife = false, .kills = 20}, Pool{.extraLife = true, .kills = 21}};
-	for (const Pool& pool: kPools)
+	for (const Pool& pool: {Pool{.extraLife = false, .kills = 20}, Pool{.extraLife = true, .kills = 21}})
 	{
 		SCOPED_TRACE(pool.kills);
 		_events->EmitEvent(GameResetEvent{});
@@ -277,13 +252,7 @@ TEST_F(RespawnManagerTest, ALifeTakenAfterTheEagleFellBuysOneMoreDeath)
 // 2P free-for-all is won by the last player standing, not by clearing the bots
 TEST_F(RespawnManagerTest, TwoPlayersFreeForAllIsWonByTheLastPlayerStanding)
 {
-	std::optional<GameState> finished{};
-	const EventSubscription finishSub{_events->AddListener([&finished](const GameFinishedEvent& event)
-	{
-		finished = event.state;
-	})};
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::TwoPlayersFreeForAll, _respawnManager,
-							 _tankSpawner);
+	ApplyGameMode(GameMode::TwoPlayersFreeForAll);
 	_events->EmitEvent(GameResetEvent{});
 
 	const auto killEvery = [this](const auto& isTarget)
@@ -314,7 +283,7 @@ TEST_F(RespawnManagerTest, TwoPlayersFreeForAllIsWonByTheLastPlayerStanding)
 		killEvery(isBot);
 	}
 
-	ASSERT_FALSE(finished.has_value()) << "the bots were cleared with both players standing, and that ended it";
+	ASSERT_FALSE(_result.has_value()) << "the bots were cleared with both players standing, and that ended it";
 
 	for (int life{}; life < 3; ++life)
 	{
@@ -322,7 +291,7 @@ TEST_F(RespawnManagerTest, TwoPlayersFreeForAllIsWonByTheLastPlayerStanding)
 		killEvery(isPlayerOne);
 	}
 
-	EXPECT_EQ(finished, GameState::Won);
+	EXPECT_EQ(_result, GameState::Won);
 }
 
 // an empty seat of a network match asks for no tank until a player sits down in it
@@ -336,7 +305,7 @@ TEST_F(RespawnManagerTest, AnEmptySeatSpawnsNothingUntilAPlayerTakesIt)
 			asked.push_back(event.type);
 		}
 	})};
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
+	ApplyGameMode(GameMode::PlayAsHost);
 	_events->EmitEvent(SeatsFilledEvent{
 			.holders = {SeatHolder::Player, SeatHolder::Empty, SeatHolder::Empty, SeatHolder::Empty}});
 	_events->EmitEvent(GameResetEvent{});
@@ -354,197 +323,131 @@ TEST_F(RespawnManagerTest, AnEmptySeatSpawnsNothingUntilAPlayerTakesIt)
 //NOTE: the bot's losses are not the newcomer's - a seat it left with no lives would give the player nothing to drive
 TEST_F(RespawnManagerTest, ASeatWhoseBotSpentEveryLifeIsGivenTheStartingLivesBack)
 {
-	std::optional<Uuid> seatTwo{};
-	unsigned short livesLeft{};
-	std::vector<EventSubscription> subs{};
-	subs.push_back(_events->AddListener([&seatTwo](const RespawnTankEvent& event)
-	{
-		if (event.type == TankType::PLAYER2)
-		{
-			seatTwo = event.uuid;
-		}
-	}));
-	subs.push_back(_events->AddListener([&livesLeft](const RespawnCountChangedToEvent& event)
-	{
-		if (event.group == GroupOf(PlayerSlot::P2))
-		{
-			livesLeft = event.respawnCount;
-		}
-	}));
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
+	ApplyGameMode(GameMode::PlayAsHost);
 	_events->EmitEvent(SeatsFilledEvent{
 			.holders = {SeatHolder::Player, SeatHolder::Bot, SeatHolder::Empty, SeatHolder::Empty}});
 	_events->EmitEvent(GameResetEvent{});
 
 	for ([[maybe_unused]] const int life: std::views::iota(0, 3))
 	{
-		seatTwo.reset();
+		_tanksAsked.clear();
 		_events->EmitEvent(RespawnTanksEvent{});
-		ASSERT_TRUE(seatTwo.has_value()) << "the bot's seat asked for no tank with a life left";
-		_events->EmitEvent(TankDiedEvent{.who = Author::Player2, .uuid = *seatTwo});
+		ASSERT_TRUE(_tanksAsked.contains(TankType::PLAYER2)) << "the bot's seat asked for no tank with a life left";
+		_events->EmitEvent(TankDiedEvent{.who = Author::Player2, .uuid = _tanksAsked.at(TankType::PLAYER2)});
 	}
-	seatTwo.reset();
+	_tanksAsked.clear();
 	_events->EmitEvent(RespawnTanksEvent{});
-	ASSERT_FALSE(seatTwo.has_value()) << "the control failed - a seat with no lives left asked for a tank";
+	ASSERT_FALSE(_tanksAsked.contains(TankType::PLAYER2))
+			<< "the control failed - a seat with no lives left asked for a tank";
 
 	_events->EmitEvent(SeatHolderChangedEvent{.slot = PlayerSlot::P2, .from = SeatHolder::Bot});
-	EXPECT_EQ(livesLeft, 3u);
+	EXPECT_EQ(_lives.at(RespawnGroup::PLAYER2), 3u);
 
 	_events->EmitEvent(RespawnTanksEvent{});
-	EXPECT_TRUE(seatTwo.has_value()) << "the newcomer was given no tank";
-	EXPECT_EQ(livesLeft, 2u) << "coming in spent a life the seat never got back";
+	EXPECT_TRUE(_tanksAsked.contains(TankType::PLAYER2)) << "the newcomer was given no tank";
+	EXPECT_EQ(_lives.at(RespawnGroup::PLAYER2), 2u) << "coming in spent a life the seat never got back";
 }
 
 // a client counts a bot's spawn off the seat it sits in, the way the host does
 TEST_F(RespawnManagerTest, AClientCountsABotsSpawnOffItsSeat)
 {
-	unsigned short livesLeft{};
-	const EventSubscription countSub{_events->AddListener([&livesLeft](const RespawnCountChangedToEvent& event)
-	{
-		if (event.group == GroupOf(PlayerSlot::P2))
-		{
-			livesLeft = event.respawnCount;
-		}
-	})};
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsClient, _respawnManager,
-							 _tankSpawner);
+	ApplyGameMode(GameMode::PlayAsClient);
 	_events->EmitEvent(GameResetEvent{});
-	ASSERT_EQ(livesLeft, 3u);
+	ASSERT_EQ(_lives.at(RespawnGroup::PLAYER2), 3u);
 
 	_events->EmitEvent(TankRespawnedEvent{.type = TankType::COOP2,
 										  .model = TankModel::Player,
 										  .uuid = UuidUtils::GetRandomUuid(),
 										  .pos = {}});
 
-	EXPECT_EQ(livesLeft, 2u);
+	EXPECT_EQ(_lives.at(RespawnGroup::PLAYER2), 2u);
 }
 
 //NOTE: taken off, not killed - the life of the tank on the field goes back to the seat for the one who comes back
 TEST_F(RespawnManagerTest, ASeatGivenUpGetsTheLifeOfItsTankBack)
 {
-	unsigned short livesLeft{};
-	const EventSubscription countSub{_events->AddListener([&livesLeft](const RespawnCountChangedToEvent& event)
-	{
-		if (event.group == GroupOf(PlayerSlot::P2))
-		{
-			livesLeft = event.respawnCount;
-		}
-	})};
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
+	ApplyGameMode(GameMode::PlayAsHost);
 	_events->EmitEvent(SeatsFilledEvent{
 			.holders = {SeatHolder::Player, SeatHolder::Player, SeatHolder::Empty, SeatHolder::Empty}});
 	_events->EmitEvent(GameResetEvent{});
 	_events->EmitEvent(RespawnTanksEvent{});
-	ASSERT_EQ(livesLeft, 2u);
+	ASSERT_EQ(_lives.at(RespawnGroup::PLAYER2), 2u);
 
 	_events->EmitEvent(SeatHolderChangedEvent{.slot = PlayerSlot::P2, .from = SeatHolder::Player,
 											  .to = SeatHolder::Empty});
 
-	EXPECT_EQ(livesLeft, 3u);
+	EXPECT_EQ(_lives.at(RespawnGroup::PLAYER2), 3u);
 }
 
 //NOTE: given up between its tanks - the seat owed a respawn asks for none until its player is back, then gets one
 TEST_F(RespawnManagerTest, ASeatGivenUpSpawnsNothingUntilItsPlayerIsBack)
 {
-	std::vector<RespawnTankEvent> asked{};
-	const EventSubscription askedSub{_events->AddListener([&asked](const RespawnTankEvent& event)
-	{
-		asked.push_back(event);
-	})};
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
+	ApplyGameMode(GameMode::PlayAsHost);
 	_events->EmitEvent(SeatsFilledEvent{
 			.holders = {SeatHolder::Player, SeatHolder::Player, SeatHolder::Empty, SeatHolder::Empty}});
 	_events->EmitEvent(GameResetEvent{});
 	_events->EmitEvent(RespawnTanksEvent{});
-	const auto seatTwo{std::ranges::find(asked, TankType::PLAYER2, &RespawnTankEvent::type)};
-	ASSERT_NE(seatTwo, asked.end());
-	_events->EmitEvent(TankDiedEvent{.who = Author::Player2, .uuid = seatTwo->uuid});
+	ASSERT_TRUE(_tanksAsked.contains(TankType::PLAYER2));
+	_events->EmitEvent(TankDiedEvent{.who = Author::Player2, .uuid = _tanksAsked.at(TankType::PLAYER2)});
 	_events->EmitEvent(SeatHolderChangedEvent{.slot = PlayerSlot::P2, .from = SeatHolder::Player,
 											  .to = SeatHolder::Empty});
-	asked.clear();
+	_tanksAsked.clear();
 
 	_events->EmitEvent(RespawnTanksEvent{});
-	ASSERT_TRUE(asked.empty()) << "the seat given up asked for a tank";
+	ASSERT_TRUE(_tanksAsked.empty()) << "the seat given up asked for a tank";
 
 	_events->EmitEvent(SeatHolderChangedEvent{.slot = PlayerSlot::P2, .from = SeatHolder::Empty});
 	_events->EmitEvent(RespawnTanksEvent{});
-	ASSERT_EQ(asked.size(), 1u);
-	EXPECT_EQ(asked.front().type, TankType::PLAYER2);
+	ASSERT_EQ(_tanksAsked.size(), 1u);
+	EXPECT_TRUE(_tanksAsked.contains(TankType::PLAYER2));
 }
 
 //NOTE: the one who left was the last on the field - taking that tank off leaves nobody to play the match
 TEST_F(RespawnManagerTest, TakingOffTheLastTankOnTheFieldLosesTheMatch)
 {
-	std::optional<Uuid> seatOne{};
-	std::optional<GameState> finished{};
-	std::vector<EventSubscription> subs{};
-	subs.push_back(_events->AddListener([&seatOne](const RespawnTankEvent& event)
-	{
-		if (event.type == TankType::PLAYER1)
-		{
-			seatOne = event.uuid;
-		}
-	}));
-	subs.push_back(_events->AddListener([&finished](const GameFinishedEvent& event) { finished = event.state; }));
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
+	ApplyGameMode(GameMode::PlayAsHost);
 	_events->EmitEvent(SeatsFilledEvent{
 			.holders = {SeatHolder::Player, SeatHolder::Player, SeatHolder::Empty, SeatHolder::Empty}});
 	_events->EmitEvent(GameResetEvent{});
 	for ([[maybe_unused]] const int life: std::views::iota(0, 3))
 	{
-		seatOne.reset();
+		_tanksAsked.clear();
 		_events->EmitEvent(RespawnTanksEvent{});
-		ASSERT_TRUE(seatOne.has_value());
-		_events->EmitEvent(TankDiedEvent{.who = Author::Player1, .uuid = *seatOne});
+		ASSERT_TRUE(_tanksAsked.contains(TankType::PLAYER1));
+		_events->EmitEvent(TankDiedEvent{.who = Author::Player1, .uuid = _tanksAsked.at(TankType::PLAYER1)});
 	}
-	ASSERT_FALSE(finished.has_value()) << "the control failed - the match was over with a tank still on the field";
+	ASSERT_FALSE(_result.has_value()) << "the control failed - the match was over with a tank still on the field";
 
 	_events->EmitEvent(SeatHolderChangedEvent{.slot = PlayerSlot::P2, .from = SeatHolder::Player,
 											  .to = SeatHolder::Empty});
 
-	EXPECT_EQ(finished, GameState::Over);
+	EXPECT_EQ(_result, GameState::Over);
 }
 
 // a free-for-all whose enemies are gone is won by the one left alone on the field
 TEST_F(RespawnManagerTest, InAFreeForAllTheOneLeftAloneWins)
 {
-	std::optional<GameState> finished{};
-	const EventSubscription finishedSub{_events->AddListener([&finished](const GameFinishedEvent& event)
-	{
-		finished = event.state;
-	})};
 	_gameConfig.networkRules = MatchRules::FreeForAll;
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
+	ApplyGameMode(GameMode::PlayAsHost);
 	_events->EmitEvent(SeatsFilledEvent{
 			.holders = {SeatHolder::Player, SeatHolder::Player, SeatHolder::Empty, SeatHolder::Empty}});
 	_events->EmitEvent(GameResetEvent{});
 	_events->EmitEvent(EnemyLineupLoadedEvent{.count = 0u});
 	_events->EmitEvent(RespawnTanksEvent{});
-	ASSERT_FALSE(finished.has_value());
+	ASSERT_FALSE(_result.has_value());
 
 	_events->EmitEvent(SeatHolderChangedEvent{.slot = PlayerSlot::P2, .from = SeatHolder::Player,
 											  .to = SeatHolder::Empty});
 
-	EXPECT_EQ(finished, GameState::Won);
+	EXPECT_EQ(_result, GameState::Won);
 }
 
 // with no enemies the map's list never comes - the last player standing wins
 TEST_F(RespawnManagerTest, AFreeForAllWithNoEnemiesIsWonByTheLastPlayerStanding)
 {
-	std::optional<Uuid> seatTwo{};
-	std::optional<GameState> finished{};
-	std::vector<EventSubscription> subs{};
-	subs.push_back(_events->AddListener([&seatTwo](const RespawnTankEvent& event)
-	{
-		if (event.type == TankType::PLAYER2)
-		{
-			seatTwo = event.uuid;
-		}
-	}));
-	subs.push_back(_events->AddListener([&finished](const GameFinishedEvent& event) { finished = event.state; }));
 	_gameConfig.networkRules = MatchRules::FreeForAll;
 	_gameConfig.simultaneousEnemies = 0u;
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
+	ApplyGameMode(GameMode::PlayAsHost);
 	_events->EmitEvent(SeatsFilledEvent{
 			.holders = {SeatHolder::Player, SeatHolder::Player, SeatHolder::Empty, SeatHolder::Empty}});
 	_events->EmitEvent(GameResetEvent{});
@@ -552,62 +455,43 @@ TEST_F(RespawnManagerTest, AFreeForAllWithNoEnemiesIsWonByTheLastPlayerStanding)
 
 	for ([[maybe_unused]] const int life: std::views::iota(0, 3))
 	{
-		seatTwo.reset();
+		_tanksAsked.clear();
 		_events->EmitEvent(RespawnTanksEvent{});
-		ASSERT_TRUE(seatTwo.has_value());
-		_events->EmitEvent(TankDiedEvent{.who = Author::Player2, .uuid = *seatTwo});
+		ASSERT_TRUE(_tanksAsked.contains(TankType::PLAYER2));
+		_events->EmitEvent(TankDiedEvent{.who = Author::Player2, .uuid = _tanksAsked.at(TankType::PLAYER2)});
 	}
 
-	EXPECT_EQ(finished, GameState::Won);
+	EXPECT_EQ(_result, GameState::Won);
 }
 
 //NOTE: the starting lives come back only for a bot's losses - a player who left with none comes back with none
 TEST_F(RespawnManagerTest, APlayerWhoLeftWithNoLivesComesBackWithNone)
 {
-	std::optional<Uuid> seatTwo{};
-	const EventSubscription askedSub{_events->AddListener([&seatTwo](const RespawnTankEvent& event)
-	{
-		if (event.type == TankType::PLAYER2)
-		{
-			seatTwo = event.uuid;
-		}
-	})};
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
+	ApplyGameMode(GameMode::PlayAsHost);
 	_events->EmitEvent(SeatsFilledEvent{
 			.holders = {SeatHolder::Player, SeatHolder::Player, SeatHolder::Empty, SeatHolder::Empty}});
 	_events->EmitEvent(GameResetEvent{});
 	for ([[maybe_unused]] const int life: std::views::iota(0, 3))
 	{
-		seatTwo.reset();
+		_tanksAsked.clear();
 		_events->EmitEvent(RespawnTanksEvent{});
-		ASSERT_TRUE(seatTwo.has_value());
-		_events->EmitEvent(TankDiedEvent{.who = Author::Player2, .uuid = *seatTwo});
+		ASSERT_TRUE(_tanksAsked.contains(TankType::PLAYER2));
+		_events->EmitEvent(TankDiedEvent{.who = Author::Player2, .uuid = _tanksAsked.at(TankType::PLAYER2)});
 	}
 	_events->EmitEvent(SeatHolderChangedEvent{.slot = PlayerSlot::P2, .from = SeatHolder::Player,
 											  .to = SeatHolder::Empty});
 	_events->EmitEvent(SeatHolderChangedEvent{.slot = PlayerSlot::P2, .from = SeatHolder::Empty});
-	seatTwo.reset();
+	_tanksAsked.clear();
 
 	_events->EmitEvent(RespawnTanksEvent{});
 
-	EXPECT_FALSE(seatTwo.has_value()) << "coming back gave a seat with no lives left a tank";
+	EXPECT_FALSE(_tanksAsked.contains(TankType::PLAYER2)) << "coming back gave a seat with no lives left a tank";
 }
 
 //NOTE: the tank taken off is no spawn the match still waits to see die - the last death of the rest loses it
 TEST_F(RespawnManagerTest, AfterASeatIsGivenUpTheLastDeathOfTheRestLosesTheMatch)
 {
-	std::optional<Uuid> seatOne{};
-	std::optional<GameState> finished{};
-	std::vector<EventSubscription> subs{};
-	subs.push_back(_events->AddListener([&seatOne](const RespawnTankEvent& event)
-	{
-		if (event.type == TankType::PLAYER1)
-		{
-			seatOne = event.uuid;
-		}
-	}));
-	subs.push_back(_events->AddListener([&finished](const GameFinishedEvent& event) { finished = event.state; }));
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
+	ApplyGameMode(GameMode::PlayAsHost);
 	_events->EmitEvent(SeatsFilledEvent{
 			.holders = {SeatHolder::Player, SeatHolder::Player, SeatHolder::Empty, SeatHolder::Empty}});
 	_events->EmitEvent(GameResetEvent{});
@@ -617,11 +501,11 @@ TEST_F(RespawnManagerTest, AfterASeatIsGivenUpTheLastDeathOfTheRestLosesTheMatch
 
 	for ([[maybe_unused]] const int life: std::views::iota(0, 3))
 	{
-		ASSERT_TRUE(seatOne.has_value());
-		_events->EmitEvent(TankDiedEvent{.who = Author::Player1, .uuid = *seatOne});
-		seatOne.reset();
+		ASSERT_TRUE(_tanksAsked.contains(TankType::PLAYER1));
+		_events->EmitEvent(TankDiedEvent{.who = Author::Player1, .uuid = _tanksAsked.at(TankType::PLAYER1)});
+		_tanksAsked.clear();
 		_events->EmitEvent(RespawnTanksEvent{});
 	}
 
-	EXPECT_EQ(finished, GameState::Over);
+	EXPECT_EQ(_result, GameState::Over);
 }

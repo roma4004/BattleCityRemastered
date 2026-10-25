@@ -9,6 +9,7 @@
 #include "enums/GameState.h"
 #include "enums/PlayerSlot.h"
 #include "gtest/gtest.h"
+#include <cstddef>
 #include <memory>
 #include <vector>
 
@@ -86,7 +87,7 @@ TEST_F(GameStateTest, AResetClearsTheResult)
 // a pause from outside - the host's or a hold's - is lifted by a reset, by the pause key, and by one release
 TEST_F(GameStateTest, APauseFromOutsideIsLiftedByAResetThePauseKeyOrOneRelease)
 {
-	GameConfig gameConfig{};
+	const GameConfig gameConfig{};
 	const InputProviderForMenu menuInput{_events, gameConfig};
 	bool isPaused{};
 	const EventSubscription statusSub{_events->AddListener([&isPaused](const PauseStatusEvent& event)

@@ -28,6 +28,7 @@
 #include "enums/TankType.h"
 #include "network/commands/WorldSnapshot.h"
 #include "utils/ColliderUtils.h"
+#include "utils/Uuid.h"
 #include "utils/UuidUtils.h"
 #include "gtest/gtest.h"
 #include <algorithm>
@@ -37,6 +38,7 @@
 #include <memory>
 #include <optional>
 #include <string_view>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -54,37 +56,52 @@ protected:
 	std::vector<EventSubscription> _instantSpawnAnimationSubs{};
 	GameConfig _gameConfig{};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
-	EventSubscription _spawnQueueSub{};
+	std::vector<AnimationCreateTankSpawnEvent> _bursts{};
+	//NOTE: where the latest burst plays - started there or shoved there
+	std::optional<ObjRectangle> _square{};
+	std::vector<EventSubscription> _subs{};
 
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
 		_obstacleSpawner = std::make_unique<ObstacleSpawner>(_events, _gameConfig);
-		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, _allObjects);
+		_subs.push_back(TestUtils::WireSpawnQueue(_events, _allObjects));
 		_allObjects.reserve(6u);
 		_bulletPool = std::make_shared<BulletPool>(_events, _allObjects, _gameConfig);
 		_tankPool = std::make_shared<TankPool>(_events, _allObjects, _gameConfig, _bulletPool);
-		TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, _gameConfig.gameMode, _respawnManager,
-								 _tankSpawner);
+		ApplyGameMode(_gameConfig.gameMode);
 		_events->EmitEvent(GameResetEvent{});
 		_instantSpawnAnimationSubs = TestUtils::WireInstantSpawnAnimations(_events);
+		_subs.push_back(_events->AddListener([this](const AnimationCreateTankSpawnEvent& event)
+		{
+			_bursts.push_back(event);
+			_square = event.rect;
+		}));
+		_subs.push_back(_events->AddListener([this](const AnimationMoveTankSpawnEvent& event)
+		{
+			_square = event.rect;
+		}));
 	}
 
-	void TearDown() override {}
+	void ApplyGameMode(const GameMode mode)
+	{
+		TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, mode, _respawnManager, _tankSpawner);
+	}
 
 	// a wall across the whole top row except one opening, laid cell by cell the way a map does it
 	void WallOffTopRow(const double gapFrom, const double gapTo) const
 	{
 		const double cell{_gameConfig.gridOffset};
 		const auto width{static_cast<double>(_gameConfig.battlefieldSize.x)};
-		for (double x{0.0}; x < width; x += cell)
+		for (int column{}; column * cell < width; ++column)
 		{
+			const double x{column * cell};
 			if (x + cell > gapFrom && x < gapTo)
 			{
 				continue;
 			}
 
-			SpawnObstacle(FPoint{.x = x, .y = 0.0}, ObstacleType::Steel);
+			std::ignore = SpawnObstacle(FPoint{.x = x, .y = 0.0}, ObstacleType::Steel);
 		}
 	}
 
@@ -93,9 +110,9 @@ protected:
 	{
 		const double cell{_gameConfig.gridOffset};
 		const auto width{static_cast<double>(_gameConfig.battlefieldSize.x)};
-		for (double x{0.0}; x < width; x += cell)
+		for (int column{}; column * cell < width; ++column)
 		{
-			SpawnObstacle(FPoint{.x = x, .y = 0.0}, type);
+			std::ignore = SpawnObstacle(FPoint{.x = column * cell, .y = 0.0}, type);
 		}
 	}
 
@@ -108,12 +125,12 @@ protected:
 		}));
 	}
 
-	std::shared_ptr<BaseObj> SpawnObstacle(const FPoint pos, const ObstacleType type) const
+	[[nodiscard]] std::shared_ptr<BaseObj> SpawnObstacle(const FPoint pos, const ObstacleType type) const
 	{
 		return TestUtils::SpawnObstacle(_events, _allObjects, pos, type, _gameConfig);
 	}
 
-	std::shared_ptr<Tank> CreatePlayer(const FPoint pos, const Direction dir) const
+	[[nodiscard]] std::shared_ptr<Tank> CreatePlayer(const FPoint pos, const Direction dir) const
 	{
 		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _gameConfig.tankSize, .h = _gameConfig.tankSize};
 
@@ -149,7 +166,7 @@ TEST_F(TankSpawnerTest, EachModeStartsWithItsTanks)
 		_allObjects.clear();
 		_gameConfig.gameState = state;
 		_gameConfig.networkSeats = seats;
-		TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, mode, _respawnManager, _tankSpawner);
+		ApplyGameMode(mode);
 		_events->EmitEvent(GameResetEvent{});
 		_events->EmitEvent(RespawnTanksEvent{});
 
@@ -163,7 +180,7 @@ TEST_F(TankSpawnerTest, AFreeForAllHostPutsEveryTankOnItsOwn)
 	_gameConfig.networkSeats = 4u;
 	_gameConfig.networkRules = MatchRules::FreeForAll;
 	_gameConfig.simultaneousEnemies = 2u;
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
+	ApplyGameMode(GameMode::PlayAsHost);
 	_events->EmitEvent(GameResetEvent{});
 	_events->EmitEvent(RespawnTanksEvent{});
 
@@ -183,7 +200,7 @@ TEST_F(TankSpawnerTest, PlayAsClientGameModeStart)
 		spawning.emplace_back(event.uuid);
 	})};
 
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsClient, _respawnManager, _tankSpawner);
+	ApplyGameMode(GameMode::PlayAsClient);
 	_events->EmitEvent(GameResetEvent{});
 	_events->EmitEvent(RespawnTanksEvent{});
 
@@ -203,27 +220,23 @@ TEST_F(TankSpawnerTest, GrenadeCancelsEnemiesStillSpawning)
 {
 	_instantSpawnAnimationSubs.clear();
 
-	std::vector<Uuid> pending{};
-	const EventSubscription pendingSub{_events->AddListener(
-			[&pending](const AnimationCreateTankSpawnEvent& event) { pending.push_back(event.uuid); })};
-
 	//NOTE: the death is all that crosses the wire, so its uuid is the client's only way to match
 	std::vector<Uuid> announcedDead{};
 	const EventSubscription diedSub{_events->AddListener(
 			[&announcedDead](const TankDiedEvent& event) { announcedDead.push_back(event.uuid); })};
 
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
+	ApplyGameMode(GameMode::OnePlayer);
 	_events->EmitEvent(GameResetEvent{});
 	_events->EmitEvent(RespawnTanksEvent{});
 
-	ASSERT_FALSE(pending.empty());
+	ASSERT_FALSE(_bursts.empty());
 	EXPECT_TRUE(_allObjects.empty());
 
 	_events->EmitEvent(Key(Faction::EnemyTeam), BonusGrenadePickupEvent{});
 
-	for (const Uuid& uuid: pending)
+	for (const AnimationCreateTankSpawnEvent& burst: _bursts)
 	{
-		_events->EmitEvent(SpawnAnimationFinishedEvent{.uuid = uuid});
+		_events->EmitEvent(SpawnAnimationFinishedEvent{.uuid = burst.uuid});
 	}
 
 	//the player was not the grenade's target and still arrives; the four enemies never do
@@ -232,7 +245,7 @@ TEST_F(TankSpawnerTest, GrenadeCancelsEnemiesStillSpawning)
 	EXPECT_EQ(announcedDead.size(), 4u);
 	for (const Uuid& dead: announcedDead)
 	{
-		EXPECT_NE(std::ranges::find(pending, dead), pending.end())
+		EXPECT_TRUE(std::ranges::contains(_bursts, dead, &AnimationCreateTankSpawnEvent::uuid))
 				<< "a cancelled spawn was announced under a uuid no client could match";
 	}
 }
@@ -246,13 +259,9 @@ TEST_F(TankSpawnerTest, ASpawnDoesNotTakeTheSquareOfABurstAlreadyRunning)
 	WallOffTopRow(tankSize * 2.0, tankSize * 3.0);
 	_events->EmitEvent(EnemyLineupLoadedEvent{.models = std::vector(4u, TankModel::Basic)});
 
-	std::vector<AnimationCreateTankSpawnEvent> bursts{};
-	const EventSubscription burstSub{_events->AddListener(
-			[&bursts](const AnimationCreateTankSpawnEvent& event) { bursts.push_back(event); })};
-
 	_events->EmitEvent(RespawnTanksEvent{});
 
-	const auto inTheOpening{std::ranges::count_if(bursts, [](const AnimationCreateTankSpawnEvent& burst)
+	const auto inTheOpening{std::ranges::count_if(_bursts, [](const AnimationCreateTankSpawnEvent& burst)
 	{
 		return MathUtils::AreEqualAbsolute(burst.rect.y, 0.0);
 	})};
@@ -264,58 +273,36 @@ TEST_F(TankSpawnerTest, ASpawnSquareIsShovedAlongAndGoesBackWhenItsOwnIsFree)
 {
 	_instantSpawnAnimationSubs.clear();
 
-	std::optional<ObjRectangle> square{};
-	std::vector<EventSubscription> burstSubs{};
-	burstSubs.push_back(_events->AddListener([&square](const AnimationCreateTankSpawnEvent& event)
-	{
-		square = event.rect;
-	}));
-	burstSubs.push_back(_events->AddListener([&square](const AnimationMoveTankSpawnEvent& event)
-	{
-		square = event.rect;
-	}));
-
 	_events->EmitEvent(RespawnTankEvent{.type = TankType::ENEMY1, .uuid = UuidUtils::GetRandomUuid()});
-	ASSERT_TRUE(square.has_value());
-	const ObjRectangle home{*square};
+	ASSERT_TRUE(_square.has_value());
+	const ObjRectangle home{*_square};
 
 	// half a hull into the square, driving along the row
 	const auto pusher{CreatePlayer(FPoint{.x = home.x + _gameConfig.tankSize / 2.0, .y = home.y}, Direction::RIGHT)};
 	_events->EmitEvent(PostTickUpdateEvent{});
 
-	EXPECT_GT(square->x, home.x) << "the square stayed under the hull that drove into it";
-	EXPECT_FALSE(ColliderUtils::IsCollide(*square, pusher->GetRect())) << "shoved, and still under the hull";
+	EXPECT_GT(_square->x, home.x) << "the square stayed under the hull that drove into it";
+	EXPECT_FALSE(ColliderUtils::IsCollide(*_square, pusher->GetRect())) << "shoved, and still under the hull";
 
 	pusher->SetPos(FPoint{.x = home.x, .y = home.y + _gameConfig.tankSize * 3.0});
 	_events->EmitEvent(PostTickUpdateEvent{});
 
-	EXPECT_DOUBLE_EQ(square->x, home.x) << "the spawn point came free and the burst did not come back";
-	EXPECT_DOUBLE_EQ(square->y, home.y);
+	EXPECT_DOUBLE_EQ(_square->x, home.x) << "the spawn point came free and the burst did not come back";
+	EXPECT_DOUBLE_EQ(_square->y, home.y);
 }
 
 TEST_F(TankSpawnerTest, ASpawnLandsWhereItsSquareWasShovedTo)
 {
 	_instantSpawnAnimationSubs.clear();
 
-	std::optional<ObjRectangle> square{};
-	std::vector<EventSubscription> burstSubs{};
-	burstSubs.push_back(_events->AddListener([&square](const AnimationCreateTankSpawnEvent& event)
-	{
-		square = event.rect;
-	}));
-	burstSubs.push_back(_events->AddListener([&square](const AnimationMoveTankSpawnEvent& event)
-	{
-		square = event.rect;
-	}));
-
 	const Uuid uuid{UuidUtils::GetRandomUuid()};
 	_events->EmitEvent(RespawnTankEvent{.type = TankType::ENEMY1, .uuid = uuid});
-	ASSERT_TRUE(square.has_value());
-	const ObjRectangle home{*square};
+	ASSERT_TRUE(_square.has_value());
+	const ObjRectangle home{*_square};
 
-	CreatePlayer(FPoint{.x = home.x, .y = home.y}, Direction::RIGHT);
+	std::ignore = CreatePlayer(FPoint{.x = home.x, .y = home.y}, Direction::RIGHT);
 	_events->EmitEvent(PostTickUpdateEvent{});
-	ASSERT_GT(square->x, home.x);
+	ASSERT_GT(_square->x, home.x);
 
 	_events->EmitEvent(SpawnAnimationFinishedEvent{.uuid = uuid});
 
@@ -325,21 +312,14 @@ TEST_F(TankSpawnerTest, ASpawnLandsWhereItsSquareWasShovedTo)
 	})};
 	ASSERT_NE(landed, _allObjects.end());
 
-	EXPECT_DOUBLE_EQ((*landed)->GetRect().x, square->x) << "it did not come up where its burst was playing";
+	EXPECT_DOUBLE_EQ((*landed)->GetRect().x, _square->x) << "it did not come up where its burst was playing";
 }
 
 // a client is told where the host shoved the burst, because it is also where the host will put the tank
 TEST_F(TankSpawnerTest, AClientMovesItsBurstWhereTheHostShovedIt)
 {
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsClient, _respawnManager,
-							 _tankSpawner);
+	ApplyGameMode(GameMode::PlayAsClient);
 	_events->EmitEvent(GameResetEvent{});
-
-	std::optional<ObjRectangle> square{};
-	const EventSubscription moveSub{_events->AddListener([&square](const AnimationMoveTankSpawnEvent& event)
-	{
-		square = event.rect;
-	})};
 
 	const Uuid uuid{UuidUtils::GetRandomUuid()};
 	constexpr FPoint shovedTo{.x = 96.0, .y = 0.0};
@@ -348,8 +328,8 @@ TEST_F(TankSpawnerTest, AClientMovesItsBurstWhereTheHostShovedIt)
 										  .uuid = uuid,
 										  .pos = {.x = 0.0, .y = 0.0}});
 	_events->EmitEvent(TankSpawnMovedEvent{.uuid = uuid, .pos = shovedTo});
-	ASSERT_TRUE(square.has_value());
-	EXPECT_DOUBLE_EQ(square->x, shovedTo.x);
+	ASSERT_TRUE(_square.has_value());
+	EXPECT_DOUBLE_EQ(_square->x, shovedTo.x);
 
 	_events->EmitEvent(TankSpawnCompletedEvent{.uuid = uuid});
 
@@ -362,16 +342,12 @@ TEST_F(TankSpawnerTest, ASpawnWaitsForItsSquareToBeFreed)
 {
 	_instantSpawnAnimationSubs.clear();
 
-	std::vector<AnimationCreateTankSpawnEvent> bursts{};
-	const EventSubscription burstSub{_events->AddListener(
-			[&bursts](const AnimationCreateTankSpawnEvent& event) { bursts.push_back(event); })};
-
 	const Uuid uuid{UuidUtils::GetRandomUuid()};
 	_events->EmitEvent(RespawnTankEvent{.type = TankType::ENEMY1, .uuid = uuid});
-	ASSERT_EQ(bursts.size(), 1u);
+	ASSERT_EQ(_bursts.size(), 1u);
 
 	const std::shared_ptr<BaseObj> squatter{
-			SpawnObstacle(FPoint{.x = bursts.front().rect.x, .y = bursts.front().rect.y}, ObstacleType::Steel)};
+			SpawnObstacle(FPoint{.x = _bursts.front().rect.x, .y = _bursts.front().rect.y}, ObstacleType::Steel)};
 	ASSERT_NE(squatter, nullptr);
 
 	const auto isTank = [](const std::shared_ptr<BaseObj>& obj)
@@ -382,7 +358,7 @@ TEST_F(TankSpawnerTest, ASpawnWaitsForItsSquareToBeFreed)
 	_events->EmitEvent(SpawnAnimationFinishedEvent{.uuid = uuid});
 
 	EXPECT_EQ(std::ranges::count_if(_allObjects, isTank), 0) << "it landed on top of what stood in its square";
-	EXPECT_EQ(bursts.size(), 2u) << "the burst ended while the tank waiting for it had nowhere to land";
+	EXPECT_EQ(_bursts.size(), 2u) << "the burst ended while the tank waiting for it had nowhere to land";
 
 	squatter->SetIsAlive(false);
 	_events->EmitEvent(SpawnAnimationFinishedEvent{.uuid = uuid});
@@ -393,27 +369,23 @@ TEST_F(TankSpawnerTest, ASpawnWaitsForItsSquareToBeFreed)
 //NOTE: the server's loop may run slower than ours - a client's own burst would end before the tank lands
 TEST_F(TankSpawnerTest, AServerBurstCountsDownAndAClientBurstWaitsForTheServer)
 {
-	std::vector<AnimationCreateTankSpawnEvent> bursts{};
-	const EventSubscription burstSub{_events->AddListener(
-			[&bursts](const AnimationCreateTankSpawnEvent& event) { bursts.push_back(event); })};
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
+	ApplyGameMode(GameMode::PlayAsHost);
 	_events->EmitEvent(GameResetEvent{});
 	_events->EmitEvent(RespawnTankEvent{.type = TankType::PLAYER1, .uuid = UuidUtils::GetRandomUuid()});
-	ASSERT_EQ(bursts.size(), 1u);
-	EXPECT_FALSE(bursts.front().isEndless) << "the host's own burst does not count the spawn down";
+	ASSERT_EQ(_bursts.size(), 1u);
+	EXPECT_FALSE(_bursts.front().isEndless) << "the host's own burst does not count the spawn down";
 
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsClient, _respawnManager,
-							 _tankSpawner);
+	ApplyGameMode(GameMode::PlayAsClient);
 	_events->EmitEvent(GameResetEvent{});
 	_allObjects.clear();
-	bursts.clear();
+	_bursts.clear();
 	const Uuid uuid{UuidUtils::GetRandomUuid()};
 	_events->EmitEvent(TankRespawnedEvent{.type = TankType::ENEMY1,
 										  .model = TankModel::Basic,
 										  .uuid = uuid,
 										  .pos = {.x = 0.0, .y = 0.0}});
-	ASSERT_EQ(bursts.size(), 1u);
-	EXPECT_TRUE(bursts.front().isEndless);
+	ASSERT_EQ(_bursts.size(), 1u);
+	EXPECT_TRUE(_bursts.front().isEndless);
 	EXPECT_TRUE(_allObjects.empty());
 
 	_events->EmitEvent(TankSpawnCompletedEvent{.uuid = uuid});
@@ -424,8 +396,7 @@ TEST_F(TankSpawnerTest, AServerBurstCountsDownAndAClientBurstWaitsForTheServer)
 //NOTE: no cancel command exists - a client drops its pending entry on the death itself
 TEST_F(TankSpawnerTest, AClientDropsASpawnTheServerCancelled)
 {
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsClient, _respawnManager,
-							 _tankSpawner);
+	ApplyGameMode(GameMode::PlayAsClient);
 	_events->EmitEvent(GameResetEvent{});
 
 	const Uuid uuid{UuidUtils::GetRandomUuid()};
@@ -442,8 +413,7 @@ TEST_F(TankSpawnerTest, AClientDropsASpawnTheServerCancelled)
 //NOTE: a seat keeps its uuid, so a stale entry would land the tank on the cancelled cycle's rect
 TEST_F(TankSpawnerTest, AClientSpawnsOnTheLatestRectAfterACancel)
 {
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsClient, _respawnManager,
-							 _tankSpawner);
+	ApplyGameMode(GameMode::PlayAsClient);
 	_events->EmitEvent(GameResetEvent{});
 
 	const Uuid uuid{UuidUtils::GetRandomUuid()};
@@ -474,8 +444,7 @@ TEST_F(TankSpawnerTest, AnEnemySpawnsOnBushAndIceButNotOnWater)
 	{
 		SCOPED_TRACE(static_cast<int>(ground));
 		_allObjects.clear();
-		TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, _gameConfig.gameMode, _respawnManager,
-								 _tankSpawner);
+		ApplyGameMode(_gameConfig.gameMode);
 		_events->EmitEvent(GameResetEvent{});
 		PlantTopRow(ground);
 
@@ -506,10 +475,6 @@ TEST_F(TankSpawnerTest, EveryEnemyRollStaysInsideItsOwnQuarterOfTheFront)
 	//NOTE: nothing lands, so the square stays the burst's - and the grenade is what frees it for the next roll
 	_instantSpawnAnimationSubs.clear();
 
-	ObjRectangle rolled{};
-	const EventSubscription rolledSub{_events->AddListener(
-			[&rolled](const AnimationCreateTankSpawnEvent& event) { rolled = event.rect; })};
-
 	const double quarterWidth{static_cast<double>(_gameConfig.battlefieldSize.x) / 4.0};
 	constexpr std::array seats{TankType::ENEMY1, TankType::ENEMY2, TankType::ENEMY3, TankType::ENEMY4};
 	for (int round{}; round < 20; ++round)
@@ -520,8 +485,9 @@ TEST_F(TankSpawnerTest, EveryEnemyRollStaysInsideItsOwnQuarterOfTheFront)
 
 			const auto quarter{static_cast<double>(type)};
 			const std::string_view seat{ToString(SeatOf(type))};
-			ASSERT_GE(rolled.x, quarter * quarterWidth) << seat << " rolled left of its quarter";
-			ASSERT_LE(rolled.Right(), (quarter + 1.0) * quarterWidth) << seat << " rolled into the next quarter";
+			ASSERT_TRUE(_square.has_value()) << seat << " rolled no square";
+			ASSERT_GE(_square->x, quarter * quarterWidth) << seat << " rolled left of its quarter";
+			ASSERT_LE(_square->Right(), (quarter + 1.0) * quarterWidth) << seat << " rolled into the next quarter";
 
 			_events->EmitEvent(Key(Faction::EnemyTeam), BonusGrenadePickupEvent{});
 		}
@@ -532,9 +498,10 @@ TEST_F(TankSpawnerTest, EveryEnemyRollStaysInsideItsOwnQuarterOfTheFront)
 TEST_F(TankSpawnerTest, AnEnemyLeavesItsQuarterOnlyWhenNothingFitsInIt)
 {
 	const double quarterWidth{static_cast<double>(_gameConfig.battlefieldSize.x) / 4.0};
-	for (double x{0.0}; x < quarterWidth; x += _gameConfig.gridOffset)
+	const double cell{_gameConfig.gridOffset};
+	for (int column{}; column * cell < quarterWidth; ++column)
 	{
-		SpawnObstacle(FPoint{.x = x, .y = 0.0}, ObstacleType::Steel);
+		std::ignore = SpawnObstacle(FPoint{.x = column * cell, .y = 0.0}, ObstacleType::Steel);
 	}
 
 	_events->EmitEvent(RespawnTanksEvent{});
@@ -549,9 +516,10 @@ TEST_F(TankSpawnerTest, AnEnemyComesUpTheMomentTheFrontClears)
 	_events->EmitEvent(GameResetEvent{});
 
 	std::vector<std::shared_ptr<BaseObj>> front{};
-	for (double x{0.0}; x < static_cast<double>(_gameConfig.battlefieldSize.x); x += _gameConfig.gridOffset)
+	const double cell{_gameConfig.gridOffset};
+	for (int column{}; column * cell < static_cast<double>(_gameConfig.battlefieldSize.x); ++column)
 	{
-		front.push_back(SpawnObstacle(FPoint{.x = x, .y = 0.0}, ObstacleType::Steel));
+		front.push_back(SpawnObstacle(FPoint{.x = column * cell, .y = 0.0}, ObstacleType::Steel));
 	}
 
 	_events->EmitEvent(RespawnTanksEvent{});
@@ -574,7 +542,7 @@ TEST_F(TankSpawnerTest, AHostSeatsABotWhereTheMatchSaysAndTellsTheClients)
 			told.push_back(event.type);
 		}
 	})};
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
+	ApplyGameMode(GameMode::PlayAsHost);
 	_events->EmitEvent(SeatsFilledEvent{
 			.holders = {SeatHolder::Player, SeatHolder::Bot, SeatHolder::Empty, SeatHolder::Empty}});
 	_events->EmitEvent(GameResetEvent{});
@@ -587,7 +555,7 @@ TEST_F(TankSpawnerTest, AHostSeatsABotWhereTheMatchSaysAndTellsTheClients)
 // the player who takes a bot's seat drives on the tank the bot left, where it stands
 TEST_F(TankSpawnerTest, APlayerTakingOverABotDrivesItsTankWhereItStands)
 {
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
+	ApplyGameMode(GameMode::PlayAsHost);
 	_events->EmitEvent(SeatsFilledEvent{
 			.holders = {SeatHolder::Player, SeatHolder::Bot, SeatHolder::Empty, SeatHolder::Empty}});
 	_events->EmitEvent(GameResetEvent{});
@@ -610,7 +578,7 @@ TEST_F(TankSpawnerTest, APlayerTakingOverABotDrivesItsTankWhereItStands)
 // and a client joining afterwards is sent that tank as the player's, not as the bot's it was
 TEST_F(TankSpawnerTest, ATankTakenOverFromABotIsSentAsThePlayers)
 {
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
+	ApplyGameMode(GameMode::PlayAsHost);
 	_events->EmitEvent(SeatsFilledEvent{
 			.holders = {SeatHolder::Player, SeatHolder::Bot, SeatHolder::Empty, SeatHolder::Empty}});
 	_events->EmitEvent(GameResetEvent{});
@@ -627,7 +595,7 @@ TEST_F(TankSpawnerTest, ATankTakenOverFromABotIsSentAsThePlayers)
 // the player who carried a tier left between the levels - whoever takes the seat afterwards starts afresh
 TEST_F(TankSpawnerTest, ATierCarriedForASeatThatWentToABotIsNotHandedOn)
 {
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
+	ApplyGameMode(GameMode::PlayAsHost);
 	_events->EmitEvent(SeatsFilledEvent{
 			.holders = {SeatHolder::Player, SeatHolder::Player, SeatHolder::Empty, SeatHolder::Empty}});
 	_events->EmitEvent(GameResetEvent{});
@@ -657,7 +625,7 @@ TEST_F(TankSpawnerTest, ABotTakingOverFromAPlayerWhoLeftDrivesItsTank)
 	{
 		told.push_back(event.type);
 	})};
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
+	ApplyGameMode(GameMode::PlayAsHost);
 	_events->EmitEvent(SeatsFilledEvent{
 			.holders = {SeatHolder::Player, SeatHolder::Player, SeatHolder::Empty, SeatHolder::Empty}});
 	_events->EmitEvent(GameResetEvent{});
@@ -687,7 +655,7 @@ TEST_F(TankSpawnerTest, ASeatGivenUpToNobodyTakesItsTankOffWithoutADeath)
 	{
 		isDeathTold = true;
 	})};
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
+	ApplyGameMode(GameMode::PlayAsHost);
 	_events->EmitEvent(SeatsFilledEvent{
 			.holders = {SeatHolder::Player, SeatHolder::Player, SeatHolder::Empty, SeatHolder::Empty}});
 	_events->EmitEvent(GameResetEvent{});
@@ -705,7 +673,7 @@ TEST_F(TankSpawnerTest, ASeatGivenUpToNobodyTakesItsTankOffWithoutADeath)
 // nor does a tank of that seat still in its burst land afterwards
 TEST_F(TankSpawnerTest, ASeatGivenUpToNobodyNeverLandsTheTankItWasSpawning)
 {
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
+	ApplyGameMode(GameMode::PlayAsHost);
 	_events->EmitEvent(SeatsFilledEvent{
 			.holders = {SeatHolder::Player, SeatHolder::Player, SeatHolder::Empty, SeatHolder::Empty}});
 	_events->EmitEvent(GameResetEvent{});

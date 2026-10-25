@@ -448,7 +448,6 @@
     <ClInclude Include="..\headers\utils\Timer.h" />
     <ClInclude Include="..\headers\utils\TimeUtils.h" />
     <ClInclude Include="..\headers\utils\Uuid.h" />
-    <ClInclude Include="..\headers\utils\Fraction.h" />
     <ClInclude Include="..\headers\utils\UuidUtils.h" />
     <ClInclude Include="..\headers\utils\WorldQuery.h" />
   </ItemGroup>
