@@ -288,6 +288,30 @@ bool IsThisMachine(const std::string_view host)
 									address);
 }
 
+//NOTE: connecting UDP only asks the OS for a route, as in LocalAddress
+bool IsReachable(const std::string_view host)
+{
+	using boost::asio::ip::udp;
+
+	boost::system::error_code ec;
+	const auto address{boost::asio::ip::make_address(std::string{host}, ec)};
+	if (ec)
+	{
+		return false;
+	}
+
+	boost::asio::io_context ioContext;
+	udp::socket socket{ioContext};
+	const udp::endpoint endpoint{address, kOutsidePort};
+	std::ignore = socket.open(endpoint.protocol(), ec);
+	if (!ec)
+	{
+		std::ignore = socket.connect(endpoint, ec);
+	}
+
+	return !ec;
+}
+
 std::vector<OwnAddress> OwnAddresses()
 {
 	std::vector<OwnAddress> own{};

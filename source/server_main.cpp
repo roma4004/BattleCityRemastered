@@ -205,6 +205,9 @@ int main(const int argc, char* argv[])
 	gameConfig.simultaneousEnemies = launchOptions->enemiesAtOnce.value_or(DefaultEnemies(gameConfig.networkRules));
 	gameConfig.networkBots = launchOptions->bots.value_or(gameConfig.networkBots);
 	gameConfig.isStartingAtOnce = launchOptions->isStartingAtOnce.value_or(gameConfig.isStartingAtOnce);
+	//NOTE: every server is listed, in the catalog of its own protocol
+	gameConfig.catalogAddress = projectConfig.CatalogAddress(gameConfig.serverAddress.host.contains(':'));
+
 	if (launchOptions->mapName)
 	{
 		gameConfig.mapPath = MapPathForName(*launchOptions->mapName);

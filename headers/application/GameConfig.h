@@ -26,6 +26,7 @@ public:
 
 	std::optional<PlayerSlot> ownSlot{};
 	network::ServerAddress serverAddress{};
+	std::optional<network::ServerAddress> catalogAddress{};
 	//NOTE: the host's; a client learns it with its seat
 	std::size_t networkSeats{kDefaultSeats};
 	//NOTE: the server's - a client mirrors the match and never needs them

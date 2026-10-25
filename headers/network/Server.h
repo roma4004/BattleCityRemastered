@@ -43,11 +43,14 @@ namespace network
 {
 using boost::asio::ip::udp;
 
+class CatalogListing;
+
 class Server final
 {
 public:
 	Server(boost::asio::io_context& ioContext, const ServerAddress& address,
-		   const std::shared_ptr<EventSystem>& events, const MatchSettings& match);
+		   const std::shared_ptr<EventSystem>& events, const MatchSettings& match,
+		   const std::optional<ServerAddress>& catalog);
 
 	~Server();
 
@@ -108,6 +111,7 @@ private:
 	MatchSettings _match;
 	//NOTE: after _boundPort - it answers with that number, so it may not be built before there is one
 	DiscoveryBeacon _beacon;
+	std::unique_ptr<CatalogListing> _listing{nullptr};
 	boost::asio::steady_timer _tickTimer;
 	udp::endpoint _sender{};
 	std::array<char, DatagramLink::kMaxDatagramSize> _receiveBuffer{};

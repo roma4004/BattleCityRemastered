@@ -5,6 +5,7 @@
 #include "components/MatchSettings.h"
 #include <cstdint>
 #include <memory>
+#include <optional>
 
 namespace network
 {
@@ -14,7 +15,7 @@ class ServerNode final : public NetworkNodeBase
 {
 public:
 	ServerNode(const ServerAddress& address, const std::shared_ptr<EventSystem>& events,
-			   const MatchSettings& match = {});
+			   const MatchSettings& match = {}, const std::optional<ServerAddress>& catalog = std::nullopt);
 
 	~ServerNode() override;
 

@@ -163,7 +163,7 @@
     {
       "name": "Debug-Linux",
       "configurePreset": "Debug-Linux",
-      "targets": ["UnitTests", "BattleCityServer", "game_assets"]
+      "targets": ["UnitTests", "BattleCityServer", "BattleCityCatalog", "game_assets"]
     },
     {
       "name": "Asan-Linux",

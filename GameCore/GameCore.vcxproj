@@ -220,6 +220,7 @@
     <ClCompile Include="..\source\entities\pawns\Bullet.cpp" />
     <ClCompile Include="..\source\entities\pawns\Pawn.cpp" />
     <ClCompile Include="..\source\entities\pawns\Tank.cpp" />
+    <ClCompile Include="..\source\network\CatalogListing.cpp" />
     <ClCompile Include="..\source\network\Client.cpp" />
     <ClCompile Include="..\source\network\ClientNode.cpp" />
     <ClCompile Include="..\source\network\DatagramLink.cpp" />
@@ -240,6 +241,7 @@
     <ClCompile Include="..\source\network\Server.cpp" />
     <ClCompile Include="..\source\network\Session.cpp" />
     <ClCompile Include="..\source\network\ServerNode.cpp" />
+    <ClCompile Include="..\source\network\ServerCatalog.cpp" />
     <ClCompile Include="..\source\network\Serializer.cpp" />
     <ClCompile Include="..\source\utils\ColliderUtils.cpp" />
     <ClCompile Include="..\source\utils\Log.cpp" />
@@ -379,6 +381,8 @@
     <ClInclude Include="..\headers\interfaces\IPickupableBonus.h" />
     <ClInclude Include="..\headers\interfaces\IShootable.h" />
     <ClInclude Include="..\headers\interfaces\ITickUpdatable.h" />
+    <ClInclude Include="..\headers\network\Catalog.h" />
+    <ClInclude Include="..\headers\network\CatalogListing.h" />
     <ClInclude Include="..\headers\network\Client.h" />
     <ClInclude Include="..\headers\network\ClientNode.h" />
     <ClInclude Include="..\headers\network\Endpoints.h" />
@@ -430,6 +434,7 @@
     <ClInclude Include="..\headers\network\Server.h" />
     <ClInclude Include="..\headers\network\Session.h" />
     <ClInclude Include="..\headers\network\ServerNode.h" />
+    <ClInclude Include="..\headers\network\ServerCatalog.h" />
     <ClInclude Include="..\headers\network\Serializer.h" />
     <ClInclude Include="..\headers\network\WireFrame.h" />
     <ClInclude Include="..\headers\geometry\Point.h" />

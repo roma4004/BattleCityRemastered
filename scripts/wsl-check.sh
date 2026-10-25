@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # The Linux check of the Windows working tree, run inside WSL2:
 #   wsl.exe -e bash /mnt/c/git/BattleCityRemastered/scripts/wsl-check.sh [--asan] [--tsan] [--coverage] [--game]
-# Brings the WSL clone to HEAD plus every uncommitted change, builds the tests and the server with GCC and runs the
-# tests; each flag adds a tree of its own, --game the game with a window, built and not run. The clone is made on
-# the first run at $BC_WSL_CLONE (~/BattleCityRemastered) - building over /mnt/c is too slow.
+# Brings the WSL clone to HEAD plus every uncommitted change, builds the tests, the server and the catalog with GCC
+# and runs the tests; each flag adds a tree of its own, --game the game with a window, built and not run. The clone is
+# made on the first run at $BC_WSL_CLONE (~/BattleCityRemastered) - building over /mnt/c is too slow.
 # From Git Bash, prefix MSYS_NO_PATHCONV=1, or MSYS rewrites the /mnt/c path.
 set -u
 

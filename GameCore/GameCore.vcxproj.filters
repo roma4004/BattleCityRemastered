@@ -258,6 +258,9 @@
     <ClCompile Include="..\source\entities\pawns\Tank.cpp">
       <Filter>source\entities\pawns</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\network\CatalogListing.cpp">
+      <Filter>source\network</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\network\Client.cpp">
       <Filter>source\network</Filter>
     </ClCompile>
@@ -313,6 +316,9 @@
       <Filter>source\network</Filter>
     </ClCompile>
     <ClCompile Include="..\source\network\Server.cpp">
+      <Filter>source\network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\network\ServerCatalog.cpp">
       <Filter>source\network</Filter>
     </ClCompile>
     <ClCompile Include="..\source\network\ServerNode.cpp">
@@ -731,6 +737,12 @@
     <ClInclude Include="..\headers\interfaces\ITickUpdatable.h">
       <Filter>headers\interfaces</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\network\Catalog.h">
+      <Filter>headers\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\CatalogListing.h">
+      <Filter>headers\network</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\network\Client.h">
       <Filter>headers\network</Filter>
     </ClInclude>
@@ -876,6 +888,9 @@
       <Filter>headers\network</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\Server.h">
+      <Filter>headers\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\ServerCatalog.h">
       <Filter>headers\network</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\ServerNode.h">

@@ -1,7 +1,10 @@
 #include "application/ProjectConfig.h"
+#include "network/Endpoints.h"
 #include "utils/Log.h"
 #include <exception>
 #include <filesystem>
+#include <optional>
+#include <string>
 #include <system_error>
 #include <utility>
 #include <boost/property_tree/ini_parser.hpp>
@@ -59,6 +62,49 @@ std::filesystem::path ProjectConfig::ResourcePath(const std::string& key) const
 	return Get<std::string>(key, key + " path from config.ini");
 }
 
+std::optional<network::ServerAddress> ProjectConfig::LastServer(const bool isIPv6) const
+{
+	std::optional<network::ServerAddress> address{
+			network::ParseServerAddress(Get<std::string>(isIPv6 ? "Network.LastIPv6" : "Network.LastIPv4", {}))};
+	//NOTE: a hand-edited key of the other protocol would land in the wrong row
+	if (address && address->host.contains(':') != isIPv6)
+	{
+		address.reset();
+	}
+
+	return address;
+}
+
+void ProjectConfig::SetLastServer(const network::ServerAddress& address)
+{
+	const bool isIPv6{address.host.contains(':')};
+	Set(isIPv6 ? "Network.LastIPv6" : "Network.LastIPv4",
+		(isIPv6 ? '[' + address.host + ']' : address.host) + ':' + std::to_string(address.port));
+}
+
+network::ServerAddress ProjectConfig::CatalogAddress(const bool isIPv6) const
+{
+	const std::string key{isIPv6 ? "Network.CatalogIPv6" : "Network.Catalog"};
+	const std::string value{Get<std::string>(key, {})};
+	network::ServerAddress address{.host = isIPv6 ? network::LocalIPv6Address() : network::LocalAddress()};
+	if (const auto parsed{network::ParseServerAddress(value)}; parsed && parsed->host.contains(':') == isIPv6)
+	{
+		address = *parsed;
+	}
+	else if (!value.empty())
+	{
+		Log::Error("config " + key + " '" + value + "' is no " + (isIPv6 ? "IPv6" : "IPv4")
+				   + " address, the catalog is asked on this machine");
+	}
+
+	if (address.port == network::kAnyFreePort)
+	{
+		address.port = network::kCatalogPort;
+	}
+
+	return address;
+}
+
 std::expected<void, ConfigError> ProjectConfig::LoadIni(const std::filesystem::path& filePath)
 {
 	try
@@ -91,7 +137,10 @@ void ProjectConfig::DefaultInitIni()
 
 		Set("Control.swap", false);
 		Set("Gamepad.deadZone", 8000);
-		Set("Network.LastConnectAddress", "");
+		Set("Network.LastIPv4", "");
+		Set("Network.LastIPv6", "");
+		Set("Network.Catalog", "");
+		Set("Network.CatalogIPv6", "");
 
 		Set("Fonts.BattleCity", "Resources/Fonts/PressStart2P-vaV7.ttf");
 		Set("Images.Logo", "Resources/Images/Title.png");

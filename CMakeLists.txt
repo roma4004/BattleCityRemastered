@@ -99,6 +99,7 @@ set(GAME_CORE_SOURCES
         source/entities/pawns/Bullet.cpp
         source/entities/pawns/Pawn.cpp
         source/entities/pawns/Tank.cpp
+        source/network/CatalogListing.cpp
         source/network/Client.cpp
         source/network/ClientNode.cpp
         source/network/DatagramLink.cpp
@@ -119,6 +120,7 @@ set(GAME_CORE_SOURCES
         source/network/Server.cpp
         source/network/Session.cpp
         source/network/ServerNode.cpp
+        source/network/ServerCatalog.cpp
         source/network/Serializer.cpp
         source/utils/ColliderUtils.cpp
         source/utils/Log.cpp
@@ -138,6 +140,7 @@ set(UNIT_TESTS_SOURCES
         UnitTests/MapTest.cpp
         UnitTests/BulletTest.cpp
         UnitTests/NetworkClientHandshakeTest.cpp
+        UnitTests/NetworkCatalogTest.cpp
         UnitTests/NetworkDiscoveryTest.cpp
         UnitTests/InputIPAddressTest.cpp
         UnitTests/InputTest.cpp
@@ -196,6 +199,8 @@ add_executable(${PROJECT_NAME} source/main.cpp)
 #construction, and the console is all the output it has
 add_executable(BattleCityServer source/server_main.cpp source/application/ServerConsole.cpp
         source/application/ServerStop.cpp source/application/PortClaim.cpp)
+#NOTE: the catalog of servers from the internet - a service of its own, GameCore only like the server
+add_executable(BattleCityCatalog source/catalog_main.cpp)
 add_executable(UnitTests ${UNIT_TESTS_SOURCES})
 
 target_include_directories(UnitTests PRIVATE headers)
@@ -212,6 +217,7 @@ gtest_discover_tests(UnitTests WORKING_DIRECTORY $<TARGET_FILE_DIR:UnitTests>)
 #NOTE: SDL3 has no SDL2main equivalent - the entry point hijack is header-only in <SDL3/SDL_main.h>
 target_link_libraries(${PROJECT_NAME} PRIVATE project_warnings GamePlatform)
 target_link_libraries(BattleCityServer PRIVATE project_warnings GameCore)
+target_link_libraries(BattleCityCatalog PRIVATE project_warnings GameCore)
 
 # --- Game assets (copied next to the exe post-build) ---
 set(GAME_ASSETS

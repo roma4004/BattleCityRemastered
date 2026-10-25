@@ -46,6 +46,7 @@ class ServerScreen final
 		ServersHeader,
 		NoServers,
 		Server,
+		ServerTail,
 		Refresh,
 		Gap,
 		Rules,
@@ -96,6 +97,8 @@ class ServerScreen final
 	std::vector<EventSubscription> _subs{};
 	//NOTE: held only while the screen is up - clearing them closes it
 	std::vector<EventSubscription> _openSubs{};
+	//NOTE: asked along with the local networks, for the servers from the internet - one of each protocol
+	std::vector<network::ServerAddress> _catalogs{};
 	//NOTE: only while a client has the screen up
 	std::unique_ptr<network::DiscoveryScan> _scan{nullptr};
 	std::vector<network::FoundServer> _servers{};
@@ -118,8 +121,9 @@ class ServerScreen final
 	//NOTE: what the rows were given - a row still holding it gets the current offer on opening
 	network::ServerAddress _offeredIPv4{};
 	network::ServerAddress _offeredIPv6{};
-	//NOTE: the host this game last joined - a client is offered it in place of this machine
-	std::optional<std::string> _lastHost{};
+	//NOTE: the server this game last joined over each protocol - a client is offered it in place of this machine
+	std::optional<network::ServerAddress> _lastIPv4{};
+	std::optional<network::ServerAddress> _lastIPv6{};
 	//NOTE: what the internet sees this machine as - asked while hosting, until somebody answers
 	std::unique_ptr<network::PublicAddressProbe> _publicProbe{nullptr};
 	//NOTE: the router's address on the internet - the host's IPv4 list offers it once known
@@ -199,11 +203,15 @@ class ServerScreen final
 
 public:
 	ServerScreen(const std::shared_ptr<EventSystem>& events, const network::ServerAddress& address,
-				 std::optional<std::string> lastHost);
+				 std::optional<network::ServerAddress> lastIPv4, std::optional<network::ServerAddress> lastIPv6,
+				 std::vector<network::ServerAddress> catalogs);
 
 	void Open(GameMode mode);
 	//NOTE: back from a server that could not listen - the host picks another port
 	void ReportPortTaken();
-	void RememberHost(std::string host) { _lastHost = std::move(host); }
+	void Remember(network::ServerAddress address)
+	{
+		(address.host.contains(':') ? _lastIPv6 : _lastIPv4) = std::move(address);
+	}
 	void Draw() const;
 };

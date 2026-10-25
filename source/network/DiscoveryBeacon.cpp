@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <random>
 #include <string>
 #include <string_view>
 #include <tuple>
@@ -26,6 +27,7 @@ DiscoveryBeacon::DiscoveryBeacon(boost::asio::io_context& ioContext, const boost
 	, _gamePort{gamePort}
 	, _seats{seats}
 	, _rules{rules}
+	, _serverId{std::random_device{}()}
 	, _freeSeats{std::move(freeSeats)}
 {
 	//NOTE: no SO_REUSEADDR - two servers answering one probe would send the client to whichever replied first
@@ -65,6 +67,16 @@ void DiscoveryBeacon::Shutdown()
 	}
 }
 
+discovery::Reply DiscoveryBeacon::Answer() const
+{
+	return discovery::Reply{.protocolVersion = discovery::kProtocolVersion,
+							.gamePort = _gamePort,
+							.seats = _seats,
+							.freeSeats = _freeSeats ? _freeSeats() : std::uint8_t{},
+							.rules = _rules,
+							.serverId = _serverId};
+}
+
 bool DiscoveryBeacon::Listen(Inbox& inbox, const boost::asio::ip::address& address)
 {
 	const udp::endpoint endpoint{address, kDiscoveryPort};
@@ -98,15 +110,9 @@ void DiscoveryBeacon::Receive(Inbox& inbox)
 
 		if (!ec && std::string_view{inbox.buffer.data(), size} == discovery::kProbe)
 		{
-			const discovery::Reply reply{.protocolVersion = discovery::kProtocolVersion,
-										 .gamePort = _gamePort,
-										 .seats = _seats,
-										 .freeSeats = _freeSeats ? _freeSeats() : std::uint8_t{},
-										 .rules = _rules};
-
 			//NOTE: one datagram, no retry - a probe that got no answer asks again
 			boost::system::error_code sendEc;
-			const auto bytes{discovery::Pack(reply)};
+			const auto bytes{discovery::Pack(Answer())};
 			std::ignore = _inbox.socket.send_to(boost::asio::buffer(bytes), inbox.sender, {}, sendEc);
 		}
 

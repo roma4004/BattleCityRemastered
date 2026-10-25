@@ -10,7 +10,7 @@ namespace network::discovery
 {
 //NOTE: raw bytes, not ser20 - the reply must be readable by a client speaking another protocol version
 inline constexpr std::string_view kProbe{"BC?1"};
-inline constexpr std::string_view kReplyTag{"BC!2"};
+inline constexpr std::string_view kReplyTag{"BC!3"};
 
 //NOTE: bump on any change to AnyCommand or the link header - the reply is the last place to refuse an old client
 inline constexpr std::uint16_t kProtocolVersion{5};
@@ -23,9 +23,11 @@ struct Reply final
 	//NOTE: answered even at zero - silence means no server; a full match tells the client to wait, not to redial
 	std::uint8_t freeSeats{};
 	MatchRules rules{};
+	//NOTE: random per server - found by the beacon and the catalog under two addresses, it is shown once
+	std::uint32_t serverId{};
 };
 
-inline constexpr std::size_t kReplySize{kReplyTag.size() + 7u};
+inline constexpr std::size_t kReplySize{kReplyTag.size() + 11u};
 
 //NOTE: written byte by byte, little end first - a struct on the wire would carry this machine's padding
 [[nodiscard]] inline std::array<char, kReplySize> Pack(const Reply& reply) noexcept
@@ -43,6 +45,10 @@ inline constexpr std::size_t kReplySize{kReplyTag.size() + 7u};
 	bytes[8] = static_cast<char>(reply.seats);
 	bytes[9] = static_cast<char>(reply.freeSeats);
 	bytes[10] = static_cast<char>(reply.rules);
+	for (std::size_t i{}; i < sizeof(reply.serverId); ++i)
+	{
+		bytes[11u + i] = static_cast<char>(reply.serverId >> (8u * i));
+	}
 
 	return bytes;
 }
@@ -67,10 +73,17 @@ inline constexpr std::size_t kReplySize{kReplyTag.size() + 7u};
 		return std::nullopt;
 	}
 
+	std::uint32_t serverId{};
+	for (std::size_t i{}; i < sizeof(serverId); ++i)
+	{
+		serverId |= std::uint32_t{byteAt(11u + i)} << (8u * i);
+	}
+
 	return Reply{.protocolVersion = static_cast<std::uint16_t>(byteAt(4) | byteAt(5) << 8u),
 				 .gamePort = static_cast<std::uint16_t>(byteAt(6) | byteAt(7) << 8u),
 				 .seats = seats,
 				 .freeSeats = freeSeats,
-				 .rules = static_cast<MatchRules>(byteAt(10))};
+				 .rules = static_cast<MatchRules>(byteAt(10)),
+				 .serverId = serverId};
 }
 }//namespace network::discovery

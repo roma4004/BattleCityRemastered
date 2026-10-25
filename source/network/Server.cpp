@@ -1,4 +1,5 @@
 #include "network/Server.h"
+#include "network/CatalogListing.h"
 #include "components/EventSystem.h"
 #include "components/MatchSettings.h"
 #include "components/events/CoreLifecycleEvents.h"
@@ -14,6 +15,7 @@
 #include "enums/DisconnectReason.h"
 #include "enums/MatchRules.h"
 #include "enums/PlayerSlot.h"
+#include "enums/PortForwarding.h"
 #include "enums/GameState.h"
 #include "utils/Log.h"
 #include <algorithm>
@@ -47,7 +49,8 @@ MatchSettings Seated(MatchSettings match)
 namespace network
 {
 Server::Server(boost::asio::io_context& ioContext, const ServerAddress& address,
-			   const std::shared_ptr<EventSystem>& events, const MatchSettings& match)
+			   const std::shared_ptr<EventSystem>& events, const MatchSettings& match,
+			   const std::optional<ServerAddress>& catalog)
 	: _socket{ioContext, udp::endpoint{boost::asio::ip::make_address(address.host), address.port}}
 	, _boundPort{_socket.local_endpoint().port()}
 	, _match{Seated(match)}
@@ -64,6 +67,12 @@ Server::Server(boost::asio::io_context& ioContext, const ServerAddress& address,
 
 	Receive();
 	ScheduleTick();
+
+	//NOTE: not in the init list - the first heartbeat locks _sessionsMutex, built after _beacon
+	if (catalog)
+	{
+		_listing = std::make_unique<CatalogListing>(ioContext, *catalog, _socket.local_endpoint().address(), _beacon);
+	}
 
 	_subs.push_back(_events->AddListener(this, &Server::OnSendNetworkFrame));
 	_subs.push_back(_events->AddListener(this, &Server::OnMapLoaded));
@@ -131,6 +140,10 @@ std::uint8_t Server::CountFreeSlots() const
 void Server::CloseSocket()
 {
 	_beacon.Shutdown();
+	if (_listing)
+	{
+		_listing->Shutdown();
+	}
 
 	std::ignore = _tickTimer.cancel();
 
@@ -366,6 +379,15 @@ void Server::OnPortForwardingChanged(const PortForwardingChangedEvent& event)
 {
 	_portForwarding = commands::PortForwardingChange{.state = event.state, .host = event.host, .port = event.port};
 	_replicationOut.Publish(*_portForwarding);
+
+	if (_listing)
+	{
+		const bool isClosed{event.state == PortForwarding::Refused || event.state == PortForwarding::BehindProvider};
+		boost::asio::post(_socket.get_executor(), [listing = _listing.get(), isClosed]
+		{
+			listing->SetPortClosed(isClosed);
+		});
+	}
 }
 
 //NOTE: to everyone again rather than to the one alone - the frame is shared, and the rest already have it

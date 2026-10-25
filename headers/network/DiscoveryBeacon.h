@@ -30,6 +30,8 @@ public:
 
 	void Shutdown();
 
+	[[nodiscard]] discovery::Reply Answer() const;
+
 private:
 	//NOTE: a socket probes come in by, with the last one's sender and bytes
 	struct Inbox final
@@ -52,6 +54,7 @@ private:
 	const std::uint16_t _gamePort;
 	const std::uint8_t _seats;
 	const MatchRules _rules;
+	const std::uint32_t _serverId;
 	std::function<std::uint8_t()> _freeSeats;
 };
 }//namespace network

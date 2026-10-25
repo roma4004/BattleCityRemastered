@@ -57,6 +57,9 @@
     <ClCompile Include="TankTest.cpp">
       <Filter></Filter>
     </ClCompile>
+    <ClCompile Include="NetworkCatalogTest.cpp">
+      <Filter></Filter>
+    </ClCompile>
     <ClCompile Include="NetworkDatagramTest.cpp">
       <Filter></Filter>
     </ClCompile>

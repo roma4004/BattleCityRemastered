@@ -15,6 +15,9 @@ inline constexpr std::uint16_t kAnyFreePort{};
 //NOTE: the fixed discovery port - a server answers here with its game port; a match never runs on it
 inline constexpr std::uint16_t kDiscoveryPort{12340};
 
+//NOTE: where the catalog listens
+inline constexpr std::uint16_t kCatalogPort{12341};
+
 //NOTE: where the server listens and a client dials; 0.0.0.0 listens on every interface and is dialled on loopback
 struct ServerAddress final
 {
@@ -39,6 +42,9 @@ struct OwnAddress final
 
 //NOTE: loopback, every interface, or an address one of them has - a literal only, as in ParseHost
 [[nodiscard]] bool IsThisMachine(std::string_view host);
+
+//NOTE: the OS has a route to the address - false over a protocol with no network; sends nothing
+[[nodiscard]] bool IsReachable(std::string_view host);
 
 //NOTE: every address of every interface that is up, loopback among them
 [[nodiscard]] std::vector<OwnAddress> OwnAddresses();

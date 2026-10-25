@@ -1,5 +1,6 @@
 #pragma once
 
+#include "network/Endpoints.h"
 #include "utils/Log.h"
 #include <cstddef>
 #include <exception>
@@ -41,9 +42,11 @@ public:
 	[[nodiscard]] bool IsCenterOnStart() const { return Get<bool>("Window.centerOnStart", false); }
 	//NOTE: out of 32767 - a worn stick rests further from the center
 	[[nodiscard]] int GamepadDeadZone() const { return Get<int>("Gamepad.deadZone", 8000); }
-	//NOTE: the host this game last joined as a client - empty until it joins one
-	[[nodiscard]] std::string LastConnectAddress() const { return Get<std::string>("Network.LastConnectAddress", {}); }
-	void SetLastConnectAddress(const std::string& host) { Set("Network.LastConnectAddress", host); }
+	//NOTE: the server last joined over the protocol - none until one is joined
+	[[nodiscard]] std::optional<network::ServerAddress> LastServer(bool isIPv6) const;
+	void SetLastServer(const network::ServerAddress& address);
+	//NOTE: this machine by default - the catalog runs next to the server
+	[[nodiscard]] network::ServerAddress CatalogAddress(bool isIPv6) const;
 	[[nodiscard]] bool IsFreshIni() const noexcept { return _isFreshIni; }
 
 	//NOTE: the destructor writes the file too - this is for what must not wait for the game to close

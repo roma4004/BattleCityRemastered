@@ -5,13 +5,14 @@
 #include <boost/asio/post.hpp>
 #include <functional>
 #include <memory>
+#include <optional>
 
 namespace network
 {
 ServerNode::ServerNode(const ServerAddress& address, const std::shared_ptr<EventSystem>& events,
-					   const MatchSettings& match)
+					   const MatchSettings& match, const std::optional<ServerAddress>& catalog)
 	: NetworkNodeBase(events, "ServerNode")
-	, _server{std::make_unique<Server>(IoContext(), address, events, match)}
+	, _server{std::make_unique<Server>(IoContext(), address, events, match, catalog)}
 {
 	StartIoThread();
 	SubscribeToNetCommandUpdate();

@@ -1,4 +1,5 @@
 #include "network/DiscoveryScan.h"
+#include "network/Catalog.h"
 #include "network/Discovery.h"
 #include "network/Endpoints.h"
 #include "utils/Log.h"
@@ -9,6 +10,7 @@
 #include <chrono>
 #include <cstddef>
 #include <iterator>
+#include <optional>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -26,29 +28,41 @@ constexpr auto kRefreshStep{10s};
 
 namespace network
 {
-DiscoveryScan::DiscoveryScan(const std::string& ownHost)
+DiscoveryScan::DiscoveryScan(const std::string& ownHost, const std::vector<ServerAddress>& catalogs)
 	: _socket{_ioContext}
+	, _socketIPv6{_ioContext}
 {
 	boost::system::error_code ec;
 	std::ignore = _socket.open(udp::v4(), ec);
 	if (ec)
 	{
 		Log::Error("DiscoveryScan open: " + ec.message());
+	}
+	else
+	{
+		std::ignore = _socket.set_option(boost::asio::socket_base::broadcast{true}, ec);
+		std::ignore = _socket.non_blocking(true, ec);
 
-		return;
+		_targets.emplace_back(boost::asio::ip::address_v4::broadcast(), kDiscoveryPort);
+		std::ranges::transform(LocalBroadcasts(), std::back_inserter(_targets), [](const std::string& broadcast)
+		{
+			return udp::endpoint{boost::asio::ip::make_address_v4(broadcast), kDiscoveryPort};
+		});
+		if (const auto own{boost::asio::ip::make_address(ownHost, ec)}; !ec && own.is_v4())
+		{
+			_targets.emplace_back(own, kDiscoveryPort);
+		}
 	}
 
-	std::ignore = _socket.set_option(boost::asio::socket_base::broadcast{true}, ec);
-	std::ignore = _socket.non_blocking(true, ec);
-
-	_targets.emplace_back(boost::asio::ip::address_v4::broadcast(), kDiscoveryPort);
-	std::ranges::transform(LocalBroadcasts(), std::back_inserter(_targets), [](const std::string& broadcast)
+	//NOTE: fails without IPv6 - the catalog is then asked over IPv4 alone
+	std::ignore = _socketIPv6.open(udp::v6(), ec);
+	std::ignore = _socketIPv6.non_blocking(true, ec);
+	for (const ServerAddress& catalog: catalogs)
 	{
-		return udp::endpoint{boost::asio::ip::make_address_v4(broadcast), kDiscoveryPort};
-	});
-	if (const auto own{boost::asio::ip::make_address(ownHost, ec)}; !ec && own.is_v4())
-	{
-		_targets.emplace_back(own, kDiscoveryPort);
+		if (const auto host{boost::asio::ip::make_address(catalog.host, ec)}; !ec)
+		{
+			_targets.emplace_back(host, catalog.port);
+		}
 	}
 
 	Refresh();
@@ -56,7 +70,7 @@ DiscoveryScan::DiscoveryScan(const std::string& ownHost)
 
 void DiscoveryScan::Refresh()
 {
-	if (!_socket.is_open())
+	if (!_socket.is_open() && !_socketIPv6.is_open())
 	{
 		return;
 	}
@@ -64,10 +78,12 @@ void DiscoveryScan::Refresh()
 	for (const udp::endpoint& target: _targets)
 	{
 		boost::system::error_code ec;
-		std::ignore = _socket.send_to(boost::asio::buffer(discovery::kProbe), target, {}, ec);
+		udp::socket& socket{target.address().is_v4() ? _socket : _socketIPv6};
+		std::ignore = socket.send_to(boost::asio::buffer(discovery::kProbe), target, {}, ec);
 	}
 
 	std::ranges::for_each(_entries, [](Entry& entry) { entry.isAnswering = false; });
+	_answeredCatalogs.clear();
 	_roundStart = Clock::now();
 	_nextRound = _roundStart + kRefreshStep;
 	_isRoundOpen = true;
@@ -75,7 +91,7 @@ void DiscoveryScan::Refresh()
 
 bool DiscoveryScan::Poll()
 {
-	if (!_socket.is_open())
+	if (!_socket.is_open() && !_socketIPv6.is_open())
 	{
 		return false;
 	}
@@ -85,46 +101,109 @@ bool DiscoveryScan::Poll()
 		Refresh();
 	}
 
+	bool isChanged{Read(_socket)};
+	isChanged = Read(_socketIPv6) || isChanged;
+	const auto now{Clock::now()};
+	if (_isRoundOpen && now - _roundStart >= kRoundLength)
+	{
+		_isRoundOpen = false;
+		//NOTE: a catalog past its answer limit said nothing - its servers stay until their silence runs out
+		const auto isGone = [this, now](const Entry& entry)
+		{
+			return !entry.isAnswering
+				   && (!entry.catalog || std::ranges::contains(_answeredCatalogs, *entry.catalog)
+					   || now - entry.heardAt > catalog::kSilenceLimit);
+		};
+		isChanged = std::erase_if(_entries, isGone) > 0 || isChanged;
+	}
+
+	return isChanged;
+}
+
+bool DiscoveryScan::Read(udp::socket& socket)
+{
 	bool isChanged{};
 	for (;;)
 	{
 		udp::endpoint sender{};
 		boost::system::error_code ec;
-		const std::size_t size{_socket.receive_from(boost::asio::buffer(_receiveBuffer), sender, {}, ec)};
+		const std::size_t size{socket.receive_from(boost::asio::buffer(_receiveBuffer), sender, {}, ec)};
 		if (ec)
 		{
 			break;
 		}
 
-		const auto reply{discovery::Parse(std::string_view{_receiveBuffer.data(), size})};
-		if (!reply || reply->protocolVersion != discovery::kProtocolVersion)
+		const std::string_view datagram{_receiveBuffer.data(), size};
+		if (datagram == catalog::kListEnd)
+		{
+			_answeredCatalogs.push_back(sender);
+
+			continue;
+		}
+
+		//NOTE: a beacon answers for itself, the catalog for every server it lists
+		std::optional<catalog::Listing> listing{catalog::ParseListing(datagram)};
+		if (listing && !_routes.contains(listing->host))
+		{
+			_routes.emplace(listing->host, IsReachable(listing->host.to_string()));
+		}
+
+		//NOTE: no route over its protocol - listed by the catalog, but cannot be joined
+		if (listing && !_routes.at(listing->host))
 		{
 			continue;
 		}
 
-		const FoundServer server{.address = ServerAddress{.host = sender.address().to_string(),
-														  .port = reply->gamePort},
-								 .seats = reply->seats,
-								 .freeSeats = reply->freeSeats,
-								 .rules = reply->rules};
-		//NOTE: the broadcast and the direct probe may both reach one server
+		const auto beaconReply{discovery::Parse(datagram)};
+		if (beaconReply)
+		{
+			listing = catalog::Listing{.heartbeat = {.reply = *beaconReply}, .host = sender.address()};
+		}
+
+		if (!listing || listing->heartbeat.reply.protocolVersion != discovery::kProtocolVersion)
+		{
+			continue;
+		}
+
+		const discovery::Reply& reply{listing->heartbeat.reply};
+		const ServerAddress address{.host = listing->host.to_string(), .port = reply.gamePort};
+		//NOTE: the broadcast, the direct probe and the catalog may all reach one server
 		const auto addressOf{[](const Entry& entry) -> const ServerAddress& { return entry.server.address; }};
-		if (const auto known{std::ranges::find(_entries, server.address, addressOf)}; known != _entries.end())
+		auto known{std::ranges::find(_entries, address, addressOf)};
+		//NOTE: a beacon and the catalog may tell of one server under two addresses - a LAN one and the router's
+		const auto isToldByTheOther = [&reply, &beaconReply](const Entry& entry)
+		{
+			return entry.serverId == reply.serverId && entry.isLocal != beaconReply.has_value();
+		};
+		if (known == _entries.end())
+		{
+			known = std::ranges::find_if(_entries, isToldByTheOther);
+		}
+
+		const bool isKnownLocal{known != _entries.end() && known->isLocal};
+		const bool isLocal{beaconReply.has_value() || isKnownLocal};
+		//NOTE: the address a beacon answered from stays - the server is joined there without the router
+		const FoundServer server{.address = isKnownLocal ? known->server.address : address,
+								 .seats = reply.seats,
+								 .freeSeats = reply.freeSeats,
+								 .rules = reply.rules,
+								 .isPortClosed = listing->heartbeat.isPortClosed && !isLocal};
+		const Entry entry{.server = server,
+						  .serverId = reply.serverId,
+						  .isAnswering = true,
+						  .isLocal = isLocal,
+						  .catalog = beaconReply ? std::nullopt : std::optional{sender},
+						  .heardAt = Clock::now()};
+		if (known != _entries.end())
 		{
 			isChanged = isChanged || known->server != server;
-			*known = Entry{.server = server, .isAnswering = true};
+			*known = entry;
 		}
 		else
 		{
-			_entries.push_back(Entry{.server = server, .isAnswering = true});
+			_entries.push_back(entry);
 			isChanged = true;
 		}
-	}
-
-	if (_isRoundOpen && Clock::now() - _roundStart >= kRoundLength)
-	{
-		_isRoundOpen = false;
-		isChanged = std::erase_if(_entries, [](const Entry& entry) { return !entry.isAnswering; }) > 0 || isChanged;
 	}
 
 	return isChanged;

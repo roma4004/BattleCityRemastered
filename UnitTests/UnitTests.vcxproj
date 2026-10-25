@@ -55,6 +55,7 @@
     <ClCompile Include="MapTest.cpp" />
     <ClCompile Include="BulletTest.cpp" />
     <ClCompile Include="NetworkClientHandshakeTest.cpp" />
+    <ClCompile Include="NetworkCatalogTest.cpp" />
     <ClCompile Include="NetworkDiscoveryTest.cpp" />
     <ClCompile Include="InputIPAddressTest.cpp" />
     <ClCompile Include="InputTest.cpp" />

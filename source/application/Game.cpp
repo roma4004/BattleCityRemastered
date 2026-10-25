@@ -32,6 +32,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <vector>
 
 namespace
 {
@@ -68,7 +69,8 @@ Game::Game(GameConfig& gameConfig, ProjectConfig& projectConfig, const WindowCon
 
 	_serverScreen = std::make_unique<ServerScreen>(
 			_events, _gameConfig.serverAddress,
-			network::ParseHost(projectConfig.LastConnectAddress()));
+			projectConfig.LastServer(false), projectConfig.LastServer(true),
+			std::vector{projectConfig.CatalogAddress(false), projectConfig.CatalogAddress(true)});
 	_userInterface = std::make_unique<UserInterface>(_events, _simulation->State(), *_scoreBoard, *_rightSideBar,
 													 *_lobbyScreen, *_serverScreen, *_menu, *_fpsManager);
 
@@ -281,9 +283,9 @@ void Game::OnConnectedToHost(const ClientConnectedToHostEvent&)
 		return;
 	}
 
-	const std::string& host{_gameConfig.serverAddress.host};
-	_serverScreen->RememberHost(host);
-	_projectConfig.SetLastConnectAddress(host);
+	//NOTE: the actual port, not auto - a server from the internet has no beacon to tell it
+	_serverScreen->Remember(_gameConfig.serverAddress);
+	_projectConfig.SetLastServer(_gameConfig.serverAddress);
 	_projectConfig.Save();
 }
 
