@@ -162,24 +162,25 @@ TEST_F(TankTest, DrivesAlongItsKey)
 	}
 }
 
-// standing against an edge and facing it: the press leaves the tank where it is - the field ends the drive
+// half a step short of an edge and driving at it: the tank comes flush with it on every side, and the field ends the drive
 TEST_F(TankTest, StopsAtTheFieldEdge)
 {
 	const FPoint farCorner{.x = static_cast<double>(_gameConfig.battlefieldSize.x) - _tankSize,
 						   .y = static_cast<double>(_gameConfig.battlefieldSize.y) - _tankSize};
-	const std::array starts{std::pair{FPoint{}, Direction::UP}, std::pair{FPoint{}, Direction::LEFT},
-							std::pair{farCorner, Direction::DOWN}, std::pair{farCorner, Direction::RIGHT}};
-	for (const auto& [start, dir]: starts)
+	const std::array flushAt{std::pair{FPoint{}, Direction::UP}, std::pair{FPoint{}, Direction::LEFT},
+							 std::pair{farCorner, Direction::DOWN}, std::pair{farCorner, Direction::RIGHT}};
+	for (const auto& [flush, dir]: flushAt)
 	{
 		SCOPED_TRACE(static_cast<int>(dir));
 		_events->EmitEvent(GameResetEvent{});
 		_allObjects.clear();
+		const FPoint start{DirectionUtils::Moved(flush, StepOfOneFrame() / 2.0, DirectionUtils::Opposite(dir))};
 		const auto player{CreatePlayer(start, Author::Player1, dir)};
 
-		Press(dir);
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		Drive(dir, 2);
 
-		EXPECT_EQ(start, player->GetPos());
+		EXPECT_DOUBLE_EQ(player->GetPos().x, flush.x);
+		EXPECT_DOUBLE_EQ(player->GetPos().y, flush.y);
 	}
 }
 

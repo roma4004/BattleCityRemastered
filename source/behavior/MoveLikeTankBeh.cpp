@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <limits>
 #include <memory>
 #include <optional>
 #include <ranges>
@@ -44,7 +45,14 @@ bool MoveLikeTankBeh::IsBlocking(const BaseObj* const object, const ObjRectangle
 bool MoveLikeTankBeh::IsCanMove(const double deltaTime, const Direction dir,
 								const std::vector<std::shared_ptr<BaseObj>>& objects) const
 {
-	const ObjRectangle tankNextPosRect{DirectionUtils::Swept(_rect, _speed * deltaTime, dir)};
+	const double step{_speed * deltaTime};
+	//NOTE: a side with less room than a step is no way out - the tank would turn there and stand
+	if (step > DirectionUtils::GapToEdge(_rect, _gameConfig.battlefieldSize, dir))
+	{
+		return false;
+	}
+
+	const ObjRectangle tankNextPosRect{DirectionUtils::Swept(_rect, step, dir)};
 
 	auto blocking = [this, &tankNextPosRect](const std::shared_ptr<BaseObj>& object)
 	{
@@ -60,9 +68,8 @@ double MoveLikeTankBeh::GetTravelledDistance(const double step, const Direction 
 {
 	const ObjRectangle sweptRect{DirectionUtils::Swept(_rect, step, dir)};
 
-	//NOTE: stop a pixel short - flush with the wall, rounding alone decides which side of it the leading edge is on
-	constexpr double padding{1.0};
-	double travelled{step};
+	//NOTE: the field edge cuts the step flush - it is no collider, a hull against it touches nothing
+	double travelled{std::min(step, DirectionUtils::GapToEdge(_rect, _gameConfig.battlefieldSize, dir))};
 	outTouched.clear();
 	for (const std::shared_ptr<BaseObj>& object: objects)
 	{
@@ -72,15 +79,25 @@ double MoveLikeTankBeh::GetTravelledDistance(const double step, const Direction 
 		}
 
 		outTouched.push_back(object.get());
-		//NOTE: only objects behind the leading edge are passed - a tank at a wall is a hair inside it as often as short
-		if (const double gap{DirectionUtils::GapTo(_rect, object->GetRect(), dir)};
-			gap > -ColliderUtils::kTouchTolerance)
-		{
-			travelled = std::min(travelled, gap - padding);
-		}
+		travelled = std::min(travelled, SpaceBefore(*object, dir));
 	}
 
 	return travelled;
+}
+
+double MoveLikeTankBeh::SpaceBefore(const BaseObj& blocker, const Direction dir) const
+{
+	//NOTE: only objects behind the leading edge are passed - a tank at a wall is a hair inside it as often as short
+	const double gap{DirectionUtils::GapTo(_rect, blocker.GetRect(), dir)};
+	if (gap <= -ColliderUtils::kTouchTolerance)
+	{
+		return std::numeric_limits<double>::infinity();
+	}
+
+	//NOTE: stop a pixel short - flush with the wall, rounding alone decides which side of it the leading edge is on
+	constexpr double padding{1.0};
+
+	return gap - padding;
 }
 
 bool MoveLikeTankBeh::NudgeIntoGap(const Direction dir, const double step,
@@ -101,7 +118,7 @@ bool MoveLikeTankBeh::NudgeIntoGap(const Direction dir, const double step,
 
 		//NOTE: the field border is no opening - the nudge would push the tank off the field with nothing to stop it
 		if (needed <= 0.0 || needed > reach
-			|| !DirectionUtils::FitsBeforeEdge(_rect, _gameConfig.battlefieldSize, needed, lateral))
+			|| needed > DirectionUtils::GapToEdge(_rect, _gameConfig.battlefieldSize, lateral))
 		{
 			continue;
 		}
@@ -223,12 +240,11 @@ bool MoveLikeTankBeh::Move(const Direction dir, const double deltaTime,
 						   std::vector<BaseObj*>& outCollisions)
 {
 	const double step{_speed * deltaTime};
-	if (!DirectionUtils::FitsBeforeEdge(_rect, _gameConfig.battlefieldSize, step, dir))
-	{
-		return false;
-	}
-
 	const double distance{GetTravelledDistance(step, dir, objects, outCollisions)};
+	if (distance <= 0.0)
+	{
+		return NudgeIntoGap(dir, step, objects, outCollisions);
+	}
 
 	//NOTE: ice turns the step into momentum, but only while the way is clear
 	if (outCollisions.empty() && _effects.isTouchTheIce)
@@ -240,11 +256,6 @@ bool MoveLikeTankBeh::Move(const Direction dir, const double deltaTime,
 		}
 
 		return true;
-	}
-
-	if (distance <= 0.0)
-	{
-		return NudgeIntoGap(dir, step, objects, outCollisions);
 	}
 
 	_rect = DirectionUtils::Moved(_rect, distance, dir);
@@ -273,10 +284,10 @@ bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime, const std::vecto
 			speed /= _driftMultiplicator;
 		}
 
-		if (IsCanMove(deltaTime, dir, objects)
-			&& DirectionUtils::FitsBeforeEdge(_rect, _gameConfig.battlefieldSize, speed, dir))
+		std::vector<BaseObj*> touched{};
+		if (const double distance{GetTravelledDistance(speed, dir, objects, touched)}; distance > 0.0)
 		{
-			_rect = DirectionUtils::Moved(_rect, speed, dir);
+			_rect = DirectionUtils::Moved(_rect, distance, dir);
 		}
 
 		velocity -= speed;

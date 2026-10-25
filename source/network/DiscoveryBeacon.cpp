@@ -3,18 +3,48 @@
 #include "network/Endpoints.h"
 #include "enums/MatchRules.h"
 #include "utils/Log.h"
+#include <boost/asio/ip/address_v6.hpp>
+#include <boost/asio/ip/multicast.hpp>
 #include <boost/system/error_code.hpp>
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <optional>
 #include <random>
 #include <string>
 #include <string_view>
 #include <tuple>
 #include <utility>
-#ifndef _WIN32 //NOTE: Linux
-#include <optional>
-#endif //NOTE: Linux
+#include <vector>
+
+namespace
+{
+//NOTE: a probe from a link-local address came over that link - the server's address on it that reaches further
+std::optional<boost::asio::ip::address_v6> FurtherAddressFor(const boost::asio::ip::udp::endpoint& asker)
+{
+	if (!asker.address().is_v6() || !asker.address().to_v6().is_link_local())
+	{
+		return std::nullopt;
+	}
+
+	const std::vector<network::IPv6Interface> links{network::IPv6Interfaces()};
+	const auto link{std::ranges::find(links, asker.address().to_v6().scope_id(), &network::IPv6Interface::index)};
+	if (link == links.end())
+	{
+		return std::nullopt;
+	}
+
+	boost::system::error_code ec;
+	auto furthest{boost::asio::ip::make_address_v6(link->furthest, ec)};
+	if (ec || furthest.is_link_local())
+	{
+		return std::nullopt;
+	}
+
+	return furthest;
+}
+}//namespace
 
 namespace network
 {
@@ -37,6 +67,11 @@ DiscoveryBeacon::DiscoveryBeacon(boost::asio::io_context& ioContext, const boost
 				  + " is taken, this server is reachable by --port only");
 
 		return;
+	}
+
+	if (host.is_v6() && !host.is_loopback())
+	{
+		JoinGroupIPv6();
 	}
 
 #ifndef _WIN32 //NOTE: Linux
@@ -99,6 +134,23 @@ bool DiscoveryBeacon::Listen(Inbox& inbox, const boost::asio::ip::address& addre
 	return true;
 }
 
+void DiscoveryBeacon::JoinGroupIPv6()
+{
+	const auto group{boost::asio::ip::make_address_v6(std::string{discovery::kGroupIPv6})};
+	std::size_t joined{};
+	for (const IPv6Interface& link: IPv6Interfaces())
+	{
+		boost::system::error_code ec;
+		std::ignore = _inbox.socket.set_option(boost::asio::ip::multicast::join_group(group, link.index), ec);
+		joined += ec ? 0u : 1u;
+	}
+
+	if (joined == 0u)
+	{
+		Log::Info("DiscoveryBeacon: no link took the IPv6 group, this server is found by its address only");
+	}
+}
+
 void DiscoveryBeacon::Receive(Inbox& inbox)
 {
 	const auto onReceived = [this, &inbox](const boost::system::error_code& ec, const std::size_t size)
@@ -112,8 +164,16 @@ void DiscoveryBeacon::Receive(Inbox& inbox)
 		{
 			//NOTE: one datagram, no retry - a probe that got no answer asks again
 			boost::system::error_code sendEc;
-			const auto bytes{discovery::Pack(Answer())};
-			std::ignore = _inbox.socket.send_to(boost::asio::buffer(bytes), inbox.sender, {}, sendEc);
+			if (const std::optional<boost::asio::ip::address_v6> further{FurtherAddressFor(inbox.sender)})
+			{
+				const auto bytes{discovery::Pack(Answer(), further->to_bytes())};
+				std::ignore = _inbox.socket.send_to(boost::asio::buffer(bytes), inbox.sender, {}, sendEc);
+			}
+			else
+			{
+				const auto bytes{discovery::Pack(Answer())};
+				std::ignore = _inbox.socket.send_to(boost::asio::buffer(bytes), inbox.sender, {}, sendEc);
+			}
 		}
 
 		Receive(inbox);

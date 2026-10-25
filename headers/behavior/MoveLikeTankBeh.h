@@ -51,6 +51,8 @@ public:
 			  std::vector<BaseObj*>& outCollisions) override;
 	[[nodiscard]] std::vector<BaseObj*> BlockersAhead(
 			Direction dir, double step, const std::vector<std::shared_ptr<BaseObj>>& objects) const;
+	//NOTE: how far the tank gets before the blocker - no limit from one it is already past
+	[[nodiscard]] double SpaceBefore(const BaseObj& blocker, Direction dir) const;
 	[[nodiscard]] bool ApplyMoveVelocity(double deltaTime, const std::vector<std::shared_ptr<BaseObj>>& objects);
 	[[nodiscard]] double GetVelocity(Direction dir) const;
 	void Carry(Direction dir, double distance, double velocity);

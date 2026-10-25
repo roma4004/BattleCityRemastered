@@ -313,17 +313,23 @@ bool Tank::IsDrivingAgainst(const Direction dir) const
 
 double Tank::ShoveDistance(const Direction dir, const double wanted, const int depth) const
 {
-	if (depth > kMaxShoveChain
-		|| !DirectionUtils::FitsBeforeEdge(GetRect(), _gameConfig.battlefieldSize, wanted, dir))
+	if (depth > kMaxShoveChain)
 	{
 		return 0.0;
 	}
 
-	double allowed{wanted};
+	//NOTE: the field edge and a wall stop a shoved tank where they would stop it driving
+	double allowed{std::min(wanted, DirectionUtils::GapToEdge(GetRect(), _gameConfig.battlefieldSize, dir))};
 	for (const BaseObj* const blocker: _tankMoveBeh->BlockersAhead(dir, wanted, _allObjects))
 	{
 		const auto* const peer{dynamic_cast<const Tank*>(blocker)};
-		if (peer == nullptr || peer->IsDrivingAgainst(dir))
+		if (peer == nullptr)
+		{
+			allowed = std::min(allowed, _tankMoveBeh->SpaceBefore(*blocker, dir));
+			continue;
+		}
+
+		if (peer->IsDrivingAgainst(dir))
 		{
 			return 0.0;
 		}
@@ -379,7 +385,13 @@ void Tank::ShoveAhead(const Direction dir, const double step)
 	for (BaseObj* const blocker: blockers)
 	{
 		auto* const peer{dynamic_cast<Tank*>(blocker)};
-		if (peer == nullptr || peer->IsDrivingAgainst(dir))
+		if (peer == nullptr)
+		{
+			allowed = std::min(allowed, _tankMoveBeh->SpaceBefore(*blocker, dir));
+			continue;
+		}
+
+		if (peer->IsDrivingAgainst(dir))
 		{
 			return;
 		}

@@ -339,6 +339,27 @@ std::vector<std::string> LocalBroadcasts()
 	return broadcasts;
 }
 
+std::vector<IPv6Interface> IPv6Interfaces()
+{
+	const auto isOwnIPv6 = [](const boost::asio::ip::address_v6& address) { return !address.is_loopback(); };
+	std::vector<IPv6Interface> links{};
+	for (const std::vector<InterfaceAddress>& addresses: InterfaceAddresses() | std::views::values)
+	{
+		auto ipv6{addresses | std::views::keys | std::views::filter(&boost::asio::ip::address::is_v6)
+				  | std::views::transform(&boost::asio::ip::address::to_v6) | std::views::filter(isOwnIPv6)};
+		const auto link{std::ranges::find_if(ipv6, &boost::asio::ip::address_v6::is_link_local)};
+		if (link == ipv6.end())
+		{
+			continue;
+		}
+
+		const auto furthest{std::ranges::min_element(ipv6, {}, ReachOf)};
+		links.push_back(IPv6Interface{.index = (*link).scope_id(), .furthest = (*furthest).to_string()});
+	}
+
+	return links;
+}
+
 std::optional<std::string> SubnetBroadcast(const std::string_view host)
 {
 	boost::system::error_code ec;

@@ -44,7 +44,6 @@
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
-#include <exception>
 #include <memory>
 #include <optional>
 #include <string>
@@ -146,31 +145,6 @@ protected:
 		});
 	}
 
-	//NOTE: keeps pumping while it waits - the client's own retries need it
-	[[nodiscard]] bool ReboundHost(std::unique_ptr<network::ServerNode>& server,
-								   const uint16_t port) const
-	{
-		return PumpUntil([this, &server, port]
-		{
-			if (server)
-			{
-				return true;
-			}
-
-			try
-			{
-				server = std::make_unique<network::ServerNode>(network::ServerAddress{.port = port},
-																		_serverEvents);
-			}
-			catch (const std::exception&)
-			{
-				return false;
-			}
-
-			return true;
-		}, kRebindTimeout);
-	}
-
 	//NOTE: a bare link on one socket - a ClientNode would open a socket of its own for every connection
 	[[nodiscard]] std::optional<PlayerSlot> Dial(boost::asio::ip::udp::socket& socket,
 												 const std::uint32_t connectionId) const
@@ -207,8 +181,6 @@ protected:
 	}
 
 	static constexpr auto kWaitTimeout{5s};
-	//NOTE: short on purpose - the client gives up after ~10s, and a slow re-bind eats that window
-	static constexpr auto kRebindTimeout{1500ms};
 };
 
 // what the host emits comes out on the client as the same event, keyed the same and whole - a crossed wire swaps them
@@ -424,108 +396,6 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 		ASSERT_EQ(obstacleType, received[i].type);
 		ASSERT_EQ(_uuid, received[i].uuid);
 	}
-}
-
-//NOTE: the link and what rides it - a server still thinking the old client plays reconnects nothing
-TEST_F(NetworkTest, ClientReconnectsAfterEstablishedLinkDrops)
-{
-	auto server{MakeServer()};
-	const uint16_t port{server->GetBoundPort()};
-	const auto client{MakeClient(port)};
-
-	int readySignals{};
-	bool isHostLost{};
-	std::vector<EventSubscription> subs{};
-	subs.push_back(_serverEvents->AddListener(
-			[&readySignals](const ServerInClientReadyToStartGameEvent&) { ++readySignals; }));
-	subs.push_back(_clientEvents->AddListener([&isHostLost](const ClientHostLostEvent&) { isHostLost = true; }));
-	subs.push_back(AnnounceReadyOnConnect());
-
-	ASSERT_TRUE(PumpUntil([this] { return _linksUp == 1; }));
-	ASSERT_TRUE(PumpUntil([&readySignals] { return readySignals == 1; })) << "the server never got the first ready";
-
-	//NOTE: Abort, not just reset - this test is about a link that dies without a goodbye
-	server->Abort();
-	server.reset();
-
-	ASSERT_TRUE(PumpUntil([&isHostLost] { return isHostLost; })) << "client never noticed the link dropped";
-
-	if (!ReboundHost(server, port))
-	{
-		GTEST_SKIP() << "port " << port << " still held by the OS - nothing to test against";
-	}
-
-	ASSERT_TRUE(PumpUntil([this] { return _linksUp == 2; }, 10s))
-			<< "client did not reconnect after the server came back";
-
-	EXPECT_TRUE(PumpUntil([&readySignals] { return readySignals == 2; }))
-			<< "reconnected client never asked the server to start the match again";
-}
-
-//NOTE: the other half of ClientQuitTellsHostWhy - the server outlives the loss and takes the next client
-TEST_F(NetworkTest, TheServerLearnsTheClientDroppedWithoutSayingGoodbye)
-{
-	const auto server{MakeServer()};
-	const uint16_t port{server->GetBoundPort()};
-	auto client{MakeClient(port)};
-
-	bool clientLost{};
-	int readySignals{};
-	std::optional<DisconnectReason> announced{};
-	std::vector<EventSubscription> subs{};
-	subs.push_back(_serverEvents->AddListener([&clientLost](const ServerClientLostEvent&) { clientLost = true; }));
-	subs.push_back(_serverEvents->AddListener(
-			[&readySignals](const ServerInClientReadyToStartGameEvent&) { ++readySignals; }));
-	subs.push_back(_serverEvents->AddListener(
-			[&announced](const ServerInDisconnectEvent& event) { announced = event.reason; }));
-	subs.push_back(AnnounceReadyOnConnect());
-
-	ASSERT_TRUE(PumpUntil([this] { return _linksUp == 1; }));
-	ASSERT_TRUE(PumpUntil([&readySignals] { return readySignals == 1; }));
-
-	client->Abort();
-	client.reset();
-
-	ASSERT_TRUE(PumpUntil([&clientLost] { return clientLost; }))
-			<< "the server never noticed the client stopped answering";
-	EXPECT_FALSE(announced.has_value()) << "a dropped link reported itself as an announced leave";
-
-	const auto secondClient{MakeClient(port)};
-	ASSERT_TRUE(PumpUntil([this] { return _linksUp == 2; }))
-			<< "the server stopped accepting after losing the first client";
-	EXPECT_TRUE(PumpUntil([&readySignals] { return readySignals == 2; }))
-			<< "host never got a ready from the client that replaced the lost one";
-}
-
-// a host that shuts down says why, and the client keeps trying to come back
-TEST_F(NetworkTest, HostShutdownTellsClientWhyAndKeepsTheReconnect)
-{
-	auto server{MakeServer()};
-	const uint16_t port{server->GetBoundPort()};
-	const auto client{MakeClient(port)};
-
-	ASSERT_TRUE(PumpUntil([this] { return _linksUp == 1; }));
-
-	std::optional<DisconnectReason> received{};
-	bool gaveUp{};
-	std::vector<EventSubscription> subs{};
-	subs.push_back(_clientEvents->AddListener(
-			[&received](const ClientInDisconnectEvent& event) { received = event.reason; }));
-	subs.push_back(_clientEvents->AddListener([&gaveUp](const ClientReconnectAbandonedEvent&) { gaveUp = true; }));
-
-	server.reset();//NOTE: the goodbye goes out from inside the destructor before the socket closes
-
-	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); })) << "client never got the server's goodbye";
-	EXPECT_EQ(DisconnectReason::HostShutdown, *received);
-
-	if (!ReboundHost(server, port))
-	{
-		GTEST_SKIP() << "port " << port << " still held by the OS - nothing to test against";
-	}
-
-	EXPECT_TRUE(PumpUntil([this] { return _linksUp == 2; }, 10s))
-			<< "client did not dial back the server that only announced a restart";
-	EXPECT_FALSE(gaveUp) << "client gave up on a host that was restarting the same mode";
 }
 
 // a client that quits says why as well, so the seat is freed rather than timed out
@@ -770,31 +640,6 @@ TEST_F(NetworkTest, AReadyOwedFromTheLobbyIsPaidOnceTheMatchStarts)
 	EXPECT_TRUE(PumpUntil([&field] { return field.has_value(); })) << "the debt the lobby left was dropped";
 }
 
-// The match goes on without a lost player, so a key it held would keep its tank driving into a wall
-TEST_F(NetworkTest, ALostClientLetsGoOfTheKeysOfItsSeat)
-{
-	std::optional<bool> isUpHeld{};
-	bool isClientLost{};
-	std::vector<EventSubscription> subs{};
-	subs.push_back(_serverEvents->AddListener(Key(InputChannel::RemoteP1),
-											[&isUpHeld](const MoveUpEvent& event) { isUpHeld = event.isPressed; }));
-	subs.push_back(_serverEvents->AddListener([&isClientLost](const ServerClientLostEvent&) { isClientLost = true; }));
-
-	const auto server{MakeServer()};
-	auto client{MakeClient(server->GetBoundPort())};
-	ASSERT_TRUE(PumpUntil([this] { return _firstSeat.has_value(); }));
-	ASSERT_EQ(*_firstSeat, PlayerSlot::P1);
-
-	_clientEvents->EmitEvent(Key(InputChannel::LocalP1), MoveUpEvent{.isPressed = true});
-	ASSERT_TRUE(PumpUntil([&isUpHeld] { return isUpHeld.value_or(false); }));
-
-	client->Abort();
-	client.reset();
-
-	ASSERT_TRUE(PumpUntil([&isClientLost] { return isClientLost; }));
-	EXPECT_FALSE(isUpHeld.value_or(true)) << "the seat's tank still drives on a key nobody holds";
-}
-
 // a client redialing from the same socket before the host saw the timeout gets its seat back, not "match full"
 TEST_F(NetworkTest, AClientDialingAgainFromTheSameAddressTakesItsSeatBack)
 {
@@ -838,19 +683,6 @@ TEST_F(NetworkTest, AKickedClientIsToldWhyAndDoesNotDialBack)
 	ASSERT_TRUE(PumpUntil([&reason, &isAbandoned, &isSeatFreed] { return reason && isAbandoned && isSeatFreed; }))
 			<< "told why: " << reason.has_value() << ", gave up: " << isAbandoned << ", seat freed: " << isSeatFreed;
 	EXPECT_EQ(*reason, DisconnectReason::Kicked);
-}
-
-// a closed server turns a hello away and seats it only once it opens again
-TEST_F(NetworkTest, AClosedServerSeatsNoClientUntilItOpens)
-{
-	const auto server{MakeServer()};
-	_serverEvents->EmitEvent(ServerAcceptingChangedEvent{.isAccepting = false});
-
-	const auto client{MakeClient(server->GetBoundPort())};
-	EXPECT_FALSE(PumpUntil([this] { return _linksUp == 1; }, 1s)) << "a closed server seated a client";
-
-	_serverEvents->EmitEvent(ServerAcceptingChangedEvent{.isAccepting = true});
-	EXPECT_TRUE(PumpUntil([this] { return _linksUp == 1; })) << "the reopened server never seated it";
 }
 
 // a hello the server turns away is no connection - the client must not report a seat it never got

@@ -10,6 +10,8 @@ namespace network::discovery
 {
 //NOTE: raw bytes, not ser20 - the reply must be readable by a client speaking another protocol version
 inline constexpr std::string_view kProbe{"BC?1"};
+//NOTE: IPv6 has no broadcast - beacons join this group on every link; ff02::1 would wake every machine on it
+inline constexpr std::string_view kGroupIPv6{"ff02::bc:1"};
 inline constexpr std::string_view kReplyTag{"BC!3"};
 
 //NOTE: bump on any change to AnyCommand or the link header - the reply is the last place to refuse an old client
@@ -28,6 +30,8 @@ struct Reply final
 };
 
 inline constexpr std::size_t kReplySize{kReplyTag.size() + 11u};
+//NOTE: the answer to a probe over the group - it leaves from the link's own address, so it tells the furthest one
+inline constexpr std::size_t kAddressedReplySize{kReplySize + 16u};
 
 //NOTE: written byte by byte, little end first - a struct on the wire would carry this machine's padding
 [[nodiscard]] inline std::array<char, kReplySize> Pack(const Reply& reply) noexcept
@@ -55,7 +59,7 @@ inline constexpr std::size_t kReplySize{kReplyTag.size() + 11u};
 
 [[nodiscard]] inline std::optional<Reply> Parse(const std::string_view datagram) noexcept
 {
-	if (datagram.size() != kReplySize || !datagram.starts_with(kReplyTag))
+	if ((datagram.size() != kReplySize && datagram.size() != kAddressedReplySize) || !datagram.starts_with(kReplyTag))
 	{
 		return std::nullopt;
 	}
@@ -85,5 +89,40 @@ inline constexpr std::size_t kReplySize{kReplyTag.size() + 11u};
 				 .freeSeats = freeSeats,
 				 .rules = static_cast<MatchRules>(byteAt(10)),
 				 .serverId = serverId};
+}
+
+[[nodiscard]] inline std::array<char, kAddressedReplySize> Pack(const Reply& reply,
+																const std::array<unsigned char, 16u>& furthest) noexcept
+{
+	std::array<char, kAddressedReplySize> bytes{};
+	const std::array<char, kReplySize> plain{Pack(reply)};
+	for (std::size_t i{}; i < kReplySize; ++i)
+	{
+		bytes[i] = plain[i];
+	}
+
+	for (std::size_t i{}; i < furthest.size(); ++i)
+	{
+		bytes[kReplySize + i] = static_cast<char>(furthest[i]);
+	}
+
+	return bytes;
+}
+
+//NOTE: none in a plain reply
+[[nodiscard]] inline std::optional<std::array<unsigned char, 16u>> FurthestOf(const std::string_view datagram) noexcept
+{
+	if (datagram.size() != kAddressedReplySize)
+	{
+		return std::nullopt;
+	}
+
+	std::array<unsigned char, 16u> furthest{};
+	for (std::size_t i{}; i < furthest.size(); ++i)
+	{
+		furthest[i] = static_cast<unsigned char>(datagram[kReplySize + i]);
+	}
+
+	return furthest;
 }
 }//namespace network::discovery

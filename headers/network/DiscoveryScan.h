@@ -32,7 +32,7 @@ struct FoundServer final
 	[[nodiscard]] bool operator==(const FoundServer& rhs) const = default;
 };
 
-//NOTE: broadcast into every own network, at its own address - a broadcast may not come back - and at the catalogs
+//NOTE: broadcast and the IPv6 group into every own network, its own address - a broadcast may not come back - catalogs
 class DiscoveryScan final
 {
 public:
@@ -74,7 +74,7 @@ private:
 
 	boost::asio::io_context _ioContext{};
 	udp::socket _socket;
-	//NOTE: the catalog alone is asked over IPv6 - it has no broadcast
+	//NOTE: the beacons' group and the catalogs - IPv6 has no broadcast
 	udp::socket _socketIPv6;
 	std::vector<udp::endpoint> _targets{};
 	//NOTE: a catalog's listing is the longest datagram it reads

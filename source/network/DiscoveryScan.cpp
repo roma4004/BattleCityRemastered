@@ -4,6 +4,8 @@
 #include "network/Endpoints.h"
 #include "utils/Log.h"
 #include <boost/asio/ip/address.hpp>
+#include <boost/asio/ip/address_v6.hpp>
+#include <boost/asio/ip/multicast.hpp>
 #include <boost/asio/socket_base.hpp>
 #include <boost/system/error_code.hpp>
 #include <algorithm>
@@ -57,6 +59,15 @@ DiscoveryScan::DiscoveryScan(const std::string& ownHost, const std::vector<Serve
 	//NOTE: fails without IPv6 - the catalog is then asked over IPv4 alone
 	std::ignore = _socketIPv6.open(udp::v6(), ec);
 	std::ignore = _socketIPv6.non_blocking(true, ec);
+	if (_socketIPv6.is_open())
+	{
+		const auto group{boost::asio::ip::make_address_v6(std::string{discovery::kGroupIPv6})};
+		std::ranges::transform(IPv6Interfaces(), std::back_inserter(_targets), [&group](const IPv6Interface& link)
+		{
+			return udp::endpoint{boost::asio::ip::address_v6{group.to_bytes(), link.index}, kDiscoveryPort};
+		});
+	}
+
 	for (const ServerAddress& catalog: catalogs)
 	{
 		if (const auto host{boost::asio::ip::make_address(catalog.host, ec)}; !ec)
@@ -79,6 +90,13 @@ void DiscoveryScan::Refresh()
 	{
 		boost::system::error_code ec;
 		udp::socket& socket{target.address().is_v4() ? _socket : _socketIPv6};
+		//NOTE: a link-local group is on every link at once - the interface says which one the probe goes out on
+		if (target.address().is_multicast())
+		{
+			const auto link{target.address().to_v6().scope_id()};
+			std::ignore = socket.set_option(boost::asio::ip::multicast::outbound_interface{link}, ec);
+		}
+
 		std::ignore = socket.send_to(boost::asio::buffer(discovery::kProbe), target, {}, ec);
 	}
 
@@ -158,6 +176,18 @@ bool DiscoveryScan::Read(udp::socket& socket)
 		if (beaconReply)
 		{
 			listing = catalog::Listing{.heartbeat = {.reply = *beaconReply}, .host = sender.address()};
+		}
+
+		//NOTE: the link's own address works from this machine alone - the further one, if there is a route to it
+		if (const auto further{discovery::FurthestOf(datagram)}; beaconReply && further)
+		{
+			const boost::asio::ip::address host{boost::asio::ip::address_v6{*further}};
+			if (!_routes.contains(host))
+			{
+				_routes.emplace(host, IsReachable(host.to_string()));
+			}
+
+			listing->host = _routes.at(host) ? host : listing->host;
 		}
 
 		if (!listing || listing->heartbeat.reply.protocolVersion != discovery::kProtocolVersion)

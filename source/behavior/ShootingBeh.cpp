@@ -163,7 +163,7 @@ std::vector<Uuid> ShootingBeh::Volley(const std::vector<std::shared_ptr<BaseObj>
 
 		for (int row{1}; row < depth; ++row)
 		{
-			if (!DirectionUtils::FitsBeforeEdge(at, _gameConfig.battlefieldSize, step, _direction)
+			if (step > DirectionUtils::GapToEdge(at, _gameConfig.battlefieldSize, _direction)
 				|| !IsClear(DirectionUtils::Swept(at, step, _direction), objects))
 			{
 				break;

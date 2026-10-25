@@ -44,6 +44,8 @@ private:
 
 	//NOTE: false when the address is taken, or is not this machine's
 	bool Listen(Inbox& inbox, const boost::asio::ip::address& address);
+	//NOTE: on every link this machine has - a server listening over IPv6 is found by the group, not a broadcast
+	void JoinGroupIPv6();
 	void Receive(Inbox& inbox);
 
 	//NOTE: bound to the server's address - every answer goes out of it, so the asker reads that address

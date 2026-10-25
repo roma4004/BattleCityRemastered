@@ -129,16 +129,6 @@ namespace DirectionUtils
 	return GapTo(rect, border, dir);
 }
 
-//NOTE: asymmetric - pixel 0 is on screen, pixel battlefieldSize is already past it
-[[nodiscard]] constexpr bool FitsBeforeEdge(const ObjRectangle& rect, const UPoint battlefieldSize,
-											const double distance, const Direction dir) noexcept
-{
-	const auto [dx, dy] = Unit(dir);
-	const double gap{GapToEdge(rect, battlefieldSize, dir)};
-
-	return dx + dy < 0.0 ? distance <= gap : distance < gap;
-}
-
 //NOTE: on the axis across the heading only - how far ahead or behind the other one stands is not asked
 [[nodiscard]] constexpr bool OverlapsAcross(const ObjRectangle& rect, const ObjRectangle& other,
 										   const Direction dir) noexcept

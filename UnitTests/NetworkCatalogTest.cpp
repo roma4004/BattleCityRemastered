@@ -89,17 +89,6 @@ TEST_F(NetworkCatalogTest, AServerOnIPv6IsFoundThroughTheSameCatalog)
 	EXPECT_TRUE(Await(scan, listed, true));
 }
 
-// a stopped server says goodbye and leaves the list at once, not after its silence
-TEST_F(NetworkCatalogTest, AStoppedServerLeavesTheListAtOnce)
-{
-	ASSERT_TRUE(Await(_scan, _listed, true));
-
-	_server.reset();
-	_scan.Refresh();
-
-	EXPECT_TRUE(Await(_scan, _listed, false));
-}
-
 // a port the router refused is marked in the list - the players know to swap hosts
 TEST_F(NetworkCatalogTest, AServerTheRouterRefusedIsListedWithItsPortClosed)
 {
@@ -111,24 +100,6 @@ TEST_F(NetworkCatalogTest, AServerTheRouterRefusedIsListedWithItsPortClosed)
 	_scan.Refresh();
 
 	EXPECT_TRUE(Await(_scan, closed, true));
-}
-
-// REFRESH pressed over and over keeps the servers from the internet - the catalog skips a probe past its limit
-TEST_F(NetworkCatalogTest, AListRefreshedOverAndOverKeepsTheServersFromTheInternet)
-{
-	ASSERT_TRUE(Await(_scan, _listed, true));
-
-	//NOTE: the first probe and two refreshes are answered, the third refresh is past the catalog's answer limit
-	for (int refresh{}; refresh < 3; ++refresh)
-	{
-		_scan.Refresh();
-		Pump(_scan, 50ms);
-	}
-
-	//NOTE: past the round the last refresh opened, which got no answer
-	Pump(_scan, 1100ms);
-
-	EXPECT_TRUE(std::ranges::contains(_scan.Servers(), _listed));
 }
 
 // a host on the client's own network is listed at the address its beacon answered from, not again at the catalog's

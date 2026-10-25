@@ -52,6 +52,17 @@ struct OwnAddress final
 //NOTE: the broadcast address of every IPv4 network this machine is in - 255.255.255.255 leaves by one interface
 [[nodiscard]] std::vector<std::string> LocalBroadcasts();
 
+//NOTE: an interface with IPv6 - its index scopes a link-local address and picks the link a multicast leaves by
+struct IPv6Interface final
+{
+	std::uint32_t index{};
+	//NOTE: the address on it that reaches furthest - its link's own when it has no other
+	std::string furthest{};
+};
+
+//NOTE: every interface that is up with an IPv6 link of its own - loopback has none
+[[nodiscard]] std::vector<IPv6Interface> IPv6Interfaces();
+
 //NOTE: the broadcast address of the network this machine's IPv4 is in - none for an address it does not have
 [[nodiscard]] std::optional<std::string> SubnetBroadcast(std::string_view host);
 
