@@ -12,10 +12,12 @@
 #include "enums/GameState.h"
 #include "enums/InputSignal.h"
 #include "enums/PortForwarding.h"
+#include "enums/RespawnGroup.h"
 #include "enums/StatisticsType.h"
 #include "network/commands/WorldSnapshot.h"
 #include "utils/Log.h"
 #include <algorithm>
+#include <cstddef>
 #include <string>
 #include <utility>
 #include <variant>
@@ -198,6 +200,18 @@ void ReplicationApplier::Emit(const commands::WorldSnapshot& command) const
 	_events->EmitEvent(SetPauseEvent{.isPaused = command.phase == GameState::Paused});
 }
 
+void ReplicationApplier::Emit(const commands::RespawnCountChange& command) const
+{
+	if (static_cast<std::size_t>(command.group) >= kRespawnGroupCount)
+	{
+		Log::Error("ReplicationApplier: respawn count for an unknown group, ignored");
+
+		return;
+	}
+
+	_events->EmitEvent(RespawnCountChangedToEvent{.group = command.group, .respawnCount = command.respawnCount});
+}
+
 void ReplicationApplier::Emit(const commands::AbsenceChange& command) const
 {
 	_events->EmitEvent(AbsenceChangedEvent{.seats = command.seats});
@@ -232,16 +246,16 @@ void ReplicationApplier::Emit(const commands::BonusStatus& command) const
 			_events->EmitEvent(Key(author), BonusHelmetAppliedEvent{.author = author, .isActive = command.isEnable});
 			return;
 		case BonusType::Ship:
-			_events->EmitEvent(Key(author), BonusShipAppliedEvent{.author = author});
-			return;
-		case BonusType::Tank:
-			_events->EmitEvent(BonusTankAppliedEvent{.author = author});
+			_events->EmitEvent(Key(author), BonusShipAppliedEvent{.author = author,
+																  .isActive = command.isEnable,
+																  .charges = command.charges});
 			return;
 		case BonusType::Star:
 		case BonusType::Caliber:
 		case BonusType::None:
 		case BonusType::Timer:
 		case BonusType::Grenade:
+		case BonusType::Tank:
 		case BonusType::Shovel:
 		case BonusType::lastId:
 			break;

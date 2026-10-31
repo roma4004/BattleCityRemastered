@@ -18,7 +18,7 @@
 namespace
 {
 //NOTE: a seat row's lives cell; the row ends after the lives digits
-constexpr int kRowLivesCell{4};
+constexpr int kRowLivesCell{5};
 }//namespace
 
 void SideBarWords::Add(std::string text, const SDL_Rect& place, const UiLayout::Measure& measure)
@@ -99,8 +99,7 @@ void SideBarPlayerPainter::PaintSeatPictures(const std::vector<SideBarSeat>& sea
 {
 	//NOTE: off the seat's picture; badges take the empty row under it
 	constexpr Point livesCell{.x = 9, .y = 9};
-	constexpr Point timerCell{.x = 1, .y = 17};
-	constexpr Point helmetCell{.x = 9, .y = 17};
+	constexpr Point badgeRow{.x = 1, .y = 17};
 	constexpr std::array pictures{TextureOffset::kPlayer1Icon, TextureOffset::kPlayer2Icon};
 
 	const auto seated{std::views::zip(seats, pictures)};
@@ -122,13 +121,30 @@ void SideBarPlayerPainter::PaintSeatPictures(const std::vector<SideBarSeat>& sea
 	//NOTE: badges after all pictures - the next picture's gray margin overlaps the badge row
 	for (const auto [seat, picture]: seated)
 	{
-		const auto badgeIn = [this, &picture](const Point cell)
+		//NOTE: two cells, the helmet rightmost; three badges squeeze into thirds
+		const std::array badges{std::pair{TextureOffset::kBonusTimer, seat.frozen},
+								std::pair{TextureOffset::kBonusShip, seat.ship},
+								std::pair{TextureOffset::kBonusHelmet, seat.helmet}};
+		const auto isShown = [](const auto& badge) { return badge.second.has_value(); };
+		const auto cells{std::max(std::ranges::count_if(badges, isShown), std::ptrdiff_t{2})};
+		const double cellWidth{SideBarCanvas::kCell * 2.0 / static_cast<double>(cells)};
+		std::ptrdiff_t nextCell{};
+		for (const auto [order, badge]: std::views::zip(std::views::iota(std::ptrdiff_t{}), badges))
 		{
-			return SideBarCanvas::Inset(_canvas.Rect(SideBarCanvas::CellOff(picture, cell)), SideBarCanvas::kCellMargin,
-										SideBarCanvas::kBadgeMarginDown);
-		};
-		_canvas.DrawBadge(TextureOffset::kBonusTimer, seat.frozen, badgeIn(timerCell));
-		_canvas.DrawBadge(TextureOffset::kBonusHelmet, seat.helmet, badgeIn(helmetCell));
+			if (!isShown(badge))
+			{
+				continue;
+			}
+
+			const std::ptrdiff_t cell{order + 1 == std::ssize(badges) ? cells - 1 : nextCell++};
+			const ObjRectangle place{.x = picture.x + badgeRow.x + cellWidth * static_cast<double>(cell),
+									 .y = picture.y + badgeRow.y,
+									 .w = cellWidth,
+									 .h = SideBarCanvas::kCell};
+			_canvas.DrawBadge(badge.first, badge.second,
+							  SideBarCanvas::Inset(_canvas.Rect(place), SideBarCanvas::kCellMargin,
+												   SideBarCanvas::kBadgeMarginDown));
+		}
 	}
 }
 
@@ -139,6 +155,7 @@ void SideBarPlayerPainter::PaintSeatRows(const std::vector<SideBarSeat>& seats, 
 	constexpr int timerCell{0};
 	constexpr int numberCell{1};
 	constexpr int helmetCell{3};
+	constexpr int shipCell{4};
 
 	for (const auto [index, seat]: std::views::zip(std::views::iota(0), seats))
 	{
@@ -170,6 +187,7 @@ void SideBarPlayerPainter::PaintSeatRows(const std::vector<SideBarSeat>& seats, 
 		_canvas.DrawBadge(TextureOffset::kBonusTimer, seat.frozen, badgeIn(timerCell));
 		words.Add(std::to_string(index + 1) + "P", _canvas.Rect(SideBarCanvas::GlyphCells(number)), barFont);
 		_canvas.DrawBadge(TextureOffset::kBonusHelmet, seat.helmet, badgeIn(helmetCell));
+		_canvas.DrawBadge(TextureOffset::kBonusShip, seat.ship, badgeIn(shipCell));
 		words.Add(std::to_string(seat.lives), _canvas.Rect(SideBarCanvas::GlyphCells(cell(kRowLivesCell, 1))),
 				  barFont);
 	}

@@ -5,6 +5,7 @@
 #include "components/events/SpawnEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/GameModeEvents.h"
+#include "components/events/ObjectLifecycleEvents.h"
 #include "components/events/RenderUIEvents.h"
 #include "entities/EffectTarget.h"
 #include "enums/Author.h"
@@ -42,6 +43,8 @@ void RightSideBar::Subscribe()
 	_subs.push_back(_events->AddListener(this, &RightSideBar::OnMapLoaded));
 	_subs.push_back(_events->AddListener(this, &RightSideBar::OnSeatHoldersAnnounced));
 	_subs.push_back(_events->AddListener(this, &RightSideBar::OnBonusEffectsChanged));
+	_subs.push_back(_events->AddListener(this, &RightSideBar::OnBonusShipApplied));
+	_subs.push_back(_events->AddListener(this, &RightSideBar::OnTankDied));
 }
 
 void RightSideBar::Draw() const
@@ -125,6 +128,7 @@ std::vector<SideBarSeat> RightSideBar::Seats() const
 							   return FreezesSeat(effect.type, effect.target, effect.spared, side, seat);
 						   }),
 						   .helmet = HelmetSpent(seat),
+						   .ship = _ships[SeatIndex(slot)] ? std::optional{0.f} : std::nullopt,
 						   .label = LabelOf(slot)};
 	};
 
@@ -207,6 +211,7 @@ void RightSideBar::OnGameReset(const GameResetEvent&)
 {
 	_effects.clear();
 	_enemyBadges.clear();
+	_ships.fill(false);
 }
 
 void RightSideBar::OnRespawnCountChangedTo(const RespawnCountChangedToEvent& event)
@@ -217,7 +222,18 @@ void RightSideBar::OnRespawnCountChangedTo(const RespawnCountChangedToEvent& eve
 
 void RightSideBar::OnMapLoaded(const MapLoadedEvent& event) { _stageNumber = event.stage; }
 
-void RightSideBar::OnSeatHoldersAnnounced(const SeatHoldersAnnouncedEvent& event) { _holders = event.holders; }
+//NOTE: a seat given up takes its tank off the field with no death
+void RightSideBar::OnSeatHoldersAnnounced(const SeatHoldersAnnouncedEvent& event)
+{
+	_holders = event.holders;
+	for (auto&& [holder, ship]: std::views::zip(_holders, _ships))
+	{
+		if (holder == SeatHolder::Empty)
+		{
+			ship = false;
+		}
+	}
+}
 
 void RightSideBar::OnBonusEffectsChanged(const BonusEffectsChangedEvent& event)
 {
@@ -232,4 +248,26 @@ void RightSideBar::OnBonusEffectsChanged(const BonusEffectsChangedEvent& event)
 
 	_effects = event.effects | std::views::transform(toRunning) | std::ranges::to<std::vector>();
 	PlaceEnemyBadges();
+}
+
+void RightSideBar::OnBonusShipApplied(const BonusShipAppliedEvent& event)
+{
+	const std::optional<PlayerSlot> slot{SlotOf(event.author)};
+	if (!slot)
+	{
+		return;
+	}
+
+	_ships[SeatIndex(*slot)] = event.isActive;
+}
+
+void RightSideBar::OnTankDied(const TankDiedEvent& event)
+{
+	const std::optional<PlayerSlot> slot{SlotOf(event.who)};
+	if (!slot)
+	{
+		return;
+	}
+
+	_ships[SeatIndex(*slot)] = false;
 }

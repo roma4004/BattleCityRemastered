@@ -202,7 +202,16 @@ TEST_F(TankSpawnerTest, PlayAsClientGameModeStart)
 
 	ApplyGameMode(GameMode::PlayAsClient);
 	_events->EmitEvent(GameResetEvent{});
-	_events->EmitEvent(RespawnTanksEvent{});
+	double x{};
+	for (const TankType type: {TankType::PLAYER1, TankType::PLAYER2, TankType::ENEMY1, TankType::ENEMY2,
+							   TankType::ENEMY3, TankType::ENEMY4})
+	{
+		_events->EmitEvent(TankRespawnedEvent{.type = type,
+											  .model = TankModel::Basic,
+											  .uuid = UuidUtils::GetRandomUuid(),
+											  .pos = {.x = x, .y = 0.0}});
+		x += _gameConfig.tankSize * 2.0;
+	}
 
 	EXPECT_EQ(spawning.size(), 6u);
 	EXPECT_TRUE(_allObjects.empty());

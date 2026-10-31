@@ -33,7 +33,7 @@ bool MoveLikeTankBeh::IsBlocking(const BaseObj* const object, const ObjRectangle
 		return false;
 	}
 
-	//NOTE: the ship bonus carries the tank over the water for the rest of its life
+	//NOTE: the ship bonus carries the tank over the water
 	if (_effects.isShipActive && object->GetTerrain() == Terrain::Water)
 	{
 		return false;

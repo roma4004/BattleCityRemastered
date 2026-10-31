@@ -71,7 +71,7 @@ class TankSpawner final
 		TankType type{};
 		unsigned short tier{1u};
 		unsigned int health{};
-		bool isShipActive{};
+		unsigned short shipCharges{};
 	};
 
 	const std::vector<std::shared_ptr<BaseObj>>& _allObjects;

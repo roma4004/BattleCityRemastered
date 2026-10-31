@@ -21,8 +21,7 @@ struct TankDiedEvent;
 struct BonusTankPickupEvent;
 struct PlayersBaseFinishedEvent;
 struct RespawnTanksEvent;
-struct BonusTankAppliedEvent;
-struct TankRespawnedEvent;
+struct BonusGoldenGrenadePickupEvent;
 struct SeatsFilledEvent;
 struct SeatHolderChangedEvent;
 struct WorldSnapshotRequestedEvent;
@@ -59,8 +58,7 @@ class RespawnManager final
 	unsigned short _playersDeathCount{};
 
 	void OnBonusTank(Author author);
-	void OnBonusTankApplied(const BonusTankAppliedEvent& event);
-	void OnTankRespawned(const TankRespawnedEvent& event);
+	void OnGoldenGrenadePickup(const BonusGoldenGrenadePickupEvent& event);
 	void OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const;
 	void OnWorldSnapshotReceived(const WorldSnapshotReceivedEvent& event);
 	void OnSeatsFilled(const SeatsFilledEvent& event);

@@ -3,6 +3,8 @@
 #include "components/events/BonusPickupEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/ReplicationEvents.h"
+#include "enums/Author.h"
+#include "enums/Faction.h"
 #include "enums/ObstacleType.h"
 #include "application/GameConfig.h"
 #include <optional>
@@ -17,6 +19,7 @@ void EagleTile::Subscribe()
 	if (_gameConfig.IsAuthority())
 	{
 		_subs.push_back(_events->AddListener(this, &EagleTile::OnBonusShovel));
+		_subs.push_back(_events->AddListener(this, &EagleTile::OnBonusShovelPickup));
 	}
 }
 
@@ -40,6 +43,15 @@ void EagleTile::OnBonusShovel(const BonusShovelStatusChangeEvent& event)
 	if (_gameConfig.IsHost())
 	{
 		_events->EmitEvent(HealthChangedEvent{.health = GetHealth(), .uuid = _uuid});
+	}
+}
+
+//NOTE: half the full health - a whole eagle lives, one at half or less falls
+void EagleTile::OnBonusShovelPickup(const BonusShovelPickupEvent& event)
+{
+	if (event.isSuper && event.faction != Faction::PlayerTeam)
+	{
+		TakeDamage(kHealth / 2u, Author::None);
 	}
 }
 

@@ -76,11 +76,14 @@ void BindHostBonus(ReplicationPublisher& out)
 	});
 	out.Bind<BonusShipAppliedEvent>([](const auto& e)
 	{
-		return commands::BonusStatus{.author = e.author, .bonusType = BonusType::Ship};
+		return commands::BonusStatus{.author = e.author,
+									 .bonusType = BonusType::Ship,
+									 .isEnable = e.isActive,
+									 .charges = e.charges};
 	});
-	out.Bind<BonusTankAppliedEvent>([](const auto& e)
+	out.Bind<RespawnCountChangedToEvent>([](const auto& e)
 	{
-		return commands::BonusStatus{.author = e.author, .bonusType = BonusType::Tank};
+		return commands::RespawnCountChange{.group = e.group, .respawnCount = e.respawnCount};
 	});
 	out.Bind<BonusEffectsChangedEvent>([](const auto& e) { return commands::BonusEffects{.effects = e.effects}; });
 }

@@ -17,6 +17,7 @@ namespace
 {
 constexpr double kAtlasCellSize{16.0};
 constexpr int kBonusSpawnFrames{3};
+constexpr int kWaterScrollSteps{16};
 
 //NOTE: entity sprites only - UI reads TextureOffset directly and never lands here
 ObjRectangle GetTextureRect(const TextureType texture)
@@ -144,8 +145,13 @@ TextureManager::AtlasFrames TextureManager::GetAnimFrames(const AnimationType ty
 	switch (type)
 	{
 		case AnimationType::Water_Flow:
-			//NOTE: the water frames sit to the left of the offset, so they are walked backwards
-			return AtlasFrames{.first = TextureOffset::kWater, .step = -1};
+		{
+			//NOTE: the window scrolls across the water strip right to left, a pixel a frame
+			ObjRectangle scrollStart{TextureOffset::kWater};
+			scrollStart.x += kWaterScrollSteps - 1;
+
+			return AtlasFrames{.first = scrollStart, .step = -1};
+		}
 		case AnimationType::Bullet_Explosion:
 			destRect = rect.GetScaledBy(3.0);
 			return AtlasFrames{.first = TextureOffset::kBulletExplosion};

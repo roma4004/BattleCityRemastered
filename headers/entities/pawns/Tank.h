@@ -15,6 +15,7 @@ enum class Faction : char8_t;
 enum class Direction : char8_t;
 enum class TankModel : char8_t;
 enum class TankType : char8_t;
+enum class Terrain : char8_t;
 struct UPoint;
 struct TankResetProperty;
 struct PosChangedEvent;
@@ -30,6 +31,7 @@ struct BonusGrenadePickupEvent;
 struct BonusStarPickupEvent;
 struct BonusCaliberPickupEvent;
 struct BonusShipPickupEvent;
+struct BonusTeamShipPickupEvent;
 struct WorldSnapshotRequestedEvent;
 class IInputProvider;
 class MoveLikeTankBeh;
@@ -70,11 +72,12 @@ class Tank final : public Pawn
 	void OnBonusHelmetApplied(const BonusHelmetAppliedEvent& event);
 	void OnTierChanged(const TierChangedEvent& event);
 	void OnTankGrew(const TankGrewEvent& event);
-	void OnBonusShipApplied(const BonusShipAppliedEvent&);
+	void OnBonusShipApplied(const BonusShipAppliedEvent& event);
 	void OnBonusHelmetStatusChange(const BonusHelmetStatusChangeEvent& event);
 	void OnBonusStarPickup(const BonusStarPickupEvent& event);
 	void OnBonusCaliberPickup(const BonusCaliberPickupEvent& event);
 	void OnBonusShipPickup(const BonusShipPickupEvent& event);
+	void OnBonusTeamShipPickup(const BonusTeamShipPickupEvent& event);
 	void OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const;
 
 	void OnBonusTimer(const BonusTimerStatusChangeEvent& event);
@@ -122,7 +125,11 @@ class Tank final : public Pawn
 	void ApplyTier(unsigned short tier);
 	void OnBonusStar();
 	void OnBonusCaliber();
-	void OnBonusShip();
+	//NOTE: tops the charges up, never adds
+	void BoardShip(unsigned short charges);
+	void AnnounceShip() const;
+	//NOTE: waits for land - lost on water, it would strand the tank
+	void DropSpentShipAshore();
 
 protected:
 	BonusEffectProperty _effects{};
@@ -141,8 +148,7 @@ protected:
 
 	void HandleBonusPickUp(BaseObj& object);
 	void OnPosChanged(const PosChangedEvent& event) override;
-	[[nodiscard]] bool IsTouchBush() const;
-	[[nodiscard]] bool IsTouchIce() const;
+	[[nodiscard]] bool IsTouching(Terrain terrain) const;
 
 public:
 	static constexpr CollisionTags kCollision{tags::Impassable{}, tags::Destructible{}, tags::Impenetrable{},

@@ -41,7 +41,7 @@ void Map::CreateObstacles(const double cellSize, const bool isBaseless) const
 
 void Map::CreateBonuses(const double bonusSize, const double cellSize, const bool isBaseless) const
 {
-	for (const auto& [col, row, type]: _data.bonuses)
+	for (const auto& [col, row, type, isSuper]: _data.bonuses)
 	{
 		//NOTE: checked here too, not only in the loader - MapData is a plain struct anyone can fill
 		if (!IsSpawnableBonus(type) || (isBaseless && type == BonusType::Shovel))
@@ -54,6 +54,6 @@ void Map::CreateBonuses(const double bonusSize, const double cellSize, const boo
 								.w = bonusSize,
 								.h = bonusSize};
 
-		_events->EmitEvent(SpawnMapBonusEvent{.rect = rect, .type = type});
+		_events->EmitEvent(SpawnMapBonusEvent{.rect = rect, .type = type, .isSuper = isSuper});
 	}
 }

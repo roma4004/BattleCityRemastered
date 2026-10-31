@@ -109,10 +109,20 @@ void UiRenderer::Subscribe()
 	_subs.push_back(_events->AddListener(this, &UiRenderer::DrawPlate));
 
 	_subs.push_back(_events->AddListener(this, &UiRenderer::OnRenderDeviceReset));
+	_subs.push_back(_events->AddListener(this, &UiRenderer::OnPresentFrame));
 }
 
 //NOTE: text comes back from the font
 void UiRenderer::OnRenderDeviceReset(const RenderDeviceResetEvent&) { _textCache.Clear(); }
+
+//NOTE: no list this frame, no rows - a click must not answer a panel already gone
+void UiRenderer::OnPresentFrame(const PresentFrameEvent&) const
+{
+	if (!std::exchange(_isPanelRowsAnnounced, false))
+	{
+		AnnouncePanelRows({}, {}, 0);
+	}
+}
 
 int UiRenderer::PanelFit::PointSize(const std::span<const UiTable> words, const SDL_Rect& panel,
 									const float renderScale, const std::function<bool(int)>& goesIn)
@@ -576,6 +586,7 @@ void UiRenderer::AnnounceMenuTiles(const UiLayout::Placement& modes) const
 
 void UiRenderer::AnnouncePanelRows(const std::vector<Point>& rows, const Point rowSize, const int symbolWidth) const
 {
+	_isPanelRowsAnnounced = !rows.empty();
 	if (rows == _panelRowPlaces && rowSize == _panelRowSize && symbolWidth == _panelSymbolWidth)
 	{
 		return;

@@ -120,6 +120,7 @@ struct SideBarSeat
 	unsigned short lives{};
 	std::optional<float> frozen{};
 	std::optional<float> helmet{};
+	std::optional<float> ship{};
 	std::string label{};
 };
 

@@ -238,7 +238,12 @@ void Tank::OnTierChanged(const TierChangedEvent& event)
 
 void Tank::OnTankGrew(const TankGrewEvent& event) { _rect = event.rect; }
 
-void Tank::OnBonusShipApplied(const BonusShipAppliedEvent&) { OnBonusShip(); }
+void Tank::OnBonusShipApplied(const BonusShipAppliedEvent& event)
+{
+	_effects.isShipActive = event.isActive;
+	_effects.shipCharges = event.charges;
+	AnnounceShip();
+}
 
 void Tank::SubscribeBonus()
 {
@@ -248,6 +253,7 @@ void Tank::SubscribeBonus()
 	_subs.push_back(_events->AddListener(Key(_author), this, &Tank::OnBonusStarPickup));
 	_subs.push_back(_events->AddListener(Key(_author), this, &Tank::OnBonusCaliberPickup));
 	_subs.push_back(_events->AddListener(Key(_author), this, &Tank::OnBonusShipPickup));
+	_subs.push_back(_events->AddListener(Key(_faction), this, &Tank::OnBonusTeamShipPickup));
 }
 
 void Tank::OnBonusHelmetStatusChange(const BonusHelmetStatusChangeEvent& event) { OnBonusHelmet(event.isActive); }
@@ -256,7 +262,9 @@ void Tank::OnBonusStarPickup(const BonusStarPickupEvent&) { OnBonusStar(); }
 
 void Tank::OnBonusCaliberPickup(const BonusCaliberPickupEvent&) { OnBonusCaliber(); }
 
-void Tank::OnBonusShipPickup(const BonusShipPickupEvent&) { OnBonusShip(); }
+void Tank::OnBonusShipPickup(const BonusShipPickupEvent& event) { BoardShip(event.charges); }
+
+void Tank::OnBonusTeamShipPickup(const BonusTeamShipPickupEvent& event) { BoardShip(event.charges); }
 
 void Tank::OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const
 {
@@ -268,15 +276,29 @@ void Tank::OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) co
 												.health = GetHealth(),
 												.tier = _tier,
 												.isHelmetActive = _effects.isHelmetActive,
-												.isShipActive = _effects.isShipActive});
+												.isShipActive = _effects.isShipActive,
+												.shipCharges = _effects.shipCharges});
 }
 
+//NOTE: the helmet takes a hit before the ship does
 void Tank::TakeDamage(const unsigned int damage, const Author author)
 {
-	if (!_effects.isHelmetActive)
+	if (_effects.isHelmetActive)
 	{
-		Pawn::TakeDamage(damage, author);
+		return;
 	}
+
+	if (_effects.shipCharges > 0u)
+	{
+		--_effects.shipCharges;
+		//NOTE: spent ashore, the ship goes at once; afloat, on landing
+		_effects.isShipActive = _effects.shipCharges > 0u || IsTouching(Terrain::Water);
+		AnnounceShip();
+
+		return;
+	}
+
+	Pawn::TakeDamage(damage, author);
 }
 
 unsigned int Tank::GetTier() const noexcept { return _tier; }
@@ -470,8 +492,9 @@ void Tank::TickUpdate(const double deltaTime)
 		outCollisions.clear();
 	}
 
-	_effects.isTouchTheBushes = IsTouchBush();
-	if (const bool isTouchTheIce{IsTouchIce()};
+	_effects.isTouchTheBushes = IsTouching(Terrain::Bush);
+	DropSpentShipAshore();
+	if (const bool isTouchTheIce{IsTouching(Terrain::Ice)};
 		_effects.isTouchTheIce != isTouchTheIce)
 	{
 		_effects.isTouchTheIce = isTouchTheIce;
@@ -601,19 +624,36 @@ void Tank::OnBonusStar() { Upgrade(kStarTiers); }
 
 void Tank::OnBonusCaliber() { Upgrade(kCaliberTiers); }
 
-void Tank::OnBonusShip()
+//NOTE: a tank killed this tick hears until the sweep
+void Tank::BoardShip(const unsigned short charges)
 {
-	if (_effects.isShipActive)
+	if (!GetIsAlive() || _effects.shipCharges >= charges)
 	{
 		return;
 	}
 
 	_effects.isShipActive = true;
+	_effects.shipCharges = charges;
+	AnnounceShip();
+}
 
-	if (_gameConfig.IsHost())
+//NOTE: on every side - the side bar listens too, not only the client
+void Tank::AnnounceShip() const
+{
+	_events->EmitEvent(BonusShipAppliedEvent{.author = _author,
+											 .isActive = _effects.isShipActive,
+											 .charges = _effects.shipCharges});
+}
+
+void Tank::DropSpentShipAshore()
+{
+	if (!_effects.isShipActive || _effects.shipCharges > 0u || IsTouching(Terrain::Water))
 	{
-		_events->EmitEvent(BonusShipAppliedEvent{.author = _author});
+		return;
 	}
+
+	_effects.isShipActive = false;
+	AnnounceShip();
 }
 
 void Tank::EmitDamageStatistics(const Author author)
@@ -655,32 +695,17 @@ void Tank::OnPosChanged(const PosChangedEvent& event)
 {
 	Pawn::OnPosChanged(event);
 
-	_effects.isTouchTheBushes = IsTouchBush();
+	_effects.isTouchTheBushes = IsTouching(Terrain::Bush);
 
 	//NOTE: the client's only move, so the track turns from here
 	++_trackSteps;
 }
 
-bool Tank::IsTouchBush() const
+bool Tank::IsTouching(const Terrain terrain) const
 {
-	auto bushCollisionsFilter{_allObjects | std::views::filter([this](const std::shared_ptr<BaseObj>& object)
+	return std::ranges::any_of(_allObjects, [this, terrain](const std::shared_ptr<BaseObj>& object)
 	{
-		return _uuid != object->GetUuid()
-			   && ColliderUtils::IsCollide(_rect, object->GetRect())
-			   && object->GetTerrain() == Terrain::Bush;
-	})};
-
-	return !bushCollisionsFilter.empty();
-}
-
-bool Tank::IsTouchIce() const
-{
-	auto bushCollisionsFilter{_allObjects | std::views::filter([this](const std::shared_ptr<BaseObj>& object)
-	{
-		return _uuid != object->GetUuid()
-			   && ColliderUtils::IsCollide(_rect, object->GetRect())
-			   && object->GetTerrain() == Terrain::Ice;
-	})};
-
-	return !bushCollisionsFilter.empty();
+		return _uuid != object->GetUuid() && object->GetTerrain() == terrain
+			   && ColliderUtils::IsCollide(_rect, object->GetRect());
+	});
 }

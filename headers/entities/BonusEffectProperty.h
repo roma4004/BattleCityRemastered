@@ -6,4 +6,5 @@ struct BonusEffectProperty
 	bool isTouchTheBushes{};
 	bool isTouchTheIce{};
 	bool isShipActive{};
+	unsigned short shipCharges{};
 };

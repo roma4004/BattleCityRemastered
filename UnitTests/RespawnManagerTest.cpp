@@ -20,8 +20,8 @@
 #include "enums/RespawnGroup.h"
 #include "enums/TankModel.h"
 #include "enums/TankType.h"
+#include "utils/TimeUtils.h"
 #include "utils/Uuid.h"
-#include "utils/UuidUtils.h"
 #include "gtest/gtest.h"
 #include <algorithm>
 #include <array>
@@ -29,6 +29,7 @@
 #include <memory>
 #include <optional>
 #include <ranges>
+#include <string_view>
 #include <tuple>
 #include <vector>
 
@@ -86,13 +87,21 @@ protected:
 		_allObjects.erase(tank);
 	}
 
-	void TakeAnExtraLife(const Author author)
+	void TakeBonus(const Author author, const BonusType type, const bool isSuper = false)
 	{
-		_bonusSpawner->SpawnBonus({.w = _gameConfig.tankSize, .h = _gameConfig.tankSize}, BonusType::Tank);
+		_bonusSpawner->SpawnBonus({.w = _gameConfig.tankSize, .h = _gameConfig.tankSize}, type, {}, isSuper);
 		const auto bonus{std::dynamic_pointer_cast<Bonus>(_allObjects.back())};
 		ASSERT_NE(bonus, nullptr);
 		bonus->PickUpBonus(author);
 		_allObjects.pop_back();
+	}
+
+	[[nodiscard]] std::size_t AliveOf(const Faction side) const
+	{
+		return static_cast<std::size_t>(std::ranges::count_if(_allObjects, [side](const auto& object)
+		{
+			return object->GetFaction() == side && object->GetIsAlive();
+		}));
 	}
 };
 
@@ -193,7 +202,7 @@ TEST_F(RespawnManagerTest, AnEmptiedEnemyPoolWins)
 		_result.reset();
 		if (pool.extraLife)
 		{
-			TakeAnExtraLife(Author::Enemy1);
+			TakeBonus(Author::Enemy1, BonusType::Tank);
 		}
 
 		//NOTE: the field is topped up before every death, so each one is a tank the match really put down
@@ -206,6 +215,65 @@ TEST_F(RespawnManagerTest, AnEmptiedEnemyPoolWins)
 
 		EXPECT_EQ(_result, GameState::Won);
 	}
+}
+
+// a golden grenade kills the enemies on the field and takes as many off the reserve, down to none
+TEST_F(RespawnManagerTest, APlayersGoldenGrenadeTakesTheFieldOffTheEnemyReserveToo)
+{
+	struct Reserve final
+	{
+		std::string_view why;
+		unsigned short enemies{};
+		bool isWon{};
+	};
+
+	for (const Reserve& level: {Reserve{.why = "a reserve deeper than the field", .enemies = 20u},
+								Reserve{.why = "one left behind the field", .enemies = 5u, .isWon = true}})
+	{
+		SCOPED_TRACE(level.why);
+		_events->EmitEvent(GameResetEvent{});
+		_allObjects.clear();
+		_result.reset();
+		_events->EmitEvent(EnemyLineupLoadedEvent{.count = level.enemies});
+		for ([[maybe_unused]] const int seat: std::views::iota(0, 4))
+		{
+			_events->EmitEvent(RespawnTanksEvent{});
+			TimeUtils::Advance(_gameConfig.enemySpawnCooldown);
+		}
+		const std::size_t onField{AliveOf(Faction::EnemyTeam)};
+		ASSERT_GT(onField, 1u) << "the field did not fill";
+		const unsigned short reserve{_lives.at(RespawnGroup::ENEMY_ALL)};
+
+		TakeBonus(Author::Player1, BonusType::Grenade, true);
+
+		EXPECT_EQ(AliveOf(Faction::EnemyTeam), 0u);
+		const std::size_t left{reserve > onField ? reserve - onField : 0u};
+		EXPECT_EQ(_lives.at(RespawnGroup::ENEMY_ALL), left);
+		EXPECT_EQ(_result == GameState::Won, level.isWon);
+
+		_tanksAsked.clear();
+		_events->EmitEvent(RespawnTanksEvent{});
+		const auto isEnemy = [](const TankType type) { return !SlotOf(type); };
+		EXPECT_EQ(std::ranges::count_if(_tanksAsked | std::views::keys, isEnemy), std::min(left, onField));
+	}
+}
+
+// an enemy's kills the players and takes a life more off each
+TEST_F(RespawnManagerTest, AnEnemysGoldenGrenadeTakesALifeMoreOffEachPlayer)
+{
+	ApplyGameMode(GameMode::TwoPlayers);
+	_events->EmitEvent(GameResetEvent{});
+	_events->EmitEvent(RespawnTanksEvent{});
+	ASSERT_EQ(AliveOf(Faction::PlayerTeam), 2u);
+	const unsigned short firstLives{_lives.at(RespawnGroup::PLAYER1)};
+	const unsigned short secondLives{_lives.at(RespawnGroup::PLAYER2)};
+
+	TakeBonus(Author::Enemy1, BonusType::Grenade, true);
+
+	EXPECT_EQ(AliveOf(Faction::PlayerTeam), 0u);
+	EXPECT_EQ(_lives.at(RespawnGroup::PLAYER1), firstLives - 1u);
+	EXPECT_EQ(_lives.at(RespawnGroup::PLAYER2), secondLives - 1u);
+	EXPECT_FALSE(_result.has_value()) << "lives were left, yet the match ended";
 }
 
 // the player's last life spent loses the match - three of them
@@ -238,7 +306,7 @@ TEST_F(RespawnManagerTest, ALifeTakenAfterTheEagleFellBuysOneMoreDeath)
 {
 	_events->EmitEvent(RespawnTanksEvent{});
 	_events->EmitEvent(PlayersBaseFinishedEvent{});
-	TakeAnExtraLife(Author::Player1);
+	TakeBonus(Author::Player1, BonusType::Tank);
 
 	KillOne(Faction::PlayerTeam);
 	ASSERT_FALSE(_result.has_value()) << "the extra life bought nothing";
@@ -346,21 +414,6 @@ TEST_F(RespawnManagerTest, ASeatWhoseBotSpentEveryLifeIsGivenTheStartingLivesBac
 	_events->EmitEvent(RespawnTanksEvent{});
 	EXPECT_TRUE(_tanksAsked.contains(TankType::PLAYER2)) << "the newcomer was given no tank";
 	EXPECT_EQ(_lives.at(RespawnGroup::PLAYER2), 2u) << "coming in spent a life the seat never got back";
-}
-
-// a client counts a bot's spawn off the seat it sits in, the way the host does
-TEST_F(RespawnManagerTest, AClientCountsABotsSpawnOffItsSeat)
-{
-	ApplyGameMode(GameMode::PlayAsClient);
-	_events->EmitEvent(GameResetEvent{});
-	ASSERT_EQ(_lives.at(RespawnGroup::PLAYER2), 3u);
-
-	_events->EmitEvent(TankRespawnedEvent{.type = TankType::COOP2,
-										  .model = TankModel::Player,
-										  .uuid = UuidUtils::GetRandomUuid(),
-										  .pos = {}});
-
-	EXPECT_EQ(_lives.at(RespawnGroup::PLAYER2), 2u);
 }
 
 //NOTE: taken off, not killed - the life of the tank on the field goes back to the seat for the one who comes back

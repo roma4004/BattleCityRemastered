@@ -5,6 +5,7 @@
 #include "enums/TextureOffset.h"
 #include "geometry/ObjRectangle.h"
 #include "geometry/Point.h"
+#include "utils/MathUtils.h"
 #include "utils/SdlRenderUtils.h"
 #include <algorithm>
 #include <cmath>
@@ -63,10 +64,13 @@ void SideBarCanvas::DrawBadge(const ObjRectangle& picture, const std::optional<f
 		return;
 	}
 
+	//NOTE: the badge is the bonus box without its shadow; the ship has no box
+	const bool isShip{MathUtils::AreEqualAbsolute(picture.x, TextureOffset::kBonusShip.x)
+					  && MathUtils::AreEqualAbsolute(picture.y, TextureOffset::kBonusShip.y)};
 	const SDL_FRect box{.x = static_cast<float>(picture.x),
 						.y = static_cast<float>(picture.y),
-						.w = static_cast<float>(TextureOffset::kBonusBoxWidth),
-						.h = static_cast<float>(TextureOffset::kBonusBoxHeight)};
+						.w = static_cast<float>(isShip ? picture.w : TextureOffset::kBonusBoxWidth),
+						.h = static_cast<float>(isShip ? picture.h : TextureOffset::kBonusBoxHeight)};
 	const SDL_FRect room{SdlRenderUtils::ToFRect(place)};
 	const float aspect{box.w / box.h};
 	const float width{std::min(room.w, room.h * aspect)};

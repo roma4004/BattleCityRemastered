@@ -399,7 +399,7 @@ void TankSpawner::OnNextLevelRequested(const NextLevelRequestedEvent&)
 			_nextLevelLoadouts.push_back(NextLevelLoadout{.type = tank.type,
 											   .tier = tank.tier,
 											   .health = tank.health,
-											   .isShipActive = tank.isShipActive});
+											   .shipCharges = tank.shipCharges});
 		}
 	}
 }
@@ -423,9 +423,9 @@ void TankSpawner::SpendLoadout(const Uuid uuid, const TankType type, const unsig
 	const NextLevelLoadout carried{*found};
 	_nextLevelLoadouts.erase(found);
 
-	if (carried.isShipActive)
+	if (carried.shipCharges > 0u)
 	{
-		_events->EmitEvent(Key(SeatOf(type)), BonusShipPickupEvent{});
+		_events->EmitEvent(Key(SeatOf(type)), BonusShipPickupEvent{.charges = carried.shipCharges});
 	}
 
 	if (!IsHost(_gameMode))
@@ -772,6 +772,7 @@ void TankSpawner::RestoreTank(const network::commands::TankSnapshot& tank)
 
 	if (tank.isShipActive)
 	{
-		_events->EmitEvent(Key(seat), BonusShipAppliedEvent{.author = seat});
+		_events->EmitEvent(Key(seat),
+						   BonusShipAppliedEvent{.author = seat, .isActive = true, .charges = tank.shipCharges});
 	}
 }

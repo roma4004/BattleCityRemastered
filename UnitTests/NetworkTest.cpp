@@ -25,6 +25,7 @@
 #include "enums/ObstacleType.h"
 #include "enums/PlayerSlot.h"
 #include "enums/PortForwarding.h"
+#include "enums/RespawnGroup.h"
 #include "enums/TankModel.h"
 #include "enums/TankType.h"
 #include "network/ClientNode.h"
@@ -203,7 +204,7 @@ TEST_F(NetworkTest, EveryReplicatedEventArrivesAsItself)
 	std::optional<BonusSpawnCompletedEvent> bonusLanded{};
 	std::optional<BonusHelmetAppliedEvent> helmet{};
 	std::optional<BonusShipAppliedEvent> ship{};
-	std::optional<BonusTankAppliedEvent> extraLife{};
+	std::optional<RespawnCountChangedToEvent> lives{};
 	std::optional<BonusEffectsChangedEvent> effects{};
 	std::optional<TierChangedEvent> tier{};
 	std::optional<TankGrewEvent> grew{};
@@ -229,7 +230,7 @@ TEST_F(NetworkTest, EveryReplicatedEventArrivesAsItself)
 											  [&helmet](const BonusHelmetAppliedEvent& e) { helmet = e; }));
 	subs.push_back(_clientEvents->AddListener(Key(Author::Player1),
 											  [&ship](const BonusShipAppliedEvent& e) { ship = e; }));
-	subs.push_back(_clientEvents->AddListener([&extraLife](const BonusTankAppliedEvent& e) { extraLife = e; }));
+	subs.push_back(_clientEvents->AddListener([&lives](const RespawnCountChangedToEvent& e) { lives = e; }));
 	subs.push_back(_clientEvents->AddListener([&effects](const BonusEffectsChangedEvent& e) { effects = e; }));
 	subs.push_back(_clientEvents->AddListener(Key(_uuid), [&tier](const TierChangedEvent& e) { tier = e; }));
 	subs.push_back(_clientEvents->AddListener(Key(_uuid), [&grew](const TankGrewEvent& e) { grew = e; }));
@@ -254,10 +255,10 @@ TEST_F(NetworkTest, EveryReplicatedEventArrivesAsItself)
 	_serverEvents->EmitEvent(DespawnedEvent{.uuid = _uuid, .reason = DespawnReason::PickedUp});
 	_serverEvents->EmitEvent(BonusSpawnedEvent{.pos = pos, .type = BonusType::Timer, .uuid = _uuid, .isSuper = true});
 	_serverEvents->EmitEvent(BonusSpawnCompletedEvent{.uuid = _uuid});
-	//NOTE: three effects share BonusStatus, told apart by bonusType - a swap lands the wrong effect on the wrong seat
+	//NOTE: two effects share BonusStatus, told apart by bonusType - a swap lands the wrong effect on the wrong seat
 	_serverEvents->EmitEvent(BonusHelmetAppliedEvent{.author = Author::Player1, .isActive = true});
-	_serverEvents->EmitEvent(BonusShipAppliedEvent{.author = Author::Player1});
-	_serverEvents->EmitEvent(BonusTankAppliedEvent{.author = Author::Player2});
+	_serverEvents->EmitEvent(BonusShipAppliedEvent{.author = Author::Player1, .isActive = true, .charges = 2u});
+	_serverEvents->EmitEvent(RespawnCountChangedToEvent{.group = RespawnGroup::PLAYER2, .respawnCount = 2u});
 	_serverEvents->EmitEvent(BonusEffectsChangedEvent{
 			.effects = {BonusEffectTimeLeft{.type = BonusType::Helmet,
 											.target = Author::Enemy3,
@@ -288,7 +289,7 @@ TEST_F(NetworkTest, EveryReplicatedEventArrivesAsItself)
 
 	ASSERT_TRUE(PumpUntil([&]
 	{
-		return moved && shot && health && despawned.size() == 2u && bonus && bonusLanded && helmet && ship && extraLife
+		return moved && shot && health && despawned.size() == 2u && bonus && bonusLanded && helmet && ship && lives
 			   && effects && tier && grew && respawned.size() == kTankTypes.size() && bulletHit && tankHit
 			   && tankDied && brickDied && steelDied && bonusPickup && bonusDestroyed && bonusExpired;
 	}));
@@ -307,7 +308,10 @@ TEST_F(NetworkTest, EveryReplicatedEventArrivesAsItself)
 	EXPECT_EQ(bonusLanded->uuid, _uuid);
 	EXPECT_TRUE(helmet->isActive);
 	EXPECT_EQ(ship->author, Author::Player1);
-	EXPECT_EQ(extraLife->author, Author::Player2);
+	EXPECT_TRUE(ship->isActive);
+	EXPECT_EQ(ship->charges, 2u);
+	EXPECT_EQ(lives->group, RespawnGroup::PLAYER2);
+	EXPECT_EQ(lives->respawnCount, 2u);
 	ASSERT_EQ(effects->effects.size(), 2u);
 	EXPECT_EQ(effects->effects[0].type, BonusType::Helmet);
 	EXPECT_EQ(effects->effects[0].target, EffectTarget{Author::Enemy3});

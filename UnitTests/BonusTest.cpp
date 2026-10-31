@@ -35,9 +35,11 @@
 #include <algorithm>
 #include <array>
 #include <chrono>
+#include <cmath>
 #include <cstddef>
 #include <memory>
 #include <optional>
+#include <ranges>
 #include <string_view>
 #include <tuple>
 #include <vector>
@@ -407,6 +409,133 @@ TEST_F(BonusTest, ShipPickUpCanCrossWater)
 	EXPECT_GT(player->GetRect().y, waterRect.y + waterRect.h);
 }
 
+// a ship takes a hit for the tank, a golden one two
+TEST_F(BonusTest, AShipTakesAHitPerChargeThenTheTankDoes)
+{
+	struct Hits final
+	{
+		std::string_view why;
+		bool isSuper{};
+		int hits{};
+		bool isHurt{};
+	};
+
+	for (const Hits& row: {Hits{.why = "a ship takes the first hit", .hits = 1},
+						   Hits{.why = "and is gone after it", .hits = 2, .isHurt = true},
+						   Hits{.why = "a golden one takes two", .isSuper = true, .hits = 2},
+						   Hits{.why = "and the third gets through", .isSuper = true, .hits = 3, .isHurt = true}})
+	{
+		SCOPED_TRACE(row.why);
+		_events->EmitEvent(GameResetEvent{});
+		_allObjects.clear();
+		const auto player{CreatePlayer({.x = 0.0, .y = 0.0})};
+		_bonusSpawner->SpawnBonus({.x = _tankSize * 3.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize},
+								  BonusType::Ship, {}, row.isSuper);
+		const auto ship{std::dynamic_pointer_cast<Bonus>(_allObjects.back())};
+		ASSERT_NE(ship, nullptr);
+		ship->PickUpBonus(Author::Player1);
+		const unsigned int fullHealth{player->GetHealth()};
+
+		for (int hit{}; hit < row.hits; ++hit)
+		{
+			player->TakeDamage(1u, Author::Enemy1);
+		}
+
+		EXPECT_EQ(player->GetHealth() < fullHealth, row.isHurt);
+	}
+}
+
+// a golden ship covers the taker's team, a plain one the taker alone
+TEST_F(BonusTest, AGoldenShipGoesToTheTakersTeam)
+{
+	struct Take final
+	{
+		std::string_view why;
+		GameMode mode{};
+		bool isSuper{};
+		bool isMateCovered{};
+	};
+
+	const GameMode teamMode{_gameConfig.gameMode};
+	for (const Take& take: {Take{.why = "a plain ship", .mode = teamMode},
+							Take{.why = "a golden one", .mode = teamMode, .isSuper = true, .isMateCovered = true},
+							Take{.why = "a golden one in a free-for-all",
+								 .mode = GameMode::FreeForAll,
+								 .isSuper = true}})
+	{
+		SCOPED_TRACE(take.why);
+		_events->EmitEvent(GameResetEvent{});
+		_allObjects.clear();
+		_gameConfig.gameMode = take.mode;
+		const auto taker{CreatePlayer({.x = 0.0, .y = 0.0})};
+		const auto mate{CreatePlayer({.x = _tankSize * 2.0, .y = 0.0}, Author::Player2)};
+		const auto enemy{CreateBot({.x = _tankSize * 4.0, .y = 0.0}, Author::Enemy1, Direction::DOWN)};
+		_bonusSpawner->SpawnBonus({.x = _tankSize * 3.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize},
+								  BonusType::Ship, {}, take.isSuper);
+		const auto ship{std::dynamic_pointer_cast<Bonus>(_allObjects.back())};
+		ASSERT_NE(ship, nullptr);
+		ship->PickUpBonus(Author::Player1);
+		const unsigned int fullHealth{taker->GetHealth()};
+
+		for (const auto& tank: {taker, mate, enemy})
+		{
+			tank->TakeDamage(1u, Author::None);
+		}
+
+		EXPECT_EQ(taker->GetHealth(), fullHealth) << "the taker went without";
+		EXPECT_EQ(mate->GetHealth() == fullHealth, take.isMateCovered);
+		EXPECT_LT(enemy->GetHealth(), fullHealth) << "the other side got it too";
+	}
+
+	_gameConfig.gameMode = teamMode;
+}
+
+// a ship lost afloat carries the tank ashore; lost ashore, the water stops the tank
+TEST_F(BonusTest, AShipLostAfloatCarriesTheTankAshore)
+{
+	for (const bool isHitAfloat: {false, true})
+	{
+		SCOPED_TRACE(isHitAfloat ? "hit afloat" : "hit ashore");
+		_events->EmitEvent(GameResetEvent{});
+		_allObjects.clear();
+		const auto player{CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN)};
+		//NOTE: cells, as on a map, wider than the tank - it slips past a narrow lake
+		const ObjRectangle lake{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize * 3.0, .h = _gridSize * 2.0};
+		const auto columns{std::views::iota(0, static_cast<int>(std::ceil(lake.w / _gridSize)))};
+		for (const auto [column, row]: std::views::cartesian_product(columns, std::views::iota(0, 2)))
+		{
+			_events->EmitEvent(SpawnObstacleEvent{.rect = {.x = lake.x + _gridSize * column,
+														   .y = lake.y + _gridSize * row,
+														   .w = _gridSize,
+														   .h = _gridSize},
+												  .type = ObstacleType::Water});
+		}
+		_bonusSpawner->SpawnBonus({.x = _tankSize * 3.0, .y = 0.0, .w = _tankSize, .h = _tankSize}, BonusType::Ship);
+		const auto ship{std::dynamic_pointer_cast<Bonus>(_allObjects.back())};
+		ASSERT_NE(ship, nullptr);
+		ship->PickUpBonus(Author::Player1);
+		_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = true});
+
+		constexpr int framesToReachWater{100};
+		for (int frame{}; frame < framesToReachWater && isHitAfloat
+						  && player->GetRect().y + player->GetRect().h <= lake.y; ++frame)
+		{
+			_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		}
+
+		ASSERT_EQ(player->GetRect().y + player->GetRect().h > lake.y, isHitAfloat);
+		player->TakeDamage(1u, Author::Enemy1);
+
+		constexpr int framesToCrossWater{100};
+		for (int frame{}; frame < framesToCrossWater; ++frame)
+		{
+			_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		}
+
+		EXPECT_EQ(player->GetRect().y > lake.y + lake.h, isHitAfloat);
+	}
+}
+
 // a dropped bonus waits out its burst: the world stays empty until the animation reports the end
 TEST_F(BonusTest, DelayedSpawnLandsAfterAnimation)
 {
@@ -600,6 +729,50 @@ TEST_F(BonusTest, ShovelPickUpByEnemyLeavesTheEagleWounded)
 	_events->EmitEvent(BonusShovelPickupEvent{.faction = Faction::EnemyTeam});
 
 	EXPECT_EQ(woundedHealth, eagle->GetHealth());
+}
+
+// the enemies' golden shovel takes half the eagle's health, the players' one heals it
+TEST_F(BonusTest, AGoldenShovelTakenByEnemiesHitsTheEagle)
+{
+	struct Take final
+	{
+		std::string_view why;
+		Author taker{};
+		bool isHalfDown{};
+		bool isAlive{};
+		bool isWhole{};
+	};
+
+	for (const Take& take: {Take{.why = "a whole eagle lives through it", .taker = Author::Enemy1, .isAlive = true},
+							Take{.why = "one half down falls", .taker = Author::Enemy1, .isHalfDown = true},
+							Take{.why = "the players' one heals it",
+								 .taker = Author::Player1,
+								 .isHalfDown = true,
+								 .isAlive = true,
+								 .isWhole = true}})
+	{
+		SCOPED_TRACE(take.why);
+		_events->EmitEvent(GameResetEvent{});
+		_allObjects.clear();
+		_events->EmitEvent(SpawnObstacleEvent{.rect = {.x = 0.0, .y = 0.0, .w = _gridSize, .h = _gridSize},
+											  .type = ObstacleType::Eagle});
+		const std::shared_ptr<BaseObj> eagle{_allObjects.back()};
+		const unsigned int fullHealth{eagle->GetHealth()};
+		if (take.isHalfDown)
+		{
+			eagle->TakeDamage(fullHealth / 2u, Author::Enemy1);
+		}
+
+		_bonusSpawner->SpawnBonus({.x = _tankSize * 3.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize},
+								  BonusType::Shovel, {}, true);
+		const auto shovel{std::dynamic_pointer_cast<Bonus>(_allObjects.back())};
+		ASSERT_NE(shovel, nullptr);
+
+		shovel->PickUpBonus(take.taker);
+
+		ASSERT_EQ(eagle->GetIsAlive(), take.isAlive);
+		EXPECT_EQ(eagle->GetHealth() == fullHealth, take.isWhole);
+	}
 }
 
 // the enemy shovel ends the player's effect - left running, it swallows the next pickup as an extension

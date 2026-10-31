@@ -13,5 +13,7 @@ struct BonusStatus final
 	Author author{};
 	BonusType bonusType{};
 	bool isEnable{};
+	//NOTE: the ship's only
+	unsigned short charges{};
 };
 }//namespace network::commands

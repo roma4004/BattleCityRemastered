@@ -29,6 +29,7 @@ struct PanelScroll;
 struct PanelCaret;
 struct PanelDropDown;
 struct RenderDeviceResetEvent;
+struct PresentFrameEvent;
 class GameConfig;
 
 //NOTE: the screens over the world - menu, scoreboard, lobby, side bar, plates; the frame is RenderManager's
@@ -57,6 +58,7 @@ class UiRenderer final
 	mutable std::vector<Point> _panelRowPlaces{};
 	mutable Point _panelRowSize{};
 	mutable int _panelSymbolWidth{};
+	mutable bool _isPanelRowsAnnounced{};
 
 	//NOTE: no sprite means the whole texture
 	struct IconSource final
@@ -76,6 +78,7 @@ class UiRenderer final
 
 	void Subscribe();
 	void OnRenderDeviceReset(const RenderDeviceResetEvent&);
+	void OnPresentFrame(const PresentFrameEvent&) const;
 
 	void DrawMenuBackground(const RenderMenuBackgroundEvent& event) const;
 	void DrawMenu(const RenderMenuEvent& event) const;

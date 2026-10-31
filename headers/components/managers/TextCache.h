@@ -1,8 +1,6 @@
 #pragma once
 
-#include "application/SdlHandle.h"
 #include "geometry/Point.h"
-#include <SDL3_ttf/SDL_ttf.h>
 #include <cstddef>
 #include <memory>
 #include <string>
@@ -11,11 +9,9 @@
 
 struct SDL_Color;
 struct SDL_Config;
+struct TTF_Font;
 struct TTF_Text;
 struct TTF_TextEngine;
-
-//NOTE: declared here, not taken from SDL_Config.h - the cache needs fonts only, not the renderer and the mixer
-using FontHandle = SdlHandle<TTF_Font, TTF_CloseFont>;
 
 //NOTE: glyphs are laid out at final pixel size, so a layout is only valid for the scale that made it
 class TextCache final
@@ -90,6 +86,11 @@ private:
 		void operator()(TTF_TextEngine* engine) const noexcept;
 	};
 
+	struct FontDeleter
+	{
+		void operator()(TTF_Font* font) const noexcept;
+	};
+
 	[[nodiscard]] bool IsReady() const;
 	[[nodiscard]] TTF_Font* FontForScale(int basePointSize, float scale);
 	[[nodiscard]] TTF_TextEngine* Engine();
@@ -102,7 +103,7 @@ private:
 	std::unique_ptr<TTF_TextEngine, EngineDeleter> _engine{};
 
 	//NOTE: keyed by final pixel size - a scale change only leaves the old sizes unasked for
-	std::unordered_map<int, FontHandle> _fonts{};
+	std::unordered_map<int, std::unique_ptr<TTF_Font, FontDeleter>> _fonts{};
 
 	std::unordered_map<Key, CachedText, KeyHash, KeyEqual> _entries{};
 	std::unordered_map<Key, Point, KeyHash, KeyEqual> _measures{};

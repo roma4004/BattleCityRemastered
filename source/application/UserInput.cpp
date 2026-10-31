@@ -272,7 +272,7 @@ void UserInput::MouseEvents(const SDL_Event& event)
 		_mouseButtons.MouseLeftButton = true;
 
 		const SDL_Point mouse{ToLogical(event.button.x, event.button.y)};
-		if (_isTyping)
+		if (!_panelRows.empty())
 		{
 			ClickPanelRow(mouse);
 
@@ -303,7 +303,7 @@ void UserInput::MouseEvents(const SDL_Event& event)
 	if (event.type == SDL_EVENT_MOUSE_MOTION)
 	{
 		const SDL_Point mouse{ToLogical(event.motion.x, event.motion.y)};
-		if (_isTyping)
+		if (!_panelRows.empty())
 		{
 			HoverPanelRow(mouse);
 

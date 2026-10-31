@@ -82,7 +82,7 @@ public:
 
 	void SpawnRandomBonus(ObjRectangle rect);
 
-	void SpawnPermanentBonus(ObjRectangle rect, BonusType type);
+	void SpawnPermanentBonus(ObjRectangle rect, BonusType type, bool isSuper);
 
 	void SpawnBonus(ObjRectangle rect, BonusType type, Uuid uuid = {}, bool isSuper = false);
 };

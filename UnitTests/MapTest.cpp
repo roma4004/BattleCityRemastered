@@ -30,6 +30,7 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <utility>
 #include <vector>
 #include "TestUtils.h"//NOTE: PrintTo for the Point types
 
@@ -131,17 +132,22 @@ protected:
 	}
 };
 
-// a letter marks a bonus lying on the map: the cell under it stays free ground, the bonus is listed apart
+// a letter marks a bonus lying on the map: the cell under it stays free ground, a capital lays it golden
 TEST_F(MapTest, ALetterLaysABonusOnFreeGround)
 {
-	const auto map{MapLoader::Parse("0h00\n0000\n")};
+	for (const auto& [grid, isSuper]: {std::pair{"0h00\n0000\n", false}, std::pair{"0H00\n0000\n", true}})
+	{
+		SCOPED_TRACE(grid);
+		const auto map{MapLoader::Parse(grid)};
 
-	ASSERT_TRUE(map.has_value()) << map.error().reason;
-	EXPECT_EQ(map->At(1u, 0u), ObstacleType::None);
-	ASSERT_EQ(map->bonuses.size(), 1u);
-	EXPECT_EQ(map->bonuses.front().col, 1u);
-	EXPECT_EQ(map->bonuses.front().row, 0u);
-	EXPECT_EQ(map->bonuses.front().type, BonusType::Helmet);
+		ASSERT_TRUE(map.has_value()) << map.error().reason;
+		EXPECT_EQ(map->At(1u, 0u), ObstacleType::None);
+		ASSERT_EQ(map->bonuses.size(), 1u);
+		EXPECT_EQ(map->bonuses.front().col, 1u);
+		EXPECT_EQ(map->bonuses.front().row, 0u);
+		EXPECT_EQ(map->bonuses.front().type, BonusType::Helmet);
+		EXPECT_EQ(map->bonuses.front().isSuper, isSuper);
+	}
 }
 
 // "N enemies:" gives the level its count and the models of the first ones in order; no line, or a commented one, none

@@ -15,6 +15,7 @@ struct BonusPlacement
 	std::size_t col{};
 	std::size_t row{};
 	BonusType type{};
+	bool isSuper{};
 };
 
 struct MapData

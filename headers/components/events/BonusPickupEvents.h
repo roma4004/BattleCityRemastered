@@ -13,12 +13,30 @@ struct BonusStarPickupEvent {};
 
 struct BonusCaliberPickupEvent {};
 
-struct BonusShipPickupEvent {};
+//NOTE: keyed the same; charges are the hits it takes
+struct BonusShipPickupEvent
+{
+	unsigned short charges{};
+};
+
+//NOTE: keyed by the taker's faction
+struct BonusTeamShipPickupEvent
+{
+	unsigned short charges{};
+};
+
+inline constexpr unsigned short kGoldenShipCharges{2u};
 
 //NOTE: spares its taker, who in a free-for-all is on the side it hits
 struct BonusGrenadePickupEvent
 {
 	Author spared{};
+};
+
+//NOTE: sent before the blast, so the deaths see the reserve already cut
+struct BonusGoldenGrenadePickupEvent
+{
+	Author taker{};
 };
 
 struct BonusHelmetPickupEvent
@@ -35,6 +53,7 @@ struct BonusTankPickupEvent
 struct BonusShovelPickupEvent
 {
 	Faction faction{};
+	bool isSuper{};
 };
 
 //NOTE: whom to freeze, not who picked it up - the bonus itself decides that it hits the other side
@@ -84,12 +103,12 @@ struct BonusHelmetAppliedEvent
 	bool isActive;
 };
 
+//NOTE: out of charges, still active while afloat
 struct BonusShipAppliedEvent
 {
 	Author author{};
+	bool isActive{};
+	unsigned short charges{};
 };
 
-struct BonusTankAppliedEvent
-{
-	Author author{};
-};
+

@@ -8,6 +8,7 @@
 
 enum class Faction : char8_t;
 struct ObjRectangle;
+struct BonusShovelPickupEvent;
 struct BonusShovelStatusChangeEvent;
 class GameConfig;
 class EventSystem;
@@ -18,6 +19,7 @@ class EagleTile final : public Obstacle, public IFortress
 
 	void Subscribe() override;
 	void OnBonusShovel(const BonusShovelStatusChangeEvent& event);
+	void OnBonusShovelPickup(const BonusShovelPickupEvent& event);
 
 protected:
 	void EmitDeathStatistics(Author author) override;

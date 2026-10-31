@@ -33,6 +33,7 @@ struct TankSnapshot final
 	unsigned short tier{};
 	bool isHelmetActive{};
 	bool isShipActive{};
+	unsigned short shipCharges{};
 };
 
 struct ObstacleSnapshot final

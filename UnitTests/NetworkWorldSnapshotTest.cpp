@@ -226,7 +226,7 @@ TEST_F(NetworkWorldSnapshotTest, ObstaclesArriveAsTheyStand)
 	EXPECT_EQ(clientEagle->GetHealth(), eagle->GetHealth());
 }
 
-// a snapshot restores a spawned tank whole - place, facing, health, tier, helmet; a spawning one waits for the host
+// a snapshot restores a tank whole - place, facing, health, tier, helmet, ship; a spawning one waits for the host
 TEST_F(NetworkWorldSnapshotTest, TanksArriveAsTheyStand)
 {
 	_serverEvents->EmitEvent(SpawnAnimationFinishedEvent{.uuid = _hostTankSpawns.at(TankType::PLAYER1)});
@@ -240,7 +240,10 @@ TEST_F(NetworkWorldSnapshotTest, TanksArriveAsTheyStand)
 	host->TakeDamage(15u, Author::Enemy1);
 	_serverEvents->EmitEvent(Key(Author::Player1), BonusStarPickupEvent{});
 	_serverEvents->EmitEvent(Key(Author::Player1), BonusHelmetStatusChangeEvent{.isActive = true});
+	_serverEvents->EmitEvent(Key(Author::Player1), BonusShipPickupEvent{.charges = 2u});
 	const Uuid bursting{_hostTankSpawns.at(TankType::PLAYER2)};
+	std::optional<BonusShipAppliedEvent> ship{};
+	const EventSubscription shipSub{_clientEvents->AddListener([&ship](const BonusShipAppliedEvent& e) { ship = e; })};
 
 	Replicate();
 
@@ -252,6 +255,10 @@ TEST_F(NetworkWorldSnapshotTest, TanksArriveAsTheyStand)
 	EXPECT_EQ(client->GetTier(), 2u);
 	EXPECT_EQ(client->GetAuthor(), Author::Player1);
 	EXPECT_TRUE(client->Cover().has_value()) << "the helmet did not come with the tank";
+	ASSERT_TRUE(ship.has_value()) << "the ship did not come with the tank";
+	EXPECT_EQ(ship->author, Author::Player1);
+	EXPECT_TRUE(ship->isActive);
+	EXPECT_EQ(ship->charges, 2u);
 	const auto clientBare{std::dynamic_pointer_cast<Tank>(ClientObject(bare->GetUuid()))};
 	ASSERT_NE(clientBare, nullptr);
 	EXPECT_FALSE(clientBare->Cover().has_value()) << "a helmet gone on the host is on on the client";

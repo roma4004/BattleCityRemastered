@@ -78,6 +78,7 @@ struct SpawnMapBonusEvent
 {
 	ObjRectangle rect;
 	BonusType type;
+	bool isSuper{};
 };
 
 struct BonusReApplyEvent

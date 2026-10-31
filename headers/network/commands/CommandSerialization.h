@@ -14,6 +14,7 @@
 #include "PortForwardingChange.h"
 #include "SeatHoldersChange.h"
 #include "PositionChange.h"
+#include "RespawnCountChange.h"
 #include "RespawnTank.h"
 #include "SignalEvent.h"
 #include "SlotAssignment.h"
@@ -64,6 +65,7 @@ void serialize(Archive& ar, network::commands::BonusStatus& cmd, const unsigned 
 	ar & cmd.author;
 	ar & cmd.bonusType;
 	ar & cmd.isEnable;
+	ar & cmd.charges;
 }
 
 template<class Archive>
@@ -133,6 +135,13 @@ void serialize(Archive& ar, network::commands::PositionChange& cmd, const unsign
 	ar & cmd.pos;
 	ar & cmd.dir;
 	ar & cmd.uuid;
+}
+
+template<class Archive>
+void serialize(Archive& ar, network::commands::RespawnCountChange& cmd, const unsigned int /*version*/)
+{
+	ar & cmd.group;
+	ar & cmd.respawnCount;
 }
 
 template<class Archive>
@@ -278,6 +287,7 @@ void serialize(Archive& ar, network::commands::TankSnapshot& tank, const unsigne
 	ar & tank.tier;
 	ar & tank.isHelmetActive;
 	ar & tank.isShipActive;
+	ar & tank.shipCharges;
 }
 
 template<class Archive>

@@ -22,7 +22,7 @@ struct TextureOffset
 	static constexpr ObjRectangle kSteel{.x = 256, .y = 16, .w = 8, .h = 8};
 	static constexpr ObjRectangle kBush{.x = 272, .y = 32, .w = 8, .h = 8};
 	static constexpr ObjRectangle kIce{.x = 288, .y = 32, .w = 8, .h = 8};
-	static constexpr ObjRectangle kWater{.x = 272, .y = 80, .w = 8, .h = 8};//left -> right; played back-to-front frame
+	static constexpr ObjRectangle kWater{.x = 257, .y = 80, .w = 8, .h = 8};
 
 	// Effects
 	static constexpr ObjRectangle kTankSpawn{.x = 256, .y = 96, .w = 16, .h = 16};// 4 frames, animation 16x16

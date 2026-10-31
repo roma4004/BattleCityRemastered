@@ -17,6 +17,7 @@
 # t  timer        l  extra tank     c  caliber
 # h  helmet       s  star           b  ship
 # g  grenade      v  shovel
+# A capital letter lays the same bonus golden - B is a golden ship.
 #
 # One exception to "one character is one cell": 3 is the eagle's top-left corner and covers 3x3
 # cells on its own, so the 8 cells right and below it must be left as 0 - they are its body, not

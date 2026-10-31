@@ -33,6 +33,7 @@ struct BonusRecipe
 {
 	BonusType type{};
 	PickupEmitter emit{};
+	PickupEmitter superEmit{};
 };
 
 constexpr std::array s_recipes{
@@ -52,6 +53,11 @@ constexpr std::array s_recipes{
 					.emit = [](EventSystem& events, const Author author, const Faction faction)
 					{
 						events.EmitEvent(Key(EnemiesOf(faction)), BonusGrenadePickupEvent{.spared = author});
+					},
+					.superEmit = [](EventSystem& events, const Author author, const Faction faction)
+					{
+						events.EmitEvent(BonusGoldenGrenadePickupEvent{.taker = author});
+						events.EmitEvent(Key(EnemiesOf(faction)), BonusGrenadePickupEvent{.spared = author});
 					}},
 		BonusRecipe{.type = BonusType::Tank,
 					.emit = [](EventSystem& events, const Author author, Faction)
@@ -67,6 +73,10 @@ constexpr std::array s_recipes{
 					.emit = [](EventSystem& events, Author, const Faction faction)
 					{
 						events.EmitEvent(BonusShovelPickupEvent{.faction = faction});
+					},
+					.superEmit = [](EventSystem& events, Author, const Faction faction)
+					{
+						events.EmitEvent(BonusShovelPickupEvent{.faction = faction, .isSuper = true});
 					}},
 		BonusRecipe{.type = BonusType::Caliber,
 					.emit = [](EventSystem& events, const Author author, Faction)
@@ -76,7 +86,19 @@ constexpr std::array s_recipes{
 		BonusRecipe{.type = BonusType::Ship,
 					.emit = [](EventSystem& events, const Author author, Faction)
 					{
-						events.EmitEvent(Key(author), BonusShipPickupEvent{});
+						events.EmitEvent(Key(author), BonusShipPickupEvent{.charges = 1u});
+					},
+					//NOTE: a free-for-all has no team - the taker alone gets it
+					.superEmit = [](EventSystem& events, const Author author, const Faction faction)
+					{
+						if (faction == Faction::Solo)
+						{
+							events.EmitEvent(Key(author), BonusShipPickupEvent{.charges = kGoldenShipCharges});
+
+							return;
+						}
+
+						events.EmitEvent(Key(faction), BonusTeamShipPickupEvent{.charges = kGoldenShipCharges});
 					}},
 };
 
@@ -253,15 +275,17 @@ void Bonus::PickUpBonus(const Author author)
 	{
 		_events->EmitEvent(StatisticsBonusPickupEvent{.author = author});
 
-		const PickupEmitter emit{GetRecipe(_bonusType).emit};
+		const BonusRecipe& recipe{GetRecipe(_bonusType)};
 		const Faction faction{FactionOf(author, _gameConfig.Rules())};
-		emit(*_events, author, faction);
-
+		//NOTE: the super step first - a golden grenade cuts the reserve before its blast kills
 		if (_isSuper)
 		{
 			//NOTE: a super bonus applies its effect twice - timed ones double the duration, stepped ones advance twice
-			emit(*_events, author, faction);
+			const PickupEmitter again{recipe.superEmit != nullptr ? recipe.superEmit : recipe.emit};
+			again(*_events, author, faction);
 		}
+
+		recipe.emit(*_events, author, faction);
 
 		Despawn(DespawnReason::PickedUp);
 	}

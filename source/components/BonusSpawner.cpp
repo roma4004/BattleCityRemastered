@@ -179,18 +179,19 @@ void BonusSpawner::SpawnBonus(const ObjRectangle rect, const BonusType type, Uui
 	_events->EmitEvent(AnimationCreateBonusSpawnEvent{.rect = rect, .uuid = uuid, .isEndless = _gameConfig.IsClient()});
 }
 
-void BonusSpawner::SpawnPermanentBonus(const ObjRectangle rect, const BonusType type)
+void BonusSpawner::SpawnPermanentBonus(const ObjRectangle rect, const BonusType type, const bool isSuper)
 {
-	const Uuid uuid{AnnounceSpawn(rect, type, Uuid{}, false)};
+	const Uuid uuid{AnnounceSpawn(rect, type, Uuid{}, isSuper)};
 
-	_pendingSpawns.emplace_back(PendingSpawn{.rect = rect, .type = type, .uuid = uuid, .isPermanent = true});
+	_pendingSpawns.emplace_back(
+			PendingSpawn{.rect = rect, .type = type, .uuid = uuid, .isSuper = isSuper, .isPermanent = true});
 
 	_events->EmitEvent(AnimationCreateBonusSpawnEvent{.rect = rect, .uuid = uuid, .isEndless = _gameConfig.IsClient()});
 }
 
 void BonusSpawner::OnSpawnMapBonus(const SpawnMapBonusEvent& event)
 {
-	SpawnPermanentBonus(event.rect, event.type);
+	SpawnPermanentBonus(event.rect, event.type, event.isSuper);
 }
 
 void BonusSpawner::Materialize(const PendingSpawn& pending) const

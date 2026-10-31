@@ -34,6 +34,8 @@ void TextCache::EngineDeleter::operator()(TTF_TextEngine* engine) const noexcept
 	TTF_DestroyRendererTextEngine(engine);
 }
 
+void TextCache::FontDeleter::operator()(TTF_Font* font) const noexcept { TTF_CloseFont(font); }
+
 TextCache::TextCache(const SDL_Config& sdlConfig)
 	: _sdlConfig{sdlConfig} {}
 
@@ -103,7 +105,7 @@ TTF_Font* TextCache::FontForScale(const int basePointSize, const float scale)
 		return it->second.get();
 	}
 
-	FontHandle sized{TTF_CopyFont(_sdlConfig.font.get())};
+	std::unique_ptr<TTF_Font, FontDeleter> sized{TTF_CopyFont(_sdlConfig.font.get())};
 	if (!sized || !TTF_SetFontSize(sized.get(), static_cast<float>(pixelSize)))
 	{
 		//NOTE: nothing stored on failure; the startup font draws the line at its own size instead of not at all

@@ -37,10 +37,12 @@ constexpr std::size_t kMaxListedEnemies{std::numeric_limits<unsigned short>::max
 	return firstVisible == std::string_view::npos || line[firstVisible] == kCommentPrefix;
 }
 
+[[nodiscard]] bool IsGoldenSymbol(const char symbol) { return symbol >= 'A' && symbol <= 'Z'; }
+
 //NOTE: bonuses are letters, obstacles digits - the grid stays a picture, and a new obstacle never takes a bonus symbol
 [[nodiscard]] BonusType BonusOfSymbol(const char symbol)
 {
-	switch (symbol)
+	switch (IsGoldenSymbol(symbol) ? static_cast<char>(symbol - 'A' + 'a') : symbol)
 	{
 		case 't':
 			return BonusType::Timer;
@@ -345,7 +347,8 @@ std::expected<MapData, MapError> MapLoader::Parse(const std::string_view text, s
 			{
 				map.bonuses.push_back(BonusPlacement{.col = map.cells.size() % map.cols,
 													 .row = map.rows,
-													 .type = bonus});
+													 .type = bonus,
+													 .isSuper = IsGoldenSymbol(symbol)});
 				map.cells.push_back(ObstacleType::None);
 
 				continue;

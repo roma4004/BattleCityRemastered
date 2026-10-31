@@ -15,6 +15,7 @@
 #include <vector>
 
 struct BonusEffectsChangedEvent;
+struct BonusShipAppliedEvent;
 struct GameModeAppliedEvent;
 struct GameResetEvent;
 struct MapLoadedEvent;
@@ -22,6 +23,7 @@ struct RespawnCountChangedToEvent;
 struct SeatHoldersAnnouncedEvent;
 struct SideBarEnemyBadge;
 struct SideBarSeat;
+struct TankDiedEvent;
 class GameConfig;
 
 class RightSideBar final
@@ -31,6 +33,8 @@ class RightSideBar final
 	unsigned short _stageNumber{1u};
 	//NOTE: as the host told them - a client in a seat a bot holds is watching it
 	std::array<SeatHolder, kSeatCount> _holders{};
+	//NOTE: no timer, unlike the effects
+	std::array<bool, kSeatCount> _ships{};
 
 	struct RunningEffect final
 	{
@@ -77,6 +81,8 @@ class RightSideBar final
 	void OnMapLoaded(const MapLoadedEvent& event);
 	void OnSeatHoldersAnnounced(const SeatHoldersAnnouncedEvent& event);
 	void OnBonusEffectsChanged(const BonusEffectsChangedEvent& event);
+	void OnBonusShipApplied(const BonusShipAppliedEvent& event);
+	void OnTankDied(const TankDiedEvent& event);
 
 public:
 	RightSideBar(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig);

@@ -64,6 +64,14 @@ RespawnManager::RespawnManager(const std::shared_ptr<EventSystem>& events, const
 
 void RespawnManager::Subscribe()
 {
+	//NOTE: a client counts nothing - the host sends the counts, the snapshot to a late joiner
+	if (IsClient(_gameMode))
+	{
+		_subs.push_back(_events->AddListener(this, &RespawnManager::OnWorldSnapshotReceived));
+
+		return;
+	}
+
 	_subs.push_back(_events->AddListener(this, &RespawnManager::OnGameReset));
 	_subs.push_back(_events->AddListener(this, &RespawnManager::OnTankSpawn));
 	_subs.push_back(_events->AddListener(this, &RespawnManager::OnTankDied));
@@ -71,13 +79,7 @@ void RespawnManager::Subscribe()
 	_subs.push_back(_events->AddListener(this, &RespawnManager::OnPlayersBaseFinished));
 	_subs.push_back(_events->AddListener(this, &RespawnManager::OnRespawnTanks));
 	_subs.push_back(_events->AddListener(this, &RespawnManager::OnEnemyLineupLoaded));
-
-	if (IsClient(_gameMode))
-	{
-		_subs.push_back(_events->AddListener(this, &RespawnManager::OnBonusTankApplied));
-		_subs.push_back(_events->AddListener(this, &RespawnManager::OnTankRespawned));
-		_subs.push_back(_events->AddListener(this, &RespawnManager::OnWorldSnapshotReceived));
-	}
+	_subs.push_back(_events->AddListener(this, &RespawnManager::OnGoldenGrenadePickup));
 
 	if (IsHost(_gameMode))
 	{
@@ -98,7 +100,21 @@ void RespawnManager::OnPlayersBaseFinished(const PlayersBaseFinishedEvent&) { Tr
 
 void RespawnManager::OnRespawnTanks(const RespawnTanksEvent&) { RespawnTanks(); }
 
-void RespawnManager::OnBonusTankApplied(const BonusTankAppliedEvent& event) { OnBonusTank(event.author); }
+//NOTE: per tank on the field, a protected one too - the blast spares it, the reserve does not
+void RespawnManager::OnGoldenGrenadePickup(const BonusGoldenGrenadePickupEvent& event)
+{
+	const bool isEnemyTaker{!SlotOf(event.taker)};
+	const auto isHit = [this, &event, isEnemyTaker](const SpawnSlot& slot)
+	{
+		return slot.isOnField && SeatOf(slot.type) != event.taker
+			   && (_isFreeForAll || IsEnemyGroup(slot.group) != isEnemyTaker);
+	};
+
+	for (const SpawnSlot& slot: _slots | std::views::filter(isHit))
+	{
+		ChangeRespawnCount(-1, slot.group);
+	}
+}
 
 //NOTE: the reset before it counted the default - a map that says how many enemies it has overrides it
 void RespawnManager::OnEnemyLineupLoaded(const EnemyLineupLoadedEvent& event)
@@ -211,18 +227,6 @@ void RespawnManager::OnBonusTank(const Author author)
 	{
 		ChangeRespawnCount(1, GroupOf(*slot));
 	}
-
-	if (IsHost(_gameMode))
-	{
-		_events->EmitEvent(BonusTankAppliedEvent{.author = author});
-	}
-}
-
-//NOTE: a coop bot spends a life of the seat it sits in, the way the host counts it
-void RespawnManager::OnTankRespawned(const TankRespawnedEvent& event)
-{
-	const std::optional<PlayerSlot> slot{SlotOf(event.type)};
-	ChangeRespawnCount(-1, slot ? GroupOf(*slot) : RespawnGroup::ENEMY_ALL);
 }
 
 //NOTE: told before the reset that spawns by it
