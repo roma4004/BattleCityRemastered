@@ -35,6 +35,8 @@ public:
 		std::vector<std::string> messages{};
 		//NOTE: each newer than what this link handed over for its entity, none older than the last snapshot
 		std::vector<std::string> latest{};
+		//NOTE: the peer kept a message going past anything a sender here makes - an unreadable link, as a bad message
+		bool isOverflowed{};
 	};
 
 	DatagramLink(std::uint32_t connectionId, Clock::time_point now);
@@ -43,6 +45,9 @@ public:
 
 	//NOTE: false when the backlog would exceed kMaxBacklog - the backlog is dropped and the peer skips the gap
 	[[nodiscard]] bool SendReliable(std::string_view message);
+
+	//NOTE: never refused - a backlog too full for it is dropped as for any message, and then it goes out alone
+	void SendGoodbye(std::string_view message);
 
 	//NOTE: a reliable message replacing the peer's whole field; opens an epoch, older epochs' Latest values are dropped
 	[[nodiscard]] bool SendSnapshot(std::string_view message);

@@ -1,5 +1,6 @@
 #include "network/Session.h"
 #include "enums/Absence.h"
+#include "enums/DisconnectReason.h"
 #include "enums/InputChannel.h"
 #include "enums/InputSignal.h"
 #include "components/EventSystem.h"
@@ -107,19 +108,26 @@ void Session::Receive(const std::string_view datagram, const DatagramLink::Clock
 		return;
 	}
 
+	//NOTE: the seat goes as with a kick - left held, the lobby would wait for this client and its keys stay pressed
 	if (!Dispatch(*arrivals))
 	{
-		_isPeerGone = true;
+		Lose();
 		Shutdown(DisconnectReason::ProtocolError);
 	}
 }
 
 void Session::Send(const WireFrame& frame)
 {
+	//NOTE: behind the goodbye - the client drops the link on it, and a frame it never acks keeps this one from draining
+	if (IsFinished())
+	{
+		return;
+	}
+
 	if (!_link.SendFrame(frame))
 	{
 		Log::Info("Session: the client fell too far behind, its backlog is dropped for a snapshot");
-		_isSnapshotOwed.store(true, std::memory_order_release);
+		OweSnapshot();
 	}
 }
 
@@ -163,9 +171,7 @@ void Session::Lose()
 
 void Session::Shutdown(const DisconnectReason reason)
 {
-	commands::CommandBatch farewell;
-	farewell.commands.emplace_back(commands::Disconnect{.reason = reason});
-	std::ignore = _link.SendReliable(network::Serialize(farewell));
+	_link.SendGoodbye(SerializeGoodbye(reason));
 
 	MarkFinished();
 }
@@ -173,8 +179,14 @@ void Session::Shutdown(const DisconnectReason reason)
 //NOTE: the goodbye goes out on the next tick, the seat is given up here - a kicked client is not coming back
 void Session::Kick()
 {
-	Shutdown(DisconnectReason::Kicked);
+	//NOTE: kicked twice, or gone meanwhile - a second goodbye would wait for an ack nobody sends
+	if (IsFinished())
+	{
+		return;
+	}
+
 	Lose();
+	Shutdown(DisconnectReason::Kicked);
 }
 
 void Session::Handle(const commands::Disconnect& command)
@@ -198,7 +210,7 @@ void Session::Handle(const commands::SignalEvent& command)
 		{
 			case ClientSignal::ReadyToPlay:
 				//NOTE: here, on the game thread - set earlier, the snapshot could go out before the ready it answers
-				_isSnapshotOwed.store(true, std::memory_order_release);
+				OweSnapshot();
 				_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = _slot});
 				break;
 			case ClientSignal::RestartMatch:

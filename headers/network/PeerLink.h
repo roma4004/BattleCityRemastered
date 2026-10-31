@@ -30,7 +30,7 @@ protected:
 	//NOTE: called only from Dispatch, so never before the peer is built
 	virtual void OnCommand(const commands::AnyCommand& command) = 0;
 
-	//NOTE: false only for an unparsable message; both ends share AnyCommand, so ignoring the other half is fine
+	//NOTE: false for an unparsable or overlong message; both ends share AnyCommand, so ignoring the other half is fine
 	[[nodiscard]] bool Dispatch(const DatagramLink::Arrivals& arrivals);
 
 	std::shared_ptr<EventSystem> _events{nullptr};

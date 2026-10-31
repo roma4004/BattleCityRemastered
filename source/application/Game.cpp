@@ -99,19 +99,18 @@ void Game::Subscribe()
 
 void Game::OnApplyGameMode(const ApplyGameModeEvent&)
 {
-	//NOTE: only the server process tells the two network entries apart; a restart needs no address
-	const GameMode entered{_serverProcess ? GameMode::PlayAsHost : _gameConfig.gameMode};
-	//NOTE: a client asked again picks its server anew, unless the command line named it
-	const bool isPickedAnew{_selectedGameMode == GameMode::PlayAsClient && !_isAddressNamedByArguments};
-	if (_selectedGameMode == entered && !isPickedAnew && _simulation->TryRestartMatch())
-	{
-		return;
-	}
-
+	//NOTE: a network entry asked again picks its server anew too, unless the command line named it
 	if (IsNetworkGame(_selectedGameMode) && !_isAddressNamedByArguments)
 	{
 		_serverScreen->Open(_selectedGameMode);
 
+		return;
+	}
+
+	//NOTE: only the server process tells the two network entries apart; a restart needs no address
+	const GameMode entered{_serverProcess ? GameMode::PlayAsHost : _gameConfig.gameMode};
+	if (_selectedGameMode == entered && _simulation->TryRestartMatch())
+	{
 		return;
 	}
 

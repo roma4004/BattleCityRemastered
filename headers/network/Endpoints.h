@@ -43,6 +43,9 @@ struct OwnAddress final
 //NOTE: loopback, every interface, or an address one of them has - a literal only, as in ParseHost
 [[nodiscard]] bool IsThisMachine(std::string_view host);
 
+//NOTE: "0.0.0.0" and "::" listen on every interface and are dialled on loopback; any other host as it is
+[[nodiscard]] std::string DialHost(std::string_view host);
+
 //NOTE: the OS has a route to the address - false over a protocol with no network; sends nothing
 [[nodiscard]] bool IsReachable(std::string_view host);
 

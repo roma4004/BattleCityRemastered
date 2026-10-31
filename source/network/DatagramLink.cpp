@@ -35,6 +35,8 @@ enum class ChunkType : std::uint8_t
 constexpr std::size_t kHeaderSize{2u + 1u + 4u * 5u};
 constexpr std::size_t kReliableChunkHeaderSize{1u + 1u + 4u + 4u + 2u};
 constexpr std::size_t kMaxFragmentSize{DatagramLink::kMaxDatagramSize - kHeaderSize - kReliableChunkHeaderSize};
+//NOTE: the longest message Enqueue lets out - a backlog's worth of fragments
+constexpr std::size_t kMaxMessageSize{DatagramLink::kMaxBacklog * kMaxFragmentSize};
 //NOTE: chunk type, entity, epoch, size
 constexpr std::size_t kLatestChunkHeaderSize{1u + sizeof(Uuid) + 4u + 2u};
 //NOTE: nothing splits a Latest value - it is one entity's newest state, and half of it is worth nothing
@@ -194,7 +196,7 @@ bool DatagramLink::Enqueue(const std::string_view message, const bool isSnapshot
 		return false;
 	}
 
-	for (std::size_t offset = 0u; offset < message.size(); offset += kMaxFragmentSize)
+	for (std::size_t offset{}; offset < message.size(); offset += kMaxFragmentSize)
 	{
 		const std::string_view piece{message.substr(offset, kMaxFragmentSize)};
 		_unacked.emplace(_nextReliableSeq++, Fragment{.bytes = std::string{piece},
@@ -204,6 +206,14 @@ bool DatagramLink::Enqueue(const std::string_view message, const bool isSnapshot
 	}
 
 	return true;
+}
+
+void DatagramLink::SendGoodbye(const std::string_view message)
+{
+	if (!SendReliable(message))
+	{
+		std::ignore = SendReliable(message);
+	}
 }
 
 bool DatagramLink::SendLatest(const Uuid& key, std::string message)
@@ -402,6 +412,14 @@ void DatagramLink::DeliverInOrder(Arrivals& arrivals)
 	for (auto it{_outOfOrder.find(_nextDelivered)}; it != _outOfOrder.end(); it = _outOfOrder.find(_nextDelivered))
 	{
 		_assembly += it->second.bytes;
+		if (_assembly.size() > kMaxMessageSize)
+		{
+			arrivals.isOverflowed = true;
+			_assembly.clear();
+
+			return;
+		}
+
 		if (it->second.isLast)
 		{
 			arrivals.messages.push_back(std::move(_assembly));

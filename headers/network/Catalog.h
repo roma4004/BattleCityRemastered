@@ -20,6 +20,8 @@ inline constexpr std::chrono::seconds kSilenceLimit{10};
 //NOTE: three lists per address in three seconds - enough for REFRESH, too few to flood a spoofed address
 inline constexpr std::chrono::seconds kAnswerWindow{3};
 inline constexpr std::uint8_t kAnswerBurst{3u};
+//NOTE: a few servers on one machine - more game ports from one address would only fill every answer
+inline constexpr std::ptrdiff_t kServersPerAddress{8};
 
 //NOTE: the beacon's reply, then a port-closed byte
 inline constexpr std::size_t kHeartbeatSize{discovery::kReplySize + 1u};

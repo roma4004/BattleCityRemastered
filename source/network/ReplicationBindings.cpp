@@ -17,7 +17,7 @@ namespace network
 {
 namespace
 {
-//NOTE: eleven local types onto one command - each line names its StatisticsType and the fields it carries
+//NOTE: eight local types onto one command - each line names its StatisticsType and the fields it carries
 void BindHostStatistics(ReplicationPublisher& out)
 {
 	out.Bind<StatisticsBulletHitEvent>([](const auto& e)

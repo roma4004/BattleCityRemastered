@@ -12,6 +12,7 @@
 #include <functional>
 #include <optional>
 #include <random>
+#include <ranges>
 #include <string>
 #include <string_view>
 #include <tuple>
@@ -54,6 +55,7 @@ DiscoveryBeacon::DiscoveryBeacon(boost::asio::io_context& ioContext, const boost
 	: _inbox{.socket = udp::socket{ioContext}}
 	, _broadcastInbox{.socket = udp::socket{ioContext}}
 	, _subnetInbox{.socket = udp::socket{ioContext}}
+	, _isOnEveryAddress{host.is_unspecified()}
 	, _gamePort{gamePort}
 	, _seats{seats}
 	, _rules{rules}
@@ -75,6 +77,13 @@ DiscoveryBeacon::DiscoveryBeacon(boost::asio::io_context& ioContext, const boost
 	}
 
 #ifndef _WIN32 //NOTE: Linux
+	if (host.is_v6() && !host.is_unspecified() && !host.is_loopback())
+	{
+		ListenToGroupIPv6(host);
+
+		return;
+	}
+
 	//NOTE: a socket on every address hears a broadcast by itself, and none ever comes to loopback
 	if (!host.is_v4() || host.is_unspecified() || host.is_loopback())
 	{
@@ -94,12 +103,19 @@ DiscoveryBeacon::~DiscoveryBeacon() { Shutdown(); }
 
 void DiscoveryBeacon::Shutdown()
 {
-	for (udp::socket* const socket: {&_inbox.socket, &_broadcastInbox.socket, &_subnetInbox.socket})
+	const auto close = [](udp::socket& socket)
 	{
 		boost::system::error_code ec;
-		std::ignore = socket->cancel(ec);
-		std::ignore = socket->close(ec);
+		std::ignore = socket.cancel(ec);
+		std::ignore = socket.close(ec);
+	};
+
+	for (udp::socket* const socket: {&_inbox.socket, &_broadcastInbox.socket, &_subnetInbox.socket})
+	{
+		close(*socket);
 	}
+
+	std::ranges::for_each(_groupInboxes, close, &Inbox::socket);
 }
 
 discovery::Reply DiscoveryBeacon::Answer() const
@@ -151,6 +167,30 @@ void DiscoveryBeacon::JoinGroupIPv6()
 	}
 }
 
+void DiscoveryBeacon::ListenToGroupIPv6(const boost::asio::ip::address& host)
+{
+	const auto group{boost::asio::ip::make_address_v6(std::string{discovery::kGroupIPv6})};
+	//NOTE: a link's own address answers on that link alone - the group port on the others is left to their servers
+	const auto isAnsweredOn = [own = host.to_v6()](const IPv6Interface& link)
+	{
+		return !own.is_link_local() || link.index == own.scope_id();
+	};
+	for (const IPv6Interface& link: IPv6Interfaces() | std::views::filter(isAnsweredOn))
+	{
+		Inbox& inbox{_groupInboxes.emplace_back(Inbox{.socket = udp::socket{_inbox.socket.get_executor()}})};
+		boost::system::error_code ec;
+		if (Listen(inbox, boost::asio::ip::address_v6{group.to_bytes(), link.index}))
+		{
+			std::ignore = inbox.socket.set_option(boost::asio::ip::multicast::join_group(group, link.index), ec);
+		}
+
+		if (!inbox.socket.is_open() || ec)
+		{
+			Log::Info("DiscoveryBeacon: the IPv6 group does not reach this server on every link, its address does");
+		}
+	}
+}
+
 void DiscoveryBeacon::Receive(Inbox& inbox)
 {
 	const auto onReceived = [this, &inbox](const boost::system::error_code& ec, const std::size_t size)
@@ -164,7 +204,7 @@ void DiscoveryBeacon::Receive(Inbox& inbox)
 		{
 			//NOTE: one datagram, no retry - a probe that got no answer asks again
 			boost::system::error_code sendEc;
-			if (const std::optional<boost::asio::ip::address_v6> further{FurtherAddressFor(inbox.sender)})
+			if (const auto further{_isOnEveryAddress ? FurtherAddressFor(inbox.sender) : std::nullopt})
 			{
 				const auto bytes{discovery::Pack(Answer(), further->to_bytes())};
 				std::ignore = _inbox.socket.send_to(boost::asio::buffer(bytes), inbox.sender, {}, sendEc);

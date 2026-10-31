@@ -98,7 +98,7 @@ private:
 	void CleanupDeadSessions();
 	void OnStatusRequested(const ServerStatusRequestedEvent&) const;
 	void OnPlayersRequested(const ServerPlayersRequestedEvent&) const;
-	void OnKickRequested(const ServerKickRequestedEvent& event) const;
+	void OnKickRequested(const ServerKickRequestedEvent& event);
 	void OnAcceptingChanged(const ServerAcceptingChangedEvent& event);
 	void OnPortForwardingChanged(const PortForwardingChangedEvent& event);
 	void OnClientSeated(const ServerClientSeatedEvent&);
@@ -109,6 +109,13 @@ private:
 	const uint16_t _boundPort;
 	//NOTE: seats clamped to 1-4; clients are told the current match, map included, so written under _sessionsMutex
 	MatchSettings _match;
+
+	//NOTE: above the beacon and the listing - both count free seats under the mutex from the moment they are built
+	std::vector<std::shared_ptr<Session>> _sessions;
+	//NOTE: written where a seat is taken, under _sessionsMutex as well
+	SeatHistory _seatHistory;
+	mutable std::mutex _sessionsMutex;
+
 	//NOTE: after _boundPort - it answers with that number, so it may not be built before there is one
 	DiscoveryBeacon _beacon;
 	std::unique_ptr<CatalogListing> _listing{nullptr};
@@ -119,16 +126,13 @@ private:
 	ReplicationPublisher _replicationOut;
 	std::vector<EventSubscription> _subs{};
 
-	std::vector<std::shared_ptr<Session>> _sessions;
-	//NOTE: written where a seat is taken, under _sessionsMutex as well
-	SeatHistory _seatHistory;
-	mutable std::mutex _sessionsMutex;
-
 	//NOTE: what the router said last - told again to whoever sits down after. Both sides of it are on the game thread
 	std::optional<commands::PortForwardingChange> _portForwarding{};
 
 	//NOTE: set once the goodbyes are out - the socket closes when every one is acked or the linger runs out
 	std::function<void()> _onClosed{};
 	Clock::time_point _closeDeadline{};
+	//NOTE: the ones told goodbye - a session finished before has nobody left to ack, so it is not waited for
+	std::vector<std::shared_ptr<Session>> _toldGoodbye{};
 };
 }//namespace network

@@ -24,7 +24,7 @@
 namespace network
 {
 ReplicationApplier::ReplicationApplier(const std::shared_ptr<EventSystem>& events,
-									   network::NetworkCommandQueue& queue)
+									   NetworkCommandQueue& queue)
 	: _events{events}
 	, _queue{queue} {}
 

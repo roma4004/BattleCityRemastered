@@ -17,6 +17,13 @@ PeerLink::PeerLink(std::string ownerName, std::shared_ptr<EventSystem> events)
 //NOTE: the messages first - a Latest value in the same datagram may belong to an entity one of them spawns
 bool PeerLink::Dispatch(const DatagramLink::Arrivals& arrivals)
 {
+	if (arrivals.isOverflowed)
+	{
+		Log::Error(_ownerName + ": the peer sent a message longer than any it could, the link is dropped");
+
+		return false;
+	}
+
 	const auto dispatch = [this](const std::string& message) { return DispatchMessage(message); };
 
 	return std::ranges::all_of(arrivals.messages, dispatch) && std::ranges::all_of(arrivals.latest, dispatch);
@@ -24,7 +31,7 @@ bool PeerLink::Dispatch(const DatagramLink::Arrivals& arrivals)
 
 bool PeerLink::DispatchMessage(const std::string& message)
 {
-	const auto batch{network::Deserialize(message)};
+	const auto batch{Deserialize(message)};
 	if (!batch)
 	{
 		constexpr std::size_t maxLoggedBytes{200};

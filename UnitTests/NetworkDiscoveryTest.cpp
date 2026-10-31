@@ -18,6 +18,7 @@
 #include <string>
 #include <thread>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 // beacon and probe over a real loopback socket - the io_context is pumped by hand instead of on a thread
@@ -112,7 +113,8 @@ TEST_F(NetworkDiscoveryTest, AScanFindsTheServerOnThisMachine)
 	EXPECT_TRUE(std::ranges::contains(scan.Servers(), expected));
 }
 
-// IPv6 has no broadcast: a server listening over it is found by the group on its link, at its furthest address there
+// IPv6 has no broadcast: a server listening over it is found by the group on its link, at an address it listens on -
+// on "::" the one that reaches furthest from that link, on one address that address
 TEST_F(NetworkDiscoveryTest, AScanFindsAnIPv6ServerByTheGroupOnItsLink)
 {
 	const std::vector<network::IPv6Interface> links{network::IPv6Interfaces()};
@@ -126,34 +128,68 @@ TEST_F(NetworkDiscoveryTest, AScanFindsAnIPv6ServerByTheGroupOnItsLink)
 	}
 
 	std::ignore = socket.close(ec);
-	constexpr std::uint16_t gamePort{54321u};
-	const network::DiscoveryBeacon beacon{_ioContext, boost::asio::ip::address_v6::any(), gamePort,
-										  std::uint8_t{4}, MatchRules::FreeForAll, [] { return std::uint8_t{2}; }};
-	network::DiscoveryScan scan{std::string{}};
-	//NOTE: a server on "::" may hear the IPv4 broadcast too - those rows are no concern here
-	const auto found = [&scan]
+	//NOTE: a server on "::" may hear the IPv4 broadcast too - those answers are no concern here
+	const auto findOverIPv6 = [](const std::string& host)
 	{
-		const auto isOverIPv6 = [](const network::FoundServer& server)
+		//NOTE: one per beacon - a receive completed after the last poll dies with it, not in the next beacon's poll
+		boost::asio::io_context ioContext{};
+		constexpr std::uint16_t gamePort{54321u};
+		const network::DiscoveryBeacon beacon{ioContext, boost::asio::ip::make_address(host), gamePort,
+											  std::uint8_t{4}, MatchRules::FreeForAll, [] { return std::uint8_t{2}; }};
+		network::DiscoveryScan scan{std::string{}};
+		const auto found = [&scan]
 		{
-			return server.address.port == gamePort && server.address.host.contains(':');
+			const auto isOverIPv6 = [](const network::FoundServer& server)
+			{
+				return server.address.port == gamePort && server.address.host.contains(':');
+			};
+
+			return scan.Servers() | std::views::filter(isOverIPv6) | std::ranges::to<std::vector>();
 		};
 
-		return scan.Servers() | std::views::filter(isOverIPv6) | std::ranges::to<std::vector>();
-	};
+		//NOTE: past the first answer too - every link is probed at once, and the others come right behind it
+		for (int attempt{}; attempt < 100 && (found().empty() || attempt < 10); ++attempt)
+		{
+			ioContext.poll();
+			std::ignore = scan.Poll();
+			std::this_thread::sleep_for(std::chrono::milliseconds{5});
+		}
 
-	//NOTE: past the first answer too - every link is probed at once, and the others come right behind it
-	for (int attempt{}; attempt < 100 && (found().empty() || attempt < 10); ++attempt)
+		return found();
+	};
+	const auto hostOf = [](const network::FoundServer& server) { return server.address.host; };
+
+	const std::vector<network::FoundServer> onEveryAddress{findOverIPv6("::")};
+	ASSERT_FALSE(onEveryAddress.empty()) << "no link carried the probe to the server";
+	for (const std::string& host: onEveryAddress | std::views::transform(hostOf))
 	{
-		_ioContext.poll();
-		std::ignore = scan.Poll();
-		std::this_thread::sleep_for(std::chrono::milliseconds{5});
+		EXPECT_TRUE(std::ranges::contains(links, host, &network::IPv6Interface::furthest))
+				<< host << " is not the furthest address of a link";
 	}
 
-	const std::vector<network::FoundServer> servers{found()};
-	ASSERT_FALSE(servers.empty()) << "no link carried the probe to the server";
-	for (const network::FoundServer& server: servers)
+	//NOTE: best a link's own address where the link reaches further - the answer must not trade it for the further
+	//one; on a link the group was just heard over, as a tunnel's may carry none
+	const auto isOwnOfAHeardFurtherLink = [&links, &onEveryAddress, &hostOf](const std::string& host)
 	{
-		EXPECT_TRUE(std::ranges::contains(links, server.address.host, &network::IPv6Interface::furthest))
-				<< server.address.host << " is the link's own address, not the one that reaches furthest";
+		if (!host.starts_with("fe80:"))
+		{
+			return false;
+		}
+
+		const auto link{std::ranges::find(links, boost::asio::ip::make_address(host).to_v6().scope_id(),
+										  &network::IPv6Interface::index)};
+
+		return link != links.end() && link->furthest != host
+			   && std::ranges::contains(onEveryAddress, link->furthest, hostOf);
+	};
+	const auto hosts{network::OwnAddresses() | std::views::transform(&network::OwnAddress::host)};
+	const auto linkLocal{std::ranges::find_if(hosts, isOwnOfAHeardFurtherLink)};
+	const std::string own{linkLocal == hosts.end() ? onEveryAddress.front().address.host : *linkLocal};
+	SCOPED_TRACE(own);
+	const std::vector<network::FoundServer> onOwnAddress{findOverIPv6(own)};
+	ASSERT_FALSE(onOwnAddress.empty()) << "no link carried the probe to the server";
+	for (const std::string& host: onOwnAddress | std::views::transform(hostOf))
+	{
+		EXPECT_EQ(host, own) << "the answer named an address the server does not listen on";
 	}
 }

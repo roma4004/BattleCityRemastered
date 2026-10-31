@@ -1,13 +1,13 @@
 #include "network/Client.h"
 #include "components/EventSystem.h"
 #include "components/events/CoreLifecycleEvents.h"
-#include "enums/ClientSignal.h"
 #include "network/DatagramLink.h"
+#include "network/Endpoints.h"
 #include "network/ReplicationBindings.h"
 #include "network/Serializer.h"
-#include "network/commands/CommandBatch.h"
 #include "utils/Log.h"
 #include "utils/RandUtils.h"
+#include <boost/asio/ip/address.hpp>
 #include <boost/asio/post.hpp>
 #include <cstdint>
 #include <random>
@@ -17,28 +17,12 @@
 #include <utility>
 #include <variant>
 
-namespace
-{
-//NOTE: a server told to listen everywhere is dialled on this machine - 0.0.0.0 is not a place to connect to
-boost::asio::ip::address DialAddress(const std::string& host)
-{
-	auto address{boost::asio::ip::make_address(host)};
-	if (address.is_unspecified())
-	{
-		address = address.is_v6() ? boost::asio::ip::address{boost::asio::ip::address_v6::loopback()}
-								  : boost::asio::ip::address{boost::asio::ip::address_v4::loopback()};
-	}
-
-	return address;
-}
-}//namespace
-
 namespace network
 {
 Client::Client(boost::asio::io_context& ioContext, const ServerAddress& address,
 			   const std::shared_ptr<EventSystem>& events)
 	: PeerLink("Client", events)
-	, _endpoint{DialAddress(address.host), address.port}
+	, _endpoint{boost::asio::ip::make_address(DialHost(address.host)), address.port}
 	, _socket{ioContext, _endpoint.protocol()}
 	, _tickTimer{ioContext}
 	, _reconnectTimer{ioContext}
@@ -133,6 +117,8 @@ void Client::OnDatagram(const std::string_view datagram, const Clock::time_point
 	Log::Info("client connected");
 	_reconnectAttempts = 0;
 	_reconnectAbandoned = false;
+	//NOTE: seated now - a host lost later is given up on after the usual attempts, not waited for as a full one
+	_isWaitingForSeat = false;
 	_isConnected = true;
 	_commandQueue.Enqueue([this] { _events->EmitEvent(ClientConnectedToHostEvent{}); });
 }
@@ -337,9 +323,7 @@ void Client::Shutdown(const DisconnectReason reason, std::function<void()> onClo
 		return;
 	}
 
-	commands::CommandBatch farewell;
-	farewell.commands.emplace_back(commands::Disconnect{.reason = reason});
-	std::ignore = _link->SendReliable(network::Serialize(farewell));
+	_link->SendGoodbye(SerializeGoodbye(reason));
 
 	const auto now{Clock::now()};
 	Transmit(now);

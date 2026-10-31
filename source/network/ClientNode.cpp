@@ -21,13 +21,7 @@ ClientNode::~ClientNode()
 	});
 }
 
-void ClientNode::ProcessNetworkCommands()
-{
-	if (_client)
-	{
-		_client->ProcessCommandQueue();
-	}
-}
+void ClientNode::ProcessNetworkCommands() { _client->ProcessCommandQueue(); }
 
 void ClientNode::Abort()
 {

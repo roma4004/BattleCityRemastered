@@ -22,7 +22,7 @@ namespace network
 using boost::asio::ip::udp;
 
 //NOTE: one client, known by address; Server does its I/O, and every method below the accessors runs on the io thread
-class Session final : public PeerLink, public std::enable_shared_from_this<Session>
+class Session final : public PeerLink
 {
 public:
 	Session(udp::endpoint endpoint, std::uint32_t connectionId, const std::shared_ptr<EventSystem>& events,
@@ -38,6 +38,8 @@ public:
 
 	//NOTE: the cue to drop this session - the game thread reads it without a lock, as it does IsWoundDown
 	[[nodiscard]] bool IsFinished() const noexcept { return _isFinished.load(std::memory_order_acquire); }
+	//NOTE: a finished session gives its seat up at once - a client dialling back takes it before the sweep
+	[[nodiscard]] bool Holds(const PlayerSlot slot) const noexcept { return !IsFinished() && _slot == slot; }
 	//NOTE: finished, and nothing of it left in flight - the goodbyes both ways read, or the peer gone silent
 	[[nodiscard]] bool IsWoundDown() const noexcept { return _isWoundDown.load(std::memory_order_acquire); }
 	//NOTE: on the network thread, the link's only one - the game thread is handed the answer, not the link

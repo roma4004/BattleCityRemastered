@@ -82,7 +82,7 @@ private:
 	bool _reconnectPending{};
 	//NOTE: tells our own cancellation apart from a dropped link, so teardown does not reconnect
 	std::atomic<bool> _isShuttingDown{};
-	//NOTE: not set by a goodbye - the host sends one when restarting, and only the client can dial back
+	//NOTE: set by a kick or a protocol error - after any other goodbye, a restart or a full server, it dials back
 	std::atomic<bool> _isLinkUnrecoverable{};
 	std::atomic<bool> _isWaitingForSeat{};
 	unsigned char _reconnectAttempts{};

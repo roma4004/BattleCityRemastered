@@ -1,10 +1,60 @@
 #include "network/Serializer.h"
+#include "network/commands/CommandBatch.h"
 #include "network/commands/CommandSerialization.h"
+#include "network/commands/Disconnect.h"
+#include "enums/DisconnectReason.h"
 #include "utils/Log.h"
 #include <ser20/archives/portable_binary.hpp>
+#include <ser20/details/helpers.hpp>
+#include <ser20/ser20.hpp>
+#include <algorithm>
+#include <exception>
+#include <expected>
 #include <sstream>
 #include <string>
+#include <type_traits>
 #include <variant>
+#include <vector>
+
+//NOTE: a count off the wire is not trusted with an allocation - elements are read one by one, so a lie runs out of
+//bytes and throws long before ser20's resize(count) would have zeroed gigabytes; the input archive is ours alone, and
+//a container other than these two on the wire needs its own load here
+namespace ser20
+{
+//NOTE: what is made room for ahead of the elements that back it
+constexpr size_type kTrustedCount{256u};
+
+template<class T, class A>
+void SER20_LOAD_FUNCTION_NAME(PortableBinaryInputArchive& ar, std::vector<T, A>& vector)
+	requires(!std::is_same_v<T, bool>)
+{
+	static_assert(!std::is_empty_v<T>, "an element of no bytes never runs out of them - a lied count reads forever");
+
+	size_type size{};
+	ar(make_size_tag(size));
+	vector.clear();
+	vector.reserve(std::min(size, kTrustedCount));
+	for (size_type index{}; index < size; ++index)
+	{
+		ar(vector.emplace_back());
+	}
+}
+
+template<class CharT, class Traits, class Alloc>
+void SER20_LOAD_FUNCTION_NAME(PortableBinaryInputArchive& ar, std::basic_string<CharT, Traits, Alloc>& text)
+{
+	size_type size{};
+	ar(make_size_tag(size));
+	text.clear();
+	for (size_type read{}; read < size;)
+	{
+		const size_type chunk{std::min(size - read, kTrustedCount)};
+		text.resize(read + chunk);
+		ar(binary_data(text.data() + read, chunk * sizeof(CharT)));
+		read += chunk;
+	}
+}
+}//namespace ser20
 
 namespace network
 {
@@ -67,6 +117,14 @@ std::string Serialize(const commands::CommandBatch& batch)
 	}
 
 	return archiveStream.str();
+}
+
+std::string SerializeGoodbye(const DisconnectReason reason)
+{
+	commands::CommandBatch goodbye;
+	goodbye.commands.emplace_back(commands::Disconnect{.reason = reason});
+
+	return Serialize(goodbye);
 }
 
 std::expected<commands::CommandBatch, DeserializeError> Deserialize(const std::string& archiveData)

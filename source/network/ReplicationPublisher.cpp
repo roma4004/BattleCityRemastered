@@ -57,12 +57,12 @@ std::shared_ptr<const WireFrame> ReplicationPublisher::TakeFrame()
 
 		commands::CommandBatch single;
 		single.commands.push_back(std::move(command));
-		frame->latest.emplace_back(*latestKey, network::Serialize(single));
+		frame->latest.emplace_back(*latestKey, Serialize(single));
 	});
 
 	if (!reliable.commands.empty())
 	{
-		frame->reliable = network::Serialize(reliable);
+		frame->reliable = Serialize(reliable);
 	}
 
 	return frame;

@@ -9,6 +9,7 @@
 #include <boost/asio/ip/address_v4.hpp>
 #include <boost/asio/ip/v6_only.hpp>
 #include <boost/system/error_code.hpp>
+#include <algorithm>
 #include <cstddef>
 #include <map>
 #include <ranges>
@@ -94,6 +95,7 @@ void ServerCatalog::Take(const std::string_view datagram, const Clock::time_poin
 		sender = boost::asio::ip::make_address_v4(boost::asio::ip::v4_mapped, sender.to_v6());
 	}
 
+	const auto isHeard = [now](const auto& entry) { return now - entry.second.heardAt <= catalog::kSilenceLimit; };
 	if (datagram == discovery::kProbe)
 	{
 		Answers& answers{_answers[sender]};
@@ -111,7 +113,6 @@ void ServerCatalog::Take(const std::string_view datagram, const Clock::time_poin
 
 		//NOTE: a datagram per server, no retry - an unanswered probe asks again
 		boost::system::error_code ec;
-		const auto isHeard = [now](const auto& entry) { return now - entry.second.heardAt <= catalog::kSilenceLimit; };
 		for (const auto& [server, entry]: _entries | std::views::filter(isHeard))
 		{
 			const auto bytes{catalog::Pack(catalog::Listing{.heartbeat = entry.heartbeat, .host = server.address()})};
@@ -137,6 +138,15 @@ void ServerCatalog::Take(const std::string_view datagram, const Clock::time_poin
 			Log::Info("catalog: " + server.address().to_string() + ':' + std::to_string(server.port()) + " left");
 		}
 
+		return;
+	}
+
+	//NOTE: ordered by address, then port - the sender's servers lie together from port 0; a silent one is not counted
+	const auto isSameHost = [&sender](const auto& entry) { return entry.first.address() == sender; };
+	const auto ofSender{std::ranges::subrange{_entries.lower_bound(udp::endpoint{sender, 0u}), _entries.end()}
+						| std::views::take_while(isSameHost)};
+	if (!_entries.contains(server) && std::ranges::count_if(ofSender, isHeard) >= catalog::kServersPerAddress)
+	{
 		return;
 	}
 

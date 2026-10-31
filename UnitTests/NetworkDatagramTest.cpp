@@ -5,9 +5,11 @@
 #include <algorithm>
 #include <chrono>
 #include <cstddef>
+#include <cstdint>
 #include <iterator>
 #include <string>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 using namespace std::chrono_literals;
@@ -286,6 +288,39 @@ TEST_F(NetworkDatagramTest, ABacklogPastTheLimitIsDroppedAndThePeerSkipsToTheNex
 	Carry(_host.TakeDatagrams(_now), _client);
 
 	EXPECT_EQ(_messages, std::vector<std::string>{"snapshot"});
+}
+
+// a peer keeping one message going past anything a sender here makes is cut off - not buffered for ever
+TEST_F(NetworkDatagramTest, AMessageThatNeverEndsIsRefusedInsteadOfBuffered)
+{
+	ASSERT_TRUE(_host.SendReliable(std::string(network::DatagramLink::kMaxDatagramSize * 2u, 'x')));
+	const std::string fragment{_host.TakeDatagrams(_now).front()};
+	//NOTE: its first fragment again and again under the next numbers - the datagram's after the protocol id, flags and
+	//connection, the chunk's after the header, its type and flags; big-endian, as the wire is
+	const auto renumbered = [&fragment](const std::uint32_t seq)
+	{
+		std::string datagram{fragment};
+		for (const auto& [at, value]: {std::pair{std::size_t{7u}, seq + 1u}, std::pair{std::size_t{25u}, seq}})
+		{
+			for (std::size_t byte{}; byte < 4u; ++byte)
+			{
+				datagram[at + byte] = static_cast<char>((value >> (8u * (3u - byte))) & 0xFFu);
+			}
+		}
+
+		return datagram;
+	};
+
+	bool isOverflowed{};
+	for (std::uint32_t seq{}; seq <= network::DatagramLink::kMaxBacklog && !isOverflowed; ++seq)
+	{
+		const auto arrivals{_client.Receive(renumbered(seq), _now)};
+		ASSERT_TRUE(arrivals.has_value());
+		EXPECT_TRUE(arrivals->messages.empty());
+		isOverflowed = arrivals->isOverflowed;
+	}
+
+	EXPECT_TRUE(isOverflowed) << "the link kept buffering a message no sender here could have sent";
 }
 
 // a peer with nothing to say still sends heartbeats, so silence means a real loss

@@ -10,19 +10,13 @@
 
 namespace
 {
-//NOTE: the same rule the client dials by - a server told to listen everywhere is asked on this machine
+//NOTE: dialled as the client dials; an unparsable host is asked on this machine
 boost::asio::ip::address ProbeAddress(const std::string& host)
 {
-	//NOTE: one named result for -Wnrvo; an unparsable host leaves v4 unspecified, so the fallback below is right
 	boost::system::error_code ec;
-	boost::asio::ip::address address{boost::asio::ip::make_address(host, ec)};
-	if (ec || address.is_unspecified())
-	{
-		address = address.is_v6() ? boost::asio::ip::address{boost::asio::ip::address_v6::loopback()}
-								  : boost::asio::ip::address{boost::asio::ip::address_v4::loopback()};
-	}
+	const auto address{boost::asio::ip::make_address(network::DialHost(host), ec)};
 
-	return address;
+	return ec ? boost::asio::ip::address{boost::asio::ip::address_v4::loopback()} : address;
 }
 }//namespace
 

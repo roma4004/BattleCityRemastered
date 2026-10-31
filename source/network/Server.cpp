@@ -10,10 +10,8 @@
 #include "network/Serializer.h"
 #include "network/WireFrame.h"
 #include "network/commands/CommandBatch.h"
-#include "network/commands/Disconnect.h"
 #include "network/commands/WorldSnapshot.h"
 #include "enums/DisconnectReason.h"
-#include "enums/MatchRules.h"
 #include "enums/PlayerSlot.h"
 #include "enums/PortForwarding.h"
 #include "enums/GameState.h"
@@ -22,6 +20,7 @@
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <boost/asio/strand.hpp>
 #include <boost/asio/post.hpp>
 #include <memory>
@@ -31,6 +30,7 @@
 #include <string>
 #include <string_view>
 #include <tuple>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -56,6 +56,9 @@ Server::Server(boost::asio::io_context& ioContext, const ServerAddress& address,
 	, _match{Seated(match)}
 	, _beacon{ioContext, boost::asio::ip::make_address(address.host), _boundPort,
 			  _match.seats, _match.rules, [this] { return CountFreeSlots(); }}
+	, _listing{catalog ? std::make_unique<CatalogListing>(ioContext, *catalog, _socket.local_endpoint().address(),
+														  _beacon)
+					   : nullptr}
 	, _tickTimer{ioContext}
 	, _events{events}
 	, _replicationOut{events}
@@ -67,12 +70,6 @@ Server::Server(boost::asio::io_context& ioContext, const ServerAddress& address,
 
 	Receive();
 	ScheduleTick();
-
-	//NOTE: not in the init list - the first heartbeat locks _sessionsMutex, built after _beacon
-	if (catalog)
-	{
-		_listing = std::make_unique<CatalogListing>(ioContext, *catalog, _socket.local_endpoint().address(), _beacon);
-	}
 
 	_subs.push_back(_events->AddListener(this, &Server::OnSendNetworkFrame));
 	_subs.push_back(_events->AddListener(this, &Server::OnMapLoaded));
@@ -117,6 +114,7 @@ void Server::Shutdown(const DisconnectReason reason, const std::function<void()>
 
 	_onClosed = onClosed;
 	_closeDeadline = now + DatagramLink::kFarewellLinger;
+	_toldGoodbye = std::move(sessions);
 }
 
 std::uint8_t Server::CountFreeSlots() const
@@ -126,11 +124,7 @@ std::uint8_t Server::CountFreeSlots() const
 	std::uint8_t free{};
 	for (const PlayerSlot slot: kSlots | std::views::take(_match.seats))
 	{
-		const auto holdsSlot = [slot](const std::shared_ptr<Session>& session)
-		{
-			return !session->IsFinished() && session->GetSlot() == slot;
-		};
-
+		const auto holdsSlot = [slot](const std::shared_ptr<Session>& session) { return session->Holds(slot); };
 		free += static_cast<std::uint8_t>(!std::ranges::any_of(_sessions, holdsSlot));
 	}
 
@@ -219,12 +213,9 @@ void Server::RefuseSeat(const udp::endpoint& endpoint, const std::uint32_t conne
 {
 	Log::Info("Server: every seat is taken, the client is told to wait for a free match");
 
-	commands::CommandBatch farewell;
-	farewell.commands.emplace_back(commands::Disconnect{.reason = DisconnectReason::ServerFull});
-
 	//NOTE: no session is kept for it - the client asks again later, and every ask gets the same answer
 	DatagramLink refusal{connectionId, now};
-	std::ignore = refusal.SendReliable(network::Serialize(farewell));
+	refusal.SendGoodbye(SerializeGoodbye(DisconnectReason::ServerFull));
 	SendTo(endpoint, refusal.TakeDatagrams(now));
 }
 
@@ -286,10 +277,11 @@ void Server::Tick()
 	}
 
 	const auto isDrained = [](const std::shared_ptr<Session>& session) { return session->IsDrained(); };
-	if (_onClosed && (now >= _closeDeadline || std::ranges::all_of(sessions, isDrained)))
+	if (_onClosed && (now >= _closeDeadline || std::ranges::all_of(_toldGoodbye, isDrained)))
 	{
 		const auto onClosed{std::move(_onClosed)};
 		_onClosed = nullptr;
+		_toldGoodbye.clear();
 		CloseSocket();
 		onClosed();
 
@@ -349,12 +341,12 @@ void Server::OnPlayersRequested(const ServerPlayersRequestedEvent&) const
 	});
 }
 
-void Server::OnKickRequested(const ServerKickRequestedEvent& event) const
+void Server::OnKickRequested(const ServerKickRequestedEvent& event)
 {
 	const auto sessions{CopySessions()};
 	const auto kicked{std::ranges::find_if(sessions, [slot = event.slot](const std::shared_ptr<Session>& session)
 	{
-		return !session->IsFinished() && session->GetSlot() == slot;
+		return session->Holds(slot);
 	})};
 
 	if (kicked == sessions.end())
@@ -365,7 +357,8 @@ void Server::OnKickRequested(const ServerKickRequestedEvent& event) const
 	}
 
 	Log::Info("kicking " + std::string{ToString(event.slot)} + " " + (*kicked)->Address());
-	(*kicked)->Kick();
+	//NOTE: the link is the io thread's alone - the console asks on the game one
+	boost::asio::post(_socket.get_executor(), [session = *kicked] { session->Kick(); });
 }
 
 void Server::OnAcceptingChanged(const ServerAcceptingChangedEvent& event)
@@ -473,12 +466,11 @@ std::vector<std::shared_ptr<Session>> Server::CopySessions() const
 
 std::optional<PlayerSlot> Server::FindFreeSlot(const udp::endpoint& endpoint) const
 {
-	//NOTE: a finished session gives its seat up at once - a client dialling back takes it before the sweep
 	const auto isFree = [this](const PlayerSlot slot)
 	{
 		return std::ranges::none_of(_sessions, [slot](const std::shared_ptr<Session>& session)
 		{
-			return !session->IsFinished() && session->GetSlot() == slot;
+			return session->Holds(slot);
 		});
 	};
 

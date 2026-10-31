@@ -288,6 +288,19 @@ bool IsThisMachine(const std::string_view host)
 									address);
 }
 
+std::string DialHost(const std::string_view host)
+{
+	boost::system::error_code ec;
+	const auto address{boost::asio::ip::make_address(std::string{host}, ec)};
+	if (ec || !address.is_unspecified())
+	{
+		return std::string{host};
+	}
+
+	return address.is_v6() ? boost::asio::ip::address_v6::loopback().to_string()
+						   : boost::asio::ip::address_v4::loopback().to_string();
+}
+
 //NOTE: connecting UDP only asks the OS for a route, as in LocalAddress
 bool IsReachable(const std::string_view host)
 {
