@@ -21,7 +21,7 @@ struct MatchSettings final
 	std::uint8_t enemiesAtOnce{kMaxEnemiesAtOnce};
 	//NOTE: seats bots hold, up to every one - the empty ones first, then players', who watch until their first command
 	std::uint8_t bots{};
-	//NOTE: the match starts with whoever is in, and the rest join it running
+	//NOTE: bots in every seat, whatever bots says, until their players' first command; the rest join it running
 	bool isStartingAtOnce{};
 
 	[[nodiscard]] bool operator==(const MatchSettings& rhs) const = default;

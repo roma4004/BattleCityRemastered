@@ -11,6 +11,7 @@
 #include <concepts>
 #include <memory>
 #include <optional>
+#include <string>
 #include <vector>
 
 struct BonusEffectsChangedEvent;
@@ -21,7 +22,6 @@ struct RespawnCountChangedToEvent;
 struct SeatHoldersAnnouncedEvent;
 struct SideBarEnemyBadge;
 struct SideBarSeat;
-struct UiTable;
 class GameConfig;
 
 class RightSideBar final
@@ -70,8 +70,7 @@ class RightSideBar final
 	[[nodiscard]] static bool IsRunning(const RunningEffect& effect);
 	[[nodiscard]] static bool FreezesEnemyTeam(const RunningEffect& effect);
 	[[nodiscard]] static bool FortifiesBase(const RunningEffect& effect);
-	[[nodiscard]] bool IsWatching() const;
-	[[nodiscard]] std::optional<UiTable> HintTable() const;
+	[[nodiscard]] std::string LabelOf(PlayerSlot slot) const;
 	void OnGameModeApplied(const GameModeAppliedEvent& event);
 	void OnGameReset(const GameResetEvent&);
 	void OnRespawnCountChangedTo(const RespawnCountChangedToEvent& event);

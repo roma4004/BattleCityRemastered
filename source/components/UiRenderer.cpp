@@ -396,13 +396,9 @@ void UiRenderer::DrawSideBar(const RenderSideBarEvent& event) const
 
 	const float scale{CurrentRenderScale()};
 	const SideBarWords words{_playerPainter.Paint(event.players, CellMeasurer(SideBarCanvas::kPointSize, scale),
-												  CellMeasurer(SDL_Config::kFontSizePt, scale))};
-	if (words.hint)
-	{
-		DrawTables(std::array<PlacedTable, 1>{{{*event.players.hint, *words.hint}}}, SDL_Config::kFontSizePt, scale);
-	}
-
+												  CellMeasurer(SideBarCanvas::kLabelPointSize, scale))};
 	DrawTables(std::views::zip(words.tables, words.places), SideBarCanvas::kPointSize, scale);
+	DrawTables(std::views::zip(words.labels, words.labelPlaces), SideBarCanvas::kLabelPointSize, scale);
 }
 
 void UiRenderer::RenderFPS(const RenderFPSEvent& event) const

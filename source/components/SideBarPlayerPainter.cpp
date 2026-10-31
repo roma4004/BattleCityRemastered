@@ -2,7 +2,6 @@
 #include "components/SideBarCanvas.h"
 #include "components/UiLayout.h"
 #include "components/UiTable.h"
-#include "components/WorldGeometry.h"
 #include "components/events/RenderUIEvents.h"
 #include "enums/TextureOffset.h"
 #include "geometry/ObjRectangle.h"
@@ -36,7 +35,7 @@ SideBarPlayerPainter::SideBarPlayerPainter(const SideBarCanvas& canvas)
 
 //NOTE: the atlas has pictures for two seats; three or four go as rows
 SideBarWords SideBarPlayerPainter::Paint(const SideBarPlayers& players, const UiLayout::Measure& barFont,
-										 const UiLayout::Measure& menuFont) const
+										 const UiLayout::Measure& labelFont) const
 {
 	constexpr double seatRowsTop{1.0};
 	//NOTE: how far the gray block reaches past the outermost picture
@@ -61,42 +60,27 @@ SideBarWords SideBarPlayerPainter::Paint(const SideBarPlayers& players, const Ui
 	const double rowLeft{frame.x + (frame.w - rowWidth) / 2.0};
 	const double rowsTop{firstSeat.y + seatRowsTop};
 
-	const double rowsHeight{SideBarCanvas::kCell * static_cast<double>(players.seats.size())};
-	const double seatsBottom{isRows ? rowsTop + rowsHeight + border : flag.y};
-	const double blockBottom{players.hint ? seatsBottom : flag.y + flag.h + border};
 	const ObjRectangle block{.x = isRows ? rowLeft - border : frame.x,
 							 .y = firstSeat.y,
 							 .w = isRows ? rowWidth + border * 2.0 : frame.w,
-							 .h = blockBottom - firstSeat.y};
+							 .h = flag.y + flag.h + border - firstSeat.y};
 	_canvas.Draw(TextureOffset::kSideBarGray, _canvas.Rect(block));
-	if (!players.hint)
-	{
-		_canvas.Draw(flag, _canvas.Rect(flag));
-		const ObjRectangle fortified{.x = flag.x + fortifiedSpace.x,
-									 .y = flag.y + fortifiedSpace.y,
-									 .w = fortifiedSpace.w,
-									 .h = fortifiedSpace.h};
-		_canvas.DrawBadge(TextureOffset::kBonusShovel, players.fortified,
-						  SideBarCanvas::Inset(_canvas.Rect(fortified), SideBarCanvas::kCellMargin, fortifiedMargin));
-	}
+	_canvas.Draw(flag, _canvas.Rect(flag));
+	const ObjRectangle fortified{.x = flag.x + fortifiedSpace.x,
+								 .y = flag.y + fortifiedSpace.y,
+								 .w = fortifiedSpace.w,
+								 .h = fortifiedSpace.h};
+	_canvas.DrawBadge(TextureOffset::kBonusShovel, players.fortified,
+					  SideBarCanvas::Inset(_canvas.Rect(fortified), SideBarCanvas::kCellMargin, fortifiedMargin));
 
 	SideBarWords words{};
 	if (isRows)
 	{
-		PaintSeatRows(players.seats, rowLeft, rowsTop, words, barFont);
+		PaintSeatRows(players.seats, rowLeft, rowsTop, words, barFont, labelFont);
 	}
 	else
 	{
-		PaintSeatPictures(players.seats, words, barFont);
-	}
-
-	if (players.hint)
-	{
-		const Point hintAt{.x = _canvas.Left(), .y = _canvas.Rect(flag).y};
-		words.hint = UiLayout::CenteredAcross(UiLayout::Place(*players.hint, hintAt, 0, menuFont), hintAt,
-											  static_cast<int>(WorldGeometry::kSideBarWidth));
-
-		return words;
+		PaintSeatPictures(players.seats, words, barFont, labelFont);
 	}
 
 	const std::string number{std::to_string(players.stage)};
@@ -111,7 +95,7 @@ SideBarWords SideBarPlayerPainter::Paint(const SideBarPlayers& players, const Ui
 }
 
 void SideBarPlayerPainter::PaintSeatPictures(const std::vector<SideBarSeat>& seats, SideBarWords& words,
-											 const UiLayout::Measure& barFont) const
+											 const UiLayout::Measure& barFont, const UiLayout::Measure& labelFont) const
 {
 	//NOTE: off the seat's picture; badges take the empty row under it
 	constexpr Point livesCell{.x = 9, .y = 9};
@@ -122,7 +106,15 @@ void SideBarPlayerPainter::PaintSeatPictures(const std::vector<SideBarSeat>& sea
 	const auto seated{std::views::zip(seats, pictures)};
 	for (const auto [seat, picture]: seated)
 	{
-		_canvas.Draw(picture, _canvas.Rect(picture));
+		const SDL_Rect place{_canvas.Rect(picture)};
+		_canvas.Draw(picture, place);
+		if (!seat.label.empty())
+		{
+			PaintLabel(seat.label, place, words, labelFont);
+
+			continue;
+		}
+
 		words.Add(std::to_string(seat.lives),
 				  _canvas.Rect(SideBarCanvas::GlyphCells(SideBarCanvas::CellOff(picture, livesCell))), barFont);
 	}
@@ -141,7 +133,8 @@ void SideBarPlayerPainter::PaintSeatPictures(const std::vector<SideBarSeat>& sea
 }
 
 void SideBarPlayerPainter::PaintSeatRows(const std::vector<SideBarSeat>& seats, const double left, const double top,
-										 SideBarWords& words, const UiLayout::Measure& barFont) const
+										 SideBarWords& words, const UiLayout::Measure& barFont,
+										 const UiLayout::Measure& labelFont) const
 {
 	constexpr int timerCell{0};
 	constexpr int numberCell{1};
@@ -161,6 +154,18 @@ void SideBarPlayerPainter::PaintSeatRows(const std::vector<SideBarSeat>& seats, 
 			return SideBarCanvas::Inset(_canvas.Rect(cell(column, 1)), SideBarCanvas::kCellMargin,
 										SideBarCanvas::kBadgeMarginDown);
 		};
+		if (!seat.label.empty())
+		{
+			//NOTE: from the block's top - a lower edge shows a step past the block
+			const ObjRectangle row{cell(timerCell, kRowLivesCell + 1)};
+			const double plateTop{index == 0 ? TextureOffset::kPlayer1Icon.y : row.y};
+			PaintLabel(seat.label,
+					   _canvas.Rect(ObjRectangle{.x = row.x, .y = plateTop, .w = row.w, .h = row.y + row.h - plateTop}),
+					   words, labelFont);
+
+			continue;
+		}
+
 		const ObjRectangle number{cell(numberCell, helmetCell - numberCell)};
 		_canvas.DrawBadge(TextureOffset::kBonusTimer, seat.frozen, badgeIn(timerCell));
 		words.Add(std::to_string(index + 1) + "P", _canvas.Rect(SideBarCanvas::GlyphCells(number)), barFont);
@@ -168,4 +173,22 @@ void SideBarPlayerPainter::PaintSeatRows(const std::vector<SideBarSeat>& seats, 
 		words.Add(std::to_string(seat.lives), _canvas.Rect(SideBarCanvas::GlyphCells(cell(kRowLivesCell, 1))),
 				  barFont);
 	}
+}
+
+void SideBarPlayerPainter::PaintLabel(const std::string& label, const SDL_Rect& seat, SideBarWords& words,
+									  const UiLayout::Measure& labelFont) const
+{
+	constexpr int margin{4};
+
+	UiTable table{.rows = {UiRow{.cells = {TextCell(label, kSideBarTextColor)}}}};
+	UiLayout::Placement placed{UiLayout::Place(table, Point{}, 0, labelFont)};
+	const Point middle{.x = seat.x + seat.w / 2, .y = seat.y + seat.h / 2};
+	placed.ShiftBy(Point{.x = middle.x - placed.size.x / 2, .y = middle.y - placed.size.y / 2});
+
+	const Point plate{.x = std::max(seat.w, placed.size.x + margin * 2), .y = std::max(seat.h, placed.size.y)};
+	_canvas.Draw(TextureOffset::kSideBarGray,
+				 SDL_Rect{.x = middle.x - plate.x / 2, .y = middle.y - plate.y / 2, .w = plate.x, .h = plate.y});
+
+	words.labels.push_back(std::move(table));
+	words.labelPlaces.push_back(std::move(placed));
 }

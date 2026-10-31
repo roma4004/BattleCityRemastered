@@ -94,12 +94,8 @@ TEST_F(NetworkGameStateTest, TheReadyThatCompletesTheSeatsStartsTheMatch)
 				  .seated = {PlayerSlot::P1, PlayerSlot::P2},
 				  .early = {PlayerSlot::P1},
 				  .last = PlayerSlot::P2},
-			Start{.why = "no enemies - somebody to fight is a second player",
-				  .match = {.seats = 4u, .enemiesAtOnce = 0u, .isStartingAtOnce = true},
-				  .early = {PlayerSlot::P1},
-				  .last = PlayerSlot::P2},
-			Start{.why = "no enemies - a bot in a seat is the second",
-				  .match = {.seats = 2u, .enemiesAtOnce = 0u, .bots = 1u, .isStartingAtOnce = true},
+			Start{.why = "no enemies - the bots in the other seats are somebody to fight",
+				  .match = {.seats = 2u, .enemiesAtOnce = 0u, .isStartingAtOnce = true},
 				  .last = PlayerSlot::P1}};
 	for (const Start& start: starts)
 	{
@@ -408,14 +404,18 @@ TEST_F(NetworkGameStateTest, TheBotsTakeTheTopSeatsNobodyTookThenTheTopPlayersSe
 
 	const std::array seatings{
 			Seating{.why = "the empty seats first",
-					.match = {.seats = 4u, .bots = 2u, .isStartingAtOnce = true},
-					.readies = {PlayerSlot::P1},
-					.holders = {SeatHolder::Player, SeatHolder::Empty, SeatHolder::Bot, SeatHolder::Bot}},
+					.match = {.seats = 4u, .bots = 2u},
+					.readies = {PlayerSlot::P1, PlayerSlot::P2},
+					.holders = {SeatHolder::Player, SeatHolder::Player, SeatHolder::Bot, SeatHolder::Bot}},
 			Seating{.why = "a bot left over takes the top player's seat",
-					.match = {.seats = 4u, .bots = 3u, .isStartingAtOnce = true},
+					.match = {.seats = 4u, .bots = 3u},
 					.seated = {PlayerSlot::P4},
 					.readies = {PlayerSlot::P1, PlayerSlot::P4},
-					.holders = {SeatHolder::Player, SeatHolder::Bot, SeatHolder::Bot, SeatHolder::Bot}}};
+					.holders = {SeatHolder::Player, SeatHolder::Bot, SeatHolder::Bot, SeatHolder::Bot}},
+			Seating{.why = "starting at once, every seat is a bot's until its player's first command",
+					.match = {.seats = 3u, .bots = 1u, .isStartingAtOnce = true},
+					.readies = {PlayerSlot::P1},
+					.holders = {SeatHolder::Bot, SeatHolder::Bot, SeatHolder::Bot, SeatHolder::Empty}}};
 	for (const Seating& seating: seatings)
 	{
 		SCOPED_TRACE(seating.why);

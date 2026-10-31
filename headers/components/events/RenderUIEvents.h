@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <string>
 #include <vector>
 
 struct MenuShownEvent
@@ -119,6 +120,7 @@ struct SideBarSeat
 	unsigned short lives{};
 	std::optional<float> frozen{};
 	std::optional<float> helmet{};
+	std::string label{};
 };
 
 //NOTE: the reserve fills the enemy frame from the top; badges take the cells it left empty
@@ -144,8 +146,6 @@ struct SideBarPlayers
 	std::vector<SideBarSeat> seats{};
 	unsigned short stage{};
 	std::optional<float> fortified{};
-	//NOTE: while a bot drives the client's seat; it replaces the flag
-	std::optional<UiTable> hint{};
 };
 
 struct RenderSideBarEvent

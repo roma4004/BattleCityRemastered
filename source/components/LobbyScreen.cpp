@@ -34,9 +34,9 @@ UiRow Line(std::string text) { return UiRow{.cells = {TextCell(std::move(text), 
 	switch (choice)
 	{
 		case AbsenceChoice::Continue:
-			return isAnyoneOut ? "PLAY ON WITHOUT" : "CONTINUE";
+			return isAnyoneOut ? "PLAY WITHOUT" : "CONTINUE";
 		case AbsenceChoice::Bot:
-			return "HAND OVER TO BOT";
+			return "PLAY WITH COOP BOT";
 	}
 
 	return "";
@@ -313,6 +313,13 @@ void LobbyScreen::DrawAbsence() const
 	}
 
 	const bool isAnyoneOut{std::ranges::contains(_absence, Absence::Left)};
+	if (isAnyoneOut)
+	{
+		seats.rows.push_back(Line("THE PLAYER STILL CAN REJOIN"));
+		seats.rows.push_back(Line("YOU CAN WAIT FOR IT"));
+		seats.rows.push_back(Line("OR CONTINUE WITH CHOICE BELOW"));
+	}
+
 	UiTable choices{};
 	std::ranges::transform(Choices(), std::back_inserter(choices.rows), [isAnyoneOut](const AbsenceChoice choice)
 	{

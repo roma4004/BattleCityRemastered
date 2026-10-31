@@ -3,7 +3,6 @@
 #include "components/UiLayout.h"
 #include "components/UiTable.h"
 #include <SDL3/SDL_rect.h>
-#include <optional>
 #include <string>
 #include <vector>
 
@@ -16,8 +15,8 @@ struct SideBarWords
 {
 	std::vector<UiTable> tables{};
 	std::vector<UiLayout::Placement> places{};
-	//NOTE: in the menu font - the side bar's one is too wide for it
-	std::optional<UiLayout::Placement> hint{};
+	std::vector<UiTable> labels{};
+	std::vector<UiLayout::Placement> labelPlaces{};
 
 	//NOTE: one line from the place's top-left corner
 	void Add(std::string text, const SDL_Rect& place, const UiLayout::Measure& measure);
@@ -28,14 +27,16 @@ class SideBarPlayerPainter final
 {
 	const SideBarCanvas& _canvas;
 
-	void PaintSeatPictures(const std::vector<SideBarSeat>& seats, SideBarWords& words,
-						   const UiLayout::Measure& barFont) const;
+	void PaintSeatPictures(const std::vector<SideBarSeat>& seats, SideBarWords& words, const UiLayout::Measure& barFont,
+						   const UiLayout::Measure& labelFont) const;
 	void PaintSeatRows(const std::vector<SideBarSeat>& seats, double left, double top, SideBarWords& words,
-					   const UiLayout::Measure& barFont) const;
+					   const UiLayout::Measure& barFont, const UiLayout::Measure& labelFont) const;
+	void PaintLabel(const std::string& label, const SDL_Rect& seat, SideBarWords& words,
+					const UiLayout::Measure& labelFont) const;
 
 public:
 	explicit SideBarPlayerPainter(const SideBarCanvas& canvas);
 
 	[[nodiscard]] SideBarWords Paint(const SideBarPlayers& players, const UiLayout::Measure& barFont,
-									 const UiLayout::Measure& menuFont) const;
+									 const UiLayout::Measure& labelFont) const;
 };

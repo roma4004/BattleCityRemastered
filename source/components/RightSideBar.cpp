@@ -6,7 +6,6 @@
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/GameModeEvents.h"
 #include "components/events/RenderUIEvents.h"
-#include "components/UiTable.h"
 #include "entities/EffectTarget.h"
 #include "enums/Author.h"
 #include "enums/BonusType.h"
@@ -24,6 +23,7 @@
 #include <cstddef>
 #include <optional>
 #include <ranges>
+#include <string>
 #include <variant>
 #include <vector>
 
@@ -52,8 +52,7 @@ void RightSideBar::Draw() const
 																	.teamFrozen = SpentOn(FreezesEnemyTeam)},
 										  .players = SideBarPlayers{.seats = Seats(),
 																	.stage = _stageNumber,
-																	.fortified = SpentOn(FortifiesBase),
-																	.hint = HintTable()}});
+																	.fortified = SpentOn(FortifiesBase)}});
 }
 
 //NOTE: a new badge takes the first empty cell under the reserve; one the reserve grew over is placed anew
@@ -125,7 +124,8 @@ std::vector<SideBarSeat> RightSideBar::Seats() const
 						   {
 							   return FreezesSeat(effect.type, effect.target, effect.spared, side, seat);
 						   }),
-						   .helmet = HelmetSpent(seat)};
+						   .helmet = HelmetSpent(seat),
+						   .label = LabelOf(slot)};
 	};
 
 	return kSlots | std::views::take(_gameConfig.SeatCount()) | std::views::transform(seatOf)
@@ -186,23 +186,15 @@ bool RightSideBar::FortifiesBase(const RunningEffect& effect)
 	return effect.type == BonusType::Shovel && effect.target == EffectTarget{Faction::PlayerTeam};
 }
 
-bool RightSideBar::IsWatching() const
+//NOTE: any bot's seat is free to join
+std::string RightSideBar::LabelOf(const PlayerSlot slot) const
 {
-	const std::optional<PlayerSlot>& own{_gameConfig.ownSlot};
-
-	return _gameConfig.IsClient() && own && IsInMatch(_gameConfig.gameState)
-		   && _holders[SeatIndex(*own)] == SeatHolder::Bot;
-}
-
-std::optional<UiTable> RightSideBar::HintTable() const
-{
-	if (!IsWatching())
+	if (!IsInMatch(_gameConfig.gameState) || _holders[SeatIndex(slot)] != SeatHolder::Bot)
 	{
-		return std::nullopt;
+		return {};
 	}
 
-	return UiTable{.rows = {UiRow{.cells = {TextCell("MOVE OR FIRE", kSideBarTextColor, UiAlign::Centered)}},
-							UiRow{.cells = {TextCell("TO PLAY", kSideBarTextColor, UiAlign::Centered)}}}};
+	return _gameConfig.ownSlot == slot ? "PRESS TO START" : "WAITING";
 }
 
 //NOTE: a network seat is empty until the host says who took it

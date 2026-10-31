@@ -18,7 +18,7 @@
 GameStateManager::GameStateManager(const std::shared_ptr<EventSystem>& events, const MatchSettings& match)
 	: _events{events}
 	, _seatCount{match.seats}
-	, _bots{std::min(match.bots, MaxBots(match.seats))}
+	, _bots{match.isStartingAtOnce ? match.seats : std::min(match.bots, MaxBots(match.seats))}
 	, _fewestToStart{match.enemiesAtOnce > 0u ? 1u : 2u}
 	, _isStartingAtOnce{match.isStartingAtOnce}
 {

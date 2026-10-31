@@ -24,6 +24,8 @@ public:
 	static constexpr double kScale{2.75};
 	//NOTE: a digit fills one atlas cell
 	static constexpr int kPointSize{static_cast<int>(kCell * kScale)};
+	//NOTE: square symbols - "PRESS TO START" fits across the bar
+	static constexpr int kLabelPointSize{11};
 	static constexpr double kCellMargin{0.5};
 	//NOTE: keeps a badge clear of the pictures above and below
 	static constexpr double kBadgeMarginDown{1.0};
