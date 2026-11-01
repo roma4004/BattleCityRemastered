@@ -253,7 +253,7 @@ void Tank::SubscribeBonus()
 	_subs.push_back(_events->AddListener(Key(_author), this, &Tank::OnBonusStarPickup));
 	_subs.push_back(_events->AddListener(Key(_author), this, &Tank::OnBonusCaliberPickup));
 	_subs.push_back(_events->AddListener(Key(_author), this, &Tank::OnBonusShipPickup));
-	_subs.push_back(_events->AddListener(Key(_faction), this, &Tank::OnBonusTeamShipPickup));
+	_subs.push_back(_events->AddListener(Key(_faction), this, &Tank::OnBonusShipPickup));
 }
 
 void Tank::OnBonusHelmetStatusChange(const BonusHelmetStatusChangeEvent& event) { OnBonusHelmet(event.isActive); }
@@ -263,8 +263,6 @@ void Tank::OnBonusStarPickup(const BonusStarPickupEvent&) { OnBonusStar(); }
 void Tank::OnBonusCaliberPickup(const BonusCaliberPickupEvent&) { OnBonusCaliber(); }
 
 void Tank::OnBonusShipPickup(const BonusShipPickupEvent& event) { BoardShip(event.charges); }
-
-void Tank::OnBonusTeamShipPickup(const BonusTeamShipPickupEvent& event) { BoardShip(event.charges); }
 
 void Tank::OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const
 {

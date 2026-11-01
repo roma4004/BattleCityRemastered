@@ -31,7 +31,6 @@ struct BonusGrenadePickupEvent;
 struct BonusStarPickupEvent;
 struct BonusCaliberPickupEvent;
 struct BonusShipPickupEvent;
-struct BonusTeamShipPickupEvent;
 struct WorldSnapshotRequestedEvent;
 class IInputProvider;
 class MoveLikeTankBeh;
@@ -77,7 +76,6 @@ class Tank final : public Pawn
 	void OnBonusStarPickup(const BonusStarPickupEvent& event);
 	void OnBonusCaliberPickup(const BonusCaliberPickupEvent& event);
 	void OnBonusShipPickup(const BonusShipPickupEvent& event);
-	void OnBonusTeamShipPickup(const BonusTeamShipPickupEvent& event);
 	void OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const;
 
 	void OnBonusTimer(const BonusTimerStatusChangeEvent& event);

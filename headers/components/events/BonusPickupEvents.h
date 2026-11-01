@@ -19,12 +19,6 @@ struct BonusShipPickupEvent
 	unsigned short charges{};
 };
 
-//NOTE: keyed by the taker's faction
-struct BonusTeamShipPickupEvent
-{
-	unsigned short charges{};
-};
-
 inline constexpr unsigned short kGoldenShipCharges{2u};
 
 //NOTE: spares its taker, who in a free-for-all is on the side it hits

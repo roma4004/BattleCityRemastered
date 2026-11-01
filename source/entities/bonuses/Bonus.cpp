@@ -98,7 +98,7 @@ constexpr std::array s_recipes{
 							return;
 						}
 
-						events.EmitEvent(Key(faction), BonusTeamShipPickupEvent{.charges = kGoldenShipCharges});
+						events.EmitEvent(Key(faction), BonusShipPickupEvent{.charges = kGoldenShipCharges});
 					}},
 };
 

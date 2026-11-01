@@ -450,12 +450,14 @@ class EventSystem final : public std::enable_shared_from_this<EventSystem>
 		std::unique_ptr<BaseKeyedEvent> event;
 	};
 
+	//NOTE: keyed by the event and the key type together - one event keyed by Author and by Faction is two maps
 	std::unordered_map<std::type_index, KeyedEventInfo> _keyedEvents;
 
 	template<typename KeyT, typename EventType>
 	KeyedEvent<KeyT, EventType>* GetTypedKeyedEvent()
 	{
-		if (const auto it{_keyedEvents.find(std::type_index(typeid(EventType)))}; it != _keyedEvents.end())
+		if (const auto it{_keyedEvents.find(std::type_index(typeid(KeyedEvent<KeyT, EventType>)))};
+			it != _keyedEvents.end())
 		{
 			return static_cast<KeyedEvent<KeyT, EventType>*>(it->second.event.get());
 		}
@@ -539,7 +541,7 @@ public:
 	template<typename KeyT, typename EventType, Callable CallableT>
 	EventSubscription AddKeyedListenerImpl(const KeyT& key, CallableT&& callback, const std::source_location& origin)
 	{
-		const std::type_index typeKey(typeid(EventType));
+		const std::type_index typeKey(typeid(KeyedEvent<KeyT, EventType>));
 
 		if (const auto it{_keyedEvents.find(typeKey)}; it == _keyedEvents.end())
 		{

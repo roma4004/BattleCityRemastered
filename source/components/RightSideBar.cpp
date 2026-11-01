@@ -22,6 +22,7 @@
 #include <chrono>
 #include <concepts>
 #include <cstddef>
+#include <memory>
 #include <optional>
 #include <ranges>
 #include <string>
