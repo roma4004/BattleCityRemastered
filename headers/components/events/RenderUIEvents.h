@@ -127,7 +127,7 @@ struct SideBarSeat
 //NOTE: the reserve fills the enemy frame from the top; badges take the cells it left empty
 inline constexpr int kEnemyFrameCells{20};
 
-//NOTE: an enemy's helmet or free-for-all timer, in the frame cell it took when it started
+//NOTE: an enemy's helmet, ship or free-for-all timer, in the frame cell it took when it started
 struct SideBarEnemyBadge
 {
 	int cell{};

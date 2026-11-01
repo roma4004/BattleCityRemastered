@@ -34,7 +34,7 @@ class RightSideBar final
 	//NOTE: as the host told them - a client in a seat a bot holds is watching it
 	std::array<SeatHolder, kSeatCount> _holders{};
 	//NOTE: no timer, unlike the effects
-	std::array<bool, kSeatCount> _ships{};
+	std::vector<Author> _ships{};
 
 	struct RunningEffect final
 	{
@@ -70,6 +70,7 @@ class RightSideBar final
 	[[nodiscard]] unsigned short RespawnCountOf(RespawnGroup group) const;
 	[[nodiscard]] std::optional<float> SpentOn(const std::predicate<const RunningEffect&> auto& isIt) const;
 	[[nodiscard]] std::optional<float> HelmetSpent(Author seat) const;
+	[[nodiscard]] std::optional<float> ShipSpent(Author seat) const;
 	[[nodiscard]] static float Spent(const RunningEffect& effect);
 	[[nodiscard]] static bool IsRunning(const RunningEffect& effect);
 	[[nodiscard]] static bool FreezesEnemyTeam(const RunningEffect& effect);

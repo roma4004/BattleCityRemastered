@@ -68,8 +68,9 @@ void RightSideBar::PlaceEnemyBadges()
 	});
 
 	const auto cells{std::views::iota(reserve, kEnemyFrameCells)};
-	for (const auto [type, seat]: std::views::cartesian_product(std::array{BonusType::Helmet, BonusType::Timer},
-																 kEnemyAuthors))
+	const auto sharesCell = [](const BonusType type) { return type == BonusType::Helmet || type == BonusType::Ship; };
+	for (const auto [type, seat]:
+		 std::views::cartesian_product(std::array{BonusType::Helmet, BonusType::Ship, BonusType::Timer}, kEnemyAuthors))
 	{
 		const bool isPlaced{std::ranges::any_of(_enemyBadges, [type, seat](const EnemyBadge& badge)
 		{
@@ -77,6 +78,18 @@ void RightSideBar::PlaceEnemyBadges()
 		})};
 		if (isPlaced || !EnemyBadgeSpent(seat, type))
 		{
+			continue;
+		}
+
+		//NOTE: an enemy's helmet and ship share a cell - the ship is drawn beside the frame
+		const auto mate{std::ranges::find_if(_enemyBadges, [&sharesCell, type, seat](const EnemyBadge& badge)
+		{
+			return badge.seat == seat && sharesCell(badge.type) && sharesCell(type);
+		})};
+		if (mate != _enemyBadges.end())
+		{
+			_enemyBadges.push_back(EnemyBadge{.seat = seat, .type = type, .cell = mate->cell});
+
 			continue;
 		}
 
@@ -109,6 +122,11 @@ std::optional<float> RightSideBar::EnemyBadgeSpent(const Author seat, const Bonu
 		return HelmetSpent(seat);
 	}
 
+	if (type == BonusType::Ship)
+	{
+		return ShipSpent(seat);
+	}
+
 	return SpentOn([seat](const RunningEffect& effect)
 	{
 		return FreezesSeat(effect.type, effect.target, effect.spared, Faction::Solo, seat);
@@ -128,7 +146,7 @@ std::vector<SideBarSeat> RightSideBar::Seats() const
 							   return FreezesSeat(effect.type, effect.target, effect.spared, side, seat);
 						   }),
 						   .helmet = HelmetSpent(seat),
-						   .ship = _ships[SeatIndex(slot)] ? std::optional{0.f} : std::nullopt,
+						   .ship = ShipSpent(seat),
 						   .label = LabelOf(slot)};
 	};
 
@@ -168,6 +186,12 @@ std::optional<float> RightSideBar::HelmetSpent(const Author seat) const
 	{
 		return effect.type == BonusType::Helmet && effect.target == EffectTarget{seat};
 	});
+}
+
+//NOTE: spent by charges, not by time - shown whole while it lasts
+std::optional<float> RightSideBar::ShipSpent(const Author seat) const
+{
+	return std::ranges::contains(_ships, seat) ? std::optional{0.f} : std::nullopt;
 }
 
 float RightSideBar::Spent(const RunningEffect& effect)
@@ -211,7 +235,7 @@ void RightSideBar::OnGameReset(const GameResetEvent&)
 {
 	_effects.clear();
 	_enemyBadges.clear();
-	_ships.fill(false);
+	_ships.clear();
 }
 
 void RightSideBar::OnRespawnCountChangedTo(const RespawnCountChangedToEvent& event)
@@ -226,13 +250,12 @@ void RightSideBar::OnMapLoaded(const MapLoadedEvent& event) { _stageNumber = eve
 void RightSideBar::OnSeatHoldersAnnounced(const SeatHoldersAnnouncedEvent& event)
 {
 	_holders = event.holders;
-	for (auto&& [holder, ship]: std::views::zip(_holders, _ships))
+	std::erase_if(_ships, [this](const Author seat)
 	{
-		if (holder == SeatHolder::Empty)
-		{
-			ship = false;
-		}
-	}
+		const std::optional<PlayerSlot> slot{SlotOf(seat)};
+
+		return slot && _holders[SeatIndex(*slot)] == SeatHolder::Empty;
+	});
 }
 
 void RightSideBar::OnBonusEffectsChanged(const BonusEffectsChangedEvent& event)
@@ -252,22 +275,17 @@ void RightSideBar::OnBonusEffectsChanged(const BonusEffectsChangedEvent& event)
 
 void RightSideBar::OnBonusShipApplied(const BonusShipAppliedEvent& event)
 {
-	const std::optional<PlayerSlot> slot{SlotOf(event.author)};
-	if (!slot)
+	std::erase(_ships, event.author);
+	if (event.isActive)
 	{
-		return;
+		_ships.push_back(event.author);
 	}
 
-	_ships[SeatIndex(*slot)] = event.isActive;
+	PlaceEnemyBadges();
 }
 
 void RightSideBar::OnTankDied(const TankDiedEvent& event)
 {
-	const std::optional<PlayerSlot> slot{SlotOf(event.who)};
-	if (!slot)
-	{
-		return;
-	}
-
-	_ships[SeatIndex(*slot)] = false;
+	std::erase(_ships, event.who);
+	PlaceEnemyBadges();
 }

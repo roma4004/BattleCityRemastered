@@ -58,6 +58,17 @@ void SideBarEnemyPainter::PaintEffects(const SideBarEnemies& enemies, const int 
 
 	std::ranges::for_each(enemies.badges, [this, &inCell](const SideBarEnemyBadge& badge)
 	{
+		if (badge.type == BonusType::Ship)
+		{
+			//NOTE: it shares the cell with its helmet, so stands outside the frame on that cell's side
+			constexpr double outward{SideBarCanvas::kCell + kReserveFirstCell.x};
+			ObjRectangle beside{FrameCell(badge.cell)};
+			beside.x += badge.cell % kReservePerRow == 0 ? -outward : outward;
+			_canvas.DrawBadge(TextureOffset::kBonusShip, badge.spent, inCell(beside));
+
+			return;
+		}
+
 		const ObjRectangle& picture{badge.type == BonusType::Helmet ? TextureOffset::kBonusHelmet
 																	: TextureOffset::kBonusTimer};
 		_canvas.DrawBadge(picture, badge.spent, inCell(FrameCell(badge.cell)));
