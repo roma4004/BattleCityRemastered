@@ -201,7 +201,7 @@ TEST_F(LevelProgressionTest, TheHostReportsWhatTheTankCarried)
 	EXPECT_EQ(tierReport->tier, tier);
 }
 
-// lives travel too: the ones lost stay lost, and the tank that saw the level out takes the field again for free
+// lives travel too, plus one on top: the tank that saw the level out takes the field again for free
 TEST_F(LevelProgressionTest, TheLivesLeftRideOnToTheNextLevel)
 {
 	_events->EmitEvent(TankDiedEvent{.who = Author::Player1, .uuid = PlayerOne()->GetUuid(), .author = Author::Enemy1});
@@ -212,16 +212,21 @@ TEST_F(LevelProgressionTest, TheLivesLeftRideOnToTheNextLevel)
 	_events->EmitEvent(NextLevelRequestedEvent{});
 	StartMatch(GameResetEvent{.keepsPlayerProgress = true});
 
-	EXPECT_EQ(_playerOneLives, beforeTheWin);
+	EXPECT_EQ(_playerOneLives, beforeTheWin + 1u);
 }
 
 // while a restart hands out three again, whatever the run spent
 TEST_F(LevelProgressionTest, ARestartGivesTheLivesBack)
 {
 	const unsigned short afterFirstSpawn{_playerOneLives};
-	_events->EmitEvent(TankDiedEvent{.who = Author::Player1, .uuid = PlayerOne()->GetUuid(), .author = Author::Enemy1});
-	_allObjects.clear();
-	_events->EmitEvent(RespawnTanksEvent{});
+	//NOTE: two deaths - the level gives one back
+	for (int death{}; death < 2; ++death)
+	{
+		_events->EmitEvent(
+				TankDiedEvent{.who = Author::Player1, .uuid = PlayerOne()->GetUuid(), .author = Author::Enemy1});
+		_allObjects.clear();
+		_events->EmitEvent(RespawnTanksEvent{});
+	}
 	_events->EmitEvent(NextLevelRequestedEvent{});
 	StartMatch(GameResetEvent{.keepsPlayerProgress = true});
 	ASSERT_LT(_playerOneLives, afterFirstSpawn);

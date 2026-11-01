@@ -1,20 +1,18 @@
 #pragma once
 
 #include "components/EventSystem.h"
-#include "enums/Author.h"
 #include "enums/PlayerSlot.h"
 #include "enums/RespawnGroup.h"
 #include "utils/Uuid.h"
 #include <array>
-#include <chrono>
 #include <cstddef>
 #include <memory>
 #include <vector>
 
 enum class TankType : char8_t;
 enum class GameMode : char8_t;
-class GameConfig;
 struct GameResetEvent;
+struct NextLevelRequestedEvent;
 struct EnemyLineupLoadedEvent;
 struct TankSpawnEvent;
 struct TankDiedEvent;
@@ -26,11 +24,10 @@ struct SeatsFilledEvent;
 struct SeatHolderChangedEvent;
 struct WorldSnapshotRequestedEvent;
 struct WorldSnapshotReceivedEvent;
-class EventSystem;
+class GameConfig;
 
 class RespawnManager final
 {
-	using milliseconds = std::chrono::milliseconds;
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
 
@@ -48,16 +45,10 @@ class RespawnManager final
 
 	GameMode _gameMode{};
 	bool _isFreeForAll{};
-	std::size_t _seatCount{};
 	//NOTE: an empty seat spawns nothing - a network match says who sits where as it starts
 	std::array<SeatHolder, kSeatCount> _holders{};
 	std::size_t _enemySeats{};
-	unsigned short _enemiesSpawnCount{};
-	unsigned short _enemiesDeathCount{};
-	unsigned short _playersSpawnCount{};
-	unsigned short _playersDeathCount{};
 
-	void OnBonusTank(Author author);
 	void OnGoldenGrenadePickup(const BonusGoldenGrenadePickupEvent& event);
 	void OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const;
 	void OnWorldSnapshotReceived(const WorldSnapshotReceivedEvent& event);
@@ -67,27 +58,25 @@ class RespawnManager final
 
 	void Subscribe();
 	void OnGameReset(const GameResetEvent& event);
+	void OnNextLevelRequested(const NextLevelRequestedEvent&);
 	void OnBonusTankPickup(const BonusTankPickupEvent& event);
 	void OnPlayersBaseFinished(const PlayersBaseFinishedEvent&);
-	void OnRespawnTanks(const RespawnTanksEvent& event);
+	void OnRespawnTanks(const RespawnTanksEvent& event) const;
 	void OnEnemyLineupLoaded(const EnemyLineupLoadedEvent& event);
 
-	void SetEnemyNeedRespawn();
-	void SetPlayerNeedRespawn();
+	void RecountSeats(RespawnGroup group);
 
 	void ResetRespawnStat(bool keepsPlayerLives);
 	void ResetSpawn(bool keepsPlayerLives = false);
 
-	void ChangeRespawnCount(int delta, RespawnGroup type);
-	void TriggerLastPlayersLife();
+	void ChangeRespawnCount(int delta, RespawnGroup group);
+	void SetRespawnCount(RespawnGroup group, unsigned short count);
 
 	void OnTankSpawn(const TankSpawnEvent& event);
-	void OnEnemyDied(bool isAvailable);
-	void OnPlayerDied(bool isAvailable);
+	void CheckMatchEnd() const;
 	[[nodiscard]] bool AreEnemiesGone() const;
 	[[nodiscard]] std::size_t PlayersStillIn() const;
 	void OnTankDied(const TankDiedEvent& event);
-	void RespawnTanks();
 
 	std::vector<SpawnSlot> _slots{};
 

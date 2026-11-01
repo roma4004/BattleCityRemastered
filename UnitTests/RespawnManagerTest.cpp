@@ -25,6 +25,7 @@
 #include "gtest/gtest.h"
 #include <algorithm>
 #include <array>
+#include <cstddef>
 #include <map>
 #include <memory>
 #include <optional>
@@ -228,6 +229,7 @@ TEST_F(RespawnManagerTest, APlayersGoldenGrenadeTakesTheFieldOffTheEnemyReserveT
 	};
 
 	for (const Reserve& level: {Reserve{.why = "a reserve deeper than the field", .enemies = 20u},
+								Reserve{.why = "fewer left than the blast frees seats", .enemies = 10u},
 								Reserve{.why = "one left behind the field", .enemies = 5u, .isWon = true}})
 	{
 		SCOPED_TRACE(level.why);
@@ -276,6 +278,43 @@ TEST_F(RespawnManagerTest, AnEnemysGoldenGrenadeTakesALifeMoreOffEachPlayer)
 	EXPECT_FALSE(_result.has_value()) << "lives were left, yet the match ended";
 }
 
+// two players killed at once lose only if neither has a life left - whichever of them dies last
+TEST_F(RespawnManagerTest, PlayersKilledAtOnceLoseOnlyWithNoLifeLeftAmongThem)
+{
+	for (const Author spent: {Author::Player1, Author::Player2})
+	{
+		SCOPED_TRACE(static_cast<int>(spent));
+		_events->EmitEvent(GameResetEvent{});
+		_allObjects.clear();
+		_result.reset();
+		ApplyGameMode(GameMode::TwoPlayers);
+		_events->EmitEvent(GameResetEvent{});
+		const auto isSpent = [spent](const std::shared_ptr<BaseObj>& obj)
+		{
+			const auto tank{std::dynamic_pointer_cast<Tank>(obj)};
+
+			return tank != nullptr && tank->GetAuthor() == spent;
+		};
+
+		for (int life{}; life < 2; ++life)
+		{
+			_events->EmitEvent(RespawnTanksEvent{});
+			const auto tank{std::ranges::find_if(_allObjects, isSpent)};
+			ASSERT_NE(tank, _allObjects.end());
+			_events->EmitEvent(TankDiedEvent{.uuid = (*tank)->GetUuid()});
+			_allObjects.erase(tank);
+		}
+		_events->EmitEvent(RespawnTanksEvent{});
+		ASSERT_EQ(AliveOf(Faction::PlayerTeam), 2u);
+		ASSERT_EQ(_lives.at(GroupOf(*SlotOf(spent))), 0u);
+
+		TakeBonus(Author::Enemy1, BonusType::Grenade);
+
+		EXPECT_EQ(AliveOf(Faction::PlayerTeam), 0u);
+		EXPECT_FALSE(_result.has_value()) << "the other player had a life left, yet the match ended";
+	}
+}
+
 // the player's last life spent loses the match - three of them
 TEST_F(RespawnManagerTest, ThePlayersLastLifeSpentLoses)
 {
@@ -315,6 +354,73 @@ TEST_F(RespawnManagerTest, ALifeTakenAfterTheEagleFellBuysOneMoreDeath)
 	KillOne(Faction::PlayerTeam);
 
 	EXPECT_EQ(_result, GameState::Over);
+}
+
+// the eagle falling while the player is between tanks loses at once
+TEST_F(RespawnManagerTest, AnEagleFallingBetweenThePlayersTanksLosesAtOnce)
+{
+	_events->EmitEvent(RespawnTanksEvent{});
+	KillOne(Faction::PlayerTeam);
+	ASSERT_FALSE(_result.has_value()) << "the control failed - a death with lives left ended the match";
+
+	_events->EmitEvent(PlayersBaseFinishedEvent{});
+	_tanksAsked.clear();
+	_events->EmitEvent(RespawnTanksEvent{});
+
+	EXPECT_EQ(_result, GameState::Over);
+	EXPECT_FALSE(_tanksAsked.contains(TankType::PLAYER1)) << "the seat got a tank after the eagle fell";
+}
+
+// the last player and the last enemy falling together lose, in either order
+TEST_F(RespawnManagerTest, TheLastPlayerFallingWithTheLastEnemyLoses)
+{
+	for (const bool isPlayerFirst: {true, false})
+	{
+		SCOPED_TRACE(isPlayerFirst);
+		_events->EmitEvent(GameResetEvent{});
+		_allObjects.clear();
+		_result.reset();
+		_events->EmitEvent(EnemyLineupLoadedEvent{.count = 1u});
+		TimeUtils::Advance(_gameConfig.enemySpawnCooldown);
+		_events->EmitEvent(RespawnTanksEvent{});
+		_events->EmitEvent(PlayersBaseFinishedEvent{});
+		ASSERT_EQ(AliveOf(Faction::EnemyTeam), 1u);
+
+		KillOne(isPlayerFirst ? Faction::PlayerTeam : Faction::EnemyTeam);
+		KillOne(isPlayerFirst ? Faction::EnemyTeam : Faction::PlayerTeam);
+
+		EXPECT_EQ(_result, GameState::Over);
+	}
+}
+
+// a player who spent every life comes back on the next level
+TEST_F(RespawnManagerTest, ALevelChangeBringsBackAPlayerWhoSpentEveryLife)
+{
+	ApplyGameMode(GameMode::TwoPlayers);
+	_events->EmitEvent(GameResetEvent{});
+	const auto isPlayerOne = [](const std::shared_ptr<BaseObj>& obj)
+	{
+		const auto tank{std::dynamic_pointer_cast<Tank>(obj)};
+
+		return tank != nullptr && tank->GetAuthor() == Author::Player1;
+	};
+	for (int life{}; life < 3; ++life)
+	{
+		_events->EmitEvent(RespawnTanksEvent{});
+		const auto tank{std::ranges::find_if(_allObjects, isPlayerOne)};
+		ASSERT_NE(tank, _allObjects.end());
+		_events->EmitEvent(TankDiedEvent{.uuid = (*tank)->GetUuid()});
+		_allObjects.erase(tank);
+	}
+	ASSERT_EQ(_lives.at(RespawnGroup::PLAYER1), 0u);
+
+	_events->EmitEvent(NextLevelRequestedEvent{});
+	_events->EmitEvent(GameResetEvent{.keepsPlayerProgress = true});
+	_allObjects.clear();
+	_tanksAsked.clear();
+	_events->EmitEvent(RespawnTanksEvent{});
+
+	EXPECT_TRUE(_tanksAsked.contains(TankType::PLAYER1)) << "the player who spent every life sat the level out";
 }
 
 // 2P free-for-all is won by the last player standing, not by clearing the bots
