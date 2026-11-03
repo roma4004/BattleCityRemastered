@@ -137,6 +137,9 @@ struct LoadMapEvent {};
 //NOTE: sent by the scoreboard, handled by the authority only - a client forwards it so both load the same map
 struct NextLevelRequestedEvent {};
 
+//NOTE: the authority took the ask, once per won level - the won field still stands, the reset comes after
+struct NextLevelEvent {};
+
 //NOTE: local ServerInRestartRequestedEvent - the seats are taken, so the match restarts without a new ready round
 struct MatchRestartRequestedEvent {};
 

@@ -47,11 +47,11 @@ protected:
 	std::vector<EventSubscription> _instantSpawnAnimationSubs{};
 	GameConfig _gameConfig{};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
-	double _deltaTimeOneFrame{1.0 / 60.0};
+	static constexpr double kDeltaTimeOneFrame{1.0 / 60.0};
 	BulletCaliber _caliber{
 			.speed = 300.0, .damage = 1u, .health = 1, .blastRadius = 12.0, .tier = 1u, .size{.x = 6.0, .y = 5.0}};
 	double _tankSize{};
-	unsigned short _tankHealth{1u};
+	static constexpr unsigned short kTankHealth{1u};
 	EventSubscription _spawnQueueSub{};
 
 	void SetUp() override
@@ -75,7 +75,7 @@ protected:
 	{
 		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _gameConfig.tankSize, .h = _gameConfig.tankSize};
 
-		return TestUtils::CreatePlayer(rect, _tankHealth, author, _allObjects, _events, dir, _tankPool, _gameConfig);
+		return TestUtils::CreatePlayer(rect, kTankHealth, author, _allObjects, _events, dir, _tankPool, _gameConfig);
 	}
 
 	[[nodiscard]] std::shared_ptr<Tank> CreateBot(const FPoint pos, const Author author, const Direction dir,
@@ -83,7 +83,7 @@ protected:
 	{
 		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _gameConfig.tankSize, .h = _gameConfig.tankSize};
 
-		return TestUtils::CreateBot(rect, _tankHealth, author, _allObjects, _events, dir, _tankPool, _gameConfig, tier);
+		return TestUtils::CreateBot(rect, kTankHealth, author, _allObjects, _events, dir, _tankPool, _gameConfig, tier);
 	}
 
 	[[nodiscard]] std::shared_ptr<Bullet> CreateBullet(const FPoint pos, const Direction dir, const Author author) const
@@ -99,125 +99,177 @@ protected:
 	}
 };
 
-// a player shot by the enemy team: the hit stays with the seat, the kill goes to the team's shared counter
-TEST_F(StatisticsTest, APlayerShotByTheEnemyTeam)
+// a tank shot is a hit and a kill, counted by who took it and who fired - the enemies share a column, a seat owns one
+TEST_F(StatisticsTest, ATankShotIsCountedByWhoTookItAndWhoFired)
 {
-	for (const PlayerSlot seat: {PlayerSlot::P1, PlayerSlot::P2})
+	struct Shot final
 	{
-		SCOPED_TRACE(ToString(seat));
+		Author target;
+		Author shooter;
+		void (*credit)(StatisticsData&);
+	};
+
+	for (const auto& [target, shooter, credit]:
+		 {Shot{.target = Author::Player1,
+			   .shooter = Author::Enemy1,
+			   .credit = [](StatisticsData& data)
+			   {
+				   ++data.seats[SeatIndex(PlayerSlot::P1)].hitByEnemyTeam;
+				   ++data.enemyTeam.playerKills;
+			   }},
+		  Shot{.target = Author::Player2,
+			   .shooter = Author::Enemy1,
+			   .credit = [](StatisticsData& data)
+			   {
+				   ++data.seats[SeatIndex(PlayerSlot::P2)].hitByEnemyTeam;
+				   ++data.enemyTeam.playerKills;
+			   }},
+		  Shot{.target = Author::Player1,
+			   .shooter = Author::Player2,
+			   .credit = [](StatisticsData& data)
+			   {
+				   ++data.seats[SeatIndex(PlayerSlot::P1)].friendlyHitsTaken;
+				   ++data.seats[SeatIndex(PlayerSlot::P1)].friendlyKillsTaken;
+			   }},
+		  Shot{.target = Author::Player2,
+			   .shooter = Author::Player1,
+			   .credit = [](StatisticsData& data)
+			   {
+				   ++data.seats[SeatIndex(PlayerSlot::P2)].friendlyHitsTaken;
+				   ++data.seats[SeatIndex(PlayerSlot::P2)].friendlyKillsTaken;
+			   }},
+		  Shot{.target = Author::Enemy1,
+			   .shooter = Author::Enemy2,
+			   .credit = [](StatisticsData& data)
+			   {
+				   ++data.enemyTeam.friendlyHitsTaken;
+				   ++data.enemyTeam.friendlyKillsTaken;
+			   }},
+		  Shot{.target = Author::Enemy1,
+			   .shooter = Author::Player1,
+			   .credit = [](StatisticsData& data)
+			   {
+				   ++data.seats[SeatIndex(PlayerSlot::P1)].enemyHits;
+				   ++data.seats[SeatIndex(PlayerSlot::P1)].enemyKills;
+			   }},
+		  Shot{.target = Author::Enemy1,
+			   .shooter = Author::Player2,
+			   .credit = [](StatisticsData& data)
+			   {
+				   ++data.seats[SeatIndex(PlayerSlot::P2)].enemyHits;
+				   ++data.seats[SeatIndex(PlayerSlot::P2)].enemyKills;
+			   }},
+		  Shot{.target = Author::Enemy1,
+			   .shooter = Author::Player3,
+			   .credit = [](StatisticsData& data)
+			   {
+				   ++data.seats[SeatIndex(PlayerSlot::P3)].enemyHits;
+				   ++data.seats[SeatIndex(PlayerSlot::P3)].enemyKills;
+			   }}})
+	{
+		SCOPED_TRACE(testing::Message() << static_cast<int>(target) << " by " << static_cast<int>(shooter));
 		_events->EmitEvent(GameResetEvent{});
 		_allObjects.clear();
 		StatisticsData expected{_statistics->GetData()};
-		++expected.seats[SeatIndex(seat)].hitByEnemyTeam;
-		++expected.enemyTeam.playerKills;
-		std::ignore = CreatePlayer({.x = 0.0, .y = 0.0}, AuthorOf(seat));
-		std::ignore = CreateBullet({.x = _tankSize / 2.0, .y = _tankSize}, Direction::UP, Author::Enemy1);
+		credit(expected);
+		if (SlotOf(target).has_value())
+		{
+			std::ignore = CreatePlayer({.x = 0.0, .y = 0.0}, target);
+		}
+		else
+		{
+			std::ignore = CreateBot({.x = 0.0, .y = 0.0}, target, Direction::DOWN);
+		}
+		std::ignore = CreateBullet({.x = _tankSize / 2.0, .y = _tankSize}, Direction::UP, shooter);
 
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 		EXPECT_EQ(_statistics->GetData(), expected);
 	}
 }
 
-// shot by the other seat it is friendly fire, the hit and the kill both kept by the seat it happened to
-TEST_F(StatisticsTest, APlayerShotByTheOtherSeat)
-{
-	constexpr std::array kShooters{std::pair{PlayerSlot::P1, Author::Player2},
-								   std::pair{PlayerSlot::P2, Author::Player1}};
-	for (const auto& [seat, shooter]: kShooters)
-	{
-		SCOPED_TRACE(ToString(seat));
-		_events->EmitEvent(GameResetEvent{});
-		_allObjects.clear();
-		StatisticsData expected{_statistics->GetData()};
-		++expected.seats[SeatIndex(seat)].friendlyHitsTaken;
-		++expected.seats[SeatIndex(seat)].friendlyKillsTaken;
-		std::ignore = CreatePlayer({.x = 0.0, .y = 0.0}, AuthorOf(seat));
-		std::ignore = CreateBullet({.x = _tankSize / 2.0, .y = _tankSize + 1.0}, Direction::UP, shooter);
-
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-
-		EXPECT_EQ(_statistics->GetData(), expected);
-	}
-}
-
-// a bot shot by a bot - the enemy team counts its own friendly fire too, hit and kill alike
-TEST_F(StatisticsTest, AnEnemyShotByItsOwnTeam)
-{
-	std::ignore = CreateBot({.x = _tankSize * 2.0 + 2.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
-	std::ignore = CreateBullet({.x = _tankSize * 2.0 + 2.0 + _tankSize / 2.0, .y = _tankSize}, Direction::UP,
-							   Author::Enemy2);
-
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-
-	EXPECT_EQ(_statistics->GetData().enemyTeam.friendlyHitsTaken, 1u);
-	EXPECT_EQ(_statistics->GetData().enemyTeam.friendlyKillsTaken, 1u);
-}
-
-// a bot shot by a seat is that seat's hit and kill - the seats never share a bucket
-TEST_F(StatisticsTest, AnEnemyShotByASeat)
-{
-	for (const PlayerSlot seat: {PlayerSlot::P1, PlayerSlot::P2})
-	{
-		SCOPED_TRACE(ToString(seat));
-		_events->EmitEvent(GameResetEvent{});
-		_allObjects.clear();
-		StatisticsData expected{_statistics->GetData()};
-		++expected.seats[SeatIndex(seat)].enemyHits;
-		++expected.seats[SeatIndex(seat)].enemyKills;
-		std::ignore = CreateBot({.x = _tankSize * 2.0 + 2.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
-		std::ignore = CreateBullet({.x = _tankSize * 2.0 + 2.0 + _tankSize / 2.0, .y = _tankSize}, Direction::UP,
-								   AuthorOf(seat));
-
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-
-		EXPECT_EQ(_statistics->GetData(), expected);
-	}
-}
-
-// a third seat scores into its own column
-TEST_F(StatisticsTest, AThirdSeatScoresIntoItsOwnColumn)
-{
-	std::ignore = CreateBot({.x = _tankSize * 2.0 + 2.0, .y = 0.0}, Author::Enemy1, Direction::DOWN);
-	std::ignore = CreateBullet({.x = _tankSize * 2.0 + 2.0 + _tankSize / 2.0, .y = _tankSize}, Direction::UP,
-							   Author::Player3);
-
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-
-	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P3).enemyHits, 1u);
-	EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).enemyHits, 0u);
-}
-
-// the counter is about bullets touching bullets - touching a wall, broken or not, or the field's edge is no bullet hit
-TEST_F(StatisticsTest, ABulletTouchingAnythingButABulletIsNoBulletHit)
+// two shots meeting head-on credit both authors, each in their own column - a wall or the field's edge is no bullet hit
+TEST_F(StatisticsTest, OnlyBulletsMeetingAreBulletHits)
 {
 	struct Touch final
 	{
 		std::string_view why;
-		std::optional<ObstacleType> wall;
-		Direction dir{};
+		Author author{};
+		double y{};
+		std::optional<ObstacleType> wall{};
+		std::optional<Author> oncoming{};
+		void (*credit)(StatisticsData&){};
 	};
 
-	constexpr std::array kTouches{
-			Touch{.why = "a brick it brings down", .wall = ObstacleType::Brick, .dir = Direction::DOWN},
-			Touch{.why = "steel that swallows it", .wall = ObstacleType::Steel, .dir = Direction::DOWN},
-			Touch{.why = "the edge of the field", .wall = std::nullopt, .dir = Direction::UP}};
-	for (const Touch& touch: kTouches)
+	const double edge{static_cast<double>(_gameConfig.battlefieldSize.y) - _caliber.size.y - 1.0};
+	for (const Touch& touch:
+		 {Touch{.why = "a brick it brings down",
+				.author = Author::Player1,
+				.y = _tankSize,
+				.wall = ObstacleType::Brick,
+				.credit = [](StatisticsData& data) { ++data.seats[SeatIndex(PlayerSlot::P1)].brickWallKills; }},
+		  Touch{.why = "steel that swallows it",
+				.author = Author::Player1,
+				.y = _tankSize,
+				.wall = ObstacleType::Steel,
+				.credit = [](StatisticsData&) {}},
+		  Touch{.why = "the edge of the field",
+				.author = Author::Player1,
+				.y = edge,
+				.credit = [](StatisticsData&) {}},
+		  Touch{.why = "two enemy shots fill one column twice",
+				.author = Author::Enemy1,
+				.y = _tankSize,
+				.oncoming = Author::Enemy2,
+				.credit = [](StatisticsData& data) { data.enemyTeam.bulletHits += 2u; }},
+		  Touch{.why = "two seats",
+				.author = Author::Player1,
+				.y = _tankSize,
+				.oncoming = Author::Player2,
+				.credit = [](StatisticsData& data)
+				{
+					++data.seats[SeatIndex(PlayerSlot::P1)].bulletHits;
+					++data.seats[SeatIndex(PlayerSlot::P2)].bulletHits;
+				}},
+		  Touch{.why = "the first seat and an enemy",
+				.author = Author::Player1,
+				.y = _tankSize,
+				.oncoming = Author::Enemy1,
+				.credit = [](StatisticsData& data)
+				{
+					++data.seats[SeatIndex(PlayerSlot::P1)].bulletHits;
+					++data.enemyTeam.bulletHits;
+				}},
+		  Touch{.why = "the second seat and an enemy",
+				.author = Author::Player2,
+				.y = _tankSize,
+				.oncoming = Author::Enemy1,
+				.credit = [](StatisticsData& data)
+				{
+					++data.seats[SeatIndex(PlayerSlot::P2)].bulletHits;
+					++data.enemyTeam.bulletHits;
+				}}})
 	{
 		SCOPED_TRACE(touch.why);
 		_events->EmitEvent(GameResetEvent{});
 		_allObjects.clear();
+		StatisticsData expected{_statistics->GetData()};
+		touch.credit(expected);
+		const double ahead{touch.y + _caliber.size.y + 1.0};
 		if (touch.wall.has_value())
 		{
-			const auto wall{SpawnObstacle(FPoint{.x = 0.0, .y = _tankSize + _caliber.size.y + 1}, *touch.wall)};
+			const auto wall{SpawnObstacle(FPoint{.x = 0.0, .y = ahead}, *touch.wall)};
 			_caliber.damage = wall->GetHealth();
 		}
-		std::ignore = CreateBullet({.x = 0.0, .y = touch.dir == Direction::UP ? 0.0 : _tankSize}, touch.dir,
-								   Author::Player1);
+		if (touch.oncoming.has_value())
+		{
+			std::ignore = CreateBullet({.x = 0.0, .y = ahead}, Direction::UP, *touch.oncoming);
+		}
+		std::ignore = CreateBullet({.x = 0.0, .y = touch.y}, Direction::DOWN, touch.author);
 
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
-		EXPECT_EQ(_statistics->GetData().Seat(PlayerSlot::P1).bulletHits, 0u);
+		EXPECT_EQ(_statistics->GetData(), expected);
 	}
 }
 
@@ -262,61 +314,7 @@ TEST_F(StatisticsTest, AWallBroughtDownIsCountedToItsShooter)
 		_caliber.tier = type == ObstacleType::Steel ? 3u : 1u;
 		std::ignore = CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, author);
 
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-
-		EXPECT_EQ(_statistics->GetData(), expected);
-	}
-}
-
-// two shots meeting head-on credit both authors, each in their own counter - two enemy shots fill one bucket twice
-TEST_F(StatisticsTest, BulletsMeetingCreditBothAuthors)
-{
-	struct Meeting final
-	{
-		Author down;
-		Author up;
-		void (*credit)(StatisticsData&);
-	};
-
-	constexpr std::array kMeetings{
-			 Meeting{.down = Author::Enemy1,
-					 .up = Author::Enemy2,
-					 .credit = [](StatisticsData& data)
-					 {
-						 data.enemyTeam.bulletHits += 2u;
-					 }},
-			 Meeting{.down = Author::Player1,
-					 .up = Author::Player2,
-					 .credit = [](StatisticsData& data)
-					 {
-						 ++data.seats[SeatIndex(PlayerSlot::P1)].bulletHits;
-						 ++data.seats[SeatIndex(PlayerSlot::P2)].bulletHits;
-					 }},
-			 Meeting{.down = Author::Player1,
-					 .up = Author::Enemy1,
-					 .credit = [](StatisticsData& data)
-					 {
-						 ++data.seats[SeatIndex(PlayerSlot::P1)].bulletHits;
-						 ++data.enemyTeam.bulletHits;
-					 }},
-			 Meeting{.down = Author::Player2,
-					 .up = Author::Enemy1,
-					 .credit = [](StatisticsData& data)
-					 {
-						 ++data.seats[SeatIndex(PlayerSlot::P2)].bulletHits;
-						 ++data.enemyTeam.bulletHits;
-					 }}};
-	for (const auto& [down, up, credit]: kMeetings)
-	{
-		SCOPED_TRACE(testing::Message() << static_cast<int>(down) << ' ' << static_cast<int>(up));
-		_events->EmitEvent(GameResetEvent{});
-		_allObjects.clear();
-		StatisticsData expected{_statistics->GetData()};
-		credit(expected);
-		std::ignore = CreateBullet({.x = 0.0, .y = _tankSize}, Direction::DOWN, down);
-		std::ignore = CreateBullet({.x = 0.0, .y = _tankSize + _caliber.size.y + 1.0}, Direction::UP, up);
-
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 		EXPECT_EQ(_statistics->GetData(), expected);
 	}
@@ -346,7 +344,7 @@ TEST_F(StatisticsTest, ABonusPickupIsCountedToItsTaker)
 		}
 		_bonusSpawner->SpawnRandomBonus({.x = x, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize});
 
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 		EXPECT_EQ(_statistics->GetData(), expected);
 	}
@@ -362,13 +360,13 @@ TEST_F(StatisticsTest, BonusExpiredCountedWithNoAuthor)
 
 	EXPECT_EQ(_statistics->GetData().bonusExpired, 0u);
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	EXPECT_EQ(_statistics->GetData().bonusExpired, 1u);
 	EXPECT_FALSE(_allObjects.back()->GetIsAlive());
 
 	//NOTE: the timer is one-shot - a second tick must not keep counting the same bonus
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	EXPECT_EQ(_statistics->GetData().bonusExpired, 1u);
 }

@@ -22,6 +22,10 @@ namespace
 {
 constexpr std::uint16_t kProtocolId{0xBC54u};
 constexpr std::uint8_t kHelloFlag{0x01u};
+//NOTE: an echoing hello - the cookie and the player's key follow the header
+constexpr std::uint8_t kCookieFlag{0x02u};
+//NOTE: the flags of a challenge, which carries the connection id and the cookie alone
+constexpr std::uint8_t kChallengeFlag{0x04u};
 constexpr std::uint8_t kLastFragmentFlag{0x01u};
 constexpr std::uint8_t kSnapshotFragmentFlag{0x02u};
 
@@ -31,14 +35,14 @@ enum class ChunkType : std::uint8_t
 	Latest = 2,
 };
 
-//NOTE: protocol id, flags, connection id, datagram seq, ack, ack bits, reliable base
-constexpr std::size_t kHeaderSize{2u + 1u + 4u * 5u};
+//NOTE: protocol id, flags, connection id, datagram seq, ack, ack bits, reliable base, a hello's cookie and key
+constexpr std::size_t kHeaderSize{2u + 1u + 4u * 5u + 8u + 8u};
 constexpr std::size_t kReliableChunkHeaderSize{1u + 1u + 4u + 4u + 2u};
 constexpr std::size_t kMaxFragmentSize{DatagramLink::kMaxDatagramSize - kHeaderSize - kReliableChunkHeaderSize};
 //NOTE: the longest message Enqueue lets out - a backlog's worth of fragments
 constexpr std::size_t kMaxMessageSize{DatagramLink::kMaxBacklog * kMaxFragmentSize};
-//NOTE: chunk type, entity, epoch, size
-constexpr std::size_t kLatestChunkHeaderSize{1u + sizeof(Uuid) + 4u + 2u};
+//NOTE: chunk type, entity, epoch, the reliable seq it comes after, size
+constexpr std::size_t kLatestChunkHeaderSize{1u + sizeof(Uuid) + 4u + 4u + 2u};
 //NOTE: nothing splits a Latest value - it is one entity's newest state, and half of it is worth nothing
 constexpr std::size_t kMaxLatestSize{DatagramLink::kMaxDatagramSize - kHeaderSize - kLatestChunkHeaderSize};
 
@@ -46,9 +50,7 @@ constexpr std::uint32_t kAckBits{32u};
 //NOTE: kept below the receive window, so a fragment the sender may send always fits where the peer stores it
 constexpr std::uint32_t kSendWindow{256u};
 constexpr std::uint32_t kReceiveWindow{1024u};
-//NOTE: how many datagrams back an entity's newest value is still remembered
-constexpr std::uint32_t kLatestMemory{4096u};
-constexpr std::size_t kMaxSentRecords{1024u};
+static_assert(kSendWindow < kReceiveWindow);
 
 constexpr auto kInitialRetransmit{200ms};
 constexpr auto kMinRetransmit{50ms};
@@ -66,6 +68,12 @@ void PutU32(std::string& out, const std::uint32_t value)
 {
 	PutU16(out, static_cast<std::uint16_t>(value >> 16u));
 	PutU16(out, static_cast<std::uint16_t>(value & 0xFFFFu));
+}
+
+void PutU64(std::string& out, const std::uint64_t value)
+{
+	PutU32(out, static_cast<std::uint32_t>(value >> 32u));
+	PutU32(out, static_cast<std::uint32_t>(value & 0xFFFFFFFFu));
 }
 
 //NOTE: every read is bounds-checked once - a short datagram flips ok instead of reading past its end
@@ -99,6 +107,13 @@ struct Reader final
 		return value;
 	}
 
+	[[nodiscard]] std::uint64_t TakeU64()
+	{
+		const std::uint64_t high{TakeUnsigned(4u)};
+
+		return (high << 32u) | TakeUnsigned(4u);
+	}
+
 	[[nodiscard]] bool IsAtEnd() const { return offset == data.size(); }
 };
 
@@ -121,12 +136,34 @@ struct ParsedHeader final
 						.ackBits = reader.TakeUnsigned(4u),
 						.reliableBase = reader.TakeUnsigned(4u)};
 
+	if ((flags & kCookieFlag) != 0u)
+	{
+		parsed.header.cookie = reader.TakeU64();
+		parsed.header.playerKey = reader.TakeU64();
+	}
+
 	if (!reader.ok || protocolId != kProtocolId || parsed.seq == 0u)
 	{
 		return std::nullopt;
 	}
 
 	return parsed;
+}
+
+[[nodiscard]] std::optional<std::uint64_t> ParseChallenge(const std::string_view datagram,
+														  const std::uint32_t connectionId)
+{
+	Reader reader{.data = datagram};
+	const auto protocolId{reader.TakeUnsigned(2u)};
+	const auto flags{reader.TakeUnsigned(1u)};
+	const auto id{reader.TakeUnsigned(4u)};
+	const auto cookie{reader.TakeU64()};
+	if (!reader.ok || !reader.IsAtEnd() || protocolId != kProtocolId || flags != kChallengeFlag || id != connectionId)
+	{
+		return std::nullopt;
+	}
+
+	return cookie;
 }
 
 struct ReliableChunk final
@@ -142,12 +179,14 @@ struct LatestChunk final
 {
 	Uuid key{};
 	std::uint32_t epoch{};
+	std::uint32_t after{};
 	std::string_view bytes{};
 };
 }//namespace
 
-DatagramLink::DatagramLink(const std::uint32_t connectionId, const Clock::time_point now)
+DatagramLink::DatagramLink(const std::uint32_t connectionId, const Clock::time_point now, const std::uint64_t playerKey)
 	: _connectionId{connectionId}
+	, _playerKey{playerKey}
 	, _lastReceivedAt{now} {}
 
 std::optional<DatagramHeader> DatagramLink::PeekHeader(const std::string_view datagram)
@@ -156,6 +195,17 @@ std::optional<DatagramHeader> DatagramLink::PeekHeader(const std::string_view da
 	const auto parsed{ParseHeader(reader)};
 
 	return parsed ? std::optional{parsed->header} : std::nullopt;
+}
+
+std::string DatagramLink::Challenge(const std::uint32_t connectionId, const std::uint64_t cookie)
+{
+	std::string datagram{};
+	PutU16(datagram, kProtocolId);
+	PutU8(datagram, kChallengeFlag);
+	PutU32(datagram, connectionId);
+	PutU64(datagram, cookie);
+
+	return datagram;
 }
 
 DatagramLink::Clock::duration DatagramLink::RetransmitTimeout() const
@@ -224,9 +274,11 @@ bool DatagramLink::SendLatest(const Uuid& key, std::string message)
 	}
 
 	//NOTE: numbered across the link - an entry acked and erased comes back, and an old ack must not match it
+	const auto entity{_reliableEntities.find(key)};
 	_latest.insert_or_assign(key, LatestValue{.bytes = std::move(message),
 											  .version = ++_latestVersion,
 											  .epoch = _epoch,
+											  .after = entity == _reliableEntities.end() ? 0u : entity->second,
 											  .resendAt = {}});
 
 	return true;
@@ -235,6 +287,16 @@ bool DatagramLink::SendLatest(const Uuid& key, std::string message)
 bool DatagramLink::SendFrame(const WireFrame& frame)
 {
 	const bool isQueued{frame.isSnapshot ? SendSnapshot(frame.reliable) : SendReliable(frame.reliable)};
+	//NOTE: an entity whose message is acked holds nothing back
+	std::erase_if(_reliableEntities, [base{ReliableBase()}](const auto& entity) { return entity.second <= base; });
+	if (isQueued)
+	{
+		std::ranges::for_each(frame.reliableEntities, [this](const Uuid& entity)
+		{
+			_reliableEntities.insert_or_assign(entity, _nextReliableSeq);
+		});
+	}
+
 	const auto isHeld = [this](const auto& latest) { return SendLatest(latest.first, latest.second); };
 
 	//NOTE: counted, not short-circuited - one value too big must not keep the rest off the wire
@@ -244,6 +306,15 @@ bool DatagramLink::SendFrame(const WireFrame& frame)
 std::optional<DatagramLink::Arrivals> DatagramLink::Receive(const std::string_view datagram,
 															const Clock::time_point now)
 {
+	//NOTE: no answer yet - the hello goes again at once, now with the cookie, and the reply to that is the answer
+	if (const auto cookie{ParseChallenge(datagram, _connectionId)}; cookie && !_hasHeardPeer)
+	{
+		_cookie = cookie;
+		_isHelloOwed = true;
+
+		return std::nullopt;
+	}
+
 	Reader reader{.data = datagram};
 	const auto parsed{ParseHeader(reader)};
 	if (!parsed || parsed->header.connectionId != _connectionId)
@@ -275,6 +346,7 @@ std::optional<DatagramLink::Arrivals> DatagramLink::Receive(const std::string_vi
 			std::ranges::transform(reader.Take(sizeof(Uuid)), std::begin(chunk.key.data),
 								   [](const char byte) { return static_cast<std::uint8_t>(byte); });
 			chunk.epoch = reader.TakeUnsigned(4u);
+			chunk.after = reader.TakeUnsigned(4u);
 			chunk.bytes = reader.Take(reader.TakeUnsigned(2u));
 			latest.push_back(chunk);
 		}
@@ -310,19 +382,23 @@ std::optional<DatagramLink::Arrivals> DatagramLink::Receive(const std::string_vi
 
 	Arrivals arrivals{};
 	DeliverInOrder(arrivals);
+	ReleaseHeld(arrivals);
 
-	if (parsed->seq + kLatestMemory < _newestReceived)
+	//NOTE: how many datagrams back an entity's newest value is still remembered
+	constexpr std::uint32_t latestMemory{4096u};
+	if (parsed->seq + latestMemory < _newestReceived)
 	{
 		return arrivals;
 	}
 
-	for (const auto& [key, epoch, bytes]: latest)
+	for (const auto& [key, epoch, after, bytes]: latest)
 	{
-		AcceptLatest(key, HeldLatest{.bytes = std::string{bytes}, .epoch = epoch, .seq = parsed->seq}, arrivals);
+		AcceptLatest(key, HeldLatest{.bytes = std::string{bytes}, .epoch = epoch, .after = after, .seq = parsed->seq},
+					 arrivals);
 	}
 
-	std::erase_if(_latestSeenIn, [this](const auto& seen) { return seen.second + kLatestMemory < _newestReceived; });
-	std::erase_if(_heldLatest, [this](const auto& held) { return held.second.seq + kLatestMemory < _newestReceived; });
+	std::erase_if(_latestSeenIn, [this](const auto& seen) { return seen.second + latestMemory < _newestReceived; });
+	std::erase_if(_heldLatest, [this](const auto& held) { return held.second.seq + latestMemory < _newestReceived; });
 
 	return arrivals;
 }
@@ -335,7 +411,8 @@ void DatagramLink::AcceptLatest(const Uuid& key, const HeldLatest& value, Arriva
 		return;
 	}
 
-	if (value.epoch > _appliedEpoch)
+	//NOTE: held behind its entity's reliable message too - the spawn it moves may be on its way
+	if (value.epoch > _appliedEpoch || value.after > _nextDelivered)
 	{
 		const auto [it, isNew]{_heldLatest.try_emplace(key, value)};
 		if (!isNew && std::tie(it->second.epoch, it->second.seq) < std::tie(value.epoch, value.seq))
@@ -356,18 +433,20 @@ void DatagramLink::AcceptLatest(const Uuid& key, const HeldLatest& value, Arriva
 	arrivals.latest.push_back(value.bytes);
 }
 
-//NOTE: a missed snapshot is superseded by the next one, so the values held for it are dropped with it
-void DatagramLink::EnterEpoch(const std::uint32_t epoch, Arrivals& arrivals)
+//NOTE: out once its snapshot and its entity's message are in; one waiting for a missed snapshot is dropped
+void DatagramLink::ReleaseHeld(Arrivals& arrivals)
 {
-	_appliedEpoch = epoch;
+	const auto isDue = [this](const auto& held)
+	{
+		return held.second.epoch <= _appliedEpoch && held.second.after <= _nextDelivered;
+	};
+	const auto due{_heldLatest | std::views::filter(isDue) | std::ranges::to<std::vector>()};
+	std::erase_if(_heldLatest, isDue);
 
-	const auto isOpened = [epoch](const auto& held) { return held.second.epoch == epoch; };
-	for (const auto& [key, value]: _heldLatest | std::views::filter(isOpened))
+	for (const auto& [key, value]: due)
 	{
 		AcceptLatest(key, value, arrivals);
 	}
-
-	std::erase_if(_heldLatest, [epoch](const auto& held) { return held.second.epoch <= epoch; });
 }
 
 //NOTE: only what the ack says - a repeated datagram is told apart by its reliable seq and its entity's newest one
@@ -427,7 +506,7 @@ void DatagramLink::DeliverInOrder(Arrivals& arrivals)
 
 			if (it->second.isSnapshot)
 			{
-				EnterEpoch(it->second.epoch, arrivals);
+				_appliedEpoch = it->second.epoch;
 			}
 		}
 
@@ -505,13 +584,19 @@ std::vector<std::string> DatagramLink::TakeDatagrams(const Clock::time_point now
 	const auto finish = [this, now, &datagrams, &payload, &record]
 	{
 		std::string datagram{};
+		const bool isEcho{!_hasHeardPeer && _cookie.has_value()};
 		PutU16(datagram, kProtocolId);
-		PutU8(datagram, _hasHeardPeer ? std::uint8_t{0u} : kHelloFlag);
+		PutU8(datagram, static_cast<std::uint8_t>((_hasHeardPeer ? 0u : kHelloFlag) | (isEcho ? kCookieFlag : 0u)));
 		PutU32(datagram, _connectionId);
 		PutU32(datagram, _nextDatagramSeq);
 		PutU32(datagram, _newestReceived);
 		PutU32(datagram, _receivedBits);
 		PutU32(datagram, ReliableBase());
+		if (isEcho)
+		{
+			PutU64(datagram, *_cookie);
+			PutU64(datagram, _playerKey);
+		}
 		datagram += payload;
 		datagrams.push_back(std::move(datagram));
 
@@ -546,7 +631,7 @@ std::vector<std::string> DatagramLink::TakeDatagrams(const Clock::time_point now
 		}
 
 		std::string chunk{};
-		PutU8(chunk, static_cast<std::uint8_t>(ChunkType::Reliable));
+		PutU8(chunk, std::to_underlying(ChunkType::Reliable));
 		PutU8(chunk, static_cast<std::uint8_t>((fragment.isLast ? kLastFragmentFlag : 0u)
 											   | (fragment.isSnapshot ? kSnapshotFragmentFlag : 0u)));
 		PutU32(chunk, seq);
@@ -570,10 +655,11 @@ std::vector<std::string> DatagramLink::TakeDatagrams(const Clock::time_point now
 		}
 
 		std::string chunk{};
-		PutU8(chunk, static_cast<std::uint8_t>(ChunkType::Latest));
+		PutU8(chunk, std::to_underlying(ChunkType::Latest));
 		std::ranges::transform(key.data, std::back_inserter(chunk),
 							   [](const std::uint8_t byte) { return static_cast<char>(byte); });
 		PutU32(chunk, value.epoch);
+		PutU32(chunk, value.after);
 		PutU16(chunk, static_cast<std::uint16_t>(value.bytes.size()));
 		chunk += value.bytes;
 		append(chunk);
@@ -581,7 +667,7 @@ std::vector<std::string> DatagramLink::TakeDatagrams(const Clock::time_point now
 		value.resendAt = now + retransmit;
 	}
 
-	if (!payload.empty() || (datagrams.empty() && (_isAckOwed || now - _lastSentAt >= kHeartbeat)))
+	if (!payload.empty() || (datagrams.empty() && (_isAckOwed || _isHelloOwed || now - _lastSentAt >= kHeartbeat)))
 	{
 		finish();
 	}
@@ -589,10 +675,12 @@ std::vector<std::string> DatagramLink::TakeDatagrams(const Clock::time_point now
 	if (!datagrams.empty())
 	{
 		_isAckOwed = false;
+		_isHelloOwed = false;
 		_lastSentAt = now;
 	}
 
-	while (_sent.size() > kMaxSentRecords)
+	constexpr std::size_t maxSentRecords{1024u};
+	while (_sent.size() > maxSentRecords)
 	{
 		_sent.pop_front();
 	}

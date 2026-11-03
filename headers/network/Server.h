@@ -3,6 +3,7 @@
 #include "DatagramLink.h"
 #include "DiscoveryBeacon.h"
 #include "Endpoints.h"
+#include "HelloCookies.h"
 #include "ReplicationPublisher.h"
 #include "SeatHistory.h"
 #include "Session.h"
@@ -68,7 +69,7 @@ private:
 	void Receive();
 	void OnDatagram(std::string_view datagram, Clock::time_point now);
 
-	void Seat(const udp::endpoint& endpoint, std::uint32_t connectionId, std::string_view hello,
+	void Seat(const udp::endpoint& endpoint, const DatagramHeader& header, std::string_view hello,
 			  Clock::time_point now);
 
 	//NOTE: told why, the client waits for a free match instead of burning its retries
@@ -83,7 +84,7 @@ private:
 	[[nodiscard]] std::vector<std::shared_ptr<Session>> CopySessions() const;
 
 	//NOTE: called under _sessionsMutex - search and seating are one step, or two clients get the same seat
-	[[nodiscard]] std::optional<PlayerSlot> FindFreeSlot(const udp::endpoint& endpoint) const;
+	[[nodiscard]] std::vector<PlayerSlot> FreeSeats() const;
 
 	//NOTE: what the beacon answers with, so it is taken under the mutex like any other read of the seats
 	[[nodiscard]] std::uint8_t CountFreeSlots() const;
@@ -115,9 +116,12 @@ private:
 	//NOTE: written where a seat is taken, under _sessionsMutex as well
 	SeatHistory _seatHistory;
 	mutable std::mutex _sessionsMutex;
+	//NOTE: set from the goodbyes going out to the socket closing - above the beacon, which counts no free seat then
+	std::function<void()> _onClosed{};
 
 	//NOTE: after _boundPort - it answers with that number, so it may not be built before there is one
 	DiscoveryBeacon _beacon;
+	HelloCookies _cookies{};
 	std::unique_ptr<CatalogListing> _listing{nullptr};
 	boost::asio::steady_timer _tickTimer;
 	udp::endpoint _sender{};
@@ -129,8 +133,6 @@ private:
 	//NOTE: what the router said last - told again to whoever sits down after. Both sides of it are on the game thread
 	std::optional<commands::PortForwardingChange> _portForwarding{};
 
-	//NOTE: set once the goodbyes are out - the socket closes when every one is acked or the linger runs out
-	std::function<void()> _onClosed{};
 	Clock::time_point _closeDeadline{};
 	//NOTE: the ones told goodbye - a session finished before has nobody left to ack, so it is not waited for
 	std::vector<std::shared_ptr<Session>> _toldGoodbye{};

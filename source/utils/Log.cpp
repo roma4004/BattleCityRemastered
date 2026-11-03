@@ -1,4 +1,5 @@
 #include "utils/Log.h"
+#include <atomic>
 #include <chrono>
 #include <ctime>
 #include <fstream>
@@ -6,6 +7,7 @@
 #include <iostream>
 #include <mutex>
 #include <sstream>
+#include <string>
 
 namespace
 {
@@ -15,14 +17,14 @@ std::mutex g_writeMutex;
 
 bool Log::_consoleEnabled{true};
 bool Log::_fileEnabled{};
-Log::Level Log::_level{Level::Normal};
+std::atomic<Log::Level> Log::_level{Level::Normal};
 std::string Log::_filename{"game_log.txt"};
 
 void Log::Error(const std::string& message) { Write(message, true); }
 
 void Log::Info(const std::string& message)
 {
-	if (_level >= Level::Normal)
+	if (_level.load(std::memory_order_relaxed) >= Level::Normal)
 	{
 		Write(message, false);
 	}
@@ -36,24 +38,20 @@ void Log::Detail(const std::string& message)
 	}
 }
 
-//NOTE: unlocked - the level is set once at startup, and this runs for every skipped detail line
-bool Log::IsDetailed() noexcept { return _level >= Level::Detailed; }
+//NOTE: an atomic, not the lock - /loglevel sets it while the io threads read it for every detail line
+bool Log::IsDetailed() noexcept { return _level.load(std::memory_order_relaxed) >= Level::Detailed; }
 
 void Log::SetConsole(const bool enabled)
 {
-	const std::scoped_lock lock(g_writeMutex);
+	const std::scoped_lock lock{g_writeMutex};
 	_consoleEnabled = enabled;
 }
 
-void Log::SetLevel(const Level level)
-{
-	const std::scoped_lock lock(g_writeMutex);
-	_level = level;
-}
+void Log::SetLevel(const Level level) { _level.store(level, std::memory_order_relaxed); }
 
 void Log::SetFile(const bool enabled, const std::string& filename)
 {
-	const std::scoped_lock lock(g_writeMutex);
+	const std::scoped_lock lock{g_writeMutex};
 	_fileEnabled = enabled;
 	if (!filename.empty())
 	{
@@ -100,7 +98,7 @@ std::string Log::TimeStamp()
 
 void Log::Write(const std::string& message, const bool isError)
 {
-	const std::scoped_lock lock(g_writeMutex);
+	const std::scoped_lock lock{g_writeMutex};
 	const std::string line{TimeStamp() + ' ' + message};
 
 	if (_consoleEnabled)

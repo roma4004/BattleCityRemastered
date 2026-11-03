@@ -1,5 +1,6 @@
 #pragma once
 
+#include "PortForwardingChange.h"
 #include "components/StatisticsData.h"
 #include "components/events/BonusPickupEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
@@ -18,6 +19,7 @@
 #include "geometry/Point.h"
 #include "utils/Uuid.h"
 #include <array>
+#include <optional>
 #include <vector>
 
 namespace network::commands
@@ -74,5 +76,7 @@ struct WorldSnapshot final
 	std::array<SeatHolder, kSeatCount> holders{};
 	//NOTE: a newcomer to a held match is shown why it is held
 	std::array<Absence, kSeatCount> absence{};
+	//NOTE: may be in the replaced frame, as the seat announce; none until the router is asked
+	std::optional<PortForwardingChange> portForwarding{};
 };
 }//namespace network::commands

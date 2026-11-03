@@ -65,7 +65,8 @@ constexpr std::size_t kColumnSymbols{9};
 constexpr std::size_t kFoundAddressSymbols{std::string_view{"255.255.255.255:65535"}.size()};
 //NOTE: the host has to open the port, or another player hosts
 constexpr std::string_view kPortClosedMark{"CLOSED"};
-static_assert(2 * kColumnSymbols + kFoundAddressSymbols + 1 + kPortClosedMark.size() <= kRowSymbols,
+static_assert(2 * kColumnSymbols + kFoundAddressSymbols + std::string_view{"> "}.size() + kPortClosedMark.size()
+				  <= kRowSymbols,
 			  "a found server has to fit in one row");
 //NOTE: the up and down triangles in UTF-8 - spelled in bytes, so no compiler reads them in its own code page
 constexpr std::string_view kAscending{"\xE2\x96\xB2"};
@@ -160,11 +161,9 @@ constexpr auto kCaretBlink{1060ms};
 	keys.rows.insert(std::next(keys.rows.begin()),
 					 isHosting ? UiRow{.cells = {Word("Setting"), Word("Left / Right")}}
 							   : UiRow{.cells = {Word("Sort"), Word("header, Left / Right, Enter")}});
-	if (isHosting)
-	{
-		keys.rows.insert(std::next(keys.rows.begin(), 2),
-						 UiRow{.cells = {Word("Address"), Word("Enter, pick from list")}});
-	}
+	keys.rows.insert(std::next(keys.rows.begin(), 2),
+					 isHosting ? UiRow{.cells = {Word("Address"), Word("Enter, pick from list")}}
+							   : UiRow{.cells = {Word("Address"), Word("server, Left / Right")}});
 
 	return keys;
 }
@@ -186,26 +185,35 @@ constexpr auto kCaretBlink{1060ms};
 	return (at + (isForward ? 1u : count - 1u)) % count;
 }
 
-[[nodiscard]] int PlayersOf(const network::FoundServer& server) { return server.seats - server.freeSeats; }
+[[nodiscard]] int PlayersOf(const network::FoundAddress& found) { return found.seats - found.freeSeats; }
 
 //NOTE: by number, not by text - "10.0.0.9" comes before "10.0.0.10"
 [[nodiscard]] std::pair<boost::asio::ip::address, std::uint16_t> AddressOrder(const network::FoundServer& server)
 {
 	boost::system::error_code ec;
 
-	return {boost::asio::ip::make_address(server.address.host, ec), server.address.port};
+	const network::ServerAddress& first{server.addresses.front().address};
+
+	return {boost::asio::ip::make_address(first.host, ec), first.port};
 }
 
-//NOTE: one or two lines - an address too long for the row breaks after a colon
-[[nodiscard]] std::vector<std::string> ServerLines(const network::FoundServer& server)
+//NOTE: one or two lines - an address too long for the row breaks after a colon; arrows round one of several
+[[nodiscard]] std::vector<std::string> ServerLines(const network::FoundServer& server,
+												   const network::FoundAddress& shown)
 {
-	const std::string seats{server.IsFull() ? "FULL"
-											: std::to_string(PlayersOf(server)) + '/' + std::to_string(server.seats)};
-	const std::string mode{server.rules == MatchRules::FreeForAll ? "FFA" : "CLASSIC"};
-	const std::string columns{TextUtils::Fitted(seats, kColumnSymbols) + TextUtils::Fitted(mode, kColumnSymbols)};
-	const std::string& host{server.address.host};
-	const std::string address{(host.contains(':') ? '[' + host + ']' : host) + ':'
-							  + std::to_string(server.address.port)};
+	const std::string seats{shown.IsFull() ? "FULL"
+										   : std::to_string(PlayersOf(shown)) + '/' + std::to_string(shown.seats)};
+	const std::string mode{shown.rules == MatchRules::FreeForAll ? "FFA" : "CLASSIC"};
+	std::string columns{TextUtils::Fitted(seats, kColumnSymbols) + TextUtils::Fitted(mode, kColumnSymbols)};
+	const std::string& host{shown.address.host};
+	std::string address{(host.contains(':') ? '[' + host + ']' : host) + ':' + std::to_string(shown.address.port)};
+	//NOTE: the opening arrow takes the gap before the address - every address starts in one column
+	if (server.addresses.size() > 1)
+	{
+		columns.back() = '<';
+		address += '>';
+	}
+
 	const std::size_t room{kRowSymbols - columns.size()};
 	std::vector<std::string> lines{columns + address};
 	if (address.size() > room)
@@ -214,13 +222,13 @@ constexpr auto kCaretBlink{1060ms};
 		lines = {columns + address.substr(0, cut), std::string(columns.size(), ' ') + address.substr(cut)};
 	}
 
-	if (!server.isPortClosed)
+	if (!shown.isPortClosed)
 	{
 		return lines;
 	}
 
-	//NOTE: after the longest IPv4 address if it fits, else under the players on the second line
-	const std::size_t markAt{columns.size() + kFoundAddressSymbols + 1};
+	//NOTE: after the longest IPv4 address and its arrow if it fits, else under the players on the second line
+	const std::size_t markAt{columns.size() + kFoundAddressSymbols + 2};
 	if (lines.size() == 1 && lines.front().size() < markAt)
 	{
 		lines.front() = TextUtils::Fitted(lines.front(), markAt) + std::string{kPortClosedMark};
@@ -238,10 +246,12 @@ constexpr auto kCaretBlink{1060ms};
 	return lines;
 }
 
-//NOTE: the players column's order - a server with someone waiting first, then an empty one, a full one last
+//NOTE: someone waiting, then empty, then full - by the first address, so turning a row does not move it
 [[nodiscard]] int JoinRank(const network::FoundServer& server)
 {
-	return server.IsFull() ? 2 : (server.freeSeats < server.seats ? 0 : 1);
+	const network::FoundAddress& first{server.addresses.front()};
+
+	return first.IsFull() ? 2 : (first.freeSeats < first.seats ? 0 : 1);
 }
 
 //NOTE: none for what is no address
@@ -358,19 +368,6 @@ constexpr auto kCaretBlink{1060ms};
 			hasInternetIPv6 ? "HOST ON IPv6 INSTEAD" : ""};
 }
 
-//NOTE: as far as the list scrolls - from there its last servers fill the rows
-[[nodiscard]] std::size_t LastFirstShown(const std::vector<network::FoundServer>& servers)
-{
-	std::size_t first{servers.size()};
-	std::size_t rows{};
-	while (first > 0 && rows + ServerLines(servers[first - 1]).size() <= kListRows)
-	{
-		rows += ServerLines(servers[--first]).size();
-	}
-
-	return first;
-}
-
 //NOTE: a debugging switch - made-up servers after the real ones, a scrolled list without a LAN full of hosts
 constexpr bool kAreFakeServersShown{false};
 
@@ -378,22 +375,33 @@ std::vector<network::FoundServer> FakeServers()
 {
 	if constexpr (kAreFakeServersShown)
 	{
+		constexpr MatchRules classic{MatchRules::Classic};
 		constexpr MatchRules ffa{MatchRules::FreeForAll};
-		return {{.address = {.host = "255.255.255.255", .port = 65535}, .seats = 2, .freeSeats = 1},
-				{.address = {.host = "172.16.254.1", .port = 65535}, .seats = 4, .freeSeats = 4, .rules = ffa},
-				{.address = {.host = "192.168.0.10", .port = 50001}, .seats = 2, .freeSeats = 2},
-				{.address = {.host = "255.255.255.254", .port = 65534}, .seats = 2, .freeSeats = 0},
-				{.address = {.host = "10.20.30.40", .port = 65535}, .seats = 3, .freeSeats = 1, .rules = ffa},
-				{.address = {.host = "255.255.255.253", .port = 65534}, .seats = 4, .freeSeats = 0, .rules = ffa},
-				{.address = {.host = "10.0.0.6", .port = 4001}, .seats = 2, .freeSeats = 0},
-				{.address = {.host = "192.168.100.200", .port = 5000}, .seats = 4, .freeSeats = 2},
-				{.address = {.host = "192.168.0.14", .port = 50005}, .seats = 2, .freeSeats = 1},
-				{.address = {.host = "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff", .port = 65535}, .seats = 2,
-				 .freeSeats = 2},
-				{.address = {.host = "2001:db8:85a3:1234:5678:8a2e:370:7334", .port = 65535}, .seats = 4,
-				 .freeSeats = 1, .rules = ffa, .isPortClosed = true},
-				{.address = {.host = "fdfd::1a54:4f90", .port = 5000}, .seats = 2, .freeSeats = 0},
-				{.address = {.host = "10.0.0.7", .port = 4002}, .seats = 2, .freeSeats = 2, .isPortClosed = true}};
+		const auto at = [](std::string host, const std::uint16_t port, const std::uint8_t seats,
+						   const std::uint8_t freeSeats, const MatchRules rules = MatchRules::Classic,
+						   const bool isPortClosed = false)
+		{
+			return network::FoundAddress{.address = {.host = std::move(host), .port = port},
+										 .seats = seats,
+										 .freeSeats = freeSeats,
+										 .rules = rules,
+										 .isPortClosed = isPortClosed};
+		};
+		return {{.addresses = {at("255.255.255.255", 65535, 2, 1)}},
+				{.addresses = {at("172.16.254.1", 65535, 4, 4, ffa)}},
+				{.addresses = {at("192.168.0.10", 50001, 2, 2)}},
+				{.addresses = {at("255.255.255.254", 65534, 2, 0)}},
+				{.addresses = {at("10.20.30.40", 65535, 3, 1, ffa)}},
+				{.addresses = {at("255.255.255.253", 65534, 4, 0, ffa)}},
+				{.addresses = {at("10.0.0.6", 4001, 2, 0)}},
+				{.addresses = {at("192.168.100.200", 5000, 4, 2)}},
+				{.addresses = {at("192.168.0.14", 50005, 2, 1)}},
+				{.addresses = {at("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff", 65535, 2, 2)}},
+				{.addresses = {at("2001:db8:85a3:1234:5678:8a2e:370:7334", 65535, 4, 1, ffa, true)}},
+				{.addresses = {at("fdfd::1a54:4f90", 5000, 2, 0)}},
+				{.addresses = {at("10.0.0.7", 4002, 2, 2, classic, true)}},
+				{.addresses = {at("192.168.0.20", 5000, 4, 3), at("2001:db8::20", 5000, 4, 3),
+							   at("203.0.113.7", 5000, 4, 3, classic, true)}}};
 	}
 
 	return {};
@@ -648,6 +656,18 @@ void ServerScreen::OnRowClicked(const PanelRowClickedEvent& event)
 	}
 
 	Pick(*item);
+	//NOTE: an arrow round a server's address turns it, the rest of the row joins
+	if (_focus.line == Line::Server)
+	{
+		const std::string row{LineRow(Lines()[event.row]).cells.front().text};
+		if (event.symbol == row.find('<') || event.symbol == row.find('>'))
+		{
+			Change(event.symbol == row.find('>'));
+
+			return;
+		}
+	}
+
 	const bool isAddressRow{_focus.line == Line::IPv4 || _focus.line == Line::IPv6};
 	//NOTE: on a host row only the port is typed - a click on the rest of it brings the list down
 	if (!isAddressRow || (IsHosting() && !IsPortAt(event.symbol)))
@@ -756,6 +776,22 @@ void ServerScreen::Press()
 		return;
 	}
 
+	if (_focus.line == Line::Server)
+	{
+		//NOTE: a full server is not joined - unless joined last, it may hold the seat left there
+		const network::FoundServer& server{_servers[_focus.server]};
+		const auto isJoinedLast = [this](const network::FoundAddress& found)
+		{
+			return found.address == _lastIPv4 || found.address == _lastIPv6;
+		};
+		if (IsPickable(_focus) && (!RowAddress(server).IsFull() || std::ranges::any_of(server.addresses, isJoinedLast)))
+		{
+			Choose(RowAddress(server).address, false);
+		}
+
+		return;
+	}
+
 	if (IsTurnable(_focus.line))
 	{
 		Change(true);
@@ -768,17 +804,6 @@ void ServerScreen::Press()
 		if (_scan)
 		{
 			_scan->Refresh();
-		}
-
-		return;
-	}
-
-	if (_focus.line == Line::Server)
-	{
-		//NOTE: a full server is scrolled through, not joined
-		if (IsPickable(_focus) && !_servers[_focus.server].IsFull())
-		{
-			Choose(_servers[_focus.server].address, false);
 		}
 
 		return;
@@ -870,8 +895,8 @@ bool ServerScreen::IsPublic(const std::string_view host) const
 
 bool ServerScreen::IsTurnable(const Line line) noexcept
 {
-	return line == Line::ServersHeader || line == Line::Rules || line == Line::Seats || line == Line::Map
-		   || line == Line::Enemies || line == Line::Bots || line == Line::Start;
+	return line == Line::ServersHeader || line == Line::Server || line == Line::Rules || line == Line::Seats
+		   || line == Line::Map || line == Line::Enemies || line == Line::Bots || line == Line::Start;
 }
 
 //NOTE: round and round, the way the list is stepped through
@@ -881,6 +906,20 @@ void ServerScreen::Change(const bool isForward)
 	{
 		_column = static_cast<Column>(Turned(static_cast<std::size_t>(_column), kHeaders.size(), isForward));
 		_caretMoved = std::chrono::steady_clock::now();
+	}
+	else if (_focus.line == Line::Server)
+	{
+		const std::vector<network::FoundAddress>& addresses{_servers[_focus.server].addresses};
+		const auto shown{std::ranges::find(addresses, RowAddress(_servers[_focus.server]))};
+		const auto at{static_cast<std::size_t>(std::distance(addresses.begin(), shown))};
+		const auto isOfThisServer = [&addresses](const network::ServerAddress& turned)
+		{
+			return std::ranges::contains(addresses, turned, &network::FoundAddress::address);
+		};
+		std::erase_if(_turnedTo, isOfThisServer);
+		_turnedTo.push_back(addresses[Turned(at, addresses.size(), isForward)].address);
+		//NOTE: an IPv6 address may take a second line - scrolled to keep it in sight
+		Pick(_focus);
 	}
 	else if (_focus.line == Line::Rules)
 	{
@@ -938,15 +977,27 @@ ServerScreen::Column ServerScreen::ColumnAt(const std::size_t symbol) noexcept
 void ServerScreen::Arrange(std::vector<network::FoundServer> servers)
 {
 	const std::optional<network::ServerAddress> focused{
-			_focus.line == Line::Server ? std::optional{_servers[_focus.server].address} : std::nullopt};
+			_focus.line == Line::Server ? std::optional{RowAddress(_servers[_focus.server]).address} : std::nullopt};
 	_servers = Ordered(std::move(servers));
-	_firstShown = std::min(_firstShown, LastFirstShown(_servers));
+	const auto isGone = [this](const network::ServerAddress& turned)
+	{
+		return std::ranges::none_of(_servers, [&turned](const network::FoundServer& server)
+		{
+			return std::ranges::contains(server.addresses, turned, &network::FoundAddress::address);
+		});
+	};
+	std::erase_if(_turnedTo, isGone);
+	_firstShown = std::min(_firstShown, LastFirstShown());
 	if (!focused)
 	{
 		return;
 	}
 
-	const auto server{std::ranges::find(_servers, *focused, &network::FoundServer::address)};
+	const auto isFocused = [&focused](const network::FoundServer& server)
+	{
+		return std::ranges::contains(server.addresses, *focused, &network::FoundAddress::address);
+	};
+	const auto server{std::ranges::find_if(_servers, isFocused)};
 	if (server == _servers.end())
 	{
 		PickFirst();
@@ -978,7 +1029,7 @@ std::vector<network::FoundServer> ServerScreen::Ordered(std::vector<network::Fou
 			sort(JoinRank);
 			break;
 		case Column::Mode:
-			sort(&network::FoundServer::rules);
+			sort([](const network::FoundServer& server) { return server.addresses.front().rules; });
 			break;
 		case Column::Address:
 			sort(AddressOrder);
@@ -986,6 +1037,36 @@ std::vector<network::FoundServer> ServerScreen::Ordered(std::vector<network::Fou
 	}
 
 	return servers;
+}
+
+//NOTE: the address the row was turned to while its server has it, else the one most likely to reach it
+const network::FoundAddress& ServerScreen::RowAddress(const network::FoundServer& server) const
+{
+	const auto isTurnedTo = [this](const network::FoundAddress& found)
+	{
+		return std::ranges::contains(_turnedTo, found.address);
+	};
+	const auto turned{std::ranges::find_if(server.addresses, isTurnedTo)};
+
+	return turned == server.addresses.end() ? server.addresses.front() : *turned;
+}
+
+std::size_t ServerScreen::RowsOf(const network::FoundServer& server) const
+{
+	return ServerLines(server, RowAddress(server)).size();
+}
+
+//NOTE: as far as the list scrolls - from there its last servers fill the rows
+std::size_t ServerScreen::LastFirstShown() const
+{
+	std::size_t first{_servers.size()};
+	std::size_t rows{};
+	while (first > 0 && rows + RowsOf(_servers[first - 1]) <= kListRows)
+	{
+		rows += RowsOf(_servers[--first]);
+	}
+
+	return first;
 }
 
 std::vector<ServerScreen::Item> ServerScreen::Lines() const
@@ -998,7 +1079,7 @@ std::vector<ServerScreen::Item> ServerScreen::Lines() const
 		const std::size_t listStart{lines.size()};
 		for (std::size_t server{_firstShown}; server < _servers.size(); ++server)
 		{
-			const std::size_t rows{ServerLines(_servers[server]).size()};
+			const std::size_t rows{RowsOf(_servers[server])};
 			if (lines.size() - listStart + rows > kListRows)
 			{
 				break;
@@ -1089,7 +1170,10 @@ std::optional<ServerScreen::Item> ServerScreen::ItemAt(const std::size_t row) co
 //NOTE: a server found on the network is what a client most likely came for
 void ServerScreen::PickFirst()
 {
-	const auto server{std::ranges::find(_servers, false, &network::FoundServer::IsFull)};
+	const auto server{std::ranges::find_if(_servers, [this](const network::FoundServer& found)
+	{
+		return !RowAddress(found).IsFull();
+	})};
 	if (server == _servers.end())
 	{
 		Pick(Item{.line = Line::IPv4});
@@ -1114,10 +1198,9 @@ void ServerScreen::Pick(const Item& item)
 		//NOTE: scrolled just far enough to show the server picked, its second line too
 		std::size_t first{item.server + 1};
 		std::size_t rows{};
-		while (first > std::min(_firstShown, item.server)
-			   && rows + ServerLines(_servers[first - 1]).size() <= kListRows)
+		while (first > std::min(_firstShown, item.server) && rows + RowsOf(_servers[first - 1]) <= kListRows)
 		{
-			rows += ServerLines(_servers[--first]).size();
+			rows += RowsOf(_servers[--first]);
 		}
 
 		_firstShown = first;
@@ -1276,9 +1359,10 @@ UiRow ServerScreen::LineRow(const Item& item) const
 		case Line::ServerTail:
 		{
 			const network::FoundServer& server{_servers[item.server]};
-			std::string text{ServerLines(server)[item.line == Line::Server ? 0 : 1]};
+			const network::FoundAddress& shown{RowAddress(server)};
+			std::string text{ServerLines(server, shown)[item.line == Line::Server ? 0 : 1]};
 
-			return UiRow{.cells = {Address(std::move(text), server.IsFull() ? kFullServerColor : kTextColor)}};
+			return UiRow{.cells = {Address(std::move(text), shown.IsFull() ? kFullServerColor : kTextColor)}};
 		}
 		case Line::Refresh:
 			return UiRow{.cells = {Word("REFRESH", kButtonColor)}};

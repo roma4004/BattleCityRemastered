@@ -38,8 +38,8 @@ protected:
 	EventSubscription _spawnQueueSub{};
 	EventSubscription _healthSub{};
 	FPoint _bonusPos{.x = 200.0, .y = 200.0};
-	unsigned int _tankHealth{100};
-	unsigned int _bonusHeal{50};
+	static constexpr unsigned int kTankHealth{100};
+	static constexpr unsigned int kBonusHeal{50};
 
 	void SetUp() override
 	{
@@ -60,7 +60,7 @@ protected:
 	{
 		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _gameConfig.tankSize, .h = _gameConfig.tankSize};
 
-		return TestUtils::CreateBot(rect, _tankHealth, author, _allObjects, _events, Direction::UP, _tankPool,
+		return TestUtils::CreateBot(rect, kTankHealth, author, _allObjects, _events, Direction::UP, _tankPool,
 									_gameConfig, tier);
 	}
 };
@@ -72,13 +72,13 @@ TEST_F(NetworkClientMirrorTest, AClientTakesHealthOffTheWireInsteadOfHealingItse
 
 	_events->EmitEvent(Key(Author::Enemy1), BonusStarPickupEvent{});
 
-	EXPECT_EQ(enemy->GetHealth(), _tankHealth);
+	EXPECT_EQ(enemy->GetHealth(), kTankHealth);
 	EXPECT_TRUE(_reportedHealth.empty());
 
 	_events->EmitEvent(Key(enemy->GetUuid()),
-					   HealthChangedEvent{.health = _tankHealth + _bonusHeal, .uuid = enemy->GetUuid()});
+					   HealthChangedEvent{.health = kTankHealth + kBonusHeal, .uuid = enemy->GetUuid()});
 
-	EXPECT_EQ(enemy->GetHealth(), _tankHealth + _bonusHeal);
+	EXPECT_EQ(enemy->GetHealth(), kTankHealth + kBonusHeal);
 }
 
 //NOTE: the host holds the growth back until there is room, so the tier alone must not grow the mirror

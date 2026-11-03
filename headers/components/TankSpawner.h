@@ -24,7 +24,7 @@ struct PawnProperty;
 struct BonusEffectProperty;
 struct EnemyLineupLoadedEvent;
 struct GameResetEvent;
-struct NextLevelRequestedEvent;
+struct NextLevelEvent;
 struct PostTickUpdateEvent;
 struct RespawnTankEvent;
 struct SeatsFilledEvent;
@@ -92,7 +92,7 @@ class TankSpawner final
 
 	void Subscribe();
 	void OnRespawnTank(const RespawnTankEvent& event);
-	void OnNextLevelRequested(const NextLevelRequestedEvent&);
+	void OnNextLevel(const NextLevelEvent&);
 	void OnEnemyLineupLoaded(const EnemyLineupLoadedEvent& event);
 	void OnSpawnAnimationFinished(const SpawnAnimationFinishedEvent& event);
 	void OnTankRespawned(const TankRespawnedEvent& event);

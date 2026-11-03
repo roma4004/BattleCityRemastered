@@ -371,8 +371,8 @@ TEST_F(RespawnManagerTest, AnEagleFallingBetweenThePlayersTanksLosesAtOnce)
 	EXPECT_FALSE(_tanksAsked.contains(TankType::PLAYER1)) << "the seat got a tank after the eagle fell";
 }
 
-// the last player and the last enemy falling together lose, in either order
-TEST_F(RespawnManagerTest, TheLastPlayerFallingWithTheLastEnemyLoses)
+// the last player and the last enemy fall one after the other - the result reached first stands
+TEST_F(RespawnManagerTest, TheResultReachedFirstStands)
 {
 	for (const bool isPlayerFirst: {true, false})
 	{
@@ -389,7 +389,7 @@ TEST_F(RespawnManagerTest, TheLastPlayerFallingWithTheLastEnemyLoses)
 		KillOne(isPlayerFirst ? Faction::PlayerTeam : Faction::EnemyTeam);
 		KillOne(isPlayerFirst ? Faction::EnemyTeam : Faction::PlayerTeam);
 
-		EXPECT_EQ(_result, GameState::Over);
+		EXPECT_EQ(_result, isPlayerFirst ? GameState::Over : GameState::Won);
 	}
 }
 
@@ -414,7 +414,7 @@ TEST_F(RespawnManagerTest, ALevelChangeBringsBackAPlayerWhoSpentEveryLife)
 	}
 	ASSERT_EQ(_lives.at(RespawnGroup::PLAYER1), 0u);
 
-	_events->EmitEvent(NextLevelRequestedEvent{});
+	_events->EmitEvent(NextLevelEvent{});
 	_events->EmitEvent(GameResetEvent{.keepsPlayerProgress = true});
 	_allObjects.clear();
 	_tanksAsked.clear();

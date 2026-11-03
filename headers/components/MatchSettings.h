@@ -2,6 +2,7 @@
 
 #include "enums/MatchRules.h"
 #include "enums/PlayerSlot.h"
+#include <algorithm>
 #include <cstdint>
 #include <string>
 
@@ -28,6 +29,15 @@ struct MatchSettings final
 };
 
 [[nodiscard]] constexpr std::uint8_t MaxBots(const std::uint8_t seats) noexcept { return seats; }
+
+//NOTE: one to four seats, whatever the launch or the wire asked for, and a bot short of filling them all
+[[nodiscard]] inline MatchSettings Seated(MatchSettings match)
+{
+	match.seats = std::clamp(match.seats, std::uint8_t{1}, static_cast<std::uint8_t>(kSeatCount));
+	match.bots = std::min(match.bots, MaxBots(match.seats));
+
+	return match;
+}
 
 //NOTE: a classic match is played against the enemies
 [[nodiscard]] constexpr std::uint8_t FewestEnemies(const MatchRules rules) noexcept

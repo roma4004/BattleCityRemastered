@@ -49,7 +49,7 @@ protected:
 	std::shared_ptr<TankPool> _tankPool{nullptr};
 	std::vector<EventSubscription> _instantSpawnAnimationSubs{};
 	EventSubscription _spawnQueueSub{};
-	double _deltaTimeOneFrame{1.0 / 60.0};
+	static constexpr double kDeltaTimeOneFrame{1.0 / 60.0};
 	double _tankSize{};
 	double _gridSize{};
 
@@ -122,7 +122,7 @@ protected:
 	{
 		for (int frame{}; frame < frames; ++frame)
 		{
-			_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+			_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 		}
 	}
 
@@ -132,7 +132,7 @@ protected:
 		Tick(frames);
 	}
 
-	[[nodiscard]] double StepOfOneFrame() const { return _gameConfig.tankSpeed * _deltaTimeOneFrame; }
+	[[nodiscard]] double StepOfOneFrame() const { return _gameConfig.tankSpeed * kDeltaTimeOneFrame; }
 };
 
 // a tank facing its key with room ahead is carried that way, in each of the four, and the other axis is left alone
@@ -152,7 +152,7 @@ TEST_F(TankTest, DrivesAlongItsKey)
 		const auto player{CreatePlayer(start, Author::Player1, dir)};
 
 		Press(dir);
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 		const auto [unitX, unitY]{DirectionUtils::Unit(dir)};
 		const double alongX{player->GetPos().x - start.x};
@@ -194,7 +194,7 @@ TEST_F(TankTest, StandsWhileFiring)
 	const FPoint startPos{player->GetPos()};
 
 	_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = true});
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	EXPECT_EQ(startPos, player->GetPos());
 }
@@ -215,7 +215,7 @@ TEST_F(TankTest, FiresIntoTheField)
 		const std::size_t size{_allObjects.size()};
 
 		_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = true});
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 		EXPECT_LT(size, _allObjects.size());
 	}
@@ -237,7 +237,7 @@ TEST_F(TankTest, HoldsFireOutOfTheField)
 		const std::size_t size{_allObjects.size()};
 
 		_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = true});
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 		EXPECT_EQ(size, _allObjects.size());
 	}
@@ -257,7 +257,7 @@ TEST_F(TankTest, WallStopsIt)
 		const FPoint startPos{player->GetPos()};
 
 		_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = true});
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 		EXPECT_EQ(startPos, player->GetPos());
 	}
@@ -275,7 +275,7 @@ TEST_F(TankTest, ShotOutrunsTheMovingHull)
 
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveLeftEvent{.isPressed = true});
 	_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = true});
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	ASSERT_EQ(_allObjects.size(), 2u) << "no bullet was spawned";
 	const std::shared_ptr<BaseObj> bullet{_allObjects.back()};
@@ -304,8 +304,8 @@ TEST_F(TankTest, PointBlankBlastHitsTheShooter)
 	const unsigned int startHealth{player->GetHealth()};
 
 	_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = true});
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	EXPECT_LT(player->GetHealth(), startHealth) << "own blast did not reach the shooter";
 }
@@ -320,7 +320,7 @@ TEST_F(TankTest, TopTierVolleyIsHullWide)
 	const std::size_t before{_allObjects.size()};
 
 	_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = true});
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	ASSERT_GT(_allObjects.size(), before + 1u) << "no volley was fired";
 	const ObjRectangle hull{player->GetRect()};
@@ -338,7 +338,7 @@ TEST_F(TankTest, VolleyShellSurvivesTheBlastAhead)
 	const std::size_t before{_allObjects.size()};
 
 	_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = true});
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 	_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = false});
 
 	ASSERT_EQ(_allObjects.size(), before + 2u);
@@ -348,7 +348,7 @@ TEST_F(TankTest, VolleyShellSurvivesTheBlastAhead)
 
 	for (int frame{}; frame < 60 && ahead->GetIsAlive(); ++frame)
 	{
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 	}
 
 	ASSERT_FALSE(ahead->GetIsAlive()) << "the lead shell never reached the edge";
@@ -369,7 +369,7 @@ TEST_F(TankTest, PointBlankVolleyFiresFirstRowOnly)
 	const std::size_t before{_allObjects.size()};
 
 	_events->EmitEvent(Key(InputChannel::LocalP1), FireEvent{.isPressed = true});
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	EXPECT_EQ(_allObjects.size(), before + 1u);
 }
@@ -381,30 +381,36 @@ TEST_F(TankTest, TapOnlyTurns)
 	const FPoint before{player->GetPos()};
 
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveRightEvent{.isPressed = true});
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	EXPECT_EQ(player->GetDirection(), Direction::RIGHT);
 	EXPECT_EQ(player->GetPos(), before);
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	EXPECT_GT(player->GetPos().x, before.x);
 }
 
-// the plain case: the tank ahead is moved, and the pusher takes the room it made - half a step, all that cleared
+// the tank ahead is moved whichever way its barrel points, and the pusher takes the room it made - half a step
 TEST_F(TankTest, PushedTankGivesWayAtHalfSpeed)
 {
-	const auto pusher{CreatePlayer({.x = 0.0, .y = _tankSize * 2.0}, Author::Player1, Direction::RIGHT)};
-	const auto pushed{CreatePlayer({.x = _tankSize, .y = _tankSize * 2.0}, Author::Player2, Direction::UP)};
-	const double pusherX{pusher->GetPos().x};
-	const double pushedX{pushed->GetPos().x};
+	for (const Direction facing: {Direction::UP, Direction::LEFT})
+	{
+		SCOPED_TRACE(static_cast<int>(facing));
+		_events->EmitEvent(GameResetEvent{});
+		_allObjects.clear();
+		const auto pusher{CreatePlayer({.x = 0.0, .y = _tankSize * 2.0}, Author::Player1, Direction::RIGHT)};
+		const auto pushed{CreatePlayer({.x = _tankSize, .y = _tankSize * 2.0}, Author::Player2, facing)};
+		const double pusherX{pusher->GetPos().x};
+		const double pushedX{pushed->GetPos().x};
 
-	_events->EmitEvent(Key(InputChannel::LocalP1), MoveRightEvent{.isPressed = true});
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		_events->EmitEvent(Key(InputChannel::LocalP1), MoveRightEvent{.isPressed = true});
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
-	EXPECT_GT(pushed->GetPos().x, pushedX) << "the tank ahead stood like a wall";
-	EXPECT_GT(pusher->GetPos().x, pusherX);
-	EXPECT_LT(pusher->GetPos().x - pusherX, StepOfOneFrame()) << "pushing cost the driver nothing";
+		EXPECT_GT(pushed->GetPos().x, pushedX) << "the tank ahead stood like a wall";
+		EXPECT_GT(pusher->GetPos().x, pusherX);
+		EXPECT_LT(pusher->GetPos().x - pusherX, StepOfOneFrame()) << "pushing cost the driver nothing";
+	}
 }
 
 // a tank driving at us is not shoved out of the way, so a meeting head-on holds both where they are
@@ -420,23 +426,10 @@ TEST_F(TankTest, HeadOnMeetingHoldsBoth)
 	const FPoint pusherPos{pusher->GetPos()};
 	const FPoint pushedPos{pushed->GetPos()};
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	EXPECT_EQ(pushed->GetPos(), pushedPos);
 	EXPECT_EQ(pusher->GetPos(), pusherPos);
-}
-
-// facing is not leaning: a tank standing still gives way whichever way its barrel happens to point
-TEST_F(TankTest, FacingDoesNotResistAPush)
-{
-	const auto pusher{CreatePlayer({.x = 0.0, .y = _tankSize * 2.0}, Author::Player1, Direction::RIGHT)};
-	const auto pushed{CreatePlayer({.x = _tankSize, .y = _tankSize * 2.0}, Author::Player2, Direction::LEFT)};
-	const double pushedX{pushed->GetPos().x};
-
-	_events->EmitEvent(Key(InputChannel::LocalP1), MoveRightEvent{.isPressed = true});
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-
-	EXPECT_GT(pushed->GetPos().x, pushedX) << "a parked tank held the shove by looking our way";
 }
 
 // with its back to a wall the tank ahead has nowhere to give way to, and then it is a wall itself
@@ -451,7 +444,7 @@ TEST_F(TankTest, TankAgainstAWallIsNotPushed)
 	const FPoint pushedPos{pushed->GetPos()};
 
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveRightEvent{.isPressed = true});
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	EXPECT_EQ(pushed->GetPos(), pushedPos);
 	EXPECT_EQ(pusher->GetPos(), pusherPos);
@@ -467,7 +460,7 @@ TEST_F(TankTest, ChainGivesWayTogether)
 	const double farX{far->GetPos().x};
 
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveRightEvent{.isPressed = true});
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	EXPECT_GT(near->GetPos().x, nearX) << "the near tank stood like a wall";
 	EXPECT_GT(far->GetPos().x, farX) << "the far tank was left in the near one's way";
@@ -486,7 +479,7 @@ TEST_F(TankTest, ChainStandsWhenItsEndIsBlocked)
 	const FPoint nearPos{near->GetPos()};
 
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveRightEvent{.isPressed = true});
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	EXPECT_EQ(near->GetPos(), nearPos);
 	EXPECT_EQ(pusher->GetPos(), pusherPos);
@@ -504,12 +497,12 @@ TEST_F(TankTest, PushedTankSlidesOnIce)
 	for (int frame{}; frame < framesPushing; ++frame)
 	{
 		_events->EmitEvent(Key(InputChannel::LocalP1), MoveRightEvent{.isPressed = true});
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 	}
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveRightEvent{.isPressed = false});
 	const double pushedX{pushed->GetPos().x};
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	EXPECT_GT(pushed->GetPos().x, pushedX) << "the shoved tank stopped dead on ice";
 }
@@ -561,19 +554,24 @@ TEST_F(TankTest, GapNarrowerThanTheTankTakesNone)
 	EXPECT_LT(player->GetRect().y, kWallY);
 }
 
-//NOTE: a corridor is one block wide, the same as a tank - it has to take it edge to edge, nothing to spare
+//NOTE: a corridor is one block wide, the same as a tank - taken edge to edge, a shift overshooting lands in the wall
 TEST_F(TankTest, TankWideGapTakesTheTank)
 {
 	const double gapStart{_tankSize * 2.0};
-	BuildWall(0.0, gapStart);
-	BuildWall(gapStart + _tankSize, _tankSize * 2.0);
+	for (const double startX: {gapStart, gapStart - _tankSize / 2.0})
+	{
+		SCOPED_TRACE(startX);
+		_events->EmitEvent(GameResetEvent{});
+		_allObjects.clear();
+		BuildWall(0.0, gapStart);
+		BuildWall(gapStart + _tankSize, _tankSize * 2.0);
+		const auto player{CreatePlayer({.x = startX, .y = 0.0}, Author::Player1, Direction::DOWN)};
 
-	const auto player{CreatePlayer({.x = gapStart, .y = 0.0}, Author::Player1, Direction::DOWN)};
+		Drive(Direction::DOWN, 120);
 
-	Drive(Direction::DOWN, 120);
-
-	EXPECT_DOUBLE_EQ(player->GetRect().x, gapStart);
-	EXPECT_GT(player->GetRect().y, kWallY);
+		EXPECT_DOUBLE_EQ(player->GetRect().x, gapStart) << "the tank never lined up with the corridor";
+		EXPECT_GT(player->GetRect().y, kWallY) << "the tank stayed under the wall";
+	}
 }
 
 // a star grows the tank, and standing on a wall it grows away from it - grown into the wall it would be stuck there
@@ -632,21 +630,6 @@ TEST_F(TankTest, ShotLeavesAHoleTheTankFits)
 	EXPECT_GT(player->GetRect().y, kWallY) << "the hole was too narrow for the tank that made it";
 }
 
-//NOTE: the corridor is cut to the tank's own width - a shift overshooting by a pixel lands in the far wall
-TEST_F(TankTest, TankWideGapIsEnteredFromHalfOff)
-{
-	const double gapStart{_tankSize * 2.0};
-	BuildWall(0.0, gapStart);
-	BuildWall(gapStart + _tankSize, _tankSize * 2.0);
-
-	const auto player{CreatePlayer({.x = gapStart - _tankSize / 2.0, .y = 0.0}, Author::Player1, Direction::DOWN)};
-
-	Drive(Direction::DOWN, 120);
-
-	EXPECT_DOUBLE_EQ(player->GetRect().x, gapStart) << "the tank never lined up with the corridor";
-	EXPECT_GT(player->GetRect().y, kWallY) << "the tank stayed under the wall";
-}
-
 // the field edge is no opening - a tank nudged past it would keep going, nothing out there blocks the way back
 TEST_F(TankTest, NudgeStopsAtTheFieldEdge)
 {
@@ -675,23 +658,6 @@ TEST_F(TankTest, HairInsideAWallDoesNotPassIt)
 	EXPECT_DOUBLE_EQ(player->GetRect().x, startX) << "the tank drove through the wall it was touching";
 }
 
-// in a bush a tank shows no health bar, which would give it away - on open ground and once the bush is gone, it is back
-TEST_F(TankTest, HealthBarHidesInABush)
-{
-	const std::shared_ptr<Tank> tank{CreatePlayer({.x = 0.0, .y = 0.0}, Author::Player1, Direction::DOWN)};
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-	ASSERT_TRUE(tank->ShownHealth().has_value()) << "no bar on open ground";
-
-	std::ignore = SpawnObstacle(FPoint{.x = 0.0, .y = 0.0}, ObstacleType::Bush);
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-	ASSERT_FALSE(tank->ShownHealth().has_value()) << "the bar gave the hidden tank away";
-
-	_allObjects.pop_back();
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-
-	EXPECT_TRUE(tank->ShownHealth().has_value());
-}
-
 //NOTE: on ice Move feeds velocity instead of moving - ApplyMoveVelocity spends it later
 TEST_F(TankTest, SlidesOnIceAfterTheKeyIsReleased)
 {
@@ -702,7 +668,7 @@ TEST_F(TankTest, SlidesOnIceAfterTheKeyIsReleased)
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = false});
 	const double yOnGround{tank->GetPos().y};
 	ASSERT_GT(yOnGround, 0.0);
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 	ASSERT_DOUBLE_EQ(tank->GetPos().y, yOnGround) << "on plain ground the tank is not where the key left it";
 
 	SpawnObstacleArea(ObjRectangle{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize * 8.0}, ObstacleType::Ice);
@@ -711,7 +677,7 @@ TEST_F(TankTest, SlidesOnIceAfterTheKeyIsReleased)
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = false});
 	const double yOnRelease{tank->GetPos().y};
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	EXPECT_GT(tank->GetPos().y, yOnRelease);
 }
@@ -755,7 +721,7 @@ TEST_F(TankTest, TurningAroundKeepsTheDrift)
 	ASSERT_EQ(tank->GetDirection(), Direction::DOWN);
 
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveUpEvent{.isPressed = true});
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveUpEvent{.isPressed = false});
 
 	Tick(2);

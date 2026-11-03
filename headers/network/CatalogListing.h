@@ -1,10 +1,13 @@
 #pragma once
 
+#include "Catalog.h"
 #include "Endpoints.h"
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/address.hpp>
 #include <boost/asio/ip/udp.hpp>
+#include <array>
 #include <boost/asio/steady_timer.hpp>
+#include <cstdint>
 
 namespace network
 {
@@ -34,11 +37,18 @@ public:
 
 private:
 	void Send();
+	void Receive();
 
 	const DiscoveryBeacon& _beacon;
 	udp::socket _socket;
 	udp::endpoint _catalog{};
 	boost::asio::steady_timer _heartbeat;
 	bool _isPortClosed{};
+	//NOTE: random per listing - the catalog takes no word for this server without it
+	std::uint64_t _token{};
+	//NOTE: echoed in every heartbeat - zero until the first challenge
+	std::uint64_t _cookie{};
+	//NOTE: a byte past a challenge - a longer datagram cut to fit must not pass for one
+	std::array<char, catalog::kChallengeSize + 1u> _inbox{};
 };
 }//namespace network

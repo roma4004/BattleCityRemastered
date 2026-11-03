@@ -89,7 +89,7 @@ void TankSpawner::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &TankSpawner::Reset));
 	_subs.push_back(_events->AddListener(this, &TankSpawner::OnRespawnTank));
-	_subs.push_back(_events->AddListener(this, &TankSpawner::OnNextLevelRequested));
+	_subs.push_back(_events->AddListener(this, &TankSpawner::OnNextLevel));
 	//NOTE: a tank is the host's call - the client's burst never finishes and waits for TankSpawnComplete
 	if (IsAuthority(_gameMode))
 	{
@@ -381,13 +381,8 @@ TankModel TankSpawner::UpcomingEnemyModel() const
 }
 
 //NOTE: read from the field while it stands - the reset that clears it comes a phase later, on a server even later
-void TankSpawner::OnNextLevelRequested(const NextLevelRequestedEvent&)
+void TankSpawner::OnNextLevel(const NextLevelEvent&)
 {
-	if (IsClient(_gameMode))
-	{
-		return;
-	}
-
 	network::commands::WorldSnapshot field{};
 	_events->EmitEvent(WorldSnapshotRequestedEvent{.snapshot = field});
 

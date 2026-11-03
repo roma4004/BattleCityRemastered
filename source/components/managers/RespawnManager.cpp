@@ -70,7 +70,7 @@ void RespawnManager::Subscribe()
 	}
 
 	_subs.push_back(_events->AddListener(this, &RespawnManager::OnGameReset));
-	_subs.push_back(_events->AddListener(this, &RespawnManager::OnNextLevelRequested));
+	_subs.push_back(_events->AddListener(this, &RespawnManager::OnNextLevel));
 	_subs.push_back(_events->AddListener(this, &RespawnManager::OnTankSpawn));
 	_subs.push_back(_events->AddListener(this, &RespawnManager::OnTankDied));
 	_subs.push_back(_events->AddListener(this, &RespawnManager::OnBonusTankPickup));
@@ -93,7 +93,7 @@ void RespawnManager::Subscribe()
 void RespawnManager::OnGameReset(const GameResetEvent& event) { ResetSpawn(event.keepsPlayerProgress); }
 
 //NOTE: a life on top every level - a player who spent them all comes back
-void RespawnManager::OnNextLevelRequested(const NextLevelRequestedEvent&)
+void RespawnManager::OnNextLevel(const NextLevelEvent&)
 {
 	const auto isSeated = [this](const PlayerSlot slot) { return _holders[SeatIndex(slot)] != SeatHolder::Empty; };
 	for (const PlayerSlot slot: kSlots | std::views::filter(isSeated))
@@ -175,6 +175,7 @@ void RespawnManager::ResetRespawnStat(const bool keepsPlayerLives)
 
 void RespawnManager::ResetSpawn(const bool keepsPlayerLives)
 {
+	_isDecided = false;
 	ResetRespawnStat(keepsPlayerLives);
 
 	//NOTE: announced on every reset - a level change is the one reset that does not restore the counters on screen
@@ -295,11 +296,17 @@ void RespawnManager::OnTankSpawn(const TankSpawnEvent& event)
 }
 
 //NOTE: no players left loses; a free-for-all is won by the last one standing
-void RespawnManager::CheckMatchEnd() const
+void RespawnManager::CheckMatchEnd()
 {
+	if (_isDecided)
+	{
+		return;
+	}
+
 	const std::size_t playersIn{PlayersStillIn()};
 	if (playersIn == 0u)
 	{
+		_isDecided = true;
 		_events->EmitEvent(GameFinishedEvent{.state = GameState::Over});
 
 		return;
@@ -307,6 +314,7 @@ void RespawnManager::CheckMatchEnd() const
 
 	if (AreEnemiesGone() && (!_isFreeForAll || playersIn == 1u))
 	{
+		_isDecided = true;
 		_events->EmitEvent(GameFinishedEvent{.state = GameState::Won});
 	}
 }

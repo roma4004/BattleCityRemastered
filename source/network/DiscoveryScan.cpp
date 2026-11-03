@@ -12,21 +12,17 @@
 #include <chrono>
 #include <cstddef>
 #include <iterator>
+#include <cstdint>
 #include <optional>
+#include <random>
 #include <ranges>
 #include <string>
 #include <string_view>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 using namespace std::chrono_literals;
-
-namespace
-{
-//NOTE: answers take milliseconds - a longer round only keeps a gone server listed
-constexpr auto kRoundLength{1s};
-constexpr auto kRefreshStep{10s};
-}//namespace
 
 namespace network
 {
@@ -53,6 +49,7 @@ DiscoveryScan::DiscoveryScan(const std::string& ownHost, const std::vector<Serve
 		if (const auto own{boost::asio::ip::make_address(ownHost, ec)}; !ec && own.is_v4())
 		{
 			_targets.emplace_back(own, kDiscoveryPort);
+			_ownHosts.push_back(own.to_string());
 		}
 	}
 
@@ -66,13 +63,22 @@ DiscoveryScan::DiscoveryScan(const std::string& ownHost, const std::vector<Serve
 		{
 			return udp::endpoint{boost::asio::ip::address_v6{group.to_bytes(), link.index}, kDiscoveryPort};
 		});
+		//NOTE: this machine by IPv6 as well - a server on ::1 hears neither the broadcast nor the group
+		_targets.emplace_back(boost::asio::ip::address_v6::loopback(), kDiscoveryPort);
+		if (const auto own{boost::asio::ip::make_address(LocalIPv6Address(), ec)}; !ec && !own.is_loopback())
+		{
+			_targets.emplace_back(own, kDiscoveryPort);
+			_ownHosts.push_back(own.to_string());
+		}
 	}
 
+	std::random_device device{};
 	for (const ServerAddress& catalog: catalogs)
 	{
 		if (const auto host{boost::asio::ip::make_address(catalog.host, ec)}; !ec)
 		{
-			_targets.emplace_back(host, catalog.port);
+			_catalogs.push_back(AskedCatalog{.endpoint = {host, catalog.port},
+											 .nonce = std::uniform_int_distribution<std::uint64_t>{}(device)});
 		}
 	}
 
@@ -100,10 +106,22 @@ void DiscoveryScan::Refresh()
 		std::ignore = socket.send_to(boost::asio::buffer(discovery::kProbe), target, {}, ec);
 	}
 
-	std::ranges::for_each(_entries, [](Entry& entry) { entry.isAnswering = false; });
+	for (const auto& [endpoint, nonce]: _catalogs)
+	{
+		boost::system::error_code ec;
+		udp::socket& socket{endpoint.address().is_v4() ? _socket : _socketIPv6};
+		std::ignore = socket.send_to(boost::asio::buffer(catalog::PackQuery(nonce)), endpoint, {}, ec);
+	}
+
+	for (Heard& heard: _entries | std::views::transform(&Entry::addresses) | std::views::join)
+	{
+		heard.isAnswering = false;
+	}
+
 	_answeredCatalogs.clear();
 	_roundStart = Clock::now();
-	_nextRound = _roundStart + kRefreshStep;
+	constexpr auto refreshStep{10s};
+	_nextRound = _roundStart + refreshStep;
 	_isRoundOpen = true;
 }
 
@@ -122,17 +140,23 @@ bool DiscoveryScan::Poll()
 	bool isChanged{Read(_socket)};
 	isChanged = Read(_socketIPv6) || isChanged;
 	const auto now{Clock::now()};
-	if (_isRoundOpen && now - _roundStart >= kRoundLength)
+	//NOTE: answers take milliseconds - a longer round only keeps a gone server listed
+	constexpr auto roundLength{1s};
+	if (_isRoundOpen && now - _roundStart >= roundLength)
 	{
 		_isRoundOpen = false;
-		//NOTE: a catalog past its answer limit said nothing - its servers stay until their silence runs out
-		const auto isGone = [this, now](const Entry& entry)
+		//NOTE: a catalog past its answer limit said nothing - its addresses stay until their silence runs out
+		const auto isGone = [this, now](const Heard& heard)
 		{
-			return !entry.isAnswering
-				   && (!entry.catalog || std::ranges::contains(_answeredCatalogs, *entry.catalog)
-					   || now - entry.heardAt > catalog::kSilenceLimit);
+			return !heard.isAnswering
+				   && (!heard.catalog || std::ranges::contains(_answeredCatalogs, *heard.catalog)
+					   || now - heard.heardAt > catalog::kSilenceLimit);
 		};
-		isChanged = std::erase_if(_entries, isGone) > 0 || isChanged;
+		std::ranges::for_each(_entries, [&isGone, &isChanged](Entry& entry)
+		{
+			isChanged = std::erase_if(entry.addresses, isGone) > 0u || isChanged;
+		});
+		std::erase_if(_entries, [](const Entry& entry) { return entry.addresses.empty(); });
 	}
 
 	return isChanged;
@@ -141,7 +165,13 @@ bool DiscoveryScan::Poll()
 bool DiscoveryScan::Read(udp::socket& socket)
 {
 	bool isChanged{};
-	for (;;)
+	const auto isAsked = [this](const std::uint64_t nonce)
+	{
+		return std::ranges::contains(_catalogs, nonce, &AskedCatalog::nonce);
+	};
+	//NOTE: read on the game thread - a flood faster than a frame would otherwise hold the frame forever
+	constexpr std::size_t datagramsPerPoll{256u};
+	for (std::size_t read{}; read < datagramsPerPoll; ++read)
 	{
 		udp::endpoint sender{};
 		boost::system::error_code ec;
@@ -152,17 +182,32 @@ bool DiscoveryScan::Read(udp::socket& socket)
 		}
 
 		const std::string_view datagram{_receiveBuffer.data(), size};
-		if (datagram == catalog::kListEnd)
+		if (const auto end{catalog::ParseTagged(datagram, catalog::kListEnd)})
 		{
-			_answeredCatalogs.push_back(sender);
+			if (isAsked(*end))
+			{
+				_answeredCatalogs.push_back(*end);
+			}
 
 			continue;
 		}
 
-		//NOTE: a beacon answers for itself, the catalog for every server it lists
+		//NOTE: a beacon answers for itself, a catalog of this scan for every server it lists - nobody else lists any
 		std::optional<catalog::Listing> listing{catalog::ParseListing(datagram)};
+		if (listing && !isAsked(listing->nonce))
+		{
+			continue;
+		}
+
+		//NOTE: each new address costs a socket to ask for its route
+		const bool hasRoom{_entries.size() < catalog::kMaxServers};
 		if (listing && !_routes.contains(listing->host))
 		{
+			if (!hasRoom)
+			{
+				continue;
+			}
+
 			_routes.emplace(listing->host, IsReachable(listing->host.to_string()));
 		}
 
@@ -182,12 +227,12 @@ bool DiscoveryScan::Read(udp::socket& socket)
 		if (const auto further{discovery::FurthestOf(datagram)}; beaconReply && further)
 		{
 			const boost::asio::ip::address host{boost::asio::ip::address_v6{*further}};
-			if (!_routes.contains(host))
+			if (!_routes.contains(host) && hasRoom)
 			{
 				_routes.emplace(host, IsReachable(host.to_string()));
 			}
 
-			listing->host = _routes.at(host) ? host : listing->host;
+			listing->host = _routes.contains(host) && _routes.at(host) ? host : listing->host;
 		}
 
 		if (!listing || listing->heartbeat.reply.protocolVersion != discovery::kProtocolVersion)
@@ -197,41 +242,77 @@ bool DiscoveryScan::Read(udp::socket& socket)
 
 		const discovery::Reply& reply{listing->heartbeat.reply};
 		const ServerAddress address{.host = listing->host.to_string(), .port = reply.gamePort};
-		//NOTE: the broadcast, the direct probe and the catalog may all reach one server
-		const auto addressOf{[](const Entry& entry) -> const ServerAddress& { return entry.server.address; }};
-		auto known{std::ranges::find(_entries, address, addressOf)};
-		//NOTE: a beacon and the catalog may tell of one server under two addresses - a LAN one and the router's
-		const auto isToldByTheOther = [&reply, &beaconReply](const Entry& entry)
+		const auto addressOf{[](const Heard& heard) -> const ServerAddress& { return heard.found.address; }};
+		//NOTE: an address is one server's - a server restarted there answers under a new id
+		const auto isOther = [&reply](const Entry& entry) { return entry.serverId != reply.serverId; };
+		for (Entry& other: _entries | std::views::filter(isOther))
 		{
-			return entry.serverId == reply.serverId && entry.isLocal != beaconReply.has_value();
-		};
-		if (known == _entries.end())
+			const auto isThere = [&address](const Heard& heard) { return heard.found.address == address; };
+			isChanged = std::erase_if(other.addresses, isThere) > 0u || isChanged;
+		}
+		std::erase_if(_entries, [](const Entry& entry) { return entry.addresses.empty(); });
+
+		auto server{std::ranges::find(_entries, reply.serverId, &Entry::serverId)};
+		if (server == _entries.end() && _entries.size() >= catalog::kMaxServers)
 		{
-			known = std::ranges::find_if(_entries, isToldByTheOther);
+			continue;
 		}
 
-		const bool isKnownLocal{known != _entries.end() && known->isLocal};
-		const bool isLocal{beaconReply.has_value() || isKnownLocal};
-		//NOTE: the address a beacon answered from stays - the server is joined there without the router
-		const FoundServer server{.address = isKnownLocal ? known->server.address : address,
-								 .seats = reply.seats,
-								 .freeSeats = reply.freeSeats,
-								 .rules = reply.rules,
-								 .isPortClosed = listing->heartbeat.isPortClosed && !isLocal};
-		const Entry entry{.server = server,
-						  .serverId = reply.serverId,
-						  .isAnswering = true,
-						  .isLocal = isLocal,
-						  .catalog = beaconReply ? std::nullopt : std::optional{sender},
-						  .heardAt = Clock::now()};
-		if (known != _entries.end())
+		if (server == _entries.end())
 		{
-			isChanged = isChanged || known->server != server;
-			*known = entry;
+			server = _entries.insert(_entries.end(), Entry{.serverId = reply.serverId});
 		}
-		else
+
+		auto heard{std::ranges::find(server->addresses, address, addressOf)};
+		const bool isNew{heard == server->addresses.end()};
+		//NOTE: both protocols over a machine's links - more under one id would be somebody else's
+		constexpr std::size_t maxAddresses{8u};
+		if (isNew && server->addresses.size() >= maxAddresses)
 		{
-			_entries.push_back(entry);
+			continue;
+		}
+
+		if (isNew)
+		{
+			heard = server->addresses.insert(server->addresses.end(), Heard{.found = {.address = address}});
+		}
+
+		const auto now{Clock::now()};
+		heard->isAnswering = true;
+		heard->heardAt = now;
+		heard->catalog = beaconReply ? std::nullopt : std::optional{listing->nonce};
+		if (beaconReply)
+		{
+			heard->localHeardAt = now;
+		}
+
+		//NOTE: only while its beacon is heard - after a move to another network the LAN address leads nowhere
+		const auto isLocal = [now](const Heard& local)
+		{
+			return local.localHeardAt && now - *local.localHeardAt <= catalog::kSilenceLimit;
+		};
+		const FoundAddress was{heard->found};
+		heard->found = FoundAddress{.address = address,
+									.seats = reply.seats,
+									.freeSeats = reply.freeSeats,
+									.rules = reply.rules,
+									.isPortClosed = listing->heartbeat.isPortClosed && !isLocal(*heard)};
+		isChanged = isNew || heard->found != was || isChanged;
+
+		const auto reach = [this, &isLocal](const Heard& one)
+		{
+			const std::string& host{one.found.address.host};
+			boost::system::error_code parseError;
+			if (boost::asio::ip::make_address(host, parseError).is_loopback())
+			{
+				return std::pair{3, host.contains(':')};
+			}
+
+			return std::pair{std::ranges::contains(_ownHosts, host) ? 0 : (isLocal(one) ? 1 : 2), host.contains(':')};
+		};
+		if (!std::ranges::is_sorted(server->addresses, {}, reach))
+		{
+			std::ranges::stable_sort(server->addresses, {}, reach);
 			isChanged = true;
 		}
 	}
@@ -241,6 +322,12 @@ bool DiscoveryScan::Read(udp::socket& socket)
 
 std::vector<FoundServer> DiscoveryScan::Servers() const
 {
-	return _entries | std::views::transform(&Entry::server) | std::ranges::to<std::vector>();
+	const auto found = [](const Entry& entry)
+	{
+		return FoundServer{
+				.addresses = entry.addresses | std::views::transform(&Heard::found) | std::ranges::to<std::vector>()};
+	};
+
+	return _entries | std::views::transform(found) | std::ranges::to<std::vector>();
 }
 }//namespace network

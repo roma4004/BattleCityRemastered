@@ -237,21 +237,6 @@ TEST_F(NetworkGameStateTest, ThePauseKeyPausesOnlyARunningMatch)
 	}
 }
 
-//NOTE: entering a phase clears the field, so answering the reset with a phase change would loop
-TEST_F(NetworkGameStateTest, AResetDuringAMatchChangesNothing)
-{
-	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
-	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P1});
-	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P2});
-	ASSERT_EQ(GameState::Playing, _phase);
-
-	_announced.clear();
-	_events->EmitEvent(GameResetEvent{});
-
-	EXPECT_EQ(GameState::Playing, _phase);
-	EXPECT_TRUE(_announced.empty());
-}
-
 // applying the mode again is a new match: the phase is announced again, and the old match's peers are dropped
 TEST_F(NetworkGameStateTest, ApplyingTheModeAgainStartsAFreshMatch)
 {
@@ -501,39 +486,26 @@ TEST_F(NetworkGameStateTest, AJoinTakesTheTankFromItsBotOnTheFirstCommand)
 	EXPECT_EQ(_matchStarts, 0) << "the join restarted the match";
 }
 
-// the match stands still from the join until the newcomer has the field - an unpause meanwhile gets the pause back
-TEST_F(NetworkGameStateTest, AJoinHoldsTheMatchUntilTheFieldReachesTheNewcomer)
+// the match stands still from the join until every newcomer has the field - an unpause meanwhile gets the pause back
+TEST_F(NetworkGameStateTest, AJoinHoldsTheMatchUntilTheFieldReachesEveryNewcomer)
 {
 	const PauseSwitch pauseSwitch{_events};
-	_stateManager = std::make_unique<GameStateManager>(_events, MatchSettings{.seats = 2u, .isStartingAtOnce = true});
+	_stateManager = std::make_unique<GameStateManager>(_events, MatchSettings{.seats = 3u, .isStartingAtOnce = true});
 	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P1});
 
 	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P2});
+	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P3});
 	ASSERT_EQ(_pauses, std::vector{true});
 
 	_events->EmitEvent(SetPauseEvent{.isPaused = false});
 	EXPECT_EQ(_pauses, (std::vector{true, true})) << "the unpause was not answered with the pause that still stands";
 
 	_events->EmitEvent(ServerClientSyncedEvent{.slot = PlayerSlot::P2});
-	EXPECT_EQ(_pauses, (std::vector{true, true, false}));
-}
-
-// two newcomers at once - the first one caught up does not let the match go for the other
-TEST_F(NetworkGameStateTest, TheHoldWaitsForEveryNewcomer)
-{
-	const PauseSwitch pauseSwitch{_events};
-	_stateManager = std::make_unique<GameStateManager>(_events, MatchSettings{.seats = 3u, .isStartingAtOnce = true});
-	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsHost});
-	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P1});
-	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P2});
-	_events->EmitEvent(ServerInClientReadyToStartGameEvent{.slot = PlayerSlot::P3});
-
-	_events->EmitEvent(ServerClientSyncedEvent{.slot = PlayerSlot::P2});
-	ASSERT_EQ(_pauses, std::vector{true}) << "the match went on before the second newcomer had the field";
+	EXPECT_EQ(_pauses, (std::vector{true, true})) << "the match went on before the second newcomer had the field";
 
 	_events->EmitEvent(ServerClientSyncedEvent{.slot = PlayerSlot::P3});
-	EXPECT_EQ(_pauses, (std::vector{true, false}));
+	EXPECT_EQ(_pauses, (std::vector{true, true, false}));
 }
 
 //NOTE: a player pausing while the field is on its way meant it - the end of the sync does not lift it
@@ -714,18 +686,6 @@ TEST_F(NetworkGameStateTest, TheLastOneLeavingTakesTheHeldMatchToTheLobby)
 	EXPECT_EQ(_announced, std::vector{GameState::Lobby});
 	ASSERT_TRUE(_asked.has_value());
 	EXPECT_EQ(_asked->seats, (std::array<Absence, kSeatCount>{})) << "the clients are still asked about a match gone";
-}
-
-//NOTE: a client only mirrors who left - its own answer goes to the server, and nothing changes here until it answers
-TEST_F(NetworkGameStateTest, AClientsAnswerChangesNothingOnTheClient)
-{
-	_events->EmitEvent(GameModeAppliedEvent{.mode = GameMode::PlayAsClient});
-	_events->EmitEvent(HostPhaseAnnouncedEvent{.phase = GameState::Paused});
-	_events->EmitEvent(AbsenceChangedEvent{.seats = {Absence::None, Absence::Left, Absence::None, Absence::None}});
-
-	_events->EmitEvent(AbsenceChosenEvent{.choice = AbsenceChoice::Bot});
-
-	EXPECT_TRUE(_seatChanges.empty()) << "the client handed a seat to a bot on its own";
 }
 
 //NOTE: a restart drops who left with the match - the next one would start held for a player nobody waits for

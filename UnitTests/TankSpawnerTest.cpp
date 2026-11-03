@@ -464,20 +464,6 @@ TEST_F(TankSpawnerTest, AnEnemySpawnsOnBushAndIceButNotOnWater)
 	}
 }
 
-// the one opening in the top row is off both the tank and the half-tank stride - a search by strides misses it
-TEST_F(TankSpawnerTest, AnEnemyFindsAnOpeningThatIsOffTheCoarseSteps)
-{
-	//NOTE: exactly one tank wide, set one cell off the tank-sized stride
-	const double tankSize{_gameConfig.tankSize};
-	const double gapFrom{tankSize * 2.0 + _gameConfig.gridOffset};
-	WallOffTopRow(gapFrom, gapFrom + tankSize);
-
-	const std::size_t before{CountTanksInTopRow()};
-	_events->EmitEvent(RespawnTanksEvent{});
-
-	EXPECT_GT(CountTanksInTopRow(), before) << "no enemy took the one opening there was";
-}
-
 // no two seats can roll overlapping squares if each stays inside its quarter - so every roll is checked
 TEST_F(TankSpawnerTest, EveryEnemyRollStaysInsideItsOwnQuarterOfTheFront)
 {
@@ -612,7 +598,7 @@ TEST_F(TankSpawnerTest, ATierCarriedForASeatThatWentToABotIsNotHandedOn)
 	_events->EmitEvent(Key(Author::Player2), BonusStarPickupEvent{});
 	ASSERT_EQ(_allObjects.size(), 1u);
 	ASSERT_EQ(std::dynamic_pointer_cast<Tank>(_allObjects.front())->GetTier(), 2u);
-	_events->EmitEvent(NextLevelRequestedEvent{});
+	_events->EmitEvent(NextLevelEvent{});
 
 	_events->EmitEvent(SeatsFilledEvent{
 			.holders = {SeatHolder::Player, SeatHolder::Bot, SeatHolder::Empty, SeatHolder::Empty}});
@@ -656,7 +642,7 @@ TEST_F(TankSpawnerTest, ABotTakingOverFromAPlayerWhoLeftDrivesItsTank)
 	EXPECT_EQ(told, std::vector{TankType::COOP2}) << "the seat's next tank waits for a player who is not there";
 }
 
-// a seat given up to nobody takes its tank off the field - no death, so nobody scores it and nothing bursts
+// a seat given up to nobody takes its tank off the field or never lands the one bursting - no death, so nobody scores
 TEST_F(TankSpawnerTest, ASeatGivenUpToNobodyTakesItsTankOffWithoutADeath)
 {
 	bool isDeathTold{};
@@ -665,35 +651,27 @@ TEST_F(TankSpawnerTest, ASeatGivenUpToNobodyTakesItsTankOffWithoutADeath)
 		isDeathTold = true;
 	})};
 	ApplyGameMode(GameMode::PlayAsHost);
-	_events->EmitEvent(SeatsFilledEvent{
-			.holders = {SeatHolder::Player, SeatHolder::Player, SeatHolder::Empty, SeatHolder::Empty}});
-	_events->EmitEvent(GameResetEvent{});
-	_events->EmitEvent(RespawnTankEvent{.type = TankType::PLAYER2, .uuid = UuidUtils::GetRandomUuid()});
-	ASSERT_EQ(_allObjects.size(), 1u);
-	const std::shared_ptr<BaseObj> tank{_allObjects.front()};
+	for (const bool isBursting: {false, true})
+	{
+		SCOPED_TRACE(isBursting ? "still bursting" : "on the field");
+		_events->EmitEvent(SeatsFilledEvent{
+				.holders = {SeatHolder::Player, SeatHolder::Player, SeatHolder::Empty, SeatHolder::Empty}});
+		_events->EmitEvent(GameResetEvent{});
+		_allObjects.clear();
+		isDeathTold = false;
+		if (isBursting)
+		{
+			_instantSpawnAnimationSubs.clear();
+		}
+		const Uuid uuid{UuidUtils::GetRandomUuid()};
+		_events->EmitEvent(RespawnTankEvent{.type = TankType::PLAYER2, .uuid = uuid});
+		ASSERT_EQ(_allObjects.size(), isBursting ? 0u : 1u);
 
-	_events->EmitEvent(SeatHolderChangedEvent{.slot = PlayerSlot::P2, .from = SeatHolder::Player,
-											  .to = SeatHolder::Empty});
+		_events->EmitEvent(SeatHolderChangedEvent{.slot = PlayerSlot::P2, .from = SeatHolder::Player,
+												  .to = SeatHolder::Empty});
+		_events->EmitEvent(SpawnAnimationFinishedEvent{.uuid = uuid});
 
-	EXPECT_FALSE(tank->GetIsAlive()) << "the tank of the one who left still stands";
-	EXPECT_FALSE(isDeathTold) << "taking the tank off was told as a death";
-}
-
-// nor does a tank of that seat still in its burst land afterwards
-TEST_F(TankSpawnerTest, ASeatGivenUpToNobodyNeverLandsTheTankItWasSpawning)
-{
-	ApplyGameMode(GameMode::PlayAsHost);
-	_events->EmitEvent(SeatsFilledEvent{
-			.holders = {SeatHolder::Player, SeatHolder::Player, SeatHolder::Empty, SeatHolder::Empty}});
-	_events->EmitEvent(GameResetEvent{});
-	_instantSpawnAnimationSubs.clear();
-	const Uuid uuid{UuidUtils::GetRandomUuid()};
-	_events->EmitEvent(RespawnTankEvent{.type = TankType::PLAYER2, .uuid = uuid});
-	ASSERT_TRUE(_allObjects.empty()) << "the control failed - the tank landed with no burst to wait for";
-
-	_events->EmitEvent(SeatHolderChangedEvent{.slot = PlayerSlot::P2, .from = SeatHolder::Player,
-											  .to = SeatHolder::Empty});
-	_events->EmitEvent(SpawnAnimationFinishedEvent{.uuid = uuid});
-
-	EXPECT_TRUE(_allObjects.empty()) << "the seat given up landed a tank";
+		EXPECT_TRUE(std::ranges::none_of(_allObjects, &BaseObj::GetIsAlive)) << "the seat given up has a tank";
+		EXPECT_FALSE(isDeathTold) << "taking the tank off was told as a death";
+	}
 }

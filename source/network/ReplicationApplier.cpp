@@ -1,5 +1,6 @@
 #include "network/ReplicationApplier.h"
 #include "components/EventSystem.h"
+#include "components/MatchSettings.h"
 #include "components/events/BonusPickupEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/InputEvents.h"
@@ -11,6 +12,7 @@
 #include "enums/BonusType.h"
 #include "enums/GameState.h"
 #include "enums/InputSignal.h"
+#include "enums/PlayerSlot.h"
 #include "enums/PortForwarding.h"
 #include "enums/RespawnGroup.h"
 #include "enums/StatisticsType.h"
@@ -168,9 +170,17 @@ void ReplicationApplier::Emit(const commands::BonusSpawn& command) const
 										 .isSuper = command.isSuper});
 }
 
+//NOTE: off the wire - a seat past the last one, or more seats than there are, would index past every per-seat array
 void ReplicationApplier::Emit(const commands::SlotAssignment& command) const
 {
-	_events->EmitEvent(PlayerSlotAssignedEvent{.slot = command.slot, .match = command.match});
+	if (SeatIndex(command.slot) >= kSeatCount)
+	{
+		Log::Error("ReplicationApplier: assigned a seat that does not exist, ignored");
+
+		return;
+	}
+
+	_events->EmitEvent(PlayerSlotAssignedEvent{.slot = command.slot, .match = Seated(command.match)});
 }
 
 //NOTE: replaced, not patched - the reset first, then the phase before the field, since entering a match clears it
@@ -198,6 +208,10 @@ void ReplicationApplier::Emit(const commands::WorldSnapshot& command) const
 	_events->EmitEvent(AbsenceChangedEvent{.seats = command.absence});
 	EmitEffects(command.effects);
 	_events->EmitEvent(SetPauseEvent{.isPaused = command.phase == GameState::Paused});
+	if (command.portForwarding)
+	{
+		Emit(*command.portForwarding);
+	}
 }
 
 void ReplicationApplier::Emit(const commands::RespawnCountChange& command) const

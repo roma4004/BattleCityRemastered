@@ -107,6 +107,7 @@ set(GAME_CORE_SOURCES
         source/network/DiscoveryProbe.cpp
         source/network/DiscoveryScan.cpp
         source/network/Endpoints.cpp
+        source/network/HelloCookies.cpp
         source/network/NetworkNodeBase.cpp
         source/network/PeerLink.cpp
         source/network/PortMapping.cpp
@@ -142,7 +143,6 @@ set(UNIT_TESTS_SOURCES
         UnitTests/NetworkClientHandshakeTest.cpp
         UnitTests/NetworkCatalogTest.cpp
         UnitTests/NetworkDiscoveryTest.cpp
-        UnitTests/InputIPAddressTest.cpp
         UnitTests/InputTest.cpp
         UnitTests/GameStateTest.cpp
         UnitTests/NetworkGameStateTest.cpp
@@ -151,7 +151,6 @@ set(UNIT_TESTS_SOURCES
         UnitTests/NetworkDatagramTest.cpp
         UnitTests/NetworkTest.cpp
         UnitTests/RespawnManagerTest.cpp
-        UnitTests/ScoreBoardTest.cpp
         UnitTests/SimulationStepTest.cpp
         UnitTests/StatisticsTest.cpp
         UnitTests/TankSpawnerTest.cpp

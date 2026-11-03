@@ -57,7 +57,6 @@
     <ClCompile Include="NetworkClientHandshakeTest.cpp" />
     <ClCompile Include="NetworkCatalogTest.cpp" />
     <ClCompile Include="NetworkDiscoveryTest.cpp" />
-    <ClCompile Include="InputIPAddressTest.cpp" />
     <ClCompile Include="InputTest.cpp" />
     <ClCompile Include="GameStateTest.cpp" />
     <ClCompile Include="NetworkGameStateTest.cpp" />
@@ -70,7 +69,6 @@
       <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ClCompile Include="RespawnManagerTest.cpp" />
-    <ClCompile Include="ScoreBoardTest.cpp" />
     <ClCompile Include="SimulationStepTest.cpp" />
     <ClCompile Include="StatisticsTest.cpp" />
     <ClCompile Include="TankSpawnerTest.cpp" />

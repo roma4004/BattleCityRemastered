@@ -41,9 +41,6 @@ namespace
 //NOTE: any address past the local network will do
 constexpr auto kOutsideAddress{"8.8.8.8"};
 constexpr std::uint16_t kOutsidePort{53};
-constexpr auto kIPv6Loopback{"::1"};
-//NOTE: a /31 or /32 network is two machines or one - it has no broadcast address
-constexpr unsigned short kWidestBroadcastPrefix{30u};
 
 //NOTE: an interface's address and the length of its network's prefix
 using InterfaceAddress = std::pair<boost::asio::ip::address, unsigned short>;
@@ -151,14 +148,13 @@ unsigned short PrefixOf(const sockaddr* const mask)
 Interfaces InterfaceAddresses()
 {
 	Interfaces byName;
-	ifaddrs* list{nullptr};
-	if (getifaddrs(&list) != 0)
+	std::unique_ptr<ifaddrs, decltype(&freeifaddrs)> list{nullptr, &freeifaddrs};
+	if (getifaddrs(std::out_ptr(list)) != 0)
 	{
 		return byName;
 	}
 
-	const std::unique_ptr<ifaddrs, decltype(&freeifaddrs)> owner{list, &freeifaddrs};
-	for (const ifaddrs* entry{list}; entry != nullptr; entry = entry->ifa_next)
+	for (const ifaddrs* entry{list.get()}; entry != nullptr; entry = entry->ifa_next)
 	{
 		if ((entry->ifa_flags & IFF_UP) == 0u)
 		{
@@ -188,7 +184,10 @@ int ReachOf(const boost::asio::ip::address_v6& address)
 
 bool HasBroadcast(const InterfaceAddress& entry)
 {
-	return entry.first.is_v4() && !entry.first.is_loopback() && entry.second <= kWidestBroadcastPrefix;
+	//NOTE: a /31 or /32 network is two machines or one - it has no broadcast address
+	constexpr unsigned short widestBroadcastPrefix{30u};
+
+	return entry.first.is_v4() && !entry.first.is_loopback() && entry.second <= widestBroadcastPrefix;
 }
 
 std::string BroadcastOf(const InterfaceAddress& entry)
@@ -255,6 +254,7 @@ std::string LocalAddress()
 //NOTE: from the interface LocalAddress goes out by - its IPv6 that reaches furthest
 std::string LocalIPv6Address()
 {
+	constexpr auto loopback{"::1"};
 	const auto local{boost::asio::ip::make_address(LocalAddress())};
 	const Interfaces interfaces{InterfaceAddresses()};
 	const auto cards{interfaces | std::views::values};
@@ -264,14 +264,14 @@ std::string LocalIPv6Address()
 	})};
 	if (card == cards.end())
 	{
-		return kIPv6Loopback;
+		return loopback;
 	}
 
 	auto ipv6{*card | std::views::keys | std::views::filter(&boost::asio::ip::address::is_v6)
 			  | std::views::transform(&boost::asio::ip::address::to_v6)};
 	const auto furthest{std::ranges::min_element(ipv6, {}, ReachOf)};
 
-	return furthest == ipv6.end() ? kIPv6Loopback : (*furthest).to_string();
+	return furthest == ipv6.end() ? loopback : (*furthest).to_string();
 }
 
 bool IsThisMachine(const std::string_view host)

@@ -156,12 +156,20 @@ void Simulation::OnNextLevelRequested(const NextLevelRequestedEvent&)
 		return;
 	}
 
+	//NOTE: every seat's board asks - one late by a frame would leave the next level too, and skip one
+	if (_gameConfig.gameState != GameState::Won)
+	{
+		return;
+	}
+
 	_isNextLevelPending = true;
 }
 
 //NOTE: the map is chosen before the teardown; the following reset keeps the players' progress from the won level
 void Simulation::StartNextLevel()
 {
+	_events->EmitEvent(NextLevelEvent{});
+
 	_gameConfig.mapPath = _levels.PathAfter(_gameConfig.mapPath);
 	++_gameConfig.stageNumber;
 	_isNextLevel = true;

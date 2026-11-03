@@ -282,6 +282,9 @@
     <ClCompile Include="..\source\network\Endpoints.cpp">
       <Filter>source\network</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\network\HelloCookies.cpp">
+      <Filter>source\network</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\network\NetworkNodeBase.cpp">
       <Filter>source\network</Filter>
     </ClCompile>
@@ -852,6 +855,12 @@
       <Filter>headers\network</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\Endpoints.h">
+      <Filter>headers\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\HelloCookies.h">
+      <Filter>headers\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\NetworkCommandQueue.h">
       <Filter>headers\network</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\NetworkNodeBase.h">

@@ -103,6 +103,8 @@ class ServerScreen final
 	std::unique_ptr<network::DiscoveryScan> _scan{nullptr};
 	std::vector<network::FoundServer> _servers{};
 	std::size_t _firstShown{};
+	//NOTE: one per turned row - shown while its server has it
+	std::vector<network::ServerAddress> _turnedTo{};
 	//NOTE: by the players at first; kept past closing, as what is typed is
 	Sort _sort{};
 	//NOTE: the header column Left and Right move along, sorted by on Enter
@@ -168,7 +170,7 @@ class ServerScreen final
 	//NOTE: the router's address, which no interface has
 	[[nodiscard]] bool IsPublic(std::string_view host) const;
 
-	//NOTE: Left and Right turn a setting's value and the header's column, not a caret
+	//NOTE: Left and Right turn a setting's value, the header's column and a server's address, not a caret
 	[[nodiscard]] static bool IsTurnable(Line line) noexcept;
 	void Change(bool isForward);
 
@@ -176,6 +178,9 @@ class ServerScreen final
 	[[nodiscard]] static Column ColumnAt(std::size_t symbol) noexcept;
 	void Arrange(std::vector<network::FoundServer> servers);
 	[[nodiscard]] std::vector<network::FoundServer> Ordered(std::vector<network::FoundServer> servers) const;
+	[[nodiscard]] const network::FoundAddress& RowAddress(const network::FoundServer& server) const;
+	[[nodiscard]] std::size_t RowsOf(const network::FoundServer& server) const;
+	[[nodiscard]] std::size_t LastFirstShown() const;
 
 	[[nodiscard]] std::vector<Item> Lines() const;
 	[[nodiscard]] bool IsPickable(const Item& item) const;

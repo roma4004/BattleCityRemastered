@@ -7,10 +7,12 @@
 #include <boost/asio/error.hpp>
 #include <boost/asio/ip/address.hpp>
 #include <boost/asio/ip/address_v4.hpp>
+#include <boost/asio/ip/address_v6.hpp>
 #include <boost/asio/ip/v6_only.hpp>
 #include <boost/system/error_code.hpp>
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
 #include <map>
 #include <ranges>
 #include <string>
@@ -19,6 +21,23 @@
 
 namespace network
 {
+namespace
+{
+//NOTE: an IPv6 host has a /64 to itself - counted by the address, it could list from as many as it likes
+[[nodiscard]] boost::asio::ip::address NetworkOf(const boost::asio::ip::address& address)
+{
+	if (address.is_v4())
+	{
+		return address;
+	}
+
+	auto bytes{address.to_v6().to_bytes()};
+	std::fill(bytes.begin() + 8, bytes.end(), std::uint8_t{});
+
+	return boost::asio::ip::address_v6{bytes};
+}
+}//namespace
+
 ServerCatalog::ServerCatalog(boost::asio::io_context& ioContext, const ServerAddress& address)
 	: _socket{ioContext}
 	, _sweep{ioContext}
@@ -96,7 +115,7 @@ void ServerCatalog::Take(const std::string_view datagram, const Clock::time_poin
 	}
 
 	const auto isHeard = [now](const auto& entry) { return now - entry.second.heardAt <= catalog::kSilenceLimit; };
-	if (datagram == discovery::kProbe)
+	if (const auto nonce{catalog::ParseTagged(datagram, discovery::kProbe)})
 	{
 		Answers& answers{_answers[sender]};
 		if (now - answers.since >= catalog::kAnswerWindow)
@@ -115,11 +134,12 @@ void ServerCatalog::Take(const std::string_view datagram, const Clock::time_poin
 		boost::system::error_code ec;
 		for (const auto& [server, entry]: _entries | std::views::filter(isHeard))
 		{
-			const auto bytes{catalog::Pack(catalog::Listing{.heartbeat = entry.heartbeat, .host = server.address()})};
+			const auto bytes{catalog::Pack(
+					catalog::Listing{.heartbeat = entry.heartbeat, .host = server.address(), .nonce = *nonce})};
 			std::ignore = _socket.send_to(boost::asio::buffer(bytes), _sender, {}, ec);
 		}
 
-		std::ignore = _socket.send_to(boost::asio::buffer(catalog::kListEnd), _sender, {}, ec);
+		std::ignore = _socket.send_to(boost::asio::buffer(catalog::PackListEnd(*nonce)), _sender, {}, ec);
 
 		return;
 	}
@@ -130,7 +150,25 @@ void ServerCatalog::Take(const std::string_view datagram, const Clock::time_poin
 		return;
 	}
 
+	//NOTE: only with the cookie echoed - a forged sender never hears it
+	if (!_cookies.IsValid(heartbeat->cookie, _sender, heartbeat->reply.gamePort, now))
+	{
+		const auto challenge{catalog::Pack(catalog::Challenge{
+				.token = heartbeat->token, .cookie = _cookies.For(_sender, heartbeat->reply.gamePort, now)})};
+		boost::system::error_code ec;
+		std::ignore = _socket.send_to(boost::asio::buffer(challenge), _sender, {}, ec);
+
+		return;
+	}
+
 	const udp::endpoint server{sender, heartbeat->reply.gamePort};
+	//NOTE: a server heard lately speaks with the token it came with - a restart takes over once the old one is silent
+	if (const auto known{_entries.find(server)};
+		known != _entries.end() && isHeard(*known) && known->second.heartbeat.token != heartbeat->token)
+	{
+		return;
+	}
+
 	if (heartbeat->reply.seats == 0u)
 	{
 		if (_entries.erase(server) > 0u)
@@ -142,10 +180,13 @@ void ServerCatalog::Take(const std::string_view datagram, const Clock::time_poin
 	}
 
 	//NOTE: ordered by address, then port - the sender's servers lie together from port 0; a silent one is not counted
-	const auto isSameHost = [&sender](const auto& entry) { return entry.first.address() == sender; };
-	const auto ofSender{std::ranges::subrange{_entries.lower_bound(udp::endpoint{sender, 0u}), _entries.end()}
-						| std::views::take_while(isSameHost)};
-	if (!_entries.contains(server) && std::ranges::count_if(ofSender, isHeard) >= catalog::kServersPerAddress)
+	const boost::asio::ip::address network{NetworkOf(sender)};
+	const auto isSameNetwork = [&network](const auto& entry) { return NetworkOf(entry.first.address()) == network; };
+	const auto ofSender{std::ranges::subrange{_entries.lower_bound(udp::endpoint{network, 0u}), _entries.end()}
+						| std::views::take_while(isSameNetwork)};
+	if (!_entries.contains(server)
+		&& (std::ranges::count_if(ofSender, isHeard) >= catalog::kServersPerAddress
+			|| _entries.size() >= catalog::kMaxServers))
 	{
 		return;
 	}

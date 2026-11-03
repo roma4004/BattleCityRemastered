@@ -2,6 +2,7 @@
 
 #include "Catalog.h"
 #include "Endpoints.h"
+#include "HelloCookies.h"
 #include <array>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/address.hpp>
@@ -59,10 +60,11 @@ private:
 	boost::asio::steady_timer _sweep;
 	std::uint16_t _boundPort{};
 	udp::endpoint _sender{};
-	//NOTE: a byte past a heartbeat - Linux cuts a longer datagram to fit, and a cut one must not pass for it
+	//NOTE: a byte past a heartbeat - a longer datagram is cut to fit, and a cut one must not pass for it
 	std::array<char, catalog::kHeartbeatSize + 1u> _buffer{};
 	//NOTE: by the heartbeat's sender with the game port it named
 	std::map<udp::endpoint, Entry> _entries{};
 	std::map<boost::asio::ip::address, Answers> _answers{};
+	HelloCookies _cookies{};
 };
 }//namespace network

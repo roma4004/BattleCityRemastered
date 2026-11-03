@@ -57,12 +57,13 @@ protected:
 	boost::asio::io_context _ioContext{};
 };
 
-// the beacon answers with the game port, the rules and the free seats
+// the beacon answers with the game port, the rules and the free seats - a full server too, or it would read as none
 TEST_F(NetworkDiscoveryTest, ABeaconAnswersWithTheGamePortItsRulesAndItsFreeSeats)
 {
 	constexpr std::uint16_t gamePort{54321u};
+	std::uint8_t freeSeats{1u};
 	const network::DiscoveryBeacon beacon{_ioContext, boost::asio::ip::address_v4::loopback(), gamePort,
-										  std::uint8_t{4}, MatchRules::FreeForAll, [] { return std::uint8_t{1}; }};
+										  std::uint8_t{4}, MatchRules::FreeForAll, [&freeSeats] { return freeSeats; }};
 
 	network::DiscoveryProbe probe{std::string{network::kDefaultHost}};
 
@@ -74,20 +75,14 @@ TEST_F(NetworkDiscoveryTest, ABeaconAnswersWithTheGamePortItsRulesAndItsFreeSeat
 	EXPECT_EQ(reply->seats, 4u);
 	EXPECT_EQ(reply->freeSeats, 1u);
 	EXPECT_EQ(reply->rules, MatchRules::FreeForAll);
-}
 
-// a full server still answers: silence would read as "no server here" and the client would keep looking
-TEST_F(NetworkDiscoveryTest, AFullServerStillAnswers)
-{
-	const network::DiscoveryBeacon beacon{_ioContext, boost::asio::ip::address_v4::loopback(), 12345u,
-										  std::uint8_t{4}, MatchRules::Classic, [] { return std::uint8_t{}; }};
+	freeSeats = 0u;
+	network::DiscoveryProbe fullProbe{std::string{network::kDefaultHost}};
 
-	network::DiscoveryProbe probe{std::string{network::kDefaultHost}};
+	const auto fullReply{Ask(fullProbe)};
 
-	const auto reply{Ask(probe)};
-
-	ASSERT_TRUE(reply.has_value());
-	EXPECT_EQ(reply->freeSeats, 0u);
+	ASSERT_TRUE(fullReply.has_value()) << "a full server fell silent";
+	EXPECT_EQ(fullReply->freeSeats, 0u);
 }
 
 // the scan asks this machine by its address too - its own broadcast may never come back to it
@@ -98,10 +93,10 @@ TEST_F(NetworkDiscoveryTest, AScanFindsTheServerOnThisMachine)
 										  std::uint8_t{4}, MatchRules::FreeForAll, [] { return std::uint8_t{2}; }};
 
 	network::DiscoveryScan scan{std::string{network::kDefaultHost}};
-	const network::FoundServer expected{
-			.address = network::ServerAddress{.host = network::kDefaultHost, .port = gamePort}, .seats = 4u,
-			.freeSeats = 2u,
-			.rules = MatchRules::FreeForAll};
+	const network::FoundServer expected{.addresses = {{.address = {.host = network::kDefaultHost, .port = gamePort},
+													   .seats = 4u,
+													   .freeSeats = 2u,
+													   .rules = MatchRules::FreeForAll}}};
 
 	for (int attempt{}; attempt < 100 && !std::ranges::contains(scan.Servers(), expected); ++attempt)
 	{
@@ -114,7 +109,7 @@ TEST_F(NetworkDiscoveryTest, AScanFindsTheServerOnThisMachine)
 }
 
 // IPv6 has no broadcast: a server listening over it is found by the group on its link, at an address it listens on -
-// on "::" the one that reaches furthest from that link, on one address that address
+// on "::" the one that reaches furthest from that link, on one address that address; ::1 is asked by this machine alone
 TEST_F(NetworkDiscoveryTest, AScanFindsAnIPv6ServerByTheGroupOnItsLink)
 {
 	const std::vector<network::IPv6Interface> links{network::IPv6Interfaces()};
@@ -128,7 +123,7 @@ TEST_F(NetworkDiscoveryTest, AScanFindsAnIPv6ServerByTheGroupOnItsLink)
 	}
 
 	std::ignore = socket.close(ec);
-	//NOTE: a server on "::" may hear the IPv4 broadcast too - those answers are no concern here
+	//NOTE: a server on "::" may hear the IPv4 broadcast and the probe to ::1 too - those answers are no concern here
 	const auto findOverIPv6 = [](const std::string& host)
 	{
 		//NOTE: one per beacon - a receive completed after the last poll dies with it, not in the next beacon's poll
@@ -139,12 +134,13 @@ TEST_F(NetworkDiscoveryTest, AScanFindsAnIPv6ServerByTheGroupOnItsLink)
 		network::DiscoveryScan scan{std::string{}};
 		const auto found = [&scan]
 		{
-			const auto isOverIPv6 = [](const network::FoundServer& server)
+			const auto isOverIPv6 = [](const network::FoundAddress& heard)
 			{
-				return server.address.port == gamePort && server.address.host.contains(':');
+				return heard.address.port == gamePort && heard.address.host.contains(':') && heard.address.host != "::1";
 			};
 
-			return scan.Servers() | std::views::filter(isOverIPv6) | std::ranges::to<std::vector>();
+			return scan.Servers() | std::views::transform(&network::FoundServer::addresses) | std::views::join
+				   | std::views::filter(isOverIPv6) | std::ranges::to<std::vector>();
 		};
 
 		//NOTE: past the first answer too - every link is probed at once, and the others come right behind it
@@ -157,9 +153,9 @@ TEST_F(NetworkDiscoveryTest, AScanFindsAnIPv6ServerByTheGroupOnItsLink)
 
 		return found();
 	};
-	const auto hostOf = [](const network::FoundServer& server) { return server.address.host; };
+	const auto hostOf = [](const network::FoundAddress& found) { return found.address.host; };
 
-	const std::vector<network::FoundServer> onEveryAddress{findOverIPv6("::")};
+	const std::vector<network::FoundAddress> onEveryAddress{findOverIPv6("::")};
 	ASSERT_FALSE(onEveryAddress.empty()) << "no link carried the probe to the server";
 	for (const std::string& host: onEveryAddress | std::views::transform(hostOf))
 	{
@@ -186,7 +182,7 @@ TEST_F(NetworkDiscoveryTest, AScanFindsAnIPv6ServerByTheGroupOnItsLink)
 	const auto linkLocal{std::ranges::find_if(hosts, isOwnOfAHeardFurtherLink)};
 	const std::string own{linkLocal == hosts.end() ? onEveryAddress.front().address.host : *linkLocal};
 	SCOPED_TRACE(own);
-	const std::vector<network::FoundServer> onOwnAddress{findOverIPv6(own)};
+	const std::vector<network::FoundAddress> onOwnAddress{findOverIPv6(own)};
 	ASSERT_FALSE(onOwnAddress.empty()) << "no link carried the probe to the server";
 	for (const std::string& host: onOwnAddress | std::views::transform(hostOf))
 	{

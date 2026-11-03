@@ -37,7 +37,7 @@ protected:
 	std::shared_ptr<TankPool> _tankPool{nullptr};
 	GameConfig _gameConfig{};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
-	double _deltaTimeOneFrame{1.0 / 60.0};
+	static constexpr double kDeltaTimeOneFrame{1.0 / 60.0};
 	BulletCaliber _caliber{
 			.speed = 300.0, .damage = 1u, .health = 1, .blastRadius = 12.0, .tier = 1u, .size{.x = 6.0, .y = 5.0}};
 	double _gridSize{1};
@@ -99,7 +99,7 @@ TEST_F(BulletTest, BulletMoveInsideScreen)
 		_allObjects.clear();
 		const auto bullet{CreateBullet(start, dir, Author::Player1)};
 
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 		const auto [unitX, unitY]{DirectionUtils::Unit(dir)};
 		const double alongX{bullet->GetPos().x - start.x};
@@ -123,7 +123,7 @@ TEST_F(BulletTest, BulletMoveOutSideScreen)
 		_allObjects.clear();
 		const auto bullet{CreateBullet(start, dir, Author::Player1)};
 
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 		EXPECT_EQ(start, bullet->GetPos());
 	}
@@ -154,7 +154,7 @@ TEST_F(BulletTest, BulletDamagesABrickFromEverySide)
 		const auto brickWall{SpawnObstacle(rect, ObstacleType::Brick)};
 		const unsigned int brickWallHealth{brickWall->GetHealth()};
 
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 		EXPECT_GT(brickWallHealth, brickWall->GetHealth());
 	}
@@ -194,7 +194,7 @@ TEST_F(BulletTest, BulletBlowRadiusIsDirectionSymmetric)
 
 		const unsigned int healthBefore{farTile->GetHealth()};
 
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 		return healthBefore - farTile->GetHealth();
 	};
@@ -216,7 +216,7 @@ TEST_F(BulletTest, BulletDamageTank)
 
 	EXPECT_EQ(enemyBot->GetHealth(), 1u);
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	EXPECT_EQ(enemyBot->GetHealth(), 0u);
 }
@@ -227,7 +227,7 @@ TEST_F(BulletTest, SameRankBulletsDestroyEachOther)
 	const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};
 	const auto bullet2{CreateBullet({.x = 0, .y = _caliber.size.y + 1}, Direction::UP, Author::Player2)};
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	EXPECT_FALSE(bullet->GetIsAlive());
 	EXPECT_FALSE(bullet2->GetIsAlive());
@@ -246,14 +246,14 @@ TEST_F(BulletTest, AHeavierBulletOutlivesTheMeetingAndFliesOn)
 											 Direction::DOWN, Author::Player1)};
 	const auto light{CreateBullet({.x = 0.0, .y = _caliber.size.y + 1}, Direction::UP, Author::Player2)};
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	EXPECT_FALSE(light->GetIsAlive());
 	EXPECT_EQ(tankHealth - _caliber.damage, beside->GetHealth());
 	ASSERT_EQ(heavyCaliber.health - _caliber.health, heavy->GetHealth());
 
 	const FPoint metAt{heavy->GetPos()};
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	EXPECT_LT(metAt.y, heavy->GetPos().y);
 }
@@ -268,7 +268,7 @@ TEST_F(BulletTest, BulletPenetratesABrickItCanPayFor)
 	_caliber.blastRadius = _gameConfig.tankSize;
 	const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	EXPECT_FALSE(brickWall->GetIsAlive());
 	EXPECT_TRUE(bullet->GetIsAlive());
@@ -308,7 +308,7 @@ TEST_F(BulletTest, AShellSinksAsDeepAsItsBlastLetsAndDealsDamageOnce)
 
 		for (int tick{}; tick < 200 && shell->GetIsAlive(); ++tick)
 		{
-			_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+			_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 		}
 
 		EXPECT_FALSE(shell->GetIsAlive());
@@ -320,36 +320,34 @@ TEST_F(BulletTest, AShellSinksAsDeepAsItsBlastLetsAndDealsDamageOnce)
 	EXPECT_LT(broken.front(), broken.back());
 }
 
-// steel below the third tier is not penetrated, whatever the shot has to spare
-TEST_F(BulletTest, BulletBelowTierThreeDealsDamageAgainstSteel)
+// steel stops a shot below the third tier unharmed, whatever the shot has to spare; from the third tier on it breaks
+TEST_F(BulletTest, SteelIsPenetratedOnlyFromTierThree)
 {
-	const auto steelWall{SpawnObstacle({.x = 0.0, .y = 6.0, .w = _gridSize, .h = _gridSize}, ObstacleType::Steel)};
-	const unsigned int steelWallHealth{steelWall->GetHealth()};
-	_caliber.health = steelWallHealth + 1;
-	_caliber.blastRadius = _gameConfig.tankSize;
-	const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};
+	struct Gun final
+	{
+		unsigned short tier{};
+		bool isPenetrating{};
+	};
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	for (const Gun& gun: {Gun{.tier = 2u}, Gun{.tier = 3u, .isPenetrating = true}})
+	{
+		SCOPED_TRACE(gun.tier);
+		_events->EmitEvent(GameResetEvent{});
+		_allObjects.clear();
+		const auto steelWall{SpawnObstacle({.x = 0.0, .y = 6.0, .w = _gridSize, .h = _gridSize}, ObstacleType::Steel)};
+		const unsigned int steelWallHealth{steelWall->GetHealth()};
+		_caliber.tier = gun.tier;
+		_caliber.damage = steelWallHealth;
+		_caliber.health = steelWallHealth + 1;
+		_caliber.blastRadius = _gameConfig.tankSize;
+		const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};
 
-	EXPECT_FALSE(bullet->GetIsAlive());
-	EXPECT_EQ(steelWallHealth, steelWall->GetHealth());
-}
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
-// from the third tier on steel is penetrated like brick
-TEST_F(BulletTest, TierThreeBulletPenetratesSteel)
-{
-	const auto steelWall{SpawnObstacle({.x = 0.0, .y = 6.0, .w = _gridSize, .h = _gridSize}, ObstacleType::Steel)};
-	const unsigned int steelWallHealth{steelWall->GetHealth()};
-	_caliber.tier = 3u;
-	_caliber.damage = steelWallHealth;
-	_caliber.health = steelWallHealth + 1;
-	_caliber.blastRadius = _gameConfig.tankSize;
-	const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};
-
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-
-	EXPECT_FALSE(steelWall->GetIsAlive());
-	EXPECT_TRUE(bullet->GetIsAlive());
+		EXPECT_EQ(bullet->GetIsAlive(), gun.isPenetrating);
+		EXPECT_EQ(steelWall->GetIsAlive(), !gun.isPenetrating);
+		EXPECT_EQ(steelWall->GetHealth() == steelWallHealth, !gun.isPenetrating);
+	}
 }
 
 // the eagle outlives a shot - the base falls only when its health is gone
@@ -363,7 +361,7 @@ TEST_F(BulletTest, EagleFallsOnlyWhenItsHealthIsGone)
 	const auto eagle{SpawnObstacle({.x = 0.0, .y = 6.0, .w = _gridSize, .h = _gridSize}, ObstacleType::Eagle)};
 	std::ignore = CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Enemy1);
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	ASSERT_TRUE(eagle->GetIsAlive());
 	EXPECT_FALSE(isBaseFinished);
@@ -382,59 +380,46 @@ TEST_F(BulletTest, BulletDamagefortressWall)
 										  ObstacleType::Fortress)};
 	const unsigned int fortressWallHealth{fortressWall->GetHealth()};
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	EXPECT_GT(fortressWallHealth, fortressWall->GetHealth());
 }
 
-// a bush never stops a bullet - it burns in a blast on something solid, and only from tier three
+// a bush never stops a bullet - it burns in a blast on something solid behind it, and only from tier three
 TEST_F(BulletTest, ABushBurnsInABlastOnlyFromTierThree)
 {
 	struct Blast final
 	{
 		unsigned short tier{};
+		bool isWallAhead{};
 		bool isBushStanding{};
 	};
 
-	for (const Blast& blast: {Blast{.tier = 2u, .isBushStanding = true}, Blast{.tier = 3u, .isBushStanding = false}})
+	for (const Blast& blast: {Blast{.tier = 2u, .isWallAhead = true, .isBushStanding = true},
+							  Blast{.tier = 3u, .isWallAhead = true},
+							  Blast{.tier = 3u, .isBushStanding = true}})
 	{
-		SCOPED_TRACE(blast.tier);
+		SCOPED_TRACE(testing::Message() << blast.tier << (blast.isWallAhead ? " on a wall" : " in the open"));
 		_events->EmitEvent(GameResetEvent{});
 		_allObjects.clear();
 		_caliber.tier = blast.tier;
-		std::ignore = CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
-
-		const auto wall{SpawnObstacle(ObjRectangle{.x = 0.0, .y = 20.0, .w = _gridSize, .h = 4.0},
-									  ObstacleType::Brick)};
+		const auto bullet{CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1)};
+		if (blast.isWallAhead)
+		{
+			std::ignore = SpawnObstacle(ObjRectangle{.x = 0.0, .y = 20.0, .w = _gridSize, .h = 4.0},
+										ObstacleType::Brick);
+		}
 		const auto bush{SpawnObstacle(ObjRectangle{.x = 0.0, .y = 26.0, .w = _gridSize, .h = _gridSize},
 									  ObstacleType::Bush)};
 
-		const unsigned int wallHealth{wall->GetHealth()};
-		for (int frame{}; frame < 20 && wall->GetHealth() == wallHealth; ++frame)
+		for (int frame{}; frame < 10; ++frame)
 		{
-			_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+			_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 		}
 
-		EXPECT_GT(wallHealth, wall->GetHealth());
+		EXPECT_NE(bullet->GetIsAlive(), blast.isWallAhead) << "the shot ended anywhere but on the wall";
 		EXPECT_EQ(bush->GetIsAlive(), blast.isBushStanding);
 	}
-}
-
-// Nothing solid behind it, so the shot flies on and the bush is never in a blast at all
-TEST_F(BulletTest, TierThreeFliesThroughABushWithoutBurningIt)
-{
-	_caliber.tier = 3u;
-	std::ignore = CreateBullet({.x = 0.0, .y = 0.0}, Direction::DOWN, Author::Player1);
-
-	const auto bush{SpawnObstacle(ObjRectangle{.x = 0.0, .y = 20.0, .w = _gridSize, .h = _gridSize},
-								  ObstacleType::Bush)};
-
-	for (int frame{}; frame < 10; ++frame)
-	{
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-	}
-
-	EXPECT_TRUE(bush->GetIsAlive());
 }
 
 // a tier-three blast burns a bush and digs steel, but the water or ice beside the wall comes through untouched
@@ -455,7 +440,7 @@ TEST_F(BulletTest, WaterAndIceSurviveABlastThatBurnsABush)
 		const unsigned int wallHealth{wall->GetHealth()};
 		for (int frame{}; frame < 20 && wall->GetHealth() == wallHealth; ++frame)
 		{
-			_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+			_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 		}
 
 		EXPECT_GT(wallHealth, wall->GetHealth()) << "the shot never reached the wall";
@@ -476,7 +461,7 @@ TEST_F(BulletTest, ABulletFliesOverWaterAndIce)
 		const auto tile{SpawnObstacle(ObjRectangle{.x = 0.0, .y = 6.0, .w = _gridSize, .h = _gridSize}, terrain)};
 		const unsigned int tileHealth{tile->GetHealth()};
 
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 		EXPECT_TRUE(bullet->GetIsAlive()) << "the terrain stopped the bullet";
 		EXPECT_EQ(tileHealth, tile->GetHealth());

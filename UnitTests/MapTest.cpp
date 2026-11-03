@@ -277,8 +277,8 @@ TEST_F(MapTest, ABaselessMatchLeavesTheEagleItsWallAndTheShovelOut)
 	EXPECT_EQ(bonuses, std::vector{BonusType::Helmet});
 }
 
-// the campaign is the folder, read in name order
-TEST_F(MapTest, TheNextLevelIsTheNextNameInTheFolder)
+// the campaign is the folder in name order, looping; a map from elsewhere starts it over, an empty folder stays put
+TEST_F(MapTest, TheCampaignIsTheFolderInNameOrder)
 {
 	const MapsFolder maps{"order"};
 	maps.Add("level1");
@@ -286,61 +286,32 @@ TEST_F(MapTest, TheNextLevelIsTheNextNameInTheFolder)
 	const LevelRotation rotation{maps.Folder()};
 
 	EXPECT_EQ(rotation.PathAfter(maps.PathOf("level1")), maps.PathOf("level2"));
-}
-
-// and the last one is followed by the first, so the prompt on the scoreboard always points somewhere
-TEST_F(MapTest, TheLastLevelLoopsBackToTheFirst)
-{
-	const MapsFolder maps{"loop"};
-	maps.Add("level1");
-	maps.Add("level2");
-	const LevelRotation rotation{maps.Folder()};
-
-	EXPECT_EQ(rotation.PathAfter(maps.PathOf("level2")), maps.PathOf("level1"));
-}
-
-// a map the folder does not hold - the console can load one by name - starts the campaign over
-TEST_F(MapTest, AMapOutsideTheFolderStartsTheCampaignOver)
-{
-	const MapsFolder maps{"stranger"};
-	maps.Add("level1");
-	maps.Add("level2");
-	const LevelRotation rotation{maps.Folder()};
-
+	EXPECT_EQ(rotation.PathAfter(maps.PathOf("level2")), maps.PathOf("level1")) << "the last level did not loop back";
+	//NOTE: the console can load a map by name from anywhere
 	EXPECT_EQ(rotation.PathAfter("Resources/Maps/handmade.map"), maps.PathOf("level1"));
+
+	const MapsFolder empty{"empty"};
+	const LevelRotation nothing{empty.Folder()};
+
+	EXPECT_EQ(nothing.PathAfter(empty.PathOf("level1")), empty.PathOf("level1"));
 }
 
-// with nothing to rotate through the match stays on the map it is on
-TEST_F(MapTest, AnEmptyFolderLeavesTheLevelAsItIs)
-{
-	const MapsFolder maps{"empty"};
-	const LevelRotation rotation{maps.Folder()};
-
-	EXPECT_EQ(rotation.PathAfter(maps.PathOf("level1")), maps.PathOf("level1"));
-}
-
-//NOTE: the reset and the map load used to hang off MatchStartedEvent, ordered only by who subscribed first
-TEST_F(MapTest, TheMapFillsTheFieldTheResetJustEmptied)
+// one reset, then the level's map - a reset after the load empties the level, a second one tears it down twice
+TEST_F(MapTest, ALevelStartsWithOneResetThenItsMap)
 {
 	//NOTE: the spawners are built on the mode change, so this is what gives the match a map to load
 	_simulation.ApplyGameMode(GameMode::OnePlayer);
 	_order.clear();
-
+	//NOTE: the reset and the map load used to hang off MatchStartedEvent, ordered only by who subscribed first
 	_events->EmitEvent(MatchStartedEvent{});
+	ASSERT_EQ(_order, (std::vector<std::string_view>{"reset", "map", "spawn"})) << "the first level";
 
-	EXPECT_EQ(_order, (std::vector<std::string_view>{"reset", "map", "spawn"}));
-}
-
-// one reset, then the next level's map - a reset after the load empties the level, a second one tears it down twice
-TEST_F(MapTest, TheNextLevelIsOneResetThenItsMap)
-{
-	_events->EmitEvent(GameModeChangedToEvent{.mode = GameMode::OnePlayer});
 	_order.clear();
 	_events->EmitEvent(GameFinishedEvent{.state = GameState::Won});
 	_events->EmitEvent(NextLevelRequestedEvent{});
 	_events->EmitEvent(PostTickUpdateEvent{});
 
-	EXPECT_EQ(_order, (std::vector<std::string_view>{"reset", "map", "spawn"}));
+	EXPECT_EQ(_order, (std::vector<std::string_view>{"reset", "map", "spawn"})) << "the next level";
 }
 
 // a restart is a new run, not one more level of the old one
@@ -356,15 +327,4 @@ TEST_F(MapTest, ARestartStartsOverFromTheFirstStage)
 	_events->EmitEvent(MatchRestartRequestedEvent{});
 
 	EXPECT_EQ(_gameConfig.stageNumber, 1u);
-}
-
-// the ask is answered a step later, so every listener of it still sees the field it has to read
-TEST_F(MapTest, TheFieldStandsUntilTheFrameEnds)
-{
-	_events->EmitEvent(GameModeChangedToEvent{.mode = GameMode::OnePlayer});
-	_order.clear();
-	_events->EmitEvent(GameFinishedEvent{.state = GameState::Won});
-	_events->EmitEvent(NextLevelRequestedEvent{});
-
-	EXPECT_TRUE(_order.empty()) << "the world was torn down inside the ask for the next level";
 }

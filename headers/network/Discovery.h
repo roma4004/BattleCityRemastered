@@ -1,6 +1,7 @@
 #pragma once
 
 #include "enums/MatchRules.h"
+#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <optional>
@@ -15,7 +16,7 @@ inline constexpr std::string_view kGroupIPv6{"ff02::bc:1"};
 inline constexpr std::string_view kReplyTag{"BC!3"};
 
 //NOTE: bump on any change to AnyCommand or the link header - the reply is the last place to refuse an old client
-inline constexpr std::uint16_t kProtocolVersion{5};
+inline constexpr std::uint16_t kProtocolVersion{6};
 
 struct Reply final
 {
@@ -37,10 +38,7 @@ inline constexpr std::size_t kAddressedReplySize{kReplySize + 16u};
 [[nodiscard]] inline std::array<char, kReplySize> Pack(const Reply& reply) noexcept
 {
 	std::array<char, kReplySize> bytes{};
-	for (std::size_t i{}; i < kReplyTag.size(); ++i)
-	{
-		bytes[i] = kReplyTag[i];
-	}
+	std::ranges::copy(kReplyTag, bytes.begin());
 
 	bytes[4] = static_cast<char>(reply.protocolVersion & 0xFFu);
 	bytes[5] = static_cast<char>(reply.protocolVersion >> 8u);
@@ -95,16 +93,9 @@ inline constexpr std::size_t kAddressedReplySize{kReplySize + 16u};
 																const std::array<unsigned char, 16u>& furthest) noexcept
 {
 	std::array<char, kAddressedReplySize> bytes{};
-	const std::array<char, kReplySize> plain{Pack(reply)};
-	for (std::size_t i{}; i < kReplySize; ++i)
-	{
-		bytes[i] = plain[i];
-	}
-
-	for (std::size_t i{}; i < furthest.size(); ++i)
-	{
-		bytes[kReplySize + i] = static_cast<char>(furthest[i]);
-	}
+	std::ranges::copy(Pack(reply), bytes.begin());
+	std::ranges::transform(furthest, bytes.begin() + kReplySize,
+						   [](const unsigned char byte) { return static_cast<char>(byte); });
 
 	return bytes;
 }
@@ -118,10 +109,8 @@ inline constexpr std::size_t kAddressedReplySize{kReplySize + 16u};
 	}
 
 	std::array<unsigned char, 16u> furthest{};
-	for (std::size_t i{}; i < furthest.size(); ++i)
-	{
-		furthest[i] = static_cast<unsigned char>(datagram[kReplySize + i]);
-	}
+	std::ranges::transform(datagram.substr(kReplySize), furthest.begin(),
+						   [](const char byte) { return static_cast<unsigned char>(byte); });
 
 	return furthest;
 }

@@ -21,6 +21,10 @@ struct DatagramHeader final
 	std::uint32_t connectionId{};
 	//NOTE: the sender has not heard this peer yet - what tells a server a new client from a stale datagram
 	bool isHello{};
+	//NOTE: a hello echoing the server's challenge
+	std::optional<std::uint64_t> cookie{};
+	//NOTE: one per game run - tells a returning player from a neighbour behind the same NAT
+	std::uint64_t playerKey{};
 };
 
 //NOTE: one peer's protocol, no socket and no clock - the owner passes datagrams both ways, so tests need no network
@@ -39,9 +43,13 @@ public:
 		bool isOverflowed{};
 	};
 
-	DatagramLink(std::uint32_t connectionId, Clock::time_point now);
+	//NOTE: the key goes out with the cookie echo alone - a server's link needs none
+	DatagramLink(std::uint32_t connectionId, Clock::time_point now, std::uint64_t playerKey = 0u);
 
 	[[nodiscard]] static std::optional<DatagramHeader> PeekHeader(std::string_view datagram);
+
+	//NOTE: a server's answer to a hello without the cookie - no datagram of a link, and shorter than any hello
+	[[nodiscard]] static std::string Challenge(std::uint32_t connectionId, std::uint64_t cookie);
 
 	//NOTE: false when the backlog would exceed kMaxBacklog - the backlog is dropped and the peer skips the gap
 	[[nodiscard]] bool SendReliable(std::string_view message);
@@ -95,14 +103,17 @@ private:
 		std::string bytes{};
 		std::uint32_t version{};
 		std::uint32_t epoch{};
+		//NOTE: the reliable seq past its entity's newest message - the spawn it moves comes first
+		std::uint32_t after{};
 		Clock::time_point resendAt{};
 	};
 
-	//NOTE: a value that came ahead of the snapshot opening its epoch
+	//NOTE: a value ahead of the snapshot opening its epoch, or of its entity's reliable message
 	struct HeldLatest final
 	{
 		std::string bytes{};
 		std::uint32_t epoch{};
+		std::uint32_t after{};
 		std::uint32_t seq{};
 	};
 
@@ -123,12 +134,16 @@ private:
 	void RecordArrival(std::uint32_t seq);
 	void SkipTo(std::uint32_t base);
 	void DeliverInOrder(Arrivals& arrivals);
-	void EnterEpoch(std::uint32_t epoch, Arrivals& arrivals);
 	void AcceptLatest(const Uuid& key, const HeldLatest& value, Arrivals& arrivals);
+	void ReleaseHeld(Arrivals& arrivals);
 
 	const std::uint32_t _connectionId;
+	const std::uint64_t _playerKey;
 	bool _hasHeardPeer{};
 	bool _isAckOwed{};
+	//NOTE: what the server challenged with - every hello echoes it from then on
+	std::optional<std::uint64_t> _cookie{};
+	bool _isHelloOwed{};
 	Clock::time_point _lastReceivedAt;
 	Clock::time_point _lastSentAt{};
 
@@ -137,6 +152,8 @@ private:
 	std::map<std::uint32_t, Fragment> _unacked{};
 	std::unordered_map<Uuid, LatestValue> _latest{};
 	std::uint32_t _latestVersion{};
+	//NOTE: per entity, the reliable seq past its newest unacked message
+	std::unordered_map<Uuid, std::uint32_t> _reliableEntities{};
 	//NOTE: how many snapshots this end has sent
 	std::uint32_t _epoch{};
 	std::deque<SentDatagram> _sent{};

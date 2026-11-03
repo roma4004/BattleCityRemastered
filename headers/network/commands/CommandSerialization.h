@@ -36,6 +36,7 @@
 #include <ser20/types/array.hpp>
 #include <ser20/types/chrono.hpp>
 #include <ser20/types/common.hpp>
+#include <ser20/types/optional.hpp>
 #include <ser20/types/string.hpp>
 #include <ser20/types/variant.hpp>
 #include <ser20/types/vector.hpp>
@@ -360,6 +361,7 @@ void serialize(Archive& ar, network::commands::WorldSnapshot& snapshot, const un
 	ar & snapshot.statistics;
 	ar & snapshot.holders;
 	ar & snapshot.absence;
+	ar & snapshot.portForwarding;
 }
 
 template<class Archive>

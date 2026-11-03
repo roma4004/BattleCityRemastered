@@ -11,11 +11,6 @@
 
 namespace
 {
-//NOTE: per search name - UPnP advises a second or two; miniupnpc tries four names, so silence takes four times this
-constexpr int kDiscoverMilliseconds{2000};
-//NOTE: two hops, as UPnP advises - the router is the next one
-constexpr unsigned char kDiscoverTtl{2u};
-
 //NOTE: the provider's shared range (RFC 6598) tells a provider's NAT from a second home router, which has a private one
 [[nodiscard]] RouterState ConnectedStateOf(const std::string& outsideAddress)
 {
@@ -44,9 +39,13 @@ namespace network
 //NOTE: Winsock, which miniupnpc needs on Windows, is started for the whole process by asio
 Router::Router()
 {
+	//NOTE: per search name - UPnP advises a second or two; miniupnpc tries four names, so silence takes four times this
+	constexpr int discoverMilliseconds{2000};
+	//NOTE: two hops, as UPnP advises - the router is the next one
+	constexpr unsigned char discoverTtl{2u};
 	int error{};
 	const std::unique_ptr<UPNPDev, decltype(&freeUPNPDevlist)> devices{
-			upnpDiscover(kDiscoverMilliseconds, nullptr, nullptr, UPNP_LOCAL_PORT_ANY, 0, kDiscoverTtl, &error),
+			upnpDiscover(discoverMilliseconds, nullptr, nullptr, UPNP_LOCAL_PORT_ANY, 0, discoverTtl, &error),
 			&freeUPNPDevlist};
 	if (!devices)
 	{

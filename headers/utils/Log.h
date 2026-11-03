@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <cstdint>
 #include <string>
 
@@ -34,6 +35,6 @@ private:
 
 	static bool _consoleEnabled;
 	static bool _fileEnabled;
-	static Level _level;
+	static std::atomic<Level> _level;
 	static std::string _filename;
 };

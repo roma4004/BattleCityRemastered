@@ -8,7 +8,12 @@
 #include <boost/asio/error.hpp>
 #include <boost/asio/ip/address.hpp>
 #include <boost/system/error_code.hpp>
+#include <cstddef>
+#include <cstdint>
+#include <optional>
+#include <random>
 #include <string>
+#include <string_view>
 #include <tuple>
 
 namespace network
@@ -47,6 +52,9 @@ CatalogListing::CatalogListing(boost::asio::io_context& ioContext, const ServerA
 		return;
 	}
 
+	std::random_device device{};
+	_token = std::uniform_int_distribution<std::uint64_t>{}(device);
+	Receive();
 	Send();
 }
 
@@ -73,7 +81,8 @@ void CatalogListing::Shutdown()
 	}
 
 	//NOTE: if lost, the catalog drops the server after kSilenceLimit anyway
-	catalog::Heartbeat goodbye{.reply = _beacon.Answer(), .isPortClosed = _isPortClosed};
+	catalog::Heartbeat goodbye{
+			.reply = _beacon.Answer(), .isPortClosed = _isPortClosed, .token = _token, .cookie = _cookie};
 	goodbye.reply.seats = 0u;
 	goodbye.reply.freeSeats = 0u;
 	const auto bytes{catalog::Pack(goodbye)};
@@ -86,7 +95,8 @@ void CatalogListing::Shutdown()
 void CatalogListing::Send()
 {
 	//NOTE: no retry - the next heartbeat makes up for a lost one
-	const auto bytes{catalog::Pack(catalog::Heartbeat{.reply = _beacon.Answer(), .isPortClosed = _isPortClosed})};
+	const auto bytes{catalog::Pack(catalog::Heartbeat{
+			.reply = _beacon.Answer(), .isPortClosed = _isPortClosed, .token = _token, .cookie = _cookie})};
 	boost::system::error_code ec;
 	std::ignore = _socket.send_to(boost::asio::buffer(bytes), _catalog, {}, ec);
 
@@ -98,5 +108,27 @@ void CatalogListing::Send()
 			Send();
 		}
 	});
+}
+
+//NOTE: a refused heartbeat goes again with the cookie - from any sender, the token says it is ours
+void CatalogListing::Receive()
+{
+	const auto onReceived = [this](const boost::system::error_code& ec, const std::size_t size)
+	{
+		if (ec == boost::asio::error::operation_aborted || !_socket.is_open())
+		{
+			return;
+		}
+
+		const auto challenge{ec ? std::nullopt : catalog::ParseChallenge(std::string_view{_inbox.data(), size})};
+		if (challenge && challenge->token == _token)
+		{
+			_cookie = challenge->cookie;
+			Send();
+		}
+
+		Receive();
+	};
+	_socket.async_receive(boost::asio::buffer(_inbox), onReceived);
 }
 }//namespace network

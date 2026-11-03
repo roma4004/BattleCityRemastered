@@ -34,18 +34,6 @@
 #include <variant>
 #include <vector>
 
-namespace
-{
-//NOTE: one to four seats, whatever the launch asked for, and a bot short of filling them all
-MatchSettings Seated(MatchSettings match)
-{
-	match.seats = std::clamp(match.seats, std::uint8_t{1}, static_cast<std::uint8_t>(kSeatCount));
-	match.bots = std::min(match.bots, MaxBots(match.seats));
-
-	return match;
-}
-}//namespace
-
 namespace network
 {
 Server::Server(boost::asio::io_context& ioContext, const ServerAddress& address,
@@ -119,16 +107,15 @@ void Server::Shutdown(const DisconnectReason reason, const std::function<void()>
 
 std::uint8_t Server::CountFreeSlots() const
 {
-	const std::lock_guard lock{_sessionsMutex};
-
-	std::uint8_t free{};
-	for (const PlayerSlot slot: kSlots | std::views::take(_match.seats))
+	//NOTE: closed to newcomers or closing - a seat listed as free would only earn a ServerFull every few seconds
+	if (!_isAccepting.load(std::memory_order_acquire) || _onClosed)
 	{
-		const auto holdsSlot = [slot](const std::shared_ptr<Session>& session) { return session->Holds(slot); };
-		free += static_cast<std::uint8_t>(!std::ranges::any_of(_sessions, holdsSlot));
+		return 0u;
 	}
 
-	return free;
+	const std::scoped_lock lock{_sessionsMutex};
+
+	return static_cast<std::uint8_t>(FreeSeats().size());
 }
 
 void Server::CloseSocket()
@@ -203,10 +190,18 @@ void Server::OnDatagram(const std::string_view datagram, const Clock::time_point
 		return;
 	}
 
+	//NOTE: a seat, and the hello read, only once it echoes the cookie - a forged sender address never hears one
+	if (!header->cookie || !_cookies.IsValid(*header->cookie, _sender, header->connectionId, now))
+	{
+		SendTo(_sender, {DatagramLink::Challenge(header->connectionId,
+												 _cookies.For(_sender, header->connectionId, now))});
+		return;
+	}
+
 	std::ranges::for_each(sessions | std::views::filter(isSameAddress),
 						  [](const std::shared_ptr<Session>& session) { session->Supersede(); });
 
-	Seat(_sender, header->connectionId, datagram, now);
+	Seat(_sender, *header, datagram, now);
 }
 
 void Server::RefuseSeat(const udp::endpoint& endpoint, const std::uint32_t connectionId, const Clock::time_point now)
@@ -219,28 +214,26 @@ void Server::RefuseSeat(const udp::endpoint& endpoint, const std::uint32_t conne
 	SendTo(endpoint, refusal.TakeDatagrams(now));
 }
 
-void Server::Seat(const udp::endpoint& endpoint, const std::uint32_t connectionId, const std::string_view hello,
+void Server::Seat(const udp::endpoint& endpoint, const DatagramHeader& header, const std::string_view hello,
 				  const Clock::time_point now)
 {
-	//NOTE: not accepting answers like a full server - the client waits instead of spending its retries on silence
-	if (!_isAccepting.load(std::memory_order_acquire))
-	{
-		RefuseSeat(endpoint, connectionId, now);
-		return;
-	}
-
 	std::unique_lock lock{_sessionsMutex};
-	const auto slot{FindFreeSlot(endpoint)};
+	const auto freeSeats{FreeSeats()};
+	//NOTE: closed to newcomers alone - a player back after a dropped link still gets the seat it left
+	const auto slot{_isAccepting.load(std::memory_order_acquire)
+							? _seatHistory.Choose(freeSeats, endpoint, header.playerKey)
+							: _seatHistory.Returning(freeSeats, endpoint, header.playerKey)};
+	//NOTE: refused like a full server, closed or not - the client waits instead of spending its retries on silence
 	if (!slot)
 	{
 		lock.unlock();
-		RefuseSeat(endpoint, connectionId, now);
+		RefuseSeat(endpoint, header.connectionId, now);
 		return;
 	}
 
-	const auto session{std::make_shared<Session>(endpoint, connectionId, _events, *slot, _match, now)};
+	const auto session{std::make_shared<Session>(endpoint, header.connectionId, _events, *slot, _match, now)};
 	_sessions.emplace_back(session);
-	_seatHistory.Seat(*slot, endpoint);
+	_seatHistory.Seat(*slot, endpoint, header.playerKey);
 	lock.unlock();
 
 	session->Start();
@@ -375,7 +368,9 @@ void Server::OnPortForwardingChanged(const PortForwardingChangedEvent& event)
 
 	if (_listing)
 	{
-		const bool isClosed{event.state == PortForwarding::Refused || event.state == PortForwarding::BehindProvider};
+		//NOTE: Lost too - the router forgot the port, and the catalog would offer a server nobody can reach
+		const bool isClosed{event.state == PortForwarding::Refused || event.state == PortForwarding::BehindProvider
+							|| event.state == PortForwarding::Lost};
 		boost::asio::post(_socket.get_executor(), [listing = _listing.get(), isClosed]
 		{
 			listing->SetPortClosed(isClosed);
@@ -448,6 +443,7 @@ std::shared_ptr<const WireFrame> Server::TakeWorldSnapshot() const
 	commands::CommandBatch batch;
 	auto& snapshot{std::get<commands::WorldSnapshot>(batch.commands.emplace_back(commands::WorldSnapshot{}))};
 	_events->EmitEvent(WorldSnapshotRequestedEvent{.snapshot = snapshot});
+	snapshot.portForwarding = _portForwarding;
 
 	if (!IsInMatch(snapshot.phase))
 	{
@@ -455,7 +451,7 @@ std::shared_ptr<const WireFrame> Server::TakeWorldSnapshot() const
 	}
 
 	return std::make_shared<const WireFrame>(
-			WireFrame{.reliable = network::Serialize(batch), .latest = {}, .isSnapshot = true});
+			WireFrame{.reliable = network::Serialize(batch), .reliableEntities = {}, .latest = {}, .isSnapshot = true});
 }
 
 std::vector<std::shared_ptr<Session>> Server::CopySessions() const
@@ -464,7 +460,7 @@ std::vector<std::shared_ptr<Session>> Server::CopySessions() const
 	return _sessions;
 }
 
-std::optional<PlayerSlot> Server::FindFreeSlot(const udp::endpoint& endpoint) const
+std::vector<PlayerSlot> Server::FreeSeats() const
 {
 	const auto isFree = [this](const PlayerSlot slot)
 	{
@@ -474,10 +470,7 @@ std::optional<PlayerSlot> Server::FindFreeSlot(const udp::endpoint& endpoint) co
 		});
 	};
 
-	const auto freeSeats{kSlots | std::views::take(_match.seats) | std::views::filter(isFree)
-						 | std::ranges::to<std::vector>()};
-
-	return _seatHistory.Choose(freeSeats, endpoint);
+	return kSlots | std::views::take(_match.seats) | std::views::filter(isFree) | std::ranges::to<std::vector>();
 }
 
 void Server::CleanupDeadSessions()

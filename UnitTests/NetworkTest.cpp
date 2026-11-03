@@ -88,19 +88,19 @@ protected:
 	std::optional<PlayerSlot> _firstSeat{};
 	std::optional<PlayerSlot> _secondSeat{};
 	std::vector<EventSubscription> _subs{};
-	double _deltaTimeOneFrame{1.0 / 60.0};
+	static constexpr double kDeltaTimeOneFrame{1.0 / 60.0};
 
 	//NOTE: stands in for Game::Run, in its order - nothing is received or sent without it
 	void Pump() const
 	{
-		_serverEvents->EmitEvent(NetCommandUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-		_clientEvents->EmitEvent(NetCommandUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-		_secondClientEvents->EmitEvent(NetCommandUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-		_thirdClientEvents->EmitEvent(NetCommandUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-		_serverEvents->EmitEvent(PreTickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-		_clientEvents->EmitEvent(PreTickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-		_secondClientEvents->EmitEvent(PreTickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-		_thirdClientEvents->EmitEvent(PreTickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		_serverEvents->EmitEvent(NetCommandUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
+		_clientEvents->EmitEvent(NetCommandUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
+		_secondClientEvents->EmitEvent(NetCommandUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
+		_thirdClientEvents->EmitEvent(NetCommandUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
+		_serverEvents->EmitEvent(PreTickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
+		_clientEvents->EmitEvent(PreTickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
+		_secondClientEvents->EmitEvent(PreTickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
+		_thirdClientEvents->EmitEvent(PreTickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 		_serverEvents->EmitEvent(SendNetworkFrameEvent{});
 		_clientEvents->EmitEvent(SendNetworkFrameEvent{});
 		_secondClientEvents->EmitEvent(SendNetworkFrameEvent{});
@@ -529,6 +529,8 @@ TEST_F(NetworkTest, AThreeSeatServerSeatsAThirdClientAndTellsItTheMatch)
 	const uint16_t port{server->GetBoundPort()};
 	const auto client{MakeClient(port)};
 	const auto secondClient{MakeClient(port, _secondClientEvents)};
+	//NOTE: seats go to whoever echoes the cookie first - the third is let in after the other two
+	ASSERT_TRUE(PumpUntil([this] { return _firstSeat && _secondSeat; }));
 	const auto thirdClient{MakeClient(port, _thirdClientEvents)};
 
 	ASSERT_TRUE(PumpUntil([&third] { return third.has_value(); })) << "the third client was told no seat";
@@ -644,26 +646,34 @@ TEST_F(NetworkTest, AReadyOwedFromTheLobbyIsPaidOnceTheMatchStarts)
 	EXPECT_TRUE(PumpUntil([&field] { return field.has_value(); })) << "the debt the lobby left was dropped";
 }
 
-// a client redialing from the same socket before the host saw the timeout gets its seat back, not "match full"
-TEST_F(NetworkTest, AClientDialingAgainFromTheSameAddressTakesItsSeatBack)
+// a client redialing gets its own seat - not "match full" before the host saw the timeout, nor the first free one
+TEST_F(NetworkTest, AClientDialingAgainTakesItsOwnSeatBack)
 {
 	std::optional<PlayerSlot> lost{};
-	const EventSubscription lostSub{_serverEvents->AddListener(
-			[&lost](const ServerClientLostEvent& event) { lost = event.slot; })};
+	bool isGoodbyeHeard{};
+	std::vector<EventSubscription> subs{};
+	subs.push_back(_serverEvents->AddListener([&lost](const ServerClientLostEvent& event) { lost = event.slot; }));
+	subs.push_back(_serverEvents->AddListener(
+			[&isGoodbyeHeard](const ServerInDisconnectEvent&) { isGoodbyeHeard = true; }));
 
 	const auto server{MakeServer()};
+	auto client{MakeClient(server->GetBoundPort())};
+	ASSERT_TRUE(PumpUntil([this] { return _linksUp == 1; }));
 	boost::asio::io_context ioContext;
 	boost::asio::ip::udp::socket socket{ioContext, boost::asio::ip::udp::v4()};
 	socket.connect({boost::asio::ip::make_address("127.0.0.1"), server->GetBoundPort()});
 	socket.non_blocking(true);
+	ASSERT_EQ(Dial(socket, 1u), PlayerSlot::P2);
 
-	ASSERT_EQ(Dial(socket, 1u), PlayerSlot::P1);
-	const auto secondClient{MakeClient(server->GetBoundPort(), _secondClientEvents)};
-	ASSERT_TRUE(PumpUntil([this] { return _secondSeat.has_value(); }));
-
-	EXPECT_EQ(Dial(socket, 2u), PlayerSlot::P1) << "the new connection was refused a seat its own old one held";
+	EXPECT_EQ(Dial(socket, 2u), PlayerSlot::P2) << "the new connection was refused a seat its own old one held";
 	ASSERT_TRUE(PumpUntil([&lost] { return lost.has_value(); })) << "the replaced connection was never let go";
-	EXPECT_EQ(*lost, PlayerSlot::P1);
+	EXPECT_EQ(*lost, PlayerSlot::P2);
+
+	//NOTE: the one who left comes back to its own tank
+	client.reset();
+	ASSERT_TRUE(PumpUntil([&isGoodbyeHeard] { return isGoodbyeHeard; })) << "the first seat was never let go";
+
+	EXPECT_EQ(Dial(socket, 3u), PlayerSlot::P2) << "the client came back to the first free seat, not its own";
 }
 
 //NOTE: a kicked client that dialled straight back would sit in the seat it was sent away from
@@ -807,29 +817,8 @@ TEST_F(NetworkTest, TheClientsAreToldWhoLeft)
 	EXPECT_EQ(told->seats, sent);
 }
 
-// what the router said about the server's port goes out to the clients - the lobby gives a friend the way in from it
+// what the router said about the port reaches the clients, one seated after it too - the lobby shows the way in
 TEST_F(NetworkTest, TheClientsAreToldWhereTheInternetReachesTheServer)
-{
-	const auto server{MakeServer()};
-	const auto client{MakeClient(server->GetBoundPort())};
-	ASSERT_TRUE(PumpUntil([this] { return _linksUp == 1; }));
-
-	std::optional<PortForwardingChangedEvent> told{};
-	const EventSubscription toldSub{_clientEvents->AddListener([&told](const PortForwardingChangedEvent& event)
-	{
-		told = event;
-	})};
-	_serverEvents->EmitEvent(
-			PortForwardingChangedEvent{.state = PortForwarding::Open, .host = "203.0.113.7", .port = 5000u});
-
-	ASSERT_TRUE(PumpUntil([&told] { return told.has_value(); }));
-	EXPECT_EQ(told->state, PortForwarding::Open);
-	EXPECT_EQ(told->host, "203.0.113.7");
-	EXPECT_EQ(told->port, 5000u);
-}
-
-// a client that sits down after the router answered is told it all the same
-TEST_F(NetworkTest, AClientSeatedAfterTheRouterAnsweredIsToldTheWayIn)
 {
 	std::optional<PortForwardingChangedEvent> told{};
 	const EventSubscription toldSub{_clientEvents->AddListener([&told](const PortForwardingChangedEvent& event)
@@ -842,8 +831,15 @@ TEST_F(NetworkTest, AClientSeatedAfterTheRouterAnsweredIsToldTheWayIn)
 	Pump();
 	const auto client{MakeClient(server->GetBoundPort())};
 
-	ASSERT_TRUE(PumpUntil([&told] { return told.has_value(); }));
+	ASSERT_TRUE(PumpUntil([&told] { return told.has_value(); })) << "a client seated after the answer heard nothing";
 	EXPECT_EQ(told->state, PortForwarding::Refused);
+	EXPECT_EQ(told->port, 5000u);
+
+	_serverEvents->EmitEvent(
+			PortForwardingChangedEvent{.state = PortForwarding::Open, .host = "203.0.113.7", .port = 5000u});
+
+	ASSERT_TRUE(PumpUntil([&told] { return told->state == PortForwarding::Open; }));
+	EXPECT_EQ(told->host, "203.0.113.7");
 	EXPECT_EQ(told->port, 5000u);
 }
 
@@ -867,28 +863,4 @@ TEST_F(NetworkTest, EveryAnswerAboutWhoLeftReachesTheServer)
 
 	ASSERT_TRUE(PumpUntil([&heard, &sent] { return heard.size() == sent.size(); }));
 	EXPECT_EQ(heard, sent);
-}
-
-// a client dialling back gets the seat it held, not the first free one - the one who left comes back to its own tank
-TEST_F(NetworkTest, AClientDialingAgainGetsItsOwnSeatOverAnEarlierFreeOne)
-{
-	bool isGoodbyeHeard{};
-	const EventSubscription goodbyeSub{_serverEvents->AddListener([&isGoodbyeHeard](const ServerInDisconnectEvent&)
-	{
-		isGoodbyeHeard = true;
-	})};
-
-	const auto server{MakeServer()};
-	auto client{MakeClient(server->GetBoundPort())};
-	ASSERT_TRUE(PumpUntil([this] { return _linksUp == 1; }));
-	boost::asio::io_context ioContext;
-	boost::asio::ip::udp::socket socket{ioContext, boost::asio::ip::udp::v4()};
-	socket.connect({boost::asio::ip::make_address("127.0.0.1"), server->GetBoundPort()});
-	socket.non_blocking(true);
-	ASSERT_EQ(Dial(socket, 1u), PlayerSlot::P2);
-
-	client.reset();
-	ASSERT_TRUE(PumpUntil([&isGoodbyeHeard] { return isGoodbyeHeard; })) << "the first seat was never let go";
-
-	EXPECT_EQ(Dial(socket, 2u), PlayerSlot::P2) << "the client came back to the first free seat, not its own";
 }

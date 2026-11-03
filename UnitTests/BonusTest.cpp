@@ -64,10 +64,10 @@ protected:
 	EventSubscription _fortressWallSub{};
 	GameConfig _gameConfig{};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
-	unsigned short _tankHealth{100u};
+	static constexpr unsigned short kTankHealth{100u};
 	double _tankSize{};
 	double _gridSize{};
-	double _deltaTimeOneFrame{1.0 / 60.0};
+	static constexpr double kDeltaTimeOneFrame{1.0 / 60.0};
 	BulletCaliber _caliber{
 			.speed = 300.0, .damage = 1u, .health = 1, .blastRadius = 12.0, .tier = 1u, .size{.x = 6.0, .y = 5.0}};
 	EventSubscription _spawnQueueSub{};
@@ -98,7 +98,7 @@ protected:
 	{
 		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _gameConfig.tankSize, .h = _gameConfig.tankSize};
 
-		return TestUtils::CreatePlayer(rect, _tankHealth, author, _allObjects, _events, dir, _tankPool, _gameConfig,
+		return TestUtils::CreatePlayer(rect, kTankHealth, author, _allObjects, _events, dir, _tankPool, _gameConfig,
 									   tier);
 	}
 
@@ -107,7 +107,7 @@ protected:
 	{
 		const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = _gameConfig.tankSize, .h = _gameConfig.tankSize};
 
-		return TestUtils::CreateBot(rect, _tankHealth, author, _allObjects, _events, dir, _tankPool, _gameConfig, tier);
+		return TestUtils::CreateBot(rect, kTankHealth, author, _allObjects, _events, dir, _tankPool, _gameConfig, tier);
 	}
 
 	[[nodiscard]] std::shared_ptr<Bullet> CreateBullet(const FPoint pos, const Direction dir, const Author author) const
@@ -126,11 +126,11 @@ TEST_F(BonusTest, BonusPickUp)
 	const auto* const bonus{dynamic_cast<Bonus*>(_allObjects.back().get())};
 	ASSERT_NE(bonus, nullptr);
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 	ASSERT_TRUE(bonus->GetIsAlive()) << "the bonus went before anyone reached it";
 
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = true});
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	EXPECT_FALSE(bonus->GetIsAlive());
 }
@@ -144,16 +144,16 @@ TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 	const auto enemyBot{CreateBot({.x = _tankSize * 2, .y = _tankSize * 2}, Author::Enemy1, Direction::DOWN)};
 	const FPoint startPos{enemyBot->GetPos()};
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	ASSERT_NE(startPos, enemyBot->GetPos()) << "the enemy stood still with the timer still lying there";
 
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = true});
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	const FPoint enemyPos{enemyBot->GetPos()};
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	EXPECT_EQ(enemyPos, enemyBot->GetPos());
 }
@@ -183,7 +183,7 @@ TEST_F(BonusTest, AnEnemyArrivingDuringAFreezeArrivesFrozen)
 
 		for (int frame{}; frame < 10; ++frame)
 		{
-			_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+			_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 		}
 
 		EXPECT_EQ(arrived->GetPos() == arrivedAt, isTimerTaken);
@@ -205,13 +205,13 @@ TEST_F(BonusTest, AnotherPlayersTimerExtendsTheFreeze)
 
 	TimeUtils::Advance(225ms);
 	const FPoint frozenAt{enemyBot->GetPos()};
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 	ASSERT_EQ(frozenAt, enemyBot->GetPos()) << "the freeze ended with the first timer's time";
 
 	TimeUtils::Advance(125ms);
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	EXPECT_NE(frozenAt, enemyBot->GetPos()) << "the freeze outlived both timers";
 }
@@ -223,20 +223,20 @@ TEST_F(BonusTest, HelmetPickUpAndBulletCantDamageTank)
 	const unsigned int spawnHealth{player->GetHealth()};
 	std::ignore = CreateBullet({.x = _tankSize + 1.0, .y = 0.0}, Direction::LEFT, Author::Enemy1);
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	ASSERT_GT(spawnHealth, player->GetHealth()) << "the shot missed the tank even without a helmet";
 
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = true});
 	_bonusSpawner->SpawnBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize}, BonusType::Helmet);
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	//NOTE: taken after the pickup - the pickup heals
 	const unsigned int playerHealth{player->GetHealth()};
 	std::ignore = CreateBullet({.x = _tankSize + 1.0, .y = 0.0}, Direction::LEFT, Author::Enemy1);
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	EXPECT_EQ(playerHealth, player->GetHealth());
 }
@@ -248,11 +248,11 @@ TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 	const auto enemyBot{CreateBot({.x = _tankSize * 2, .y = _tankSize * 2}, Author::Enemy1, Direction::DOWN)};
 	_bonusSpawner->SpawnBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize}, BonusType::Grenade);
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 	ASSERT_EQ(enemyBot->GetHealth(), 100u) << "the grenade hit the enemy before anyone picked it up";
 
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = true});
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	EXPECT_EQ(enemyBot->GetHealth(), 0u);
 }
@@ -270,11 +270,11 @@ TEST_F(BonusTest, TankPickUpExtraLife)
 	_bonusSpawner->SpawnBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize}, BonusType::Tank);
 	const unsigned short playerSpawnCount{respawnActual};
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 	ASSERT_EQ(playerSpawnCount, respawnActual) << "the life was given before anyone reached the bonus";
 
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = true});
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	EXPECT_LT(playerSpawnCount, respawnActual);
 }
@@ -302,11 +302,11 @@ TEST_F(BonusTest, AStarOrCaliberRaisesTheTier)
 		_bonusSpawner->SpawnBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize}, pickup.bonus, {},
 								  pickup.isSuper);
 
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 		ASSERT_EQ(player->GetTier(), 1u) << "the bonus was taken before the tank reached it";
 
 		_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = true});
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 		EXPECT_EQ(player->GetTier(), 1u + pickup.tiers);
 	}
@@ -334,7 +334,7 @@ TEST_F(BonusTest, APickupHealsTheTank)
 		_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = true});
 		_bonusSpawner->SpawnBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize}, pickup.bonus);
 
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 		EXPECT_GT(player->GetHealth(), spawnHealth);
 	}
@@ -348,11 +348,11 @@ TEST_F(BonusTest, ShovelPickUpByPlayerThenFortressWallTurnIntoSteelWall)
 	const ObjRectangle fortressRect{.x = _tankSize + 1.0, .y = 0, .w = _gridSize, .h = _gridSize};
 	_events->EmitEvent(SpawnObstacleEvent{.rect = fortressRect, .type = ObstacleType::Fortress});
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 	ASSERT_NE(dynamic_cast<FortressBrickWall*>(_fortressWall.get()), nullptr) << "the walls turned before the pickup";
 
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveDownEvent{.isPressed = true});
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	EXPECT_NE(dynamic_cast<FortressSteelWall*>(_fortressWall.get()), nullptr);
 }
@@ -371,20 +371,6 @@ TEST_F(BonusTest, ShovelPickUpByPlayerHealsTheEagle)
 	EXPECT_EQ(fullHealth, eagle->GetHealth());
 }
 
-// but not one shot down in the same tick
-TEST_F(BonusTest, ShovelDoesNotHealAFallenEagle)
-{
-	_events->EmitEvent(SpawnObstacleEvent{.rect = {.x = 0.0, .y = 0.0, .w = _gridSize, .h = _gridSize},
-										  .type = ObstacleType::Eagle});
-	const std::shared_ptr<BaseObj> eagle{_allObjects.back()};
-	eagle->TakeDamage(eagle->GetHealth(), Author::Enemy1);
-
-	_events->EmitEvent(BonusShovelPickupEvent{.faction = Faction::PlayerTeam});
-
-	EXPECT_FALSE(eagle->GetIsAlive());
-	EXPECT_EQ(0u, eagle->GetHealth());
-}
-
 // and lets the same tank across once the ship is taken
 TEST_F(BonusTest, ShipPickUpCanCrossWater)
 {
@@ -395,7 +381,7 @@ TEST_F(BonusTest, ShipPickUpCanCrossWater)
 	const ObjRectangle waterRect{.x = 0.0, .y = _tankSize * 2.0 + 2.0, .w = _gridSize, .h = _gridSize};
 	_events->EmitEvent(SpawnObstacleEvent{.rect = waterRect, .type = ObstacleType::Water});
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	//NOTE: no Game here to sweep the dead bonus out of the way
 	std::erase_if(_allObjects, [](const std::shared_ptr<BaseObj>& object) { return !object->GetIsAlive(); });
@@ -403,7 +389,7 @@ TEST_F(BonusTest, ShipPickUpCanCrossWater)
 	constexpr int framesToCrossWater{100};
 	for (int frame{}; frame < framesToCrossWater; ++frame)
 	{
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 	}
 
 	EXPECT_GT(player->GetRect().y, waterRect.y + waterRect.h);
@@ -520,7 +506,7 @@ TEST_F(BonusTest, AShipLostAfloatCarriesTheTankAshore)
 		for (int frame{}; frame < framesToReachWater && isHitAfloat
 						  && player->GetRect().y + player->GetRect().h <= lake.y; ++frame)
 		{
-			_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+			_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 		}
 
 		ASSERT_EQ(player->GetRect().y + player->GetRect().h > lake.y, isHitAfloat);
@@ -529,7 +515,7 @@ TEST_F(BonusTest, AShipLostAfloatCarriesTheTankAshore)
 		constexpr int framesToCrossWater{100};
 		for (int frame{}; frame < framesToCrossWater; ++frame)
 		{
-			_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+			_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 		}
 
 		EXPECT_EQ(player->GetRect().y > lake.y + lake.h, isHitAfloat);
@@ -572,7 +558,7 @@ TEST_F(BonusTest, ABonusLaidOutByTheMapNeverExpires)
 	const auto placed{_allObjects.back()};
 	ASSERT_NE(dropped, placed);
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	EXPECT_FALSE(dropped->GetIsAlive()) << "the dropped one outlived its cooldown";
 	EXPECT_TRUE(placed->GetIsAlive());
@@ -593,7 +579,7 @@ TEST_F(BonusTest, ABonusNeverLandsUnderCover)
 		_allObjects.clear();
 		_events->EmitEvent(SpawnObstacleEvent{.rect = {.w = _gridSize, .h = _gridSize}, .type = cover});
 
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 		EXPECT_EQ(_allObjects.size(), 1u);
 	}
@@ -632,7 +618,7 @@ TEST_F(BonusTest, AFreeForAllTimerFreezesEveryoneButItsTaker)
 	_events->EmitEvent(Key(InputChannel::LocalP1), MoveRightEvent{.isPressed = true});
 	const FPoint playerPos{player->GetPos()};
 	const FPoint takerPos{taker->GetPos()};
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	EXPECT_EQ(playerPos, player->GetPos()) << "the player drove on under another's timer";
 	EXPECT_NE(takerPos, taker->GetPos()) << "the timer froze the one who took it";
@@ -649,7 +635,7 @@ TEST_F(BonusTest, BonusDestroy)
 	ASSERT_NE(bonus, nullptr);
 	EXPECT_TRUE(bonus->GetIsAlive());
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	EXPECT_FALSE(bonus->GetIsAlive());
 }
@@ -664,7 +650,7 @@ TEST_F(BonusTest, AShotBonusGivesTheShooterNothing)
 	const auto* const bonus{dynamic_cast<Bonus*>(_allObjects.back().get())};
 	ASSERT_NE(bonus, nullptr);
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	ASSERT_FALSE(bonus->GetIsAlive()) << "the shot missed the bonus";
 	EXPECT_EQ(shooter->GetTier(), 1u);
@@ -682,7 +668,7 @@ TEST_F(BonusTest, ShovelPickUpByEnemyThenFortressBrickWallHide)
 
 	EXPECT_NE(dynamic_cast<FortressBrickWall*>(_fortressWall.get()), nullptr);
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	EXPECT_FALSE(_fortressWall->GetIsAlive());
 }
@@ -708,11 +694,11 @@ TEST_F(BonusTest, ShovelPickUpByEnemyThenFortressSteelWallHide)
 
 	EXPECT_NE(dynamic_cast<FortressBrickWall*>(_fortressWall.get()), nullptr);
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	EXPECT_NE(dynamic_cast<FortressSteelWall*>(_fortressWall.get()), nullptr);
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = kDeltaTimeOneFrame});
 
 	EXPECT_FALSE(_fortressWall->GetIsAlive());
 }

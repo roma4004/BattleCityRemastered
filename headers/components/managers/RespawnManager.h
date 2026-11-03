@@ -12,7 +12,7 @@
 enum class TankType : char8_t;
 enum class GameMode : char8_t;
 struct GameResetEvent;
-struct NextLevelRequestedEvent;
+struct NextLevelEvent;
 struct EnemyLineupLoadedEvent;
 struct TankSpawnEvent;
 struct TankDiedEvent;
@@ -48,6 +48,8 @@ class RespawnManager final
 	//NOTE: an empty seat spawns nothing - a network match says who sits where as it starts
 	std::array<SeatHolder, kSeatCount> _holders{};
 	std::size_t _enemySeats{};
+	//NOTE: the first of Won and Over stands
+	bool _isDecided{};
 
 	void OnGoldenGrenadePickup(const BonusGoldenGrenadePickupEvent& event);
 	void OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const;
@@ -58,7 +60,7 @@ class RespawnManager final
 
 	void Subscribe();
 	void OnGameReset(const GameResetEvent& event);
-	void OnNextLevelRequested(const NextLevelRequestedEvent&);
+	void OnNextLevel(const NextLevelEvent&);
 	void OnBonusTankPickup(const BonusTankPickupEvent& event);
 	void OnPlayersBaseFinished(const PlayersBaseFinishedEvent&);
 	void OnRespawnTanks(const RespawnTanksEvent& event) const;
@@ -73,7 +75,7 @@ class RespawnManager final
 	void SetRespawnCount(RespawnGroup group, unsigned short count);
 
 	void OnTankSpawn(const TankSpawnEvent& event);
-	void CheckMatchEnd() const;
+	void CheckMatchEnd();
 	[[nodiscard]] bool AreEnemiesGone() const;
 	[[nodiscard]] std::size_t PlayersStillIn() const;
 	void OnTankDied(const TankDiedEvent& event);

@@ -228,6 +228,7 @@
     <ClCompile Include="..\source\network\DiscoveryProbe.cpp" />
     <ClCompile Include="..\source\network\DiscoveryScan.cpp" />
     <ClCompile Include="..\source\network\Endpoints.cpp" />
+    <ClCompile Include="..\source\network\HelloCookies.cpp" />
     <ClCompile Include="..\source\network\NetworkNodeBase.cpp" />
     <ClCompile Include="..\source\network\PeerLink.cpp" />
     <ClCompile Include="..\source\network\PortMapping.cpp" />
@@ -386,12 +387,14 @@
     <ClInclude Include="..\headers\network\Client.h" />
     <ClInclude Include="..\headers\network\ClientNode.h" />
     <ClInclude Include="..\headers\network\Endpoints.h" />
+    <ClInclude Include="..\headers\network\HelloCookies.h" />
     <ClInclude Include="..\headers\network\DatagramLink.h" />
     <ClInclude Include="..\headers\network\Discovery.h" />
     <ClInclude Include="..\headers\network\DiscoveryBeacon.h" />
     <ClInclude Include="..\headers\network\DiscoveryProbe.h" />
     <ClInclude Include="..\headers\network\DiscoveryScan.h" />
     <ClInclude Include="..\headers\network\SeatHistory.h" />
+    <ClInclude Include="..\headers\network\NetworkCommandQueue.h" />
     <ClInclude Include="..\headers\network\NetworkNodeBase.h" />
     <ClInclude Include="..\headers\network\PeerLink.h" />
     <ClInclude Include="..\headers\network\PortMapping.h" />

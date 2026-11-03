@@ -24,10 +24,6 @@ using namespace std::chrono_literals;
 
 namespace
 {
-//NOTE: a datagram may be lost on the way, so the question goes again until an answer comes or time is up
-constexpr auto kResendStep{500ms};
-constexpr auto kPatience{5s};
-
 [[nodiscard]] network::stun::Transaction RandomTransaction()
 {
 	std::random_device random{};
@@ -162,12 +158,15 @@ void PublicAddressProbe::TakeHandover()
 	}
 
 	std::ignore = _socket.non_blocking(true, ec);
-	_giveUpAt = Clock::now() + kPatience;
+	constexpr auto patience{5s};
+	_giveUpAt = Clock::now() + patience;
 }
 
 void PublicAddressProbe::Send(const Clock::time_point now)
 {
-	_nextSend = now + kResendStep;
+	//NOTE: a datagram may be lost on the way, so the question goes again until an answer comes or time is up
+	constexpr auto resendStep{500ms};
+	_nextSend = now + resendStep;
 	const auto request{stun::Request(_transaction)};
 	for (const udp::endpoint& server: _servers)
 	{

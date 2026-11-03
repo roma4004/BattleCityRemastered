@@ -32,27 +32,27 @@
 
 namespace network::commands
 {
+//NOTE: a command about one entity - the uuid names it
+template<class CommandT>
+concept EntityCommand = requires(const CommandT& command) { { command.uuid } -> std::convertible_to<Uuid>; };
+
+//NOTE: a newer value replaces the older one of the same entity, newer by datagram seq - the uuid says which entity
+template<class CommandT>
+concept LatestCommand = CommandT::kDelivery == Delivery::Latest && EntityCommand<CommandT>;
+
+//NOTE: without this check a command marked Latest with no uuid would be sent reliably by ReplicationPublisher, no error
+template<class CommandT>
+concept Command = CommandT::kDelivery == Delivery::Reliable || LatestCommand<CommandT>;
+
+//NOTE: every command listed in it has to satisfy Command, or the build stops here - std::variant alone takes any type
+template<Command... CommandTs>
+using CommandVariant = std::variant<CommandTs...>;
+
 //NOTE: ser20 puts the alternative index on the wire - append only, inserting renumbers everything after
-using AnyCommand = std::variant<
+using AnyCommand = CommandVariant<
 	BonusSpawn, BonusStatus, Despawn, GameStateChange, HealthChange,
 	KeyStateChange, ObstacleSpawn, PositionChange, RespawnTank, SignalEvent, StatisticsChange, TankShot,
 	TankSpawnComplete, Disconnect, BonusSpawnComplete, TierChange, SlotAssignment, WorldSnapshot,
 	TankSpawnMoved, AbsenceChange, PortForwardingChange, SeatHoldersChange, TankGrew, BonusEffects,
 	RespawnCountChange>;
-
-//NOTE: a Latest command is replaced per entity on its way out, so it has to say which entity that is
-template<class CommandT>
-concept LatestCommand = CommandT::kDelivery == Delivery::Latest && requires(const CommandT& command) {
-	{ command.uuid } -> std::convertible_to<Uuid>;
-};
-
-//NOTE: a command without its own kDelivery does not compile here - there is no default to fall back on
-template<class Variant>
-inline constexpr bool kIsEveryDeliveryNamed{false};
-
-template<class... CommandTs>
-inline constexpr bool kIsEveryDeliveryNamed<std::variant<CommandTs...>>{
-		(... && (CommandTs::kDelivery == Delivery::Reliable || LatestCommand<CommandTs>))};
-
-static_assert(kIsEveryDeliveryNamed<AnyCommand>, "a Latest command must carry the uuid it is replaced by");
 }//namespace network::commands

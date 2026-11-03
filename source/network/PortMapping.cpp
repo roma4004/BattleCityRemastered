@@ -31,17 +31,6 @@ using namespace std::chrono_literals;
 namespace
 {
 constexpr auto kDescription{"Battle City Remastered"};
-//NOTE: renewed at half, so the port stays open while the server runs; a killed one leaves it at most this long
-constexpr auto kLease{20min};
-//NOTE: the UPnP error of a router that takes permanent leases only; asked again with no lease time
-constexpr int kOnlyPermanentLeases{725};
-//NOTE: a port kept for good needs no renewal - asked again once a day all the same, in case the router forgot it
-constexpr auto kPermanentRenewStep{24h};
-//NOTE: a refused renewal is asked again this often - the lease still holds, and a restarted router takes it at once
-constexpr auto kRefusedRenewStep{30s};
-constexpr auto kInternetPollStep{50ms};
-//NOTE: a router lists every mapping of every machine behind it - a long list is not walked to its end
-constexpr int kMappingsRead{128};
 //NOTE: a router found before answers in a fraction of a second, a search with nothing answering takes eight
 constexpr auto kAnswerPatience{10s};
 
@@ -77,7 +66,9 @@ constexpr auto kAnswerPatience{10s};
 void CloseLeftovers(const network::Router& router, const std::string& client, const std::stop_token& stop)
 {
 	std::vector<std::string> leftovers{};
-	for (int index{}; index < kMappingsRead && !stop.stop_requested(); ++index)
+	//NOTE: a router lists every mapping of every machine behind it - a long list is not walked to its end
+	constexpr int mappingsRead{128};
+	for (int index{}; index < mappingsRead && !stop.stop_requested(); ++index)
 	{
 		std::array<char, 6> externalPort{};
 		std::array<char, 16> internalClient{};
@@ -189,8 +180,9 @@ bool PortMapping::Sleep(const std::stop_token& stop, const std::chrono::millisec
 
 std::optional<std::string> PortMapping::AskInternet(const std::stop_token& stop)
 {
+	constexpr auto pollStep{50ms};
 	std::optional<std::string> seen{_publicProbe->Poll()};
-	while (!seen && _publicProbe->IsAsking() && Sleep(stop, kInternetPollStep))
+	while (!seen && _publicProbe->IsAsking() && Sleep(stop, pollStep))
 	{
 		seen = _publicProbe->Poll();
 	}
@@ -244,10 +236,12 @@ void PortMapping::Forward(const std::stop_token& stop)
 
 	//NOTE: the router passes the port on to whatever address it is told - this machine's on its network
 	const std::string client{IsEveryNetwork(_host) ? router.InsideAddress() : _host};
+	//NOTE: renewed at half, so the port stays open while the server runs; a killed one leaves it at most this long
+	constexpr std::chrono::seconds leaseTime{20min};
 	bool isPermanent{};
-	const auto open = [&router, &port, &client, &isPermanent]
+	const auto open = [&router, &port, &client, &isPermanent, leaseTime]
 	{
-		const std::string lease{isPermanent ? "0" : std::to_string(std::chrono::seconds{kLease}.count())};
+		const std::string lease{isPermanent ? "0" : std::to_string(leaseTime.count())};
 
 		return UPNP_AddPortMapping(router.ControlUrl(), router.ServiceType(), port.c_str(), port.c_str(),
 								   client.c_str(), kDescription, "UDP", nullptr, lease.c_str());
@@ -260,7 +254,9 @@ void PortMapping::Forward(const std::stop_token& stop)
 	}
 
 	int result{open()};
-	if (result == kOnlyPermanentLeases)
+	//NOTE: the UPnP error of a router that takes permanent leases only; asked again with no lease time
+	constexpr int onlyPermanentLeases{725};
+	if (result == onlyPermanentLeases)
 	{
 		isPermanent = true;
 		result = open();
@@ -311,9 +307,13 @@ void PortMapping::Forward(const std::stop_token& stop)
 	};
 	reportOpen();
 
-	const std::chrono::milliseconds renewStep{isPermanent ? kPermanentRenewStep : kLease / 2};
+	//NOTE: a port kept for good needs no renewal - asked again once a day all the same, in case the router forgot it
+	constexpr auto permanentRenewStep{24h};
+	//NOTE: a refused renewal is asked again this often - the lease still holds, and a restarted router takes it at once
+	constexpr auto refusedRenewStep{30s};
+	const std::chrono::milliseconds renewStep{isPermanent ? permanentRenewStep : leaseTime / 2};
 	bool isRenewalRefused{};
-	while (Sleep(stop, isRenewalRefused ? kRefusedRenewStep : renewStep))
+	while (Sleep(stop, isRenewalRefused ? refusedRenewStep : renewStep))
 	{
 		const int renewed{open()};
 		if (renewed != UPNPCOMMAND_SUCCESS && !isRenewalRefused)

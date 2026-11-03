@@ -105,7 +105,7 @@ TEST_F(LevelProgressionTest, TheTierRidesOnToTheNextLevel)
 	_events->EmitEvent(Key(Author::Player1), BonusStarPickupEvent{});
 	ASSERT_EQ(PlayerOne()->GetTier(), 2u);
 
-	_events->EmitEvent(NextLevelRequestedEvent{});
+	_events->EmitEvent(NextLevelEvent{});
 	StartMatch(GameResetEvent{.keepsPlayerProgress = true});
 
 	ASSERT_NE(PlayerOne(), nullptr);
@@ -119,7 +119,7 @@ TEST_F(LevelProgressionTest, ATankCarryingATierLandsGrownAndWhollyOnTheField)
 	_events->EmitEvent(Key(Author::Player1), BonusStarPickupEvent{});
 	_events->EmitEvent(Key(Author::Player1), BonusStarPickupEvent{});
 	_events->EmitEvent(Key(Author::Player1), BonusStarPickupEvent{});
-	_events->EmitEvent(NextLevelRequestedEvent{});
+	_events->EmitEvent(NextLevelEvent{});
 	StartMatch(GameResetEvent{.keepsPlayerProgress = true});
 
 	ASSERT_NE(PlayerOne(), nullptr);
@@ -132,7 +132,7 @@ TEST_F(LevelProgressionTest, ATankCarryingATierLandsGrownAndWhollyOnTheField)
 TEST_F(LevelProgressionTest, TheLoadoutIsSpentOnTheFirstSpawnOfTheLevel)
 {
 	_events->EmitEvent(Key(Author::Player1), BonusStarPickupEvent{});
-	_events->EmitEvent(NextLevelRequestedEvent{});
+	_events->EmitEvent(NextLevelEvent{});
 	StartMatch(GameResetEvent{.keepsPlayerProgress = true});
 
 	const Uuid uuid{PlayerOne()->GetUuid()};
@@ -150,7 +150,7 @@ TEST_F(LevelProgressionTest, TheHealthRidesOnToTheNextLevel)
 	const unsigned int spawnHealth{PlayerOne()->GetHealth()};
 	PlayerOne()->Heal(1);
 
-	_events->EmitEvent(NextLevelRequestedEvent{});
+	_events->EmitEvent(NextLevelEvent{});
 	StartMatch(GameResetEvent{.keepsPlayerProgress = true});
 
 	ASSERT_NE(PlayerOne(), nullptr);
@@ -163,7 +163,7 @@ TEST_F(LevelProgressionTest, AWoundedTankStartsTheNextLevelWhole)
 	const unsigned int spawnHealth{PlayerOne()->GetHealth()};
 	PlayerOne()->TakeDamage(1u, Author::Enemy1);
 
-	_events->EmitEvent(NextLevelRequestedEvent{});
+	_events->EmitEvent(NextLevelEvent{});
 	StartMatch(GameResetEvent{.keepsPlayerProgress = true});
 
 	ASSERT_NE(PlayerOne(), nullptr);
@@ -190,7 +190,7 @@ TEST_F(LevelProgressionTest, TheHostReportsWhatTheTankCarried)
 		tiers.push_back(event);
 	})};
 
-	_events->EmitEvent(NextLevelRequestedEvent{});
+	_events->EmitEvent(NextLevelEvent{});
 	StartMatch(GameResetEvent{.keepsPlayerProgress = true});
 
 	const auto healthReport{std::ranges::find(healths, PlayerOne()->GetUuid(), &HealthChangedEvent::uuid)};
@@ -209,7 +209,7 @@ TEST_F(LevelProgressionTest, TheLivesLeftRideOnToTheNextLevel)
 	_events->EmitEvent(RespawnTanksEvent{});
 	const unsigned short beforeTheWin{_playerOneLives};
 
-	_events->EmitEvent(NextLevelRequestedEvent{});
+	_events->EmitEvent(NextLevelEvent{});
 	StartMatch(GameResetEvent{.keepsPlayerProgress = true});
 
 	EXPECT_EQ(_playerOneLives, beforeTheWin + 1u);
@@ -227,7 +227,7 @@ TEST_F(LevelProgressionTest, ARestartGivesTheLivesBack)
 		_allObjects.clear();
 		_events->EmitEvent(RespawnTanksEvent{});
 	}
-	_events->EmitEvent(NextLevelRequestedEvent{});
+	_events->EmitEvent(NextLevelEvent{});
 	StartMatch(GameResetEvent{.keepsPlayerProgress = true});
 	ASSERT_LT(_playerOneLives, afterFirstSpawn);
 

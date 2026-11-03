@@ -19,6 +19,21 @@
 
 namespace network
 {
+namespace
+{
+//NOTE: one per game run - back from the menu, the player is still the one who left
+[[nodiscard]] std::uint64_t PlayerKey()
+{
+	static const std::uint64_t key{[]
+	{
+		std::random_device device{};
+		return std::uniform_int_distribution<std::uint64_t>{}(device);
+	}()};
+
+	return key;
+}
+}//namespace
+
 Client::Client(boost::asio::io_context& ioContext, const ServerAddress& address,
 			   const std::shared_ptr<EventSystem>& events)
 	: PeerLink("Client", events)
@@ -60,7 +75,7 @@ void Client::OnCommand(const commands::AnyCommand& command)
 void Client::TryConnect()
 {
 	const auto now{Clock::now()};
-	_link.emplace(RandUtils::GetRandNumber(std::uniform_int_distribution<std::uint32_t>{}), now);
+	_link.emplace(RandUtils::GetRandNumber(std::uniform_int_distribution<std::uint32_t>{}), now, PlayerKey());
 	_attemptStartedAt = now;
 	Transmit(now);
 }
@@ -93,14 +108,14 @@ void Client::OnDatagram(const std::string_view datagram, const Clock::time_point
 	}
 
 	const auto arrivals{_link->Receive(datagram, now)};
+	//NOTE: a challenge brings nothing, but its echo goes at once
+	Transmit(now);
 	if (!arrivals)
 	{
 		return;
 	}
 
 	const bool isFirstAnswer{!_isConnected && !_isShuttingDown};
-
-	Transmit(now);
 
 	if (!Dispatch(*arrivals))
 	{
@@ -161,13 +176,18 @@ void Client::Tick()
 		return;
 	}
 
-	if (_link && !_isConnected && now - _attemptStartedAt > kConnectTimeout)
+	//NOTE: one link for all attempts - a slow host still seats it once; an attempt includes the redial pause
+	if (_link && !_isConnected && now - _attemptStartedAt > kConnectTimeout + kReconnectDelay)
 	{
 		++_reconnectAttempts;
+		_attemptStartedAt = now;
 		Log::Error("Client connect failed (attempt " + std::to_string(_reconnectAttempts) + "/"
 				   + std::to_string(kMaxReconnectAttempts) + "): the host did not answer");
-		_link.reset();
-		ScheduleReconnect();
+		if (_reconnectAttempts >= kMaxReconnectAttempts)
+		{
+			_link.reset();
+			ScheduleReconnect();
+		}
 	}
 	else if (_link && _isConnected && _link->IsSilent(now))
 	{

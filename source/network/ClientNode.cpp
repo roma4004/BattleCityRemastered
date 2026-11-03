@@ -1,6 +1,5 @@
 #include "network/ClientNode.h"
 #include "network/Client.h"
-#include <boost/asio/post.hpp>
 
 namespace network
 {
@@ -22,9 +21,4 @@ ClientNode::~ClientNode()
 }
 
 void ClientNode::ProcessNetworkCommands() { _client->ProcessCommandQueue(); }
-
-void ClientNode::Abort()
-{
-	boost::asio::post(IoContext(), [client = _client] { client->Shutdown(); });
-}
 }//namespace network
