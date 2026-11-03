@@ -205,6 +205,7 @@ TEST_F(NetworkTest, EveryReplicatedEventArrivesAsItself)
 	std::optional<BonusHelmetAppliedEvent> helmet{};
 	std::optional<BonusShipAppliedEvent> ship{};
 	std::optional<RespawnCountChangedToEvent> lives{};
+	std::optional<ShareRecipientChangedEvent> owed{};
 	std::optional<BonusEffectsChangedEvent> effects{};
 	std::optional<TierChangedEvent> tier{};
 	std::optional<TankGrewEvent> grew{};
@@ -231,6 +232,7 @@ TEST_F(NetworkTest, EveryReplicatedEventArrivesAsItself)
 	subs.push_back(_clientEvents->AddListener(Key(Author::Player1),
 											  [&ship](const BonusShipAppliedEvent& e) { ship = e; }));
 	subs.push_back(_clientEvents->AddListener([&lives](const RespawnCountChangedToEvent& e) { lives = e; }));
+	subs.push_back(_clientEvents->AddListener([&owed](const ShareRecipientChangedEvent& e) { owed = e; }));
 	subs.push_back(_clientEvents->AddListener([&effects](const BonusEffectsChangedEvent& e) { effects = e; }));
 	subs.push_back(_clientEvents->AddListener(Key(_uuid), [&tier](const TierChangedEvent& e) { tier = e; }));
 	subs.push_back(_clientEvents->AddListener(Key(_uuid), [&grew](const TankGrewEvent& e) { grew = e; }));
@@ -259,6 +261,7 @@ TEST_F(NetworkTest, EveryReplicatedEventArrivesAsItself)
 	_serverEvents->EmitEvent(BonusHelmetAppliedEvent{.author = Author::Player1, .isActive = true});
 	_serverEvents->EmitEvent(BonusShipAppliedEvent{.author = Author::Player1, .isActive = true, .charges = 2u});
 	_serverEvents->EmitEvent(RespawnCountChangedToEvent{.group = RespawnGroup::PLAYER2, .respawnCount = 2u});
+	_serverEvents->EmitEvent(ShareRecipientChangedEvent{.seat = PlayerSlot::P2});
 	_serverEvents->EmitEvent(BonusEffectsChangedEvent{
 			.effects = {BonusEffectTimeLeft{.type = BonusType::Helmet,
 											.target = Author::Enemy3,
@@ -290,7 +293,7 @@ TEST_F(NetworkTest, EveryReplicatedEventArrivesAsItself)
 	ASSERT_TRUE(PumpUntil([&]
 	{
 		return moved && shot && health && despawned.size() == 2u && bonus && bonusLanded && helmet && ship && lives
-			   && effects && tier && grew && respawned.size() == kTankTypes.size() && bulletHit && tankHit
+			   && owed && effects && tier && grew && respawned.size() == kTankTypes.size() && bulletHit && tankHit
 			   && tankDied && brickDied && steelDied && bonusPickup && bonusDestroyed && bonusExpired;
 	}));
 
@@ -312,6 +315,7 @@ TEST_F(NetworkTest, EveryReplicatedEventArrivesAsItself)
 	EXPECT_EQ(ship->charges, 2u);
 	EXPECT_EQ(lives->group, RespawnGroup::PLAYER2);
 	EXPECT_EQ(lives->respawnCount, 2u);
+	EXPECT_EQ(owed->seat, PlayerSlot::P2);
 	ASSERT_EQ(effects->effects.size(), 2u);
 	EXPECT_EQ(effects->effects[0].type, BonusType::Helmet);
 	EXPECT_EQ(effects->effects[0].target, EffectTarget{Author::Enemy3});
@@ -491,6 +495,29 @@ TEST_F(NetworkTest, EachClientPutsOnlyItsOwnSeatOnTheWire)
 
 	ASSERT_TRUE(PumpUntil([&firstSeatMoved, &secondSeatMoved] { return firstSeatMoved && secondSeatMoved; }));
 	EXPECT_FALSE(strayArrived) << "a client sent the keyboard half of a seat it was never given";
+}
+
+// the key reaches the host as the seat's input, and a client watching its seat's bot does not take the tank by it
+TEST_F(NetworkTest, TheShareKeyTakesNoTank)
+{
+	const auto server{MakeServer()};
+	const auto client{MakeClient(server->GetBoundPort())};
+	ASSERT_TRUE(PumpUntil([this] { return _firstSeat.has_value(); }));
+
+	bool isShared{};
+	bool isTankTaken{};
+	std::vector<EventSubscription> subs{};
+	subs.push_back(_serverEvents->AddListener([this, &isShared](const ShareLifeEvent& e)
+	{
+		isShared = e.isPressed && e.giver == *_firstSeat;
+	}));
+	subs.push_back(_serverEvents->AddListener(
+			[&isTankTaken](const ServerInTankCommandEvent&) { isTankTaken = true; }));
+
+	_clientEvents->EmitEvent(ShareLifeEvent{.giver = *_firstSeat, .isPressed = true});
+
+	ASSERT_TRUE(PumpUntil([&isShared] { return isShared; })) << "the press never reached the seat";
+	EXPECT_FALSE(isTankTaken);
 }
 
 //NOTE: an unanswered hello reads as no host - a third player would spend its retries on a server merely busy

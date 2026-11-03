@@ -85,6 +85,7 @@ void BindHostBonus(ReplicationPublisher& out)
 	{
 		return commands::RespawnCountChange{.group = e.group, .respawnCount = e.respawnCount};
 	});
+	out.Bind<ShareRecipientChangedEvent>([](const auto& e) { return commands::ShareRecipientChange{.seat = e.seat}; });
 	out.Bind<BonusEffectsChangedEvent>([](const auto& e) { return commands::BonusEffects{.effects = e.effects}; });
 }
 
@@ -190,18 +191,33 @@ void BindClientReplication(ReplicationPublisher& out)
 	});
 }
 
-//NOTE: forwards the five keys of the slot's local half; the server takes the seat from the session they came on
+//NOTE: the server takes the seat from the session these keys came on
 std::vector<EventSubscription> BindClientInput(ReplicationPublisher& out, EventSystem& events, const PlayerSlot slot)
 {
 	const InputChannel channel{LocalInput(slot)};
 
 	std::vector<EventSubscription> subs{};
-	subs.reserve(5u);
+	subs.reserve(7u);
 	subs.push_back(BindKey<MoveUpEvent>(out, events, channel, InputSignal::MoveUp));
 	subs.push_back(BindKey<MoveLeftEvent>(out, events, channel, InputSignal::MoveLeft));
 	subs.push_back(BindKey<MoveDownEvent>(out, events, channel, InputSignal::MoveDown));
 	subs.push_back(BindKey<MoveRightEvent>(out, events, channel, InputSignal::MoveRight));
 	subs.push_back(BindKey<FireEvent>(out, events, channel, InputSignal::Fire));
+	subs.push_back(events.AddListener([&out, slot](const ShareLifeEvent& event)
+	{
+		//NOTE: the keyboard's other half drives no seat on this machine
+		if (event.giver == slot)
+		{
+			out.Publish(commands::KeyStateChange{.action = InputSignal::ShareLife, .isPressed = event.isPressed});
+		}
+	}));
+	subs.push_back(events.AddListener([&out, slot](const GamepadButtonEvent& event)
+	{
+		if (event.button == GamepadButton::X && event.controllerSlot == slot)
+		{
+			out.Publish(commands::KeyStateChange{.action = InputSignal::ShareLife, .isPressed = event.isPressed});
+		}
+	}));
 
 	return subs;
 }

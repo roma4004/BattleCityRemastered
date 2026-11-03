@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+struct SideBarLabel;
 struct SideBarPlayers;
 struct SideBarSeat;
 class SideBarCanvas;
@@ -31,7 +32,7 @@ class SideBarPlayerPainter final
 						   const UiLayout::Measure& labelFont) const;
 	void PaintSeatRows(const std::vector<SideBarSeat>& seats, double left, double top, SideBarWords& words,
 					   const UiLayout::Measure& barFont, const UiLayout::Measure& labelFont) const;
-	void PaintLabel(const std::string& label, const SDL_Rect& seat, SideBarWords& words,
+	void PaintLabel(const SideBarLabel& label, const SDL_Rect& seat, SideBarWords& words,
 					const UiLayout::Measure& labelFont) const;
 
 public:

@@ -5,12 +5,14 @@
 #include "enums/Author.h"
 #include "enums/BonusType.h"
 #include "enums/ObstacleType.h"
+#include "enums/PlayerSlot.h"
 #include "enums/RespawnGroup.h"
 #include "enums/TankModel.h"
 #include "enums/TankType.h"
 #include "utils/Uuid.h"
 #include <chrono>
 #include <memory>
+#include <optional>
 
 class BaseObj;
 class Bonus;
@@ -37,6 +39,12 @@ struct RespawnCountChangedToEvent
 {
 	RespawnGroup group{};
 	unsigned short respawnCount;
+};
+
+//NOTE: the seat a shared life would go to; none while nobody waits or nobody can give one
+struct ShareRecipientChangedEvent
+{
+	std::optional<PlayerSlot> seat{};
 };
 
 struct TankRespawnedEvent

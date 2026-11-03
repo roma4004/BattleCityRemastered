@@ -226,6 +226,11 @@ void ReplicationApplier::Emit(const commands::RespawnCountChange& command) const
 	_events->EmitEvent(RespawnCountChangedToEvent{.group = command.group, .respawnCount = command.respawnCount});
 }
 
+void ReplicationApplier::Emit(const commands::ShareRecipientChange& command) const
+{
+	_events->EmitEvent(ShareRecipientChangedEvent{.seat = command.seat});
+}
+
 void ReplicationApplier::Emit(const commands::AbsenceChange& command) const
 {
 	_events->EmitEvent(AbsenceChangedEvent{.seats = command.seats});

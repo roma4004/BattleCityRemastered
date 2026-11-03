@@ -115,13 +115,20 @@ struct RenderPlateEvent
 //NOTE: near-black side bar text; alpha spelled out - IntToColor reads it from the top byte, and 0 is invisible
 inline constexpr unsigned int kSideBarTextColor{0xff000002u};
 
+//NOTE: the button stands before the words
+struct SideBarLabel
+{
+	std::string text{};
+	UiIcon button{UiIcon::None};
+};
+
 struct SideBarSeat
 {
 	unsigned short lives{};
 	std::optional<float> frozen{};
 	std::optional<float> helmet{};
 	std::optional<float> ship{};
-	std::string label{};
+	SideBarLabel label{};
 };
 
 //NOTE: the reserve fills the enemy frame from the top; badges take the cells it left empty

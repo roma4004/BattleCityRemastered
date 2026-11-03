@@ -71,6 +71,8 @@ struct WorldSnapshot final
 	std::vector<BonusEffectTimeLeft> effects{};
 	//NOTE: indexed by RespawnGroup
 	std::array<unsigned short, kRespawnGroupCount> respawnCounts{};
+	//NOTE: told once, on the change - a newcomer has missed it
+	std::optional<PlayerSlot> shareRecipient{};
 	StatisticsData statistics{};
 	//NOTE: the seat announce may be in the frame this snapshot replaces, so the snapshot carries it too
 	std::array<SeatHolder, kSeatCount> holders{};

@@ -4,6 +4,7 @@
 #include "components/UiTable.h"
 #include "components/events/RenderUIEvents.h"
 #include "enums/TextureOffset.h"
+#include "enums/UiIcon.h"
 #include "geometry/ObjRectangle.h"
 #include "geometry/Point.h"
 #include <algorithm>
@@ -107,7 +108,7 @@ void SideBarPlayerPainter::PaintSeatPictures(const std::vector<SideBarSeat>& sea
 	{
 		const SDL_Rect place{_canvas.Rect(picture)};
 		_canvas.Draw(picture, place);
-		if (!seat.label.empty())
+		if (!seat.label.text.empty())
 		{
 			PaintLabel(seat.label, place, words, labelFont);
 
@@ -171,7 +172,7 @@ void SideBarPlayerPainter::PaintSeatRows(const std::vector<SideBarSeat>& seats, 
 			return SideBarCanvas::Inset(_canvas.Rect(cell(column, 1)), SideBarCanvas::kCellMargin,
 										SideBarCanvas::kBadgeMarginDown);
 		};
-		if (!seat.label.empty())
+		if (!seat.label.text.empty())
 		{
 			//NOTE: from the block's top - a lower edge shows a step past the block
 			const ObjRectangle row{cell(timerCell, kRowLivesCell + 1)};
@@ -193,13 +194,21 @@ void SideBarPlayerPainter::PaintSeatRows(const std::vector<SideBarSeat>& seats, 
 	}
 }
 
-void SideBarPlayerPainter::PaintLabel(const std::string& label, const SDL_Rect& seat, SideBarWords& words,
+void SideBarPlayerPainter::PaintLabel(const SideBarLabel& label, const SDL_Rect& seat, SideBarWords& words,
 									  const UiLayout::Measure& labelFont) const
 {
 	constexpr int margin{4};
+	//NOTE: a symbol's width - the button stands off the words as a key's letter does
+	constexpr int buttonGap{SideBarCanvas::kLabelPointSize};
 
-	UiTable table{.rows = {UiRow{.cells = {TextCell(label, kSideBarTextColor)}}}};
-	UiLayout::Placement placed{UiLayout::Place(table, Point{}, 0, labelFont)};
+	UiTable table{.rows = {UiRow{.cells = {TextCell(label.text, kSideBarTextColor)}}}};
+	if (label.button != UiIcon::None)
+	{
+		std::vector<UiCell>& cells{table.rows.front().cells};
+		cells.insert(cells.begin(), UiCell{.icon = label.button});
+	}
+
+	UiLayout::Placement placed{UiLayout::Place(table, Point{}, 0, labelFont, buttonGap)};
 	const Point middle{.x = seat.x + seat.w / 2, .y = seat.y + seat.h / 2};
 	placed.ShiftBy(Point{.x = middle.x - placed.size.x / 2, .y = middle.y - placed.size.y / 2});
 

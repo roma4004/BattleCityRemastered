@@ -4,6 +4,7 @@
 #include "components/events/SpawnEvents.h"
 #include "components/events/BonusPickupEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
+#include "components/events/InputEvents.h"
 #include "components/events/ObjectLifecycleEvents.h"
 #include "components/events/ReplicationEvents.h"
 #include "enums/Author.h"
@@ -38,8 +39,7 @@ bool IsEnemyGroup(const RespawnGroup group) noexcept { return group == RespawnGr
 
 RespawnManager::RespawnManager(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig)
 	: _events{events}
-	, _gameMode{gameConfig.gameMode}
-	, _isFreeForAll{gameConfig.IsFreeForAll()}
+	, _gameConfig{gameConfig}
 	, _enemySeats{gameConfig.EnemySeats()}
 {
 	std::ranges::fill(_holders | std::views::take(gameConfig.SeatCount()), SeatHolder::Player);
@@ -62,7 +62,7 @@ RespawnManager::RespawnManager(const std::shared_ptr<EventSystem>& events, const
 void RespawnManager::Subscribe()
 {
 	//NOTE: a client counts nothing - the host sends the counts, the snapshot to a late joiner
-	if (IsClient(_gameMode))
+	if (_gameConfig.IsClient())
 	{
 		_subs.push_back(_events->AddListener(this, &RespawnManager::OnWorldSnapshotReceived));
 
@@ -78,8 +78,10 @@ void RespawnManager::Subscribe()
 	_subs.push_back(_events->AddListener(this, &RespawnManager::OnRespawnTanks));
 	_subs.push_back(_events->AddListener(this, &RespawnManager::OnEnemyLineupLoaded));
 	_subs.push_back(_events->AddListener(this, &RespawnManager::OnGoldenGrenadePickup));
+	_subs.push_back(_events->AddListener(this, &RespawnManager::OnShareLife));
+	_subs.push_back(_events->AddListener(this, &RespawnManager::OnGamepadButton));
 
-	if (IsHost(_gameMode))
+	if (_gameConfig.IsHost())
 	{
 		_subs.push_back(_events->AddListener(this, &RespawnManager::OnWorldSnapshotRequested));
 		_subs.push_back(_events->AddListener(this, &RespawnManager::OnSeatsFilled));
@@ -109,7 +111,7 @@ void RespawnManager::OnGoldenGrenadePickup(const BonusGoldenGrenadePickupEvent& 
 	const auto isHit = [this, &event, isEnemyTaker](const SpawnSlot& slot)
 	{
 		return slot.isOnField && SeatOf(slot.type) != event.taker
-			   && (_isFreeForAll || IsEnemyGroup(slot.group) != isEnemyTaker);
+			   && (_gameConfig.IsFreeForAll() || IsEnemyGroup(slot.group) != isEnemyTaker);
 	};
 
 	for (const SpawnSlot& slot: _slots | std::views::filter(isHit))
@@ -127,6 +129,66 @@ void RespawnManager::OnEnemyLineupLoaded(const EnemyLineupLoadedEvent& event)
 	}
 
 	SetRespawnCount(RespawnGroup::ENEMY_ALL, static_cast<unsigned short>(*event.count));
+}
+
+void RespawnManager::OnShareLife(const ShareLifeEvent& event)
+{
+	const std::optional<PlayerSlot> recipient{ShareRecipient()};
+	if (!event.isPressed || _gameConfig.gameState != GameState::Playing || !recipient || !CanGiveLife(event.giver))
+	{
+		return;
+	}
+
+	ChangeRespawnCount(-1, GroupOf(event.giver));
+	ChangeRespawnCount(1, GroupOf(*recipient));
+}
+
+void RespawnManager::OnGamepadButton(const GamepadButtonEvent& event)
+{
+	if (event.button == GamepadButton::X)
+	{
+		OnShareLife(ShareLifeEvent{.giver = event.controllerSlot, .isPressed = event.isPressed});
+	}
+}
+
+//NOTE: the reserve may run out - the tank on the field is no part of it
+bool RespawnManager::CanGiveLife(const PlayerSlot slot) const
+{
+	return IsDrivenSeat(_gameConfig.gameMode, _holders[SeatIndex(slot)], slot) && _respawnCount[GroupIndex(slot)] > 0u;
+}
+
+//NOTE: the seats in order; nobody is owed a life no seat can give
+std::optional<PlayerSlot> RespawnManager::ShareRecipient() const
+{
+	const auto canGive = [this](const PlayerSlot slot) { return CanGiveLife(slot); };
+	if (_gameConfig.IsFreeForAll() || std::ranges::none_of(kSlots, canGive))
+	{
+		return std::nullopt;
+	}
+
+	const auto isSpent = [this](const PlayerSlot slot)
+	{
+		const SpawnSlot& seat{*std::ranges::find(_slots, PlayerTankOf(slot), &SpawnSlot::type)};
+
+		return _holders[SeatIndex(slot)] != SeatHolder::Empty && !seat.isOnField
+			   && _respawnCount[GroupIndex(slot)] == 0u;
+	};
+	const auto spent{std::ranges::find_if(kSlots, isSpent)};
+
+	return spent == kSlots.end() ? std::nullopt : std::optional{*spent};
+}
+
+//NOTE: once a frame, so no death, spawn or seat change can be missed; only a change goes out
+void RespawnManager::AnnounceShareRecipient()
+{
+	const std::optional<PlayerSlot> recipient{ShareRecipient()};
+	if (recipient == _announcedRecipient)
+	{
+		return;
+	}
+
+	_announcedRecipient = recipient;
+	_events->EmitEvent(ShareRecipientChangedEvent{.seat = recipient});
 }
 
 //NOTE: a free seat somebody sits in waits - no more of them than the group has lives
@@ -272,6 +334,7 @@ void RespawnManager::Vacate(SpawnSlot& seat)
 void RespawnManager::OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const
 {
 	std::ranges::copy(_respawnCount, event.snapshot.respawnCounts.begin());
+	event.snapshot.shareRecipient = ShareRecipient();
 }
 
 void RespawnManager::OnWorldSnapshotReceived(const WorldSnapshotReceivedEvent& event)
@@ -312,7 +375,7 @@ void RespawnManager::CheckMatchEnd()
 		return;
 	}
 
-	if (AreEnemiesGone() && (!_isFreeForAll || playersIn == 1u))
+	if (AreEnemiesGone() && (!_gameConfig.IsFreeForAll() || playersIn == 1u))
 	{
 		_isDecided = true;
 		_events->EmitEvent(GameFinishedEvent{.state = GameState::Won});
@@ -350,10 +413,12 @@ void RespawnManager::OnTankDied(const TankDiedEvent& event)
 	CheckMatchEnd();
 }
 
-void RespawnManager::OnRespawnTanks(const RespawnTanksEvent&) const
+void RespawnManager::OnRespawnTanks(const RespawnTanksEvent&)
 {
 	for (const auto& slot: _slots | std::ranges::views::filter([](const auto& s) { return s.isAvailable; }))
 	{
 		_events->EmitEvent(RespawnTankEvent{.type = slot.type, .uuid = slot.uuid});
 	}
+
+	AnnounceShareRecipient();
 }

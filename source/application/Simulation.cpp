@@ -204,6 +204,7 @@ void Simulation::OnPlayerSlotAssigned(const PlayerSlotAssignedEvent& event)
 {
 	_gameConfig.ownSlot = event.slot;
 	_gameConfig.networkSeats = event.match.seats;
+	_gameConfig.networkRules = event.match.rules;
 }
 
 void Simulation::OnHostLeft(const ClientInDisconnectEvent&) { _isLinkUp = false; }

@@ -5,6 +5,7 @@
 #include "components/BonusSpawner.h"
 #include "components/events/SpawnEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
+#include "components/events/InputEvents.h"
 #include "components/events/ObjectLifecycleEvents.h"
 #include "components/TankSpawner.h"
 #include "components/managers/RespawnManager.h"
@@ -55,6 +56,7 @@ protected:
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
+		_gameConfig.gameState = GameState::Playing;
 		_subs.push_back(TestUtils::WireSpawnQueue(_events, _allObjects));
 		_allObjects.reserve(6u);
 		const auto bulletPool{std::make_shared<BulletPool>(_events, _allObjects, _gameConfig)};
@@ -86,6 +88,26 @@ protected:
 
 		_events->EmitEvent(TankDiedEvent{.uuid = (*tank)->GetUuid()});
 		_allObjects.erase(tank);
+	}
+
+	//NOTE: the other seats spawn along the way
+	void SpawnAndKill(const PlayerSlot slot)
+	{
+		const TankType seat{PlayerTankOf(slot)};
+		_tanksAsked.clear();
+		_events->EmitEvent(RespawnTanksEvent{});
+		ASSERT_TRUE(_tanksAsked.contains(seat)) << "the seat asked for no tank with a life left";
+		const Uuid uuid{_tanksAsked.at(seat)};
+		_events->EmitEvent(TankDiedEvent{.who = AuthorOf(slot), .uuid = uuid});
+		std::erase_if(_allObjects, [uuid](const std::shared_ptr<BaseObj>& obj) { return obj->GetUuid() == uuid; });
+	}
+
+	void SpendEveryLife(const PlayerSlot slot)
+	{
+		for ([[maybe_unused]] const int life: std::views::iota(0, 3))
+		{
+			SpawnAndKill(slot);
+		}
 	}
 
 	void TakeBonus(const Author author, const BonusType type, const bool isSuper = false)
@@ -421,6 +443,40 @@ TEST_F(RespawnManagerTest, ALevelChangeBringsBackAPlayerWhoSpentEveryLife)
 	_events->EmitEvent(RespawnTanksEvent{});
 
 	EXPECT_TRUE(_tanksAsked.contains(TankType::PLAYER1)) << "the player who spent every life sat the level out";
+}
+
+// a life leaves the giver's reserve and the ally who has none is owed a tank: two players, coop bot, network match
+TEST_F(RespawnManagerTest, ASpareLifeGoesToAnAllyWithNone)
+{
+	struct Share final
+	{
+		GameMode mode{};
+		PlayerSlot ally{};
+		PlayerSlot giver{};
+	};
+
+	for (const Share& share: {Share{.mode = GameMode::TwoPlayers, .ally = PlayerSlot::P1, .giver = PlayerSlot::P2},
+							  Share{.mode = GameMode::CoopWithBot, .ally = PlayerSlot::P2, .giver = PlayerSlot::P1},
+							  Share{.mode = GameMode::PlayAsHost, .ally = PlayerSlot::P1, .giver = PlayerSlot::P2}})
+	{
+		SCOPED_TRACE(static_cast<int>(share.mode));
+		_events->EmitEvent(GameResetEvent{});
+		_allObjects.clear();
+		ApplyGameMode(share.mode);
+		_events->EmitEvent(SeatsFilledEvent{
+				.holders = {SeatHolder::Player, SeatHolder::Player, SeatHolder::Empty, SeatHolder::Empty}});
+		_events->EmitEvent(GameResetEvent{});
+		SpendEveryLife(share.ally);
+		const unsigned short giverLives{_lives.at(GroupOf(share.giver))};
+		ASSERT_EQ(_lives.at(GroupOf(share.ally)), 0u);
+
+		_events->EmitEvent(ShareLifeEvent{.giver = share.giver, .isPressed = true});
+
+		EXPECT_EQ(_lives.at(GroupOf(share.giver)), giverLives - 1u);
+		_tanksAsked.clear();
+		_events->EmitEvent(RespawnTanksEvent{});
+		EXPECT_TRUE(_tanksAsked.contains(PlayerTankOf(share.ally))) << "the life given brought no tank";
+	}
 }
 
 // 2P free-for-all is won by the last player standing, not by clearing the bots

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "enums/PlayerSlot.h"
 #include <cstddef>
 
 enum class GameMode : char8_t
@@ -41,4 +42,13 @@ enum class GameMode : char8_t
 }
 
 //NOTE: seat one is the phase's call, not the mode's - the demo hands both seats to bots
-[[nodiscard]] constexpr bool UsesCoopBots(const GameMode mode) noexcept { return mode == GameMode::CoopWithBot; }
+[[nodiscard]] constexpr bool IsCoopBotSeat(const GameMode mode, const PlayerSlot slot) noexcept
+{
+	return mode == GameMode::CoopWithBot && slot != PlayerSlot::P1;
+}
+
+//NOTE: somebody at the keys - the holders read a coop bot's seat as a player's
+[[nodiscard]] constexpr bool IsDrivenSeat(const GameMode mode, const SeatHolder holder, const PlayerSlot slot) noexcept
+{
+	return holder == SeatHolder::Player && !IsCoopBotSeat(mode, slot);
+}

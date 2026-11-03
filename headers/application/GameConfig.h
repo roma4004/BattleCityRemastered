@@ -29,7 +29,7 @@ public:
 	std::optional<network::ServerAddress> catalogAddress{};
 	//NOTE: the host's; a client learns it with its seat
 	std::size_t networkSeats{kDefaultSeats};
-	//NOTE: the server's - a client mirrors the match and never needs them
+	//NOTE: the host's; a client learns them with its seat - its tanks and side bar take their side from them
 	MatchRules networkRules{};
 	//NOTE: how many enemies the field holds at once
 	std::size_t simultaneousEnemies{4u};

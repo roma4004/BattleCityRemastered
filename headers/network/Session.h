@@ -84,6 +84,7 @@ private:
 	void Handle(const commands::Despawn&) const {}
 	void Handle(const commands::RespawnTank&) const {}
 	void Handle(const commands::RespawnCountChange&) const {}
+	void Handle(const commands::ShareRecipientChange&) const {}
 	void Handle(const commands::ObstacleSpawn&) const {}
 	void Handle(const commands::TankSpawnComplete&) const {}
 	void Handle(const commands::TankSpawnMoved&) const {}

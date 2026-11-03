@@ -40,7 +40,7 @@ constexpr int kPanelSideMargin{20};
 
 //NOTE: tighter than the controls' rows, which hold pad pictures
 constexpr int kMenuModeRowHeight{24};
-constexpr Point kMenuIconSize{.x = 30, .y = 30};
+constexpr Point kMenuIconSize{.x = 26, .y = 26};
 constexpr int kMenuRowPadding{5};
 
 int PanelRowHeight(const int pointSize)
@@ -171,7 +171,7 @@ void UiRenderer::DrawMenu(const RenderMenuEvent& event) const
 	constexpr int titleGap{28};
 	//NOTE: the controls are placed from the panel's bottom, so the room under them never changes
 	constexpr int controlsBottomGap{10};
-	constexpr int menuRowHeight{30};
+	constexpr int menuRowHeight{26};
 	//NOTE: room for the arrow left of the mode it points at, and the slack a click still lands in
 	constexpr int selectorGap{35};
 
@@ -448,6 +448,7 @@ UiRenderer::IconSource UiRenderer::Icon(const UiIcon icon) const
 	constexpr double pauseShare{0.40};
 	constexpr double gameOverShare{0.27};
 	constexpr double gameWonShare{0.16};
+	constexpr Point sideBarButtonSize{.x = SideBarCanvas::kPointSize, .y = SideBarCanvas::kPointSize};
 	const auto sprite = [this](const ObjRectangle& offset, const Point size)
 	{
 		return IconSource{.texture = _sdlConfig.atlasTexture.get(),
@@ -475,6 +476,8 @@ UiRenderer::IconSource UiRenderer::Icon(const UiIcon icon) const
 			return IconSource{.texture = _sdlConfig.xboxTextures[0].get(), .size = kMenuIconSize};
 		case UiIcon::MenuXBoxA:
 			return IconSource{.texture = _sdlConfig.xboxTextures[4].get(), .size = kMenuIconSize};
+		case UiIcon::MenuXBoxX:
+			return IconSource{.texture = _sdlConfig.xboxTextures[6].get(), .size = kMenuIconSize};
 		case UiIcon::MenuPS5Home:
 			return IconSource{.texture = _sdlConfig.ps5Textures[3].get(), .size = kMenuIconSize};
 		case UiIcon::MenuPS5Create:
@@ -487,6 +490,12 @@ UiRenderer::IconSource UiRenderer::Icon(const UiIcon icon) const
 			return IconSource{.texture = _sdlConfig.ps5Textures[2].get(), .size = kMenuIconSize};
 		case UiIcon::MenuPS5Cross:
 			return IconSource{.texture = _sdlConfig.ps5Textures[1].get(), .size = kMenuIconSize};
+		case UiIcon::MenuPS5Square:
+			return IconSource{.texture = _sdlConfig.ps5Textures[6].get(), .size = kMenuIconSize};
+		case UiIcon::SideBarXBoxX:
+			return IconSource{.texture = _sdlConfig.xboxTextures[6].get(), .size = sideBarButtonSize};
+		case UiIcon::SideBarPS5Square:
+			return IconSource{.texture = _sdlConfig.ps5Textures[6].get(), .size = sideBarButtonSize};
 		case UiIcon::PlatePause:
 			return sprite(TextureOffset::kPauseText, PlateSize(TextureOffset::kPauseText, pauseShare));
 		case UiIcon::PlateGameOver:

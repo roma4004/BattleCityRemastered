@@ -12,4 +12,5 @@ enum class InputSignal : std::uint8_t
 	Fire,
 	PauseRequest,
 	PauseStatus,
+	ShareLife,
 };

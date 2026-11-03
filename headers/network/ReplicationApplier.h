@@ -29,6 +29,7 @@ private:
 	void Emit(const commands::Despawn& command) const;
 	void Emit(const commands::RespawnTank& command) const;
 	void Emit(const commands::RespawnCountChange& command) const;
+	void Emit(const commands::ShareRecipientChange& command) const;
 	void Emit(const commands::ObstacleSpawn& command) const;
 	void Emit(const commands::TankSpawnComplete& command) const;
 	void Emit(const commands::TankSpawnMoved& command) const;

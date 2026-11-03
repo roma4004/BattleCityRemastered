@@ -117,50 +117,63 @@ std::expected<void, ConfigError> ProjectConfig::LoadIni(const std::filesystem::p
 		return std::unexpected(ConfigError{.path = filePath, .reason = err.message(), .line = err.line()});
 	}
 
+	//NOTE: a file can be older than a key - what it lacks takes the default, and the next save writes that in
+	DefaultInitIni();
+
 	return {};
 }
 
 void ProjectConfig::DefaultInitIni()
 {
+	const auto keyRepair = [this](const std::string& key, const auto& value)
+	{
+		if (!_pTreeIni.get_child_optional(key))
+		{
+			Set(key, value);
+		}
+	};
+
 	try
 	{
-		Set("Window.width", 800u);
-		Set("Window.height", 600u);
-		Set("Window.posX", 100u);
-		Set("Window.posY", 100u);
-		Set("Window.vsync", 0);
-		Set("Window.MonitorNumber", 1u);
-		Set("Window.centerOnStart", false);
+		keyRepair("Window.width", 800u);
+		keyRepair("Window.height", 600u);
+		keyRepair("Window.posX", 100u);
+		keyRepair("Window.posY", 100u);
+		keyRepair("Window.vsync", 0);
+		keyRepair("Window.MonitorNumber", 1u);
+		keyRepair("Window.centerOnStart", false);
 
-		Set("Sound.volume", 100u);
-		Set("Sound.onOff", true);
+		keyRepair("Sound.volume", 100u);
+		keyRepair("Sound.onOff", true);
 
-		Set("Control.swap", false);
-		Set("Gamepad.deadZone", 8000);
-		Set("Network.LastIPv4", "");
-		Set("Network.LastIPv6", "");
-		Set("Network.Catalog", "");
-		Set("Network.CatalogIPv6", "");
+		keyRepair("Control.swap", false);
+		keyRepair("Gamepad.deadZone", 8000);
+		keyRepair("Network.LastIPv4", "");
+		keyRepair("Network.LastIPv6", "");
+		keyRepair("Network.Catalog", "");
+		keyRepair("Network.CatalogIPv6", "");
 
-		Set("Fonts.BattleCity", "Resources/Fonts/PressStart2P-vaV7.ttf");
-		Set("Images.Logo", "Resources/Images/Title.png");
-		Set("Music.LevelStarted", "Resources/Sounds/levelStarted.wav");
-		Set("Images.SpriteSheet", "Resources/Images/SpriteSheet.png");
-		Set("Images.MenuSelectorP1", "Resources/Images/menuSelectorP1.png");
+		keyRepair("Fonts.BattleCity", "Resources/Fonts/PressStart2P-vaV7.ttf");
+		keyRepair("Images.Logo", "Resources/Images/Title.png");
+		keyRepair("Music.LevelStarted", "Resources/Sounds/levelStarted.wav");
+		keyRepair("Images.SpriteSheet", "Resources/Images/SpriteSheet.png");
+		keyRepair("Images.MenuSelectorP1", "Resources/Images/menuSelectorP1.png");
 
-		Set("Images.PS5_Create", "Resources/Images/PS5_Buttons/Create.png");
-		Set("Images.PS5_Cross", "Resources/Images/PS5_Buttons/Cross.png");
-		Set("Images.PS5_D-Pad", "Resources/Images/PS5_Buttons/D-Pad.png");
-		Set("Images.PS5_Home", "Resources/Images/PS5_Buttons/Home.png");
-		Set("Images.PS5_Options", "Resources/Images/PS5_Buttons/Options.png");
-		Set("Images.PS5_Triangle", "Resources/Images/PS5_Buttons/Triangle.png");
+		keyRepair("Images.PS5_Create", "Resources/Images/PS5_Buttons/Create.png");
+		keyRepair("Images.PS5_Cross", "Resources/Images/PS5_Buttons/Cross.png");
+		keyRepair("Images.PS5_D-Pad", "Resources/Images/PS5_Buttons/D-Pad.png");
+		keyRepair("Images.PS5_Home", "Resources/Images/PS5_Buttons/Home.png");
+		keyRepair("Images.PS5_Options", "Resources/Images/PS5_Buttons/Options.png");
+		keyRepair("Images.PS5_Square", "Resources/Images/PS5_Buttons/Square.png");
+		keyRepair("Images.PS5_Triangle", "Resources/Images/PS5_Buttons/Triangle.png");
 
-		Set("Images.XBox_D-Pad", "Resources/Images/Xbox_Buttons/D-Pad.png");
-		Set("Images.XBox_Home", "Resources/Images/Xbox_Buttons/Home.png");
-		Set("Images.XBox_Menu", "Resources/Images/Xbox_Buttons/Menu.png");
-		Set("Images.XBox_View", "Resources/Images/Xbox_Buttons/View.png");
-		Set("Images.XBox_A", "Resources/Images/Xbox_Buttons/A.png");
-		Set("Images.XBox_Y", "Resources/Images/Xbox_Buttons/Y.png");
+		keyRepair("Images.XBox_D-Pad", "Resources/Images/Xbox_Buttons/D-Pad.png");
+		keyRepair("Images.XBox_Home", "Resources/Images/Xbox_Buttons/Home.png");
+		keyRepair("Images.XBox_Menu", "Resources/Images/Xbox_Buttons/Menu.png");
+		keyRepair("Images.XBox_View", "Resources/Images/Xbox_Buttons/View.png");
+		keyRepair("Images.XBox_A", "Resources/Images/Xbox_Buttons/A.png");
+		keyRepair("Images.XBox_X", "Resources/Images/Xbox_Buttons/X.png");
+		keyRepair("Images.XBox_Y", "Resources/Images/Xbox_Buttons/Y.png");
 	}
 	catch (const boost::property_tree::ptree_bad_data& err)
 	{

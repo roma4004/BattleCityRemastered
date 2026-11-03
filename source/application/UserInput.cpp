@@ -14,6 +14,7 @@
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_gamepad.h>
 #include <SDL3/SDL_keyboard.h>
+#include <SDL3/SDL_keycode.h>
 #include <algorithm>
 #include <array>
 #include <cstddef>
@@ -50,6 +51,21 @@ bool IsSameController(const std::shared_ptr<SDL_Gamepad>& controller, const SDL_
 	}
 
 	return false;
+}
+
+//NOTE: a pad of no kind we have pictures for reads as the layout most of them copy
+[[nodiscard]] InputDevice PadOf(const SDL_JoystickID instanceId)
+{
+	const SDL_GamepadType type{SDL_GetGamepadTypeForID(instanceId)};
+	const bool isPlayStation{type == SDL_GAMEPAD_TYPE_PS3 || type == SDL_GAMEPAD_TYPE_PS4
+							 || type == SDL_GAMEPAD_TYPE_PS5};
+
+	return isPlayStation ? InputDevice::PlayStationPad : InputDevice::XBoxPad;
+}
+
+[[nodiscard]] constexpr InputDevice KeyboardHalf(const std::size_t half) noexcept
+{
+	return half == 0u ? InputDevice::KeyboardLeft : InputDevice::KeyboardRight;
 }
 
 //NOTE: by the key's place, not the layout - SDL names a non-Latin layout's keys as on QWERTY
@@ -368,40 +384,60 @@ void UserInput::HoverPanelRow(const SDL_Point& mouse)
 
 void UserInput::KeyboardKeyPressRelease(const SDL_Event& event, const bool& isPressed) const
 {
-	const PlayerSlot keyboardLeftSideSlot{DeviceSlot(0u)};
-	const PlayerSlot keyboardRightSideSlot{DeviceSlot(1u)};
+	constexpr std::size_t leftKeyboardHalf{0u};
+	constexpr std::size_t rightKeyboardHalf{1u};
+	//NOTE: a key that drives a seat tells whose hint now names this half of the keyboard
+	const auto seatOn = [this, isPressed](const std::size_t half)
+	{
+		const PlayerSlot slot{DeviceSlot(half)};
+		if (isPressed)
+		{
+			_events->EmitEvent(SeatDeviceUsedEvent{.slot = slot, .device = KeyboardHalf(half)});
+		}
+
+		return slot;
+	};
 
 	switch (event.key.key)
 	{
 		case SDLK_W:
-			_events->EmitEvent(Key(LocalInput(keyboardLeftSideSlot)), MoveUpEvent{.isPressed = isPressed});
+			_events->EmitEvent(Key(LocalInput(seatOn(leftKeyboardHalf))), MoveUpEvent{.isPressed = isPressed});
 			break;
 		case SDLK_UP:
-			_events->EmitEvent(Key(LocalInput(keyboardRightSideSlot)), MoveUpEvent{.isPressed = isPressed});
+			_events->EmitEvent(Key(LocalInput(seatOn(rightKeyboardHalf))), MoveUpEvent{.isPressed = isPressed});
 			break;
 		case SDLK_A:
-			_events->EmitEvent(Key(LocalInput(keyboardLeftSideSlot)), MoveLeftEvent{.isPressed = isPressed});
+			_events->EmitEvent(Key(LocalInput(seatOn(leftKeyboardHalf))), MoveLeftEvent{.isPressed = isPressed});
 			break;
 		case SDLK_LEFT:
-			_events->EmitEvent(Key(LocalInput(keyboardRightSideSlot)), MoveLeftEvent{.isPressed = isPressed});
+			_events->EmitEvent(Key(LocalInput(seatOn(rightKeyboardHalf))), MoveLeftEvent{.isPressed = isPressed});
 			break;
 		case SDLK_S:
-			_events->EmitEvent(Key(LocalInput(keyboardLeftSideSlot)), MoveDownEvent{.isPressed = isPressed});
+			_events->EmitEvent(Key(LocalInput(seatOn(leftKeyboardHalf))), MoveDownEvent{.isPressed = isPressed});
 			break;
 		case SDLK_DOWN:
-			_events->EmitEvent(Key(LocalInput(keyboardRightSideSlot)), MoveDownEvent{.isPressed = isPressed});
+			_events->EmitEvent(Key(LocalInput(seatOn(rightKeyboardHalf))), MoveDownEvent{.isPressed = isPressed});
 			break;
 		case SDLK_D:
-			_events->EmitEvent(Key(LocalInput(keyboardLeftSideSlot)), MoveRightEvent{.isPressed = isPressed});
+			_events->EmitEvent(Key(LocalInput(seatOn(leftKeyboardHalf))), MoveRightEvent{.isPressed = isPressed});
 			break;
 		case SDLK_RIGHT:
-			_events->EmitEvent(Key(LocalInput(keyboardRightSideSlot)), MoveRightEvent{.isPressed = isPressed});
+			_events->EmitEvent(Key(LocalInput(seatOn(rightKeyboardHalf))), MoveRightEvent{.isPressed = isPressed});
 			break;
 		case SDLK_SPACE:
-			_events->EmitEvent(Key(LocalInput(keyboardLeftSideSlot)), FireEvent{.isPressed = isPressed});
+			_events->EmitEvent(Key(LocalInput(seatOn(leftKeyboardHalf))), FireEvent{.isPressed = isPressed});
 			break;
 		case SDLK_RCTRL:
-			_events->EmitEvent(Key(LocalInput(keyboardRightSideSlot)), FireEvent{.isPressed = isPressed});
+			_events->EmitEvent(Key(LocalInput(seatOn(rightKeyboardHalf))), FireEvent{.isPressed = isPressed});
+			break;
+		case SDLK_Q:
+		case SDLK_O:
+			//NOTE: the press is the whole act - a held key's repeats would give the next seat out of lives one as well
+			if (!event.key.repeat)
+			{
+				_events->EmitEvent(ShareLifeEvent{.giver = seatOn(event.key.key == SDLK_Q ? leftKeyboardHalf : rightKeyboardHalf),
+												  .isPressed = isPressed});
+			}
 			break;
 		case SDLK_M:
 			if (isPressed == false)
@@ -543,13 +579,17 @@ void UserInput::GamepadKeyPressRelease(const SDL_Event& event, const bool& isPre
 	if (ConnectedJoystickCount() > 0)
 	{
 		const PlayerSlot controllerSlot{ControllerSlotDefiner(event.gbutton.which)};
+		if (isPressed)
+		{
+			_events->EmitEvent(SeatDeviceUsedEvent{.slot = controllerSlot, .device = PadOf(event.gbutton.which)});
+		}
 
 		switch (event.gbutton.button)
 		{
 			case SDL_GAMEPAD_BUTTON_SOUTH:
 				_events->EmitEvent(Key(LocalInput(controllerSlot)), FireEvent{.isPressed = isPressed});
 				break;
-			//NOTE: B, X and Y go out as GamepadButtonEvent, which nothing consumes yet - Y also swaps the seats
+			//NOTE: B and Y go out as GamepadButtonEvent, which nothing consumes yet - Y also swaps the seats
 			case SDL_GAMEPAD_BUTTON_EAST:
 				_events->EmitEvent(GamepadButtonEvent{.controllerSlot = controllerSlot,
 													  .button = GamepadButton::B,
@@ -709,7 +749,8 @@ void UserInput::EmitHeldChange(const SDL_JoystickID instanceId, const std::optio
 		return;
 	}
 
-	const InputChannel channel{LocalInput(ControllerSlotDefiner(instanceId))};
+	const PlayerSlot slot{ControllerSlotDefiner(instanceId)};
+	const InputChannel channel{LocalInput(slot)};
 	if (before)
 	{
 		EmitMove(channel, *before, false);
@@ -717,6 +758,7 @@ void UserInput::EmitHeldChange(const SDL_JoystickID instanceId, const std::optio
 
 	if (after)
 	{
+		_events->EmitEvent(SeatDeviceUsedEvent{.slot = slot, .device = PadOf(instanceId)});
 		EmitMove(channel, *after, true);
 	}
 }

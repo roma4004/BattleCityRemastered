@@ -16,6 +16,7 @@
 #include "RespawnCountChange.h"
 #include "RespawnTank.h"
 #include "SeatHoldersChange.h"
+#include "ShareRecipientChange.h"
 #include "SignalEvent.h"
 #include "SlotAssignment.h"
 #include "StatisticsChange.h"
@@ -54,5 +55,5 @@ using AnyCommand = CommandVariant<
 	KeyStateChange, ObstacleSpawn, PositionChange, RespawnTank, SignalEvent, StatisticsChange, TankShot,
 	TankSpawnComplete, Disconnect, BonusSpawnComplete, TierChange, SlotAssignment, WorldSnapshot,
 	TankSpawnMoved, AbsenceChange, PortForwardingChange, SeatHoldersChange, TankGrew, BonusEffects,
-	RespawnCountChange>;
+	RespawnCountChange, ShareRecipientChange>;
 }//namespace network::commands

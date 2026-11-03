@@ -595,7 +595,7 @@ void TankSpawner::RespawnPlayerTeam(const TankType type, const Uuid uuid,
 //NOTE: the demo is the phase where nobody sits down - every seat goes to a bot
 bool TankSpawner::IsBotSeat(const PlayerSlot slot) const
 {
-	return _gameConfig.gameState == GameState::Demo || (UsesCoopBots(_gameMode) && slot != PlayerSlot::P1)
+	return _gameConfig.gameState == GameState::Demo || IsCoopBotSeat(_gameMode, slot)
 		   || _botSeats.test(SeatIndex(slot));
 }
 

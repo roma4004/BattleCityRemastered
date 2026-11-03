@@ -11,19 +11,24 @@
 #include <concepts>
 #include <memory>
 #include <optional>
-#include <string>
 #include <vector>
 
+enum class InputDevice : char8_t;
 struct BonusEffectsChangedEvent;
 struct BonusShipAppliedEvent;
 struct GameModeAppliedEvent;
 struct GameResetEvent;
 struct MapLoadedEvent;
 struct RespawnCountChangedToEvent;
+struct SeatDeviceUsedEvent;
 struct SeatHoldersAnnouncedEvent;
+struct ShareRecipientChangedEvent;
 struct SideBarEnemyBadge;
+struct SideBarLabel;
 struct SideBarSeat;
+struct TabReleasedEvent;
 struct TankDiedEvent;
+struct WorldSnapshotReceivedEvent;
 class GameConfig;
 
 class RightSideBar final
@@ -33,6 +38,9 @@ class RightSideBar final
 	unsigned short _stageNumber{1u};
 	//NOTE: as the host told them - a client in a seat a bot holds is watching it
 	std::array<SeatHolder, kSeatCount> _holders{};
+	//NOTE: as the host told it
+	std::optional<PlayerSlot> _shareRecipient{};
+	std::array<InputDevice, kSeatCount> _seatDevices;
 	//NOTE: no timer, unlike the effects
 	std::vector<Author> _ships{};
 
@@ -75,7 +83,10 @@ class RightSideBar final
 	[[nodiscard]] static bool IsRunning(const RunningEffect& effect);
 	[[nodiscard]] static bool FreezesEnemyTeam(const RunningEffect& effect);
 	[[nodiscard]] static bool FortifiesBase(const RunningEffect& effect);
-	[[nodiscard]] std::string LabelOf(PlayerSlot slot) const;
+	[[nodiscard]] SideBarLabel LabelOf(PlayerSlot slot) const;
+	[[nodiscard]] std::optional<SideBarLabel> ShareLabelOf(PlayerSlot slot) const;
+	[[nodiscard]] SideBarLabel GiverLabelOf(PlayerSlot giver) const;
+	[[nodiscard]] bool CanShareLife(PlayerSlot slot) const;
 	void OnGameModeApplied(const GameModeAppliedEvent& event);
 	void OnGameReset(const GameResetEvent&);
 	void OnRespawnCountChangedTo(const RespawnCountChangedToEvent& event);
@@ -84,6 +95,10 @@ class RightSideBar final
 	void OnBonusEffectsChanged(const BonusEffectsChangedEvent& event);
 	void OnBonusShipApplied(const BonusShipAppliedEvent& event);
 	void OnTankDied(const TankDiedEvent& event);
+	void OnShareRecipientChanged(const ShareRecipientChangedEvent& event);
+	void OnWorldSnapshotReceived(const WorldSnapshotReceivedEvent& event);
+	void OnTabReleased(const TabReleasedEvent& event);
+	void OnSeatDeviceUsed(const SeatDeviceUsedEvent& event);
 
 public:
 	RightSideBar(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig);

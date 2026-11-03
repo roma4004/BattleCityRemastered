@@ -16,6 +16,7 @@
 #include "PositionChange.h"
 #include "RespawnCountChange.h"
 #include "RespawnTank.h"
+#include "ShareRecipientChange.h"
 #include "SignalEvent.h"
 #include "SlotAssignment.h"
 #include "StatisticsChange.h"
@@ -143,6 +144,12 @@ void serialize(Archive& ar, network::commands::RespawnCountChange& cmd, const un
 {
 	ar & cmd.group;
 	ar & cmd.respawnCount;
+}
+
+template<class Archive>
+void serialize(Archive& ar, network::commands::ShareRecipientChange& cmd, const unsigned int /*version*/)
+{
+	ar & cmd.seat;
 }
 
 template<class Archive>
@@ -358,6 +365,7 @@ void serialize(Archive& ar, network::commands::WorldSnapshot& snapshot, const un
 	ar & snapshot.bonusSpawns;
 	ar & snapshot.effects;
 	ar & snapshot.respawnCounts;
+	ar & snapshot.shareRecipient;
 	ar & snapshot.statistics;
 	ar & snapshot.holders;
 	ar & snapshot.absence;

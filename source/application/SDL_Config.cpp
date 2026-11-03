@@ -27,13 +27,15 @@ constexpr std::array kPs5Keys{"Images.PS5_Create",
 							  "Images.PS5_D-Pad",
 							  "Images.PS5_Home",
 							  "Images.PS5_Options",
-							  "Images.PS5_Triangle"};
+							  "Images.PS5_Triangle",
+							  "Images.PS5_Square"};
 constexpr std::array kXBoxKeys{"Images.XBox_D-Pad",
 							   "Images.XBox_Home",
 							   "Images.XBox_Menu",
 							   "Images.XBox_View",
 							   "Images.XBox_A",
-							   "Images.XBox_Y"};
+							   "Images.XBox_Y",
+							   "Images.XBox_X"};
 
 std::expected<SurfaceHandle, InitError> LoadSurface(const std::filesystem::path& path)
 {

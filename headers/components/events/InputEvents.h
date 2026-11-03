@@ -63,6 +63,29 @@ struct FireEvent
 	bool isPressed;
 };
 
+//NOTE: a life for the ally who spent theirs; one listener for all seats, so the seat travels inside
+struct ShareLifeEvent
+{
+	PlayerSlot giver;
+	bool isPressed;
+};
+
+//NOTE: a keyboard half names its keys, a pad's kind its buttons
+enum class InputDevice : char8_t
+{
+	KeyboardLeft,
+	KeyboardRight,
+	XBoxPad,
+	PlayStationPad
+};
+
+//NOTE: a seat's key was pressed on this device
+struct SeatDeviceUsedEvent
+{
+	PlayerSlot slot;
+	InputDevice device;
+};
+
 struct EnterEvent
 {
 	bool isPressed;

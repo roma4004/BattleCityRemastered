@@ -7,10 +7,10 @@
 #include <array>
 #include <cstddef>
 #include <memory>
+#include <optional>
 #include <vector>
 
 enum class TankType : char8_t;
-enum class GameMode : char8_t;
 struct GameResetEvent;
 struct NextLevelEvent;
 struct EnemyLineupLoadedEvent;
@@ -19,6 +19,8 @@ struct TankDiedEvent;
 struct BonusTankPickupEvent;
 struct PlayersBaseFinishedEvent;
 struct RespawnTanksEvent;
+struct ShareLifeEvent;
+struct GamepadButtonEvent;
 struct BonusGoldenGrenadePickupEvent;
 struct SeatsFilledEvent;
 struct SeatHolderChangedEvent;
@@ -30,6 +32,7 @@ class RespawnManager final
 {
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
+	const GameConfig& _gameConfig;
 
 	//NOTE: indexed by RespawnGroup
 	std::array<unsigned short, kRespawnGroupCount> _respawnCount{};
@@ -43,13 +46,12 @@ class RespawnManager final
 		bool isOnField{};
 	};
 
-	GameMode _gameMode{};
-	bool _isFreeForAll{};
 	//NOTE: an empty seat spawns nothing - a network match says who sits where as it starts
 	std::array<SeatHolder, kSeatCount> _holders{};
 	std::size_t _enemySeats{};
 	//NOTE: the first of Won and Over stands
 	bool _isDecided{};
+	std::optional<PlayerSlot> _announcedRecipient{};
 
 	void OnGoldenGrenadePickup(const BonusGoldenGrenadePickupEvent& event);
 	void OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const;
@@ -63,8 +65,13 @@ class RespawnManager final
 	void OnNextLevel(const NextLevelEvent&);
 	void OnBonusTankPickup(const BonusTankPickupEvent& event);
 	void OnPlayersBaseFinished(const PlayersBaseFinishedEvent&);
-	void OnRespawnTanks(const RespawnTanksEvent& event) const;
+	void OnRespawnTanks(const RespawnTanksEvent& event);
 	void OnEnemyLineupLoaded(const EnemyLineupLoadedEvent& event);
+	void OnShareLife(const ShareLifeEvent& event);
+	void OnGamepadButton(const GamepadButtonEvent& event);
+	[[nodiscard]] bool CanGiveLife(PlayerSlot slot) const;
+	[[nodiscard]] std::optional<PlayerSlot> ShareRecipient() const;
+	void AnnounceShareRecipient();
 
 	void RecountSeats(RespawnGroup group);
 

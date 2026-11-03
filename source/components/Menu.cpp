@@ -77,11 +77,17 @@ UiTable ControlsTable()
 											Picture(UiIcon::MenuPS5Dpad),
 											Text("D-pad")}},
 							UiRow{.cells = {Text("Fire"),
-											Text("Space/LCtrl"),
+											Text("Space/RCtrl"),
 											Picture(UiIcon::MenuXBoxA),
 											Text("A"),
 											Picture(UiIcon::MenuPS5Cross),
-											Text("Cross")}}}};
+											Text("Cross")}},
+							UiRow{.cells = {Text("Share"),
+											Text("Q/O"),
+											Picture(UiIcon::MenuXBoxX),
+											Text("X"),
+											Picture(UiIcon::MenuPS5Square),
+											Text("Square")}}}};
 }
 }//namespace
 

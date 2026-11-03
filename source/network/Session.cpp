@@ -52,6 +52,9 @@ void EmitInput(EventSystem& events, const PlayerSlot slot, const InputSignal sig
 		//NOTE: the host writes this one, it never reads it
 		case InputSignal::PauseStatus:
 			return;
+		case InputSignal::ShareLife:
+			events.EmitEvent(ShareLifeEvent{.giver = slot, .isPressed = isPressed});
+			return;
 	}
 
 	Log::Error("Session: unhandled input signal " + std::to_string(static_cast<int>(signal)));
@@ -70,6 +73,7 @@ void EmitInput(EventSystem& events, const PlayerSlot slot, const InputSignal sig
 			return true;
 		case InputSignal::PauseRequest:
 		case InputSignal::PauseStatus:
+		case InputSignal::ShareLife:
 			return false;
 	}
 

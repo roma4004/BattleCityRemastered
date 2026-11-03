@@ -5,8 +5,10 @@
 #include "components/events/SpawnEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/GameModeEvents.h"
+#include "components/events/InputEvents.h"
 #include "components/events/ObjectLifecycleEvents.h"
 #include "components/events/RenderUIEvents.h"
+#include "components/events/ReplicationEvents.h"
 #include "entities/EffectTarget.h"
 #include "enums/Author.h"
 #include "enums/BonusType.h"
@@ -15,6 +17,8 @@
 #include "enums/GameState.h"
 #include "enums/PlayerSlot.h"
 #include "enums/RespawnGroup.h"
+#include "enums/UiIcon.h"
+#include "network/commands/WorldSnapshot.h"
 #include "utils/Timer.h"
 #include "utils/TimeUtils.h"
 #include <algorithm>
@@ -25,12 +29,15 @@
 #include <memory>
 #include <optional>
 #include <ranges>
-#include <string>
+#include <utility>
 #include <variant>
 #include <vector>
 
+//NOTE: until a key says otherwise, the keyboard half that drives the seat - a client's third or fourth is on the left
 RightSideBar::RightSideBar(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig)
-	: _gameConfig{gameConfig}
+	: _seatDevices{InputDevice::KeyboardLeft, InputDevice::KeyboardRight, InputDevice::KeyboardLeft,
+				   InputDevice::KeyboardLeft}
+	, _gameConfig{gameConfig}
 	, _events{events}
 {
 	Subscribe();
@@ -46,6 +53,10 @@ void RightSideBar::Subscribe()
 	_subs.push_back(_events->AddListener(this, &RightSideBar::OnBonusEffectsChanged));
 	_subs.push_back(_events->AddListener(this, &RightSideBar::OnBonusShipApplied));
 	_subs.push_back(_events->AddListener(this, &RightSideBar::OnTankDied));
+	_subs.push_back(_events->AddListener(this, &RightSideBar::OnShareRecipientChanged));
+	_subs.push_back(_events->AddListener(this, &RightSideBar::OnWorldSnapshotReceived));
+	_subs.push_back(_events->AddListener(this, &RightSideBar::OnTabReleased));
+	_subs.push_back(_events->AddListener(this, &RightSideBar::OnSeatDeviceUsed));
 }
 
 void RightSideBar::Draw() const
@@ -216,20 +227,69 @@ bool RightSideBar::FortifiesBase(const RunningEffect& effect)
 }
 
 //NOTE: any bot's seat is free to join
-std::string RightSideBar::LabelOf(const PlayerSlot slot) const
+SideBarLabel RightSideBar::LabelOf(const PlayerSlot slot) const
 {
-	if (!IsInMatch(_gameConfig.gameState) || _holders[SeatIndex(slot)] != SeatHolder::Bot)
+	if (!IsInMatch(_gameConfig.gameState))
 	{
 		return {};
 	}
 
-	return _gameConfig.ownSlot == slot ? "PRESS TO START" : "WAITING";
+	const bool isBot{_holders[SeatIndex(slot)] == SeatHolder::Bot};
+	if (isBot && _gameConfig.ownSlot == slot)
+	{
+		return SideBarLabel{.text = "PRESS TO START"};
+	}
+
+	return ShareLabelOf(slot).value_or(SideBarLabel{.text = isBot ? "WAITING" : ""});
+}
+
+//NOTE: over the seat the life goes to, so the giver's own lives stay in sight; the giver's machine says what to press
+std::optional<SideBarLabel> RightSideBar::ShareLabelOf(const PlayerSlot slot) const
+{
+	if (_gameConfig.gameState != GameState::Playing || _shareRecipient != slot)
+	{
+		return std::nullopt;
+	}
+
+	const auto seats{kSlots | std::views::take(_gameConfig.SeatCount())};
+	const auto isOwnGiver = [this](const PlayerSlot seat) { return _gameConfig.IsOwnSlot(seat) && CanShareLife(seat); };
+	if (const auto giver{std::ranges::find_if(seats, isOwnGiver)};
+		giver != seats.end())
+	{
+		return GiverLabelOf(*giver);
+	}
+
+	return SideBarLabel{.text = "WAITING SHARE"};
+}
+
+SideBarLabel RightSideBar::GiverLabelOf(const PlayerSlot giver) const
+{
+	switch (_seatDevices[SeatIndex(giver)])
+	{
+		case InputDevice::KeyboardLeft:
+			return SideBarLabel{.text = "Q SHARE SPAWN"};
+		case InputDevice::KeyboardRight:
+			return SideBarLabel{.text = "O SHARE SPAWN"};
+		case InputDevice::XBoxPad:
+			return SideBarLabel{.text = "SHARE SPAWN", .button = UiIcon::SideBarXBoxX};
+		case InputDevice::PlayStationPad:
+			return SideBarLabel{.text = "SHARE SPAWN", .button = UiIcon::SideBarPS5Square};
+	}
+
+	return {};
+}
+
+//NOTE: a bot's seat has nobody to press the key
+bool RightSideBar::CanShareLife(const PlayerSlot slot) const
+{
+	return IsDrivenSeat(_gameConfig.gameMode, _holders[SeatIndex(slot)], slot) && RespawnCountOf(GroupOf(slot)) > 0u;
 }
 
 //NOTE: a network seat is empty until the host says who took it
 void RightSideBar::OnGameModeApplied(const GameModeAppliedEvent& event)
 {
 	_holders.fill(IsNetworkGame(event.mode) ? SeatHolder::Empty : SeatHolder::Player);
+	_shareRecipient.reset();
 }
 
 void RightSideBar::OnGameReset(const GameResetEvent&)
@@ -289,4 +349,29 @@ void RightSideBar::OnTankDied(const TankDiedEvent& event)
 {
 	std::erase(_ships, event.who);
 	PlaceEnemyBadges();
+}
+
+void RightSideBar::OnShareRecipientChanged(const ShareRecipientChangedEvent& event) { _shareRecipient = event.seat; }
+
+void RightSideBar::OnWorldSnapshotReceived(const WorldSnapshotReceivedEvent& event)
+{
+	_shareRecipient = event.snapshot.shareRecipient;
+}
+
+//NOTE: a pair's devices trade seats, so each player keeps the prompt of the device in hand
+void RightSideBar::OnTabReleased(const TabReleasedEvent& event)
+{
+	//NOTE: a client's third or fourth seat stays with its first device, as UserInput::DeviceSlot has it
+	if (event.isSecondPair && _gameConfig.ownSlot && SeatIndex(*_gameConfig.ownSlot) >= 2u)
+	{
+		return;
+	}
+
+	const std::size_t first{event.isSecondPair ? 2u : 0u};
+	std::swap(_seatDevices[first], _seatDevices[first + 1u]);
+}
+
+void RightSideBar::OnSeatDeviceUsed(const SeatDeviceUsedEvent& event)
+{
+	_seatDevices[SeatIndex(event.slot)] = event.device;
 }

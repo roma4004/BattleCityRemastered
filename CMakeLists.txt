@@ -229,12 +229,14 @@ set(GAME_ASSETS
         Resources/Images/PS5_Buttons/D-Pad.png
         Resources/Images/PS5_Buttons/Home.png
         Resources/Images/PS5_Buttons/Options.png
+        Resources/Images/PS5_Buttons/Square.png
         Resources/Images/PS5_Buttons/Triangle.png
         Resources/Images/Xbox_Buttons/D-Pad.png
         Resources/Images/Xbox_Buttons/Home.png
         Resources/Images/Xbox_Buttons/Menu.png
         Resources/Images/Xbox_Buttons/View.png
         Resources/Images/Xbox_Buttons/A.png
+        Resources/Images/Xbox_Buttons/X.png
         Resources/Images/Xbox_Buttons/Y.png
         Resources/Maps/level1.map
         Resources/Maps/level2.map
