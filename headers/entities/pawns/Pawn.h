@@ -51,21 +51,22 @@ protected:
 	const GameConfig& _gameConfig;
 
 	std::vector<EventSubscription> _subs{};
-	EventSubscription _tickUpdateSub{};
 
 	virtual void Subscribe();
-	void Unsubscribe();
 	void SubscribeTickUpdate();
 	void UnsubscribeTickUpdate();
-	void OnTickUpdate(const TickUpdateEvent& event);
 	virtual void OnDespawned(const DespawnedEvent& event);
 	virtual void OnPosChanged(const PosChangedEvent& event);
 
-	//TODO: implement collision detection through quadtree
-	void TickUpdate(double deltaTime) override = 0;
-
 private:
+	EventSubscription _tickUpdateSub{};
+
 	virtual void SubscribeAsAuthority();
 	virtual void SubscribeAsClient();
+	void Unsubscribe();
+	void OnTickUpdate(const TickUpdateEvent& event);
 	void OnHealthChanged(const HealthChangedEvent& event);
+
+	//TODO: implement collision detection through quadtree
+	void TickUpdate(double deltaTime) override = 0;
 };

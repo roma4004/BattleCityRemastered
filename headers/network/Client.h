@@ -38,14 +38,13 @@ public:
 
 	~Client();
 
-	void Shutdown();
-
 	//NOTE: onClosed fires once the goodbye is acked, or turned out undeliverable
 	void Shutdown(DisconnectReason reason, std::function<void()> onClosed);
 
 private:
 	using Clock = DatagramLink::Clock;
 
+	void Shutdown();
 	void Subscribe();
 	void OnCommand(const commands::AnyCommand& command) override;
 

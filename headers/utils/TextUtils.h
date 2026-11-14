@@ -6,10 +6,11 @@
 
 class TextUtils final
 {
+	[[nodiscard]] static std::size_t SymbolCount(std::string_view text);
+
 public:
 	//NOTE: where a UTF-8 text's symbol starts - the bytes continuing one are 10xxxxxx; past the end is the size
 	[[nodiscard]] static std::size_t ByteOf(std::string_view text, std::size_t symbol);
-	[[nodiscard]] static std::size_t SymbolCount(std::string_view text);
 	//NOTE: cut or filled with spaces to this many symbols - a column of the monospaced font
 	[[nodiscard]] static std::string Fitted(std::string text, std::size_t symbols);
 

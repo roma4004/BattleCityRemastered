@@ -334,7 +334,6 @@ class KeyedEvent final : public BaseKeyedEvent
 public:
 	using callbackType = std::function<void(Args...)>;
 	using ListenerList = std::list<detail::Listener<callbackType>>;
-	using ListenerMap = std::unordered_map<KeyT, ListenerList>;
 	using ListenerHandle = ListenerList::iterator;
 
 	ListenerHandle AddListener(const KeyT& key, callbackType callback, const std::source_location& origin)
@@ -417,6 +416,8 @@ private:
 
 		_hasDead = false;
 	}
+
+	using ListenerMap = std::unordered_map<KeyT, ListenerList>;
 
 	ListenerMap _listeners;
 	int _emitDepth{};

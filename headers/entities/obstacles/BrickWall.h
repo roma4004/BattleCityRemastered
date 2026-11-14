@@ -11,7 +11,6 @@ class EventSystem;
 
 class BrickWall : public Obstacle
 {
-protected:
 	void EmitDeathStatistics(Author author) override;
 
 	static constexpr CollisionTags kCollision{tags::Impassable{}, tags::Destructible{}, tags::Impenetrable{},

@@ -55,9 +55,6 @@ class InputProviderForMenu final
 
 	void Subscribe();
 
-public:
-	InputProviderForMenu(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig);
-
 	void EnableMenuInput();
 	void DisableMenuInput();
 	void ToggleMenuInputSubscription();
@@ -71,4 +68,7 @@ public:
 	void ToggleDown();
 
 	[[nodiscard]] MenuKeys GetKeysStats() const noexcept { return _keys; }
+
+public:
+	InputProviderForMenu(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig);
 };

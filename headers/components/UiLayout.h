@@ -10,6 +10,8 @@
 //NOTE: turns a table into places; cell sizes come from the measurer, so no fonts or SDL here
 class UiLayout final
 {
+	static constexpr int kColumnGap{20};
+
 public:
 	struct PlacedCell final
 	{
@@ -34,8 +36,6 @@ public:
 	};
 
 	using Measure = std::function<Point(const UiCell&)>;
-
-	static constexpr int kColumnGap{20};
 
 	//NOTE: a row is as tall as its tallest cell, and never lower than minRowHeight
 	[[nodiscard]] static Placement Place(const UiTable& table, Point origin, int minRowHeight, const Measure& measure,

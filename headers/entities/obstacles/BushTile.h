@@ -11,7 +11,6 @@ class EventSystem;
 
 class BushTile final : public Obstacle
 {
-protected:
 	void EmitDeathStatistics(Author author) override;
 
 	static constexpr CollisionTags kCollision{tags::Passable{}, tags::Indestructible{}, tags::Penetrable{},

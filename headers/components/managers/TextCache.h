@@ -16,12 +16,12 @@ struct TTF_TextEngine;
 //NOTE: glyphs are laid out at final pixel size, so a layout is only valid for the scale that made it
 class TextCache final
 {
-public:
 	struct TextDeleter
 	{
 		void operator()(TTF_Text* text) const noexcept;
 	};
 
+public:
 	struct CachedText
 	{
 		std::unique_ptr<TTF_Text, TextDeleter> text{};

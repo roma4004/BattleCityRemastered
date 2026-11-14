@@ -21,12 +21,10 @@ class GameConfig;
 
 class Bonus final : public BaseObj, public IPickupableBonus
 {
-public:
 	static constexpr CollisionTags kCollision{tags::Impassable{}, tags::Destructible{}, tags::Impenetrable{},
 											  tags::NoTerrain{}};
 	static constexpr DrawLayer kLayer{DrawLayer::World};
 
-private:
 	const GameConfig& _gameConfig;
 	BonusType _bonusType{};
 	bool _isSuper{};

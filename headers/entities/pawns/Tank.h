@@ -59,6 +59,12 @@ class Tank final : public Pawn
 
 	//NOTE: shoves a tank ahead along our heading before we move; our step gets only the room left after the shove
 	void ShoveAhead(Direction dir, double step);
+	//NOTE: how far this tank and the ones beyond it can be shoved; a wall, the edge or a tank pushing back stops all
+	[[nodiscard]] double ShoveDistance(Direction dir, double wanted, int depth) const;
+	//NOTE: driving towards dir, not just facing it - a parked tank is shoved, one driving at us blocks the chain
+	[[nodiscard]] bool IsDrivingAgainst(Direction dir) const;
+	//NOTE: two tanks may push a third - alreadyMoved shoves it only once
+	void ShoveBy(double distance, Direction dir, double velocity, std::vector<const Tank*>& alreadyMoved);
 	void ApplyFreshLoadout();
 
 	//NOTE: a seat changing hands in a running match - the hull keeps its health and its tier, only the driver changes
@@ -129,7 +135,6 @@ class Tank final : public Pawn
 	//NOTE: waits for land - lost on water, it would strand the tank
 	void DropSpentShipAshore();
 
-protected:
 	BonusEffectProperty _effects{};
 	unsigned int _trackSteps{};
 	BulletCaliber _caliber{};
@@ -137,21 +142,23 @@ protected:
 
 	void EmitDamageStatistics(Author author) override;
 	void EmitDeathStatistics(Author author) override;
-	void OnDespawned(const DespawnedEvent& event) override;
 
-	void Subscribe() override;
 	void TickUpdate(double deltaTime) override;
 
 	void Shot();
 
 	void HandleBonusPickUp(BaseObj& object);
-	void OnPosChanged(const PosChangedEvent& event) override;
 	[[nodiscard]] bool IsTouching(Terrain terrain) const;
 
-public:
 	static constexpr CollisionTags kCollision{tags::Impassable{}, tags::Destructible{}, tags::Impenetrable{},
 											  tags::NoTerrain{}};
 
+protected:
+	void OnDespawned(const DespawnedEvent& event) override;
+	void Subscribe() override;
+	void OnPosChanged(const PosChangedEvent& event) override;
+
+public:
 	Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool,
 		 std::unique_ptr<IInputProvider> inputProvider, const GameConfig& gameConfig);
 
@@ -172,14 +179,6 @@ public:
 	[[nodiscard]] static double SizeOf(TankModel model, unsigned short tier, const GameConfig& gameConfig);
 
 	[[nodiscard]] unsigned int GetTier() const noexcept;
-
-	//NOTE: how far this tank and the ones beyond it can be shoved; a wall, the edge or a tank pushing back stops all
-	[[nodiscard]] double ShoveDistance(Direction dir, double wanted, int depth) const;
-	//NOTE: driving towards dir, not just facing it - a parked tank is shoved, one driving at us blocks the chain
-	[[nodiscard]] bool IsDrivingAgainst(Direction dir) const;
-
-	//NOTE: two tanks may push a third - alreadyMoved shoves it only once
-	void ShoveBy(double distance, Direction dir, double velocity, std::vector<const Tank*>& alreadyMoved);
 
 	//NOTE: what the driver needs of the tank it drives
 	[[nodiscard]] bool CanShoot() const noexcept;

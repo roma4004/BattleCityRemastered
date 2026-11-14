@@ -18,25 +18,28 @@ class BaseObj : public IObstacle
 	unsigned int _health{};
 	CollisionTags _collision;
 
+	virtual void EmitDamageStatistics(Author author);
+	virtual void EmitDeathStatistics(Author author);
+
 protected:
 	Uuid _uuid{};
 	Faction _faction{};
 	ObjRectangle _rect{};
 
-	virtual void EmitDamageStatistics(Author author);
-	virtual void EmitDeathStatistics(Author author);
+	virtual void SetHealth(unsigned int health);
+	virtual void SetId(Uuid uuid);
 
 	BaseObj(BaseObjProperty baseObjProperty, CollisionTags collision);
 
+	~BaseObj() override;
+
+public:
 	//NOTE: an entity is its uuid - copying one would hand two objects the same identity
 	BaseObj(const BaseObj&) = delete;
 	BaseObj(BaseObj&&) = delete;
 	BaseObj& operator=(const BaseObj&) = delete;
 	BaseObj& operator=(BaseObj&&) = delete;
 
-	~BaseObj() override;
-
-public:
 	//NOTE: entering and leaving the world; called on a fully built object, so the virtual call reaches the leaf
 	virtual void Activate() {}
 	virtual void Deactivate() {}
@@ -50,7 +53,6 @@ public:
 	void SetPos(const FPoint& pos);
 
 	[[nodiscard]] virtual unsigned int GetHealth() const;
-	virtual void SetHealth(unsigned int health);
 
 	[[nodiscard]] bool GetIsAlive() const noexcept override;
 	void SetIsAlive(bool isAlive) noexcept override;
@@ -69,6 +71,5 @@ public:
 	[[nodiscard]] virtual const ObjRectangle& GetRect() const;
 
 	[[nodiscard]] virtual Uuid GetUuid() const;
-	virtual void SetId(Uuid uuid);
 	[[nodiscard]] Faction GetFaction() const noexcept;
 };

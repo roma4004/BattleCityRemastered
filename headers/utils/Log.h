@@ -28,9 +28,8 @@ public:
 	static void SetFile(bool enabled, const std::string& filename = "game_log.txt");
 	static void SetLevel(Level level);
 
-	[[nodiscard]] static std::string TimeStamp();
-
 private:
+	[[nodiscard]] static std::string TimeStamp();
 	static void Write(const std::string& message, bool isError);
 
 	static bool _consoleEnabled;

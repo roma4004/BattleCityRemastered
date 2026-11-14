@@ -20,21 +20,21 @@ class GameConfig;
 class Obstacle : public BaseObj
 {
 	const DrawLayer _layer;
+	ObstacleType _obstacleType{};
 
 	void OnHealthChanged(const HealthChangedEvent& event);
 	void OnWorldSnapshotRequested(const WorldSnapshotRequestedEvent& event) const;
 	void SubscribeAsClient();
-
-protected:
 	//NOTE: empty, not pure - only the eagle has something to hear
 	virtual void Subscribe();
+
+	void EmitDeathStatistics(Author author) override = 0;
+
+protected:
 	virtual void OnDespawned(const DespawnedEvent& event);
-	ObstacleType _obstacleType{};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
 	const GameConfig& _gameConfig;
-
-	void EmitDeathStatistics(Author author) override = 0;
 
 	Obstacle(ObjRectangle rect, unsigned int health, const std::shared_ptr<EventSystem>& events, Uuid uuid,
 			 const GameConfig& gameConfig, ObstacleType obstacleType, CollisionTags collision, DrawLayer layer);

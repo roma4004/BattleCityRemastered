@@ -21,13 +21,14 @@ class EagleTile final : public Obstacle, public IFortress
 	void OnBonusShovel(const BonusShovelStatusChangeEvent& event);
 	void OnBonusShovelPickup(const BonusShovelPickupEvent& event);
 
-protected:
 	void EmitDeathStatistics(Author author) override;
-	void OnDespawned(const DespawnedEvent& event) override;
 
 	static constexpr CollisionTags kCollision{tags::Impassable{}, tags::Destructible{}, tags::Impenetrable{},
 											  tags::NoTerrain{}};
 	static constexpr DrawLayer kLayer{DrawLayer::World};
+
+protected:
+	void OnDespawned(const DespawnedEvent& event) override;
 
 public:
 	EagleTile(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, Uuid uuid, const GameConfig& gameConfig);

@@ -113,13 +113,12 @@ class UserInput final
 	void ConnectController(const std::shared_ptr<SDL_Gamepad>& newController);
 	[[nodiscard]] PlayerSlot ControllerSlotDefiner(SDL_JoystickID instanceId) const;
 	void OnMenuTilesPlaced(const MenuTilesPlacedEvent& event);
+	void Update();
 
 public:
 	UserInput(const std::shared_ptr<EventSystem>& events, const WindowConfig& windowConfig,
 			  const SDL_Config& sdlConfig, int gamepadDeadZone);
 	~UserInput();
-
-	void Update();
 
 	[[nodiscard]] bool IsShutdown() const noexcept;
 };

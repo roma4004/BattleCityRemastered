@@ -78,7 +78,6 @@ public:
 
 	static constexpr std::size_t kMaxDatagramSize{1200u};
 	static constexpr std::size_t kMaxBacklog{1024u};
-	static constexpr std::chrono::milliseconds kHeartbeat{100};
 	static constexpr std::chrono::milliseconds kPeerTimeout{std::chrono::seconds{2}};
 	//NOTE: how often the owner hands out what is due - retransmits and heartbeats keep no timer of their own
 	static constexpr std::chrono::milliseconds kPollInterval{10};
@@ -88,6 +87,8 @@ public:
 	static constexpr int kSocketBufferSize{1 << 20};
 
 private:
+	static constexpr std::chrono::milliseconds kHeartbeat{100};
+
 	struct Fragment final
 	{
 		std::string bytes{};

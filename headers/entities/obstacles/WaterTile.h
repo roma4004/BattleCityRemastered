@@ -13,7 +13,6 @@ class EventSystem;
 
 class WaterTile final : public Obstacle
 {
-protected:
 	void EmitDeathStatistics(Author author) override;
 
 	static constexpr CollisionTags kCollision{tags::Impassable{}, tags::Indestructible{}, tags::Penetrable{},

@@ -36,6 +36,4 @@ public:
 	Menu(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig);
 
 	void Draw();
-
-	[[nodiscard]] MenuKeys GetKeysStats() const { return _input->GetKeysStats(); }
 };

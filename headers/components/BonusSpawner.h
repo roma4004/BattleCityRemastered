@@ -75,14 +75,13 @@ class BonusSpawner final
 	void Materialize(const PendingSpawn& pending) const;
 	bool MaterializePending(Uuid uuid);
 	[[nodiscard]] Uuid AnnounceSpawn(ObjRectangle rect, BonusType type, Uuid uuid, bool isSuper) const;
+	void SpawnPermanentBonus(ObjRectangle rect, BonusType type, bool isSuper);
 
 public:
 	BonusSpawner(const std::shared_ptr<EventSystem>& events, const std::vector<std::shared_ptr<BaseObj>>& allObjects,
 				 const GameConfig& gameConfig);
 
 	void SpawnRandomBonus(ObjRectangle rect);
-
-	void SpawnPermanentBonus(ObjRectangle rect, BonusType type, bool isSuper);
 
 	void SpawnBonus(ObjRectangle rect, BonusType type, Uuid uuid = {}, bool isSuper = false);
 };

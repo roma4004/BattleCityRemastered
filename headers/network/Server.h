@@ -55,8 +55,6 @@ public:
 
 	~Server();
 
-	void Shutdown();
-
 	void Shutdown(DisconnectReason reason, const std::function<void()>& onClosed);
 
 	[[nodiscard]] uint16_t GetBoundPort() const noexcept { return _boundPort; }
@@ -66,6 +64,7 @@ public:
 private:
 	using Clock = DatagramLink::Clock;
 
+	void Shutdown();
 	void Receive();
 	void OnDatagram(std::string_view datagram, Clock::time_point now);
 

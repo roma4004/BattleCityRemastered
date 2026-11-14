@@ -9,7 +9,6 @@ class GameConfig;
 
 class SteelWall : public Obstacle
 {
-protected:
 	void EmitDeathStatistics(Author author) override;
 
 	static constexpr CollisionTags kCollision{tags::Impassable{}, tags::Indestructible{}, tags::Impenetrable{},

@@ -16,6 +16,8 @@ class SideBarCanvas final
 
 	//NOTE: the enemy frame's left edge, centered in the side bar
 	[[nodiscard]] int ColumnX() const;
+	//NOTE: the side bar starts where the field ends
+	[[nodiscard]] int Left() const;
 	[[nodiscard]] static int Pixels(double atlasPixels);
 
 public:
@@ -32,8 +34,6 @@ public:
 
 	SideBarCanvas(const SDL_Config& sdlConfig, const GameConfig& gameConfig);
 
-	//NOTE: the side bar starts where the field ends
-	[[nodiscard]] int Left() const;
 	//NOTE: over the enemy frame, as wide as it
 	[[nodiscard]] SDL_Rect FpsBox() const;
 	[[nodiscard]] SDL_Rect Rect(const ObjRectangle& atlas) const;

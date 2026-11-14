@@ -37,16 +37,17 @@ class Bullet final : public Pawn
 	[[nodiscard]] bool PenetrateWall(const std::vector<BaseObj*>& contacts);
 	void DealDamage(const std::vector<BaseObj*>& blast);
 
-protected:
-	void Subscribe() override;
-	void OnDespawned(const DespawnedEvent& event) override;
 	void TickUpdate(double deltaTime) override;
 
-public:
 	static constexpr CollisionTags kCollision{tags::Passable{}, tags::Destructible{}, tags::Impenetrable{},
 											  tags::NoTerrain{}};
 	static constexpr DrawLayer kLayer{DrawLayer::World};
 
+protected:
+	void Subscribe() override;
+	void OnDespawned(const DespawnedEvent& event) override;
+
+public:
 	Bullet(PawnProperty pawnProperty, const GameConfig& gameConfig, const BulletCaliber& caliber = {});
 
 	~Bullet() override;
